@@ -1,4 +1,4 @@
-# hrajfotbal.com — Phase 1 Build Specification (v2.1)
+# hrajfotbal.com — Phase 1 Build Specification (v2.2)
 ## Analysis document for Letco (living documentation seed)
 
 **Instruction to the platform:** This document is the source of truth. Where implementation questions arise that this document does not answer, do NOT invent a resolution — surface the question at the next milestone gate. Build in the milestone order defined in §10; each milestone ends with a human verification gate. Do not proceed past a gate without confirmation.
@@ -50,6 +50,7 @@ Game status machine:
 - `full → published`: automatic when a spot releases.
 - `published → played` / `full → played`: `played` set by admin after start time, regardless of whether the game sold out — an under-capacity game is marked `played` directly from `published`. `settled` set by admin after attendance marking completes.
 - Game cancellation: all active bookings cancelled, any applied money credited to wallets, waitlist cleared, all affected players emailed.
+- Game edits with active bookings: **capacity can never be reduced below the current count of active (reserved + confirmed) bookings** — the admin edit is rejected otherwise. **Price changes never affect existing bookings** — each booking's `price_czk`/`credit_applied_czk` is locked at booking time; a new price applies only to bookings created after the edit.
 
 ### bookings
 `id, game_id, player_id, status, payment_method (qr|cash|credit|seed_free), payment_code (unique numeric VS, nullable — only QR bookings), price_czk, credit_applied_czk int default 0, is_seed bool, booked_by_admin bool, attendance (null|present|no_show), nudge_sent_at timestamptz null, reminder_sent_at timestamptz null, expires_at timestamptz null, cancel_lead_hours numeric null, created_at`
@@ -69,11 +70,19 @@ Any transition not in this table is invalid and must be rejected at the function
 
 **Server-function mandate (non-negotiable):** these transitions are implemented as **plpgsql `SECURITY DEFINER` functions** — `create_booking`, `confirm_booking`, `cancel_booking`, `expire_booking` — invoked from the app exclusively via `supabase.rpc()`. The logical names in the tables above (`createBooking()` etc.) map one-to-one to these database functions. Each function performs its state check, insert/update, ledger writes, and event insert in a single database transaction. No state-bearing table is ever written from TypeScript directly, and no transition is ever assembled from separate client-side queries — the "same transaction" guarantee only holds inside the database.
 
-**Concurrency rule (critical):** capacity is enforced inside `create_booking` in a single transaction: take `pg_advisory_xact_lock(game_id)` (transaction-scoped, auto-released at commit), then count active bookings (reserved + confirmed) and insert only if count < capacity. Plus a defensive unique constraint on `(game_id, player_id)` where status in (reserved, confirmed) — one active booking per player per game. Never enforce capacity in application code alone.
+**Function authorization (non-negotiable):** every `SECURITY DEFINER` function hardens its `search_path` (`SET search_path = ''`, schema-qualifying every reference) to close the classic definer privilege-escalation vector, and derives identity from the session — **never** from a client-supplied player or booking id. `create_booking` and `cancel_booking` are **owner-only**: the acting player is resolved from `auth.uid()` and must own the target booking; a call passing another player's id is rejected. `confirm_booking` and `expire_booking` are **admin-or-cron-only**: permitted only when `auth.uid()` maps to an admin player, or the call runs in the service-role cron/admin context. No function ever trusts a client-supplied identity.
+
+**Concurrency rule (critical):** all advisory locks are transaction-scoped (`pg_advisory_xact_lock`, auto-released at commit). Because every `id` is a UUID (not a bigint), each lock hashes the id to a bigint key: `pg_advisory_xact_lock(hashtextextended(<id>::text, 0))` — this hashing form is used **everywhere** an advisory lock is taken. `create_booking` acquires locks in a fixed order to avoid deadlock — **player lock first, then game lock**:
+1. `pg_advisory_xact_lock(hashtextextended(player_id::text, 0))` — serializes this player's credit redemptions across all games (see the credit-redemption rule below).
+2. `pg_advisory_xact_lock(hashtextextended(game_id::text, 0))` — serializes capacity for this game.
+
+Under the game lock, count active bookings (reserved + confirmed) and insert only if count < capacity. Plus a defensive unique constraint on `(game_id, player_id)` where status in (reserved, confirmed) — one active booking per player per game. Never enforce capacity in application code alone.
+
+**Credit-redemption serialization (critical):** the game lock protects capacity but **not** the player's wallet, which is player-scoped, not game-scoped. Two near-simultaneous bookings by one player for *different* games take different game locks and do not block each other; without a player lock both would read the same balance and both redeem it, driving the ledger negative — the same credit spent twice. The player lock in step 1 serializes redemption per player. Holding it, `create_booking` re-reads the balance (`SUM(delta_czk)` for the player), applies `min(balance, price)`, and writes the negative redemption row **only if the resulting balance stays ≥ 0**, rejecting any redemption that would take it below zero. The non-negative-balance guard is the belt-and-suspenders backstop behind the lock.
 
 ### credit_ledger
 `id, player_id, delta_czk int, reason (cancellation_credit|admin_grant|redemption|adjustment), booking_id nullable, created_at`
-Append-only — no UPDATE or DELETE, enforced by RLS/privileges. Balance = `SUM(delta_czk)`. Redemptions are negative rows written inside the `createBooking()` transaction.
+Append-only — no UPDATE or DELETE, enforced by RLS/privileges. Balance = `SUM(delta_czk)` and **must never go negative**. Redemptions are negative rows written inside the `create_booking` transaction under the per-player advisory lock (see the concurrency rule above), which re-reads the balance and rejects any redemption that would take it below zero.
 
 ### waitlist
 `id, game_id, player_id, joined_at, notified_at nullable, converted_booking_id nullable`
@@ -82,7 +91,7 @@ Unique on `(game_id, player_id)`.
 ### events
 `id, event_type text, player_id nullable, game_id nullable, booking_id nullable, metadata jsonb, city, brand, playbook_version text default 'v1', policy_version text default 'v1', created_at`
 Append-only. Full Phase 1 catalog:
-`account_created, auth_link_sent, auth_completed, game_published, game_cancelled, game_settled, booking_created, payment_confirmed, booking_cancelled, booking_expired, spot_released, waitlist_joined, waitlist_notified, waitlist_converted, nudge_sent, reminder_sent, attendance_marked, credit_issued, credit_redeemed, admin_booking_created, player_claimed`
+`account_created, auth_link_sent, auth_completed, game_published, game_cancelled, game_settled, booking_created, payment_confirmed, booking_cancelled, booking_expired, spot_released, waitlist_joined, waitlist_notified, waitlist_converted, nudge_sent, reminder_sent, attendance_marked, credit_issued, credit_redeemed, payment_unmatched, admin_booking_created, player_claimed`
 
 Every server function that changes state writes its event **in the same transaction** as the state change. A state change without its event row is a bug.
 
@@ -99,12 +108,18 @@ Payments remain Czech regardless of UI language: CZK, Czech QR platba standard, 
 - Player payment screen renders a **Czech SPD 1.0 QR string** encoded as QR code, exactly:
   `SPD*1.0*ACC:<IBAN>*AM:<amount>.00*CC:CZK*X-VS:<VS>*MSG:<NICKNAME>`
   IBAN comes from env variable `PAYMENT_IBAN`. Also render the same data as plain text fallback (account number, amount, VS) below the QR.
+  The `MSG` value (player nickname) is **sanitized before interpolation**: strip every character outside the SPD-permitted set — the asterisk `*` (the SPD field delimiter) above all, plus control and non-ASCII characters — and cap the field length (SPD `MSG` max 60 chars). A nickname can never break the SPD framing or overflow the field.
 - Amount = `price_czk − credit_applied_czk`. If credit covers the full price, the booking confirms instantly with `payment_method = credit` and no QR is shown.
-- Credit auto-application: `createBooking()` reads the ledger balance, applies `min(balance, price)`, writes the negative redemption row, sets `credit_applied_czk`.
+- Credit auto-application: `create_booking` reads the ledger balance **under the per-player advisory lock** (§3 concurrency rule), applies `min(balance, price)`, writes the negative redemption row (rejecting any that would take the balance below zero), and sets `credit_applied_czk` — all in the same transaction.
 - Cash at pitch: selectable at booking; booking sits in `reserved` until admin confirms at the game.
 - Seed players (`is_seed`): price 0, `payment_method = seed_free`, confirmed instantly, flagged at booking level.
 - Admin confirmation: pending bookings sorted by VS, one-tap ✓ Paid → `confirmBooking()`. Target ≤5 seconds per confirmation including page load.
 - **Automation seam:** `confirmBooking(bookingId, confirmedBy)` is the single entry point. A future Fio bank poller calls the same function. Nothing in Phase 1 may assume the confirmer is human.
+- **Payment reconciliation (policy, not a module — `policy_version = 'v1'`):** the VS-sorted pending list (admin one-tap ✓ Paid) is the **only** reconciliation surface in Phase 1 — no separate admin queue UI is built.
+  - **Underpayment** (amount received < amount due): the booking stays `reserved`; the admin follows up manually. No auto-confirm.
+  - **Overpayment** (amount received > amount due): the admin confirms the booking (`confirm_booking`) and the difference is issued as wallet credit (`credit_issued`).
+  - **Payment after expiry** (booking already `expired`): the full amount is issued as wallet credit; the spot is **not** reinstated.
+  - **Unmatched payment** (no VS match): resolved by a manual admin credit grant, logged with a `payment_unmatched` event.
 
 ---
 
@@ -115,7 +130,7 @@ Config module with named constants; `policy_version = 'v1'` stamped on events.
 - **Cancellation:** any lead time → full credit of money actually applied (QR-paid, cash-paid, and/or credit-applied amounts) to wallet via `cancellation_credit`. "No cash refunds ever" means no money ever leaves the system — a cancelled cash-paid booking is refunded as wallet credit, never returned as cash. Record `cancel_lead_hours` on the booking. Unpaid reserved cancellations (no money applied) issue no credit.
 - **Reservation hold:** unpaid reservations hold until game day by default (`expires_at` null unless nudged).
 - **Scarcity nudge:** when a game is full AND waitlist ≥ 1, every unpaid `reserved` booking — **including cash reservations** — gets one email: "pay online within 12h or lose the spot." Sets `nudge_sent_at` and `expires_at = now() + 12h`; on expiry the spot is released to the waitlist like any other. No exemption for cash, and no manual-release surface. Confirmed (prepaid) bookings are never expired by this mechanism — prepaying is spot insurance. One nudge per booking, ever.
-- **Expiry:** cron sweeps bookings where `expires_at < now()` and status = reserved → `expireBooking()` → spot_released → waitlist notification.
+- **Expiry:** cron sweeps bookings where `expires_at < now()` and status = reserved → `expireBooking()` → spot_released → waitlist notification. A payment that lands **after** a booking has expired is credited in full to the player's wallet (see §4 payment reconciliation) — the spot is never reinstated.
 - **Waitlist:** one-tap join on full games. When a spot frees (cancel or expire), email **all active** waitlisted players (those with no `converted_booking_id`) simultaneously (`waitlist_notified`; `notified_at` = the last time notified, **not** a suppression flag — players are re-notified on every subsequent release), first-come-first-served. The race is settled by `create_booking`'s transactional capacity check — first successful insert wins; later attempts get a friendly "spot already taken, you're still on the waitlist" screen. A waitlisted player converts by calling `create_booking` with a `from_waitlist_id` argument, which sets `converted_booking_id` and emits `waitlist_converted` in the same transaction.
 - **Game reminder:** every player with an active booking gets one reminder email 24h before `starts_at` (`reminder_sent` event). One per booking, ever.
 
@@ -146,15 +161,16 @@ All jobs must be idempotent — running twice in a row produces no duplicate ema
 
 - Passwordless email magic link (Supabase built-in). Emit `auth_link_sent` and `auth_completed` events — this pair measures drop-off. Auth email uses **Supabase's built-in email sender** until M5 and sits **outside** the `sendEmail()`/`EMAIL_DRY_RUN` seam (see §2); at M5 Supabase SMTP is switched to Resend alongside `EMAIL_DRY_RUN=off`. This keeps login working on real phones before the Resend DNS is verified.
 - Signup: GDPR consent checkbox (required), marketing opt-in (separate, optional), link to privacy page.
+- **Deep-link resume:** the magic-link `redirectTo` carries the target game id and the pending action (book / join-waitlist). After `auth_completed`, the app resumes that action automatically — the player lands back on the game with their intent fulfilled, not on a bare home screen. **No pre-auth soft holds — ever:** a spot is never reserved for an unauthenticated visitor; the booking comes into existence only when `create_booking` runs under the authenticated session.
 - **Shadow claim:** when a new auth user's email matches a shadow player's email, link `auth_user_id` to the existing player row (preserving history) and emit `player_claimed`. Do not create a duplicate player.
 - Account deletion: via email request in Phase 1 (mailto link on account page); no self-serve deletion UI.
 - **Privacy page:** use placeholder text clearly marked DRAFT — final copy is supplied by a human at M5. Do not generate final legal text.
 - **RLS, deny-by-default:** RLS enabled on every table in its creation migration; default privileges revoked as belt-and-suspenders.
   - players: user reads/updates own row only (matched via auth_user_id). No public reads.
-  - bookings, credit_ledger, waitlist: user reads own rows only. All writes go through the plpgsql `SECURITY DEFINER` RPC functions mandated in §3 (`create_booking`, `confirm_booking`, `cancel_booking`, `expire_booking`), invoked via `supabase.rpc()` — **no direct client inserts/updates on any state-bearing table**, and no state transition assembled from separate TypeScript queries.
+  - bookings, credit_ledger, waitlist: user reads own rows only. **All writes go through the plpgsql `SECURITY DEFINER` RPCs mandated in §3** (`create_booking`, `confirm_booking`, `cancel_booking`, `expire_booking`), invoked via `supabase.rpc()`. Player actions (`create_booking`, `cancel_booking`) are called **with the user's JWT**, so `auth.uid()` inside the function identifies the acting player; cron and admin API routes call `confirm_booking`/`expire_booking` **with the service-role key**. Authorization is enforced **inside each function** per §3 (owner-only vs admin-or-cron-only), not at the transport layer — the service-role key grants *reach*, not permission. There are **no direct client inserts/updates on any state-bearing table**, and no transition assembled from separate TypeScript queries.
   - games (published), game_roster_public: anonymous read.
   - events: no client access whatsoever.
-- Service-role/secret key: server-only, never under `NEXT_PUBLIC_`. No secrets in code or git.
+- **Service-role key:** used **only** server-side by cron and admin API routes to invoke the admin-or-cron RPCs (`confirm_booking`, `expire_booking`) — never to perform direct table writes that bypass RLS, and never exposed under `NEXT_PUBLIC_`. Authorization always happens inside the function (§3), so a service-role call is not a blanket write grant. No secrets in code or git.
 
 ---
 
@@ -170,7 +186,7 @@ All jobs must be idempotent — running twice in a row produces no duplicate ema
 - `/privacy` — privacy page (DRAFT placeholder per §8)
 
 **Admin (`/admin`, gated by `players.is_admin`, server-verified — not just hidden nav):**
-- Games: create / edit / cancel; per-game roster with payment status badges (paid / reserved / cash / seed)
+- Games: create / edit / cancel; per-game roster with payment status badges (paid / reserved / cash / seed). Edit enforces the §3 rule: capacity cannot drop below the count of active bookings; price changes apply to future bookings only.
 - One-tap ✓ Paid, pending sorted by VS
 - Add player manually: creates shadow player + booking in one flow, ≤10 seconds
 - Waitlist depth per game (visible number — this is the expansion-trigger sensor)
@@ -214,7 +230,7 @@ Build strictly in this order. Each gate = human verification before proceeding.
 
 ## 11. Acceptance criteria (Phase 1 done when all pass)
 
-1. Signup → book → QR displayed in <60 s on a phone
+1. Book → QR displayed in <60 s for an **authenticated** player on a phone. (First-time signup speed is *not* held to this 60 s bar — magic-link round-trip time is outside our control; it is tracked instead via the `auth_link_sent` → `auth_completed` funnel.)
 2. Full game shows waitlist button; join works
 3. Admin payment confirmation ≤5 s; roster distinguishes paid / reserved / cash / seed
 4. Shadow-player booking created in ≤10 s
@@ -228,6 +244,8 @@ Build strictly in this order. Each gate = human verification before proceeding.
 12. Cron jobs are idempotent: double-run produces no duplicate emails or events
 13. Game link shared in WhatsApp renders a correct preview card; `.ics` opens in a phone calendar app
 14. Dry-run game runs end-to-end in parallel with the WhatsApp process
+15. Cross-user RPC rejected: a player invoking `create_booking`/`cancel_booking` with **another** player's id — or a non-admin invoking `confirm_booking`/`expire_booking` — is rejected inside the function, not honored (assert via API in E2E)
+16. Credit double-spend prevented: two concurrent credit-funded bookings by **one** player for **different** games redeem the wallet at most once, and the ledger never goes negative (assert via SQL in E2E)
 
 E2E coverage (Playwright): every criterion above that has a user-visible path gets a test. Where a criterion is about data (events, ledger, RLS), assert via API/SQL in the test, not by eyeballing.
 
@@ -245,7 +263,7 @@ If any task appears to require one of these, stop and raise it at the gate inste
 
 - This document is the contract. Disagreements are resolved by editing this document first, then implementing.
 - Schema changes only via migration files; RLS in the same migration.
-- State transitions only via the plpgsql `SECURITY DEFINER` RPC functions (§3), invoked via `supabase.rpc()`; every transition writes its event in the same transaction.
+- State transitions only via the plpgsql `SECURITY DEFINER` RPC functions (§3), invoked via `supabase.rpc()` — player actions with the user's JWT, cron/admin routes with the service-role key, with authorization enforced inside each function (§3/§8); every transition writes its event in the same transaction.
 - `credit_ledger` and `events` are append-only.
 - All user-facing strings centralized, English values.
 - No secrets in code; nothing secret under `NEXT_PUBLIC_`.
