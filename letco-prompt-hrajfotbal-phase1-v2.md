@@ -115,6 +115,7 @@ Payments remain Czech regardless of UI language: CZK, Czech QR platba standard, 
 - Seed players (`is_seed`): price 0, `payment_method = seed_free`, confirmed instantly, flagged at booking level.
 - Admin confirmation: pending bookings sorted by VS, one-tap ✓ Paid → `confirmBooking()`. Target ≤5 seconds per confirmation including page load.
 - **Automation seam:** `confirmBooking(bookingId, confirmedBy)` is the single entry point. A future Fio bank poller calls the same function. Nothing in Phase 1 may assume the confirmer is human.
+  - **Signature (v2.4):** `confirm_booking(booking_id UUID, confirmed_by UUID, received_amount_czk INT DEFAULT NULL) -> { id, status, credit_issued_czk }`. NULL means "confirm at the expected amount" (the admin one-tap path); when supplied, `received_amount_czk` drives the reconciliation rules below, and it is the parameter a future bank poller populates from the bank-reported amount.
 - **Payment reconciliation (policy, not a module — `policy_version = 'v1'`):** the VS-sorted pending list (admin one-tap ✓ Paid) is the **only** reconciliation surface in Phase 1 — no separate admin queue UI is built.
   - **Underpayment** (amount received < amount due): the booking stays `reserved`; the admin follows up manually. No auto-confirm.
   - **Overpayment** (amount received > amount due): the admin confirms the booking (`confirm_booking`) and the difference is issued as wallet credit (`credit_issued`).
