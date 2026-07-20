@@ -342,6 +342,30 @@ export interface Database {
         Args: { p_game_id: string; p_capacity: number };
         Returns: number;
       };
+
+      /** Callable by anon — the caller has not signed in yet, by definition. */
+      record_auth_link_sent: {
+        Args: { p_game_id?: string | null; p_action?: string | null };
+        Returns: void;
+      };
+      /** Returns whether the session already has a player row. */
+      record_auth_completed: {
+        Args: Record<string, never>;
+        Returns: boolean;
+      };
+      /** Returns the claimed/existing player id, or null if there was nothing to claim. */
+      claim_shadow_player: {
+        Args: Record<string, never>;
+        Returns: string | null;
+      };
+      complete_signup: {
+        Args: {
+          p_nickname: string;
+          p_gdpr_consent: boolean;
+          p_marketing_opt_in?: boolean;
+        };
+        Returns: string;
+      };
     };
 
     Enums: {

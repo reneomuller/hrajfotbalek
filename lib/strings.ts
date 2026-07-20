@@ -86,6 +86,22 @@ export const strings = {
     linkSent: "Check your inbox — the link is on its way.",
     linkExpired: "That link has expired. Request a new one.",
     signOut: "Sign out",
+    emailInvalid: "That does not look like an email address.",
+    linkSendFailed: "We could not send the link. Please try again.",
+    callbackFailed: "That sign-in link is invalid or has already been used.",
+
+    signupTitle: "Choose your nickname",
+    signupLede: "This is the name that appears in the lineup.",
+    nicknameLabel: "Nickname",
+    nicknameHint: "Letters, numbers, spaces, _ and - · up to 20 characters",
+    nicknameInvalid:
+      "Use only letters, numbers, spaces, _ and - (up to 20 characters).",
+    nicknameTaken: "That nickname is taken. Try another.",
+    gdprLabel: "I agree to the privacy policy.",
+    gdprLink: "Read the privacy policy",
+    gdprRequired: "Please agree to the privacy policy to continue.",
+    marketingLabel: "Email me about new games. (Optional)",
+    createAccount: "Create my account",
   },
 
   games: {
