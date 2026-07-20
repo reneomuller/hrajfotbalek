@@ -1,14 +1,32 @@
 /**
  * Database types.
  *
- * NOTE: hand-authored to match migrations 20260720100000 and 20260720100100
- * exactly. Regenerate from the live schema once the migrations have been
- * applied, and treat the generated output as authoritative from that point on:
+ * Hand-authored to match migrations 20260720100000, 20260720100100 and
+ * 20260720100200. Migration 3 changes only EXECUTE privilege on
+ * next_payment_code(), so it has no effect on any type below.
  *
- *   supabase gen types typescript --linked > lib/types/database.ts
+ * VERIFIED against the live schema after those migrations were applied: every
+ * table, column, SQL type, nullability, the view projection, all five enums
+ * and the 22-value event_type catalog were introspected from pg_catalog and
+ * matched this file exactly. So the contents are known-accurate — but they
+ * were confirmed by comparison, not produced by the generator.
  *
- * (or `--local` against a local stack). Any drift between this file and the
+ * Still to do: replace this file with genuine generated output. Neither route
+ * works on this machine yet —
+ *
+ *   supabase gen types typescript --db-url ...   needs Docker (not installed)
+ *   supabase gen types typescript --linked       needs a Supabase access token
+ *
+ * Once either is available, regenerate and treat the generated output as
+ * authoritative from that point on. Any drift between this file and the
  * migrations is a bug in this file.
+ *
+ * One known difference from what the generator would emit: the
+ * game_roster_public Row fields are typed non-nullable here, whereas the
+ * generator widens every view column to `| null` because Postgres cannot prove
+ * non-nullability through a join. The inner joins in the view body do
+ * guarantee it, so the narrower type is the more useful one — but expect this
+ * to be the line that changes when the file is genuinely regenerated.
  */
 
 export type Json =
