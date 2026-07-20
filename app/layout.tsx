@@ -37,6 +37,21 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
+  /**
+   * Base for resolving relative Open Graph and Twitter image URLs.
+   *
+   * WhatsApp and every other unfurler fetch `og:image` as an absolute URL and
+   * will not resolve a relative path. Without this, Next falls back to
+   * `http://localhost:3000`, which produces preview cards that render locally
+   * and silently show no image once deployed — the failure appears only in
+   * production, in someone else's chat window.
+   *
+   * Resolved from NEXT_PUBLIC_SITE_URL, the same variable the magic-link
+   * origin uses, so both agree by construction.
+   */
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ?? "http://localhost:3000",
+  ),
   title: strings.meta.title,
   description: strings.meta.description,
 };
