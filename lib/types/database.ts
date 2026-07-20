@@ -113,6 +113,21 @@ export interface CancelResult {
   cancel_lead_hours: number;
 }
 
+/**
+ * Return contract of confirm_booking and expire_booking (SQL composite
+ * public.confirm_result).
+ *
+ * `status` is what the booking ended up as, which is NOT always what the
+ * caller was driving toward: confirming a payment that landed after expiry
+ * returns `expired` with a non-zero credit, because the spot is never
+ * reinstated.
+ */
+export interface ConfirmResult {
+  id: string;
+  status: BookingStatus;
+  credit_issued_czk: number;
+}
+
 export interface Database {
   public: {
     Tables: {
@@ -296,6 +311,36 @@ export interface Database {
       cancel_booking: {
         Args: { p_booking_id: string };
         Returns: CancelResult;
+      };
+
+      /**
+       * Admin-or-service-role. The single automation seam: the admin UI omits
+       * p_received_amount_czk (confirm at the expected amount), while a future
+       * bank poller passes the bank-reported figure. Same entry point.
+       */
+      confirm_booking: {
+        Args: {
+          p_booking_id: string;
+          p_confirmed_by?: string | null;
+          p_received_amount_czk?: number | null;
+        };
+        Returns: ConfirmResult;
+      };
+
+      /** Admin-or-cron. Never reinstates a spot. */
+      expire_booking: {
+        Args: { p_booking_id: string };
+        Returns: ConfirmResult;
+      };
+
+      publish_game: { Args: { p_game_id: string }; Returns: GameStatus };
+      mark_game_played: { Args: { p_game_id: string }; Returns: GameStatus };
+      settle_game: { Args: { p_game_id: string }; Returns: GameStatus };
+      /** Returns the number of bookings cancelled by the fan-out. */
+      cancel_game: { Args: { p_game_id: string }; Returns: number };
+      set_game_capacity: {
+        Args: { p_game_id: string; p_capacity: number };
+        Returns: number;
       };
     };
 
