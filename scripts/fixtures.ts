@@ -167,6 +167,21 @@ export const games = {
     capacity: 12,
     priceCzk: 200,
   },
+  /**
+   * Output-escaping fixture. `venue` is admin-supplied free text that reaches
+   * three different grammars — HTML text, the OG `content` attribute, and
+   * iCalendar TEXT — and each escapes differently. This venue carries a payload
+   * for all three at once: HTML tags and quotes, an iCalendar comma/semicolon/
+   * backslash, and a newline. It must render as literal text everywhere and
+   * must never execute or break a field boundary.
+   */
+  hostileVenue: {
+    id: "5eed0000-0000-0000-0000-00000000b009",
+    venue: '<script>alert(1)</script> "Praha 2", a;b\\c',
+    startsInHours: 24 * 11,
+    capacity: 12,
+    priceCzk: 200,
+  },
 } satisfies Record<string, GameFixture>;
 
 export const allPlayerIds = Object.values(players).map((p) => p.id);

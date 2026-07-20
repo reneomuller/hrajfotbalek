@@ -1,8 +1,17 @@
+import Link from "next/link";
+import { GameCard } from "@/components/GameCard";
+import { getNextGame } from "@/lib/games/queries";
 import { strings } from "@/lib/strings";
 
 const { landing, brand, nav } = strings;
 
-export default function LandingPage() {
+// The next-match block reflects live capacity, so this page renders per
+// request rather than being statically cached at build time.
+export const dynamic = "force-dynamic";
+
+export default async function LandingPage() {
+  const nextGame = await getNextGame();
+
   return (
     <>
       {/* Vignette over the page — matches the reference's fixed overlay. */}
@@ -108,26 +117,34 @@ export default function LandingPage() {
             </div>
 
             {/*
-              ================= PHASE 10 PLACEHOLDER SLOT =================
-              The live next-game block wires in here.
-
-              Phase 10 replaces the contents of this container with the real
-              game card: venue, kickoff time (via `lib/format.ts`, never raw
-              UTC), the live capacity counter, the public roster read through
-              the `game_roster_public` view, and the join/waitlist CTA.
-
-              Keep the container chrome below — border, radius and background
-              are theme tokens matched to the design reference. Only the inner
-              content is Phase 10's to replace.
-              =============================================================
+              Live next-game block (Phase 10). The container chrome is the
+              original slot's — only the inner content is real data now.
             */}
             <div
-              data-phase-10-slot="next-game"
-              className="flex min-h-[220px] items-center justify-center overflow-hidden rounded-panel border border-hairline-volt bg-surface-panel p-6"
+              data-testid="next-game"
+              className="min-h-[220px] overflow-hidden rounded-panel border border-hairline-volt bg-surface-panel p-6"
             >
-              <p className="font-mono text-[11px] tracking-[1px] text-faint">
-                {landing.nextMatchPlaceholder}
-              </p>
+              {nextGame ? (
+                <>
+                  <GameCard
+                    game={nextGame.game}
+                    bookedCount={nextGame.bookedCount}
+                    featured
+                  />
+                  <Link
+                    href={`/game/${nextGame.game.id}`}
+                    className="mt-4 block rounded-cta bg-volt px-6 py-[14px] text-center font-condensed text-cta font-extrabold uppercase tracking-wide text-surface no-underline"
+                  >
+                    {landing.nextMatchCta}
+                  </Link>
+                </>
+              ) : (
+                <div className="flex min-h-[180px] items-center justify-center">
+                  <p className="font-mono text-[11px] tracking-[1px] text-faint">
+                    {strings.games.empty}
+                  </p>
+                </div>
+              )}
             </div>
           </section>
 

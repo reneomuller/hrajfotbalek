@@ -1,0 +1,139 @@
+import { createServerSupabaseClient } from "@/lib/supabase/clients";
+import type { Database } from "@/lib/types/database";
+
+type GameRow = Database["public"]["Tables"]["games"]["Row"];
+type RosterRow = Database["public"]["Views"]["game_roster_public"]["Row"];
+
+/**
+ * Read paths for the player-facing game surfaces.
+ *
+ * WHY THE COUNT COMES FROM `game_roster_public` AND NOT `bookings`:
+ * `bookings` is granted to `authenticated` only and carries own-row RLS, so an
+ * anonymous visitor counting it gets zero rows — not an error, just a silently
+ * wrong counter. `game_roster_public` is the anon-readable projection and it
+ * already filters to active bookings (`reserved` + `confirmed`) on publicly
+ * visible games, which is exactly the capacity definition `create_booking`
+ * enforces. Counting it keeps the displayed number and the RPC's decision in
+ * agreement for signed-out and signed-in visitors alike.
+ *
+ * The counter is computed server-side on load and may be slightly stale by the
+ * time it is read. That is accepted: `create_booking` is the authority on
+ * whether a spot exists, and a stale-by-seconds number is far safer than a
+ * client-side one that drifts.
+ */
+
+export const PUBLIC_GAME_STATUSES = [
+  "published",
+  "full",
+  "played",
+  "settled",
+] as const;
+
+export interface GameWithCount {
+  game: GameRow;
+  bookedCount: number;
+  spotsLeft: number;
+}
+
+/** Counts active roster rows per game id, in one round trip. */
+async function countRosterByGame(gameIds: string[]): Promise<Map<string, number>> {
+  const counts = new Map<string, number>();
+  if (gameIds.length === 0) return counts;
+
+  const supabase = await createServerSupabaseClient();
+  const { data, error } = await supabase
+    .from("game_roster_public")
+    .select("game_id")
+    .in("game_id", gameIds);
+
+  if (error || !data) return counts;
+
+  for (const row of data as Pick<RosterRow, "game_id">[]) {
+    counts.set(row.game_id, (counts.get(row.game_id) ?? 0) + 1);
+  }
+  return counts;
+}
+
+/**
+ * Upcoming publicly-visible games, soonest first.
+ *
+ * The `status` filter is defence in depth, not the enforcement point: the
+ * `games_select_public` RLS policy already hides draft and cancelled games
+ * from anon and authenticated alike. Stating it here as well means a future
+ * policy change cannot silently widen this surface.
+ */
+export async function listUpcomingGames(limit = 20): Promise<GameWithCount[]> {
+  const supabase = await createServerSupabaseClient();
+
+  const { data: games, error } = await supabase
+    .from("games")
+    .select("*")
+    .in("status", ["published", "full"])
+    .gte("starts_at", new Date().toISOString())
+    .order("starts_at", { ascending: true })
+    .limit(limit);
+
+  if (error || !games) return [];
+
+  const counts = await countRosterByGame(games.map((g) => g.id));
+
+  return games.map((game) => {
+    const bookedCount = counts.get(game.id) ?? 0;
+    return {
+      game,
+      bookedCount,
+      spotsLeft: Math.max(0, game.capacity - bookedCount),
+    };
+  });
+}
+
+/** The soonest upcoming game, for the landing next-match block. */
+export async function getNextGame(): Promise<GameWithCount | null> {
+  const games = await listUpcomingGames(1);
+  return games[0] ?? null;
+}
+
+/**
+ * A single game by id, or null when it is not publicly visible.
+ *
+ * A draft or cancelled game returns null through RLS rather than 403, so the
+ * page renders a not-found state — which is the correct disclosure: an
+ * anonymous visitor learns nothing about whether the id exists.
+ */
+export async function getGameById(id: string): Promise<GameWithCount | null> {
+  const supabase = await createServerSupabaseClient();
+
+  const { data: game, error } = await supabase
+    .from("games")
+    .select("*")
+    .eq("id", id)
+    .maybeSingle();
+
+  if (error || !game) return null;
+
+  const counts = await countRosterByGame([game.id]);
+  const bookedCount = counts.get(game.id) ?? 0;
+
+  return {
+    game,
+    bookedCount,
+    spotsLeft: Math.max(0, game.capacity - bookedCount),
+  };
+}
+
+/** The PII-safe roster for a game. */
+export async function getRoster(gameId: string): Promise<RosterRow[]> {
+  const supabase = await createServerSupabaseClient();
+
+  // PII BOUNDARY: this projection is nickname + status only, and must stay
+  // that way. The view cannot expose player_id/email/phone — it does not
+  // project them — but selecting `*` here would still be a latent hazard if
+  // the view were ever widened, so the columns are named explicitly.
+  const { data, error } = await supabase
+    .from("game_roster_public")
+    .select("game_id, nickname, status")
+    .eq("game_id", gameId);
+
+  if (error || !data) return [];
+  return data as RosterRow[];
+}

@@ -52,7 +52,7 @@ export const strings = {
     ],
     nextMatchEyebrow: "//",
     nextMatchLabel: "NEXT MATCH",
-    nextMatchPlaceholder: "Loading the next match…",
+    nextMatchCta: "Claim your spot",
 
     pay: {
       title: "PAY AHEAD",
@@ -114,12 +114,25 @@ export const strings = {
     listTitle: "Upcoming games",
     empty: "No games scheduled yet. Check back soon.",
     spotsLeft: "spots left",
+    spotLeft: "spot left",
     full: "Full",
     joinWaitlist: "Join the waitlist",
     onWaitlist: "You are on the waitlist",
     rosterTitle: "Lineup",
     rosterEmpty: "No one has claimed a spot yet.",
     cancelled: "This game was cancelled.",
+    notFound: "That game does not exist, or is not published yet.",
+    backToGames: "← All games",
+    viewGame: "View game",
+    // Roster badges. The view projects booking status only — `reserved` means
+    // a spot is held but unpaid, `confirmed` means paid or covered by credit.
+    rosterReserved: "holding",
+    rosterConfirmed: "in",
+    capacityLabel: "Capacity",
+    startsLabel: "Kick-off",
+    venueLabel: "Where",
+    priceLabel: "Price",
+    alreadyStarted: "This game has already kicked off.",
   },
 
   booking: {
