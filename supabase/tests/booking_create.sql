@@ -85,13 +85,13 @@ insert into auth.users (id, email) values
   ('d0000000-0000-0000-0000-0000000000d1', 'admin@test.invalid');
 
 insert into public.players (id, nickname, email, auth_user_id, is_seed, is_admin) values
-  ('aaaa0000-0000-0000-0000-00000000000a', 'PlayerA', 'a@test.invalid',     'a0000000-0000-0000-0000-0000000000a1', false, false),
-  ('bbbb0000-0000-0000-0000-00000000000b', 'PlayerB', 'b@test.invalid',     'b0000000-0000-0000-0000-0000000000b1', false, false),
-  ('cccc0000-0000-0000-0000-00000000000c', 'PlayerC', 'c@test.invalid',     'c0000000-0000-0000-0000-0000000000c1', false, false),
-  ('55550000-0000-0000-0000-000000000055', 'SeedBot', 'seed@test.invalid',  '50000000-0000-0000-0000-000000000051', true,  false),
-  ('dddd0000-0000-0000-0000-00000000000d', 'AdminM',  'admin@test.invalid', 'd0000000-0000-0000-0000-0000000000d1', false, true),
+  ('aaaa0000-0000-0000-0000-00000000000a', 'TstPlayerA', 'a@test.invalid',     'a0000000-0000-0000-0000-0000000000a1', false, false),
+  ('bbbb0000-0000-0000-0000-00000000000b', 'TstPlayerB', 'b@test.invalid',     'b0000000-0000-0000-0000-0000000000b1', false, false),
+  ('cccc0000-0000-0000-0000-00000000000c', 'TstPlayerC', 'c@test.invalid',     'c0000000-0000-0000-0000-0000000000c1', false, false),
+  ('55550000-0000-0000-0000-000000000055', 'TstSeedBot', 'seed@test.invalid',  '50000000-0000-0000-0000-000000000051', true,  false),
+  ('dddd0000-0000-0000-0000-00000000000d', 'TstAdminM',  'admin@test.invalid', 'd0000000-0000-0000-0000-0000000000d1', false, true),
   -- Shadow: never logged in, no session, cannot act for itself.
-  ('eeee0000-0000-0000-0000-00000000000e', 'ShadowE', 'shadow@test.invalid', null, false, false);
+  ('eeee0000-0000-0000-0000-00000000000e', 'TstShadowE', 'shadow@test.invalid', null, false, false);
 
 insert into public.games (id, venue, starts_at, capacity, price_czk, status) values
   ('91110000-0000-0000-0000-000000000001', 'Cap Two',    now() + interval '7 days', 2,  200, 'published'),

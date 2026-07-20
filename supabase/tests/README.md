@@ -1,14 +1,20 @@
-# SQL assertion suite — Phases 3 & 4
+# SQL assertion suite — Phases 3–8
 
-Plain-SQL assertion scripts covering the schema, RLS and constraint invariants
-of migrations `20260720100000`, `20260720100100` and `20260720100200`.
+Plain-SQL assertion scripts covering the schema, RLS, RPC and auth invariants.
 
 | File | Covers | Assertions |
 |------|--------|-----------|
-| `01_rls_players_games_events.sql` | players/games/events RLS, cross-user reads, column-scoped UPDATE | 13 |
+| `01_rls_players_games_events.sql` | players/games/events RLS, cross-user reads, column-scoped UPDATE | 14 |
 | `02_rls_bookings_ledger_waitlist.sql` | own-row reads, no client writes, append-only ledger | 13 |
 | `03_constraints_and_vs_sequence.sql` | nickname CHECK, partial unique, waitlist unique, VS format, indexes | 20 |
 | `04_game_roster_public.sql` | view projection, game-status filter, booking-status filter | 10 |
+| `booking_create.sql` | create_booking + admin_create_booking: derivation, capacity, credit, authz | 36 |
+| `booking_cancel.sql` | cancel_booking: ownership, window, credit-for-applied-money, events | 22 |
+| `booking_rpcs_b.sql` | confirm/expire, the 3 reconciliation paths, game transitions, cancel_game | 48 |
+| `auth_rpcs.sql` | shadow claim (exact match), signup validation, auth funnel events | 35 |
+| `concurrency/booking_race.mjs` | genuine 2-connection races: last spot, one wallet across two games | 10 |
+
+Total: 198 SQL assertions + 10 concurrency assertions.
 
 ## Running
 
@@ -38,6 +44,25 @@ stack under Docker. `pgtap` is available on the instance (1.3.3) but not
 installed, and Docker is not present on the current dev machine. These scripts
 assert the same invariants through plain SQL so they run anywhere `psql` does.
 Converting them to pgTAP once a local stack exists is a mechanical change.
+
+## Test isolation — two rules learned the hard way
+
+These suites run against a database that also holds seed fixtures, so they must
+not assume they are alone in it. Both rules below were added after real
+failures that appeared the moment `npm run seed` existed:
+
+1. **Never assert a global `count(*)`.** Scope every count to the file's own
+   fixture ids. `(select count(*) from public.games) = 4` passed happily
+   against an empty database and broke immediately against a seeded one — and
+   it was never really asserting what it claimed to.
+2. **Namespace fixture nicknames.** `players.nickname` is globally unique, so a
+   test fixture called `SeedBot` collides with the seed's `SeedBot` and the
+   whole file aborts on a unique violation. Test nicknames are prefixed `Tst`.
+
+A third, subtler one, in `auth_rpcs.sql`: `reset role` does **not** clear
+`request.jwt.claims`. They are separate GUCs, so an assertion meaning "nobody is
+signed in" silently keeps running as whoever `act_as()` last impersonated. Use
+`act_as_nobody()`.
 
 ## Assertion style
 

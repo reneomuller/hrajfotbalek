@@ -72,9 +72,24 @@ returns integer language sql security definer as $$
   select count(*)::int from public.events e where e.event_type = p_type;
 $$;
 
+-- Counts only THIS FILE'S players: the four fixture rows, plus any row created
+-- by a signup under one of this file's auth users. A global count(*) passed
+-- only against an empty database and broke as soon as `npm run seed` existed.
 create function pg_temp.player_count()
 returns integer language sql security definer as $$
-  select count(*)::int from public.players;
+  select count(*)::int from public.players p
+   where p.id in (
+           'aaaa0000-0000-0000-0000-00000000000a',
+           'bbbb0000-0000-0000-0000-00000000000b',
+           'cccc0000-0000-0000-0000-00000000000c',
+           'dddd0000-0000-0000-0000-00000000000d')
+      or p.auth_user_id in (
+           'a0000000-0000-0000-0000-0000000000a1',
+           'b0000000-0000-0000-0000-0000000000b1',
+           'c0000000-0000-0000-0000-0000000000c1',
+           'd0000000-0000-0000-0000-0000000000d1',
+           'e0000000-0000-0000-0000-0000000000e1',
+           'f0000000-0000-0000-0000-0000000000f1');
 $$;
 
 -- --- fixtures ----------------------------------------------------------------

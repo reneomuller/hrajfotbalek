@@ -111,10 +111,18 @@ select pg_temp.ok(
                       '55550000-0000-0000-0000-000000000005')) = 4,
   'published, full, played and settled games all return rows');
 
+-- Scoped to this file's fixture games: a global count(*) over the view passed
+-- only against an empty database and broke as soon as `npm run seed` existed.
 select pg_temp.ok(
-  (select count(*) from public.game_roster_public) = 4,
-  'the view returns rows for the 4 public games and nothing else',
-  'count=' || (select count(*) from public.game_roster_public));
+  (select count(*) from public.game_roster_public where game_id in (
+     '11110000-0000-0000-0000-000000000001','22220000-0000-0000-0000-000000000002',
+     '33330000-0000-0000-0000-000000000003','44440000-0000-0000-0000-000000000004',
+     '55550000-0000-0000-0000-000000000005','66660000-0000-0000-0000-000000000006')) = 4,
+  'the view returns rows for the 4 public fixture games and nothing else',
+  'count=' || (select count(*) from public.game_roster_public where game_id in (
+     '11110000-0000-0000-0000-000000000001','22220000-0000-0000-0000-000000000002',
+     '33330000-0000-0000-0000-000000000003','44440000-0000-0000-0000-000000000004',
+     '55550000-0000-0000-0000-000000000005','66660000-0000-0000-0000-000000000006')));
 
 -- =============================================================================
 -- booking-status filter

@@ -96,18 +96,35 @@ select pg_temp.ok(
   pg_temp.probe($q$insert into public.events (event_type) values ('auth_completed') returning 1$q$));
 
 -- games IS anon-readable, but only the four public statuses.
+--
+-- Scoped to THIS FILE'S fixture ids. A global count(*) passed only against an
+-- empty database and started failing the moment `npm run seed` existed —
+-- counting rows this file did not create is not what the assertion means.
 select pg_temp.ok(
-  (select count(*) from public.games) = 4,
-  'anon sees exactly the 4 public-status games',
-  'count=' || (select count(*) from public.games));
+  (select count(*) from public.games
+    where id::text like '__________-0000-0000-0000-00000000000%') >= 0,
+  'anon can read the games table at all');
+
+select pg_temp.ok(
+  (select count(*) from public.games where id in (
+     '11110000-0000-0000-0000-000000000001','22220000-0000-0000-0000-000000000002',
+     '33330000-0000-0000-0000-000000000003','44440000-0000-0000-0000-000000000004',
+     '55550000-0000-0000-0000-000000000005','66660000-0000-0000-0000-000000000006')) = 4,
+  'anon sees exactly the 4 public-status fixture games (of 6 created)',
+  'count=' || (select count(*) from public.games where id in (
+     '11110000-0000-0000-0000-000000000001','22220000-0000-0000-0000-000000000002',
+     '33330000-0000-0000-0000-000000000003','44440000-0000-0000-0000-000000000004',
+     '55550000-0000-0000-0000-000000000005','66660000-0000-0000-0000-000000000006')));
 
 select pg_temp.ok(
   not exists (select 1 from public.games where status in ('draft', 'cancelled')),
-  'anon sees no draft or cancelled game');
+  'anon sees no draft or cancelled game anywhere in the table');
 
 select pg_temp.ok(
-  (select count(*) from public.games where status in ('published','full','played','settled')) = 4,
-  'anon sees published, full, played and settled');
+  (select count(distinct status) from public.games where id in (
+     '22220000-0000-0000-0000-000000000002','33330000-0000-0000-0000-000000000003',
+     '44440000-0000-0000-0000-000000000004','55550000-0000-0000-0000-000000000005')) = 4,
+  'anon sees all four public statuses: published, full, played and settled');
 
 reset role;
 

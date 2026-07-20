@@ -11,6 +11,10 @@
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
+    // scripts/ runs directly under Node's native TypeScript stripping, which
+    // resolves imports at runtime and therefore requires the explicit .ts
+    // extension. Safe with noEmit: nothing here is compiled to JS.
+    "allowImportingTsExtensions": true,
     "jsx": "react-jsx",
     "incremental": true,
     "plugins": [

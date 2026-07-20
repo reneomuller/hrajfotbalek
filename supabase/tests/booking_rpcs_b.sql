@@ -79,9 +79,9 @@ insert into auth.users (id, email) values
   ('d0000000-0000-0000-0000-0000000000d1', 'admin@test.invalid');
 
 insert into public.players (id, nickname, email, auth_user_id, is_admin) values
-  ('aaaa0000-0000-0000-0000-00000000000a', 'PlayerA', 'a@test.invalid',     'a0000000-0000-0000-0000-0000000000a1', false),
-  ('bbbb0000-0000-0000-0000-00000000000b', 'PlayerB', 'b@test.invalid',     'b0000000-0000-0000-0000-0000000000b1', false),
-  ('dddd0000-0000-0000-0000-00000000000d', 'AdminM',  'admin@test.invalid', 'd0000000-0000-0000-0000-0000000000d1', true);
+  ('aaaa0000-0000-0000-0000-00000000000a', 'TstPlayerA', 'a@test.invalid',     'a0000000-0000-0000-0000-0000000000a1', false),
+  ('bbbb0000-0000-0000-0000-00000000000b', 'TstPlayerB', 'b@test.invalid',     'b0000000-0000-0000-0000-0000000000b1', false),
+  ('dddd0000-0000-0000-0000-00000000000d', 'TstAdminM',  'admin@test.invalid', 'd0000000-0000-0000-0000-0000000000d1', true);
 
 insert into public.games (id, venue, starts_at, capacity, price_czk, status) values
   ('91110000-0000-0000-0000-000000000001', 'Exact',      now() + interval '7 days', 10, 200, 'published'),

@@ -9,6 +9,8 @@
     "lint": "eslint",
     "test:unit": "vitest run --passWithNoTests",
     "test:e2e": "playwright test",
+    "seed": "node --env-file=.env.local scripts/seed.ts",
+    "seed:reset": "node --env-file=.env.local scripts/seed.ts --reset",
     "db:types": "supabase gen types typescript --local > lib/types/database.ts"
   },
   "dependencies": {

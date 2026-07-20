@@ -81,9 +81,9 @@ insert into auth.users (id, email) values
   ('50000000-0000-0000-0000-000000000051', 'seed@test.invalid');
 
 insert into public.players (id, nickname, email, auth_user_id, is_seed) values
-  ('aaaa0000-0000-0000-0000-00000000000a', 'PlayerA', 'a@test.invalid',    'a0000000-0000-0000-0000-0000000000a1', false),
-  ('bbbb0000-0000-0000-0000-00000000000b', 'PlayerB', 'b@test.invalid',    'b0000000-0000-0000-0000-0000000000b1', false),
-  ('55550000-0000-0000-0000-000000000055', 'SeedBot', 'seed@test.invalid', '50000000-0000-0000-0000-000000000051', true);
+  ('aaaa0000-0000-0000-0000-00000000000a', 'TstPlayerA', 'a@test.invalid',    'a0000000-0000-0000-0000-0000000000a1', false),
+  ('bbbb0000-0000-0000-0000-00000000000b', 'TstPlayerB', 'b@test.invalid',    'b0000000-0000-0000-0000-0000000000b1', false),
+  ('55550000-0000-0000-0000-000000000055', 'TstSeedBot', 'seed@test.invalid', '50000000-0000-0000-0000-000000000051', true);
 
 insert into public.games (id, venue, starts_at, capacity, price_czk, status) values
   ('91110000-0000-0000-0000-000000000001', 'Unpaid Game',  now() + interval '7 days', 10, 200, 'published'),
