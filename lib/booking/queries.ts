@@ -1,3 +1,5 @@
+import { canOfferCancel } from "@/lib/booking/badges";
+import { policy } from "@/lib/policy";
 import { createServerSupabaseClient } from "@/lib/supabase/clients";
 import type { Database } from "@/lib/types/database";
 
@@ -7,6 +9,13 @@ type GameRow = Database["public"]["Tables"]["games"]["Row"];
 export interface BookingWithGame {
   booking: BookingRow;
   game: GameRow;
+  /**
+   * Whether to OFFER the cancel affordance. Mirrors `cancel_booking`; the RPC
+   * remains the enforcement authority and is called regardless. Decided here
+   * rather than during render because reading the clock in a component is
+   * impure — same reason `hasStarted` lives in lib/games/queries.ts.
+   */
+  canCancel: boolean;
 }
 
 /**
@@ -39,7 +48,16 @@ export async function getOwnBookingWithGame(
 
   if (gameError || !game) return null;
 
-  return { booking, game };
+  return { booking, game, canCancel: decideCanCancel(booking, game, Date.now()) };
+}
+
+function decideCanCancel(booking: BookingRow, game: GameRow, now: number): boolean {
+  return canOfferCancel(
+    booking.status,
+    game.starts_at,
+    now,
+    policy.cancellation.cutoffHoursBeforeStart,
+  );
 }
 
 /** Every booking the signed-in player owns, soonest game first. */
@@ -57,11 +75,14 @@ export async function listOwnBookings(): Promise<BookingWithGame[]> {
   const { data: games } = await supabase.from("games").select("*").in("id", gameIds);
 
   const byId = new Map((games ?? []).map((g) => [g.id, g]));
+  const now = Date.now();
 
   return bookings
     .map((booking) => {
       const game = byId.get(booking.game_id);
-      return game ? { booking, game } : null;
+      return game
+        ? { booking, game, canCancel: decideCanCancel(booking, game, now) }
+        : null;
     })
     .filter((row): row is BookingWithGame => row !== null)
     .sort(
