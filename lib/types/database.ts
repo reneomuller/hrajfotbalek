@@ -84,6 +84,26 @@ export type EventType =
   | "reminder_sent"
   | "attendance_marked";
 
+/**
+ * Return contract of create_booking / admin_create_booking (SQL composite
+ * public.booking_result).
+ *
+ * `payment_method` is the DERIVED method, which may differ from what the
+ * caller asked for: a seed player gets `seed_free`, a full balance gets
+ * `credit`. The UI must branch on this value rather than on the choice it
+ * sent — see the Phase 11 rule about never predicting the outcome from a
+ * locally-held balance.
+ */
+export interface BookingResult {
+  id: string;
+  status: BookingStatus;
+  payment_method: PaymentMethod;
+  payment_code: number | null;
+  price_czk: number;
+  credit_applied_czk: number;
+  amount_due_czk: number;
+}
+
 export interface Database {
   public: {
     Tables: {
@@ -237,6 +257,30 @@ export interface Database {
       next_payment_code: {
         Args: Record<string, never>;
         Returns: number;
+      };
+
+      /**
+       * Owner-only. Identity comes from auth.uid(); p_player_id exists only to
+       * be rejected when it names anyone else, so it is deliberately absent
+       * from the client-facing arg type below.
+       */
+      create_booking: {
+        Args: {
+          p_game_id: string;
+          p_payment_method: ClientPaymentMethod;
+          p_from_waitlist_id?: string | null;
+        };
+        Returns: BookingResult;
+      };
+
+      /** Admin/service-role act-on-behalf entry point. */
+      admin_create_booking: {
+        Args: {
+          p_game_id: string;
+          p_player_id: string;
+          p_payment_method: ClientPaymentMethod;
+        };
+        Returns: BookingResult;
       };
     };
 
