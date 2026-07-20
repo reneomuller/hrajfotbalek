@@ -38,8 +38,27 @@ export async function GET(request: NextRequest) {
   const action = url.searchParams.get("action") ?? "login";
   const next = url.searchParams.get("next");
 
+  /*
+   * A failed exchange goes to /auth/error, NOT to /login.
+   *
+   * Redirecting a broken link to /login renders a page identical to the one a
+   * signed-out visitor sees, so the failure is invisible: /login never read the
+   * `?error=` it was handed. That is what made this bug survive several rounds
+   * of diagnosis — no error on screen, and (before this route logged anything)
+   * no error in the dev log either.
+   */
+  const failed = (reason: string, detail?: string) => {
+    console.error("magic-link verification failed", reason, detail ?? "");
+    const target = new URL("/auth/error", url.origin);
+    target.searchParams.set("reason", reason);
+    if (detail) target.searchParams.set("detail", detail);
+    return NextResponse.redirect(target);
+  };
+
   if (!code && !tokenHash) {
-    return NextResponse.redirect(new URL("/login?error=missing_code", url.origin));
+    // Reaching the callback with no credential at all usually means the link
+    // carried its token in the URL fragment, which never reaches the server.
+    return failed("missing_code", "no code or token_hash on the callback URL");
   }
 
   const supabase = await createServerSupabaseClient();
@@ -49,12 +68,7 @@ export async function GET(request: NextRequest) {
     : await supabase.auth.exchangeCodeForSession(code!);
 
   if (exchangeError) {
-    // Logged because the two failure modes are indistinguishable to the user
-    // but call for completely different fixes: an expired/used link is normal
-    // and self-service, whereas a missing code verifier means the link was
-    // opened in a different browser and the template should move to token_hash.
-    console.error("magic-link verification failed", exchangeError.message);
-    return NextResponse.redirect(new URL("/login?error=invalid_code", url.origin));
+    return failed("invalid_code", exchangeError.message);
   }
 
   // `record_auth_completed` returns whether a player row already exists.

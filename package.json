@@ -9,6 +9,7 @@
     "lint": "eslint",
     "test:unit": "vitest run --passWithNoTests",
     "test:e2e": "playwright test",
+    "test:auth-flow": "node --env-file=.env.local scripts/repro-auth-callback.mjs",
     "seed": "node --env-file=.env.local scripts/seed.ts",
     "seed:reset": "node --env-file=.env.local scripts/seed.ts --reset",
     "db:types": "supabase gen types typescript --local > lib/types/database.ts"

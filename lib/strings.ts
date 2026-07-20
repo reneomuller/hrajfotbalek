@@ -89,6 +89,12 @@ export const strings = {
     emailInvalid: "That does not look like an email address.",
     linkSendFailed: "We could not send the link. Please try again.",
     callbackFailed: "That sign-in link is invalid or has already been used.",
+    callbackErrorTitle: "Sign-in link did not work",
+    callbackRetry: "Request a new link",
+    // Shown alongside the friendly copy. A failed exchange has several causes
+    // that look identical to the user but need different fixes, so the
+    // underlying reason is surfaced rather than swallowed.
+    callbackDetailLabel: "Technical detail",
 
     signupTitle: "Choose your nickname",
     signupLede: "This is the name that appears in the lineup.",

@@ -67,9 +67,22 @@ begin
   perform set_config('request.jwt.claims', '', true);
 end $$;
 
+-- Counts only THIS TRANSACTION'S events, for the same reason player_count()
+-- below counts only this file's players: a global count(*) passes against an
+-- empty database and breaks the moment anything else writes an event. The
+-- funnel RPCs are exercised by real logins and by scripts/repro-auth-callback,
+-- both of which append to `events` permanently — events is append-only, so
+-- those rows never go away and the global count only ever climbs.
+--
+-- The baseline is captured here, before any fixture runs, so the delta is
+-- exactly what this file caused.
+create temp table _ev_baseline on commit drop as
+  select e.event_type, count(*)::int as n from public.events e group by e.event_type;
+
 create function pg_temp.ev_count(p_type text)
 returns integer language sql security definer as $$
-  select count(*)::int from public.events e where e.event_type = p_type;
+  select (select count(*)::int from public.events e where e.event_type = p_type)
+       - coalesce((select b.n from _ev_baseline b where b.event_type = p_type), 0);
 $$;
 
 -- Counts only THIS FILE'S players: the four fixture rows, plus any row created
