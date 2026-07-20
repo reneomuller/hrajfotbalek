@@ -164,6 +164,7 @@ export const strings = {
   payment: {
     qrTitle: "Scan to pay",
     qrHint: "Open your banking app and scan. The payment identifies itself.",
+    account: "Account",
     variableSymbol: "Variable symbol",
     amount: "Amount",
     paidAlready: "I have paid",

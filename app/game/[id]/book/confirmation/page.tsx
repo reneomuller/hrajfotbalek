@@ -1,7 +1,9 @@
 import Link from "next/link";
+import { QrPayment } from "@/components/QrPayment";
 import { requireCurrentPlayer } from "@/lib/auth/session";
 import { getOwnBookingWithGame } from "@/lib/booking/queries";
 import { formatCzk, formatGameDateTime } from "@/lib/format";
+import { amountDueCzk, paymentIban, shouldRenderQr } from "@/lib/payments/spd";
 import { strings } from "@/lib/strings";
 
 export const dynamic = "force-dynamic";
@@ -27,7 +29,7 @@ export default async function ConfirmationPage({
   const { id: gameId } = await params;
   const query = await searchParams;
 
-  await requireCurrentPlayer(`/game/${gameId}`);
+  const player = await requireCurrentPlayer(`/game/${gameId}`);
 
   const raw = query.booking;
   const bookingId = Array.isArray(raw) ? raw[0] : raw;
@@ -55,8 +57,9 @@ export default async function ConfirmationPage({
   // Branch on the DERIVED method the RPC returned, never on what was sent.
   const isCredit = booking.payment_method === "credit";
   const isSeed = booking.payment_method === "seed_free";
-  const amountDue = booking.price_czk - booking.credit_applied_czk;
+  const amountDue = amountDueCzk(booking.price_czk, booking.credit_applied_czk);
   const needsPayment = booking.status === "reserved" && amountDue > 0;
+  const showQr = booking.status === "reserved" && shouldRenderQr(booking);
 
   return (
     <main className="relative z-10 mx-auto w-full max-w-shell px-gutter pb-16 pt-24">
@@ -118,24 +121,18 @@ export default async function ConfirmationPage({
             )}
 
             {/*
-              ================= PHASE 12 SLOT — QR PAYMENT =================
-              The SPD 1.0 QR and its plain-text fallback (account, amount, VS)
-              render here for `payment_method = 'qr'`.
-              ==============================================================
+              The QR renders only for an unpaid `qr` booking carrying a VS and
+              a non-zero amount — `shouldRenderQr` owns that decision so the
+              suppression rules live next to the string builder they guard.
             */}
-            {booking.payment_method === "qr" && booking.payment_code !== null && (
-              <div className="mt-4 rounded-card border border-hairline bg-surface-card p-4">
-                <div className="flex items-baseline justify-between gap-3">
-                  <span className="font-mono text-[12px] text-muted">
-                    {strings.payment.variableSymbol}
-                  </span>
-                  <span
-                    data-testid="variable-symbol"
-                    className="font-mono text-[15px] tracking-[1px] text-bone"
-                  >
-                    {booking.payment_code}
-                  </span>
-                </div>
+            {showQr && (
+              <div className="mt-4">
+                <QrPayment
+                  iban={paymentIban()}
+                  amountCzk={amountDue}
+                  variableSymbol={booking.payment_code!}
+                  nickname={player.nickname}
+                />
               </div>
             )}
           </div>
