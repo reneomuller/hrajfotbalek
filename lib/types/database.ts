@@ -104,6 +104,15 @@ export interface BookingResult {
   amount_due_czk: number;
 }
 
+/** Return contract of cancel_booking (SQL composite public.cancel_result). */
+export interface CancelResult {
+  id: string;
+  status: BookingStatus;
+  /** Credit issued for money actually applied. 0 for an unpaid reservation. */
+  credit_issued_czk: number;
+  cancel_lead_hours: number;
+}
+
 export interface Database {
   public: {
     Tables: {
@@ -281,6 +290,12 @@ export interface Database {
           p_payment_method: ClientPaymentMethod;
         };
         Returns: BookingResult;
+      };
+
+      /** Owner-only. Issues credit for money actually applied; never cash. */
+      cancel_booking: {
+        Args: { p_booking_id: string };
+        Returns: CancelResult;
       };
     };
 
