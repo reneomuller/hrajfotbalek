@@ -1,8 +1,10 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { Roster } from "@/components/Roster";
 import { SpotsCounter } from "@/components/SpotsCounter";
 import { formatCzk, formatGameDateTime } from "@/lib/format";
 import { getGameById, getRoster } from "@/lib/games/queries";
+import { siteUrl } from "@/lib/site";
 import { strings } from "@/lib/strings";
 
 // The primary surface players land on from a shared WhatsApp link. It must
@@ -11,6 +13,40 @@ export const dynamic = "force-dynamic";
 
 interface GamePageProps {
   params: Promise<{ id: string }>;
+}
+
+/**
+ * Open Graph tags for the WhatsApp preview card.
+ *
+ * `venue` is admin-supplied free text reaching an HTML *attribute* here, which
+ * is a different grammar from the JSX text children elsewhere on this page.
+ * Next.js serializes these values into `content="…"` and escapes them for that
+ * position — the important part is that the raw string is handed to the
+ * metadata API rather than being concatenated into markup by hand, which is
+ * what would reintroduce the injection.
+ */
+export async function generateMetadata({ params }: GamePageProps): Promise<Metadata> {
+  const { id } = await params;
+  const result = await getGameById(id);
+
+  if (!result) {
+    return { title: strings.games.notFound, description: strings.meta.description };
+  }
+
+  const { game, spotsLeft } = result;
+  const title = `${game.venue} — ${formatGameDateTime(game.starts_at)}`;
+  const description = spotsLeft > 0
+    ? `${spotsLeft} ${spotsLeft === 1 ? strings.games.spotLeft : strings.games.spotsLeft} · ${formatCzk(game.price_czk)}`
+    : `${strings.games.full} · ${formatCzk(game.price_czk)}`;
+
+  const url = `${await siteUrl()}/game/${game.id}`;
+
+  return {
+    title,
+    description,
+    openGraph: { title, description, url, type: "website" },
+    twitter: { card: "summary_large_image", title, description },
+  };
 }
 
 export default async function GameDetailPage({ params }: GamePageProps) {

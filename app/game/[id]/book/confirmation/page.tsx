@@ -139,10 +139,17 @@ export default async function ConfirmationPage({
         )}
 
         {/*
-          ================= PHASE 13 SLOT — .ics DOWNLOAD =================
-          The "Add to calendar" link to /game/[id]/ics renders here.
-          =================================================================
+          Calendar download. A plain anchor rather than a Link: this is a file
+          download, not a client-side navigation, and prefetching it would be
+          a pointless request for an attachment.
         */}
+        <a
+          href={`/game/${game.id}/ics`}
+          data-testid="ics-link"
+          className="mt-8 block rounded-cta border border-hairline-volt px-6 py-4 text-center font-condensed text-cta font-extrabold uppercase tracking-wide text-volt no-underline"
+        >
+          {strings.booking.addToCalendar}
+        </a>
 
         <Link
           href={`/game/${game.id}`}

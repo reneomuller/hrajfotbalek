@@ -1,9 +1,30 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { GameCard } from "@/components/GameCard";
 import { getNextGame } from "@/lib/games/queries";
+import { siteUrl } from "@/lib/site";
 import { strings } from "@/lib/strings";
 
 const { landing, brand, nav } = strings;
+
+export async function generateMetadata(): Promise<Metadata> {
+  const url = await siteUrl();
+  return {
+    title: strings.meta.title,
+    description: strings.meta.description,
+    openGraph: {
+      title: strings.meta.title,
+      description: strings.meta.description,
+      url,
+      type: "website",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: strings.meta.title,
+      description: strings.meta.description,
+    },
+  };
+}
 
 // The next-match block reflects live capacity, so this page renders per
 // request rather than being statically cached at build time.
