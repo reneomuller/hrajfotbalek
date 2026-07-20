@@ -1,0 +1,33 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/**
+ * Volt-on-black base layer, rebuilt from the `index.html` reference.
+ * Every value here resolves through a `tailwind.config.ts` token —
+ * no inline hex is permitted in this file.
+ */
+
+@layer base {
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply m-0 bg-ink text-bone font-sans antialiased overflow-x-hidden;
+  }
+
+  ::selection {
+    @apply bg-volt text-surface;
+  }
+
+  input {
+    @apply font-sans;
+  }
+}
