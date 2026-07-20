@@ -140,7 +140,10 @@ export const strings = {
     nicknameLabel: "Nickname",
     nicknameHint: "Letters, numbers, spaces, _ and - · up to 20 characters",
     payByQr: "Pay by QR",
+    payByQrHint: "Scan a code in your banking app. Your spot is held until you pay.",
     payByCash: "Pay cash on the pitch",
+    payByCashHint: "Bring cash. The organizer confirms you on the day.",
+    choosePayment: "How do you want to pay?",
     confirmBooking: "Confirm booking",
     reserved: "Spot reserved",
     confirmed: "Payment confirmed",
@@ -151,6 +154,11 @@ export const strings = {
     cancelled: "Booking cancelled",
     addToCalendar: "Add to calendar",
     share: "Share",
+    // Full-credit and seed outcomes: confirmed instantly, nothing to pay.
+    coveredByCredit: "Your credit covered this game in full. Nothing to pay.",
+    coveredBySeed: "You are in. Nothing to pay for this one.",
+    backToGame: "← Back to the game",
+    bookingNotFound: "We could not find that booking.",
   },
 
   payment: {
@@ -174,12 +182,19 @@ export const strings = {
 
   errors: {
     generic: "Something went wrong. Please try again.",
-    capacityFull: "That game just filled up.",
+    // Losing a capacity race is a normal outcome here, not an exception — the
+    // copy says what happened and what is still true, rather than apologising.
+    capacityFull: "That spot was taken while you were deciding. You are still on the waitlist.",
+    capacityFullTitle: "Spot already taken",
     duplicateActiveBooking: "You already have a spot in this game.",
+    duplicateActiveBookingTitle: "Already booked",
     creditNegativeBlocked: "Not enough credit for that booking.",
     insufficientPermission: "You are not allowed to do that.",
     cancelWindowClosed: "It is too late to cancel this booking.",
     notSignedIn: "Please sign in first.",
+    gameNotBookable: "This game is not open for booking.",
+    gameAlreadyStarted: "This game has already kicked off.",
+    tryAgain: "Try again",
   },
 
   common: {

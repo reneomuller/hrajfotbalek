@@ -33,6 +33,26 @@ export interface GameWithCount {
   game: GameRow;
   bookedCount: number;
   spotsLeft: number;
+  /**
+   * Whether kick-off has passed.
+   *
+   * Computed here rather than in a component: reading the clock during render
+   * is impure, and the value is only ever used to mirror a rule the RPCs
+   * enforce anyway. The query layer already runs per request, so this is the
+   * honest place for it.
+   */
+  hasStarted: boolean;
+  isCancelled: boolean;
+}
+
+function decorate(game: GameRow, bookedCount: number, now: number): GameWithCount {
+  return {
+    game,
+    bookedCount,
+    spotsLeft: Math.max(0, game.capacity - bookedCount),
+    hasStarted: new Date(game.starts_at).getTime() <= now,
+    isCancelled: game.status === "cancelled",
+  };
 }
 
 /** Counts active roster rows per game id, in one round trip. */
@@ -76,15 +96,9 @@ export async function listUpcomingGames(limit = 20): Promise<GameWithCount[]> {
   if (error || !games) return [];
 
   const counts = await countRosterByGame(games.map((g) => g.id));
+  const now = Date.now();
 
-  return games.map((game) => {
-    const bookedCount = counts.get(game.id) ?? 0;
-    return {
-      game,
-      bookedCount,
-      spotsLeft: Math.max(0, game.capacity - bookedCount),
-    };
-  });
+  return games.map((game) => decorate(game, counts.get(game.id) ?? 0, now));
 }
 
 /** The soonest upcoming game, for the landing next-match block. */
@@ -112,13 +126,7 @@ export async function getGameById(id: string): Promise<GameWithCount | null> {
   if (error || !game) return null;
 
   const counts = await countRosterByGame([game.id]);
-  const bookedCount = counts.get(game.id) ?? 0;
-
-  return {
-    game,
-    bookedCount,
-    spotsLeft: Math.max(0, game.capacity - bookedCount),
-  };
+  return decorate(game, counts.get(game.id) ?? 0, Date.now());
 }
 
 /** The PII-safe roster for a game. */

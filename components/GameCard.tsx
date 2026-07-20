@@ -5,8 +5,10 @@ import type { Database } from "@/lib/types/database";
 
 type GameRow = Database["public"]["Tables"]["games"]["Row"];
 
-export interface GameCardGame
-  extends Pick<GameRow, "id" | "venue" | "starts_at" | "capacity" | "price_czk" | "status"> {}
+export type GameCardGame = Pick<
+  GameRow,
+  "id" | "venue" | "starts_at" | "capacity" | "price_czk" | "status"
+>;
 
 export interface GameCardProps {
   game: GameCardGame;

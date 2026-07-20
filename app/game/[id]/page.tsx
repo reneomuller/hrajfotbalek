@@ -33,11 +33,9 @@ export default async function GameDetailPage({ params }: GamePageProps) {
     );
   }
 
-  const { game, bookedCount, spotsLeft } = result;
+  const { game, bookedCount, spotsLeft, hasStarted, isCancelled } = result;
   const roster = await getRoster(game.id);
 
-  const isCancelled = game.status === "cancelled";
-  const hasStarted = new Date(game.starts_at).getTime() <= Date.now();
   const isFull = spotsLeft === 0;
   // A full game still takes waitlist joins; a started or cancelled one takes
   // nothing. `create_booking` enforces all three — this only mirrors it.
