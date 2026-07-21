@@ -234,6 +234,102 @@ export const strings = {
     tryAgain: "Try again",
   },
 
+  /**
+   * Transactional email copy.
+   *
+   * EIGHT in-app templates live here. The ninth transactional email in the
+   * spec — the magic link — is delivered by Supabase's own mailer and has
+   * deliberately NO entry in this table and no template in the codebase.
+   *
+   * Window figures (12h / 24h) are never written as literals here: the
+   * templates interpolate them from lib/policy.ts so a v2 policy bump moves
+   * the copy with it.
+   */
+  emails: {
+    common: {
+      when: "When",
+      where: "Where",
+      amountDue: "Amount due",
+      variableSymbol: "Variable symbol",
+      account: "Account",
+      credit: "Credit",
+      viewGame: "View the game",
+      viewAccount: "Open my account",
+      findAnother: "Find another game",
+      signOff: "See you on the pitch.",
+    },
+
+    spotHeld: {
+      subject: "Spot held — pay with this QR",
+      heading: "Your spot is held",
+      body:
+        "Scan the QR in your banking app, or pay by hand using the details below. " +
+        "Your spot is held until the payment lands.",
+      spdLabel: "Payment string (SPD)",
+    },
+
+    paymentConfirmed: {
+      subject: "Payment confirmed — you are in",
+      heading: "Payment confirmed",
+      body: "You are in the lineup. The calendar invite is attached.",
+    },
+
+    nudge: {
+      subject: "Pay now or lose your spot",
+      heading: "Someone is waiting for your spot",
+      // {hours} is interpolated from lib/policy.ts, never hardcoded.
+      body:
+        "This game is full and players are on the waitlist. Pay online within " +
+        "{hours}h or the spot goes to the next player.",
+    },
+
+    expiry: {
+      subject: "Your unpaid spot has expired",
+      heading: "Spot released",
+      body:
+        "The reservation went unpaid, so the spot has been released to the " +
+        "waitlist. You can still grab another game.",
+    },
+
+    reminder: {
+      subject: "See you tomorrow",
+      heading: "Your game is coming up",
+      // {hours} is interpolated from lib/policy.ts, never hardcoded.
+      body: "Kick-off is within {hours}h. Here are the details again.",
+    },
+
+    waitlistSpotOpen: {
+      subject: "A spot just opened",
+      heading: "A spot just opened",
+      body:
+        "A spot has come free and everyone on the waitlist has been told at the " +
+        "same time — first to claim it gets it.",
+      cta: "Claim the spot",
+    },
+
+    cancellationCredit: {
+      subject: "Booking cancelled — credit added",
+      heading: "Booking cancelled",
+      body:
+        "Your booking is cancelled and what you paid is back in your wallet as " +
+        "credit. It applies automatically to your next booking.",
+      noCreditBody:
+        "Your booking is cancelled. Nothing had been paid, so there is no " +
+        "credit to return.",
+    },
+
+    gameCancelled: {
+      subject: "Game cancelled",
+      heading: "This game is off",
+      body:
+        "The organizer cancelled this game. Anything you had paid is back in " +
+        "your wallet as credit and applies automatically to your next booking.",
+      noCreditBody:
+        "The organizer cancelled this game. Nothing had been paid, so there is " +
+        "no credit to return.",
+    },
+  },
+
   common: {
     back: "Back",
     close: "Close",

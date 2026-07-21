@@ -12,12 +12,20 @@
  * means a misconfigured environment mails real players.
  */
 
+export interface EmailAttachment {
+  filename: string;
+  /** UTF-8 content. The only attachment type in Phase 1 is a `.ics` file. */
+  content: string;
+  contentType: string;
+}
+
 export interface EmailPayload {
   to: string;
   subject: string;
   html: string;
   text?: string;
   replyTo?: string;
+  attachments?: EmailAttachment[];
 }
 
 export type SendEmailResult =
@@ -38,10 +46,14 @@ export function isDryRun(): boolean {
 
 export async function sendEmail(payload: EmailPayload): Promise<SendEmailResult> {
   if (isDryRun()) {
+    // The dry-run log IS the M3 verification surface: the whole lifecycle is
+    // observed through these lines before Resend's DNS verifies. They carry
+    // enough to identify which email fired for whom, and never the body.
     console.info("[sendEmail:dry-run] would send", {
       to: payload.to,
       subject: payload.subject,
       bytes: payload.html.length,
+      attachments: payload.attachments?.map((a) => a.filename) ?? [],
     });
     return { delivered: false, reason: "dry_run", payload };
   }
@@ -68,6 +80,15 @@ export async function sendEmail(payload: EmailPayload): Promise<SendEmailResult>
       html: payload.html,
       ...(payload.text ? { text: payload.text } : {}),
       ...(payload.replyTo ? { reply_to: payload.replyTo } : {}),
+      ...(payload.attachments?.length
+        ? {
+            attachments: payload.attachments.map((a) => ({
+              filename: a.filename,
+              content: Buffer.from(a.content, 'utf8').toString('base64'),
+              content_type: a.contentType,
+            })),
+          }
+        : {}),
     }),
   });
 
@@ -78,4 +99,29 @@ export async function sendEmail(payload: EmailPayload): Promise<SendEmailResult>
 
   const body = (await response.json()) as { id: string };
   return { delivered: true, id: body.id };
+}
+
+/**
+ * Renders a template and sends it through the same seam.
+ *
+ * Templates are pure functions of their props with no knowledge of when they
+ * fire — that is the dispatch layer's job — so this is the only place a
+ * rendered email meets a recipient address.
+ */
+export async function sendRenderedEmail(
+  to: string,
+  rendered: {
+    subject: string;
+    html: string;
+    text?: string;
+    attachments?: EmailAttachment[];
+  },
+): Promise<SendEmailResult> {
+  return sendEmail({
+    to,
+    subject: rendered.subject,
+    html: rendered.html,
+    text: rendered.text,
+    attachments: rendered.attachments,
+  });
 }

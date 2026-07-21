@@ -7,6 +7,9 @@ export default defineConfig({
       "@": fileURLToPath(new URL("./", import.meta.url)),
     },
   },
+  // Email templates are JSX rendered with react-dom/server; esbuild needs the
+  // automatic runtime to transform them under vitest.
+  esbuild: { jsx: "automatic" },
   test: {
     environment: "node",
     // E2E lives in `e2e/` and is driven by Playwright, not Vitest.
