@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { GameCard } from "@/components/GameCard";
-import { getNextGame } from "@/lib/games/queries";
+import { NextMatchCard } from "@/components/NextMatchCard";
+import { PayQr } from "@/components/PayQr";
+import { PitchBackground } from "@/components/PitchBackground";
+import { getNextGame, getRoster } from "@/lib/games/queries";
 import { siteUrl } from "@/lib/site";
 import { strings } from "@/lib/strings";
 
@@ -32,9 +34,15 @@ export const dynamic = "force-dynamic";
 
 export default async function LandingPage() {
   const nextGame = await getNextGame();
+  // The reference shows the lineup as overlapping avatars, so the block needs
+  // nicknames as well as the count. Same anon-readable view the game page uses.
+  const roster = nextGame ? await getRoster(nextGame.game.id) : [];
 
   return (
     <>
+      {/* Animated pitch + particle field, behind everything. */}
+      <PitchBackground />
+
       {/* Vignette over the page — matches the reference's fixed overlay. */}
       <div
         aria-hidden
@@ -118,47 +126,34 @@ export default async function LandingPage() {
             </div>
 
             {/*
-              Live next-game block (Phase 10). The container chrome is the
-              original slot's — only the inner content is real data now.
+              The reference's match card, wired to live data: date, counter,
+              capacity bar, lineup avatars and spots-left all come from the DB.
             */}
-            <div
-              data-testid="next-game"
-              className="min-h-[220px] overflow-hidden rounded-panel border border-hairline-volt bg-surface-panel p-6"
-            >
-              {nextGame ? (
-                <>
-                  <GameCard
-                    game={nextGame.game}
-                    bookedCount={nextGame.bookedCount}
-                    featured
-                  />
-                  <Link
-                    href={`/game/${nextGame.game.id}`}
-                    className="mt-4 block rounded-cta bg-volt px-6 py-[14px] text-center font-condensed text-cta font-extrabold uppercase tracking-wide text-surface no-underline"
-                  >
-                    {landing.nextMatchCta}
-                  </Link>
-                </>
-              ) : (
-                <div className="flex min-h-[180px] items-center justify-center">
-                  <p className="font-mono text-[11px] tracking-[1px] text-faint">
-                    {strings.games.empty}
-                  </p>
-                </div>
-              )}
-            </div>
+            {nextGame ? (
+              <NextMatchCard
+                game={nextGame.game}
+                bookedCount={nextGame.bookedCount}
+                roster={roster.map((row) => row.nickname)}
+              />
+            ) : (
+              <div
+                data-testid="next-game"
+                className="flex min-h-[220px] items-center justify-center overflow-hidden rounded-panel border border-hairline-volt bg-surface-panel p-6"
+              >
+                <p className="font-mono text-[11px] tracking-[1px] text-faint">
+                  {strings.games.empty}
+                </p>
+              </div>
+            )}
           </section>
 
           {/* PAY + COMMUNITY */}
           <section className="pt-4">
             <div className="flex flex-wrap items-stretch gap-4">
-              <div className="flex min-w-[270px] flex-1 flex-wrap items-center gap-[18px] rounded-[20px] border border-hairline-strong bg-surface-card p-[22px]">
-                <div className="h-[104px] w-[104px] flex-none rounded-[14px] bg-white p-[6px]">
-                  {/* Static illustrative QR; the real per-booking SPD code is Phase 12. */}
-                  <div className="h-full w-full rounded-control bg-qr-checker bg-[length:16px_16px]" />
-                </div>
+              <div className="flex min-w-[270px] flex-1 flex-wrap items-center gap-[18px] rounded-[20px] border border-hairline-panel bg-surface-card-strong p-[22px]">
+                <PayQr />
                 <div className="min-w-[160px] flex-1">
-                  <div className="font-display text-[clamp(20px,4.5vw,26px)] uppercase tracking-[.3px] text-white">
+                  <div className="font-display text-card-title uppercase text-white">
                     {landing.pay.title}
                   </div>
                   <div className="mt-[6px] max-w-[300px] text-[13px] leading-[1.5] text-muted">
@@ -168,15 +163,15 @@ export default async function LandingPage() {
                     <span className="font-mono text-[24px] font-bold text-volt">
                       150 {strings.common.czk}
                     </span>
-                    <span className="text-[12px] text-faint">
+                    <span className="text-[12px] text-subtle">
                       {landing.pay.perGame}
                     </span>
                   </div>
                 </div>
               </div>
 
-              <div className="flex min-w-[270px] flex-1 flex-col justify-center rounded-[20px] border border-hairline-volt bg-surface-card p-[22px] text-center">
-                <h3 className="m-0 mb-[6px] font-display text-[clamp(20px,4.6vw,28px)] uppercase text-white">
+              <div className="flex min-w-[270px] flex-1 flex-col justify-center rounded-[20px] border border-hairline-volt-soft bg-surface-card-strong p-[22px] text-center">
+                <h3 className="m-0 mb-[6px] font-display text-community-title uppercase text-white">
                   {landing.community.title}
                 </h3>
                 <p className="mx-auto mb-4 max-w-[320px] text-[13px] text-muted-dim">
@@ -187,7 +182,7 @@ export default async function LandingPage() {
                     href={landing.community.whatsappUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-[9px] rounded-cta border border-hairline-strong px-5 py-[13px] font-condensed text-[15px] font-bold tracking-wide text-bone no-underline transition hover:border-whatsapp"
+                    className="flex items-center gap-[9px] rounded-cta border border-hairline-link px-5 py-[13px] font-condensed text-[15px] font-bold tracking-wide text-bone no-underline transition hover:border-whatsapp"
                   >
                     <span className="inline-block h-5 w-5 rounded-full bg-whatsapp" />
                     {landing.community.whatsapp}
@@ -196,7 +191,7 @@ export default async function LandingPage() {
                     href={landing.community.instagramUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-[9px] rounded-cta border border-hairline-strong px-5 py-[13px] font-condensed text-[15px] font-bold tracking-wide text-bone no-underline transition hover:border-volt"
+                    className="flex items-center gap-[9px] rounded-cta border border-hairline-link px-5 py-[13px] font-condensed text-[15px] font-bold tracking-wide text-bone no-underline transition hover:border-volt"
                   >
                     <span className="inline-block h-5 w-5 rounded-[6px] bg-instagram" />
                     {landing.community.instagram}
@@ -209,7 +204,7 @@ export default async function LandingPage() {
           <div className="flex-1" />
 
           {/* FOOTER */}
-          <footer className="flex flex-wrap items-center justify-between gap-2 border-t border-hairline pb-6 pt-5">
+          <footer className="flex flex-wrap items-center justify-between gap-2 border-t border-hairline-chrome pb-6 pt-5">
             <div className="font-condensed text-[14px] font-bold tracking-wide text-footer-dim">
               {landing.footer.wordmarkLead}{" "}
               <span className="text-volt-dim">

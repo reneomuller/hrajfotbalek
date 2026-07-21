@@ -136,6 +136,13 @@ export const strings = {
     // a spot is held but unpaid, `confirmed` means paid or covered by credit.
     rosterReserved: "holding",
     rosterConfirmed: "in",
+    // Landing next-match block, per the design reference.
+    filledLabel: "FILLED",
+    joinNote: "One tap to claim. Pay ahead from your phone.",
+    openMap: "OPEN MAP ↗",
+    mapAlt: "Map of the venue",
+    // Shown on an avatar whose nickname has no letters or digits at all.
+    rosterUnknown: "?",
     capacityLabel: "Capacity",
     startsLabel: "Kick-off",
     venueLabel: "Where",

@@ -14,7 +14,7 @@ const { siteFooter } = strings;
  */
 export function SiteFooter() {
   return (
-    <footer className="relative z-10 mx-auto flex w-full max-w-shell flex-wrap items-center justify-between gap-2 border-t border-hairline px-gutter py-5">
+    <footer className="relative z-10 mx-auto flex w-full max-w-shell flex-wrap items-center justify-between gap-2 border-t border-hairline-chrome px-gutter py-5">
       <Link
         href="/privacy"
         className="font-mono text-[10px] tracking-[2px] text-dim no-underline transition hover:text-volt-dim"

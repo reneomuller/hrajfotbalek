@@ -19,7 +19,7 @@ export function SiteHeader({ nickname }: { nickname: string | null }) {
   const auth = authNavLink({ nickname });
 
   return (
-    <header className="fixed inset-x-0 top-0 z-30 border-b border-hairline bg-ink/[.72] backdrop-blur-md">
+    <header className="fixed inset-x-0 top-0 z-30 border-b border-hairline-chrome bg-ink/[.72] backdrop-blur-md">
       <div className="mx-auto flex max-w-shell items-center justify-between px-gutter py-[11px]">
         <Link
           href="/"

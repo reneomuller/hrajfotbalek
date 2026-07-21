@@ -22,18 +22,35 @@ const config: Config = {
         surface: "#0A0A0A",
         "surface-raised": "#0D0D0D",
         "surface-card": "rgba(15,15,15,.55)",
+        // The pay/community cards sit at a heavier fill than the step cards.
+        "surface-card-strong": "rgba(15,15,15,.7)",
         "surface-panel": "rgba(13,13,13,.82)",
+        // Chips and labels laid over the map image.
+        "surface-overlay": "rgba(10,10,10,.85)",
+        // Roster avatar fill and the unfilled half of the capacity bar.
+        "surface-avatar": "#222222",
+        "surface-seg": "#242424",
         // Text
         bone: "#E9E7E0",
+        chalk: "#CFCFCF",
         muted: "#9A9A9A",
         "muted-dim": "#8A8A8A",
+        subtle: "#777777",
         faint: "#6F6F6F",
+        hint: "#666666",
         dim: "#555555",
         "footer-dim": "#888888",
-        // Hairlines
+        // Hairlines — the reference uses six distinct alphas; they are not
+        // interchangeable, so each is its own token rather than rounded to one.
+        "hairline-soft": "rgba(255,255,255,.06)",
+        "hairline-chrome": "rgba(255,255,255,.07)",
         hairline: "rgba(255,255,255,.08)",
+        "hairline-panel": "rgba(255,255,255,.1)",
         "hairline-strong": "rgba(255,255,255,.12)",
+        "hairline-link": "rgba(255,255,255,.14)",
+        "hairline-volt-soft": "rgba(200,255,0,.16)",
         "hairline-volt": "rgba(200,255,0,.18)",
+        "hairline-volt-strong": "rgba(200,255,0,.3)",
         // External brand
         whatsapp: "#25D366",
       },
@@ -49,6 +66,9 @@ const config: Config = {
         "hero-sub": ["clamp(20px,5vw,30px)", { lineHeight: "1.1" }],
         "section-title": ["clamp(26px,7vw,40px)", { lineHeight: "1.05" }],
         lede: ["clamp(14px,3.6vw,17px)", { lineHeight: "1.55" }],
+        "match-title": ["clamp(26px,5.8vw,36px)", { lineHeight: "1.02", letterSpacing: "0.2px" }],
+        "card-title": ["clamp(20px,4.5vw,26px)", { letterSpacing: "0.3px" }],
+        "community-title": "clamp(20px,4.6vw,28px)",
         cta: ["clamp(16px,4vw,19px)", { lineHeight: "1" }],
         eyebrow: ["clamp(9px,2.4vw,11px)", { letterSpacing: "3px" }],
       },
@@ -78,9 +98,9 @@ const config: Config = {
       backgroundImage: {
         "page-vignette":
           "radial-gradient(120% 90% at 50% 0%,transparent 55%,rgba(0,0,0,.5) 100%)",
+        "map-vignette":
+          "radial-gradient(130% 110% at 50% 45%,transparent 50%,rgba(6,6,6,.6) 100%)",
         instagram: "linear-gradient(45deg,#F9CE34,#EE2A7B,#6228D7)",
-        "qr-checker":
-          "repeating-conic-gradient(#0A0A0A 0% 25%, transparent 0% 50%)",
       },
       keyframes: {
         pulseRing: {
