@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { notifyWaitlistForGame } from "@/lib/cron/waitlistRelease";
 import { createServerSupabaseClient } from "@/lib/supabase/clients";
 import { getSessionUser } from "@/lib/auth/session";
 import { toBookingErrorCode, type BookingErrorCode } from "@/lib/booking/errors";
@@ -55,12 +56,36 @@ export async function cancelBookingAction(
 
   const supabase = await createServerSupabaseClient();
 
+  // Read the game before cancelling: afterwards the booking still carries the
+  // id, but reading it first keeps the release step independent of whatever
+  // the RPC returns.
+  const { data: booking } = await supabase
+    .from("bookings")
+    .select("game_id")
+    .eq("id", bookingId)
+    .maybeSingle();
+
   const { error } = await supabase.rpc("cancel_booking", {
     p_booking_id: bookingId,
   });
 
   if (error) {
     return { status: "error", code: toBookingErrorCode(error.message) };
+  }
+
+  // A cancellation releases a spot, and `cancel_booking` emits `spot_released`
+  // to say so. Notifying here rather than waiting for the next cron tick is
+  // what makes the loop hands-free: cancel -> credit -> release -> notify ->
+  // convert, with no human and no 15-minute wait in the middle.
+  //
+  // Failure to mail must never fail the cancellation — the money movement is
+  // already committed, and the waitlist is re-notified on the next release.
+  if (booking?.game_id) {
+    try {
+      await notifyWaitlistForGame(booking.game_id);
+    } catch (notifyError) {
+      console.error("waitlist notify after cancellation failed", notifyError);
+    }
   }
 
   // The issued credit must show up in the balance immediately — the ledger is
