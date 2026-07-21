@@ -1,7 +1,10 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { createServerSupabaseClient } from "@/lib/supabase/clients";
+import { bookingEmailContext } from "@/lib/cron/context";
+import { dispatchEmail } from "@/lib/email/dispatch";
+import { buildSpdString, amountDueCzk, paymentIban } from "@/lib/payments/spd";
+import { createServerSupabaseClient, createServiceRoleSupabaseClient } from "@/lib/supabase/clients";
 import { getSessionUser } from "@/lib/auth/session";
 import { toBookingErrorCode, type BookingErrorCode } from "@/lib/booking/errors";
 import { buildResumeUrl } from "@/lib/booking/resume";
@@ -89,5 +92,74 @@ export async function runCreateBooking(
   const result = data as unknown as BookingResult | null;
   if (!result?.id) return { status: "error", code: "UNKNOWN" };
 
+  await dispatchBookingEmails(result);
+
   return result.id;
+}
+
+/**
+ * Emails for a freshly created booking.
+ *
+ * Branches on the DERIVED method the RPC returned, never on what was sent: a
+ * wallet that covered the price comes back `credit` and `confirmed`, and that
+ * booking must get the receipt only — the dispatch layer suppresses the
+ * spot-held email for exactly this case.
+ *
+ * Never allowed to fail the booking. The spot is already committed inside the
+ * database; an SMTP problem must not unwind it or surface as a booking error.
+ */
+async function dispatchBookingEmails(result: BookingResult): Promise<void> {
+  try {
+    // Service-role for the reads only: the player cannot select their own
+    // email through RLS on players in every path, and the game row is public.
+    const supabase = createServiceRoleSupabaseClient();
+
+    const { data: booking } = await supabase
+      .from("bookings")
+      .select("id, game_id, player_id, price_czk, credit_applied_czk, payment_code")
+      .eq("id", result.id)
+      .maybeSingle();
+    if (!booking) return;
+
+    const [{ data: game }, { data: player }] = await Promise.all([
+      supabase.from("games").select("id, venue, starts_at").eq("id", booking.game_id).maybeSingle(),
+      supabase.from("players").select("email, nickname").eq("id", booking.player_id).maybeSingle(),
+    ]);
+    if (!game || !player) return;
+
+    const instantConfirmed = result.status === "confirmed";
+    const context = await bookingEmailContext(booking, game, player, {
+      withIcs: true,
+    });
+
+    const due = amountDueCzk(booking.price_czk, booking.credit_applied_czk);
+    await dispatchEmail({
+      event: "booking_created",
+      to: player.email,
+      context: {
+        ...context,
+        instantConfirmed,
+        variableSymbol: booking.payment_code ?? undefined,
+        spdString:
+          booking.payment_code && due > 0
+            ? buildSpdString({
+                iban: paymentIban(),
+                amountCzk: due,
+                variableSymbol: booking.payment_code,
+                nickname: player.nickname,
+              })
+            : undefined,
+      },
+    });
+
+    if (instantConfirmed) {
+      await dispatchEmail({
+        event: "payment_confirmed",
+        to: player.email,
+        context,
+      });
+    }
+  } catch (error) {
+    console.error("booking email dispatch failed", error);
+  }
 }

@@ -3,7 +3,9 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { notifyWaitlistForGame } from "@/lib/cron/waitlistRelease";
-import { createServerSupabaseClient } from "@/lib/supabase/clients";
+import { bookingEmailContext } from "@/lib/cron/context";
+import { dispatchEmail } from "@/lib/email/dispatch";
+import { createServerSupabaseClient, createServiceRoleSupabaseClient } from "@/lib/supabase/clients";
 import { getSessionUser } from "@/lib/auth/session";
 import { toBookingErrorCode, type BookingErrorCode } from "@/lib/booking/errors";
 
@@ -65,13 +67,23 @@ export async function cancelBookingAction(
     .eq("id", bookingId)
     .maybeSingle();
 
-  const { error } = await supabase.rpc("cancel_booking", {
+  const { data: cancelResult, error } = await supabase.rpc("cancel_booking", {
     p_booking_id: bookingId,
   });
 
   if (error) {
     return { status: "error", code: toBookingErrorCode(error.message) };
   }
+
+  // Credit receipt. The amount comes from the RPC's own return value rather
+  // than being recomputed here — the function decides how much a cancellation
+  // is worth, and a second opinion in TypeScript is a second answer waiting to
+  // disagree.
+  const credited = Number(
+    (cancelResult as unknown as { credit_issued_czk?: number } | null)
+      ?.credit_issued_czk ?? 0,
+  );
+  await dispatchCancellationEmail(bookingId, credited);
 
   // A cancellation releases a spot, and `cancel_booking` emits `spot_released`
   // to say so. Notifying here rather than waiting for the next cron tick is
@@ -92,4 +104,42 @@ export async function cancelBookingAction(
   // the authority and the page recomputes it server-side on the next render.
   revalidatePath("/account");
   return { status: "cancelled" };
+}
+
+/**
+ * Cancellation + credit receipt.
+ *
+ * Sent after the transition has committed, and never able to fail it: the
+ * money has already moved into the wallet, and a mail problem must not make a
+ * successful cancellation look like a failed one to the player.
+ */
+async function dispatchCancellationEmail(
+  bookingId: string,
+  creditCzk: number,
+): Promise<void> {
+  try {
+    const service = createServiceRoleSupabaseClient();
+
+    const { data: booking } = await service
+      .from("bookings")
+      .select("id, game_id, player_id, price_czk, credit_applied_czk")
+      .eq("id", bookingId)
+      .maybeSingle();
+    if (!booking) return;
+
+    const [{ data: game }, { data: player }] = await Promise.all([
+      service.from("games").select("id, venue, starts_at").eq("id", booking.game_id).maybeSingle(),
+      service.from("players").select("email, nickname").eq("id", booking.player_id).maybeSingle(),
+    ]);
+    if (!game || !player) return;
+
+    const context = await bookingEmailContext(booking, game, player);
+    await dispatchEmail({
+      event: "booking_cancelled",
+      to: player.email,
+      context: { ...context, creditCzk },
+    });
+  } catch (error) {
+    console.error("cancellation email dispatch failed", error);
+  }
 }
