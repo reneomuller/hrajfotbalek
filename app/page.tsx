@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { LiveTicker } from "@/components/LiveTicker";
 import { NextMatchCard } from "@/components/NextMatchCard";
-import { PayQr } from "@/components/PayQr";
 import { PitchBackground } from "@/components/PitchBackground";
-import { getNextGame, getRoster } from "@/lib/games/queries";
+import { getNextGame, getRoster, getTickerGame } from "@/lib/games/queries";
 import { siteUrl } from "@/lib/site";
 import { strings } from "@/lib/strings";
 
@@ -37,6 +37,9 @@ export default async function LandingPage() {
   // The reference shows the lineup as overlapping avatars, so the block needs
   // nicknames as well as the count. Same anon-readable view the game page uses.
   const roster = nextGame ? await getRoster(nextGame.game.id) : [];
+  // The ticker can announce a game already in progress, which the next-match
+  // block never shows — so it is its own query, not a slice of `nextGame`.
+  const tickerGame = await getTickerGame();
 
   return (
     <>
@@ -51,15 +54,13 @@ export default async function LandingPage() {
 
       {/* NAV is the shared SiteHeader, rendered once from the root layout. */}
 
+      {/* Status ticker, in the gap between the header and the pitch touchline. */}
+      <LiveTicker entry={tickerGame} />
+
       <div className="relative z-10 mx-auto w-full max-w-shell px-gutter">
         {/* HERO */}
         <section className="flex min-h-[100svh] flex-col pb-6 pt-20 text-center">
           <div className="flex flex-1 flex-col items-center justify-center">
-            <div className="mb-[18px] flex items-center gap-[14px] font-mono text-eyebrow tracking-eyebrow text-volt-dim">
-              <span className="h-[7px] w-[7px] animate-blink rounded-full bg-volt shadow-volt-glow" />
-              {landing.liveBadge}
-            </div>
-
             <h1 className="m-0 font-display text-hero uppercase text-white">
               {landing.headlineLead}
               <br />
@@ -147,29 +148,14 @@ export default async function LandingPage() {
             )}
           </section>
 
-          {/* PAY + COMMUNITY */}
+          {/*
+            COMMUNITY — full width. The pay-ahead panel that used to share this
+            row is gone: payment choice belongs to the booking flow, and a
+            landing tile advertising a price is one more thing to keep in sync
+            with `games.price_czk`.
+          */}
           <section className="pt-4">
             <div className="flex flex-wrap items-stretch gap-4">
-              <div className="flex min-w-[270px] flex-1 flex-wrap items-center gap-[18px] rounded-[20px] border border-hairline-panel bg-surface-card-strong p-[22px]">
-                <PayQr />
-                <div className="min-w-[160px] flex-1">
-                  <div className="font-display text-card-title uppercase text-white">
-                    {landing.pay.title}
-                  </div>
-                  <div className="mt-[6px] max-w-[300px] text-[13px] leading-[1.5] text-muted">
-                    {landing.pay.body}
-                  </div>
-                  <div className="mt-3 flex items-baseline gap-[10px]">
-                    <span className="font-mono text-[24px] font-bold text-volt">
-                      150 {strings.common.czk}
-                    </span>
-                    <span className="text-[12px] text-subtle">
-                      {landing.pay.perGame}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
               <div className="flex min-w-[270px] flex-1 flex-col justify-center rounded-[20px] border border-hairline-volt-soft bg-surface-card-strong p-[22px] text-center">
                 <h3 className="m-0 mb-[6px] font-display text-community-title uppercase text-white">
                   {landing.community.title}

@@ -1,9 +1,28 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { createServerSupabaseClient } from "@/lib/supabase/clients";
 import { getSessionUser } from "@/lib/auth/session";
 import { toBookingErrorCode, type BookingErrorCode } from "@/lib/booking/errors";
+
+/**
+ * Sign out.
+ *
+ * `signOut()` on the server client clears the session cookies through the
+ * cookie adapter, so the browser is genuinely logged out rather than merely
+ * navigated away — a client-side redirect would leave the session intact and
+ * the next visit would silently be authenticated again.
+ *
+ * Scope is local: it ends this browser's session, not every session the player
+ * holds. Signing a player out of their other devices is a security action they
+ * did not ask for here.
+ */
+export async function signOutAction(): Promise<void> {
+  const supabase = await createServerSupabaseClient();
+  await supabase.auth.signOut({ scope: "local" });
+  redirect("/");
+}
 
 export interface CancelActionState {
   status: "idle" | "cancelled" | "error";

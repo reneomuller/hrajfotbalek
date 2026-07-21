@@ -4,6 +4,7 @@ import { CreditBalance } from "@/components/CreditBalance";
 import { requireCurrentPlayer } from "@/lib/auth/session";
 import { getOwnCreditBalance, listOwnBookings } from "@/lib/booking/queries";
 import { strings } from "@/lib/strings";
+import { signOutAction } from "./actions";
 
 export const metadata: Metadata = {
   title: strings.account.title,
@@ -38,9 +39,23 @@ export default async function AccountPage() {
       <h1 className="m-0 font-display text-section-title uppercase tracking-wide text-white">
         {strings.account.title}
       </h1>
-      <p className="mt-2 font-mono text-[12px] tracking-[1px] text-muted">
-        {player.nickname}
-      </p>
+      <div className="mt-2 flex flex-wrap items-center justify-between gap-3">
+        <p className="m-0 font-mono text-[12px] tracking-[1px] text-muted">
+          {player.nickname}
+        </p>
+
+        {/* Sign out — a server action, so the session cookies are cleared
+            server-side rather than merely navigated away from. */}
+        <form action={signOutAction}>
+          <button
+            type="submit"
+            data-testid="sign-out"
+            className="rounded-control border border-hairline-link px-[14px] py-2 font-condensed text-[13px] font-bold uppercase tracking-wide text-bone transition hover:border-volt hover:text-volt"
+          >
+            {strings.auth.signOut}
+          </button>
+        </form>
+      </div>
 
       <div className="mt-8">
         <CreditBalance balanceCzk={balanceCzk} />

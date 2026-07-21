@@ -8,8 +8,6 @@ import { strings } from "@/lib/strings";
 
 export interface PaymentMethodChoiceProps {
   gameId: string;
-  /** Waitlist joins take the same path; only the CTA copy differs. */
-  isFull: boolean;
 }
 
 const INITIAL: BookingActionState = { status: "idle" };
@@ -38,7 +36,7 @@ function SubmitButton({ label }: { label: string }) {
  * mean predicting the outcome from a balance this component does not have and
  * could not trust.
  */
-export function PaymentMethodChoice({ gameId, isFull }: PaymentMethodChoiceProps) {
+export function PaymentMethodChoice({ gameId }: PaymentMethodChoiceProps) {
   const [state, formAction] = useActionState(createBookingAction, INITIAL);
 
   if (state.status === "error" && state.code) {
@@ -87,9 +85,7 @@ export function PaymentMethodChoice({ gameId, isFull }: PaymentMethodChoiceProps
         </div>
       </fieldset>
 
-      <SubmitButton
-        label={isFull ? strings.games.joinWaitlist : strings.booking.confirmBooking}
-      />
+      <SubmitButton label={strings.booking.confirmBooking} />
     </form>
   );
 }

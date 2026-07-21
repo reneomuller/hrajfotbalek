@@ -1,3 +1,4 @@
+import { policy } from "@/lib/policy";
 import { createServerSupabaseClient } from "@/lib/supabase/clients";
 import type { Database } from "@/lib/types/database";
 
@@ -105,6 +106,42 @@ export async function listUpcomingGames(limit = 20): Promise<GameWithCount[]> {
 export async function getNextGame(): Promise<GameWithCount | null> {
   const games = await listUpcomingGames(1);
   return games[0] ?? null;
+}
+
+export interface TickerGame {
+  game: GameRow;
+  /** Kick-off has passed and the game is still within its playing window. */
+  isLive: boolean;
+}
+
+/**
+ * What the landing ticker announces: a game happening right now, else the next
+ * one, else nothing.
+ *
+ * A game in progress is invisible to `listUpcomingGames` — that query starts at
+ * `now()` — so this looks back by the policy's game duration to find one. There
+ * is no `ends_at` column yet; `policy.game.durationMinutes` stands in for it and
+ * is display-only.
+ */
+export async function getTickerGame(): Promise<TickerGame | null> {
+  const supabase = await createServerSupabaseClient();
+  const now = Date.now();
+  const windowStart = new Date(
+    now - policy.game.durationMinutes * 60_000,
+  ).toISOString();
+
+  const { data, error } = await supabase
+    .from("games")
+    .select("*")
+    .in("status", ["published", "full"])
+    .gte("starts_at", windowStart)
+    .order("starts_at", { ascending: true })
+    .limit(1);
+
+  if (error || !data || data.length === 0) return null;
+
+  const game = data[0];
+  return { game, isLive: new Date(game.starts_at).getTime() <= now };
 }
 
 /**

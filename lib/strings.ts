@@ -28,13 +28,17 @@ export const strings = {
     home: "Hraj Fotbal — home",
   },
 
+  ticker: {
+    live: "LIVE",
+    upcoming: "UPCOMING",
+  },
+
   siteFooter: {
     privacy: "Privacy",
     copyright: "© hrajfotbal",
   },
 
   landing: {
-    liveBadge: "LIVE · PRAGUE 3 — PRAŽAČKA",
     headlineLead: "HRAJ",
     headlineAccent: "FOTBAL",
     heroSub: "Join in and have fun.",
@@ -63,13 +67,6 @@ export const strings = {
     nextMatchLabel: "NEXT MATCH",
     nextMatchCta: "Claim your spot",
 
-    pay: {
-      title: "PAY AHEAD",
-      // Deliberately does not promise that scanning pays: the landing tile is
-      // a site QR, and payment happens after a spot is claimed.
-      body: "Scan to book — pay from your phone after claiming a spot.",
-      perGame: "/ game",
-    },
 
     community: {
       title: "JOIN THE COMMUNITY",
@@ -128,6 +125,11 @@ export const strings = {
     spotLeft: "spot left",
     full: "Full",
     joinWaitlist: "Join the waitlist",
+    // Shown instead of a CTA on a full game. It deliberately promises nothing:
+    // the waitlist RPC does not exist until Phase 17, so any "you are on the
+    // list" copy here would be a claim with no row behind it.
+    fullNotice: "This game is full — every spot is taken.",
+    seeOtherGames: "See other games →",
     onWaitlist: "You are on the waitlist",
     rosterTitle: "Lineup",
     rosterEmpty: "No one has claimed a spot yet.",
@@ -155,6 +157,7 @@ export const strings = {
 
   booking: {
     claimSpot: "Claim your spot",
+    logInToClaim: "Log in to claim",
     nicknameLabel: "Nickname",
     nicknameHint: "Letters, numbers, spaces, _ and - · up to 20 characters",
     payByQr: "Pay by QR",
@@ -196,6 +199,7 @@ export const strings = {
     findAGame: "Find a game →",
     creditBalance: "Credit balance",
     creditEmpty: "No credit yet.",
+    showQr: "Show payment QR",
     creditHint: "Credit is applied automatically to your next booking.",
     deleteAccount: "Delete my account",
     deleteAccountHint: "Email us and we remove your data.",
@@ -217,7 +221,7 @@ export const strings = {
     generic: "Something went wrong. Please try again.",
     // Losing a capacity race is a normal outcome here, not an exception — the
     // copy says what happened and what is still true, rather than apologising.
-    capacityFull: "That spot was taken while you were deciding. You are still on the waitlist.",
+    capacityFull: "That spot was taken while you were deciding.",
     capacityFullTitle: "Spot already taken",
     duplicateActiveBooking: "You already have a spot in this game.",
     duplicateActiveBookingTitle: "Already booked",

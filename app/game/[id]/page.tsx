@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Roster } from "@/components/Roster";
+import { getSessionUser } from "@/lib/auth/session";
 import { SpotsCounter } from "@/components/SpotsCounter";
 import { formatCzk, formatGameDateTime } from "@/lib/format";
 import { getGameById, getRoster } from "@/lib/games/queries";
@@ -73,9 +74,16 @@ export default async function GameDetailPage({ params }: GamePageProps) {
   const roster = await getRoster(game.id);
 
   const isFull = spotsLeft === 0;
-  // A full game still takes waitlist joins; a started or cancelled one takes
-  // nothing. `create_booking` enforces all three — this only mirrors it.
-  const canAct = !isCancelled && !hasStarted;
+  // A full game offers nothing to tap. The waitlist is Phase 17: `join_waitlist`
+  // does not exist yet, so a "join the waitlist" CTA here would send the player
+  // into `create_booking`, which refuses with CAPACITY_FULL — an error dressed
+  // up as a feature. Until the RPC lands, a full game says so plainly.
+  const canAct = !isCancelled && !hasStarted && !isFull;
+
+  // Label only. The write is gated in `createBookingAction`, not here — an
+  // anonymous visitor may still walk the whole flow and authenticate at the
+  // end, which is the no-pre-auth-hold rule.
+  const signedIn = (await getSessionUser()) !== null;
 
   return (
     <main className="relative z-10 mx-auto w-full max-w-shell px-gutter pb-16 pt-24">
@@ -116,13 +124,30 @@ export default async function GameDetailPage({ params }: GamePageProps) {
         </p>
       )}
 
+      {!isCancelled && !hasStarted && isFull && (
+        <div className="mt-5 rounded-control border border-hairline-strong px-4 py-3">
+          <p
+            data-testid="full-notice"
+            className="m-0 font-mono text-[11px] tracking-[1px] text-faint"
+          >
+            {strings.games.fullNotice}
+          </p>
+          <Link
+            href="/games"
+            className="mt-3 inline-block font-mono text-[11px] uppercase tracking-eyebrow text-volt no-underline"
+          >
+            {strings.games.seeOtherGames}
+          </Link>
+        </div>
+      )}
+
       {canAct && (
         <Link
           href={`/game/${game.id}/book`}
           data-testid="book-cta"
           className="mt-6 block rounded-cta bg-volt px-6 py-4 text-center font-condensed text-cta font-extrabold uppercase tracking-wide text-surface no-underline"
         >
-          {isFull ? strings.games.joinWaitlist : strings.booking.claimSpot}
+          {signedIn ? strings.booking.claimSpot : strings.booking.logInToClaim}
         </Link>
       )}
 

@@ -3,6 +3,7 @@ import { CancelBookingForm } from "@/components/CancelBookingForm";
 import { bookingBadge, type BadgeTone } from "@/lib/booking/badges";
 import type { BookingWithGame } from "@/lib/booking/queries";
 import { formatCzk, formatGameDateTime } from "@/lib/format";
+import { shouldRenderQr } from "@/lib/payments/spd";
 import { strings } from "@/lib/strings";
 
 export interface BookingListProps {
@@ -37,6 +38,9 @@ export function BookingList({ rows }: BookingListProps) {
       {rows.map(({ booking, game, canCancel: showCancel }) => {
         const badge = bookingBadge(booking.status, booking.payment_method);
         const amountDue = booking.price_czk - booking.credit_applied_czk;
+        // Same predicate the confirmation screen uses, so the link never leads
+        // to a page that decides there is no QR to show.
+        const showQr = booking.status === "reserved" && shouldRenderQr(booking);
 
         return (
           <li
@@ -88,6 +92,23 @@ export function BookingList({ rows }: BookingListProps) {
                 )}
                 {showCancel && <CancelBookingForm bookingId={booking.id} />}
               </div>
+            )}
+
+            {/*
+              Back to the QR. A player who closed the confirmation screen has
+              otherwise no route to the code they still owe money against. The
+              confirmation page is the one place that renders it, and it reads
+              the booking back under own-row RLS, so this is a link rather than
+              a second QR render site that could drift from the first.
+            */}
+            {showQr && (
+              <Link
+                href={`/game/${game.id}/book/confirmation?booking=${booking.id}`}
+                data-testid="show-qr"
+                className="mt-4 block rounded-control border border-hairline-volt px-4 py-3 text-center font-condensed text-[15px] font-bold uppercase tracking-wide text-volt no-underline"
+              >
+                {strings.account.showQr}
+              </Link>
             )}
           </li>
         );

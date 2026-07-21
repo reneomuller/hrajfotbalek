@@ -48,6 +48,18 @@ export const policy = {
   reminder: {
     hoursBeforeStart: 24,
   },
+
+  /**
+   * How long a game is considered in progress after `starts_at`.
+   *
+   * `games` stores no end time, so "is this game happening right now" has to
+   * come from somewhere. It is a policy value rather than a magic number in a
+   * component, and it is display-only: nothing transitions on it. When games
+   * gain an `ends_at` column this constant is deleted, not reinterpreted.
+   */
+  game: {
+    durationMinutes: 90,
+  },
 } as const;
 
 export type Policy = typeof policy;

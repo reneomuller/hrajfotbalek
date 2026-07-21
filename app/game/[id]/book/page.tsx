@@ -59,8 +59,12 @@ export default async function BookPage({ params, searchParams }: BookPageProps) 
 
   const { game, spotsLeft, hasStarted, isCancelled } = result;
 
-  // The RPC enforces all of this too; the UI only mirrors it.
-  if (isCancelled || hasStarted) {
+  // The RPC enforces all of this too; the UI only mirrors it. A full game is
+  // included: `create_booking` would refuse with CAPACITY_FULL, and until the
+  // Phase 17 waitlist exists there is nothing else this page could offer, so
+  // sending the player back to the game is more honest than a form that cannot
+  // succeed.
+  if (isCancelled || hasStarted || spotsLeft === 0) {
     redirect(`/game/${game.id}`);
   }
 
@@ -105,14 +109,8 @@ export default async function BookPage({ params, searchParams }: BookPageProps) 
         </span>
       </div>
 
-      {spotsLeft === 0 && (
-        <p className="mt-5 rounded-control border border-hairline-strong px-4 py-3 font-mono text-[11px] tracking-[1px] text-faint">
-          {strings.games.full} — {strings.games.joinWaitlist}
-        </p>
-      )}
-
       <div className="mt-8">
-        <PaymentMethodChoice gameId={game.id} isFull={spotsLeft === 0} />
+        <PaymentMethodChoice gameId={game.id} />
       </div>
     </main>
   );
