@@ -1,10 +1,11 @@
 import { formatCzk, formatGameDateTime } from "@/lib/format";
 import { strings } from "@/lib/strings";
 import {
-  Button,
-  EmailShell,
-  Fact,
-  renderEmail,
+  button,
+  emailShell,
+  fact,
+  join,
+  paragraph,
   textBody,
   type RenderedEmail,
 } from "./layout";
@@ -34,10 +35,10 @@ export interface SpotHeldProps extends BookingEmailProps {
  * answer different questions ("what do I owe" vs "am I in"), and a player who
  * receives the receipt copy while still owing money will not pay.
  *
- * The QR itself is not embedded as an image — inlined images are stripped or
- * blocked by most clients by default. The SPD string and the variable symbol
- * are both present in text, which is what a Czech banking app needs, and the
- * booking page carries the scannable code.
+ * The QR image is not embedded — most clients block remote and inline images by
+ * default. The SPD string and the variable symbol are both present as text,
+ * which is what a Czech banking app needs, and the booking page carries the
+ * scannable code.
  */
 export function spotHeldEmail(props: SpotHeldProps): RenderedEmail {
   const when = formatGameDateTime(props.startsAt);
@@ -45,20 +46,18 @@ export function spotHeldEmail(props: SpotHeldProps): RenderedEmail {
 
   return {
     subject: emails.spotHeld.subject,
-    html: renderEmail(
-      <EmailShell heading={emails.spotHeld.heading}>
-        <p>{emails.spotHeld.body}</p>
-        <Fact label={emails.common.where} value={props.venue} />
-        <Fact label={emails.common.when} value={when} />
-        <Fact label={emails.common.amountDue} value={amount} />
-        <Fact
-          label={emails.common.variableSymbol}
-          value={String(props.variableSymbol)}
-        />
-        <Fact label={emails.spotHeld.spdLabel} value={props.spdString} />
-        <Button href={props.gameUrl} label={emails.common.viewGame} />
-        <p>{emails.common.signOff}</p>
-      </EmailShell>,
+    html: emailShell(
+      emails.spotHeld.heading,
+      join([
+        paragraph(emails.spotHeld.body),
+        fact(emails.common.where, props.venue),
+        fact(emails.common.when, when),
+        fact(emails.common.amountDue, amount),
+        fact(emails.common.variableSymbol, String(props.variableSymbol)),
+        fact(emails.spotHeld.spdLabel, props.spdString),
+        button(props.gameUrl, emails.common.viewGame),
+        paragraph(emails.common.signOff),
+      ]),
     ),
     text: textBody([
       emails.spotHeld.heading,
@@ -80,14 +79,15 @@ export function paymentConfirmedEmail(props: BookingEmailProps): RenderedEmail {
 
   return {
     subject: emails.paymentConfirmed.subject,
-    html: renderEmail(
-      <EmailShell heading={emails.paymentConfirmed.heading}>
-        <p>{emails.paymentConfirmed.body}</p>
-        <Fact label={emails.common.where} value={props.venue} />
-        <Fact label={emails.common.when} value={when} />
-        <Button href={props.gameUrl} label={emails.common.viewGame} />
-        <p>{emails.common.signOff}</p>
-      </EmailShell>,
+    html: emailShell(
+      emails.paymentConfirmed.heading,
+      join([
+        paragraph(emails.paymentConfirmed.body),
+        fact(emails.common.where, props.venue),
+        fact(emails.common.when, when),
+        button(props.gameUrl, emails.common.viewGame),
+        paragraph(emails.common.signOff),
+      ]),
     ),
     text: textBody([
       emails.paymentConfirmed.heading,

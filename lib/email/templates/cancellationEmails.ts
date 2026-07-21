@@ -1,10 +1,11 @@
 import { formatCzk, formatGameDateTime } from "@/lib/format";
 import { strings } from "@/lib/strings";
 import {
-  Button,
-  EmailShell,
-  Fact,
-  renderEmail,
+  button,
+  emailShell,
+  fact,
+  join,
+  paragraph,
   textBody,
   type RenderedEmail,
 } from "./layout";
@@ -37,16 +38,15 @@ export function cancellationCreditEmail(props: CancellationEmailProps): Rendered
 
   return {
     subject: emails.cancellationCredit.subject,
-    html: renderEmail(
-      <EmailShell heading={emails.cancellationCredit.heading}>
-        <p>{body}</p>
-        <Fact label={emails.common.where} value={props.venue} />
-        <Fact label={emails.common.when} value={when} />
-        {hasCredit && (
-          <Fact label={emails.common.credit} value={formatCzk(props.creditCzk)} />
-        )}
-        <Button href={props.accountUrl} label={emails.common.viewAccount} />
-      </EmailShell>,
+    html: emailShell(
+      emails.cancellationCredit.heading,
+      join([
+        paragraph(body),
+        fact(emails.common.where, props.venue),
+        fact(emails.common.when, when),
+        hasCredit ? fact(emails.common.credit, formatCzk(props.creditCzk)) : null,
+        button(props.accountUrl, emails.common.viewAccount),
+      ]),
     ),
     text: textBody([
       emails.cancellationCredit.heading,
@@ -67,16 +67,15 @@ export function gameCancelledEmail(props: CancellationEmailProps): RenderedEmail
 
   return {
     subject: emails.gameCancelled.subject,
-    html: renderEmail(
-      <EmailShell heading={emails.gameCancelled.heading}>
-        <p>{body}</p>
-        <Fact label={emails.common.where} value={props.venue} />
-        <Fact label={emails.common.when} value={when} />
-        {hasCredit && (
-          <Fact label={emails.common.credit} value={formatCzk(props.creditCzk)} />
-        )}
-        <Button href={props.accountUrl} label={emails.common.findAnother} />
-      </EmailShell>,
+    html: emailShell(
+      emails.gameCancelled.heading,
+      join([
+        paragraph(body),
+        fact(emails.common.where, props.venue),
+        fact(emails.common.when, when),
+        hasCredit ? fact(emails.common.credit, formatCzk(props.creditCzk)) : null,
+        button(props.accountUrl, emails.common.findAnother),
+      ]),
     ),
     text: textBody([
       emails.gameCancelled.heading,
