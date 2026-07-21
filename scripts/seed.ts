@@ -310,6 +310,23 @@ async function seed(): Promise<void> {
     ).error,
   );
 
+  // --- WAITLIST: two players queue on the now-full game ---------------------
+  //
+  // Created through join_waitlist under real sessions, never a direct insert:
+  // the row and its waitlist_joined event have to land in one transaction, and
+  // a fabricated row would carry no event for Phase 26's depth metric to count.
+  // The game flipped to 'full' automatically above, which is what makes the
+  // join legal — join_waitlist refuses anything else.
+  for (const [label, session] of [
+    ["creditRich", asRich],
+    ["creditPartial", asPartial],
+  ] as const) {
+    check(
+      `waitlist join by ${label}`,
+      (await session.rpc("join_waitlist", { p_game_id: games.full.id })).error,
+    );
+  }
+
   // --- PLAYED and SETTLED ---------------------------------------------------
   for (const [game, session] of [
     [games.played, asRunner],

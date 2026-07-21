@@ -338,6 +338,35 @@ export interface Database {
       settle_game: { Args: { p_game_id: string }; Returns: GameStatus };
       /** Returns the number of bookings cancelled by the fan-out. */
       cancel_game: { Args: { p_game_id: string }; Returns: number };
+
+      /**
+       * Waitlist join. `already_joined` distinguishes a fresh row from a
+       * duplicate tap deduped by the unique constraint.
+       */
+      join_waitlist: {
+        Args: { p_game_id: string };
+        Returns: { id: string; already_joined: boolean };
+      };
+      /**
+       * Cron-only fan-out. Stamps `notified_at` and emits one
+       * `waitlist_notified` event per active waitlisted player, in one
+       * transaction, returning the players to mail.
+       */
+      notify_waitlist: {
+        Args: { p_game_id: string };
+        Returns: {
+          player_id: string;
+          email: string | null;
+          nickname: string;
+          waitlist_id: string;
+        }[];
+      };
+      /** Cron-only stamps. Both no-op when the column is already set. */
+      mark_nudged: {
+        Args: { p_booking_id: string; p_grace_hours: number };
+        Returns: boolean;
+      };
+      mark_reminder_sent: { Args: { p_booking_id: string }; Returns: boolean };
       set_game_capacity: {
         Args: { p_game_id: string; p_capacity: number };
         Returns: number;

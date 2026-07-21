@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Roster } from "@/components/Roster";
+import { WaitlistButton } from "@/components/WaitlistButton";
+import { isOnWaitlist } from "@/lib/booking/waitlistConvert";
+import { readResumeIntent } from "@/lib/booking/resume";
+import { runJoinWaitlist } from "./waitlist/actions";
 import { getSessionUser } from "@/lib/auth/session";
 import { SpotsCounter } from "@/components/SpotsCounter";
 import { formatCzk, formatGameDateTime } from "@/lib/format";
@@ -14,6 +18,7 @@ export const dynamic = "force-dynamic";
 
 interface GamePageProps {
   params: Promise<{ id: string }>;
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
 }
 
 /**
@@ -50,8 +55,9 @@ export async function generateMetadata({ params }: GamePageProps): Promise<Metad
   };
 }
 
-export default async function GameDetailPage({ params }: GamePageProps) {
+export default async function GameDetailPage({ params, searchParams }: GamePageProps) {
   const { id } = await params;
+  const query = searchParams ? await searchParams : {};
   const result = await getGameById(id);
 
   if (!result) {
@@ -74,16 +80,30 @@ export default async function GameDetailPage({ params }: GamePageProps) {
   const roster = await getRoster(game.id);
 
   const isFull = spotsLeft === 0;
-  // A full game offers nothing to tap. The waitlist is Phase 17: `join_waitlist`
-  // does not exist yet, so a "join the waitlist" CTA here would send the player
-  // into `create_booking`, which refuses with CAPACITY_FULL — an error dressed
-  // up as a feature. Until the RPC lands, a full game says so plainly.
-  const canAct = !isCancelled && !hasStarted && !isFull;
+  const canAct = !isCancelled && !hasStarted;
 
   // Label only. The write is gated in `createBookingAction`, not here — an
   // anonymous visitor may still walk the whole flow and authenticate at the
   // end, which is the no-pre-auth-hold rule.
   const signedIn = (await getSessionUser()) !== null;
+
+  // A full game now offers the waitlist rather than a dead end: `join_waitlist`
+  // exists as of Phase 17, so the CTA leads somewhere real. Read under own-row
+  // RLS, so a signed-out visitor simply gets false.
+  let alreadyOnList = isFull && signedIn ? await isOnWaitlist(game.id) : false;
+
+  // Post-auth resume for a Join-waitlist tap made while signed out. The
+  // callback sends the player back here with ?resume=join_waitlist, and the
+  // join runs now that there is a session — the same shape the booking resume
+  // uses on /book. Nothing was held in the meantime; a waitlist row is not a
+  // claim on a spot.
+  if (signedIn && canAct && isFull && !alreadyOnList) {
+    const resume = readResumeIntent(query);
+    if (resume?.action === 'join_waitlist') {
+      const outcome = await runJoinWaitlist(game.id);
+      alreadyOnList = outcome.status === 'joined' || outcome.status === 'already';
+    }
+  }
 
   return (
     <main className="relative z-10 mx-auto w-full max-w-shell px-gutter pb-16 pt-24">
@@ -124,24 +144,19 @@ export default async function GameDetailPage({ params }: GamePageProps) {
         </p>
       )}
 
-      {!isCancelled && !hasStarted && isFull && (
-        <div className="mt-5 rounded-control border border-hairline-strong px-4 py-3">
+      {canAct && isFull && (
+        <>
           <p
             data-testid="full-notice"
-            className="m-0 font-mono text-[11px] tracking-[1px] text-faint"
+            className="mt-5 rounded-control border border-hairline-strong px-4 py-3 font-mono text-[11px] tracking-[1px] text-faint"
           >
             {strings.games.fullNotice}
           </p>
-          <Link
-            href="/games"
-            className="mt-3 inline-block font-mono text-[11px] uppercase tracking-eyebrow text-volt no-underline"
-          >
-            {strings.games.seeOtherGames}
-          </Link>
-        </div>
+          <WaitlistButton gameId={game.id} alreadyOnList={alreadyOnList} />
+        </>
       )}
 
-      {canAct && (
+      {canAct && !isFull && (
         <Link
           href={`/game/${game.id}/book`}
           data-testid="book-cta"

@@ -19,6 +19,7 @@ export type BookingErrorCode =
   | "CREDIT_NEGATIVE_BLOCKED"
   | "GAME_NOT_BOOKABLE"
   | "GAME_ALREADY_STARTED"
+  | "GAME_NOT_WAITLISTABLE"
   | "GAME_NOT_FOUND"
   | "PLAYER_NOT_FOUND"
   | "INSUFFICIENT_PERMISSION"
@@ -33,6 +34,7 @@ const KNOWN_CODES: BookingErrorCode[] = [
   "CREDIT_NEGATIVE_BLOCKED",
   "GAME_NOT_BOOKABLE",
   "GAME_ALREADY_STARTED",
+  "GAME_NOT_WAITLISTABLE",
   "GAME_NOT_FOUND",
   "PLAYER_NOT_FOUND",
   "INSUFFICIENT_PERMISSION",
@@ -73,6 +75,8 @@ export function describeBookingError(code: BookingErrorCode): FriendlyBookingErr
       return { code, title: strings.errors.tryAgain, message: strings.errors.gameNotBookable };
     case "GAME_ALREADY_STARTED":
       return { code, title: strings.errors.tryAgain, message: strings.errors.gameAlreadyStarted };
+    case "GAME_NOT_WAITLISTABLE":
+      return { code, title: strings.errors.tryAgain, message: strings.errors.gameNotWaitlistable };
     case "CANCEL_WINDOW_CLOSED":
       return { code, title: strings.errors.tryAgain, message: strings.errors.cancelWindowClosed };
     case "INSUFFICIENT_PERMISSION":
@@ -84,4 +88,23 @@ export function describeBookingError(code: BookingErrorCode): FriendlyBookingErr
     default:
       return { code, title: strings.errors.tryAgain, message: strings.errors.generic };
   }
+}
+
+/**
+ * Waitlist-flow variant.
+ *
+ * Only CAPACITY_FULL differs, and it differs in a way that matters: losing a
+ * conversion race leaves the player STILL on the waitlist, which is a true and
+ * reassuring thing to say. The booking-flow copy deliberately does not claim
+ * that, because a player who never joined a waitlist is not on one.
+ */
+export function describeWaitlistError(code: BookingErrorCode): FriendlyBookingError {
+  if (code === "CAPACITY_FULL") {
+    return {
+      code,
+      title: strings.errors.capacityFullTitle,
+      message: strings.errors.capacityFullWaitlist,
+    };
+  }
+  return describeBookingError(code);
 }

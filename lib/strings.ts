@@ -131,6 +131,13 @@ export const strings = {
     fullNotice: "This game is full — every spot is taken.",
     seeOtherGames: "See other games →",
     onWaitlist: "You are on the waitlist",
+    waitlistJoined: "You are on the waitlist. We will email you when a spot opens.",
+    waitlistAlready: "You are already on the waitlist for this game.",
+    waitlistHint:
+      "Everyone waiting is told at the same moment a spot opens — first to claim it gets it.",
+    waitlistConvertTitle: "Claim the open spot",
+    waitlistConvertHint: "Pick how you want to pay and the spot is yours.",
+    waitlistNotOnList: "You are not on the waitlist for this game.",
     rosterTitle: "Lineup",
     rosterEmpty: "No one has claimed a spot yet.",
     cancelled: "This game was cancelled.",
@@ -229,6 +236,10 @@ export const strings = {
     insufficientPermission: "You are not allowed to do that.",
     cancelWindowClosed: "It is too late to cancel this booking.",
     notSignedIn: "Please sign in first.",
+    gameNotWaitlistable: "This game is not taking waitlist joins.",
+    // True only in the waitlist flow: the row survives a lost race.
+    capacityFullWaitlist:
+      "That spot went to someone else. You are still on the waitlist for the next one.",
     gameNotBookable: "This game is not open for booking.",
     gameAlreadyStarted: "This game has already kicked off.",
     tryAgain: "Try again",

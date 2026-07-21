@@ -6,10 +6,12 @@
  * the seed against a database that also holds real data cannot take the real
  * data with it. It is also what makes reseeding idempotent.
  *
- * SCOPE (per the Phase 9 plan):
- *   - No waitlist rows. `join_waitlist` does not exist until Phase 17, and
- *     inserting waitlist rows directly would fabricate a state the RPCs cannot
- *     produce — the exact thing the seed rule forbids.
+ * SCOPE:
+ *   - Waitlist rows ARE seeded as of Phase 17, created by calling
+ *     `join_waitlist` under a real session — never by direct insert, on the
+ *     same reasoning that governs every other fixture here. Phase 19 stamps
+ *     `notified_at` on one of them through `notify_waitlist`, so the
+ *     re-notification path and the waitlist-depth metric have realistic data.
  *   - No synthetic `events` rows. Every event in the database after a seed was
  *     written by an RPC as part of a real state transition. The auth-funnel
  *     events (auth_link_sent / auth_completed / account_created /
