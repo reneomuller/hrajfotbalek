@@ -5,7 +5,7 @@ import { getNextGame } from "@/lib/games/queries";
 import { siteUrl } from "@/lib/site";
 import { strings } from "@/lib/strings";
 
-const { landing, brand, nav } = strings;
+const { landing } = strings;
 
 export async function generateMetadata(): Promise<Metadata> {
   const url = await siteUrl();
@@ -41,28 +41,7 @@ export default async function LandingPage() {
         className="pointer-events-none fixed inset-0 z-[1] bg-page-vignette"
       />
 
-      {/* NAV */}
-      <header className="fixed inset-x-0 top-0 z-30 border-b border-hairline bg-ink/[.72] backdrop-blur-md">
-        <div className="mx-auto flex max-w-shell items-center justify-between px-gutter py-[11px]">
-          <div className="flex items-center gap-[10px]">
-            <div className="flex h-[38px] w-[38px] items-center justify-center rounded-badge border-[1.5px] border-volt bg-surface font-condensed text-[19px] font-extrabold italic tracking-[-1px]">
-              <span className="text-white">{brand.monogramLead}</span>
-              <span className="text-volt">{brand.monogramAccent}</span>
-            </div>
-            <div className="font-condensed text-[16px] font-bold leading-none tracking-wide">
-              {brand.wordmarkLead}{" "}
-              <span className="text-volt">{brand.wordmarkAccent}</span>
-            </div>
-          </div>
-
-          <a
-            href="#next-match"
-            className="rounded-control bg-volt px-[14px] py-2 font-condensed text-[13px] font-extrabold uppercase tracking-wide text-surface no-underline"
-          >
-            {nav.cta}
-          </a>
-        </div>
-      </header>
+      {/* NAV is the shared SiteHeader, rendered once from the root layout. */}
 
       <div className="relative z-10 mx-auto w-full max-w-shell px-gutter">
         {/* HERO */}
@@ -88,12 +67,13 @@ export default async function LandingPage() {
               {landing.vision}
             </p>
 
-            <a
-              href="#next-match"
+            {/* Primary CTA — the games list, not an in-page anchor. */}
+            <Link
+              href="/games"
               className="mt-[30px] inline-flex items-center gap-[9px] rounded-cta bg-volt px-[26px] py-[15px] font-condensed text-cta font-extrabold uppercase tracking-wide text-surface no-underline"
             >
               {landing.heroCta}
-            </a>
+            </Link>
 
             <div className="mt-[30px] animate-floatY font-mono text-[9px] tracking-eyebrow text-dim">
               {landing.scrollHint}

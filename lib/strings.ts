@@ -22,6 +22,14 @@ export const strings = {
 
   nav: {
     cta: "Claim your spot",
+    games: "Games",
+    logIn: "Log in",
+    home: "Hraj Fotbal — home",
+  },
+
+  siteFooter: {
+    privacy: "Privacy",
+    copyright: "© hrajfotbal",
   },
 
   landing: {

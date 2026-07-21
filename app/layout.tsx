@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Anton, Barlow_Condensed, JetBrains_Mono, Manrope } from "next/font/google";
 import { SessionProvider } from "@/components/SessionProvider";
+import { SiteFooter } from "@/components/SiteFooter";
+import { SiteHeader } from "@/components/SiteHeader";
 import { getCurrentPlayer } from "@/lib/auth/session";
 import { strings } from "@/lib/strings";
 import "./globals.css";
@@ -79,7 +81,9 @@ export default async function RootLayout({
             isAdmin: player?.is_admin ?? false,
           }}
         >
+          <SiteHeader nickname={player?.nickname ?? null} />
           {children}
+          <SiteFooter />
         </SessionProvider>
       </body>
     </html>
