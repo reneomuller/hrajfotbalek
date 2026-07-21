@@ -24,6 +24,7 @@ export const strings = {
     cta: "Claim your spot",
     games: "Games",
     logIn: "Log in",
+    profile: "My profile",
     home: "Hraj Fotbal — home",
   },
 
@@ -64,7 +65,9 @@ export const strings = {
 
     pay: {
       title: "PAY AHEAD",
-      body: "Scan the code and pay from your phone. The spot is yours.",
+      // Deliberately does not promise that scanning pays: the landing tile is
+      // a site QR, and payment happens after a spot is claimed.
+      body: "Scan to book — pay from your phone after claiming a spot.",
       perGame: "/ game",
     },
 
@@ -90,7 +93,7 @@ export const strings = {
     loginLede: "We email you a link. No password to remember.",
     emailLabel: "Email",
     emailPlaceholder: "you@example.com",
-    sendLink: "Send me a link",
+    sendLink: "Send link",
     linkSent: "Check your inbox — the link is on its way.",
     linkExpired: "That link has expired. Request a new one.",
     signOut: "Sign out",

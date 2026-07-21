@@ -24,12 +24,15 @@ export function primaryNavLinks(): NavLink[] {
  *
  * Keyed on the nickname rather than on "has a session": a user who has clicked
  * a magic link but not yet chosen a nickname has a session and no player row,
- * and has nothing to show in a header slot that renders a nickname. Sending
- * them to /login is correct — it forwards them on to /signup.
+ * so they are not a player yet. Sending them to /login is correct — it forwards
+ * them on to /signup.
+ *
+ * The label is fixed copy, not the nickname: a nickname is variable-width free
+ * text, and fixed chrome is the wrong place for it.
  */
 export function authNavLink(session: { nickname: string | null }): NavLink {
   if (session.nickname) {
-    return { href: "/account", label: session.nickname };
+    return { href: "/account", label: strings.nav.profile };
   }
   return { href: "/login", label: strings.nav.logIn };
 }

@@ -24,7 +24,7 @@ export function SignupForm({ next }: { next: string }) {
           required
           maxLength={NICKNAME_MAX_LENGTH}
           autoComplete="nickname"
-          className="rounded border border-white/20 bg-transparent px-4 py-3 text-base outline-none focus:border-[var(--color-volt)]"
+          className="rounded-control border border-hairline-link bg-transparent px-4 py-3 text-base outline-none transition-colors focus:border-volt"
         />
         <span className="text-xs opacity-50">{strings.auth.nicknameHint}</span>
         {state.field === "nickname" && state.message ? (
@@ -61,7 +61,7 @@ export function SignupForm({ next }: { next: string }) {
       <button
         type="submit"
         disabled={pending}
-        className="rounded bg-[var(--color-volt)] px-4 py-3 font-[family-name:var(--font-barlow-condensed)] text-lg font-extrabold uppercase italic tracking-wide text-black disabled:opacity-50"
+        className="rounded-cta bg-volt px-4 py-[15px] font-condensed text-cta font-extrabold uppercase tracking-wide text-surface transition disabled:opacity-50"
       >
         {pending ? strings.common.loading : strings.auth.createAccount}
       </button>

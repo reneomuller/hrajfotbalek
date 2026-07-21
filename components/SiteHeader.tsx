@@ -12,8 +12,8 @@ const { brand, nav } = strings;
  * carry `pt-24`, which clears the fixed bar.
  *
  * `nickname` is resolved server-side in the layout and used for DISPLAY only —
- * see the note in `lib/nav/links.ts`. It is free text, rendered as JSX children
- * so React escapes it.
+ * see the note in `lib/nav/links.ts`. It decides which slot to show; it is
+ * never rendered here.
  */
 export function SiteHeader({ nickname }: { nickname: string | null }) {
   const auth = authNavLink({ nickname });
@@ -48,7 +48,7 @@ export function SiteHeader({ nickname }: { nickname: string | null }) {
           ))}
           <Link
             href={auth.href}
-            className="max-w-[150px] truncate rounded-control bg-volt px-[14px] py-2 font-condensed text-[13px] font-extrabold uppercase tracking-wide text-surface no-underline"
+            className="rounded-control bg-volt px-[14px] py-2 font-condensed text-[13px] font-extrabold uppercase tracking-wide text-surface no-underline"
           >
             {auth.label}
           </Link>

@@ -35,14 +35,20 @@ export function LoginForm({
           autoComplete="email"
           inputMode="email"
           placeholder={strings.auth.emailPlaceholder}
-          className="rounded border border-white/20 bg-transparent px-4 py-3 text-base outline-none focus:border-[var(--color-volt)]"
+          className="rounded-control border border-hairline-link bg-transparent px-4 py-3 text-base outline-none transition-colors focus:border-volt"
         />
       </label>
 
+      {/*
+        A real submit button, so Enter inside the field and a tap both work.
+        It was previously painted with `bg-[var(--color-volt)]` — a variable
+        nothing defines, which rendered black text on a transparent block and
+        made the only way forward invisible. Colour comes from the theme token.
+      */}
       <button
         type="submit"
         disabled={pending}
-        className="rounded bg-[var(--color-volt)] px-4 py-3 font-[family-name:var(--font-barlow-condensed)] text-lg font-extrabold uppercase italic tracking-wide text-black disabled:opacity-50"
+        className="rounded-cta bg-volt px-4 py-[15px] font-condensed text-cta font-extrabold uppercase tracking-wide text-surface transition disabled:opacity-50"
       >
         {pending ? strings.common.loading : strings.auth.sendLink}
       </button>

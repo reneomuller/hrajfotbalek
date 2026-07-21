@@ -25,11 +25,15 @@ describe("authNavLink", () => {
     });
   });
 
-  it("shows the nickname linking to the account page when signed in", () => {
+  it("links the account page under fixed copy when signed in", () => {
     expect(authNavLink({ nickname: "Player_1" })).toEqual({
       href: "/account",
-      label: "Player_1",
+      label: strings.nav.profile,
     });
+  });
+
+  it("never renders the nickname itself in the nav", () => {
+    expect(authNavLink({ nickname: "Player_1" }).label).not.toContain("Player_1");
   });
 
   it("falls back to log in for a session with no player row yet", () => {
