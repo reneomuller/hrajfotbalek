@@ -224,6 +224,19 @@ export const strings = {
     cancelSuccess: "Booking cancelled. Any credit is back in your wallet.",
   },
 
+  admin: {
+    cancelGame: "Cancel this game",
+    cancelGameWarning:
+      "This cancels every booking, returns every player's money as credit, clears the waitlist and emails everyone. It cannot be undone.",
+    cancelGameConfirm: "Yes — cancel the game",
+    cancelGameDone: "Game cancelled",
+    cancelledBookings: "Bookings cancelled",
+    creditsIssued: "Players credited",
+    waitlistCleared: "Waitlist rows cleared",
+    noticesSent: "Notices sent",
+    receiptsSent: "Credit receipts sent",
+  },
+
   errors: {
     generic: "Something went wrong. Please try again.",
     // Losing a capacity race is a normal outcome here, not an exception — the

@@ -186,3 +186,121 @@ export async function dispatchEmail(input: DispatchInput): Promise<DispatchOutco
   const result = await sendRenderedEmail(input.to, rendered);
   return { sent: true, template, result };
 }
+
+// -----------------------------------------------------------------------------
+// game-cancelled fan-out
+// -----------------------------------------------------------------------------
+
+export interface CancelledRecipient {
+  bookingId: string;
+  /** Null for a shadow player with no email — skipped, not an error. */
+  email: string | null;
+  nickname: string;
+  /** Credit this cancellation returned. Zero for an unpaid reservation. */
+  creditCzk: number;
+}
+
+export interface FanOutInput {
+  gameId: string;
+  venue: string;
+  startsAt: string;
+  gameUrl: string;
+  accountUrl: string;
+  recipients: CancelledRecipient[];
+}
+
+export interface FanOutSummary {
+  notices: number;
+  receipts: number;
+  skippedNoEmail: number;
+  skippedAlreadySent: number;
+}
+
+/**
+ * Process-local record of what this fan-out has already sent.
+ *
+ * WHAT THIS DOES AND DOES NOT GUARANTEE, stated plainly because the difference
+ * matters at the gate:
+ *
+ *   - The real retry path is already safe WITHOUT this set. `cancel_game` is a
+ *     one-way transition: a second call on an cancelled game raises
+ *     INVALID_TRANSITION, so the admin action never reaches the fan-out twice
+ *     and a double-click sends nothing extra.
+ *   - This set additionally covers a direct second call to the fan-out inside
+ *     one server process, which is the resumable-partial-failure case.
+ *   - It does NOT survive a process restart. Durable cross-process idempotency
+ *     would need a sent-log the Phase 1 schema does not have; `events` is
+ *     RPC-write-only and has no email-sent type. Adding one is a schema change
+ *     that belongs in its own phase, not smuggled in here.
+ */
+const alreadyFannedOut = new Set<string>();
+
+/** Test seam — resets the process-local guard. */
+export function resetFanOutGuard(): void {
+  alreadyFannedOut.clear();
+}
+
+/**
+ * Fans the game-cancelled notice out to every affected player, plus the
+ * cancellation + credit receipt to those whose money was returned.
+ *
+ * Two emails for a credited player is deliberate and not a duplicate: the
+ * notice says the game is off, the receipt accounts for the money. Players
+ * with an unpaid reservation get the notice only — there is nothing to
+ * receipt, and a "0 CZK credited" receipt reads as a bug.
+ */
+export async function fanOutGameCancelled(input: FanOutInput): Promise<FanOutSummary> {
+  const summary: FanOutSummary = {
+    notices: 0,
+    receipts: 0,
+    skippedNoEmail: 0,
+    skippedAlreadySent: 0,
+  };
+
+  for (const recipient of input.recipients) {
+    if (!recipient.email) {
+      summary.skippedNoEmail += 1;
+      continue;
+    }
+
+    const context: DispatchContext = {
+      nickname: recipient.nickname,
+      venue: input.venue,
+      startsAt: input.startsAt,
+      gameUrl: input.gameUrl,
+      accountUrl: input.accountUrl,
+      creditCzk: recipient.creditCzk,
+    };
+
+    const sends: { event: DispatchableEvent; key: string }[] = [
+      { event: "game_cancelled", key: `${input.gameId}:${recipient.bookingId}:notice` },
+    ];
+    if (recipient.creditCzk > 0) {
+      sends.push({
+        event: "booking_cancelled",
+        key: `${input.gameId}:${recipient.bookingId}:receipt`,
+      });
+    }
+
+    for (const send of sends) {
+      if (alreadyFannedOut.has(send.key)) {
+        summary.skippedAlreadySent += 1;
+        continue;
+      }
+
+      const outcome = await dispatchEmail({
+        event: send.event,
+        to: recipient.email,
+        context,
+      });
+
+      if (outcome.sent) {
+        alreadyFannedOut.add(send.key);
+        if (send.event === "game_cancelled") summary.notices += 1;
+        else summary.receipts += 1;
+      }
+    }
+  }
+
+  return summary;
+}
