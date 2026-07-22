@@ -40,3 +40,4 @@ One line per item. Move to DONE when shipped. Sessions: only touch items explici
 
 ## Deferred decisions
 - Waitlist mechanics: notify-all FCFS stays for launch; ordered-priority revisited post-launch with real data (policy v2 candidate)
+- [ ] Fix shared probe() SQL test helper: false pass on non-volatile functions (planner prunes unread call) — use value-consuming pattern from waitlist_position.sql suite
