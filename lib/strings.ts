@@ -341,6 +341,27 @@ export const strings = {
     addPlayerNicknameTaken: "That nickname is taken. Try another.",
     addPlayerFull: "This game is full — there is no spot to give.",
 
+    // --- stats ---------------------------------------------------------------
+    statsTitle: "Stats",
+    statsLede: "Everything below is a query over the event log. Nothing here writes.",
+    statFunnel: "Signup → booking → played",
+    statFunnelSignups: "Signed up",
+    statFunnelBooked: "Booked at least once",
+    statFunnelAttended: "Turned up",
+    statConversion: "Booking → payment",
+    statConversionHint: "Share of bookings ever confirmed as paid.",
+    statNoShow: "No-show rate",
+    statNoShowHint: "Of the bookings whose attendance has been marked.",
+    statCredit: "Credit outstanding",
+    statCreditHint: "Money already taken that is still owed in football.",
+    statDropOff: "Magic-link drop-off",
+    statDropOffHint: "Sign-in links sent versus sign-ins completed.",
+    statWaitlist: "Waitlist depth",
+    statWaitlistHint:
+      "The expansion signal: when this stays deep, add a slot or a venue.",
+    statWaitlistEmpty: "No upcoming games with anyone waiting.",
+    statOf: "of",
+
     // --- players, credit grants, merge ---------------------------------------
     playersTitle: "Players",
     playersEmpty: "No players yet.",
