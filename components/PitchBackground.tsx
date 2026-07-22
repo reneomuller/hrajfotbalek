@@ -24,7 +24,33 @@ import { useEffect, useRef } from "react";
  * Respects `prefers-reduced-motion`: the pitch still renders, the animation
  * loop never starts. The static layer is the whole of the design's structure,
  * so a reduced-motion visitor sees the same composition without the movement.
+ *
+ * TWO INTENSITIES, because this is now site-wide rather than landing-only.
+ * `full` is the reference verbatim. `subtle` keeps the same pitch and the same
+ * paint values but thins the live layer — a third of the particles, no passing
+ * ball, one orb — and drops the whole canvas to a low opacity. That is the
+ * distinction the design needs: the landing page is mostly background with
+ * content on it, while a games list or an admin table is mostly content, and
+ * a full-strength particle field behind a dense table competes with the thing
+ * the player came to read. The composition is identical either way; only its
+ * weight changes.
  */
+
+export type BackgroundIntensity = "full" | "subtle";
+
+interface IntensityConfig {
+  particles: number;
+  orbs: number;
+  /** The passing ball is the loudest element; only the landing page gets it. */
+  ball: boolean;
+  /** Applied to the canvas element, not to any paint value. */
+  opacity: string;
+}
+
+const INTENSITY: Record<BackgroundIntensity, IntensityConfig> = {
+  full: { particles: 72, orbs: 3, ball: true, opacity: "opacity-100" },
+  subtle: { particles: 24, orbs: 1, ball: false, opacity: "opacity-40" },
+};
 
 const FX = {
   stripe: "rgba(166,232,56,.055)",
@@ -39,14 +65,20 @@ const FX = {
 } as const;
 
 const TAU = 6.28318;
-const PARTICLE_COUNT = 72;
 /** Height of the fixed header, excluded from the pitch's top margin. */
 const NAV = 61;
 
-export function PitchBackground() {
+export function PitchBackground({
+  intensity = "full",
+}: {
+  intensity?: BackgroundIntensity;
+}) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
+    const { particles: PARTICLE_COUNT, orbs: ORB_COUNT, ball: withBall } =
+      INTENSITY[intensity];
+
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
@@ -202,7 +234,7 @@ export function PitchBackground() {
       r: Math.random() * 1.7 + 0.6,
       g: 0,
     }));
-    const orbs = Array.from({ length: 3 }, () => ({
+    const orbs = Array.from({ length: ORB_COUNT }, () => ({
       x: Math.random() * W,
       y: Math.random() * H,
       r: Math.random() * 240 + 150,
@@ -343,7 +375,10 @@ export function PitchBackground() {
         }
       });
 
-      if (ball.pause > 0) {
+      if (!withBall) {
+        // `subtle` stops here: pitch, orbs, particles and their links, and
+        // nothing that draws the eye across the screen.
+      } else if (ball.pause > 0) {
         ball.pause--;
       } else if (ball.t < 1) {
         ball.t += ball.spd;
@@ -391,13 +426,13 @@ export function PitchBackground() {
       window.removeEventListener("pointermove", onPointerMove);
       document.documentElement.removeEventListener("pointerleave", onPointerLeave);
     };
-  }, []);
+  }, [intensity]);
 
   return (
     <canvas
       ref={canvasRef}
       aria-hidden
-      className="pointer-events-none fixed inset-0 z-0"
+      className={`pointer-events-none fixed inset-0 z-0 ${INTENSITY[intensity].opacity}`}
     />
   );
 }

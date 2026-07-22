@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Anton, Barlow_Condensed, JetBrains_Mono, Manrope } from "next/font/google";
 import { SessionProvider } from "@/components/SessionProvider";
+import { SiteBackground } from "@/components/SiteBackground";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
 import { getCurrentPlayer } from "@/lib/auth/session";
@@ -81,7 +82,12 @@ export default async function RootLayout({
             isAdmin: player?.is_admin ?? false,
           }}
         >
-          <SiteHeader nickname={player?.nickname ?? null} />
+          {/* Mounted once, here, so navigating never restarts the field. */}
+          <SiteBackground />
+          <SiteHeader
+            nickname={player?.nickname ?? null}
+            isAdmin={player?.is_admin ?? false}
+          />
           {children}
           <SiteFooter />
         </SessionProvider>

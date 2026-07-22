@@ -1,15 +1,20 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Roster } from "@/components/Roster";
+import { AvatarRow } from "@/components/game/AvatarRow";
+import { CapacityBar } from "@/components/game/CapacityBar";
+import { FormatChips } from "@/components/game/FormatChips";
+import { ShareButton } from "@/components/game/ShareButton";
+import { WaitlistPanel } from "@/components/game/WaitlistPanel";
 import { VenueMapPanel } from "@/components/VenueMapPanel";
 import { WaitlistButton } from "@/components/WaitlistButton";
 import { isOnWaitlist, waitlistPosition } from "@/lib/booking/waitlistConvert";
 import { readResumeIntent } from "@/lib/booking/resume";
 import { runJoinWaitlist } from "./waitlist/actions";
-import { getSessionUser } from "@/lib/auth/session";
-import { SpotsCounter } from "@/components/SpotsCounter";
+import { getCurrentPlayer, getSessionUser } from "@/lib/auth/session";
 import { formatCzk, formatGameDateTime } from "@/lib/format";
-import { getGameById, getRoster, getVenue } from "@/lib/games/queries";
+import { getGameById, getRoster, getVenue, getWaitlist } from "@/lib/games/queries";
+import { gameUrgency, spotsLeftLabel, urgencyLabel } from "@/lib/games/urgency";
 import { siteUrl } from "@/lib/site";
 import { strings } from "@/lib/strings";
 
@@ -40,11 +45,13 @@ export async function generateMetadata({ params }: GamePageProps): Promise<Metad
     return { title: strings.games.notFound, description: strings.meta.description };
   }
 
-  const { game, spotsLeft } = result;
+  const { game } = result;
   const title = `${game.venue} — ${formatGameDateTime(game.starts_at)}`;
-  const description = spotsLeft > 0
-    ? `${spotsLeft} ${spotsLeft === 1 ? strings.games.spotLeft : strings.games.spotsLeft} · ${formatCzk(game.price_czk)}`
-    : `${strings.games.full} · ${formatCzk(game.price_czk)}`;
+  // Same ladder the page renders, so the WhatsApp preview and the page it
+  // links to never disagree about how urgent the game is.
+  const description = `${spotsLeftLabel(result.bookedCount, game.capacity)} · ${formatCzk(
+    game.price_czk,
+  )}`;
 
   const url = `${await siteUrl()}/game/${game.id}`;
 
@@ -80,14 +87,25 @@ export default async function GameDetailPage({ params, searchParams }: GamePageP
   const { game, bookedCount, spotsLeft, hasStarted, isCancelled } = result;
   const roster = await getRoster(game.id);
   const venueRow = await getVenue(game.venue_id);
+  // The queue is public — see migration 20 and getWaitlist(). Fetched for every
+  // visitor, signed in or not, because "who is waiting" is part of what makes a
+  // full game worth queueing for.
+  const waitlist = await getWaitlist(game.id);
 
   const isFull = spotsLeft === 0;
+  const urgency = gameUrgency(bookedCount, game.capacity);
   const canAct = !isCancelled && !hasStarted;
 
   // Label only. The write is gated in `createBookingAction`, not here — an
   // anonymous visitor may still walk the whole flow and authenticate at the
   // end, which is the no-pre-auth-hold rule.
   const signedIn = (await getSessionUser()) !== null;
+
+  // DISPLAY ONLY: used to ring the viewer's own avatar in the public queue.
+  // The views project no player id, so a nickname match is the only way to
+  // answer "which of these is me" — adequate for a highlight, and never the
+  // authority on membership (that is `isOnWaitlist`, which reads under RLS).
+  const viewerNickname = signedIn ? ((await getCurrentPlayer())?.nickname ?? null) : null;
 
   // A full game now offers the waitlist rather than a dead end: `join_waitlist`
   // exists as of Phase 17, so the CTA leads somewhere real. Read under own-row
@@ -127,30 +145,20 @@ export default async function GameDetailPage({ params, searchParams }: GamePageP
         {game.venue}
       </h1>
 
-      <div className="mt-3 flex flex-wrap items-baseline gap-x-5 gap-y-2">
+      <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-3">
         <span className="font-mono text-[13px] tracking-[1px] text-volt">
           {formatGameDateTime(game.starts_at)}
         </span>
         <span className="font-mono text-[13px] text-muted">
           {formatCzk(game.price_czk)}
         </span>
-        {/* Format and surface, when the organizer said. Chips, above the map. */}
-        {game.format && (
-          <span
-            data-testid="game-format"
-            className="rounded-chip bg-volt px-2 py-1 font-mono text-[10px] font-bold tracking-[1px] text-surface"
-          >
-            {game.format}
-          </span>
-        )}
-        {game.surface && (
-          <span
-            data-testid="game-surface"
-            className="rounded-chip border border-hairline-strong px-2 py-1 font-mono text-[10px] font-bold uppercase tracking-[1px] text-muted"
-          >
-            {strings.games.surface[game.surface]}
-          </span>
-        )}
+        {/* Format and surface, when the organizer said. Chips, above the map —
+            the same pair the cards carry, from the same component. */}
+        <FormatChips
+          format={game.format}
+          surface={game.surface}
+          capacity={game.capacity}
+        />
       </div>
 
       <div className="mt-6 overflow-hidden rounded-card border border-hairline">
@@ -173,8 +181,40 @@ export default async function GameDetailPage({ params, searchParams }: GamePageP
         </div>
       )}
 
-      <div className="mt-7">
-        <SpotsCounter capacity={game.capacity} bookedCount={bookedCount} />
+      {/*
+        The count, in the card's language rather than the game page's old one.
+        This used to be `SpotsCounter`, which drew a single proportional bar —
+        the one surface that disagreed with the reference's notch-per-spot bar.
+        Same component as the cards now, so they cannot drift again.
+      */}
+      <div className="mt-7 rounded-card border border-hairline-volt bg-surface-panel p-5">
+        <div className="mb-3 flex items-baseline justify-between gap-3">
+          <span
+            data-testid="urgency-label"
+            className={`font-mono text-[10px] uppercase tracking-[2px] ${
+              urgency === "full" ? "text-faint" : "text-volt-dim"
+            }`}
+          >
+            {urgencyLabel(urgency)}
+          </span>
+          <span
+            data-testid="spots-counter"
+            className="font-mono text-[22px] font-bold text-white"
+          >
+            {String(Math.min(bookedCount, game.capacity)).padStart(2, "0")}/{game.capacity}
+          </span>
+        </div>
+
+        <CapacityBar bookedCount={bookedCount} capacity={game.capacity} />
+
+        <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-2 pl-2">
+          <AvatarRow names={roster.map((row) => row.nickname)} max={14} />
+          {!isFull && (
+            <span data-testid="spots-left" className="text-[13px] text-muted-dim">
+              <b className="text-volt">{spotsLeftLabel(bookedCount, game.capacity)}</b>
+            </span>
+          )}
+        </div>
       </div>
 
       {isCancelled && (
@@ -215,7 +255,23 @@ export default async function GameDetailPage({ params, searchParams }: GamePageP
         </Link>
       )}
 
+      {/* Share to WhatsApp — the channel this whole product replaced, and
+          still where a game actually gets filled. */}
+      <div className="mt-8">
+        <ShareButton
+          venue={game.venue}
+          when={formatGameDateTime(game.starts_at)}
+          url={`${await siteUrl()}/game/${game.id}`}
+        />
+      </div>
+
       <Roster rows={roster} />
+
+      {/* The queue, in public. Rendered whenever the game is full or anyone is
+          already waiting — an empty panel on a half-full game would be noise. */}
+      {(isFull || waitlist.length > 0) && (
+        <WaitlistPanel rows={waitlist} viewerNickname={viewerNickname} />
+      )}
     </main>
   );
 }

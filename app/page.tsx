@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { NextMatchCard } from "@/components/NextMatchCard";
-import { PitchBackground } from "@/components/PitchBackground";
 import { getNextGame, getRoster, getVenue } from "@/lib/games/queries";
 import { siteUrl } from "@/lib/site";
 import { strings } from "@/lib/strings";
@@ -39,17 +38,15 @@ export default async function LandingPage() {
   // The venue behind the game, for the map panel's photo. Null for a game
   // created before venues existed — the panel holds its own without one.
   const venueRow = nextGame ? await getVenue(nextGame.game.venue_id) : null;
+  // Absolute, for the share link — a wa.me message carrying a relative path is
+  // a message nobody can open.
+  const base = await siteUrl();
 
   return (
     <>
-      {/* Animated pitch + particle field, behind everything. */}
-      <PitchBackground />
-
-      {/* Vignette over the page — matches the reference's fixed overlay. */}
-      <div
-        aria-hidden
-        className="pointer-events-none fixed inset-0 z-[1] bg-page-vignette"
-      />
+      {/* Pitch, grain and vignette are the shared SiteBackground, mounted once
+          from the root layout. This route is what puts it at full strength —
+          see components/SiteBackground.tsx. */}
 
       {/* NAV is the shared SiteHeader, rendered once from the root layout. */}
 
@@ -132,6 +129,7 @@ export default async function LandingPage() {
                 bookedCount={nextGame.bookedCount}
                 roster={roster.map((row) => row.nickname)}
                 venueRow={venueRow}
+                shareUrl={`${base}/game/${nextGame.game.id}`}
               />
             ) : (
               <div

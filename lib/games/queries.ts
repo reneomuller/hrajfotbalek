@@ -167,3 +167,107 @@ export async function getRoster(gameId: string): Promise<RosterRow[]> {
   if (error || !data) return [];
   return data as RosterRow[];
 }
+
+/**
+ * Roster nicknames per game, in join order, for a set of games in one round
+ * trip.
+ *
+ * The list page renders avatars on every card, and doing that with one query
+ * per card is how a twenty-game list becomes twenty-one round trips. Same
+ * anon-readable view as `getRoster`, same PII boundary: nickname only.
+ *
+ * `game_roster_public` has no ordering guarantee of its own, so this sorts by
+ * nickname for a stable render. Join order is not available through the view —
+ * it projects no timestamp, deliberately — and a list whose avatars reshuffle
+ * between requests looks broken, so a deterministic order matters more here
+ * than the real one.
+ */
+export async function listRostersByGame(
+  gameIds: string[],
+): Promise<Map<string, string[]>> {
+  const rosters = new Map<string, string[]>();
+  if (gameIds.length === 0) return rosters;
+
+  const supabase = await createServerSupabaseClient();
+  const { data, error } = await supabase
+    .from("game_roster_public")
+    .select("game_id, nickname")
+    .in("game_id", gameIds);
+
+  if (error || !data) return rosters;
+
+  for (const row of data) {
+    const list = rosters.get(row.game_id) ?? [];
+    list.push(row.nickname);
+    rosters.set(row.game_id, list);
+  }
+  for (const list of rosters.values()) list.sort((a, b) => a.localeCompare(b));
+
+  return rosters;
+}
+
+/**
+ * The public waiting list for a game — nickname and position, in queue order.
+ *
+ * THE QUEUE IS PUBLIC, on the same reasoning as the roster: a pickup game is a
+ * social object, and a queue nobody can see is a queue nobody trusts. What is
+ * NOT public is how the queue is built — `game_waitlist_public` projects no
+ * `player_id` and no `joined_at`, so a visitor can read the order without
+ * reading when anyone was on their phone. See migration 20.
+ */
+export async function getWaitlist(
+  gameId: string,
+): Promise<Database["public"]["Views"]["game_waitlist_public"]["Row"][]> {
+  const supabase = await createServerSupabaseClient();
+
+  const { data, error } = await supabase
+    .from("game_waitlist_public")
+    .select("game_id, nickname, position")
+    .eq("game_id", gameId)
+    .order("position", { ascending: true });
+
+  if (error || !data) return [];
+  return data;
+}
+
+/**
+ * Game ids the signed-in player is waiting on, for the list's "You're waiting"
+ * badges.
+ *
+ * Reads `waitlist` directly rather than the public view, and that is the point:
+ * own-row RLS means this returns the caller's rows and nobody else's, so the
+ * badge cannot be made to appear on someone else's behalf. A signed-out visitor
+ * gets an empty set, which is the correct answer rather than an error.
+ */
+export async function listOwnWaitlistGameIds(): Promise<Set<string>> {
+  const supabase = await createServerSupabaseClient();
+
+  const { data, error } = await supabase
+    .from("waitlist")
+    .select("game_id")
+    .is("converted_booking_id", null);
+
+  if (error || !data) return new Set();
+  return new Set(data.map((row) => row.game_id));
+}
+
+/**
+ * Venue rows for a set of games, keyed by id, in one round trip.
+ *
+ * The single-venue `getVenue` is still the right call on the game page; this is
+ * for the list, where one query per card would dominate the render. Nulls are
+ * dropped before the query rather than filtered after, since a game with no
+ * venue link simply has no row to fetch.
+ */
+export async function getVenues(
+  venueIds: (string | null)[],
+): Promise<Map<string, VenueRow>> {
+  const ids = [...new Set(venueIds.filter((id): id is string => id !== null))];
+  if (ids.length === 0) return new Map();
+
+  const supabase = await createServerSupabaseClient();
+  const { data, error } = await supabase.from("venues").select("*").in("id", ids);
+
+  if (error || !data) return new Map();
+  return new Map(data.map((venue) => [venue.id, venue]));
+}

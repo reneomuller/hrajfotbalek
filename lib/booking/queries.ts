@@ -106,3 +106,29 @@ export async function getOwnCreditBalance(): Promise<number> {
 
   return data.reduce((sum, row) => sum + row.delta_czk, 0);
 }
+
+/**
+ * The signed-in player's next game — the one the `/games` strip points at.
+ *
+ * Here rather than in the page for the reason `hasStarted` lives in
+ * lib/games/queries.ts: reading the clock during render is impure, and React
+ * says so out loud. The query layer already runs per request, so this is the
+ * honest place for "is it still upcoming".
+ *
+ * Only a booking that still holds a spot counts. A cancelled or expired one is
+ * not somewhere you are going, and pointing a "your next game" strip at it
+ * would be actively misleading — that is the shape of booking most likely to
+ * be sitting in a player's history when they open the list.
+ */
+export async function getOwnNextBooking(): Promise<BookingWithGame | null> {
+  const bookings = await listOwnBookings();
+  const now = Date.now();
+
+  return (
+    bookings.find(
+      ({ booking, game }) =>
+        (booking.status === "reserved" || booking.status === "confirmed") &&
+        new Date(game.starts_at).getTime() > now,
+    ) ?? null
+  );
+}

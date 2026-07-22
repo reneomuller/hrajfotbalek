@@ -26,6 +26,9 @@ export const strings = {
     logIn: "Log in",
     profile: "My profile",
     home: "Hraj Fotbal — home",
+    // Shown only to an is_admin session. Hiding it hides nothing — the gate is
+    // `requireAdmin()` in the admin layout — but the panel had no door before.
+    admin: "Admin",
   },
 
   siteFooter: {
@@ -170,6 +173,36 @@ export const strings = {
     venueLabel: "Where",
     priceLabel: "Price",
     alreadyStarted: "This game has already kicked off.",
+
+    // --- urgency ladder ------------------------------------------------------
+    // Three rungs, and the copy is what distinguishes them: plenty of room
+    // reads as an invitation, the last few as a nudge, full as a queue with a
+    // way in. `urgencyLabel()` in lib/games/urgency.ts picks the rung — the
+    // thresholds are not decided at a render site.
+    urgencyOpen: "Spots open",
+    urgencyLastFew: "Almost full",
+    urgencyFull: "Full",
+
+    // --- the queue, in public ------------------------------------------------
+    waitlistTitle: "Waiting list",
+    waitlistEmpty: "Nobody is waiting yet — a spot here is still first come.",
+    // Marks the viewer's own avatar in the queue. Rendered as a title/aria
+    // label, never as visible text inside the avatar.
+    waitlistYou: "You",
+    waitlistCount: "waiting",
+    // Card badge for a logged-in player who holds a waitlist row on that game.
+    onWaitlistBadge: "You're waiting",
+
+    // --- your next game ------------------------------------------------------
+    nextGameStrip: "Your next game",
+    nextGameStripCta: "View booking →",
+
+    // --- share ---------------------------------------------------------------
+    shareWhatsApp: "Share on WhatsApp",
+    // The message body. {venue}, {when} and {url} are substituted by
+    // `whatsAppShareUrl()`; nothing here may be pre-encoded, since that helper
+    // encodes the finished string exactly once.
+    shareMessage: "{venue} · {when}\nGrab a spot: {url}",
   },
 
   booking: {
@@ -380,6 +413,19 @@ export const strings = {
     grantDone: "Wallet updated",
     grantNegativeBlocked: "That would put the wallet below zero.",
     grantInvalid: "Enter an amount other than zero.",
+
+    // --- admin rights --------------------------------------------------------
+    // Granting happens in-app as of migration 20. The copy states the one rule
+    // that keeps self-elevation impossible, because an admin who does not know
+    // why their own row has no button will assume the panel is broken.
+    makeAdmin: "Make admin",
+    revokeAdmin: "Revoke admin",
+    adminSelfNote: "You cannot change your own admin rights.",
+    adminConfirmGrant:
+      "Give this player the full admin panel — games, payments, players and rights?",
+    adminConfirmRevoke: "Take away this player's admin rights?",
+    adminChanged: "Admin rights updated",
+    adminCannotChangeOwn: "You cannot change your own admin rights.",
 
     mergeTitle: "Merge a shadow player",
     mergeLink: "Merge identities",

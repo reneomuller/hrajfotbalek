@@ -312,6 +312,19 @@ export interface Database {
         };
         Relationships: [];
       };
+      /**
+       * Anonymous waitlist surface — game_id, nickname, position and nothing
+       * else. Never player_id or joined_at: `position` exists precisely so the
+       * rank can be shown without the timestamp that produces it.
+       */
+      game_waitlist_public: {
+        Row: {
+          game_id: string;
+          nickname: string;
+          position: number;
+        };
+        Relationships: [];
+      };
     };
 
     Functions: {
@@ -488,6 +501,16 @@ export interface Database {
       set_game_capacity: {
         Args: { p_game_id: string; p_capacity: number };
         Returns: number;
+      };
+
+      /**
+       * Admin-only, and NOT callable by service_role — see migration 20.
+       * Refuses to change the caller's own flag, which is what keeps
+       * self-elevation impossible now that granting happens in-app.
+       */
+      set_player_admin: {
+        Args: { p_player_id: string; p_is_admin: boolean };
+        Returns: boolean;
       };
 
       /** Callable by anon — the caller has not signed in yet, by definition. */

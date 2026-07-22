@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { AdminNav } from "@/components/admin/AdminNav";
 import { requireAdmin } from "@/lib/auth/requireAdmin";
 import { strings } from "@/lib/strings";
 
@@ -27,12 +28,6 @@ export const metadata: Metadata = {
 
 export const dynamic = "force-dynamic";
 
-const NAV = [
-  { href: "/admin/games", label: strings.admin.navGames },
-  { href: "/admin/players", label: strings.admin.navPlayers },
-  { href: "/admin/stats", label: strings.admin.navStats },
-];
-
 export default async function AdminLayout({
   children,
 }: {
@@ -49,17 +44,7 @@ export default async function AdminLayout({
           <h1 className="m-0 font-display text-section-title uppercase tracking-wide text-white">
             {strings.admin.title}
           </h1>
-          <nav className="flex gap-4">
-            {NAV.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className="font-mono text-[11px] uppercase tracking-eyebrow text-muted no-underline hover:text-volt"
-              >
-                {link.label}
-              </Link>
-            ))}
-          </nav>
+          <AdminNav />
         </div>
 
         <div className="flex items-baseline gap-4">

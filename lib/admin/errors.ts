@@ -25,6 +25,7 @@ const CODES: Array<[string, string]> = [
   ["CREDIT_NEGATIVE_BLOCKED", strings.admin.grantNegativeBlocked],
   ["INVALID_CREDIT_DELTA", strings.admin.grantInvalid],
   ["INVALID_CREDIT_REASON", strings.admin.grantInvalid],
+  ["CANNOT_CHANGE_OWN_ADMIN", strings.admin.adminCannotChangeOwn],
   ["MERGE_SELF", strings.admin.mergeSelf],
   ["NOT_A_SHADOW", strings.admin.mergeNotShadow],
   ["MERGE_CONFLICT", strings.admin.mergeConflict],

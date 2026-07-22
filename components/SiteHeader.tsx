@@ -11,11 +11,18 @@ const { brand, nav } = strings;
  * adding navigation does not reinterpret the design. Content pages already
  * carry `pt-24`, which clears the fixed bar.
  *
- * `nickname` is resolved server-side in the layout and used for DISPLAY only —
- * see the note in `lib/nav/links.ts`. It decides which slot to show; it is
- * never rendered here.
+ * `nickname` and `isAdmin` are resolved server-side in the layout and used for
+ * DISPLAY only — see the note in `lib/nav/links.ts`. `nickname` decides which
+ * auth slot to show and is never rendered here; `isAdmin` decides whether the
+ * Admin link appears, and grants nothing by appearing.
  */
-export function SiteHeader({ nickname }: { nickname: string | null }) {
+export function SiteHeader({
+  nickname,
+  isAdmin,
+}: {
+  nickname: string | null;
+  isAdmin: boolean;
+}) {
   const auth = authNavLink({ nickname });
 
   return (
@@ -37,10 +44,11 @@ export function SiteHeader({ nickname }: { nickname: string | null }) {
         </Link>
 
         <nav className="flex items-center gap-[14px]">
-          {primaryNavLinks().map((link) => (
+          {primaryNavLinks({ isAdmin }).map((link) => (
             <Link
               key={link.href}
               href={link.href}
+              data-testid={`nav-${link.href.split("/")[1]}`}
               className="font-condensed text-[13px] font-bold uppercase tracking-wide text-bone no-underline transition hover:text-volt"
             >
               {link.label}

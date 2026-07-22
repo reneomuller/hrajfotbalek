@@ -79,6 +79,16 @@ const config: Config = {
       maxWidth: {
         shell: "980px",
       },
+      backgroundSize: {
+        /*
+         * One `drift` cycle — see the `grain` gradient below. Named
+         * `grain-tile` rather than `grain` on purpose: Tailwind generates both
+         * backgroundImage and backgroundSize utilities under the `bg-` prefix,
+         * so two entries called `grain` would produce one class that silently
+         * wins over the other.
+         */
+        "grain-tile": "60px 60px",
+      },
       spacing: {
         gutter: "22px",
         nav: "64px",
@@ -100,6 +110,17 @@ const config: Config = {
           "radial-gradient(120% 90% at 50% 0%,transparent 55%,rgba(0,0,0,.5) 100%)",
         "map-vignette":
           "radial-gradient(130% 110% at 50% 45%,transparent 50%,rgba(6,6,6,.6) 100%)",
+        /*
+         * Grain. THE ONE BACKGROUND ELEMENT THAT IS AN EXTENSION rather than a
+         * port: the reference ships a `drift` keyframe (background-position
+         * 0 0 → 60px 60px) with nothing wired to it, which is the tile this
+         * animates. A 60px dot lattice at 2% white, drifting one full tile —
+         * it reads as film grain over the flat black and gives the fixed
+         * layers something to sit on. Sized to match the keyframe's travel, so
+         * the loop is seamless.
+         */
+        grain:
+          "radial-gradient(rgba(255,255,255,.02) 1px,transparent 1px)",
         instagram: "linear-gradient(45deg,#F9CE34,#EE2A7B,#6228D7)",
       },
       keyframes: {

@@ -1,5 +1,7 @@
 import Link from "next/link";
+import { AdminRightsButton } from "@/components/admin/AdminRightsButton";
 import { GrantCreditForm } from "@/components/admin/GrantCreditForm";
+import { requireAdmin } from "@/lib/auth/requireAdmin";
 import { listPlayers } from "@/lib/admin/queries";
 import { formatCzk } from "@/lib/format";
 import { strings } from "@/lib/strings";
@@ -15,7 +17,9 @@ export const dynamic = "force-dynamic";
  * be right.
  */
 export default async function AdminPlayersPage() {
-  const players = await listPlayers();
+  // Whose session is acting. Used only to decide which row renders no rights
+  // control — `set_player_admin` refuses a self-change on its own.
+  const [acting, players] = await Promise.all([requireAdmin(), listPlayers()]);
 
   return (
     <>
@@ -83,7 +87,23 @@ export default async function AdminPlayersPage() {
                 {strings.admin.balanceLabel} {formatCzk(player.balanceCzk)}
               </div>
 
-              <GrantCreditForm playerId={player.id} />
+              <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
+                {player.id === acting.id ? (
+                  /* The acting admin's own row. Stated rather than left blank:
+                     an admin who finds no button where every other row has one
+                     will otherwise assume the panel is broken. */
+                  <span
+                    data-testid="admin-rights-self"
+                    className="font-mono text-[10px] uppercase tracking-eyebrow text-faint"
+                  >
+                    {strings.admin.adminSelfNote}
+                  </span>
+                ) : (
+                  <AdminRightsButton playerId={player.id} isAdmin={player.isAdmin} />
+                )}
+
+                <GrantCreditForm playerId={player.id} />
+              </div>
             </li>
           ))}
         </ul>

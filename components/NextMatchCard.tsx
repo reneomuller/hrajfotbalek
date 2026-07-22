@@ -1,8 +1,11 @@
 import Link from "next/link";
+import { AvatarRow } from "@/components/game/AvatarRow";
+import { CapacityBar } from "@/components/game/CapacityBar";
+import { FormatChips } from "@/components/game/FormatChips";
+import { ShareButton } from "@/components/game/ShareButton";
 import { VenueMapPanel, type VenueMapPanelProps } from "@/components/VenueMapPanel";
 import { formatGameDateTime } from "@/lib/format";
-import { capacitySegments } from "@/lib/games/capacity";
-import { initials } from "@/lib/roster/initials";
+import { gameUrgency, spotsLeftLabel, urgencyLabel } from "@/lib/games/urgency";
 import { strings } from "@/lib/strings";
 import type { GameCardGame } from "@/components/GameCard";
 
@@ -35,6 +38,8 @@ export interface NextMatchCardProps {
    * they add the venue.
    */
   venueRow: VenueMapPanelProps["venueRow"];
+  /** Absolute URL to this game, for the share link. */
+  shareUrl?: string;
 }
 
 export function NextMatchCard({
@@ -42,15 +47,12 @@ export function NextMatchCard({
   bookedCount,
   roster,
   venueRow,
+  shareUrl,
 }: NextMatchCardProps) {
   const filled = Math.min(bookedCount, game.capacity);
-  const spotsLeft = Math.max(0, game.capacity - bookedCount);
-  const isFull = spotsLeft === 0;
-  // The organizer's own words win over the derived guess: "6v6" is a fact
-  // about the game, while capacity/2 infers it from a number that also counts
-  // substitutes. Without either, no chip rather than a rounded lie.
-  const perSide = game.capacity % 2 === 0 ? game.capacity / 2 : null;
-  const formatChip = game.format ?? (perSide !== null ? `${perSide}v${perSide}` : null);
+  const urgency = gameUrgency(bookedCount, game.capacity);
+  const isFull = urgency === "full";
+  const when = formatGameDateTime(game.starts_at);
 
   return (
     <div
@@ -62,20 +64,14 @@ export function NextMatchCard({
         <div className="px-6 pb-4 pt-[22px]">
           <div className="flex items-center justify-between gap-3">
             <div className="font-mono text-[11px] uppercase tracking-[1px] text-chalk">
-              {formatGameDateTime(game.starts_at)}
+              {when}
             </div>
-            <div className="flex items-center gap-2">
-              {formatChip && (
-                <div className="rounded-chip bg-volt px-2 py-1 font-mono text-[9px] font-bold tracking-[1px] text-surface">
-                  {formatChip}
-                </div>
-              )}
-              {game.surface && (
-                <div className="rounded-chip border border-hairline-strong px-2 py-1 font-mono text-[9px] font-bold uppercase tracking-[1px] text-muted">
-                  {games.surface[game.surface]}
-                </div>
-              )}
-            </div>
+            <FormatChips
+              format={game.format}
+              surface={game.surface}
+              capacity={game.capacity}
+              size="slim"
+            />
           </div>
 
           <div className="mt-[10px] font-condensed text-match-title font-bold text-white">
@@ -89,8 +85,15 @@ export function NextMatchCard({
       {/* RIGHT — capacity + lineup + join */}
       <div className="flex min-w-[300px] flex-1 flex-col px-6 py-[22px]">
         <div className="mb-[10px] flex items-baseline justify-between">
-          <span className="font-mono text-[10px] tracking-[2px] text-volt-dim">
-            {games.filledLabel}
+          {/* The urgency ladder, same rungs and same thresholds as the list
+              cards and the game page — see lib/games/urgency.ts. */}
+          <span
+            data-testid="urgency-label"
+            className={`font-mono text-[10px] uppercase tracking-[2px] ${
+              isFull ? "text-faint" : "text-volt-dim"
+            }`}
+          >
+            {urgencyLabel(urgency)}
           </span>
           <span
             data-testid="spots-counter"
@@ -100,40 +103,14 @@ export function NextMatchCard({
           </span>
         </div>
 
-        {/*
-          Capacity bar — one segment per spot, per the reference's `data-segs`
-          block: `display:flex;gap:4px` around `flex:1;height:11px;
-          border-radius:2px` notches, volt when filled and #242424 when not.
-          Every value here is a theme token standing for that literal.
-        */}
-        <div data-testid="capacity-segments" className="flex gap-1">
-          {capacitySegments(bookedCount, game.capacity).map((isFilled, i) => (
-            <i
-              key={i}
-              className={`h-[11px] flex-1 rounded-[2px] ${
-                isFilled ? "bg-volt" : "bg-surface-seg"
-              }`}
-            />
-          ))}
-        </div>
+        <CapacityBar bookedCount={bookedCount} capacity={game.capacity} />
 
-        <div className="mt-[18px] flex flex-wrap items-center gap-y-2 pl-2">
-          <div className="flex flex-wrap items-center gap-y-[6px]">
-            {roster.map((nickname, i) => (
-              <span
-                key={`${nickname}-${i}`}
-                title={nickname}
-                className={`-ml-2 flex h-[34px] w-[34px] items-center justify-center rounded-full border-2 border-surface-raised bg-surface-avatar font-condensed text-[13px] font-bold ${
-                  i % 3 === 0 ? "text-volt" : "text-bone"
-                }`}
-              >
-                {initials(nickname)}
-              </span>
-            ))}
-          </div>
-          <span className="ml-3 text-[13px] text-muted-dim">
-            <b className="text-volt">+{spotsLeft}</b>{" "}
-            {spotsLeft === 1 ? games.spotLeft : games.spotsLeft}
+        <div className="mt-[18px] flex flex-wrap items-center gap-x-3 gap-y-2 pl-2">
+          <AvatarRow names={roster} max={14} />
+          <span className="text-[13px] text-muted-dim">
+            <b className={isFull ? "text-faint" : "text-volt"}>
+              {spotsLeftLabel(bookedCount, game.capacity)}
+            </b>
           </span>
         </div>
 
@@ -151,6 +128,12 @@ export function NextMatchCard({
         <div className="mt-[9px] text-center text-[11px] text-hint">
           {games.joinNote}
         </div>
+
+        {shareUrl && (
+          <div className="mt-4 flex justify-center">
+            <ShareButton venue={game.venue} when={when} url={shareUrl} />
+          </div>
+        )}
       </div>
     </div>
   );
