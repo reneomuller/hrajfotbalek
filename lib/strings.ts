@@ -341,6 +341,41 @@ export const strings = {
     addPlayerNicknameTaken: "That nickname is taken. Try another.",
     addPlayerFull: "This game is full — there is no spot to give.",
 
+    // --- players, credit grants, merge ---------------------------------------
+    playersTitle: "Players",
+    playersEmpty: "No players yet.",
+    balanceLabel: "Wallet",
+    bookingsLabel: "Bookings",
+    shadowTag: "Shadow",
+    seedTag: "Seed",
+    adminTag: "Admin",
+    noEmail: "no email",
+    grantCredit: "Grant credit",
+    grantAmountLabel: "Amount (CZK)",
+    grantAmountHint: "Negative to correct a mistake. A wallet can never go below zero.",
+    grantNoteLabel: "Why (optional)",
+    grantUnmatchedLabel: "This resolves a payment that arrived with a wrong or missing VS",
+    grantSubmit: "Add to wallet",
+    grantDone: "Wallet updated",
+    grantNegativeBlocked: "That would put the wallet below zero.",
+    grantInvalid: "Enter an amount other than zero.",
+
+    mergeTitle: "Merge a shadow player",
+    mergeLink: "Merge identities",
+    mergeLede:
+      "Moves every booking, waitlist row, credit and event from a shadow onto a real account, then removes the shadow. This cannot be undone.",
+    mergeShadowLabel: "Shadow to merge away",
+    mergeSurvivingLabel: "Account to keep",
+    mergeSubmit: "Merge them",
+    mergeDone: "Merged",
+    mergeRowsMoved: "Rows moved",
+    mergeSelf: "Pick two different players.",
+    mergeNotShadow:
+      "That player has signed in before, so it cannot be the one merged away. Swap them round.",
+    mergeConflict:
+      "Both of them hold a spot on the same game. Cancel one of those bookings first.",
+    mergePickBoth: "Pick a shadow and an account to keep.",
+
     // --- attendance + settle -------------------------------------------------
     attendanceTitle: "Attendance",
     attendanceLink: "Attendance & settle",

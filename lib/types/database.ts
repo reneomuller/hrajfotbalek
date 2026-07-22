@@ -453,6 +453,32 @@ export interface Database {
         Returns: AttendanceStatus;
       };
 
+      /**
+       * Admin-only. Appends the ledger row and its `credit_issued` event (plus
+       * `payment_unmatched` when resolving one) in a single transaction, and
+       * refuses any delta that would drive the balance below zero. Returns the
+       * balance after the grant.
+       */
+      grant_credit: {
+        Args: {
+          p_player_id: string;
+          p_delta_czk: number;
+          p_reason?: CreditReason;
+          p_unmatched_payment?: boolean;
+          p_note?: string | null;
+        };
+        Returns: number;
+      };
+      /**
+       * Admin-only. Repoints bookings, waitlist, credit_ledger and events onto
+       * the surviving player and deletes the shadow, in one transaction.
+       * Returns the number of rows moved.
+       */
+      merge_players: {
+        Args: { p_shadow_id: string; p_surviving_id: string };
+        Returns: number;
+      };
+
       /** Cron-only stamps. Both no-op when the column is already set. */
       mark_nudged: {
         Args: { p_booking_id: string; p_grace_hours: number };

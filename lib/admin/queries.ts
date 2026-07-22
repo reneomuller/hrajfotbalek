@@ -171,6 +171,57 @@ export function unpaidBookings(rows: AdminBookingRow[]): AdminBookingRow[] {
   return rows.filter((row) => row.status === "reserved");
 }
 
+export interface AdminPlayerRow {
+  id: string;
+  nickname: string;
+  email: string | null;
+  /** Null `auth_user_id` is what makes a row a shadow. */
+  isShadow: boolean;
+  isSeed: boolean;
+  isAdmin: boolean;
+  /** `SUM(delta_czk)` over the whole ledger — the wallet, computed here. */
+  balanceCzk: number;
+  bookingCount: number;
+}
+
+/**
+ * Every player with their balance and booking count.
+ *
+ * The balance is summed from `credit_ledger` rather than stored anywhere: the
+ * ledger is append-only and is the authority, and a cached balance column is a
+ * second source of truth waiting to disagree with it.
+ */
+export async function listPlayers(): Promise<AdminPlayerRow[]> {
+  const service = createServiceRoleSupabaseClient();
+
+  const [{ data: players }, { data: ledger }, { data: bookings }] = await Promise.all([
+    service.from("players").select("*").order("nickname", { ascending: true }),
+    service.from("credit_ledger").select("player_id, delta_czk"),
+    service.from("bookings").select("player_id"),
+  ]);
+
+  const balances = new Map<string, number>();
+  for (const row of ledger ?? []) {
+    balances.set(row.player_id, (balances.get(row.player_id) ?? 0) + row.delta_czk);
+  }
+
+  const counts = new Map<string, number>();
+  for (const row of bookings ?? []) {
+    counts.set(row.player_id, (counts.get(row.player_id) ?? 0) + 1);
+  }
+
+  return (players ?? []).map((player) => ({
+    id: player.id,
+    nickname: player.nickname,
+    email: player.email,
+    isShadow: player.auth_user_id === null,
+    isSeed: player.is_seed,
+    isAdmin: player.is_admin,
+    balanceCzk: balances.get(player.id) ?? 0,
+    bookingCount: counts.get(player.id) ?? 0,
+  }));
+}
+
 async function countActiveBookings(gameIds: string[]): Promise<Map<string, number>> {
   const counts = new Map<string, number>();
   if (gameIds.length === 0) return counts;

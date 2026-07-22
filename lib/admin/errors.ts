@@ -22,6 +22,13 @@ const CODES: Array<[string, string]> = [
   ["VENUE_NOT_FOUND", strings.admin.venueRequired],
   ["GAME_NOT_FOUND", strings.games.notFound],
   ["INSUFFICIENT_PERMISSION", strings.errors.insufficientPermission],
+  ["CREDIT_NEGATIVE_BLOCKED", strings.admin.grantNegativeBlocked],
+  ["INVALID_CREDIT_DELTA", strings.admin.grantInvalid],
+  ["INVALID_CREDIT_REASON", strings.admin.grantInvalid],
+  ["MERGE_SELF", strings.admin.mergeSelf],
+  ["NOT_A_SHADOW", strings.admin.mergeNotShadow],
+  ["MERGE_CONFLICT", strings.admin.mergeConflict],
+  ["PLAYER_NOT_FOUND", strings.admin.mergePickBoth],
   // CHECK-constraint violations reach here as the constraint name.
   ["venues_image_path_format", strings.admin.venueImageInvalid],
   ["games_format_format", strings.admin.formatInvalid],
