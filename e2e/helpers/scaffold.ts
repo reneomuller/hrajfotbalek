@@ -22,6 +22,13 @@ import { apiClientFor, players, serviceClient } from "./session.ts";
 
 const VENUE_NAME = "E2E Scratch Pitch";
 
+/**
+ * The venue is created on demand and deliberately NOT torn down: several specs
+ * run in the same session and recreating it per spec would be pure round
+ * trips. It is a real row in `venues` and it does show up in the admin venue
+ * picker, so delete it before launch if the suite has been run against the
+ * production database — `LAUNCH.md` step 1 notes this.
+ */
 let cachedVenueId: string | null = null;
 
 /** The venue every disposable game sits at, created once. */

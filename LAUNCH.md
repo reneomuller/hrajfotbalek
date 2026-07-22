@@ -54,6 +54,12 @@ happened.
 non-zero if any of them moved. Then open `/admin/stats` — every number should
 be zero or empty.
 
+**Also check the venue list.** The reset preserves venues by design, and the
+E2E suite creates one called **E2E Scratch Pitch**. If the suite has ever been
+pointed at this database, delete that venue by hand — otherwise it sits in the
+organizer's venue picker on day one. (It was removed from the dev database at
+the end of the M5 build; the suite recreates it on demand.)
+
 ---
 
 ## 2. Switch the magic-link email to Resend
