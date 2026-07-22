@@ -14,7 +14,10 @@
     "seed": "node --env-file=.env.local scripts/seed.ts",
     "seed:reset": "node --env-file=.env.local scripts/seed.ts --reset",
     "reset:platform": "node --env-file=.env.local scripts/reset-platform.mjs",
-    "db:types": "supabase gen types typescript --local > lib/types/database.ts"
+    "db:types": "supabase gen types typescript --local > lib/types/database.ts",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:booking": "playwright test e2e/booking.spec.ts",
+    "test:e2e:admin": "playwright test e2e/admin.spec.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.3",
