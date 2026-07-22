@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { strings } from "@/lib/strings";
 
 /**
  * The one empty-state shape, used wherever a list has nothing in it.
@@ -29,7 +30,8 @@ export function EmptyState({
     <div className="rounded-card border border-hairline bg-surface-card px-6 py-10 text-center">
       {/* The mark, quiet. Volt at this size reads as a wink, not an error. */}
       <p className="m-0 font-condensed text-[34px] font-extrabold italic leading-none tracking-[-1px] text-volt-dim opacity-40">
-        HF
+        {strings.brand.monogramLead}
+        {strings.brand.monogramAccent}
       </p>
 
       <h2 className="mt-5 mb-0 font-condensed text-card-title font-bold uppercase italic tracking-wide text-bone">

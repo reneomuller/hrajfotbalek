@@ -121,11 +121,11 @@ The five 🛑 **GATE** rows are spec §10 verification gates M1–M5. They are *
 | 25. Admin players: credit grants + shadow merge (grant_credit / merge_players RPCs) | M4 | Complete | 2026-07-22 | 2026-07-22 | - | `082c245`; migration 18; admin_players_rpcs.sql 29/29 |
 | 26. Admin stats page (/admin/stats) | M4 | Complete | 2026-07-22 | 2026-07-22 | - | `d716255`; five metrics verified against direct SQL; drop-off deferred to the gate. Cancel-email dry-run evidence in `4310a1d` |
 | **🛑 GATE M4 — Admin panel** | **M4** | **Verified** | 2026-07-22 | 2026-07-22 | - | Human-verified 2026-07-22: full fictional lifecycle driven through the admin UI — create with venue/format/notes → shadow + real players → VS-sorted ✓ Paid including the received-amount path → attendance with a no-show → settled; `/admin/stats` reflected the whole life correctly. Magic-link drop-off closed on production — a fresh login as a second user incremented `auth_link_sent` and `auth_completed` by exactly one each, which is the agreed verification for the metric the seed deliberately fabricates no events for. **All four §10 criteria passed.** Gate-walk fix `aa546cd` (game create/edit did not persist — every pre-`venues` game carried a null `venue_id`, so the edit form's picker opened unset and the save was rejected before any RPC ran, while React's form reset put the typed values back). The `b001` edit-page 404 seen during the walk is closed as not-a-bug: the row exists and is `published`, and the page renders on production — the 404 was a dev-server crash artifact |
-| 27. PWA basics + design/strings/privacy polish | M5 | Pending | - | - | - | |
-| 28. E2E Playwright harness + user-path specs | M5 | Pending | - | - | - | |
-| 29. E2E data, RLS & concurrency specs | M5 | Pending | - | - | - | |
-| 30. Dry-run cutover: SMTP→Resend, EMAIL_DRY_RUN=off, acceptance | M5 | Pending | - | - | - | |
-| **🛑 GATE M5 — Polish + dry run** | **M5** | **Not verified** | - | - | - | **STOP — human confirmation required. full §11 acceptance checklist passes against the real game** |
+| 27. PWA basics + design/strings/privacy polish | M5 | Complete | 2026-07-22 | 2026-07-22 | `e53e5a5`, `a9efc03`, `f8b6b91`, `ff5bf05` | Ran wider than planned, per the leg mandate: PWA manifest + maskable icons BUILT from the theme tokens (`scripts/generate-icons.mjs`), styled 404, tab titles on the eleven pages that had none, one `EmptyState` shape, server-rendered `/games` skeleton, footer contact, schema.org `SportsEvent` (8 tests), `/privacy` as a marked DRAFT — no generated legal copy, text still owed by Oliver. Plus EN/CZ/RU via overlay tables on the English one + a visible switcher (money and the Czech payment vocabulary untranslated in all three); the six-digit OTP login path via `verifyOtp`, killing the WhatsApp in-app-browser PKCE trap; `scripts/reset-platform.mjs` (built, NOT run); the shared `probe()` false pass fixed in all 10 SQL suites (`count(_p::text)`, verified against a case where `count(*)` reported rows:1 and the strict form reported denied). ends_at DECIDED: keep the policy constant, no column |
+| 28. E2E Playwright harness + user-path specs | M5 | Complete | 2026-07-22 | 2026-07-22 | `8cacd15` | 14 specs against the real stack — real RPCs, real RLS, seeded database, `EMAIL_DRY_RUN` forced on for the suite's own server. Sessions minted with a password and encoded by `@supabase/ssr` itself; the magic link is bypassed by design. Specs build a disposable game and destroy it, so the seed tableau is never mutated and re-runs are deterministic. Three findings, all fixed in the specs because the product was right: cancelling via the RPC does not notify the waitlist (the server action does); `service_role` has no UPDATE on `bookings`, so faking an elapsed grace window failed silently; client-state success markers do not survive `revalidatePath` |
+| 29. E2E data, RLS & concurrency specs | M5 | Complete | 2026-07-22 | 2026-07-22 | `0f04020` | 14 more specs, 28/28 green as a suite. Concurrency asserts database state and never timing — exactly one booking survives a last-spot race, one wallet is redeemed at most once across simultaneous bookings, the ledger never goes negative under a five-way burst. Data specs cover RLS isolation (empty results, not errors), the anon roster projection asserted by its whole shape, cross-user cancellation refused with the row provably untouched, all seven admin RPCs and three service-role sweeps refused for an ordinary session, every catalog action's event row, and cron 401s + byte-identical event counts on an immediate re-run. Finding: the un-cached suite exhausted Supabase's sign-in rate limit mid-run, which reads exactly like a broken product |
+| 30. Dry-run cutover: SMTP→Resend, EMAIL_DRY_RUN=off, acceptance | M5 | **Code side complete — cutover NOT run** | 2026-07-22 | - | `4ee888e` | Prepared, not performed. The Resend SMTP block sits commented in `supabase/config.toml` with the DNS precondition stated; `.env.example` documents the production values and both roles the Resend key plays; TEST-047 (`test:unit -- -t "sendEmail live"`) covers the flip — live branch only on an explicit off-value, everything else including `true` fails toward silence, a missing key throws rather than half-sending. `CLAUDE.md` carries the Phase 1 lessons. THE REMAINING WORK IS HUMAN and is written up step by step in `LAUNCH.md`: email template edit, DNS check, privacy text, `reset:platform --confirm`, SMTP switch, `EMAIL_DRY_RUN=off`, then one real game running shadow to the WhatsApp process |
+| **🛑 GATE M5 — Polish + dry run** | **M5** | **Not verified — awaiting the human launch sequence** | - | - | - | **STOP — human confirmation required. Everything that can be verified without sending real email or wiping the database has been: 259 unit tests, 16/16 SQL suites, 28/28 E2E specs, tsc and build clean. The §11 checklist must still pass against a REAL game, which cannot happen until `LAUNCH.md` steps 1-4 are run by hand** |
 
 ---
 
@@ -2113,11 +2113,11 @@ Keep every query to simple aggregates so an events scan stays fast. The page is 
 
 **This is a mandatory halt point, not a checklist.** Spec §10 gate M4 covers Phases 21–26: all admin surfaces from §9, including `/admin/stats`.
 
-**§10 gate criteria — verify by hand, timed:**
-- [ ] Run a fictional game lifecycle end to end — create, fill with shadow + real players, confirm payments, mark attendance, settle
-- [ ] The whole lifecycle takes **under 5 minutes of admin time**
-- [ ] The stats page reflects the fictional game's events correctly
-- [ ] **One real signup is performed on a phone**, and `/admin/stats` magic-link drop-off moves from 0/0 to 1/1 — this is the agreed verification for that metric, since the seed deliberately fabricates no auth-funnel events (Phase 9 / Phase 26)
+**§10 gate criteria — verify by hand, timed:** ALL FOUR PASSED, human-verified 2026-07-22.
+- [x] Run a fictional game lifecycle end to end — create, fill with shadow + real players, confirm payments, mark attendance, settle
+- [x] The whole lifecycle takes **under 5 minutes of admin time**
+- [x] The stats page reflects the fictional game's events correctly
+- [x] **One real signup is performed on a phone**, and `/admin/stats` magic-link drop-off moves from 0/0 to 1/1 — this is the agreed verification for that metric, since the seed deliberately fabricates no auth-funnel events (Phase 9 / Phase 26)
 
 **STOP — do not proceed past this gate without explicit human confirmation.**
 
@@ -2155,15 +2155,15 @@ This phase is largely artifact and verification work rather than new logic, and 
    - Confirm the signup consent link (Phase 8) and the account deletion-request context (Phase 14) both resolve to `/privacy` once this page exists.
 
 **Acceptance Criteria:**
-- [ ] [REQ-UI-014] Installing the app to a real phone home screen shows the correct volt-on-black icon and splash (artifact check)
-- [ ] [REQ-UI-014] `app/manifest.ts` validates and references the 192px and 512px icons, the Apple touch icon, `display: standalone`, and the theme color
-- [ ] [REQ-UI-014] No service worker file or offline caching logic exists anywhere in the project (artifact check)
-- [ ] [REQ-UI-001, REQ-UI-004] A side-by-side review on a real phone shows the app matches the `index.html` volt-on-black reference and the mobile-first layout holds (artifact check)
-- [ ] [REQ-UI-002] A grep finds no hardcoded user-facing strings outside `lib/strings.ts`
-- [ ] [REQ-UI-004] All colors, fonts, and spacing resolve from `tailwind.config.ts` tokens with no ad-hoc inline values
-- [ ] [REQ-UI-010, REQ-COMP-003] `app/privacy/page.tsx` is created in this phase (no earlier phase stubs the route) and renders placeholder text with a visible DRAFT banner and an unmistakable human-supplied insertion point; it contains no generated legal copy that could be mistaken for final text, and Phase 30 replaces it at the M5 cutover (artifact check)
-- [ ] [REQ-AUTH-007, REQ-USER-006] The signup consent link and the account deletion context both resolve to `/privacy`
-- [ ] [TEST-043] `npm run test:e2e -- -g "manifest"` passes [REQ-UI-014]
+- [ ] [REQ-UI-014] Installing the app to a real phone home screen shows the correct volt-on-black icon and splash (artifact check)  ← HUMAN: needs a real phone; part of the LAUNCH.md walk
+- [x] [REQ-UI-014] `app/manifest.ts` validates and references the 192px and 512px icons, the Apple touch icon, `display: standalone`, and the theme color
+- [x] [REQ-UI-014] No service worker file or offline caching logic exists anywhere in the project (artifact check)
+- [ ] [REQ-UI-001, REQ-UI-004] A side-by-side review on a real phone shows the app matches the `index.html` volt-on-black reference and the mobile-first layout holds (artifact check)  ← HUMAN: needs a real phone; part of the LAUNCH.md walk
+- [x] [REQ-UI-002] A grep finds no hardcoded user-facing strings outside `lib/strings.ts`
+- [x] [REQ-UI-004] All colors, fonts, and spacing resolve from `tailwind.config.ts` tokens with no ad-hoc inline values
+- [x] [REQ-UI-010, REQ-COMP-003] `app/privacy/page.tsx` is created in this phase (no earlier phase stubs the route) and renders placeholder text with a visible DRAFT banner and an unmistakable human-supplied insertion point; it contains no generated legal copy that could be mistaken for final text, and Phase 30 replaces it at the M5 cutover (artifact check)
+- [x] [REQ-AUTH-007, REQ-USER-006] The signup consent link and the account deletion context both resolve to `/privacy`
+- [x] [TEST-043] `npm run test:e2e -- -g "manifest"` passes [REQ-UI-014]
 
 **Files:**
 - `app/manifest.ts` - PWA web manifest
@@ -2183,21 +2183,21 @@ This phase is largely artifact and verification work rather than new logic, and 
 
 **Milestones:**
 - **PWA manifest + icons + theme color** (IP M20.1)
-  - [ ] `app/manifest.ts` implemented with name, start URL, standalone display, colors, and icon references
-  - [ ] 192px and 512px maskable icons plus Apple touch icon added in volt-on-black style
-  - [ ] Theme-color and apple-touch-icon metadata added to `app/layout.tsx`
-  - [ ] Absence of any service worker or offline logic confirmed
-  - [ ] Home-screen install verified on a real phone
+  - [x] `app/manifest.ts` implemented with name, start URL, standalone display, colors, and icon references
+  - [x] 192px and 512px maskable icons plus Apple touch icon added in volt-on-black style
+  - [x] Theme-color and apple-touch-icon metadata added to `app/layout.tsx`
+  - [x] Absence of any service worker or offline logic confirmed
+  - [ ] Home-screen install verified on a real phone  ← HUMAN: needs a real phone; part of the LAUNCH.md walk
 - **English copy pass + design conformance** (IP M20.2)
-  - [ ] Every `lib/strings.ts` key reviewed for English copy quality and consistency
-  - [ ] Grep confirms no hardcoded user-facing strings outside `lib/strings.ts`
-  - [ ] Each player surface compared against `index.html` on a real mobile viewport, drift corrected
-  - [ ] Colors/fonts/spacing verified to resolve from theme tokens
-  - [ ] Mobile-first layout verified on a real device
+  - [x] Every `lib/strings.ts` key reviewed for English copy quality and consistency
+  - [x] Grep confirms no hardcoded user-facing strings outside `lib/strings.ts`
+  - [ ] Each player surface compared against `index.html` on a real mobile viewport, drift corrected  ← HUMAN: needs a real phone; part of the LAUNCH.md walk
+  - [x] Colors/fonts/spacing verified to resolve from theme tokens
+  - [ ] Mobile-first layout verified on a real device  ← HUMAN: needs a real phone; part of the LAUNCH.md walk
 - **`/privacy` DRAFT page** (IP M20.3)
-  - [ ] `app/privacy/page.tsx` built with clearly-marked DRAFT placeholder copy
-  - [ ] No final legal text generated; human-supplied slot left obvious
-  - [ ] Signup consent link and account deletion context confirmed to point at `/privacy`
+  - [x] `app/privacy/page.tsx` built with clearly-marked DRAFT placeholder copy
+  - [x] No final legal text generated; human-supplied slot left obvious
+  - [x] Signup consent link and account deletion context confirmed to point at `/privacy`
 
 ---
 
@@ -2225,17 +2225,17 @@ Build the Playwright harness and the specs covering every acceptance criterion t
    - `e2e/admin.spec.ts` — confirm ≤5s with correct badges, add-shadow ≤10s, attendance→settle leaving no reserved booking, and the WhatsApp preview card / `.ics` checks — criteria 3, 4, 8, 13.
 
 **Acceptance Criteria:**
-- [ ] [REQ-API-001] The suite runs green against `scripts/seed.ts` fixtures with `EMAIL_DRY_RUN=on`, covering every acceptance criterion with a user-visible path
-- [ ] [REQ-API-001] `e2e/helpers/session.ts` seeds authenticated sessions without any magic-link round-trip
-- [ ] [REQ-PERF-001] Book→QR completes in under 60 seconds for an authenticated player (criterion 1)
-- [ ] [REQ-BIZ-022, REQ-BIZ-023] Credit auto-apply passes for both the full-credit (instant confirm, no QR) and partial-credit cases (criterion 7)
-- [ ] [REQ-BIZ-037, REQ-BIZ-038, REQ-BIZ-040] Full-game waitlist join and the cancel→credit→release→convert chain pass with zero manual intervention between steps (criteria 2, 5)
-- [ ] [REQ-BIZ-035, REQ-BIZ-036] The scarcity nudge → paid-or-expired → released chain passes (criterion 6)
-- [ ] [REQ-PERF-002, REQ-PERF-003, REQ-BIZ-042] Admin confirm completes in ≤5s with correct badges, add-shadow in ≤10s, and attendance→settle leaves no `reserved` booking (criteria 3, 4, 8)
-- [ ] [REQ-UI-012, REQ-UI-013] The WhatsApp preview card and `.ics` calendar checks pass (criterion 13)
-- [ ] [REQ-API-001] `package.json` exposes the E2E run scripts
-- [ ] [REQ-PERF-004] A full admin game lifecycle (create → fill → confirm → attendance → settle) is exercised end-to-end in under 5 minutes of admin time (M4 gate)
-- [ ] [TEST-044] `npm run test:e2e` passes [REQ-API-001, REQ-API-002]
+- [x] [REQ-API-001] The suite runs green against `scripts/seed.ts` fixtures with `EMAIL_DRY_RUN=on`, covering every acceptance criterion with a user-visible path
+- [x] [REQ-API-001] `e2e/helpers/session.ts` seeds authenticated sessions without any magic-link round-trip
+- [x] [REQ-PERF-001] Book→QR completes in under 60 seconds for an authenticated player (criterion 1)
+- [x] [REQ-BIZ-022, REQ-BIZ-023] Credit auto-apply passes for both the full-credit (instant confirm, no QR) and partial-credit cases (criterion 7)
+- [x] [REQ-BIZ-037, REQ-BIZ-038, REQ-BIZ-040] Full-game waitlist join and the cancel→credit→release→convert chain pass with zero manual intervention between steps (criteria 2, 5)
+- [x] [REQ-BIZ-035, REQ-BIZ-036] The scarcity nudge → paid-or-expired → released chain passes (criterion 6)
+- [x] [REQ-PERF-002, REQ-PERF-003, REQ-BIZ-042] Admin confirm completes in ≤5s with correct badges, add-shadow in ≤10s, and attendance→settle leaves no `reserved` booking (criteria 3, 4, 8)
+- [x] [REQ-UI-012, REQ-UI-013] The WhatsApp preview card and `.ics` calendar checks pass (criterion 13)
+- [x] [REQ-API-001] `package.json` exposes the E2E run scripts
+- [x] [REQ-PERF-004] A full admin game lifecycle (create → fill → confirm → attendance → settle) is exercised end-to-end in under 5 minutes of admin time (M4 gate)
+- [x] [TEST-044] `npm run test:e2e` passes [REQ-API-001, REQ-API-002]
 
 **Files:**
 - `playwright.config.ts` - Test configuration against seed fixtures in dry-run
@@ -2253,16 +2253,16 @@ Build the Playwright harness and the specs covering every acceptance criterion t
 
 **Milestones:**
 - **Playwright harness** (IP M21.1)
-  - [ ] `playwright.config.ts` runs against seed fixtures with `EMAIL_DRY_RUN=on`
-  - [ ] `e2e/helpers/session.ts` seeds authenticated sessions without magic-link round-trips
-  - [ ] E2E scripts added to `package.json`
+  - [x] `playwright.config.ts` runs against seed fixtures with `EMAIL_DRY_RUN=on`
+  - [x] `e2e/helpers/session.ts` seeds authenticated sessions without magic-link round-trips
+  - [x] E2E scripts added to `package.json`
 - **Player-path specs** (IP M21.1)
-  - [ ] `e2e/booking.spec.ts` covers book→QR under 60s and credit auto-apply full/partial (criteria 1, 7)
-  - [ ] `e2e/waitlist.spec.ts` covers join, cancel→credit→release→convert, and the nudge chain (criteria 2, 5, 6)
+  - [x] `e2e/booking.spec.ts` covers book→QR under 60s and credit auto-apply full/partial (criteria 1, 7)
+  - [x] `e2e/waitlist.spec.ts` covers join, cancel→credit→release→convert, and the nudge chain (criteria 2, 5, 6)
 - **Admin-path specs** (IP M21.1)
-  - [ ] `e2e/admin.spec.ts` covers confirm ≤5s with badges and add-shadow ≤10s (criteria 3, 4)
-  - [ ] `e2e/admin.spec.ts` covers attendance→settle leaving no reserved booking (criterion 8)
-  - [ ] `e2e/admin.spec.ts` covers the WhatsApp preview card and `.ics` checks (criterion 13)
+  - [x] `e2e/admin.spec.ts` covers confirm ≤5s with badges and add-shadow ≤10s (criteria 3, 4)
+  - [x] `e2e/admin.spec.ts` covers attendance→settle leaving no reserved booking (criterion 8)
+  - [x] `e2e/admin.spec.ts` covers the WhatsApp preview card and `.ics` checks (criterion 13)
 
 ---
 
@@ -2289,17 +2289,17 @@ Context from previous work: Phase 28 built the Playwright harness (`playwright.c
    - Cron double-run producing no duplicate emails or events, per route (criterion 12).
 
 **Acceptance Criteria:**
-- [ ] [REQ-BIZ-045] Two parallel `create_booking` calls for the last spot leave exactly one booking in the database (criterion 11)
-- [ ] [REQ-BIZ-046] Two parallel credit-funded bookings by one player for different games redeem the wallet at most once and `SUM(delta_czk)` never goes negative (criterion 16)
-- [ ] [REQ-BIZ-045, REQ-BIZ-046] The concurrency harness asserts database state rather than request timing or ordering
-- [ ] [REQ-SEC-009, REQ-SEC-011, REQ-SEC-012] A logged-in player cannot read another player's rows via the API, and anonymous roster reads expose no `player_id`/`email`/`phone` (criterion 10)
-- [ ] [REQ-SEC-005, REQ-BIZ-047] Cross-user `create_booking`/`cancel_booking` calls are rejected inside the function (criterion 15)
-- [ ] [REQ-SEC-006, REQ-BIZ-047] Non-admin `confirm_booking`/`expire_booking` calls are rejected inside the function (criterion 15)
-- [ ] [REQ-API-002, REQ-DB-008] Every catalog action produces its event row, asserted per action (criterion 9)
-- [ ] [REQ-INFRA-007] Each of the three cron routes run twice produces no duplicate emails or events (criterion 12)
-- [ ] [REQ-API-001] The full suite (Phase 28 + 29 specs) runs green against seed fixtures with `EMAIL_DRY_RUN=on`
-- [ ] [TEST-045] `npm run test:e2e -- -g "concurrency"` passes [REQ-BIZ-045, REQ-BIZ-046]
-- [ ] [TEST-046] `npm run test:e2e -- -g "data"` passes [REQ-SEC-009, REQ-BIZ-047]
+- [x] [REQ-BIZ-045] Two parallel `create_booking` calls for the last spot leave exactly one booking in the database (criterion 11)
+- [x] [REQ-BIZ-046] Two parallel credit-funded bookings by one player for different games redeem the wallet at most once and `SUM(delta_czk)` never goes negative (criterion 16)
+- [x] [REQ-BIZ-045, REQ-BIZ-046] The concurrency harness asserts database state rather than request timing or ordering
+- [x] [REQ-SEC-009, REQ-SEC-011, REQ-SEC-012] A logged-in player cannot read another player's rows via the API, and anonymous roster reads expose no `player_id`/`email`/`phone` (criterion 10)
+- [x] [REQ-SEC-005, REQ-BIZ-047] Cross-user `create_booking`/`cancel_booking` calls are rejected inside the function (criterion 15)
+- [x] [REQ-SEC-006, REQ-BIZ-047] Non-admin `confirm_booking`/`expire_booking` calls are rejected inside the function (criterion 15)
+- [x] [REQ-API-002, REQ-DB-008] Every catalog action produces its event row, asserted per action (criterion 9)
+- [x] [REQ-INFRA-007] Each of the three cron routes run twice produces no duplicate emails or events (criterion 12)
+- [x] [REQ-API-001] The full suite (Phase 28 + 29 specs) runs green against seed fixtures with `EMAIL_DRY_RUN=on`
+- [x] [TEST-045] `npm run test:e2e -- -g "concurrency"` passes [REQ-BIZ-045, REQ-BIZ-046]
+- [x] [TEST-046] `npm run test:e2e -- -g "data"` passes [REQ-SEC-009, REQ-BIZ-047]
 
 **Files:**
 - `e2e/concurrency.spec.ts` - Parallel-request harness for criteria 11 and 16
@@ -2315,15 +2315,15 @@ Context from previous work: Phase 28 built the Playwright harness (`playwright.c
 
 **Milestones:**
 - **Concurrency specs** (IP M21.2)
-  - [ ] `e2e/concurrency.spec.ts` asserts last-spot single winner (criterion 11)
-  - [ ] `e2e/concurrency.spec.ts` asserts no credit double-spend and a never-negative ledger (criterion 16)
-  - [ ] Harness verified to assert database state rather than timing
+  - [x] `e2e/concurrency.spec.ts` asserts last-spot single winner (criterion 11)
+  - [x] `e2e/concurrency.spec.ts` asserts no credit double-spend and a never-negative ledger (criterion 16)
+  - [x] Harness verified to assert database state rather than timing
 - **Data, RLS & idempotency specs** (IP M21.2)
-  - [ ] `e2e/data.spec.ts` asserts RLS isolation and anon roster projection (criterion 10)
-  - [ ] `e2e/data.spec.ts` asserts cross-user and non-admin RPC rejection (criterion 15)
-  - [ ] `e2e/data.spec.ts` asserts every catalog action writes its event (criterion 9)
-  - [ ] `e2e/data.spec.ts` asserts cron double-run idempotency for all three routes (criterion 12)
-  - [ ] Full suite runs green in dry-run against seed fixtures
+  - [x] `e2e/data.spec.ts` asserts RLS isolation and anon roster projection (criterion 10)
+  - [x] `e2e/data.spec.ts` asserts cross-user and non-admin RPC rejection (criterion 15)
+  - [x] `e2e/data.spec.ts` asserts every catalog action writes its event (criterion 9)
+  - [x] `e2e/data.spec.ts` asserts cron double-run idempotency for all three routes (criterion 12)
+  - [x] Full suite runs green in dry-run against seed fixtures
 
 ---
 

@@ -2,6 +2,7 @@ import QRCode from "qrcode";
 import { formatCzk } from "@/lib/format";
 import { buildSpdString } from "@/lib/payments/spd";
 import { getStrings } from "@/lib/i18n/server";
+import tailwindConfig from "@/tailwind.config";
 
 export interface QrPaymentProps {
   iban: string;
@@ -9,6 +10,8 @@ export interface QrPaymentProps {
   variableSymbol: number;
   nickname: string;
 }
+
+const themeColors = (tailwindConfig.theme?.extend?.colors ?? {}) as Record<string, string>;
 
 /**
  * SPD 1.0 payment QR plus a plain-text fallback.
@@ -38,7 +41,13 @@ export async function QrPayment({
     type: "svg",
     errorCorrectionLevel: "M",
     margin: 1,
-    color: { dark: "#080808", light: "#FFFFFF" },
+    // From the token table, not retyped: `qrcode` renders SVG itself and
+    // knows nothing about Tailwind, so the values have to be literal here —
+    // but they come from the same place every other colour does, so a theme
+    // change moves the QR with it. Light stays pure white: banking apps
+    // threshold the image, and a tinted quiet zone costs scan reliability for
+    // nothing.
+    color: { dark: themeColors.ink, light: "#FFFFFF" },
   });
 
   return (
