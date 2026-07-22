@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { EmptyState } from "@/components/EmptyState";
 import { GameCard } from "@/components/GameCard";
 import { NextGameStrip } from "@/components/game/NextGameStrip";
 import { getOwnNextBooking } from "@/lib/booking/queries";
@@ -63,9 +64,14 @@ export default async function GamesPage() {
       )}
 
       {games.length === 0 ? (
-        <p className="mt-8 font-mono text-[12px] tracking-[1px] text-faint">
-          {strings.games.empty}
-        </p>
+        <div className="mt-8">
+          <EmptyState
+            title={strings.games.emptyTitle}
+            body={strings.games.emptyBody}
+            ctaLabel={strings.games.emptyCta}
+            ctaHref={strings.landing.community.whatsappUrl}
+          />
+        </div>
       ) : (
         <div className="mt-8 flex flex-col gap-5">
           {games.map(({ game, bookedCount }) => (

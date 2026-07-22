@@ -6,6 +6,8 @@ import { availableTransitions, getAdminGame, listVenues } from "@/lib/admin/quer
 import { strings } from "@/lib/strings";
 import { updateGameAction } from "../../actions";
 
+export const metadata = { title: strings.admin.editGameTitle };
+
 export const dynamic = "force-dynamic";
 
 /**

@@ -34,6 +34,25 @@ export const strings = {
   siteFooter: {
     privacy: "Privacy",
     copyright: "© hrajfotbal",
+    // A real address in the footer of every page. A booking product that takes
+    // money and holds personal data needs one reachable line that is not a
+    // WhatsApp group, and GDPR expects a controller contact anyway.
+    contact: "Contact",
+    contactEmail: "ahoj@hrajfotbal.com",
+  },
+
+  /**
+   * The styled 404.
+   *
+   * A wrong or stale game link is the single most likely way someone lands
+   * here — the links travel through WhatsApp, get forwarded, and outlive the
+   * game. So the page offers the games list rather than apologising.
+   */
+  notFound: {
+    code: "404",
+    title: "Nothing here",
+    body: "This link points at a page that does not exist — or a game that has already been and gone.",
+    cta: "See what's on →",
   },
 
   landing: {
@@ -118,7 +137,19 @@ export const strings = {
 
   games: {
     listTitle: "Upcoming games",
-    empty: "No games scheduled yet. Check back soon.",
+    /*
+     * Empty states.
+     *
+     * An empty list is the first thing a visitor from a shared link may ever
+     * see, so it says what happens next and gives somewhere to go, rather than
+     * reporting an absence. `empty` is kept as the one-line form used where
+     * there is no room for the full block.
+     */
+    empty: "No games on the board right now.",
+    emptyTitle: "Nothing on the board",
+    emptyBody:
+      "The next match usually goes up a few days ahead. Join the WhatsApp group and you will hear about it first.",
+    emptyCta: "Join the WhatsApp group →",
     spotsLeft: "spots left",
     spotLeft: "spot left",
     full: "Full",
@@ -142,7 +173,7 @@ export const strings = {
     waitlistConvertHint: "Pick how you want to pay and the spot is yours.",
     waitlistNotOnList: "You are not on the waitlist for this game.",
     rosterTitle: "Lineup",
-    rosterEmpty: "No one has claimed a spot yet.",
+    rosterEmpty: "Nobody in the lineup yet — be the first name on it.",
     cancelled: "This game was cancelled.",
     notFound: "That game does not exist, or is not published yet.",
     backToGames: "← All games",
@@ -253,7 +284,9 @@ export const strings = {
   account: {
     title: "My account",
     myBookings: "My bookings",
-    noBookings: "You have no bookings yet.",
+    noBookings: "No bookings yet.",
+    noBookingsTitle: "Your lineup is empty",
+    noBookingsBody: "Claim a spot in any game and it shows up here, with the QR to pay it.",
     findAGame: "Find a game →",
     creditBalance: "Credit balance",
     creditEmpty: "No credit yet.",
@@ -273,6 +306,39 @@ export const strings = {
     past: "Past",
     upcoming: "Upcoming",
     cancelSuccess: "Booking cancelled. Any credit is back in your wallet.",
+  },
+
+  /**
+   * The `/privacy` placeholder.
+   *
+   * DELIBERATELY NOT A PRIVACY POLICY. A GDPR policy is a legal representation
+   * about what this system does with personal data; generated text that reads
+   * as finished is worse than an obvious placeholder, because it invites
+   * shipping. Everything here is scaffolding around a human-supplied slot —
+   * the only strings are the DRAFT warning and the labels of the sections
+   * Oliver has to fill in. This copy is replaced wholesale at the M5 cutover,
+   * and it is NOT translated: the real policy is a per-language legal text,
+   * not a UI string.
+   */
+  privacy: {
+    title: "Privacy",
+    draftBadge: "DRAFT — NOT THE REAL POLICY",
+    draftWarning:
+      "This page is a placeholder. It is not a privacy policy, it makes no promises, and it must be replaced with the real text before launch.",
+    insertionPoint: "▼ HUMAN-SUPPLIED TEXT GOES HERE ▼",
+    insertionHint:
+      "Oliver supplies the final wording. Nothing below is legally meaningful until then — these are the headings the real text needs to cover, not the text itself.",
+    outline: [
+      "Who is responsible for your data (controller identity and contact)",
+      "What is collected: email, nickname, phone if given, bookings, payments, attendance",
+      "Why it is collected and on what legal basis",
+      "Who else sees it: the hosting, database and email providers",
+      "How long it is kept",
+      "Your rights, including access, correction and deletion",
+      "How to ask for deletion, and how quickly it happens",
+    ],
+    contactLead: "Questions or a deletion request, today:",
+    back: "← Back to the games",
   },
 
   admin: {

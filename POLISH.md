@@ -13,12 +13,32 @@ One line per item. Move to DONE when shipped. Sessions: only touch items explici
 
 ## M5 batch (Phase 27 territory)
 - [ ] Three languages (EN main, CZ, RU) via strings module + switcher
-- [ ] Styled 404, favicon, PWA icons
-- [ ] Empty states with personality (no games, empty account)
-- [ ] Loading skeletons on games list
+- [x] Styled 404, favicon, PWA icons
+      (`app/not-found.tsx`; icons are BUILT from the theme tokens by
+       `scripts/generate-icons.mjs` rather than hand-exported, so a volt change
+       moves the home-screen icon with it. Manifest is install-artifacts only —
+       no service worker, deliberately.)
+- [x] Empty states with personality (no games, empty account)
+      (one `components/EmptyState.tsx` shape: what is true, what happens next,
+       one way out. The empty games list points at the WhatsApp group.)
+- [x] Loading skeletons on games list
+      (`app/games/loading.tsx` — server-rendered, no client JS; /games is
+       force-dynamic and does five round trips, which on mobile data reads as
+       broken rather than as loading.)
 - [ ] Privacy page real text (HUMAN-owned — Oliver drafts)
-- [ ] Footer contact email
-- [ ] ends_at column vs durationMinutes constant (from M3 session note)
+      (the PAGE ships: `app/privacy/page.tsx` with a DRAFT banner, an outline of
+       what the real policy must cover, and a live contact address. The TEXT is
+       still owed — this item stays open until Oliver supplies it.)
+- [x] Footer contact email
+      (general contact in the footer; data-protection requests keep their own
+       address, which /privacy and /account both point at.)
+- [x] ends_at column vs durationMinutes constant (from M3 session note)
+      (DECIDED: keep the constant, no column. Nothing but display reads an end
+       time — the "in progress" label and schema.org `endDate` — so a column
+       would carry no authority the constant lacks, while costing a migration,
+       a required admin field, validation and a backfill. Revisit when a game of
+       a different length is actually scheduled; introduce it nullable then and
+       fall back to the constant. Reasoning recorded in `lib/policy.ts`.)
 
 ## DONE
 
@@ -42,9 +62,20 @@ One line per item. Move to DONE when shipped. Sessions: only touch items explici
       (column and admin input shipped with the M4 migrations; the detail render was already live)
 
 ## M5 batch (additions)
-- [ ] schema.org Event markup on game pages
+- [x] schema.org Event markup on game pages
+      (`lib/games/schemaOrg.ts` — a pure builder with tests, because structured
+       data fails silently: a bad `offers` block is simply ignored, so the
+       assertions are the only feedback loop. Price is CZK unconditionally.)
 
 ## Deferred decisions
 - Waitlist mechanics: notify-all FCFS stays for launch; ordered-priority revisited post-launch with real data (policy v2 candidate)
-- [ ] Fix shared probe() SQL test helper: false pass on non-volatile functions (planner prunes unread call) — use value-consuming pattern from waitlist_position.sql suite
-- [ ] M5: reset-platform script (service-role, wipes games/bookings/waitlist/ledger/events, preserves players+admin flags, --confirm required) — build and run at launch-eve
+- [x] Fix shared probe() SQL test helper: false pass on non-volatile functions (planner prunes unread call) — use value-consuming pattern from waitlist_position.sql suite
+      (`count(_p::text)`, not `count(*)`, in all 10 suites that define probe().
+       Wrapping the cast in a subquery is NOT enough — pruning just moves up a
+       level; verified against `public.waitlist_position` as anon, where
+       count(*) reports rows:1 and count(_p::text) reports denied. All 16
+       suites still ALL PASS under the strict probe, so nothing was resting on
+       a false pass.)
+- [x] M5: reset-platform script (service-role, wipes games/bookings/waitlist/ledger/events, preserves players+admin flags, --confirm required) — build and run at launch-eve
+      (built as `scripts/reset-platform.mjs` and NOT run — running it is a
+       human step in the launch sequence.)

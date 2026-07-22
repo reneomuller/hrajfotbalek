@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { CancelBookingForm } from "@/components/CancelBookingForm";
+import { EmptyState } from "@/components/EmptyState";
 import { bookingBadge, type BadgeTone } from "@/lib/booking/badges";
 import type { BookingWithGame } from "@/lib/booking/queries";
 import { formatCzk, formatGameDateTime } from "@/lib/format";
@@ -19,17 +20,12 @@ const TONE_CLASS: Record<BadgeTone, string> = {
 export function BookingList({ rows }: BookingListProps) {
   if (rows.length === 0) {
     return (
-      <div className="rounded-card border border-hairline bg-surface-card p-6">
-        <p className="m-0 font-mono text-[12px] tracking-[1px] text-faint">
-          {strings.account.noBookings}
-        </p>
-        <Link
-          href="/games"
-          className="mt-4 inline-block font-mono text-[11px] uppercase tracking-eyebrow text-volt no-underline"
-        >
-          {strings.account.findAGame}
-        </Link>
-      </div>
+      <EmptyState
+        title={strings.account.noBookingsTitle}
+        body={strings.account.noBookingsBody}
+        ctaLabel={strings.account.findAGame}
+        ctaHref="/games"
+      />
     );
   }
 

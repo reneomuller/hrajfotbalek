@@ -6,6 +6,8 @@ import { listPlayers } from "@/lib/admin/queries";
 import { formatCzk } from "@/lib/format";
 import { strings } from "@/lib/strings";
 
+export const metadata = { title: strings.admin.playersTitle };
+
 export const dynamic = "force-dynamic";
 
 /**

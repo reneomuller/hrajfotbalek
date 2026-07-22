@@ -13,6 +13,8 @@ import {
 import { strings } from "@/lib/strings";
 import { markPlayedAction } from "./actions";
 
+export const metadata = { title: strings.admin.attendanceTitle };
+
 export const dynamic = "force-dynamic";
 
 /**

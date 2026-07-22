@@ -3,6 +3,8 @@ import { formatCzk, formatGameDateTime } from "@/lib/format";
 import { getAdminStats, ratio } from "@/lib/stats/queries";
 import { strings } from "@/lib/strings";
 
+export const metadata = { title: strings.admin.statsTitle };
+
 export const dynamic = "force-dynamic";
 
 /**

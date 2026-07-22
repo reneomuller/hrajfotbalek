@@ -3,6 +3,8 @@ import { availableTransitions, listAllGames } from "@/lib/admin/queries";
 import { formatCzk, formatGameDateTime } from "@/lib/format";
 import { strings } from "@/lib/strings";
 
+export const metadata = { title: strings.admin.gamesTitle };
+
 export const dynamic = "force-dynamic";
 
 /**

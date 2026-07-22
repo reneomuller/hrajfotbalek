@@ -3,6 +3,8 @@ import { MergeForm } from "@/components/admin/MergeForm";
 import { listPlayers } from "@/lib/admin/queries";
 import { strings } from "@/lib/strings";
 
+export const metadata = { title: strings.admin.mergeTitle };
+
 export const dynamic = "force-dynamic";
 
 /**

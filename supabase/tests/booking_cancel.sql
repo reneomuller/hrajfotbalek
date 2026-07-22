@@ -34,7 +34,23 @@ create function pg_temp.probe(sql text)
 returns text language plpgsql as $$
 declare n integer;
 begin
-  execute 'with _p as (' || sql || ') select count(*) from _p' into n;
+  -- A CTE, not a subquery: this wrapper has to accept INSERT/UPDATE ...
+  -- RETURNING as well as SELECT, and only a data-modifying CTE allows that.
+  --
+  -- The rows are CONSUMED, not just counted. `count(*)` never reads a column
+  -- of the CTE, so for a non-volatile function under test the planner prunes
+  -- the call out of the plan entirely and the executor never performs the
+  -- privilege check — the probe then reports `rows:1` where a direct call is
+  -- denied, which is a FALSE PASS on exactly the assertions these suites exist
+  -- to make. `count(<expr>)` must evaluate its argument, and casting the whole
+  -- row to text drags every column (and therefore every function call) into
+  -- that evaluation. Verified against `public.waitlist_position` as `anon`:
+  -- count(*) says rows:1, count(_p::text) says denied. Wrapping the cast in a
+  -- subquery is NOT enough — the pruning just moves up a level. Same reasoning
+  -- as `call_position()` in waitlist_position.sql, which hit this first.
+  -- `_p::text` is never NULL (an all-NULL row casts to '()'), so the count
+  -- still equals the row count.
+  execute 'with _p as (' || sql || ') select count(_p::text) from _p' into n;
   return 'rows:' || n;
 exception
   when insufficient_privilege then return 'denied';

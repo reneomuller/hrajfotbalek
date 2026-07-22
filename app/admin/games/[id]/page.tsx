@@ -14,6 +14,8 @@ import { formatCzk, formatGameDateTime } from "@/lib/format";
 import { strings } from "@/lib/strings";
 import { publishGameAction } from "../actions";
 
+export const metadata = { title: strings.admin.manageGame };
+
 export const dynamic = "force-dynamic";
 
 /**

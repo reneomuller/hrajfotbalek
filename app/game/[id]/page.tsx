@@ -14,6 +14,7 @@ import { runJoinWaitlist } from "./waitlist/actions";
 import { getCurrentPlayer, getSessionUser } from "@/lib/auth/session";
 import { formatCzk, formatGameDateTime } from "@/lib/format";
 import { getGameById, getRoster, getVenue, getWaitlist } from "@/lib/games/queries";
+import { gameEventSchema } from "@/lib/games/schemaOrg";
 import { gameUrgency, spotsLeftLabel, urgencyLabel } from "@/lib/games/urgency";
 import { siteUrl } from "@/lib/site";
 import { strings } from "@/lib/strings";
@@ -131,8 +132,32 @@ export default async function GameDetailPage({ params, searchParams }: GamePageP
   // RLS hides the rows the count is over.
   const position = alreadyOnList ? await waitlistPosition(game.id) : null;
 
+  // Structured data for search results. Built from the same numbers the page
+  // renders, so the two cannot disagree about price or how full the game is.
+  const schema = gameEventSchema({
+    game,
+    spotsLeft,
+    url: `${await siteUrl()}/game/${game.id}`,
+    venueName: venueRow?.name ?? game.venue,
+    city: game.city,
+  });
+
   return (
     <main className="relative z-10 mx-auto w-full max-w-shell px-gutter pb-16 pt-24">
+      {/*
+        JSON-LD. `JSON.stringify` output is inserted into a <script> body, so
+        the one dangerous sequence is a literal `</script>` inside admin-supplied
+        free text (the venue name, the notes). Escaping `<` closes that off —
+        this is the standard mitigation, and it is why the payload is built by a
+        pure function and serialized here rather than assembled as markup.
+      */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(schema).replace(/</g, "\\u003c"),
+        }}
+      />
+
       <Link
         href="/games"
         className="font-mono text-[11px] uppercase tracking-eyebrow text-muted no-underline"

@@ -4,6 +4,8 @@ import { listVenues } from "@/lib/admin/queries";
 import { strings } from "@/lib/strings";
 import { createGameAction } from "../actions";
 
+export const metadata = { title: strings.admin.newGameTitle };
+
 export const dynamic = "force-dynamic";
 
 /**

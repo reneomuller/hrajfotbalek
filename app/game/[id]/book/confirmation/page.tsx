@@ -6,6 +6,8 @@ import { formatCzk, formatGameDateTime } from "@/lib/format";
 import { amountDueCzk, paymentIban, shouldRenderQr } from "@/lib/payments/spd";
 import { strings } from "@/lib/strings";
 
+export const metadata = { title: strings.payment.qrTitle };
+
 export const dynamic = "force-dynamic";
 
 interface ConfirmationPageProps {

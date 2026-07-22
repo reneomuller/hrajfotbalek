@@ -15,12 +15,27 @@ const { siteFooter } = strings;
 export function SiteFooter() {
   return (
     <footer className="relative z-10 mx-auto flex w-full max-w-shell flex-wrap items-center justify-between gap-2 border-t border-hairline-chrome px-gutter py-5">
-      <Link
-        href="/privacy"
-        className="font-mono text-[10px] tracking-[2px] text-dim no-underline transition hover:text-volt-dim"
-      >
-        {siteFooter.privacy}
-      </Link>
+      <div className="flex items-center gap-4">
+        <Link
+          href="/privacy"
+          className="font-mono text-[10px] tracking-[2px] text-dim no-underline transition hover:text-volt-dim"
+        >
+          {siteFooter.privacy}
+        </Link>
+        {/*
+          One reachable address on every page. The WhatsApp group is where the
+          community lives, but a product that takes money and holds personal
+          data needs a contact that does not require joining a group chat.
+          Data-protection requests have their own address (`account.deleteMailto`,
+          also on /privacy) so they land somewhere they can be answered properly.
+        */}
+        <a
+          href={`mailto:${siteFooter.contactEmail}`}
+          className="font-mono text-[10px] tracking-[2px] text-dim no-underline transition hover:text-volt-dim"
+        >
+          {siteFooter.contact}
+        </a>
+      </div>
       <div className="font-mono text-[10px] tracking-[2px] text-dim">
         {siteFooter.copyright}
       </div>

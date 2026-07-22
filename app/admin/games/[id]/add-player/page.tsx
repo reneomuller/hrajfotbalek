@@ -4,6 +4,8 @@ import { AddPlayerForm } from "@/components/admin/AddPlayerForm";
 import { getAdminGame } from "@/lib/admin/queries";
 import { strings } from "@/lib/strings";
 
+export const metadata = { title: strings.admin.addPlayerTitle };
+
 export const dynamic = "force-dynamic";
 
 /**

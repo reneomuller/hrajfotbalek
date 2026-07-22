@@ -21,7 +21,12 @@ import { strings } from "@/lib/strings";
  * Three layers, none of them load-bearing alone.
  */
 export const metadata: Metadata = {
-  title: strings.admin.title,
+  // Nested admin pages set a bare title ("Players") and this hangs the section
+  // off it, so an admin with six tabs open can tell them apart.
+  title: {
+    default: strings.admin.title,
+    template: `%s · ${strings.admin.title}`,
+  },
   // The admin surface must never be indexed, linked or previewed.
   robots: { index: false, follow: false },
 };

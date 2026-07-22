@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Anton, Barlow_Condensed, JetBrains_Mono, Manrope } from "next/font/google";
 import { SessionProvider } from "@/components/SessionProvider";
 import { SiteBackground } from "@/components/SiteBackground";
@@ -6,7 +6,10 @@ import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
 import { getCurrentPlayer } from "@/lib/auth/session";
 import { strings } from "@/lib/strings";
+import tailwindConfig from "@/tailwind.config";
 import "./globals.css";
+
+const themeColors = (tailwindConfig.theme?.extend?.colors ?? {}) as Record<string, string>;
 
 /** Display face for the hero and section titles. */
 const anton = Anton({
@@ -55,8 +58,33 @@ export const metadata: Metadata = {
   metadataBase: new URL(
     process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ?? "http://localhost:3000",
   ),
-  title: strings.meta.title,
+  /**
+   * Every page sets its own bare title ("Games", "My account") and the template
+   * hangs the brand off it, so a tab strip or a shared link reads as this
+   * product rather than as six unrelated pages. `default` covers routes that
+   * set none.
+   */
+  title: {
+    default: strings.meta.title,
+    template: `%s — ${strings.brand.wordmarkLead} ${strings.brand.wordmarkAccent}`,
+  },
   description: strings.meta.description,
+  applicationName: "Hraj Fotbal",
+  manifest: "/manifest.webmanifest",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "Hraj Fotbal",
+  },
+};
+
+/**
+ * `themeColor` paints the mobile browser chrome and the standalone splash. It
+ * belongs on `viewport`, not `metadata` — Next warns and drops it otherwise.
+ */
+export const viewport: Viewport = {
+  themeColor: themeColors.ink,
+  colorScheme: "dark",
 };
 
 export default async function RootLayout({

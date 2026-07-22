@@ -11,6 +11,8 @@ import { policy } from "@/lib/policy";
 import { strings } from "@/lib/strings";
 import { runCreateBooking } from "./actions";
 
+export const metadata = { title: strings.booking.claimSpot };
+
 export const dynamic = "force-dynamic";
 
 interface BookPageProps {
