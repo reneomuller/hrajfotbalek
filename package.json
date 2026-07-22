@@ -9,6 +9,7 @@
     "lint": "eslint",
     "test:unit": "vitest run --passWithNoTests",
     "test:e2e": "playwright test",
+    "test:integration": "node --env-file=.env.local ./node_modules/vitest/vitest.mjs run --config vitest.integration.config.ts",
     "test:auth-flow": "node --env-file=.env.local scripts/repro-auth-callback.mjs",
     "seed": "node --env-file=.env.local scripts/seed.ts",
     "seed:reset": "node --env-file=.env.local scripts/seed.ts --reset",

@@ -3,7 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/auth/requireAdmin";
 import { toBookingErrorCode, type BookingErrorCode } from "@/lib/booking/errors";
-import { fanOutGameCancelled, type CancelledRecipient } from "@/lib/email/dispatch";
+import { collectCancelledRecipients } from "@/lib/email/cancelFanOut";
+import { fanOutGameCancelled } from "@/lib/email/dispatch";
 import { createServerSupabaseClient, createServiceRoleSupabaseClient } from "@/lib/supabase/clients";
 import { siteUrl } from "@/lib/site";
 
@@ -68,36 +69,10 @@ export async function cancelGameAction(
     .eq("id", gameId)
     .maybeSingle();
 
-  const { data: events } = await service
-    .from("events")
-    .select("booking_id, player_id, metadata")
-    .eq("game_id", gameId)
-    .eq("event_type", "booking_cancelled");
-
-  const affected = (events ?? []).filter(
-    (row) => (row.metadata as { source?: string } | null)?.source === "game_cancelled",
-  );
-
-  const playerIds = [...new Set(affected.map((row) => row.player_id).filter(Boolean))];
-  const { data: players } = await service
-    .from("players")
-    .select("id, email, nickname")
-    .in("id", playerIds as string[]);
-
-  const byId = new Map((players ?? []).map((p) => [p.id, p]));
-
-  const recipients: CancelledRecipient[] = affected.map((row) => {
-    const player = byId.get(row.player_id as string);
-    const credit = Number(
-      (row.metadata as { credit_issued_czk?: number } | null)?.credit_issued_czk ?? 0,
-    );
-    return {
-      bookingId: row.booking_id as string,
-      email: player?.email ?? null,
-      nickname: player?.nickname ?? "",
-      creditCzk: credit,
-    };
-  });
+  // Assembled by `collectCancelledRecipients` — shared with the dry-run
+  // harness, so the evidence at the gate exercises this exact code rather than
+  // a second implementation of it.
+  const recipients = await collectCancelledRecipients(service, gameId);
 
   const base = await siteUrl();
   const summary = await fanOutGameCancelled({
