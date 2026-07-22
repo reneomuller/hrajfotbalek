@@ -99,6 +99,15 @@ export default async function AdminGamePage({
             {strings.admin.editGame}
           </Link>
         )}
+        {canEdit && (
+          <Link
+            href={`/admin/games/${game.id}/add-player`}
+            data-testid="add-player"
+            className="rounded-cta border border-hairline-strong px-5 py-3 font-condensed text-[15px] font-extrabold uppercase tracking-wide text-bone no-underline"
+          >
+            {strings.admin.addPlayer}
+          </Link>
+        )}
       </div>
 
       {/* --- reconciliation ---------------------------------------------------

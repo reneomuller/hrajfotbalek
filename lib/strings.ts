@@ -321,6 +321,26 @@ export const strings = {
     notesTooLong: "Notes are limited to 500 characters.",
     invalidTransition: "That is not possible in this game's current state.",
 
+    // --- add shadow player ---------------------------------------------------
+    addPlayer: "Add a player",
+    addPlayerTitle: "Add a player to this game",
+    addPlayerLede:
+      "For someone who books over WhatsApp and has never logged in. They get a real identity that can be claimed or merged later.",
+    addPlayerNickname: "Nickname",
+    addPlayerEmail: "Email (optional)",
+    addPlayerEmailHint:
+      "With an email, they claim this identity automatically the first time they sign in. Without one, only a merge can link it.",
+    addPlayerMethod: "How are they paying?",
+    addPlayerSubmit: "Add and book",
+    addPlayerDone: "Added and booked",
+    // The duplicate-identity guard. A second row for the same person splits
+    // their booking history and their wallet, and costs far more to fix later.
+    addPlayerDuplicate:
+      "A player with that email already exists. Merge instead of creating a second identity.",
+    addPlayerGoToMerge: "Open the merge tool →",
+    addPlayerNicknameTaken: "That nickname is taken. Try another.",
+    addPlayerFull: "This game is full — there is no spot to give.",
+
     // --- reconciliation ------------------------------------------------------
     paymentsTitle: "Awaiting payment",
     paymentsEmpty: "Nothing outstanding — every spot on this game is settled up.",
