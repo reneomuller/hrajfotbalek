@@ -3,14 +3,17 @@ import { BookingList } from "@/components/BookingList";
 import { CreditBalance } from "@/components/CreditBalance";
 import { requireCurrentPlayer } from "@/lib/auth/session";
 import { getOwnCreditBalance, listOwnBookings } from "@/lib/booking/queries";
-import { strings } from "@/lib/strings";
+import { getStrings } from "@/lib/i18n/server";
 import { signOutAction } from "./actions";
 
-export const metadata: Metadata = {
-  title: strings.account.title,
-  // The account page must never be indexed or previewed.
-  robots: { index: false, follow: false },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getStrings();
+  return {
+    title: t.account.title,
+    // The account page must never be indexed or previewed.
+    robots: { index: false, follow: false },
+  };
+}
 
 export const dynamic = "force-dynamic";
 
@@ -22,6 +25,7 @@ export const dynamic = "force-dynamic";
  * surface another player's bookings or ledger.
  */
 export default async function AccountPage() {
+  const t = await getStrings();
   const player = await requireCurrentPlayer("/account");
 
   const [bookings, balanceCzk] = await Promise.all([
@@ -30,14 +34,14 @@ export default async function AccountPage() {
   ]);
 
   const deletionHref =
-    `mailto:${strings.account.deleteMailto}` +
-    `?subject=${encodeURIComponent(strings.account.deleteSubject)}` +
+    `mailto:${t.account.deleteMailto}` +
+    `?subject=${encodeURIComponent(t.account.deleteSubject)}` +
     `&body=${encodeURIComponent(`Player: ${player.nickname}`)}`;
 
   return (
     <main className="relative z-10 mx-auto w-full max-w-shell px-gutter pb-16 pt-24">
       <h1 className="m-0 font-display text-section-title uppercase tracking-wide text-white">
-        {strings.account.title}
+        {t.account.title}
       </h1>
       <div className="mt-2 flex flex-wrap items-center justify-between gap-3">
         <p className="m-0 font-mono text-[12px] tracking-[1px] text-muted">
@@ -52,7 +56,7 @@ export default async function AccountPage() {
             data-testid="sign-out"
             className="rounded-control border border-hairline-link px-[14px] py-2 font-condensed text-[13px] font-bold uppercase tracking-wide text-bone transition hover:border-volt hover:text-volt"
           >
-            {strings.auth.signOut}
+            {t.auth.signOut}
           </button>
         </form>
       </div>
@@ -63,7 +67,7 @@ export default async function AccountPage() {
 
       <section className="mt-10">
         <h2 className="m-0 mb-4 font-condensed text-[17px] font-bold uppercase tracking-wide text-white">
-          {strings.account.myBookings}
+          {t.account.myBookings}
         </h2>
         <BookingList rows={bookings} />
       </section>
@@ -78,17 +82,17 @@ export default async function AccountPage() {
       */}
       <section className="mt-12 border-t border-hairline pt-6">
         <h2 className="m-0 font-mono text-[11px] uppercase tracking-eyebrow text-faint">
-          {strings.account.deleteAccount}
+          {t.account.deleteAccount}
         </h2>
         <p className="mt-2 text-[13px] leading-snug text-muted">
-          {strings.account.deleteAccountHint}
+          {t.account.deleteAccountHint}
         </p>
         <a
           href={deletionHref}
           data-testid="deletion-mailto"
           className="mt-3 inline-block font-mono text-[12px] text-volt no-underline"
         >
-          {strings.account.deleteMailto}
+          {t.account.deleteMailto}
         </a>
       </section>
     </main>

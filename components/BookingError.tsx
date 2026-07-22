@@ -1,6 +1,8 @@
+"use client";
+
 import Link from "next/link";
 import { describeBookingError, type BookingErrorCode } from "@/lib/booking/errors";
-import { strings } from "@/lib/strings";
+import { useStrings } from "@/components/LocaleProvider";
 
 export interface BookingErrorProps {
   code: BookingErrorCode;
@@ -15,7 +17,8 @@ export interface BookingErrorProps {
  * so it reads as information, and the page still offers a way onward.
  */
 export function BookingError({ code, gameId }: BookingErrorProps) {
-  const { title, message } = describeBookingError(code);
+  const t = useStrings();
+  const { title, message } = describeBookingError(code, t);
 
   return (
     <div
@@ -32,7 +35,7 @@ export function BookingError({ code, gameId }: BookingErrorProps) {
         href={`/game/${gameId}`}
         className="mt-5 inline-block font-mono text-[11px] uppercase tracking-eyebrow text-volt no-underline"
       >
-        {strings.booking.backToGame}
+        {t.booking.backToGame}
       </Link>
     </div>
   );

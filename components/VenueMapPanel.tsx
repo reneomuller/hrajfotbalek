@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { strings } from "@/lib/strings";
+import { getStrings } from "@/lib/i18n/server";
 import type { Database } from "@/lib/types/database";
 
 type VenueRow = Database["public"]["Tables"]["venues"]["Row"];
@@ -31,7 +31,8 @@ export interface VenueMapPanelProps {
  * `venue` as a JSX child (React escapes it) and the maps URL runs the query
  * through `encodeURIComponent`.
  */
-export function VenueMapPanel({ venue, venueRow, className }: VenueMapPanelProps) {
+export async function VenueMapPanel({ venue, venueRow, className }: VenueMapPanelProps) {
+  const t = await getStrings();
   const image =
     venueRow?.image_path && venueRow.image_path.startsWith("/venues/")
       ? venueRow.image_path
@@ -44,7 +45,7 @@ export function VenueMapPanel({ venue, venueRow, className }: VenueMapPanelProps
       {image && (
         <Image
           src={image}
-          alt={strings.games.mapAlt}
+          alt={t.games.mapAlt}
           fill
           sizes="(max-width: 768px) 100vw, 480px"
           className="object-cover object-center"
@@ -73,7 +74,7 @@ export function VenueMapPanel({ venue, venueRow, className }: VenueMapPanelProps
         rel="noopener noreferrer"
         className="absolute right-[14px] top-[14px] rounded-[7px] border border-hairline-volt-strong bg-surface-overlay px-[9px] py-[6px] font-mono text-[9px] tracking-[1px] text-volt no-underline"
       >
-        {strings.games.openMap}
+        {t.games.openMap}
       </a>
     </div>
   );

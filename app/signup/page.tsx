@@ -1,9 +1,13 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { SignupForm } from "./SignupForm";
 import { getSessionUser, getCurrentPlayer } from "@/lib/auth/session";
-import { strings } from "@/lib/strings";
+import { getStrings } from "@/lib/i18n/server";
 
-export const metadata = { title: strings.auth.signupTitle };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getStrings();
+  return { title: t.auth.signupTitle };
+}
 
 /**
  * `/signup` — nickname + consent for a session that has no player row yet.
@@ -17,6 +21,7 @@ export default async function SignupPage({
 }: {
   searchParams: Promise<{ next?: string }>;
 }) {
+  const t = await getStrings();
   const params = await searchParams;
   const next = params.next && params.next.startsWith("/") ? params.next : "/games";
 
@@ -34,9 +39,9 @@ export default async function SignupPage({
     <main className="flex-1 flex items-center justify-center px-6 py-16">
       <div className="w-full max-w-sm">
         <h1 className="font-[family-name:var(--font-anton)] text-4xl uppercase tracking-tight">
-          {strings.auth.signupTitle}
+          {t.auth.signupTitle}
         </h1>
-        <p className="mt-3 text-sm opacity-70">{strings.auth.signupLede}</p>
+        <p className="mt-3 text-sm opacity-70">{t.auth.signupLede}</p>
 
         <SignupForm next={next} />
       </div>

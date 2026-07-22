@@ -3,11 +3,12 @@
 import { useActionState } from "react";
 import { completeSignup, type SignupFormState } from "./actions";
 import { NICKNAME_MAX_LENGTH } from "@/lib/auth/nickname";
-import { strings } from "@/lib/strings";
+import { useStrings } from "@/components/LocaleProvider";
 
 const initialState: SignupFormState = { status: "idle" };
 
 export function SignupForm({ next }: { next: string }) {
+  const t = useStrings();
   const [state, formAction, pending] = useActionState(completeSignup, initialState);
 
   return (
@@ -16,7 +17,7 @@ export function SignupForm({ next }: { next: string }) {
 
       <label className="flex flex-col gap-2">
         <span className="font-[family-name:var(--font-jetbrains-mono)] text-xs uppercase tracking-widest opacity-60">
-          {strings.auth.nicknameLabel}
+          {t.auth.nicknameLabel}
         </span>
         <input
           type="text"
@@ -26,7 +27,7 @@ export function SignupForm({ next }: { next: string }) {
           autoComplete="nickname"
           className="rounded-control border border-hairline-link bg-transparent px-4 py-3 text-base outline-none transition-colors focus:border-volt"
         />
-        <span className="text-xs opacity-50">{strings.auth.nicknameHint}</span>
+        <span className="text-xs opacity-50">{t.auth.nicknameHint}</span>
         {state.field === "nickname" && state.message ? (
           <span role="alert" className="text-sm text-red-400">
             {state.message}
@@ -39,11 +40,11 @@ export function SignupForm({ next }: { next: string }) {
       <label className="flex items-start gap-3 text-sm">
         <input type="checkbox" name="gdpr" className="mt-1" />
         <span>
-          {strings.auth.gdprLabel}{" "}
+          {t.auth.gdprLabel}{" "}
           {/* /privacy is created in Phase 27, which owns the copy. Expected to
               404 until then. */}
           <a href="/privacy" className="underline opacity-70">
-            {strings.auth.gdprLink}
+            {t.auth.gdprLink}
           </a>
         </span>
       </label>
@@ -55,7 +56,7 @@ export function SignupForm({ next }: { next: string }) {
 
       <label className="flex items-start gap-3 text-sm">
         <input type="checkbox" name="marketing" className="mt-1" />
-        <span>{strings.auth.marketingLabel}</span>
+        <span>{t.auth.marketingLabel}</span>
       </label>
 
       <button
@@ -63,7 +64,7 @@ export function SignupForm({ next }: { next: string }) {
         disabled={pending}
         className="rounded-cta bg-volt px-4 py-[15px] font-condensed text-cta font-extrabold uppercase tracking-wide text-surface transition disabled:opacity-50"
       >
-        {pending ? strings.common.loading : strings.auth.createAccount}
+        {pending ? t.common.loading : t.auth.createAccount}
       </button>
 
       {state.status === "error" && !state.field && state.message ? (

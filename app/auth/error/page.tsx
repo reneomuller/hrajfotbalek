@@ -1,6 +1,10 @@
-import { strings } from "@/lib/strings";
+import type { Metadata } from "next";
+import { getStrings } from "@/lib/i18n/server";
 
-export const metadata = { title: strings.auth.callbackErrorTitle };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getStrings();
+  return { title: t.auth.callbackErrorTitle };
+}
 
 /**
  * Terminal state for a magic link that could not be exchanged.
@@ -21,22 +25,23 @@ export default async function AuthErrorPage({
 }: {
   searchParams: Promise<{ reason?: string; detail?: string }>;
 }) {
+  const t = await getStrings();
   const { reason, detail } = await searchParams;
 
   return (
     <main className="flex-1 flex items-center justify-center px-6 py-16">
       <div className="w-full max-w-sm">
         <h1 className="font-[family-name:var(--font-anton)] text-4xl uppercase tracking-tight">
-          {strings.auth.callbackErrorTitle}
+          {t.auth.callbackErrorTitle}
         </h1>
         <p className="mt-3 text-sm opacity-70" role="alert">
-          {strings.auth.callbackFailed}
+          {t.auth.callbackFailed}
         </p>
 
         {(reason || detail) && (
           <div className="mt-6 rounded border border-white/20 p-4">
             <div className="font-[family-name:var(--font-jetbrains-mono)] text-xs uppercase tracking-widest opacity-60">
-              {strings.auth.callbackDetailLabel}
+              {t.auth.callbackDetailLabel}
             </div>
             <p className="mt-2 break-words font-[family-name:var(--font-jetbrains-mono)] text-xs opacity-80">
               {[reason, detail].filter(Boolean).join(" — ")}
@@ -48,7 +53,7 @@ export default async function AuthErrorPage({
           href="/login"
           className="mt-8 inline-block rounded-cta bg-volt px-4 py-[15px] font-condensed text-cta font-extrabold uppercase tracking-wide text-surface no-underline"
         >
-          {strings.auth.callbackRetry}
+          {t.auth.callbackRetry}
         </a>
       </div>
     </main>

@@ -1,7 +1,11 @@
+import type { Metadata } from "next";
 import Link from "next/link";
-import { strings } from "@/lib/strings";
+import { getStrings } from "@/lib/i18n/server";
 
-export const metadata = { title: strings.notFound.title };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getStrings();
+  return { title: t.notFound.title };
+}
 
 /**
  * The styled 404.
@@ -15,8 +19,9 @@ export const metadata = { title: strings.notFound.title };
  * `/game/[id]` handles its own missing-game copy (`games.notFound`); this
  * catches everything else, including mistyped URLs.
  */
-export default function NotFound() {
-  const { notFound } = strings;
+export default async function NotFound() {
+  const t = await getStrings();
+  const { notFound } = t;
 
   return (
     <main className="relative z-10 mx-auto flex w-full max-w-shell flex-1 flex-col items-start justify-center px-gutter pb-16 pt-24">

@@ -1,4 +1,4 @@
-import { strings } from "@/lib/strings";
+import { strings, type Strings } from "@/lib/strings";
 import type { BookingStatus, PaymentMethod } from "@/lib/types/database";
 
 export type BadgeTone = "paid" | "pending" | "muted";
@@ -24,30 +24,31 @@ export interface BookingBadge {
 export function bookingBadge(
   status: BookingStatus,
   method: PaymentMethod,
+  t: Strings = strings,
 ): BookingBadge {
   if (status === "cancelled") {
-    return { label: strings.account.badgeCancelled, tone: "muted" };
+    return { label: t.account.badgeCancelled, tone: "muted" };
   }
   if (status === "expired") {
-    return { label: strings.account.badgeExpired, tone: "muted" };
+    return { label: t.account.badgeExpired, tone: "muted" };
   }
 
   if (method === "seed_free") {
-    return { label: strings.account.badgeSeed, tone: "paid" };
+    return { label: t.account.badgeSeed, tone: "paid" };
   }
   if (method === "credit") {
-    return { label: strings.account.badgePaid, tone: "paid" };
+    return { label: t.account.badgePaid, tone: "paid" };
   }
   if (method === "cash") {
     return {
-      label: strings.account.badgeCash,
+      label: t.account.badgeCash,
       tone: status === "confirmed" ? "paid" : "pending",
     };
   }
 
   return status === "confirmed"
-    ? { label: strings.account.badgePaid, tone: "paid" }
-    : { label: strings.account.badgeReserved, tone: "pending" };
+    ? { label: t.account.badgePaid, tone: "paid" }
+    : { label: t.account.badgeReserved, tone: "pending" };
 }
 
 /**

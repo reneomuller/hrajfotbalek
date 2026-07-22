@@ -1,5 +1,5 @@
 import { whatsAppShareUrl } from "@/lib/games/share";
-import { strings } from "@/lib/strings";
+import { getStrings } from "@/lib/i18n/server";
 
 /**
  * Share to WhatsApp.
@@ -19,7 +19,7 @@ import { strings } from "@/lib/strings";
  * than nested, because an `<a>` inside an `<a>` is invalid HTML that browsers
  * silently un-nest in different ways.
  */
-export function ShareButton({
+export async function ShareButton({
   venue,
   when,
   url,
@@ -30,19 +30,20 @@ export function ShareButton({
   url: string;
   size?: "default" | "slim";
 }) {
+  const t = await getStrings();
   return (
     <a
-      href={whatsAppShareUrl({ venue, when, url })}
+      href={whatsAppShareUrl({ venue, when, url }, t)}
       target="_blank"
       rel="noopener noreferrer"
       data-testid="share-whatsapp"
-      aria-label={strings.games.shareWhatsApp}
+      aria-label={t.games.shareWhatsApp}
       className={`inline-flex items-center gap-2 rounded-control border border-hairline-link px-3 py-2 font-mono uppercase tracking-eyebrow text-bone no-underline transition hover:border-whatsapp ${
         size === "slim" ? "text-[9px]" : "text-[10px]"
       }`}
     >
       <span aria-hidden className="inline-block h-[10px] w-[10px] rounded-full bg-whatsapp" />
-      {strings.games.shareWhatsApp}
+      {t.games.shareWhatsApp}
     </a>
   );
 }

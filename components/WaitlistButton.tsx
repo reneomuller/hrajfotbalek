@@ -5,11 +5,12 @@ import { useFormStatus } from "react-dom";
 import { joinWaitlistAction, type WaitlistActionState } from "@/app/game/[id]/waitlist/actions";
 import { describeWaitlistError } from "@/lib/booking/errors";
 import { waitlistPositionLabel } from "@/lib/booking/waitlistLabel";
-import { strings } from "@/lib/strings";
+import { useStrings } from "@/components/LocaleProvider";
 
 const INITIAL: WaitlistActionState = { status: "idle" };
 
 function SubmitButton() {
+  const t = useStrings();
   const { pending } = useFormStatus();
   return (
     <button
@@ -18,7 +19,7 @@ function SubmitButton() {
       data-testid="join-waitlist"
       className="w-full rounded-cta bg-volt px-6 py-4 font-condensed text-cta font-extrabold uppercase tracking-wide text-surface disabled:opacity-60"
     >
-      {pending ? strings.common.loading : strings.games.joinWaitlist}
+      {pending ? t.common.loading : t.games.joinWaitlist}
     </button>
   );
 }
@@ -45,10 +46,11 @@ export function WaitlistButton({
    */
   position: number | null;
 }) {
+  const t = useStrings();
   const [state, formAction] = useActionState(joinWaitlistAction, INITIAL);
 
   const joined = state.status === "joined" || state.status === "already" || alreadyOnList;
-  const positionLabel = waitlistPositionLabel(position);
+  const positionLabel = waitlistPositionLabel(position, t);
 
   if (joined) {
     return (
@@ -58,8 +60,8 @@ export function WaitlistButton({
       >
         <p className="m-0 font-condensed text-[17px] font-bold uppercase tracking-wide text-volt">
           {state.status === "already" || alreadyOnList
-            ? strings.games.waitlistAlready
-            : strings.games.waitlistJoined}
+            ? t.games.waitlistAlready
+            : t.games.waitlistJoined}
         </p>
         {positionLabel && (
           <p
@@ -74,7 +76,7 @@ export function WaitlistButton({
           alone reads as a serving order, which notify-all FCFS is not.
         */}
         <p className="mt-2 text-[13px] leading-snug text-muted">
-          {strings.games.waitlistHint}
+          {t.games.waitlistHint}
         </p>
       </div>
     );
@@ -85,11 +87,11 @@ export function WaitlistButton({
       <input type="hidden" name="gameId" value={gameId} />
       <SubmitButton />
       <p className="mt-3 text-center text-[12px] leading-snug text-muted">
-        {strings.games.waitlistHint}
+        {t.games.waitlistHint}
       </p>
       {state.status === "error" && state.code && (
         <p role="alert" className="mt-3 text-center text-[13px] text-muted">
-          {describeWaitlistError(state.code).message}
+          {describeWaitlistError(state.code, t).message}
         </p>
       )}
     </form>

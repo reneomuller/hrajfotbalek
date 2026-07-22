@@ -1,4 +1,4 @@
-import { strings } from "@/lib/strings";
+import { getStrings } from "@/lib/i18n/server";
 import type { GameSurface } from "@/lib/types/database";
 
 /**
@@ -15,7 +15,7 @@ import type { GameSurface } from "@/lib/types/database";
  * overrides what they actually wrote. An odd capacity yields nothing at all,
  * because "6.5v6.5" is not a format and rounding it would invent a fact.
  */
-export function FormatChips({
+export async function FormatChips({
   format,
   surface,
   capacity,
@@ -27,6 +27,7 @@ export function FormatChips({
   capacity?: number;
   size?: "default" | "slim";
 }) {
+  const t = await getStrings();
   const perSide =
     capacity !== undefined && capacity > 0 && capacity % 2 === 0 ? capacity / 2 : null;
   const formatLabel = format ?? (perSide !== null ? `${perSide}v${perSide}` : null);
@@ -50,7 +51,7 @@ export function FormatChips({
           data-testid="game-surface"
           className={`rounded-chip border border-hairline-strong px-2 py-1 font-mono ${text} font-bold uppercase tracking-[1px] text-muted`}
         >
-          {strings.games.surface[surface]}
+          {t.games.surface[surface]}
         </span>
       )}
     </div>

@@ -1,8 +1,8 @@
 import Link from "next/link";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { authNavLink, primaryNavLinks } from "@/lib/nav/links";
-import { strings } from "@/lib/strings";
+import { getStrings } from "@/lib/i18n/server";
 
-const { brand, nav } = strings;
 
 /**
  * Site-wide header, rendered once from the root layout.
@@ -16,14 +16,16 @@ const { brand, nav } = strings;
  * auth slot to show and is never rendered here; `isAdmin` decides whether the
  * Admin link appears, and grants nothing by appearing.
  */
-export function SiteHeader({
+export async function SiteHeader({
   nickname,
   isAdmin,
 }: {
   nickname: string | null;
   isAdmin: boolean;
 }) {
-  const auth = authNavLink({ nickname });
+  const t = await getStrings();
+  const { brand, nav } = t;
+  const auth = authNavLink({ nickname }, t);
 
   return (
     <header className="fixed inset-x-0 top-0 z-30 border-b border-hairline-chrome bg-ink/[.72] backdrop-blur-md">
@@ -44,7 +46,15 @@ export function SiteHeader({
         </Link>
 
         <nav className="flex items-center gap-[14px]">
-          {primaryNavLinks({ isAdmin }).map((link) => (
+          {/*
+            The language control sits before the links, not buried in a menu or
+            in the footer: someone who cannot read the page has to be able to
+            find its way out without reading anything, and it names the
+            languages in their own alphabets so it is legible in all three.
+          */}
+          <LanguageSwitcher />
+
+          {primaryNavLinks({ isAdmin }, t).map((link) => (
             <Link
               key={link.href}
               href={link.href}

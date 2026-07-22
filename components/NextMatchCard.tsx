@@ -6,10 +6,9 @@ import { ShareButton } from "@/components/game/ShareButton";
 import { VenueMapPanel, type VenueMapPanelProps } from "@/components/VenueMapPanel";
 import { formatGameDateTime } from "@/lib/format";
 import { gameUrgency, spotsLeftLabel, urgencyLabel } from "@/lib/games/urgency";
-import { strings } from "@/lib/strings";
+import { getStrings } from "@/lib/i18n/server";
 import type { GameCardGame } from "@/components/GameCard";
 
-const { games, landing } = strings;
 
 /**
  * The landing page's next-match block, ported from the `index.html` reference.
@@ -42,13 +41,15 @@ export interface NextMatchCardProps {
   shareUrl?: string;
 }
 
-export function NextMatchCard({
+export async function NextMatchCard({
   game,
   bookedCount,
   roster,
   venueRow,
   shareUrl,
 }: NextMatchCardProps) {
+  const t = await getStrings();
+  const { games, landing } = t;
   const filled = Math.min(bookedCount, game.capacity);
   const urgency = gameUrgency(bookedCount, game.capacity);
   const isFull = urgency === "full";
@@ -93,7 +94,7 @@ export function NextMatchCard({
               isFull ? "text-faint" : "text-volt-dim"
             }`}
           >
-            {urgencyLabel(urgency)}
+            {urgencyLabel(urgency, t)}
           </span>
           <span
             data-testid="spots-counter"
@@ -109,7 +110,7 @@ export function NextMatchCard({
           <AvatarRow names={roster} max={14} />
           <span className="text-[13px] text-muted-dim">
             <b className={isFull ? "text-faint" : "text-volt"}>
-              {spotsLeftLabel(bookedCount, game.capacity)}
+              {spotsLeftLabel(bookedCount, game.capacity, t)}
             </b>
           </span>
         </div>

@@ -11,18 +11,22 @@ import {
   listUpcomingGames,
 } from "@/lib/games/queries";
 import { siteUrl } from "@/lib/site";
-import { strings } from "@/lib/strings";
+import { getStrings } from "@/lib/i18n/server";
 
-export const metadata: Metadata = {
-  title: strings.games.listTitle,
-  description: strings.meta.description,
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getStrings();
+  return {
+    title: t.games.listTitle,
+    description: t.meta.description,
+  };
+}
 
 // Capacity changes as people book, so the list is rendered per request rather
 // than statically cached — a cached spots-left count is a wrong one.
 export const dynamic = "force-dynamic";
 
 export default async function GamesPage() {
+  const t = await getStrings();
   const games = await listUpcomingGames();
   const gameIds = games.map(({ game }) => game.id);
 
@@ -54,7 +58,7 @@ export default async function GamesPage() {
   return (
     <main className="relative z-10 mx-auto w-full max-w-shell px-gutter pb-16 pt-24">
       <h1 className="m-0 font-display text-section-title uppercase tracking-wide text-white">
-        {strings.games.listTitle}
+        {t.games.listTitle}
       </h1>
 
       {nextOwn && (
@@ -66,10 +70,10 @@ export default async function GamesPage() {
       {games.length === 0 ? (
         <div className="mt-8">
           <EmptyState
-            title={strings.games.emptyTitle}
-            body={strings.games.emptyBody}
-            ctaLabel={strings.games.emptyCta}
-            ctaHref={strings.landing.community.whatsappUrl}
+            title={t.games.emptyTitle}
+            body={t.games.emptyBody}
+            ctaLabel={t.games.emptyCta}
+            ctaHref={t.landing.community.whatsappUrl}
           />
         </div>
       ) : (

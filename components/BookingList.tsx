@@ -5,7 +5,7 @@ import { bookingBadge, type BadgeTone } from "@/lib/booking/badges";
 import type { BookingWithGame } from "@/lib/booking/queries";
 import { formatCzk, formatGameDateTime } from "@/lib/format";
 import { shouldRenderQr } from "@/lib/payments/spd";
-import { strings } from "@/lib/strings";
+import { getStrings } from "@/lib/i18n/server";
 
 export interface BookingListProps {
   rows: BookingWithGame[];
@@ -17,13 +17,14 @@ const TONE_CLASS: Record<BadgeTone, string> = {
   muted: "border-hairline text-faint",
 };
 
-export function BookingList({ rows }: BookingListProps) {
+export async function BookingList({ rows }: BookingListProps) {
+  const t = await getStrings();
   if (rows.length === 0) {
     return (
       <EmptyState
-        title={strings.account.noBookingsTitle}
-        body={strings.account.noBookingsBody}
-        ctaLabel={strings.account.findAGame}
+        title={t.account.noBookingsTitle}
+        body={t.account.noBookingsBody}
+        ctaLabel={t.account.findAGame}
         ctaHref="/games"
       />
     );
@@ -32,7 +33,7 @@ export function BookingList({ rows }: BookingListProps) {
   return (
     <ul className="flex list-none flex-col gap-3 p-0" data-testid="booking-list">
       {rows.map(({ booking, game, canCancel: showCancel }) => {
-        const badge = bookingBadge(booking.status, booking.payment_method);
+        const badge = bookingBadge(booking.status, booking.payment_method, t);
         const amountDue = booking.price_czk - booking.credit_applied_czk;
         // Same predicate the confirmation screen uses, so the link never leads
         // to a page that decides there is no QR to show.
@@ -66,13 +67,13 @@ export function BookingList({ rows }: BookingListProps) {
               </span>
               {booking.credit_applied_czk > 0 && (
                 <span className="font-mono text-[12px] text-muted">
-                  {strings.booking.creditApplied} −
+                  {t.booking.creditApplied} −
                   {formatCzk(booking.credit_applied_czk)}
                 </span>
               )}
               {booking.status === "reserved" && amountDue > 0 && (
                 <span className="font-mono text-[12px] text-bone">
-                  {strings.booking.amountDue} {formatCzk(amountDue)}
+                  {t.booking.amountDue} {formatCzk(amountDue)}
                 </span>
               )}
             </div>
@@ -81,7 +82,7 @@ export function BookingList({ rows }: BookingListProps) {
               <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
                 {booking.payment_code !== null ? (
                   <span className="font-mono text-[11px] tracking-[1px] text-faint">
-                    {strings.payment.variableSymbol} {booking.payment_code}
+                    {t.payment.variableSymbol} {booking.payment_code}
                   </span>
                 ) : (
                   <span />
@@ -103,7 +104,7 @@ export function BookingList({ rows }: BookingListProps) {
                 data-testid="show-qr"
                 className="mt-4 block rounded-control border border-hairline-volt px-4 py-3 text-center font-condensed text-[15px] font-bold uppercase tracking-wide text-volt no-underline"
               >
-                {strings.account.showQr}
+                {t.account.showQr}
               </Link>
             )}
           </li>

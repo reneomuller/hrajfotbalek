@@ -1,17 +1,21 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { WaitlistConvert } from "@/components/WaitlistConvert";
 import { requireCurrentPlayer } from "@/lib/auth/session";
 import { formatCzk, formatGameDateTime } from "@/lib/format";
 import { getGameById } from "@/lib/games/queries";
 import { isOnWaitlist } from "@/lib/booking/waitlistConvert";
-import { strings } from "@/lib/strings";
+import { getStrings } from "@/lib/i18n/server";
 
 export const dynamic = "force-dynamic";
 
-export const metadata = {
-  title: strings.games.waitlistConvertTitle,
-  robots: { index: false, follow: false },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getStrings();
+  return {
+    title: t.games.waitlistConvertTitle,
+    robots: { index: false, follow: false },
+  };
+}
 
 /**
  * The landing page for the waitlist spot-open email.
@@ -25,6 +29,7 @@ export default async function WaitlistConvertPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
+  const t = await getStrings();
   const { id } = await params;
   await requireCurrentPlayer(`/game/${id}/waitlist/convert`);
 
@@ -33,7 +38,7 @@ export default async function WaitlistConvertPage({
     return (
       <main className="relative z-10 mx-auto w-full max-w-shell px-gutter pb-16 pt-24">
         <p className="font-mono text-[12px] tracking-[1px] text-faint">
-          {strings.games.notFound}
+          {t.games.notFound}
         </p>
       </main>
     );
@@ -48,7 +53,7 @@ export default async function WaitlistConvertPage({
         href={`/game/${game.id}`}
         className="font-mono text-[11px] uppercase tracking-eyebrow text-muted no-underline"
       >
-        {strings.booking.backToGame}
+        {t.booking.backToGame}
       </Link>
 
       <h1 className="mt-4 font-display text-section-title uppercase tracking-wide text-white">
@@ -68,7 +73,7 @@ export default async function WaitlistConvertPage({
         {onList ? (
           <>
             <p className="mb-6 text-[14px] leading-relaxed text-muted">
-              {strings.games.waitlistConvertHint}
+              {t.games.waitlistConvertHint}
             </p>
             <WaitlistConvert gameId={game.id} />
           </>
@@ -77,7 +82,7 @@ export default async function WaitlistConvertPage({
             data-testid="not-on-waitlist"
             className="rounded-control border border-hairline-strong px-4 py-3 font-mono text-[11px] tracking-[1px] text-faint"
           >
-            {strings.games.waitlistNotOnList}
+            {t.games.waitlistNotOnList}
           </p>
         )}
       </div>

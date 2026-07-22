@@ -1,5 +1,5 @@
 import { initials } from "@/lib/roster/initials";
-import { strings } from "@/lib/strings";
+import { getStrings } from "@/lib/i18n/server";
 
 /**
  * Overlapping initial avatars, from the design reference's `data-roster` block:
@@ -18,7 +18,7 @@ import { strings } from "@/lib/strings";
  * be answered by matching the viewer's own nickname. That is fine for a ring
  * and would not be fine for anything that mattered.
  */
-export function AvatarRow({
+export async function AvatarRow({
   names,
   highlight,
   max = 12,
@@ -31,6 +31,7 @@ export function AvatarRow({
   max?: number;
   size?: "default" | "slim";
 }) {
+  const t = await getStrings();
   const shown = names.slice(0, max);
   const overflow = names.length - shown.length;
   const dim = size === "slim" ? "h-[26px] w-[26px] text-[11px]" : "h-[34px] w-[34px] text-[13px]";
@@ -42,7 +43,7 @@ export function AvatarRow({
         return (
           <span
             key={`${nickname}-${i}`}
-            title={isYou ? `${nickname} — ${strings.games.waitlistYou}` : nickname}
+            title={isYou ? `${nickname} — ${t.games.waitlistYou}` : nickname}
             data-testid={isYou ? "avatar-you" : "avatar"}
             className={`-ml-2 flex items-center justify-center rounded-full border-2 font-condensed font-bold ${dim} ${
               isYou
@@ -52,7 +53,7 @@ export function AvatarRow({
                   }`
             }`}
           >
-            {initials(nickname)}
+            {initials(nickname, t)}
           </span>
         );
       })}

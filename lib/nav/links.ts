@@ -1,4 +1,4 @@
-import { strings } from "@/lib/strings";
+import { strings, type Strings } from "@/lib/strings";
 
 /**
  * Navigation link resolution.
@@ -27,9 +27,12 @@ export interface NavLink {
  * bounces the person who clicks it is a broken link. Until now the panel had no
  * door at all and admins reached it by typing the URL from memory.
  */
-export function primaryNavLinks(session: { isAdmin?: boolean } = {}): NavLink[] {
-  const links: NavLink[] = [{ href: "/games", label: strings.nav.games }];
-  if (session.isAdmin) links.push({ href: "/admin/games", label: strings.nav.admin });
+export function primaryNavLinks(
+  session: { isAdmin?: boolean } = {},
+  t: Strings = strings,
+): NavLink[] {
+  const links: NavLink[] = [{ href: "/games", label: t.nav.games }];
+  if (session.isAdmin) links.push({ href: "/admin/games", label: t.nav.admin });
   return links;
 }
 
@@ -41,6 +44,8 @@ export function primaryNavLinks(session: { isAdmin?: boolean } = {}): NavLink[] 
  * does not become the place the sections are decided.
  */
 export function adminNavLinks(): NavLink[] {
+  // Not localized, and not parameterized: the admin panel is English. See
+  // lib/i18n/locales.ts.
   return [
     { href: "/admin/games", label: strings.admin.navGames },
     { href: "/admin/players", label: strings.admin.navPlayers },
@@ -59,9 +64,12 @@ export function adminNavLinks(): NavLink[] {
  * The label is fixed copy, not the nickname: a nickname is variable-width free
  * text, and fixed chrome is the wrong place for it.
  */
-export function authNavLink(session: { nickname: string | null }): NavLink {
+export function authNavLink(
+  session: { nickname: string | null },
+  t: Strings = strings,
+): NavLink {
   if (session.nickname) {
-    return { href: "/account", label: strings.nav.profile };
+    return { href: "/account", label: t.nav.profile };
   }
-  return { href: "/login", label: strings.nav.logIn };
+  return { href: "/login", label: t.nav.logIn };
 }

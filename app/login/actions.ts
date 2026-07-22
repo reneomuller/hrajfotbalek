@@ -2,7 +2,7 @@
 
 import { headers } from "next/headers";
 import { createServerSupabaseClient } from "@/lib/supabase/clients";
-import { strings } from "@/lib/strings";
+import { getStrings } from "@/lib/i18n/server";
 
 export type PendingAction = "book" | "join_waitlist" | "login";
 
@@ -71,6 +71,7 @@ export async function requestMagicLink(
   _prevState: LoginFormState,
   formData: FormData,
 ): Promise<LoginFormState> {
+  const t = await getStrings();
   const email = String(formData.get("email") ?? "").trim();
   const gameId = (formData.get("gameId") as string | null) || null;
   const rawAction = (formData.get("action") as string | null) || "login";
@@ -79,7 +80,7 @@ export async function requestMagicLink(
   const next = (formData.get("next") as string | null) || null;
 
   if (!looksLikeEmail(email)) {
-    return { status: "error", message: strings.auth.emailInvalid };
+    return { status: "error", message: t.auth.emailInvalid };
   }
 
   const supabase = await createServerSupabaseClient();
@@ -95,7 +96,7 @@ export async function requestMagicLink(
   });
 
   if (error) {
-    return { status: "error", message: strings.auth.linkSendFailed };
+    return { status: "error", message: t.auth.linkSendFailed };
   }
 
   // Funnel numerator. Recorded only after a successful send, so the
@@ -111,5 +112,5 @@ export async function requestMagicLink(
     console.error("record_auth_link_sent failed", eventError.message);
   }
 
-  return { status: "sent", message: strings.auth.linkSent };
+  return { status: "sent", message: t.auth.linkSent };
 }

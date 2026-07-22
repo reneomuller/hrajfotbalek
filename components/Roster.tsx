@@ -1,4 +1,4 @@
-import { strings } from "@/lib/strings";
+import { getStrings } from "@/lib/i18n/server";
 import type { Database } from "@/lib/types/database";
 
 type RosterRow = Database["public"]["Views"]["game_roster_public"]["Row"];
@@ -20,16 +20,17 @@ export interface RosterProps {
  * `nickname` is player-supplied and is interpolated as a JSX text child, which
  * React escapes.
  */
-export function Roster({ rows }: RosterProps) {
+export async function Roster({ rows }: RosterProps) {
+  const t = await getStrings();
   return (
     <section className="mt-8">
       <h2 className="m-0 font-condensed text-[17px] font-bold uppercase tracking-wide text-white">
-        {strings.games.rosterTitle}
+        {t.games.rosterTitle}
       </h2>
 
       {rows.length === 0 ? (
         <p className="mt-3 font-mono text-[11px] tracking-[1px] text-faint">
-          {strings.games.rosterEmpty}
+          {t.games.rosterEmpty}
         </p>
       ) : (
         <ul className="mt-3 flex list-none flex-col gap-px p-0" data-testid="roster">
@@ -45,8 +46,8 @@ export function Roster({ rows }: RosterProps) {
                 }`}
               >
                 {row.status === "confirmed"
-                  ? strings.games.rosterConfirmed
-                  : strings.games.rosterReserved}
+                  ? t.games.rosterConfirmed
+                  : t.games.rosterReserved}
               </span>
             </li>
           ))}

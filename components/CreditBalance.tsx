@@ -1,5 +1,5 @@
 import { formatCzk } from "@/lib/format";
-import { strings } from "@/lib/strings";
+import { getStrings } from "@/lib/i18n/server";
 
 export interface CreditBalanceProps {
   /** `SUM(delta_czk)` over the player's ledger, computed server-side. */
@@ -15,13 +15,14 @@ export interface CreditBalanceProps {
  * cached or recomputed anywhere else is a second source of truth that can
  * disagree with it, and the one that disagrees is always the wrong one.
  */
-export function CreditBalance({ balanceCzk }: CreditBalanceProps) {
+export async function CreditBalance({ balanceCzk }: CreditBalanceProps) {
+  const t = await getStrings();
   const hasCredit = balanceCzk > 0;
 
   return (
     <section className="rounded-card border border-hairline-volt bg-surface-card p-5">
       <h2 className="m-0 font-mono text-[11px] uppercase tracking-eyebrow text-volt-dim">
-        {strings.account.creditBalance}
+        {t.account.creditBalance}
       </h2>
 
       <div
@@ -32,7 +33,7 @@ export function CreditBalance({ balanceCzk }: CreditBalanceProps) {
       </div>
 
       <p className="mt-3 text-[13px] leading-snug text-muted">
-        {hasCredit ? strings.account.creditHint : strings.account.creditEmpty}
+        {hasCredit ? t.account.creditHint : t.account.creditEmpty}
       </p>
     </section>
   );

@@ -1,4 +1,4 @@
-import { strings } from "@/lib/strings";
+import { strings, type Strings } from "@/lib/strings";
 
 /**
  * RPC error code → friendly copy.
@@ -55,38 +55,41 @@ export interface FriendlyBookingError {
   message: string;
 }
 
-export function describeBookingError(code: BookingErrorCode): FriendlyBookingError {
+export function describeBookingError(
+  code: BookingErrorCode,
+  t: Strings = strings,
+): FriendlyBookingError {
   switch (code) {
     case "CAPACITY_FULL":
       return {
         code,
-        title: strings.errors.capacityFullTitle,
-        message: strings.errors.capacityFull,
+        title: t.errors.capacityFullTitle,
+        message: t.errors.capacityFull,
       };
     case "DUPLICATE_ACTIVE_BOOKING":
       return {
         code,
-        title: strings.errors.duplicateActiveBookingTitle,
-        message: strings.errors.duplicateActiveBooking,
+        title: t.errors.duplicateActiveBookingTitle,
+        message: t.errors.duplicateActiveBooking,
       };
     case "CREDIT_NEGATIVE_BLOCKED":
-      return { code, title: strings.errors.tryAgain, message: strings.errors.creditNegativeBlocked };
+      return { code, title: t.errors.tryAgain, message: t.errors.creditNegativeBlocked };
     case "GAME_NOT_BOOKABLE":
-      return { code, title: strings.errors.tryAgain, message: strings.errors.gameNotBookable };
+      return { code, title: t.errors.tryAgain, message: t.errors.gameNotBookable };
     case "GAME_ALREADY_STARTED":
-      return { code, title: strings.errors.tryAgain, message: strings.errors.gameAlreadyStarted };
+      return { code, title: t.errors.tryAgain, message: t.errors.gameAlreadyStarted };
     case "GAME_NOT_WAITLISTABLE":
-      return { code, title: strings.errors.tryAgain, message: strings.errors.gameNotWaitlistable };
+      return { code, title: t.errors.tryAgain, message: t.errors.gameNotWaitlistable };
     case "CANCEL_WINDOW_CLOSED":
-      return { code, title: strings.errors.tryAgain, message: strings.errors.cancelWindowClosed };
+      return { code, title: t.errors.tryAgain, message: t.errors.cancelWindowClosed };
     case "INSUFFICIENT_PERMISSION":
       return {
         code,
-        title: strings.errors.tryAgain,
-        message: strings.errors.insufficientPermission,
+        title: t.errors.tryAgain,
+        message: t.errors.insufficientPermission,
       };
     default:
-      return { code, title: strings.errors.tryAgain, message: strings.errors.generic };
+      return { code, title: t.errors.tryAgain, message: t.errors.generic };
   }
 }
 
@@ -98,12 +101,15 @@ export function describeBookingError(code: BookingErrorCode): FriendlyBookingErr
  * reassuring thing to say. The booking-flow copy deliberately does not claim
  * that, because a player who never joined a waitlist is not on one.
  */
-export function describeWaitlistError(code: BookingErrorCode): FriendlyBookingError {
+export function describeWaitlistError(
+  code: BookingErrorCode,
+  t: Strings = strings,
+): FriendlyBookingError {
   if (code === "CAPACITY_FULL") {
     return {
       code,
-      title: strings.errors.capacityFullTitle,
-      message: strings.errors.capacityFullWaitlist,
+      title: t.errors.capacityFullTitle,
+      message: t.errors.capacityFullWaitlist,
     };
   }
   return describeBookingError(code);

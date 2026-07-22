@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { BookingError } from "@/components/BookingError";
@@ -8,10 +9,13 @@ import { readResumeIntent } from "@/lib/booking/resume";
 import { formatCzk, formatGameDateTime } from "@/lib/format";
 import { getGameById } from "@/lib/games/queries";
 import { policy } from "@/lib/policy";
-import { strings } from "@/lib/strings";
+import { getStrings } from "@/lib/i18n/server";
 import { runCreateBooking } from "./actions";
 
-export const metadata = { title: strings.booking.claimSpot };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getStrings();
+  return { title: t.booking.claimSpot };
+}
 
 export const dynamic = "force-dynamic";
 
@@ -41,6 +45,7 @@ interface BookPageProps {
  * until the RPC runs.
  */
 export default async function BookPage({ params, searchParams }: BookPageProps) {
+  const t = await getStrings();
   const { id } = await params;
   const query = await searchParams;
 
@@ -49,13 +54,13 @@ export default async function BookPage({ params, searchParams }: BookPageProps) 
     return (
       <main className="relative z-10 mx-auto w-full max-w-shell px-gutter pb-16 pt-24">
         <p className="font-mono text-[12px] tracking-[1px] text-faint">
-          {strings.games.notFound}
+          {t.games.notFound}
         </p>
         <Link
           href="/games"
           className="mt-6 inline-block font-mono text-[11px] uppercase tracking-eyebrow text-volt no-underline"
         >
-          {strings.games.backToGames}
+          {t.games.backToGames}
         </Link>
       </main>
     );
@@ -97,7 +102,7 @@ export default async function BookPage({ params, searchParams }: BookPageProps) 
         href={`/game/${game.id}`}
         className="font-mono text-[11px] uppercase tracking-eyebrow text-muted no-underline"
       >
-        {strings.booking.backToGame}
+        {t.booking.backToGame}
       </Link>
 
       <h1 className="mt-4 font-display text-section-title uppercase tracking-wide text-white">
@@ -126,7 +131,7 @@ export default async function BookPage({ params, searchParams }: BookPageProps) 
         data-testid="cancellation-reassurance"
         className="mt-4 text-center text-[12px] leading-snug text-muted"
       >
-        {cancellationReassurance(policy.cancellation.cutoffHoursBeforeStart)}
+        {cancellationReassurance(policy.cancellation.cutoffHoursBeforeStart, t)}
       </p>
     </main>
   );

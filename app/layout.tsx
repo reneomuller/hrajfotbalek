@@ -1,10 +1,12 @@
 import type { Metadata, Viewport } from "next";
 import { Anton, Barlow_Condensed, JetBrains_Mono, Manrope } from "next/font/google";
+import { LocaleProvider } from "@/components/LocaleProvider";
 import { SessionProvider } from "@/components/SessionProvider";
 import { SiteBackground } from "@/components/SiteBackground";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
 import { getCurrentPlayer } from "@/lib/auth/session";
+import { getLocale, getStrings } from "@/lib/i18n/server";
 import { strings } from "@/lib/strings";
 import tailwindConfig from "@/tailwind.config";
 import "./globals.css";
@@ -42,41 +44,51 @@ const jetbrainsMono = JetBrains_Mono({
   display: "swap",
 });
 
-export const metadata: Metadata = {
-  /**
-   * Base for resolving relative Open Graph and Twitter image URLs.
-   *
-   * WhatsApp and every other unfurler fetch `og:image` as an absolute URL and
-   * will not resolve a relative path. Without this, Next falls back to
-   * `http://localhost:3000`, which produces preview cards that render locally
-   * and silently show no image once deployed — the failure appears only in
-   * production, in someone else's chat window.
-   *
-   * Resolved from NEXT_PUBLIC_SITE_URL, the same variable the magic-link
-   * origin uses, so both agree by construction.
-   */
-  metadataBase: new URL(
-    process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ?? "http://localhost:3000",
-  ),
-  /**
-   * Every page sets its own bare title ("Games", "My account") and the template
-   * hangs the brand off it, so a tab strip or a shared link reads as this
-   * product rather than as six unrelated pages. `default` covers routes that
-   * set none.
-   */
-  title: {
-    default: strings.meta.title,
-    template: `%s — ${strings.brand.wordmarkLead} ${strings.brand.wordmarkAccent}`,
-  },
-  description: strings.meta.description,
-  applicationName: "Hraj Fotbal",
-  manifest: "/manifest.webmanifest",
-  appleWebApp: {
-    capable: true,
-    statusBarStyle: "black-translucent",
-    title: "Hraj Fotbal",
-  },
-};
+/**
+ * `generateMetadata` rather than a static `metadata` object: the title and
+ * description are copy, and copy is now per-request. A module-level constant
+ * is evaluated once at build time and would pin every language's tab title and
+ * every shared link's description to English.
+ */
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getStrings();
+
+  return {
+    /**
+     * Base for resolving relative Open Graph and Twitter image URLs.
+     *
+     * WhatsApp and every other unfurler fetch `og:image` as an absolute URL and
+     * will not resolve a relative path. Without this, Next falls back to
+     * `http://localhost:3000`, which produces preview cards that render locally
+     * and silently show no image once deployed — the failure appears only in
+     * production, in someone else's chat window.
+     *
+     * Resolved from NEXT_PUBLIC_SITE_URL, the same variable the magic-link
+     * origin uses, so both agree by construction.
+     */
+    metadataBase: new URL(
+      process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ?? "http://localhost:3000",
+    ),
+    /**
+     * Every page sets its own bare title ("Games", "My account") and the
+     * template hangs the brand off it, so a tab strip or a shared link reads as
+     * this product rather than as six unrelated pages. `default` covers routes
+     * that set none. The brand itself is not translated — it is a name.
+     */
+    title: {
+      default: t.meta.title,
+      template: `%s — ${strings.brand.wordmarkLead} ${strings.brand.wordmarkAccent}`,
+    },
+    description: t.meta.description,
+    applicationName: "Hraj Fotbal",
+    manifest: "/manifest.webmanifest",
+    appleWebApp: {
+      capable: true,
+      statusBarStyle: "black-translucent",
+      title: "Hraj Fotbal",
+    },
+  };
+}
 
 /**
  * `themeColor` paints the mobile browser chrome and the standalone splash. It
@@ -97,28 +109,36 @@ export default async function RootLayout({
   // see the note in components/SessionProvider.tsx.
   const player = await getCurrentPlayer();
 
+  // The language, decided once per request. Server components read the same
+  // table through `getStrings()`; client components get it from
+  // `LocaleProvider`, so the two can never disagree and hydrate a flash of the
+  // wrong language.
+  const [locale, t] = await Promise.all([getLocale(), getStrings()]);
+
   return (
     <html
-      lang="en"
+      lang={locale}
       className={`${anton.variable} ${barlowCondensed.variable} ${manrope.variable} ${jetbrainsMono.variable} h-full`}
     >
       <body className="min-h-full flex flex-col">
-        <SessionProvider
-          value={{
-            isAuthenticated: player !== null,
-            nickname: player?.nickname ?? null,
-            isAdmin: player?.is_admin ?? false,
-          }}
-        >
-          {/* Mounted once, here, so navigating never restarts the field. */}
-          <SiteBackground />
-          <SiteHeader
-            nickname={player?.nickname ?? null}
-            isAdmin={player?.is_admin ?? false}
-          />
-          {children}
-          <SiteFooter />
-        </SessionProvider>
+        <LocaleProvider locale={locale} t={t}>
+          <SessionProvider
+            value={{
+              isAuthenticated: player !== null,
+              nickname: player?.nickname ?? null,
+              isAdmin: player?.is_admin ?? false,
+            }}
+          >
+            {/* Mounted once, here, so navigating never restarts the field. */}
+            <SiteBackground />
+            <SiteHeader
+              nickname={player?.nickname ?? null}
+              isAdmin={player?.is_admin ?? false}
+            />
+            {children}
+            <SiteFooter />
+          </SessionProvider>
+        </LocaleProvider>
       </body>
     </html>
   );

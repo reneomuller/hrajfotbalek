@@ -7,11 +7,12 @@ import {
   type WaitlistActionState,
 } from "@/app/game/[id]/waitlist/actions";
 import { describeWaitlistError } from "@/lib/booking/errors";
-import { strings } from "@/lib/strings";
+import { useStrings } from "@/components/LocaleProvider";
 
 const INITIAL: WaitlistActionState = { status: "idle" };
 
 function SubmitButton({ label }: { label: string }) {
+  const t = useStrings();
   const { pending } = useFormStatus();
   return (
     <button
@@ -20,7 +21,7 @@ function SubmitButton({ label }: { label: string }) {
       data-testid="convert-waitlist"
       className="mt-6 w-full rounded-cta bg-volt px-6 py-4 font-condensed text-cta font-extrabold uppercase tracking-wide text-surface disabled:opacity-60"
     >
-      {pending ? strings.common.loading : label}
+      {pending ? t.common.loading : label}
     </button>
   );
 }
@@ -35,10 +36,11 @@ function SubmitButton({ label }: { label: string }) {
  * than an error box.
  */
 export function WaitlistConvert({ gameId }: { gameId: string }) {
+  const t = useStrings();
   const [state, formAction] = useActionState(convertWaitlistAction, INITIAL);
 
   if (state.status === "error" && state.code) {
-    const friendly = describeWaitlistError(state.code);
+    const friendly = describeWaitlistError(state.code, t);
     return (
       <div
         data-testid="waitlist-convert-error"
@@ -59,7 +61,7 @@ export function WaitlistConvert({ gameId }: { gameId: string }) {
 
       <fieldset className="m-0 border-0 p-0">
         <legend className="mb-4 font-condensed text-[17px] font-bold uppercase tracking-wide text-white">
-          {strings.booking.choosePayment}
+          {t.booking.choosePayment}
         </legend>
 
         <div className="flex flex-col gap-3">
@@ -67,10 +69,10 @@ export function WaitlistConvert({ gameId }: { gameId: string }) {
             <input type="radio" name="method" value="qr" defaultChecked className="mt-1 accent-volt" />
             <span>
               <span className="block font-condensed text-[16px] font-bold uppercase tracking-wide text-bone">
-                {strings.booking.payByQr}
+                {t.booking.payByQr}
               </span>
               <span className="mt-1 block text-[13px] leading-snug text-muted">
-                {strings.booking.payByQrHint}
+                {t.booking.payByQrHint}
               </span>
             </span>
           </label>
@@ -79,17 +81,17 @@ export function WaitlistConvert({ gameId }: { gameId: string }) {
             <input type="radio" name="method" value="cash" className="mt-1 accent-volt" />
             <span>
               <span className="block font-condensed text-[16px] font-bold uppercase tracking-wide text-bone">
-                {strings.booking.payByCash}
+                {t.booking.payByCash}
               </span>
               <span className="mt-1 block text-[13px] leading-snug text-muted">
-                {strings.booking.payByCashHint}
+                {t.booking.payByCashHint}
               </span>
             </span>
           </label>
         </div>
       </fieldset>
 
-      <SubmitButton label={strings.games.waitlistConvertTitle} />
+      <SubmitButton label={t.games.waitlistConvertTitle} />
     </form>
   );
 }

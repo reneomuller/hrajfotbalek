@@ -1,4 +1,4 @@
-import { strings } from "@/lib/strings";
+import { strings, type Strings } from "@/lib/strings";
 
 /**
  * The share-to-WhatsApp link.
@@ -18,12 +18,15 @@ import { strings } from "@/lib/strings";
  * The template lives in `lib/strings.ts` with the rest of the copy, so the
  * message can be reworded without touching this file.
  */
-export function whatsAppShareUrl(params: {
-  venue: string;
-  when: string;
-  url: string;
-}): string {
-  const text = strings.games.shareMessage
+export function whatsAppShareUrl(
+  params: {
+    venue: string;
+    when: string;
+    url: string;
+  },
+  t: Strings = strings,
+): string {
+  const text = t.games.shareMessage
     .replace("{venue}", params.venue)
     .replace("{when}", params.when)
     .replace("{url}", params.url);

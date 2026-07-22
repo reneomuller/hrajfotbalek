@@ -3,25 +3,26 @@ import Link from "next/link";
 import { NextMatchCard } from "@/components/NextMatchCard";
 import { getNextGame, getRoster, getVenue } from "@/lib/games/queries";
 import { siteUrl } from "@/lib/site";
-import { strings } from "@/lib/strings";
+import { getStrings } from "@/lib/i18n/server";
 
-const { landing } = strings;
 
 export async function generateMetadata(): Promise<Metadata> {
+  const t = await getStrings();
+  const { landing } = t;
   const url = await siteUrl();
   return {
-    title: strings.meta.title,
-    description: strings.meta.description,
+    title: t.meta.title,
+    description: t.meta.description,
     openGraph: {
-      title: strings.meta.title,
-      description: strings.meta.description,
+      title: t.meta.title,
+      description: t.meta.description,
       url,
       type: "website",
     },
     twitter: {
       card: "summary_large_image",
-      title: strings.meta.title,
-      description: strings.meta.description,
+      title: t.meta.title,
+      description: t.meta.description,
     },
   };
 }
@@ -31,6 +32,8 @@ export async function generateMetadata(): Promise<Metadata> {
 export const dynamic = "force-dynamic";
 
 export default async function LandingPage() {
+  const t = await getStrings();
+  const { landing } = t;
   const nextGame = await getNextGame();
   // The reference shows the lineup as overlapping avatars, so the block needs
   // nicknames as well as the count. Same anon-readable view the game page uses.
@@ -137,7 +140,7 @@ export default async function LandingPage() {
                 className="flex min-h-[220px] items-center justify-center overflow-hidden rounded-panel border border-hairline-volt bg-surface-panel p-6"
               >
                 <p className="font-mono text-[11px] tracking-[1px] text-faint">
-                  {strings.games.empty}
+                  {t.games.empty}
                 </p>
               </div>
             )}

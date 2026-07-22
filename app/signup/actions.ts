@@ -3,7 +3,7 @@
 import { redirect } from "next/navigation";
 import { createServerSupabaseClient } from "@/lib/supabase/clients";
 import { validateNickname } from "@/lib/auth/nickname";
-import { strings } from "@/lib/strings";
+import { getStrings } from "@/lib/i18n/server";
 
 export interface SignupFormState {
   status: "idle" | "error";
@@ -24,6 +24,7 @@ export async function completeSignup(
   _prevState: SignupFormState,
   formData: FormData,
 ): Promise<SignupFormState> {
+  const t = await getStrings();
   const rawNickname = String(formData.get("nickname") ?? "");
   const gdpr = formData.get("gdpr") === "on";
   const marketing = formData.get("marketing") === "on";
@@ -31,12 +32,12 @@ export async function completeSignup(
 
   const validation = validateNickname(rawNickname);
   if (!validation.valid) {
-    return { status: "error", field: "nickname", message: strings.auth.nicknameInvalid };
+    return { status: "error", field: "nickname", message: t.auth.nicknameInvalid };
   }
 
   // GDPR consent is required; marketing opt-in is independently optional.
   if (!gdpr) {
-    return { status: "error", field: "gdpr", message: strings.auth.gdprRequired };
+    return { status: "error", field: "gdpr", message: t.auth.gdprRequired };
   }
 
   const supabase = await createServerSupabaseClient();
@@ -49,15 +50,15 @@ export async function completeSignup(
 
   if (error) {
     if (error.message.includes("NICKNAME_TAKEN")) {
-      return { status: "error", field: "nickname", message: strings.auth.nicknameTaken };
+      return { status: "error", field: "nickname", message: t.auth.nicknameTaken };
     }
     if (error.message.includes("NICKNAME_INVALID")) {
-      return { status: "error", field: "nickname", message: strings.auth.nicknameInvalid };
+      return { status: "error", field: "nickname", message: t.auth.nicknameInvalid };
     }
     if (error.message.includes("CONSENT_REQUIRED")) {
-      return { status: "error", field: "gdpr", message: strings.auth.gdprRequired };
+      return { status: "error", field: "gdpr", message: t.auth.gdprRequired };
     }
-    return { status: "error", message: strings.errors.generic };
+    return { status: "error", message: t.errors.generic };
   }
 
   redirect(next.startsWith("/") ? next : "/games");

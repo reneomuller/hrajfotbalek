@@ -1,4 +1,4 @@
-import { strings } from "@/lib/strings";
+import { getStrings } from "@/lib/i18n/server";
 
 /**
  * The shape of a `GameCard` while the list is loading.
@@ -45,15 +45,16 @@ export function GameCardSkeleton() {
  * Three because that is roughly what fits above the fold on a phone — enough
  * to fill the screen, not so many that the real list jumps when it arrives.
  */
-export function GamesListSkeleton() {
+export async function GamesListSkeleton() {
+  const t = await getStrings();
   return (
     <main className="relative z-10 mx-auto w-full max-w-shell px-gutter pb-16 pt-24">
       <h1 className="m-0 font-display text-section-title uppercase tracking-wide text-white">
-        {strings.games.listTitle}
+        {t.games.listTitle}
       </h1>
 
       <p className="sr-only" role="status">
-        {strings.common.loading}
+        {t.common.loading}
       </p>
 
       <div className="mt-8 flex flex-col gap-5">

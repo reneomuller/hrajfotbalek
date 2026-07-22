@@ -1,7 +1,6 @@
 import Link from "next/link";
-import { strings } from "@/lib/strings";
+import { getStrings } from "@/lib/i18n/server";
 
-const { siteFooter } = strings;
 
 /**
  * Slim site-wide legal strip, rendered once from the root layout beneath the
@@ -12,7 +11,9 @@ const { siteFooter } = strings;
  * `/privacy` itself is Phase 27's deliverable and 404s until then, matching the
  * existing link in `components`-side signup copy.
  */
-export function SiteFooter() {
+export async function SiteFooter() {
+  const t = await getStrings();
+  const { siteFooter } = t;
   return (
     <footer className="relative z-10 mx-auto flex w-full max-w-shell flex-wrap items-center justify-between gap-2 border-t border-hairline-chrome px-gutter py-5">
       <div className="flex items-center gap-4">

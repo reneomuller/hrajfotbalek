@@ -1,7 +1,7 @@
 import QRCode from "qrcode";
 import { formatCzk } from "@/lib/format";
 import { buildSpdString } from "@/lib/payments/spd";
-import { strings } from "@/lib/strings";
+import { getStrings } from "@/lib/i18n/server";
 
 export interface QrPaymentProps {
   iban: string;
@@ -29,6 +29,7 @@ export async function QrPayment({
   variableSymbol,
   nickname,
 }: QrPaymentProps) {
+  const t = await getStrings();
   const spd = buildSpdString({ iban, amountCzk, variableSymbol, nickname });
 
   // Error correction M is the SPD/QR-platba convention: enough resilience for
@@ -46,10 +47,10 @@ export async function QrPayment({
       className="rounded-card border border-hairline-volt bg-surface-card p-5"
     >
       <h2 className="m-0 font-condensed text-[17px] font-bold uppercase tracking-wide text-white">
-        {strings.payment.qrTitle}
+        {t.payment.qrTitle}
       </h2>
       <p className="mt-2 text-[13px] leading-snug text-muted">
-        {strings.payment.qrHint}
+        {t.payment.qrHint}
       </p>
 
       {/*
@@ -70,7 +71,7 @@ export async function QrPayment({
       {/* Plain-text fallback — everything needed to pay by hand. */}
       <dl className="mt-5 grid grid-cols-[auto_1fr] gap-x-4 gap-y-2">
         <dt className="font-mono text-[11px] uppercase tracking-eyebrow text-faint">
-          {strings.payment.account}
+          {t.payment.account}
         </dt>
         <dd
           data-testid="fallback-account"
@@ -80,7 +81,7 @@ export async function QrPayment({
         </dd>
 
         <dt className="font-mono text-[11px] uppercase tracking-eyebrow text-faint">
-          {strings.payment.amount}
+          {t.payment.amount}
         </dt>
         <dd
           data-testid="fallback-amount"
@@ -90,7 +91,7 @@ export async function QrPayment({
         </dd>
 
         <dt className="font-mono text-[11px] uppercase tracking-eyebrow text-faint">
-          {strings.payment.variableSymbol}
+          {t.payment.variableSymbol}
         </dt>
         <dd
           data-testid="fallback-vs"
@@ -101,7 +102,7 @@ export async function QrPayment({
       </dl>
 
       <p className="mt-4 text-[12px] leading-snug text-faint">
-        {strings.payment.pendingConfirmation}
+        {t.payment.pendingConfirmation}
       </p>
     </section>
   );

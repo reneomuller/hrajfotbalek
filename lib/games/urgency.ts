@@ -1,4 +1,4 @@
-import { strings } from "@/lib/strings";
+import { strings, type Strings } from "@/lib/strings";
 
 /**
  * The urgency ladder, as a pure function of the count.
@@ -37,14 +37,14 @@ export function gameUrgency(bookedCount: number, capacity: number): Urgency {
 }
 
 /** The eyebrow copy for a rung. */
-export function urgencyLabel(urgency: Urgency): string {
+export function urgencyLabel(urgency: Urgency, t: Strings = strings): string {
   switch (urgency) {
     case "full":
-      return strings.games.urgencyFull;
+      return t.games.urgencyFull;
     case "lastFew":
-      return strings.games.urgencyLastFew;
+      return t.games.urgencyLastFew;
     default:
-      return strings.games.urgencyOpen;
+      return t.games.urgencyOpen;
   }
 }
 
@@ -54,8 +54,12 @@ export function urgencyLabel(urgency: Urgency): string {
  * The singular is not cosmetic: "1 spots left" on the last spot of a game is
  * the exact moment the copy is being read most carefully.
  */
-export function spotsLeftLabel(bookedCount: number, capacity: number): string {
+export function spotsLeftLabel(
+  bookedCount: number,
+  capacity: number,
+  t: Strings = strings,
+): string {
   const left = Math.max(0, Math.trunc(capacity) - Math.trunc(bookedCount));
-  if (left === 0) return strings.games.full;
-  return `${left} ${left === 1 ? strings.games.spotLeft : strings.games.spotsLeft}`;
+  if (left === 0) return t.games.full;
+  return `${left} ${left === 1 ? t.games.spotLeft : t.games.spotsLeft}`;
 }

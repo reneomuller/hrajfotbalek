@@ -1,5 +1,5 @@
 import { AvatarRow } from "@/components/game/AvatarRow";
-import { strings } from "@/lib/strings";
+import { getStrings } from "@/lib/i18n/server";
 import type { Database } from "@/lib/types/database";
 
 type WaitlistRow = Database["public"]["Views"]["game_waitlist_public"]["Row"];
@@ -25,29 +25,30 @@ type WaitlistRow = Database["public"]["Views"]["game_waitlist_public"]["Row"];
  * Nicknames are player-supplied free text rendered as JSX children, escaped by
  * React.
  */
-export function WaitlistPanel({
+export async function WaitlistPanel({
   rows,
   viewerNickname,
 }: {
   rows: Pick<WaitlistRow, "nickname" | "position">[];
   viewerNickname?: string | null;
 }) {
+  const t = await getStrings();
   return (
     <section className="mt-8" data-testid="waitlist-panel">
       <div className="flex flex-wrap items-baseline justify-between gap-3">
         <h2 className="m-0 font-condensed text-[17px] font-bold uppercase tracking-wide text-white">
-          {strings.games.waitlistTitle}
+          {t.games.waitlistTitle}
         </h2>
         {rows.length > 0 && (
           <span className="font-mono text-[10px] uppercase tracking-eyebrow text-volt-dim">
-            {rows.length} {strings.games.waitlistCount}
+            {rows.length} {t.games.waitlistCount}
           </span>
         )}
       </div>
 
       {rows.length === 0 ? (
         <p className="mt-3 font-mono text-[11px] tracking-[1px] text-faint">
-          {strings.games.waitlistEmpty}
+          {t.games.waitlistEmpty}
         </p>
       ) : (
         <>
@@ -80,7 +81,7 @@ export function WaitlistPanel({
                   </span>
                   {isYou && (
                     <span className="font-mono text-[10px] uppercase tracking-eyebrow text-volt">
-                      {strings.games.waitlistYou}
+                      {t.games.waitlistYou}
                     </span>
                   )}
                 </li>
@@ -94,7 +95,7 @@ export function WaitlistPanel({
             a queue that looks ordered but is not is worse than no number.
           */}
           <p className="mt-3 text-[12px] leading-snug text-muted-dim">
-            {strings.games.waitlistHint}
+            {t.games.waitlistHint}
           </p>
         </>
       )}

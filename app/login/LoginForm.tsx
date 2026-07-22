@@ -2,7 +2,7 @@
 
 import { useActionState } from "react";
 import { requestMagicLink, type LoginFormState } from "./actions";
-import { strings } from "@/lib/strings";
+import { useStrings } from "@/components/LocaleProvider";
 
 const initialState: LoginFormState = { status: "idle" };
 
@@ -15,6 +15,7 @@ export function LoginForm({
   action: string;
   next: string | null;
 }) {
+  const t = useStrings();
   const [state, formAction, pending] = useActionState(requestMagicLink, initialState);
 
   return (
@@ -26,7 +27,7 @@ export function LoginForm({
 
       <label className="flex flex-col gap-2">
         <span className="font-[family-name:var(--font-jetbrains-mono)] text-xs uppercase tracking-widest opacity-60">
-          {strings.auth.emailLabel}
+          {t.auth.emailLabel}
         </span>
         <input
           type="email"
@@ -34,7 +35,7 @@ export function LoginForm({
           required
           autoComplete="email"
           inputMode="email"
-          placeholder={strings.auth.emailPlaceholder}
+          placeholder={t.auth.emailPlaceholder}
           className="rounded-control border border-hairline-link bg-transparent px-4 py-3 text-base outline-none transition-colors focus:border-volt"
         />
       </label>
@@ -50,7 +51,7 @@ export function LoginForm({
         disabled={pending}
         className="rounded-cta bg-volt px-4 py-[15px] font-condensed text-cta font-extrabold uppercase tracking-wide text-surface transition disabled:opacity-50"
       >
-        {pending ? strings.common.loading : strings.auth.sendLink}
+        {pending ? t.common.loading : t.auth.sendLink}
       </button>
 
       {state.status !== "idle" && state.message ? (

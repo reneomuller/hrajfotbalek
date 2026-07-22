@@ -17,7 +17,7 @@ import { getGameById, getRoster, getVenue, getWaitlist } from "@/lib/games/queri
 import { gameEventSchema } from "@/lib/games/schemaOrg";
 import { gameUrgency, spotsLeftLabel, urgencyLabel } from "@/lib/games/urgency";
 import { siteUrl } from "@/lib/site";
-import { strings } from "@/lib/strings";
+import { getStrings } from "@/lib/i18n/server";
 
 // The primary surface players land on from a shared WhatsApp link. It must
 // render completely for a visitor with no session, so nothing here is gated.
@@ -39,18 +39,19 @@ interface GamePageProps {
  * what would reintroduce the injection.
  */
 export async function generateMetadata({ params }: GamePageProps): Promise<Metadata> {
+  const t = await getStrings();
   const { id } = await params;
   const result = await getGameById(id);
 
   if (!result) {
-    return { title: strings.games.notFound, description: strings.meta.description };
+    return { title: t.games.notFound, description: t.meta.description };
   }
 
   const { game } = result;
   const title = `${game.venue} — ${formatGameDateTime(game.starts_at)}`;
   // Same ladder the page renders, so the WhatsApp preview and the page it
   // links to never disagree about how urgent the game is.
-  const description = `${spotsLeftLabel(result.bookedCount, game.capacity)} · ${formatCzk(
+  const description = `${spotsLeftLabel(result.bookedCount, game.capacity, t)} · ${formatCzk(
     game.price_czk,
   )}`;
 
@@ -65,6 +66,7 @@ export async function generateMetadata({ params }: GamePageProps): Promise<Metad
 }
 
 export default async function GameDetailPage({ params, searchParams }: GamePageProps) {
+  const t = await getStrings();
   const { id } = await params;
   const query = searchParams ? await searchParams : {};
   const result = await getGameById(id);
@@ -73,13 +75,13 @@ export default async function GameDetailPage({ params, searchParams }: GamePageP
     return (
       <main className="relative z-10 mx-auto w-full max-w-shell px-gutter pb-16 pt-24">
         <p className="font-mono text-[12px] tracking-[1px] text-faint">
-          {strings.games.notFound}
+          {t.games.notFound}
         </p>
         <Link
           href="/games"
           className="mt-6 inline-block font-mono text-[11px] uppercase tracking-eyebrow text-volt no-underline"
         >
-          {strings.games.backToGames}
+          {t.games.backToGames}
         </Link>
       </main>
     );
@@ -162,7 +164,7 @@ export default async function GameDetailPage({ params, searchParams }: GamePageP
         href="/games"
         className="font-mono text-[11px] uppercase tracking-eyebrow text-muted no-underline"
       >
-        {strings.games.backToGames}
+        {t.games.backToGames}
       </Link>
 
       {/* `venue` is admin-supplied free text; JSX text interpolation escapes it. */}
@@ -198,7 +200,7 @@ export default async function GameDetailPage({ params, searchParams }: GamePageP
           className="mt-5 rounded-card border border-hairline bg-surface-card p-5"
         >
           <div className="font-mono text-[10px] uppercase tracking-eyebrow text-volt-dim">
-            {strings.games.notesLabel}
+            {t.games.notesLabel}
           </div>
           <p className="mt-2 whitespace-pre-line text-[14px] leading-relaxed text-bone">
             {game.notes}
@@ -220,7 +222,7 @@ export default async function GameDetailPage({ params, searchParams }: GamePageP
               urgency === "full" ? "text-faint" : "text-volt-dim"
             }`}
           >
-            {urgencyLabel(urgency)}
+            {urgencyLabel(urgency, t)}
           </span>
           <span
             data-testid="spots-counter"
@@ -236,7 +238,7 @@ export default async function GameDetailPage({ params, searchParams }: GamePageP
           <AvatarRow names={roster.map((row) => row.nickname)} max={14} />
           {!isFull && (
             <span data-testid="spots-left" className="text-[13px] text-muted-dim">
-              <b className="text-volt">{spotsLeftLabel(bookedCount, game.capacity)}</b>
+              <b className="text-volt">{spotsLeftLabel(bookedCount, game.capacity, t)}</b>
             </span>
           )}
         </div>
@@ -244,13 +246,13 @@ export default async function GameDetailPage({ params, searchParams }: GamePageP
 
       {isCancelled && (
         <p className="mt-5 rounded-control border border-hairline-strong px-4 py-3 font-mono text-[11px] tracking-[1px] text-faint">
-          {strings.games.cancelled}
+          {t.games.cancelled}
         </p>
       )}
 
       {!isCancelled && hasStarted && (
         <p className="mt-5 rounded-control border border-hairline-strong px-4 py-3 font-mono text-[11px] tracking-[1px] text-faint">
-          {strings.games.alreadyStarted}
+          {t.games.alreadyStarted}
         </p>
       )}
 
@@ -260,7 +262,7 @@ export default async function GameDetailPage({ params, searchParams }: GamePageP
             data-testid="full-notice"
             className="mt-5 rounded-control border border-hairline-strong px-4 py-3 font-mono text-[11px] tracking-[1px] text-faint"
           >
-            {strings.games.fullNotice}
+            {t.games.fullNotice}
           </p>
           <WaitlistButton
             gameId={game.id}
@@ -276,7 +278,7 @@ export default async function GameDetailPage({ params, searchParams }: GamePageP
           data-testid="book-cta"
           className="mt-6 block rounded-cta bg-volt px-6 py-4 text-center font-condensed text-cta font-extrabold uppercase tracking-wide text-surface no-underline"
         >
-          {signedIn ? strings.booking.claimSpot : strings.booking.logInToClaim}
+          {signedIn ? t.booking.claimSpot : t.booking.logInToClaim}
         </Link>
       )}
 

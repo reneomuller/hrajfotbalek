@@ -1,4 +1,4 @@
-import { strings } from "@/lib/strings";
+import { strings, type Strings } from "@/lib/strings";
 
 /**
  * The cancellation-policy line shown before a player commits to a booking.
@@ -9,11 +9,14 @@ import { strings } from "@/lib/strings";
  * cannot drift from the rule and a v2 policy bump moves the sentence with it:
  * a zero cutoff reads "before kickoff", any other reads "up to Nh before".
  */
-export function cancellationReassurance(cutoffHoursBeforeStart: number): string {
+export function cancellationReassurance(
+  cutoffHoursBeforeStart: number,
+  t: Strings = strings,
+): string {
   if (cutoffHoursBeforeStart <= 0) {
-    return strings.booking.cancelReassuranceKickoff;
+    return t.booking.cancelReassuranceKickoff;
   }
-  return strings.booking.cancelReassuranceCutoff.replace(
+  return t.booking.cancelReassuranceCutoff.replace(
     "{hours}",
     String(cutoffHoursBeforeStart),
   );

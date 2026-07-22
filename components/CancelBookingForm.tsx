@@ -4,11 +4,12 @@ import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
 import { cancelBookingAction, type CancelActionState } from "@/app/account/actions";
 import { describeBookingError } from "@/lib/booking/errors";
-import { strings } from "@/lib/strings";
+import { useStrings } from "@/components/LocaleProvider";
 
 const INITIAL: CancelActionState = { status: "idle" };
 
 function SubmitButton() {
+  const t = useStrings();
   const { pending } = useFormStatus();
   return (
     <button
@@ -17,7 +18,7 @@ function SubmitButton() {
       data-testid="cancel-booking"
       className="rounded-control border border-hairline-strong px-4 py-2 font-mono text-[11px] uppercase tracking-eyebrow text-muted disabled:opacity-50"
     >
-      {pending ? strings.common.loading : strings.booking.cancelBooking}
+      {pending ? t.common.loading : t.booking.cancelBooking}
     </button>
   );
 }
@@ -30,12 +31,13 @@ function SubmitButton() {
  * player's point of view and should not be one tap away by accident.
  */
 export function CancelBookingForm({ bookingId }: { bookingId: string }) {
+  const t = useStrings();
   const [state, formAction] = useActionState(cancelBookingAction, INITIAL);
 
   if (state.status === "cancelled") {
     return (
       <p className="m-0 font-mono text-[11px] uppercase tracking-eyebrow text-volt-dim">
-        {strings.account.cancelSuccess}
+        {t.account.cancelSuccess}
       </p>
     );
   }
@@ -44,7 +46,7 @@ export function CancelBookingForm({ bookingId }: { bookingId: string }) {
     <form
       action={formAction}
       onSubmit={(event) => {
-        if (!window.confirm(strings.booking.cancelConfirm)) event.preventDefault();
+        if (!window.confirm(t.booking.cancelConfirm)) event.preventDefault();
       }}
     >
       <input type="hidden" name="bookingId" value={bookingId} />
@@ -56,7 +58,7 @@ export function CancelBookingForm({ bookingId }: { bookingId: string }) {
           data-error-code={state.code}
           className="mt-2 m-0 text-[12px] leading-snug text-muted"
         >
-          {describeBookingError(state.code).message}
+          {describeBookingError(state.code, t).message}
         </p>
       )}
     </form>

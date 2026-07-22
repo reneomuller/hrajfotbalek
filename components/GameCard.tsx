@@ -6,7 +6,7 @@ import { ShareButton } from "@/components/game/ShareButton";
 import { VenueMapPanel, type VenueMapPanelProps } from "@/components/VenueMapPanel";
 import { formatCzk, formatGameDateTime } from "@/lib/format";
 import { gameUrgency, spotsLeftLabel, urgencyLabel } from "@/lib/games/urgency";
-import { strings } from "@/lib/strings";
+import { getStrings } from "@/lib/i18n/server";
 import type { Database } from "@/lib/types/database";
 
 type GameRow = Database["public"]["Tables"]["games"]["Row"];
@@ -59,7 +59,7 @@ export interface GameCardProps {
  * which React escapes. The share URL is built by `whatsAppShareUrl`, which
  * encodes the finished message exactly once.
  */
-export function GameCard({
+export async function GameCard({
   game,
   bookedCount,
   roster = [],
@@ -67,6 +67,7 @@ export function GameCard({
   shareUrl,
   onWaitlist = false,
 }: GameCardProps) {
+  const t = await getStrings();
   const urgency = gameUrgency(bookedCount, game.capacity);
   const filled = Math.min(bookedCount, game.capacity);
   const when = formatGameDateTime(game.starts_at);
@@ -111,7 +112,7 @@ export function GameCard({
                 data-testid="on-waitlist-badge"
                 className="rounded-chip border border-hairline-volt bg-volt/[.08] px-2 py-[2px] font-mono text-[9px] uppercase tracking-eyebrow text-volt"
               >
-                {strings.games.onWaitlistBadge}
+                {t.games.onWaitlistBadge}
               </span>
             )}
           </div>
@@ -129,7 +130,7 @@ export function GameCard({
               urgency === "full" ? "text-faint" : "text-volt-dim"
             }`}
           >
-            {urgencyLabel(urgency)}
+            {urgencyLabel(urgency, t)}
           </span>
           <span className="font-mono text-[18px] font-bold text-white">
             {String(filled).padStart(2, "0")}/{game.capacity}
@@ -145,9 +146,9 @@ export function GameCard({
             className={`text-[12px] ${urgency === "full" ? "text-faint" : "text-muted-dim"}`}
           >
             {urgency === "full" ? (
-              strings.games.fullNotice
+              t.games.fullNotice
             ) : (
-              <b className="text-volt">{spotsLeftLabel(bookedCount, game.capacity)}</b>
+              <b className="text-volt">{spotsLeftLabel(bookedCount, game.capacity, t)}</b>
             )}
           </span>
         </div>
@@ -163,7 +164,7 @@ export function GameCard({
                 : "bg-volt text-surface"
             }`}
           >
-            {urgency === "full" ? strings.games.joinWaitlist : strings.booking.claimSpot}
+            {urgency === "full" ? t.games.joinWaitlist : t.booking.claimSpot}
           </Link>
 
           {shareUrl && (

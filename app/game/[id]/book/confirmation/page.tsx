@@ -1,12 +1,16 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { QrPayment } from "@/components/QrPayment";
 import { requireCurrentPlayer } from "@/lib/auth/session";
 import { getOwnBookingWithGame } from "@/lib/booking/queries";
 import { formatCzk, formatGameDateTime } from "@/lib/format";
 import { amountDueCzk, paymentIban, shouldRenderQr } from "@/lib/payments/spd";
-import { strings } from "@/lib/strings";
+import { getStrings } from "@/lib/i18n/server";
 
-export const metadata = { title: strings.payment.qrTitle };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getStrings();
+  return { title: t.payment.qrTitle };
+}
 
 export const dynamic = "force-dynamic";
 
@@ -28,6 +32,7 @@ export default async function ConfirmationPage({
   params,
   searchParams,
 }: ConfirmationPageProps) {
+  const t = await getStrings();
   const { id: gameId } = await params;
   const query = await searchParams;
 
@@ -42,13 +47,13 @@ export default async function ConfirmationPage({
     return (
       <main className="relative z-10 mx-auto w-full max-w-shell px-gutter pb-16 pt-24">
         <p className="font-mono text-[12px] tracking-[1px] text-faint">
-          {strings.booking.bookingNotFound}
+          {t.booking.bookingNotFound}
         </p>
         <Link
           href={`/game/${gameId}`}
           className="mt-6 inline-block font-mono text-[11px] uppercase tracking-eyebrow text-volt no-underline"
         >
-          {strings.booking.backToGame}
+          {t.booking.backToGame}
         </Link>
       </main>
     );
@@ -72,8 +77,8 @@ export default async function ConfirmationPage({
       >
         <div className="font-mono text-[11px] uppercase tracking-eyebrow text-volt">
           {booking.status === "confirmed"
-            ? strings.booking.confirmed
-            : strings.booking.reserved}
+            ? t.booking.confirmed
+            : t.booking.reserved}
         </div>
 
         <h1 className="mt-3 font-display text-section-title uppercase tracking-wide text-white">
@@ -87,14 +92,14 @@ export default async function ConfirmationPage({
         {/* Instant-confirmed outcomes: nothing to pay, so no payment block. */}
         {(isCredit || isSeed) && (
           <p className="mt-6 rounded-card border border-hairline-volt bg-surface-card p-5 text-[14px] leading-relaxed text-bone">
-            {isSeed ? strings.booking.coveredBySeed : strings.booking.coveredByCredit}
+            {isSeed ? t.booking.coveredBySeed : t.booking.coveredByCredit}
           </p>
         )}
 
         {booking.credit_applied_czk > 0 && !isCredit && !isSeed && (
           <div className="mt-6 flex items-baseline justify-between gap-3 border-b border-hairline pb-3">
             <span className="font-mono text-[12px] text-muted">
-              {strings.booking.creditApplied}
+              {t.booking.creditApplied}
             </span>
             <span className="font-mono text-[13px] text-volt">
               −{formatCzk(booking.credit_applied_czk)}
@@ -106,7 +111,7 @@ export default async function ConfirmationPage({
           <div className="mt-4">
             <div className="flex items-baseline justify-between gap-3">
               <span className="font-mono text-[12px] text-muted">
-                {strings.booking.amountDue}
+                {t.booking.amountDue}
               </span>
               <span
                 data-testid="amount-due"
@@ -118,7 +123,7 @@ export default async function ConfirmationPage({
 
             {booking.payment_method === "cash" && (
               <p className="mt-4 rounded-card border border-hairline bg-surface-card p-4 text-[14px] leading-relaxed text-muted">
-                {strings.booking.payByCashHint}
+                {t.booking.payByCashHint}
               </p>
             )}
 
@@ -150,14 +155,14 @@ export default async function ConfirmationPage({
           data-testid="ics-link"
           className="mt-8 block rounded-cta border border-hairline-volt px-6 py-4 text-center font-condensed text-cta font-extrabold uppercase tracking-wide text-volt no-underline"
         >
-          {strings.booking.addToCalendar}
+          {t.booking.addToCalendar}
         </a>
 
         <Link
           href={`/game/${game.id}`}
           className="mt-8 inline-block font-mono text-[11px] uppercase tracking-eyebrow text-volt no-underline"
         >
-          {strings.booking.backToGame}
+          {t.booking.backToGame}
         </Link>
       </div>
     </main>

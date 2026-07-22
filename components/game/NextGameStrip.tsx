@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { CapacityBar } from "@/components/game/CapacityBar";
 import { formatGameDateTime } from "@/lib/format";
-import { strings } from "@/lib/strings";
+import { getStrings } from "@/lib/i18n/server";
 import type { Database } from "@/lib/types/database";
 
 type GameRow = Database["public"]["Tables"]["games"]["Row"];
@@ -23,13 +23,14 @@ type GameRow = Database["public"]["Tables"]["games"]["Row"];
  * so it carries the minimum that identifies the game plus how full it is — the
  * one number that changes after you book and that you might want to watch.
  */
-export function NextGameStrip({
+export async function NextGameStrip({
   game,
   bookedCount,
 }: {
   game: Pick<GameRow, "id" | "venue" | "starts_at" | "capacity">;
   bookedCount: number;
 }) {
+  const t = await getStrings();
   return (
     <Link
       href={`/game/${game.id}`}
@@ -38,10 +39,10 @@ export function NextGameStrip({
     >
       <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
         <span className="font-mono text-[10px] uppercase tracking-eyebrow text-volt-dim">
-          {strings.games.nextGameStrip}
+          {t.games.nextGameStrip}
         </span>
         <span className="font-mono text-[10px] uppercase tracking-eyebrow text-volt">
-          {strings.games.nextGameStripCta}
+          {t.games.nextGameStripCta}
         </span>
       </div>
 
