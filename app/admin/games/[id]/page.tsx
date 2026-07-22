@@ -99,6 +99,17 @@ export default async function AdminGamePage({
             {strings.admin.editGame}
           </Link>
         )}
+        {/* Close-out. Offered from `full`/`published` onward, and still
+            reachable on a played game that has not been settled yet. */}
+        {game.status !== "draft" && game.status !== "cancelled" && (
+          <Link
+            href={`/admin/games/${game.id}/attendance`}
+            data-testid="attendance-link"
+            className="rounded-cta border border-hairline-strong px-5 py-3 font-condensed text-[15px] font-extrabold uppercase tracking-wide text-bone no-underline"
+          >
+            {strings.admin.attendanceLink}
+          </Link>
+        )}
         {canEdit && (
           <Link
             href={`/admin/games/${game.id}/add-player`}

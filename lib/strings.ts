@@ -341,6 +341,23 @@ export const strings = {
     addPlayerNicknameTaken: "That nickname is taken. Try another.",
     addPlayerFull: "This game is full — there is no spot to give.",
 
+    // --- attendance + settle -------------------------------------------------
+    attendanceTitle: "Attendance",
+    attendanceLink: "Attendance & settle",
+    attendanceLede: "Mark who turned up, clear anything unpaid, then close the books.",
+    markPresent: "Present",
+    markNoShow: "No-show",
+    attendanceUnmarked: "Not marked",
+    markPlayed: "Mark as played",
+    settleGame: "Settle the game",
+    settled: "Settled",
+    // The hard block: an unpaid hold surviving into `settled` is a debt with
+    // no surface left to raise it.
+    settleBlocked: "Settle is blocked — these bookings are still unpaid:",
+    settleBlockedHint:
+      "Take payment (✓ Paid on the game page) or cancel the booking, then settle.",
+    settleNeedsPlayed: "Mark the game as played first.",
+
     // --- reconciliation ------------------------------------------------------
     paymentsTitle: "Awaiting payment",
     paymentsEmpty: "Nothing outstanding — every spot on this game is settled up.",

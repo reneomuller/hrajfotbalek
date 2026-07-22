@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireAdmin } from "@/lib/auth/requireAdmin";
 import { parseGameForm, type GameFormValues } from "@/lib/admin/gameForm";
+import type { TransitionState } from "@/lib/admin/actionState";
 import { toAdminErrorMessage } from "@/lib/admin/errors";
 import { createServerSupabaseClient } from "@/lib/supabase/clients";
 
@@ -169,7 +170,7 @@ export async function updateGameAction(
 
 /** Draft → published, emitting `game_published`. Never automatic. */
 export async function publishGameAction(
-  _prevState: AdminActionState,
+  _prevState: TransitionState,
   formData: FormData,
 ): Promise<AdminActionState> {
   await requireAdmin();

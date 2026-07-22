@@ -443,6 +443,16 @@ export interface Database {
           waitlist_id: string;
         }[];
       };
+      /**
+       * Admin-only. Writes `bookings.attendance` and its `attendance_marked`
+       * event in one transaction. Re-marking appends a correcting event rather
+       * than rewriting the first.
+       */
+      mark_attendance: {
+        Args: { p_booking_id: string; p_attendance: AttendanceStatus };
+        Returns: AttendanceStatus;
+      };
+
       /** Cron-only stamps. Both no-op when the column is already set. */
       mark_nudged: {
         Args: { p_booking_id: string; p_grace_hours: number };

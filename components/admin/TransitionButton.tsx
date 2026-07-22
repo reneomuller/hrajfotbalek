@@ -2,10 +2,10 @@
 
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
-import type { AdminActionState } from "@/app/admin/games/actions";
+import type { TransitionState } from "@/lib/admin/actionState";
 import { strings } from "@/lib/strings";
 
-const INITIAL: AdminActionState = { status: "idle" };
+const INITIAL: TransitionState = { status: "idle" };
 
 /**
  * A one-field form posting a game id to a transition action.
@@ -22,7 +22,12 @@ export function TransitionButton({
   testId,
   tone = "primary",
 }: {
-  action: (state: AdminActionState, formData: FormData) => Promise<AdminActionState>;
+  /**
+   * Takes the shared `TransitionState` rather than any one action's own type.
+   * These actions ignore their previous state entirely — the database decides
+   * what is legal — so the wider parameter is honest, not a widening hack.
+   */
+  action: (state: TransitionState, formData: FormData) => Promise<TransitionState>;
   gameId: string;
   label: string;
   testId?: string;
