@@ -114,13 +114,13 @@ The five 🛑 **GATE** rows are spec §10 verification gates M1–M5. They are *
 | 19. Cron foundation: guard + expiry sweep + notify_waitlist RPC + schedules | M3 | Complete | 2026-07-22 | 2026-07-22 | - | `40519f4` |
 | 20. Cron nudge + reminder sweeps + stamp RPCs | M3 | Complete | 2026-07-22 | 2026-07-22 | - | `665aaf4` |
 | **🛑 GATE M3 — Waitlist + cancellation + cron** | **M3** | **Verified** | 2026-07-22 | 2026-07-22 | - | Human-verified 2026-07-22: untouched loop witnessed (cancel → credit → release → spot-opened notification → conversion, zero touches); cron live-verified — nudge fired a real scarcity email, expiry clean, unauthenticated call 401, idempotency proven in the M3 harness |
-| 21. Admin gating + games CRUD | M4 | Pending | - | - | - | |
-| 22. Admin payments: VS-sorted confirm + roster badges | M4 | Pending | - | - | - | |
-| 23. Admin add shadow player + booking (via admin_create_booking) | M4 | Pending | - | - | - | |
-| 24. Admin attendance → settle (mark_attendance RPC) | M4 | Pending | - | - | - | |
-| 25. Admin players: credit grants + shadow merge (grant_credit / merge_players RPCs) | M4 | Pending | - | - | - | |
-| 26. Admin stats page (/admin/stats) | M4 | Pending | - | - | - | |
-| **🛑 GATE M4 — Admin panel** | **M4** | **Not verified** | - | - | - | **STOP — human confirmation required. full fictional lifecycle < 5 min admin time; stats correct; one real signup verifies magic-link drop-off** |
+| 21. Admin gating + games CRUD | M4 | Complete | 2026-07-22 | 2026-07-22 | - | `d669bb6`; + venues/format/surface/notes migrations 15-16; admin_games.sql 23/23 |
+| 22. Admin payments: VS-sorted confirm + roster badges | M4 | Complete | 2026-07-22 | 2026-07-22 | - | `f55d078`; reconciliation logic unchanged in confirm_booking |
+| 23. Admin add shadow player + booking (via admin_create_booking) | M4 | Complete | 2026-07-22 | 2026-07-22 | - | `34c4abc`; duplicate email steers to merge |
+| 24. Admin attendance → settle (mark_attendance RPC) | M4 | Complete | 2026-07-22 | 2026-07-22 | - | `af91e9f`; migration 17 + settle guard in the DB; mark_attendance.sql 18/18 |
+| 25. Admin players: credit grants + shadow merge (grant_credit / merge_players RPCs) | M4 | Complete | 2026-07-22 | 2026-07-22 | - | `082c245`; migration 18; admin_players_rpcs.sql 29/29 |
+| 26. Admin stats page (/admin/stats) | M4 | Complete | 2026-07-22 | 2026-07-22 | - | `d716255`; five metrics verified against direct SQL; drop-off deferred to the gate. Cancel-email dry-run evidence in `4310a1d` |
+| **🛑 GATE M4 — Admin panel** | **M4** | **Not verified** | 2026-07-22 | - | - | **STOP — human confirmation required. full fictional lifecycle < 5 min admin time; stats correct; one real signup verifies magic-link drop-off** |
 | 27. PWA basics + design/strings/privacy polish | M5 | Pending | - | - | - | |
 | 28. E2E Playwright harness + user-path specs | M5 | Pending | - | - | - | |
 | 29. E2E data, RLS & concurrency specs | M5 | Pending | - | - | - | |
