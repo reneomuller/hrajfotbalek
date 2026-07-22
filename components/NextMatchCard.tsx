@@ -1,5 +1,5 @@
-import Image from "next/image";
 import Link from "next/link";
+import { VenueMapPanel, type VenueMapPanelProps } from "@/components/VenueMapPanel";
 import { formatGameDateTime } from "@/lib/format";
 import { capacitySegments } from "@/lib/games/capacity";
 import { initials } from "@/lib/roster/initials";
@@ -21,37 +21,36 @@ const { games, landing } = strings;
  * `encodeURIComponent`.
  */
 
-/**
- * The reference ships a map of Pražačka. It is shown only for the venue it
- * actually depicts — a map of the wrong pitch is worse than no map, and the
- * panel is designed to hold its own without the photo. Other venues get the
- * same frame, pin and label over the dark base.
- */
-const MAPPED_VENUE = "prazacka";
-
-function hasMap(venue: string): boolean {
-  const normalized = venue
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase();
-  return normalized.includes(MAPPED_VENUE);
-}
-
 export interface NextMatchCardProps {
   game: GameCardGame;
   bookedCount: number;
   /** Nicknames of the active roster, in join order. */
   roster: string[];
+  /**
+   * The venue row behind `game.venue_id`, when there is one.
+   *
+   * Replaces the name-matching hack this card shipped with, which showed the
+   * one committed map only for venues whose name contained "prazacka". Which
+   * photo belongs to which venue is a column now, set by the organizer when
+   * they add the venue.
+   */
+  venueRow: VenueMapPanelProps["venueRow"];
 }
 
-export function NextMatchCard({ game, bookedCount, roster }: NextMatchCardProps) {
+export function NextMatchCard({
+  game,
+  bookedCount,
+  roster,
+  venueRow,
+}: NextMatchCardProps) {
   const filled = Math.min(bookedCount, game.capacity);
   const spotsLeft = Math.max(0, game.capacity - bookedCount);
   const isFull = spotsLeft === 0;
-  const mapQuery = encodeURIComponent(game.venue);
-  // "5v5" only reads as true for an even capacity; an odd one gets no chip
-  // rather than a rounded lie.
+  // The organizer's own words win over the derived guess: "6v6" is a fact
+  // about the game, while capacity/2 infers it from a number that also counts
+  // substitutes. Without either, no chip rather than a rounded lie.
   const perSide = game.capacity % 2 === 0 ? game.capacity / 2 : null;
+  const formatChip = game.format ?? (perSide !== null ? `${perSide}v${perSide}` : null);
 
   return (
     <div
@@ -65,11 +64,18 @@ export function NextMatchCard({ game, bookedCount, roster }: NextMatchCardProps)
             <div className="font-mono text-[11px] uppercase tracking-[1px] text-chalk">
               {formatGameDateTime(game.starts_at)}
             </div>
-            {perSide !== null && (
-              <div className="rounded-chip bg-volt px-2 py-1 font-mono text-[9px] font-bold tracking-[1px] text-surface">
-                {perSide}v{perSide}
-              </div>
-            )}
+            <div className="flex items-center gap-2">
+              {formatChip && (
+                <div className="rounded-chip bg-volt px-2 py-1 font-mono text-[9px] font-bold tracking-[1px] text-surface">
+                  {formatChip}
+                </div>
+              )}
+              {game.surface && (
+                <div className="rounded-chip border border-hairline-strong px-2 py-1 font-mono text-[9px] font-bold uppercase tracking-[1px] text-muted">
+                  {games.surface[game.surface]}
+                </div>
+              )}
+            </div>
           </div>
 
           <div className="mt-[10px] font-condensed text-match-title font-bold text-white">
@@ -77,38 +83,7 @@ export function NextMatchCard({ game, bookedCount, roster }: NextMatchCardProps)
           </div>
         </div>
 
-        <div className="relative h-[200px] overflow-hidden bg-surface">
-          {hasMap(game.venue) && (
-            <Image
-              src="/map-prazacka.png"
-              alt={games.mapAlt}
-              fill
-              sizes="(max-width: 768px) 100vw, 480px"
-              className="object-cover object-center"
-            />
-          )}
-          <div className="absolute inset-0 bg-map-vignette" />
-
-          {/* Pin — pulsing ring, teardrop, hole. */}
-          <div className="absolute left-1/2 top-[134px] h-12 w-12 -translate-x-1/2 -translate-y-1/2">
-            <span className="absolute inset-0 animate-pulseRing rounded-full border-[1.5px] border-volt" />
-            <span className="absolute left-1/2 top-1/2 h-6 w-6 -translate-x-1/2 -translate-y-[58%] rotate-45 rounded-[50%_50%_50%_0] bg-volt shadow-volt-glow-lg" />
-            <span className="absolute left-1/2 top-[42%] z-[2] h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-surface" />
-          </div>
-
-          <div className="absolute bottom-3 left-[14px] rounded-[7px] border border-hairline-strong bg-surface-overlay px-[10px] py-[6px] font-mono text-[10px] tracking-[1px] text-bone">
-            ◴ {game.venue}
-          </div>
-
-          <a
-            href={`https://maps.google.com/?q=${mapQuery}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="absolute right-[14px] top-[14px] rounded-[7px] border border-hairline-volt-strong bg-surface-overlay px-[9px] py-[6px] font-mono text-[9px] tracking-[1px] text-volt no-underline"
-          >
-            {games.openMap}
-          </a>
-        </div>
+        <VenueMapPanel venue={game.venue} venueRow={venueRow} />
       </div>
 
       {/* RIGHT — capacity + lineup + join */}

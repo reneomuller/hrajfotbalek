@@ -155,6 +155,16 @@ export const strings = {
     mapAlt: "Map of the venue",
     // Shown on an avatar whose nickname has no letters or digits at all.
     rosterUnknown: "?",
+    // Surface labels, keyed by the `games_surface_known` values. A closed set
+    // in the database gets a closed set of copy here rather than a raw value
+    // being rendered.
+    surface: {
+      turf: "Turf",
+      grass: "Grass",
+      indoor: "Indoor",
+      sand: "Sand",
+    },
+    notesLabel: "Good to know",
     capacityLabel: "Capacity",
     startsLabel: "Kick-off",
     venueLabel: "Where",
@@ -233,6 +243,84 @@ export const strings = {
   },
 
   admin: {
+    // --- shell ---------------------------------------------------------------
+    title: "Admin",
+    navGames: "Games",
+    navPlayers: "Players",
+    navStats: "Stats",
+    backToSite: "← Back to the site",
+
+    // --- games list ----------------------------------------------------------
+    gamesTitle: "Games",
+    gamesEmpty: "No games yet. Create the first one.",
+    newGame: "New game",
+    editGame: "Edit",
+    manageGame: "Manage",
+    publishGame: "Publish",
+    publishedDone: "Published",
+    statusLabel: "Status",
+    bookedLabel: "Booked",
+    waitlistLabel: "Waiting",
+    // Statuses are rendered from this table rather than the raw enum: the
+    // column is a database value, not user-facing copy.
+    status: {
+      draft: "Draft",
+      published: "Published",
+      full: "Full",
+      played: "Played",
+      settled: "Settled",
+      cancelled: "Cancelled",
+    },
+
+    // --- game form -----------------------------------------------------------
+    newGameTitle: "New game",
+    editGameTitle: "Edit game",
+    venueLabel: "Venue",
+    venueNew: "Add a new venue",
+    venueNameLabel: "Venue name",
+    venueImageLabel: "Image file",
+    venueImageHint:
+      "A file already committed under public/venues/ — e.g. prazacka.jpg. Leave empty for no photo.",
+    venueMapQueryLabel: "Map search (optional)",
+    venueMapQueryHint: "What to search for in Google Maps. Defaults to the venue name.",
+    startsAtLabel: "Kick-off",
+    capacityLabel: "Capacity",
+    capacityHint: "Cannot be lowered below the players already booked.",
+    priceLabel: "Price (CZK)",
+    priceHint: "Applies to future bookings only — existing bookings keep their price.",
+    formatLabel: "Format (optional)",
+    formatHint: "Like 6v6. Leave empty if it varies.",
+    surfaceLabel: "Surface (optional)",
+    surfaceNone: "Not specified",
+    surfaceOptions: {
+      turf: "Turf",
+      grass: "Grass",
+      indoor: "Indoor",
+      sand: "Sand",
+    },
+    notesLabel: "Notes (optional)",
+    notesHint: "Logistics for players — gate codes, parking, what to bring.",
+    createGame: "Create as draft",
+    createGameHint: "A new game is a draft. Publishing it is a separate step.",
+    saveGame: "Save changes",
+    saved: "Saved",
+    draftNotPublic: "This game is a draft — it is not on the public games list.",
+
+    // --- errors --------------------------------------------------------------
+    venueRequired: "Pick a venue, or add a new one.",
+    venueNameRequired: "Give the new venue a name.",
+    venueExists: "A venue with that name already exists — pick it from the list.",
+    venueImageInvalid:
+      "That does not look like a file under public/venues/ (letters, numbers, . _ - and a png/jpg/webp/avif extension).",
+    startsAtRequired: "Set a kick-off time.",
+    capacityInvalid: "Capacity must be a whole number of at least 1.",
+    capacityBelowBooked:
+      "Capacity cannot go below the players already booked. Cancel a booking first.",
+    priceInvalid: "Price must be 0 or more.",
+    formatInvalid: "Format looks like 6v6 — two numbers with a v between them.",
+    notesTooLong: "Notes are limited to 500 characters.",
+    invalidTransition: "That is not possible in this game's current state.",
+
     cancelGame: "Cancel this game",
     cancelGameWarning:
       "This cancels every booking, returns every player's money as credit, clears the waitlist and emails everyone. It cannot be undone.",

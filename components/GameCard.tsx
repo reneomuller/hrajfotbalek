@@ -7,7 +7,15 @@ type GameRow = Database["public"]["Tables"]["games"]["Row"];
 
 export type GameCardGame = Pick<
   GameRow,
-  "id" | "venue" | "starts_at" | "capacity" | "price_czk" | "status"
+  | "id"
+  | "venue"
+  | "venue_id"
+  | "starts_at"
+  | "capacity"
+  | "price_czk"
+  | "status"
+  | "format"
+  | "surface"
 >;
 
 export interface GameCardProps {

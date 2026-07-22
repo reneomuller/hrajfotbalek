@@ -3,6 +3,7 @@ import type { Database } from "@/lib/types/database";
 
 type GameRow = Database["public"]["Tables"]["games"]["Row"];
 type RosterRow = Database["public"]["Views"]["game_roster_public"]["Row"];
+type VenueRow = Database["public"]["Tables"]["venues"]["Row"];
 
 /**
  * Read paths for the player-facing game surfaces.
@@ -127,6 +128,27 @@ export async function getGameById(id: string): Promise<GameWithCount | null> {
 
   const counts = await countRosterByGame([game.id]);
   return decorate(game, counts.get(game.id) ?? 0, Date.now());
+}
+
+/**
+ * The venue a game is at, or null when the game predates `venue_id`.
+ *
+ * A separate query rather than a PostgREST embed: the hand-authored `Database`
+ * type models tables, not join shapes, and an embedded select would have to be
+ * cast back to something this file made up. Venues are public reference data,
+ * so this needs no elevation — `venues_select_public` admits every row.
+ */
+export async function getVenue(venueId: string | null): Promise<VenueRow | null> {
+  if (!venueId) return null;
+
+  const supabase = await createServerSupabaseClient();
+  const { data, error } = await supabase
+    .from("venues")
+    .select("*")
+    .eq("id", venueId)
+    .maybeSingle();
+
+  return error || !data ? null : data;
 }
 
 /** The PII-safe roster for a game. */

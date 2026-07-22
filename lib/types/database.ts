@@ -54,6 +54,15 @@ export type ClientPaymentMethod = Extract<PaymentMethod, "qr" | "cash">;
 
 export type AttendanceStatus = "present" | "no_show";
 
+/**
+ * Closed set, matching the `games_surface_known` CHECK.
+ *
+ * A closed set rather than free text: it is rendered as a label and drives
+ * nothing today, but an open column here becomes something the stats surface
+ * eventually tries to group by.
+ */
+export type GameSurface = "turf" | "grass" | "indoor" | "sand";
+
 export type CreditReason =
   | "cancellation_credit"
   | "admin_grant"
@@ -167,10 +176,17 @@ export interface Database {
         Row: {
           id: string;
           venue: string;
+          /** Structured link to `venues`; null for games created before M4. */
+          venue_id: string | null;
           starts_at: string;
           capacity: number;
           price_czk: number;
           status: GameStatus;
+          /** "6v6" — CHECK-constrained to `<n>v<n>`. */
+          format: string | null;
+          surface: GameSurface | null;
+          /** Organizer logistics, ≤500 chars. */
+          notes: string | null;
           city: string;
           brand: string;
           created_at: string;
@@ -178,14 +194,35 @@ export interface Database {
         Insert: {
           id?: string;
           venue: string;
+          venue_id?: string | null;
           starts_at: string;
           capacity: number;
           price_czk: number;
           status?: GameStatus;
+          format?: string | null;
+          surface?: GameSurface | null;
+          notes?: string | null;
           city?: string;
           brand?: string;
           created_at?: string;
         };
+        Update: never;
+        Relationships: [];
+      };
+
+      venues: {
+        Row: {
+          id: string;
+          name: string;
+          /** `/venues/<file>` under `public/`, CHECK-constrained. Never a URL. */
+          image_path: string | null;
+          map_query: string | null;
+          city: string;
+          brand: string;
+          created_at: string;
+        };
+        /** Written only by `admin_create_venue`. */
+        Insert: never;
         Update: never;
         Relationships: [];
       };
@@ -331,6 +368,42 @@ export interface Database {
       expire_booking: {
         Args: { p_booking_id: string };
         Returns: ConfirmResult;
+      };
+
+      /** Admin-only. Returns the new venue id; raises VENUE_EXISTS on a clash. */
+      admin_create_venue: {
+        Args: { p_name: string; p_image_path?: string | null; p_map_query?: string | null };
+        Returns: string;
+      };
+      /** Admin-only. Always creates a `draft`; returns the new game id. */
+      admin_create_game: {
+        Args: {
+          p_venue_id: string;
+          p_starts_at: string;
+          p_capacity: number;
+          p_price_czk: number;
+          p_format?: string | null;
+          p_surface?: GameSurface | null;
+          p_notes?: string | null;
+        };
+        Returns: string;
+      };
+      /**
+       * Admin-only. Edits venue/time/price/format/surface/notes. Writes no
+       * status (transitions belong to the functions below) and no capacity
+       * (that is `set_game_capacity`, which owns the active-bookings floor).
+       */
+      admin_update_game: {
+        Args: {
+          p_game_id: string;
+          p_venue_id: string;
+          p_starts_at: string;
+          p_price_czk: number;
+          p_format?: string | null;
+          p_surface?: GameSurface | null;
+          p_notes?: string | null;
+        };
+        Returns: string;
       };
 
       publish_game: { Args: { p_game_id: string }; Returns: GameStatus };

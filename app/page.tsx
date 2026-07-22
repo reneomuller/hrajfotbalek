@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { NextMatchCard } from "@/components/NextMatchCard";
 import { PitchBackground } from "@/components/PitchBackground";
-import { getNextGame, getRoster } from "@/lib/games/queries";
+import { getNextGame, getRoster, getVenue } from "@/lib/games/queries";
 import { siteUrl } from "@/lib/site";
 import { strings } from "@/lib/strings";
 
@@ -36,6 +36,9 @@ export default async function LandingPage() {
   // The reference shows the lineup as overlapping avatars, so the block needs
   // nicknames as well as the count. Same anon-readable view the game page uses.
   const roster = nextGame ? await getRoster(nextGame.game.id) : [];
+  // The venue behind the game, for the map panel's photo. Null for a game
+  // created before venues existed — the panel holds its own without one.
+  const venueRow = nextGame ? await getVenue(nextGame.game.venue_id) : null;
 
   return (
     <>
@@ -128,6 +131,7 @@ export default async function LandingPage() {
                 game={nextGame.game}
                 bookedCount={nextGame.bookedCount}
                 roster={roster.map((row) => row.nickname)}
+                venueRow={venueRow}
               />
             ) : (
               <div

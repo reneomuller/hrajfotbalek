@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Roster } from "@/components/Roster";
+import { VenueMapPanel } from "@/components/VenueMapPanel";
 import { WaitlistButton } from "@/components/WaitlistButton";
 import { isOnWaitlist, waitlistPosition } from "@/lib/booking/waitlistConvert";
 import { readResumeIntent } from "@/lib/booking/resume";
@@ -8,7 +9,7 @@ import { runJoinWaitlist } from "./waitlist/actions";
 import { getSessionUser } from "@/lib/auth/session";
 import { SpotsCounter } from "@/components/SpotsCounter";
 import { formatCzk, formatGameDateTime } from "@/lib/format";
-import { getGameById, getRoster } from "@/lib/games/queries";
+import { getGameById, getRoster, getVenue } from "@/lib/games/queries";
 import { siteUrl } from "@/lib/site";
 import { strings } from "@/lib/strings";
 
@@ -78,6 +79,7 @@ export default async function GameDetailPage({ params, searchParams }: GamePageP
 
   const { game, bookedCount, spotsLeft, hasStarted, isCancelled } = result;
   const roster = await getRoster(game.id);
+  const venueRow = await getVenue(game.venue_id);
 
   const isFull = spotsLeft === 0;
   const canAct = !isCancelled && !hasStarted;
@@ -132,7 +134,44 @@ export default async function GameDetailPage({ params, searchParams }: GamePageP
         <span className="font-mono text-[13px] text-muted">
           {formatCzk(game.price_czk)}
         </span>
+        {/* Format and surface, when the organizer said. Chips, above the map. */}
+        {game.format && (
+          <span
+            data-testid="game-format"
+            className="rounded-chip bg-volt px-2 py-1 font-mono text-[10px] font-bold tracking-[1px] text-surface"
+          >
+            {game.format}
+          </span>
+        )}
+        {game.surface && (
+          <span
+            data-testid="game-surface"
+            className="rounded-chip border border-hairline-strong px-2 py-1 font-mono text-[10px] font-bold uppercase tracking-[1px] text-muted"
+          >
+            {strings.games.surface[game.surface]}
+          </span>
+        )}
       </div>
+
+      <div className="mt-6 overflow-hidden rounded-card border border-hairline">
+        <VenueMapPanel venue={game.venue} venueRow={venueRow} className="h-[220px]" />
+      </div>
+
+      {/* Organizer logistics. Free text; JSX escapes it, and `whitespace-pre-line`
+          keeps the admin's line breaks without interpreting anything else. */}
+      {game.notes && (
+        <div
+          data-testid="game-notes"
+          className="mt-5 rounded-card border border-hairline bg-surface-card p-5"
+        >
+          <div className="font-mono text-[10px] uppercase tracking-eyebrow text-volt-dim">
+            {strings.games.notesLabel}
+          </div>
+          <p className="mt-2 whitespace-pre-line text-[14px] leading-relaxed text-bone">
+            {game.notes}
+          </p>
+        </div>
+      )}
 
       <div className="mt-7">
         <SpotsCounter capacity={game.capacity} bookedCount={bookedCount} />
