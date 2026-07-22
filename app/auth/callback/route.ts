@@ -1,7 +1,11 @@
 import { NextResponse, type NextRequest } from "next/server";
 import type { EmailOtpType } from "@supabase/supabase-js";
 import { createServerSupabaseClient } from "@/lib/supabase/clients";
-import { claimShadowPlayer } from "@/lib/auth/shadowClaim";
+import {
+  completePostAuth,
+  destinationAfterAuth,
+  resumeDestination,
+} from "@/lib/auth/postAuth";
 
 /**
  * Magic-link callback.
@@ -71,36 +75,12 @@ export async function GET(request: NextRequest) {
     return failed("invalid_code", exchangeError.message);
   }
 
-  // `record_auth_completed` returns whether a player row already exists.
-  const { data: hadPlayerRow, error: eventError } = await supabase.rpc("record_auth_completed");
-  if (eventError) {
-    // A metric write must never break a working login.
-    console.error("record_auth_completed failed", eventError.message);
-  }
+  // Funnel completion, shadow claim and destination — shared with the
+  // six-digit code path in `app/login/actions.ts`, so the two cannot drift.
+  const { hasPlayer } = await completePostAuth(supabase);
+  const resume = resumeDestination({ next, gameId, action });
 
-  let playerId: string | null = null;
-  try {
-    playerId = await claimShadowPlayer(supabase);
-  } catch (error) {
-    console.error("claim_shadow_player failed", (error as Error).message);
-  }
-
-  const hasPlayer = playerId !== null || hadPlayerRow === true;
-
-  // Where the user was heading before authentication interrupted them.
-  const resume = next
-    ? next
-    : gameId
-      ? action === "join_waitlist"
-        ? `/game/${gameId}?resume=join_waitlist`
-        : `/game/${gameId}/book?resume=book`
-      : "/games";
-
-  if (!hasPlayer) {
-    const signup = new URL("/signup", url.origin);
-    signup.searchParams.set("next", resume);
-    return NextResponse.redirect(signup);
-  }
-
-  return NextResponse.redirect(new URL(resume, url.origin));
+  return NextResponse.redirect(
+    new URL(destinationAfterAuth({ hasPlayer, resume }), url.origin),
+  );
 }

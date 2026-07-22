@@ -109,6 +109,21 @@ export const strings = {
     emailPlaceholder: "you@example.com",
     sendLink: "Send link",
     linkSent: "Check your inbox — the link is on its way.",
+
+    // --- the six-digit code ---------------------------------------------------
+    // The SAME email carries both a link and a code. The code exists because
+    // the link cannot survive every mail client: WhatsApp, Instagram and
+    // several Android mail apps open links in an embedded browser with its own
+    // cookie jar, and the PKCE verifier written when the link was requested is
+    // not in it — so the exchange fails with "code verifier not found" on a
+    // link that looks perfectly fine. Typing six digits into the tab that
+    // asked for them has no such dependency.
+    otpLead: "Or type the 6-digit code from the email:",
+    otpLabel: "6-digit code",
+    otpPlaceholder: "000000",
+    otpSubmit: "Sign in",
+    otpInvalid: "That code is not right, or it has expired. Request a new one.",
+    otpMalformed: "The code is six digits.",
     linkExpired: "That link has expired. Request a new one.",
     signOut: "Sign out",
     emailInvalid: "That does not look like an email address.",
