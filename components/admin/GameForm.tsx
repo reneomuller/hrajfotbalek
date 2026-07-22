@@ -31,6 +31,14 @@ const ERROR = "mt-1 text-[12px] text-volt";
  * Everything this form validates is validated again by a CHECK constraint or
  * an RPC guard. The duplication buys a labelled inline error instead of a
  * constraint violation, and nothing else — the database is the authority.
+ *
+ * EVERY FIELD IS CONTROLLED, and that is a bug fix rather than a style choice.
+ * React resets an uncontrolled `<form action={…}>` once the action returns, so
+ * a submission rejected for one field used to wipe every other field back to
+ * its `defaultValue` — the organizer saw the capacity and price they had just
+ * typed replaced by the stored ones, which reads as "the form does not save"
+ * rather than as "one field above is invalid". Controlled inputs survive the
+ * reset, so a rejected submit leaves the work intact and only the error is new.
  */
 export function GameForm({
   action,
@@ -52,8 +60,24 @@ export function GameForm({
   };
 }) {
   const [state, formAction] = useActionState(action, INITIAL);
+
   const [venueChoice, setVenueChoice] = useState(game?.venue_id ?? "");
+  const [newVenueName, setNewVenueName] = useState("");
+  const [newVenueImage, setNewVenueImage] = useState("");
+  const [newVenueMapQuery, setNewVenueMapQuery] = useState("");
+
+  // The visible wall-clock text and the absolute instant that is actually
+  // submitted, kept as two pieces of state for the reason in the header.
+  const [startsAtLocal, setStartsAtLocal] = useState(() =>
+    game ? toLocalInputValue(game.starts_at) : "",
+  );
   const [startsAtIso, setStartsAtIso] = useState(game?.starts_at ?? "");
+
+  const [capacity, setCapacity] = useState(String(game?.capacity ?? 14));
+  const [priceCzk, setPriceCzk] = useState(String(game?.price_czk ?? 200));
+  const [format, setFormat] = useState(game?.format ?? "");
+  const [surface, setSurface] = useState<string>(game?.surface ?? "");
+  const [notes, setNotes] = useState(game?.notes ?? "");
 
   const errors = state.fieldErrors ?? {};
   const isEdit = Boolean(game);
@@ -93,7 +117,14 @@ export function GameForm({
             <label className={LABEL} htmlFor="newVenueName">
               {strings.admin.venueNameLabel}
             </label>
-            <input id="newVenueName" name="newVenueName" className={FIELD} maxLength={80} />
+            <input
+              id="newVenueName"
+              name="newVenueName"
+              className={FIELD}
+              maxLength={80}
+              value={newVenueName}
+              onChange={(event) => setNewVenueName(event.target.value)}
+            />
           </div>
           <div>
             <label className={LABEL} htmlFor="newVenueImage">
@@ -110,6 +141,8 @@ export function GameForm({
               name="newVenueImage"
               className={FIELD}
               placeholder="prazacka.jpg"
+              value={newVenueImage}
+              onChange={(event) => setNewVenueImage(event.target.value)}
             />
             <p className={HINT}>{strings.admin.venueImageHint}</p>
           </div>
@@ -117,7 +150,13 @@ export function GameForm({
             <label className={LABEL} htmlFor="newVenueMapQuery">
               {strings.admin.venueMapQueryLabel}
             </label>
-            <input id="newVenueMapQuery" name="newVenueMapQuery" className={FIELD} />
+            <input
+              id="newVenueMapQuery"
+              name="newVenueMapQuery"
+              className={FIELD}
+              value={newVenueMapQuery}
+              onChange={(event) => setNewVenueMapQuery(event.target.value)}
+            />
             <p className={HINT}>{strings.admin.venueMapQueryHint}</p>
           </div>
         </div>
@@ -133,9 +172,10 @@ export function GameForm({
           type="datetime-local"
           className={FIELD}
           data-testid="starts-at"
-          defaultValue={game ? toLocalInputValue(game.starts_at) : ""}
+          value={startsAtLocal}
           onChange={(event) => {
             const value = event.target.value;
+            setStartsAtLocal(value);
             const parsed = value ? new Date(value) : null;
             setStartsAtIso(parsed && !Number.isNaN(parsed.getTime()) ? parsed.toISOString() : "");
           }}
@@ -155,7 +195,8 @@ export function GameForm({
             type="number"
             min={1}
             className={FIELD}
-            defaultValue={game?.capacity ?? 14}
+            value={capacity}
+            onChange={(event) => setCapacity(event.target.value)}
           />
           <p className={HINT}>{strings.admin.capacityHint}</p>
           {errors.capacity && <p className={ERROR}>{errors.capacity}</p>}
@@ -171,7 +212,8 @@ export function GameForm({
             type="number"
             min={0}
             className={FIELD}
-            defaultValue={game?.price_czk ?? 200}
+            value={priceCzk}
+            onChange={(event) => setPriceCzk(event.target.value)}
           />
           <p className={HINT}>{strings.admin.priceHint}</p>
           {errors.priceCzk && <p className={ERROR}>{errors.priceCzk}</p>}
@@ -189,7 +231,8 @@ export function GameForm({
             name="format"
             className={FIELD}
             placeholder="6v6"
-            defaultValue={game?.format ?? ""}
+            value={format}
+            onChange={(event) => setFormat(event.target.value)}
           />
           <p className={HINT}>{strings.admin.formatHint}</p>
           {errors.format && <p className={ERROR}>{errors.format}</p>}
@@ -203,7 +246,8 @@ export function GameForm({
             id="surface"
             name="surface"
             className={FIELD}
-            defaultValue={game?.surface ?? ""}
+            value={surface}
+            onChange={(event) => setSurface(event.target.value)}
           >
             <option value="">{strings.admin.surfaceNone}</option>
             {SURFACES.map((surface) => (
@@ -226,7 +270,8 @@ export function GameForm({
           rows={3}
           maxLength={500}
           className={FIELD}
-          defaultValue={game?.notes ?? ""}
+          value={notes}
+          onChange={(event) => setNotes(event.target.value)}
         />
         <p className={HINT}>{strings.admin.notesHint}</p>
         {errors.notes && <p className={ERROR}>{errors.notes}</p>}

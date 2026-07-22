@@ -120,6 +120,46 @@ describe("parseGameForm", () => {
     expect(over.fieldErrors.notes).toBe(strings.admin.notesTooLong);
   });
 
+  /*
+   * The M4 gate reported that what the organizer typed was not what got saved.
+   * The parse was never the culprit — but "every submitted field arrives at the
+   * action unchanged" is the property that was doubted, so it is asserted here,
+   * on values that share nothing with the form's own defaults (capacity 14,
+   * price 200) or with an empty string. `verify-game-form.check.ts` carries the
+   * same assertion the rest of the way, to the stored row.
+   */
+  it("carries every non-default field through untouched", () => {
+    const result = parseGameForm(
+      form({
+        venueId: "new",
+        newVenueName: "Praha 9 — Vysočany",
+        newVenueImage: "vysocany.webp",
+        newVenueMapQuery: "Vysočany sports hall, Praha",
+        startsAtIso: "2026-09-13T17:45:00.000Z",
+        capacity: "18",
+        priceCzk: "333",
+        format: "9v9",
+        surface: "sand",
+        notes: "Gate code 4417, park on the north side.",
+      }),
+    );
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.values).toEqual({
+      venueId: null,
+      newVenueName: "Praha 9 — Vysočany",
+      newVenueImagePath: "/venues/vysocany.webp",
+      newVenueMapQuery: "Vysočany sports hall, Praha",
+      startsAt: "2026-09-13T17:45:00.000Z",
+      capacity: 18,
+      priceCzk: 333,
+      format: "9v9",
+      surface: "sand",
+      notes: "Gate code 4417, park on the north side.",
+    });
+  });
+
   it("reports every bad field at once rather than one per round trip", () => {
     const result = parseGameForm(
       form({ venueId: "", startsAtIso: "", capacity: "0", priceCzk: "-5", format: "nope" }),

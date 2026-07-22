@@ -31,6 +31,7 @@ import {
   SEED_PASSWORD,
   allGameIds,
   allPlayerIds,
+  allVenueNames,
   games,
   players,
   type PlayerFixture,
@@ -109,6 +110,10 @@ async function reset(): Promise<void> {
   check("delete games", (await admin.from("games").delete().in("id", allGameIds)).error);
   check("delete players", (await admin.from("players").delete().in("id", allPlayerIds)).error);
 
+  // After the games, which reference them ON DELETE RESTRICT. Scoped to the
+  // fixture names, so a venue an admin created by hand survives a reset.
+  check("delete venues", (await admin.from("venues").delete().in("name", allVenueNames)).error);
+
   // Auth users last: players.auth_user_id references them.
   const { data: list, error } = await admin.auth.admin.listUsers({ page: 1, perPage: 1000 });
   check("list auth users", error);
@@ -165,6 +170,36 @@ async function seed(): Promise<void> {
     ).error,
   );
 
+  // --- venues ---------------------------------------------------------------
+  // Through `admin_create_venue` rather than a direct insert: venues are not
+  // state-bearing, but the RPC already owns the name-clash rule, and a seed
+  // that reuses an existing venue is the behaviour we want on a database that
+  // already has one. Every fixture game gets one — a game with a null
+  // `venue_id` cannot be saved from the admin edit form (migration 19).
+  const venueIds = new Map<string, string>();
+
+  for (const name of allVenueNames) {
+    const { data: existing, error: lookupError } = await admin
+      .from("venues")
+      .select("id")
+      .eq("name", name)
+      .maybeSingle();
+    check(`look up venue ${name}`, lookupError);
+
+    if (existing) {
+      venueIds.set(name, existing.id);
+      continue;
+    }
+
+    const { data, error } = await admin.rpc("admin_create_venue", {
+      p_name: name,
+      p_image_path: null,
+      p_map_query: null,
+    });
+    check(`create venue ${name}`, error);
+    venueIds.set(name, data as string);
+  }
+
   // Games are inserted as DRAFT and reach every other status through the real
   // transition RPCs. games.status is a state-bearing column: the insert is a
   // base row, but no UPDATE of it happens outside an RPC.
@@ -175,6 +210,7 @@ async function seed(): Promise<void> {
         Object.values(games).map((g) => ({
           id: g.id,
           venue: g.venue,
+          venue_id: venueIds.get(g.venue) ?? null,
           starts_at: startsAt(g.startsInHours),
           capacity: g.capacity,
           price_czk: g.priceCzk,

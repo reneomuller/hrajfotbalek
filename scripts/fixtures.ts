@@ -188,6 +188,16 @@ export const games = {
 
 export const allPlayerIds = Object.values(players).map((p) => p.id);
 export const allGameIds = Object.values(games).map((g) => g.id);
+
+/**
+ * The distinct venue names the fixture games sit at.
+ *
+ * Fixture games are given a real `venues` row rather than a bare name string,
+ * because the admin edit form binds its venue picker to `games.venue_id` and a
+ * game carrying a null one cannot be saved. Seeding games with no venue was
+ * what put every pre-venues game into exactly that state; see migration 19.
+ */
+export const allVenueNames = [...new Set(Object.values(games).map((g) => g.venue))];
 export const allPlayerEmails = Object.values(players)
   .map((p) => p.email)
   .filter((e): e is string => typeof e === "string");
