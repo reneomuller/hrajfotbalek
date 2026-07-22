@@ -41,6 +41,18 @@ interface CapturedCookie {
 }
 
 /**
+ * Sessions are minted ONCE per player per run and reused.
+ *
+ * Supabase rate-limits password sign-ins, and the suite asks for a client in
+ * almost every spec — running the full suite un-cached exhausts the limit
+ * partway through and every remaining spec fails with "Request rate limit
+ * reached", which looks exactly like a broken product and is not one. The
+ * tokens are valid for an hour, comfortably longer than a run.
+ */
+const cookieCache = new Map<string, Cookie[]>();
+const clientCache = new Map<string, SupabaseClient>();
+
+/**
  * Signs in as a seeded player and returns the cookies a browser needs to be
  * that player.
  */
@@ -48,6 +60,9 @@ export async function sessionCookiesFor(player: PlayerFixture): Promise<Cookie[]
   if (!player.email) {
     throw new Error(`${player.nickname} is a shadow player and cannot hold a session.`);
   }
+
+  const cached = cookieCache.get(player.id);
+  if (cached) return cached;
 
   const captured: CapturedCookie[] = [];
 
@@ -72,7 +87,7 @@ export async function sessionCookiesFor(player: PlayerFixture): Promise<Cookie[]
     );
   }
 
-  return captured.map(({ name, value }) => ({
+  const cookies: Cookie[] = captured.map(({ name, value }) => ({
     name,
     value,
     domain: "localhost",
@@ -83,6 +98,9 @@ export async function sessionCookiesFor(player: PlayerFixture): Promise<Cookie[]
     secure: false,
     sameSite: "Lax" as const,
   }));
+
+  cookieCache.set(player.id, cookies);
+  return cookies;
 }
 
 /** Makes an existing browser context act as the given seeded player. */
@@ -113,6 +131,9 @@ export async function apiClientFor(
     throw new Error(`${player.nickname} is a shadow player and cannot hold a session.`);
   }
 
+  const cached = clientCache.get(player.id);
+  if (cached) return cached;
+
   const supabase = createClient(SUPABASE_URL, ANON_KEY, {
     auth: { autoRefreshToken: false, persistSession: false },
   });
@@ -123,6 +144,7 @@ export async function apiClientFor(
   });
   if (error) throw new Error(`sign in as ${player.nickname}: ${error.message}`);
 
+  clientCache.set(player.id, supabase);
   return supabase;
 }
 
