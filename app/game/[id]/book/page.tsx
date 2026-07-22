@@ -3,9 +3,11 @@ import { redirect } from "next/navigation";
 import { BookingError } from "@/components/BookingError";
 import { PaymentMethodChoice } from "@/components/PaymentMethodChoice";
 import { getSessionUser } from "@/lib/auth/session";
+import { cancellationReassurance } from "@/lib/booking/reassurance";
 import { readResumeIntent } from "@/lib/booking/resume";
 import { formatCzk, formatGameDateTime } from "@/lib/format";
 import { getGameById } from "@/lib/games/queries";
+import { policy } from "@/lib/policy";
 import { strings } from "@/lib/strings";
 import { runCreateBooking } from "./actions";
 
@@ -112,6 +114,18 @@ export default async function BookPage({ params, searchParams }: BookPageProps) 
       <div className="mt-8">
         <PaymentMethodChoice gameId={game.id} />
       </div>
+
+      {/*
+        Reassurance before the commit, not after it: the question a player asks
+        at the payment choice is what happens if they cannot make it. The window
+        comes from lib/policy.ts; cancel_booking still enforces it.
+      */}
+      <p
+        data-testid="cancellation-reassurance"
+        className="mt-4 text-center text-[12px] leading-snug text-muted"
+      >
+        {cancellationReassurance(policy.cancellation.cutoffHoursBeforeStart)}
+      </p>
     </main>
   );
 }

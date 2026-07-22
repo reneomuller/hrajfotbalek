@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Roster } from "@/components/Roster";
 import { WaitlistButton } from "@/components/WaitlistButton";
-import { isOnWaitlist } from "@/lib/booking/waitlistConvert";
+import { isOnWaitlist, waitlistPosition } from "@/lib/booking/waitlistConvert";
 import { readResumeIntent } from "@/lib/booking/resume";
 import { runJoinWaitlist } from "./waitlist/actions";
 import { getSessionUser } from "@/lib/auth/session";
@@ -105,6 +105,12 @@ export default async function GameDetailPage({ params, searchParams }: GamePageP
     }
   }
 
+  // Where they stand in the queue. Read after the resume above so a player who
+  // just joined on the way back from the magic link sees their position on this
+  // render rather than the next one. Counting happens inside the RPC — own-row
+  // RLS hides the rows the count is over.
+  const position = alreadyOnList ? await waitlistPosition(game.id) : null;
+
   return (
     <main className="relative z-10 mx-auto w-full max-w-shell px-gutter pb-16 pt-24">
       <Link
@@ -152,7 +158,11 @@ export default async function GameDetailPage({ params, searchParams }: GamePageP
           >
             {strings.games.fullNotice}
           </p>
-          <WaitlistButton gameId={game.id} alreadyOnList={alreadyOnList} />
+          <WaitlistButton
+            gameId={game.id}
+            alreadyOnList={alreadyOnList}
+            position={position}
+          />
         </>
       )}
 

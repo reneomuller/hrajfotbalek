@@ -28,11 +28,6 @@ export const strings = {
     home: "Hraj Fotbal — home",
   },
 
-  ticker: {
-    live: "LIVE",
-    upcoming: "UPCOMING",
-  },
-
   siteFooter: {
     privacy: "Privacy",
     copyright: "© hrajfotbal",
@@ -135,6 +130,11 @@ export const strings = {
     waitlistAlready: "You are already on the waitlist for this game.",
     waitlistHint:
       "Everyone waiting is told at the same moment a spot opens — first to claim it gets it.",
+    // Position on the list. {position} is substituted by `waitlistPositionLabel`.
+    // It sits next to `waitlistHint`, which is what keeps it honest: under
+    // notify-all FCFS the number says how many joined ahead, not who is served
+    // first. Never render one without the other.
+    waitlistPosition: "You're #{position} in line",
     waitlistConvertTitle: "Claim the open spot",
     waitlistConvertHint: "Pick how you want to pay and the spot is yours.",
     waitlistNotOnList: "You are not on the waitlist for this game.",
@@ -172,6 +172,14 @@ export const strings = {
     payByCash: "Pay cash on the pitch",
     payByCashHint: "Bring cash. The organizer confirms you on the day.",
     choosePayment: "How do you want to pay?",
+    // Cancellation reassurance, shown before the player commits. The window is
+    // never written as a literal: `cancellationReassurance()` picks the kickoff
+    // wording under policy v1 (`cutoffHoursBeforeStart: 0`) and interpolates
+    // {hours} into the cutoff wording if a v2 policy introduces a lead time.
+    cancelReassuranceKickoff:
+      "Cancel anytime before kickoff for full wallet credit.",
+    cancelReassuranceCutoff:
+      "Cancel up to {hours}h before kickoff for full wallet credit.",
     confirmBooking: "Confirm booking",
     reserved: "Spot reserved",
     confirmed: "Payment confirmed",

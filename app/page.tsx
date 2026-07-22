@@ -1,9 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { LiveTicker } from "@/components/LiveTicker";
 import { NextMatchCard } from "@/components/NextMatchCard";
 import { PitchBackground } from "@/components/PitchBackground";
-import { getNextGame, getRoster, getTickerGame } from "@/lib/games/queries";
+import { getNextGame, getRoster } from "@/lib/games/queries";
 import { siteUrl } from "@/lib/site";
 import { strings } from "@/lib/strings";
 
@@ -37,9 +36,6 @@ export default async function LandingPage() {
   // The reference shows the lineup as overlapping avatars, so the block needs
   // nicknames as well as the count. Same anon-readable view the game page uses.
   const roster = nextGame ? await getRoster(nextGame.game.id) : [];
-  // The ticker can announce a game already in progress, which the next-match
-  // block never shows — so it is its own query, not a slice of `nextGame`.
-  const tickerGame = await getTickerGame();
 
   return (
     <>
@@ -53,9 +49,6 @@ export default async function LandingPage() {
       />
 
       {/* NAV is the shared SiteHeader, rendered once from the root layout. */}
-
-      {/* Status ticker, in the gap between the header and the pitch touchline. */}
-      <LiveTicker entry={tickerGame} />
 
       <div className="relative z-10 mx-auto w-full max-w-shell px-gutter">
         {/* HERO */}

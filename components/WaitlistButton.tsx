@@ -4,6 +4,7 @@ import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
 import { joinWaitlistAction, type WaitlistActionState } from "@/app/game/[id]/waitlist/actions";
 import { describeWaitlistError } from "@/lib/booking/errors";
+import { waitlistPositionLabel } from "@/lib/booking/waitlistLabel";
 import { strings } from "@/lib/strings";
 
 const INITIAL: WaitlistActionState = { status: "idle" };
@@ -32,13 +33,22 @@ function SubmitButton() {
 export function WaitlistButton({
   gameId,
   alreadyOnList,
+  position,
 }: {
   gameId: string;
   alreadyOnList: boolean;
+  /**
+   * The player's place in the queue, computed on the server. Null right after
+   * an interactive join: the row exists but this render predates it. The
+   * action revalidates the page, so the line appears on the next paint rather
+   * than being guessed at here.
+   */
+  position: number | null;
 }) {
   const [state, formAction] = useActionState(joinWaitlistAction, INITIAL);
 
   const joined = state.status === "joined" || state.status === "already" || alreadyOnList;
+  const positionLabel = waitlistPositionLabel(position);
 
   if (joined) {
     return (
@@ -51,6 +61,18 @@ export function WaitlistButton({
             ? strings.games.waitlistAlready
             : strings.games.waitlistJoined}
         </p>
+        {positionLabel && (
+          <p
+            data-testid="waitlist-position"
+            className="mt-3 font-mono text-[22px] font-bold text-white"
+          >
+            {positionLabel}
+          </p>
+        )}
+        {/*
+          The hint stays directly under the position on purpose: the number
+          alone reads as a serving order, which notify-all FCFS is not.
+        */}
         <p className="mt-2 text-[13px] leading-snug text-muted">
           {strings.games.waitlistHint}
         </p>

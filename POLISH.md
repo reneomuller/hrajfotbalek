@@ -20,10 +20,10 @@ One line per item. Move to DONE when shipped. Sessions: only touch items explici
 ## DONE
 
 ## Safe now (batch 1 — ready)
-- [ ] Remove the live/upcoming ticker text above the wordmark entirely
-- [ ] Segmented player-count bar (one notch per spot, per original index.html) on the landing match card
-- [ ] Cancellation-policy reassurance line on the booking screen ("Cancel anytime before kickoff for full wallet credit")
-- [ ] Waitlist position shown to the waitlisted user on the game page ("You're #2 in line")
+- [x] Remove the live/upcoming ticker text above the wordmark entirely
+- [x] Segmented player-count bar (one notch per spot, per original index.html) on the landing match card — was already conformant; extracted to `capacitySegments()` + tests so it stays that way
+- [x] Cancellation-policy reassurance line on the booking screen ("Cancel anytime before kickoff for full wallet credit")
+- [x] Waitlist position shown to the waitlisted user on the game page ("You're #2 in line")
 - [x] Post-login destination: DECIDED — stays /games; wordmark links to landing
 
 ## After M4 (games-list redesign session)

@@ -348,6 +348,15 @@ export interface Database {
         Returns: { id: string; already_joined: boolean };
       };
       /**
+       * Owner-only read. The caller's 1-based position on a game's waitlist,
+       * or null when they are not on it. Informational: notification is
+       * notify-all FCFS, so this is how many joined ahead, not a serving order.
+       */
+      waitlist_position: {
+        Args: { p_game_id: string };
+        Returns: number | null;
+      };
+      /**
        * Cron-only fan-out. Stamps `notified_at` and emits one
        * `waitlist_notified` event per active waitlisted player, in one
        * transaction, returning the players to mail.

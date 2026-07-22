@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { formatGameDateTime } from "@/lib/format";
+import { capacitySegments } from "@/lib/games/capacity";
 import { initials } from "@/lib/roster/initials";
 import { strings } from "@/lib/strings";
 import type { GameCardGame } from "@/components/GameCard";
@@ -124,13 +125,18 @@ export function NextMatchCard({ game, bookedCount, roster }: NextMatchCardProps)
           </span>
         </div>
 
-        {/* Capacity bar — one segment per spot. */}
-        <div className="flex gap-1">
-          {Array.from({ length: game.capacity }, (_, i) => (
+        {/*
+          Capacity bar — one segment per spot, per the reference's `data-segs`
+          block: `display:flex;gap:4px` around `flex:1;height:11px;
+          border-radius:2px` notches, volt when filled and #242424 when not.
+          Every value here is a theme token standing for that literal.
+        */}
+        <div data-testid="capacity-segments" className="flex gap-1">
+          {capacitySegments(bookedCount, game.capacity).map((isFilled, i) => (
             <i
               key={i}
               className={`h-[11px] flex-1 rounded-[2px] ${
-                i < filled ? "bg-volt" : "bg-surface-seg"
+                isFilled ? "bg-volt" : "bg-surface-seg"
               }`}
             />
           ))}
