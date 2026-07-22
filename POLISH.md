@@ -12,7 +12,14 @@ One line per item. Move to DONE when shipped. Sessions: only touch items explici
 - [ ] Game detail: venue address line once column exists
 
 ## M5 batch (Phase 27 territory)
-- [ ] Three languages (EN main, CZ, RU) via strings module + switcher
+- [x] Three languages (EN main, CZ, RU) via strings module + switcher
+      (EN is the only complete table; CZ/RU are partial overlays merged onto it,
+       so a missing key renders English rather than a blank. Cookie-based, not a
+       URL prefix — every game link already shared points at /game/<id> with no
+       locale segment. A completeness test walks every player-facing key.
+       NOT translated, each deliberately: admin, the privacy page, and email —
+       email has no per-player language to read, since the locale is a cookie,
+       i.e. a fact about a browser rather than a person.)
 - [x] Styled 404, favicon, PWA icons
       (`app/not-found.tsx`; icons are BUILT from the theme tokens by
        `scripts/generate-icons.mjs` rather than hand-exported, so a volt change
@@ -66,6 +73,13 @@ One line per item. Move to DONE when shipped. Sessions: only touch items explici
       (`lib/games/schemaOrg.ts` — a pure builder with tests, because structured
        data fails silently: a bad `offers` block is simply ignored, so the
        assertions are the only feedback loop. Price is CZK unconditionally.)
+
+## New backlog (post-launch)
+- [ ] `players.locale` column, captured at signup — the prerequisite for
+      translating transactional email. Until it exists, translating off the
+      cookie would send Czech to a Russian speaker whenever a cron job rather
+      than a request does the sending.
+- [ ] Game detail: venue address line once the column exists (carried over)
 
 ## Deferred decisions
 - Waitlist mechanics: notify-all FCFS stays for launch; ordered-priority revisited post-launch with real data (policy v2 candidate)

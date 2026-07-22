@@ -239,14 +239,32 @@ otp_length = 6
 otp_expiry = 3600
 
 # Use a production-ready SMTP server
+# --- M5 CUTOVER: magic-link email via Resend ---------------------------------
+#
+# The magic-link email is sent by Supabase's own mailer, NOT through
+# `lib/email/sendEmail.ts`. That was deliberate from Phase 8: keeping auth email
+# on the built-in sender meant login kept working on real phones for the whole
+# build, before Resend's DNS had verified. The M5 cutover moves it.
+#
+# The values below are the Resend SMTP endpoint. Uncomment them at the cutover
+# — AFTER Resend's DNS shows verified, and not before: a half-verified domain
+# does not bounce, it silently lands every login link in spam, and the failure
+# is invisible from this side.
+#
+# `pass` reads from the environment; the key itself is never committed.
+#
+# THIS FILE ONLY AFFECTS A LOCAL SUPABASE STACK. The hosted project's SMTP is
+# configured in the dashboard (Project Settings → Authentication → SMTP) with
+# the identical values, and that dashboard edit is a human step — see LAUNCH.md.
+#
 # [auth.email.smtp]
 # enabled = true
-# host = "smtp.sendgrid.net"
+# host = "smtp.resend.com"
 # port = 587
-# user = "apikey"
-# pass = "env(SENDGRID_API_KEY)"
-# admin_email = "admin@email.com"
-# sender_name = "Admin"
+# user = "resend"
+# pass = "env(RESEND_API_KEY)"
+# admin_email = "noreply@hrajfotbal.com"
+# sender_name = "Hraj Fotbal"
 
 # Uncomment to customize email template
 # [auth.email.template.invite]

@@ -160,7 +160,7 @@ test("attendance drives the game to settled with no reserved booking left", asyn
     p_game_id: game.id,
     p_payment_method: "qr",
   });
-  const { data: unpaidBooking } = await noShow.rpc("create_booking", {
+  await noShow.rpc("create_booking", {
     p_game_id: game.id,
     p_payment_method: "cash",
   });
