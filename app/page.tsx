@@ -8,7 +8,6 @@ import { getStrings } from "@/lib/i18n/server";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getStrings();
-  const { landing } = t;
   const url = await siteUrl();
   return {
     title: t.meta.title,
