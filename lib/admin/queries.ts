@@ -93,6 +93,84 @@ export async function listVenues(): Promise<VenueRow[]> {
   return error || !data ? [] : data;
 }
 
+export interface AdminBookingRow {
+  id: string;
+  playerId: string;
+  nickname: string;
+  status: Database["public"]["Tables"]["bookings"]["Row"]["status"];
+  paymentMethod: Database["public"]["Tables"]["bookings"]["Row"]["payment_method"];
+  /** The variable symbol. Null for anything that is not a QR booking. */
+  paymentCode: number | null;
+  priceCzk: number;
+  creditAppliedCzk: number;
+  /** What the player still owes — what ✓ Paid confirms at. */
+  amountDueCzk: number;
+  attendance: Database["public"]["Tables"]["bookings"]["Row"]["attendance"];
+  isSeed: boolean;
+  bookedByAdmin: boolean;
+}
+
+/**
+ * Every booking on a game, VS-sorted.
+ *
+ * ORDERED BY `payment_code` because that is the order the organizer's banking
+ * app shows incoming payments in, and this list exists to be read side by side
+ * with that screen. `nullsFirst: false` puts cash and credit bookings — which
+ * have no variable symbol — after the QR ones rather than at the top of the
+ * list the admin is scanning. The `(game_id, payment_code)` index from Phase 4
+ * serves exactly this shape.
+ */
+export async function listGameBookings(gameId: string): Promise<AdminBookingRow[]> {
+  const service = createServiceRoleSupabaseClient();
+
+  const { data: bookings, error } = await service
+    .from("bookings")
+    .select("*")
+    .eq("game_id", gameId)
+    .order("payment_code", { ascending: true, nullsFirst: false });
+
+  if (error || !bookings) return [];
+
+  const playerIds = [...new Set(bookings.map((b) => b.player_id))];
+  const { data: players } = await service
+    .from("players")
+    .select("id, nickname")
+    .in("id", playerIds);
+
+  const nicknames = new Map((players ?? []).map((p) => [p.id, p.nickname]));
+
+  return bookings.map((booking) => ({
+    id: booking.id,
+    playerId: booking.player_id,
+    nickname: nicknames.get(booking.player_id) ?? "",
+    status: booking.status,
+    paymentMethod: booking.payment_method,
+    paymentCode: booking.payment_code,
+    priceCzk: booking.price_czk,
+    creditAppliedCzk: booking.credit_applied_czk,
+    amountDueCzk: Math.max(0, booking.price_czk - booking.credit_applied_czk),
+    attendance: booking.attendance,
+    isSeed: booking.is_seed,
+    bookedByAdmin: booking.booked_by_admin,
+  }));
+}
+
+/** Bookings still holding a spot — the capacity-relevant set. */
+export function activeBookings(rows: AdminBookingRow[]): AdminBookingRow[] {
+  return rows.filter((row) => row.status === "reserved" || row.status === "confirmed");
+}
+
+/**
+ * Unpaid holds: the ones settle is blocked on.
+ *
+ * A `reserved` booking is money owed with nothing recording that it is owed.
+ * Phase 24 refuses to settle while any remain; Phase 22 is where the admin
+ * clears them.
+ */
+export function unpaidBookings(rows: AdminBookingRow[]): AdminBookingRow[] {
+  return rows.filter((row) => row.status === "reserved");
+}
+
 async function countActiveBookings(gameIds: string[]): Promise<Map<string, number>> {
   const counts = new Map<string, number>();
   if (gameIds.length === 0) return counts;

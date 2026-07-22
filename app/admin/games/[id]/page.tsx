@@ -1,7 +1,15 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ConfirmPaymentRow } from "@/components/admin/ConfirmPaymentRow";
+import { PaymentBadge } from "@/components/admin/PaymentBadge";
 import { TransitionButton } from "@/components/admin/TransitionButton";
-import { availableTransitions, getAdminGame } from "@/lib/admin/queries";
+import {
+  activeBookings,
+  availableTransitions,
+  getAdminGame,
+  listGameBookings,
+  unpaidBookings,
+} from "@/lib/admin/queries";
 import { formatCzk, formatGameDateTime } from "@/lib/format";
 import { strings } from "@/lib/strings";
 import { publishGameAction } from "../actions";
@@ -22,6 +30,12 @@ export default async function AdminGamePage({
   const { id } = await params;
   const game = await getAdminGame(id);
   if (!game) notFound();
+
+  const bookings = await listGameBookings(game.id);
+  const roster = activeBookings(bookings);
+  // Already VS-sorted by the query — the order the organizer's banking app
+  // lists incoming payments in.
+  const pending = unpaidBookings(bookings);
 
   const { canPublish, canEdit } = availableTransitions(game.status);
 
@@ -86,6 +100,61 @@ export default async function AdminGamePage({
           </Link>
         )}
       </div>
+
+      {/* --- reconciliation ---------------------------------------------------
+          The only reconciliation surface in Phase 1. There is deliberately no
+          separate payment queue: the organizer is looking at their banking app,
+          and a second screen to switch to is a second screen to lose. */}
+      <section className="mt-12">
+        <h3 className="m-0 font-condensed text-[18px] font-bold uppercase tracking-wide text-bone">
+          {strings.admin.paymentsTitle}
+        </h3>
+
+        {pending.length === 0 ? (
+          <p className="mt-3 font-mono text-[12px] tracking-[1px] text-faint">
+            {strings.admin.paymentsEmpty}
+          </p>
+        ) : (
+          <ul className="mt-4 list-none space-y-3 p-0">
+            {pending.map((booking) => (
+              <ConfirmPaymentRow key={booking.id} booking={booking} gameId={game.id} />
+            ))}
+          </ul>
+        )}
+      </section>
+
+      {/* --- roster ----------------------------------------------------------- */}
+      <section className="mt-10">
+        <h3 className="m-0 font-condensed text-[18px] font-bold uppercase tracking-wide text-bone">
+          {strings.admin.rosterTitle}
+        </h3>
+
+        {roster.length === 0 ? (
+          <p className="mt-3 font-mono text-[12px] tracking-[1px] text-faint">
+            {strings.admin.rosterEmpty}
+          </p>
+        ) : (
+          <ul className="mt-4 list-none space-y-2 p-0">
+            {roster.map((booking) => (
+              <li
+                key={booking.id}
+                data-testid="admin-roster-row"
+                className="flex flex-wrap items-center justify-between gap-4 rounded-card border border-hairline px-5 py-3"
+              >
+                <span className="font-condensed text-[16px] font-bold text-white">
+                  {booking.nickname}
+                </span>
+                <span className="font-mono text-[11px] tracking-[1px] text-muted">
+                  {booking.paymentCode !== null
+                    ? `${strings.admin.vsLabel} ${booking.paymentCode}`
+                    : "—"}
+                </span>
+                <PaymentBadge status={booking.status} method={booking.paymentMethod} />
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
     </>
   );
 }

@@ -28,6 +28,27 @@ const CODES: Array<[string, string]> = [
   ["games_notes_length", strings.admin.notesTooLong],
 ];
 
+/**
+ * Pulls the shortfall out of `PAYMENT_UNDERPAID`'s detail ("received X of Y").
+ *
+ * Read from the raise rather than recomputed in the action, so the number the
+ * admin sees is the one `confirm_booking` actually compared — the amount due
+ * is `price_czk - credit_applied_czk`, and re-deriving it from a page that may
+ * be seconds stale is how the message ends up disagreeing with the refusal.
+ *
+ * Null for anything that is not an underpayment, so an unrelated failure is
+ * never dressed up as a friendly shortfall.
+ */
+export function parseUnderpayment(raw: string | null | undefined): number | null {
+  if (!raw || !raw.includes("PAYMENT_UNDERPAID")) return null;
+  const match = raw.match(/received\s+(\d+)\s+of\s+(\d+)/);
+  if (!match) return null;
+  const received = Number(match[1]);
+  const due = Number(match[2]);
+  if (!Number.isFinite(received) || !Number.isFinite(due)) return null;
+  return Math.max(0, due - received);
+}
+
 export function toAdminErrorMessage(raw: string | null | undefined): string {
   if (!raw) return strings.errors.generic;
   for (const [code, message] of CODES) {

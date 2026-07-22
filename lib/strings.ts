@@ -321,6 +321,36 @@ export const strings = {
     notesTooLong: "Notes are limited to 500 characters.",
     invalidTransition: "That is not possible in this game's current state.",
 
+    // --- reconciliation ------------------------------------------------------
+    paymentsTitle: "Awaiting payment",
+    paymentsEmpty: "Nothing outstanding — every spot on this game is settled up.",
+    rosterTitle: "Roster",
+    rosterEmpty: "Nobody has claimed a spot yet.",
+    vsLabel: "VS",
+    amountDueLabel: "Due",
+    markPaid: "✓ Paid",
+    amountDiffers: "Amount differs",
+    receivedLabel: "Received (CZK)",
+    confirmReceived: "Confirm this amount",
+    paymentConfirmed: "Payment confirmed",
+    // Overpayment: the surplus becomes wallet credit. Money never leaves.
+    creditIssuedNotice: "Credit issued to the player's wallet:",
+    // Underpayment: the RPC refuses and the booking stays reserved.
+    underpaidNotice: "Short by",
+    underpaidHint: "The booking is still held and unpaid — follow up with the player.",
+    // Payment landing after expiry: credited in full, spot NOT reinstated.
+    expiredCreditedNotice:
+      "That booking had already expired. The amount went to the player's wallet as credit — the spot was not given back.",
+    badge: {
+      paid: "Paid",
+      reserved: "Holding",
+      cash: "Cash",
+      seed: "Free",
+      credit: "Credit",
+      cancelled: "Cancelled",
+      expired: "Expired",
+    },
+
     cancelGame: "Cancel this game",
     cancelGameWarning:
       "This cancels every booking, returns every player's money as credit, clears the waitlist and emails everyone. It cannot be undone.",
