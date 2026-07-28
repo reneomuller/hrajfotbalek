@@ -81,6 +81,23 @@ One line per item. Move to DONE when shipped. Sessions: only touch items explici
       than a request does the sending.
 - [ ] Game detail: venue address line once the column exists (carried over)
 
+## Noticed during Phase 2 planning (2026-07-28) — deliberately NOT in the plan
+Scope was frozen at contract v1.1.1, so these are recorded rather than built.
+- [ ] **No Node version pin.** No `engines` field, no `.nvmrc`, no
+      `.node-version`. Repo scripts rely on `--env-file` and TS type-stripping,
+      both of which are Node-major-sensitive, and nothing stops a new machine
+      running something else. Pinned versions currently live only in
+      `PHASE2_ENVIRONMENT.md` §2.
+- [ ] **`complete_signup` is orphaned by Phase 2.** Postgres cannot
+      `create or replace` a function into a different parameter list, and
+      dropping one is a destructive migration that Phase 2 §1 forbids without a
+      named gate sign-off — so `complete_signup_v2` ships alongside it and the
+      original is left unused. Dropping it wants its own gated migration.
+- [ ] **`games.venue` (text, NOT NULL) still exists beside `venue_id`.**
+      Migration 15 added the `venues` table and never removed the original
+      column, so every game insert still has to populate a value nothing reads.
+      Removing it is destructive and therefore gated.
+
 ## Deferred decisions
 - Waitlist mechanics: notify-all FCFS stays for launch; ordered-priority revisited post-launch with real data (policy v2 candidate)
 - [x] Fix shared probe() SQL test helper: false pass on non-volatile functions (planner prunes unread call) — use value-consuming pattern from waitlist_position.sql suite
