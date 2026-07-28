@@ -1,7 +1,18 @@
-# hrajfotbal.com — Phase 1 Build Specification (v2.3)
+# hrajfotbal.com — Phase 1 Build Specification (v2.5)
 ## Analysis document for Letco (living documentation seed)
 
 **Instruction to the platform:** This document is the source of truth. Where implementation questions arise that this document does not answer, do NOT invent a resolution — surface the question at the next milestone gate. Build in the milestone order defined in §10; each milestone ends with a human verification gate. Do not proceed past a gate without confirmation.
+
+---
+
+## 0. Revision history
+
+Per §13, the contract is edited first and implemented second. v2.5 is the exception being repaid: four decisions were taken during the M4/M5 build and shipped before this document recorded them. Each line below is the edit that brings the text back level with the code.
+
+- **v2.5 — `set_player_admin` supersedes the §8 no-elevation clause.** Admin rights are granted in-app by an existing admin through one `SECURITY DEFINER` RPC that refuses a self-change; the Supabase dashboard is no longer the only path (§8).
+- **v2.5 — `admin_granted` and `admin_revoked` join the §3 event catalog.** Elevation is a state change, so it writes its event in the same transaction like every other one (§3).
+- **v2.5 — venues are a table, and games carry format / surface / notes.** `games.venue text` becomes `games.venue_id` referencing `venues`, with three descriptive columns alongside it (§3).
+- **v2.5 — the waitlist queue is public.** `game_waitlist_public` exposes nickname and position, never `player_id` or `joined_at`, on the same reasoning as the public roster (§3, §5).
 
 ---
 
@@ -40,8 +51,15 @@ Migrations only — every schema change is a migration file, and RLS is enabled 
 
 **Nickname validation (signup):** the nickname is restricted to a **safe charset — letters, digits, space, dash `-`, and underscore `_` — max 20 characters.** This single input constraint closes two surfaces at once: (a) the Open Graph / public-roster **XSS** surface (no `<`, `>`, `&`, quotes, or markup can ever enter a nickname), and (b) the SPD payment-string **injection** surface (no `*` or `:` — the SPD field and key delimiters — can ever reach the QR payload; see §4). Input outside the charset or length is rejected with a friendly inline error. Duplicate nickname at signup likewise returns a friendly inline error suggesting the name is taken — never a raw constraint error.
 
+### venues (v2.5)
+`id, name (unique, required), image_path (nullable), map_query (nullable), created_at`
+
+Created through the admin RPC `admin_create_venue`; anonymous read is granted so game pages can render the venue without exposing anything else. A venue outlives the games played on it — which is why a pre-launch database reset preserves venues, and why test venues have to be removed by name rather than swept.
+
 ### games
-`id, venue text, starts_at timestamptz, capacity int, price_czk int, status, city text default 'prague', brand text default 'hrajfotbal', created_at`
+`id, venue_id (FK to venues, required), starts_at timestamptz, capacity int, price_czk int, status, format text (nullable, e.g. '6v6'), surface text (nullable, e.g. 'turf'), notes text (nullable, organizer logistics), city text default 'prague', brand text default 'hrajfotbal', created_at`
+
+**Venue as a row, not a string (v2.5).** Phase 1 shipped `venue text`; the admin panel needed a picker, the games list needed a map panel, and both needed the same venue to be the same object. `venue_id` is required — a game with no venue cannot be saved, and the games that predate the table were backfilled (migration 19). `format` / `surface` / `notes` are free text rendered on cards and detail; per §8 they are escaped at every render site exactly as the old `venue` string was.
 
 Game status machine:
 `draft → published → (full ⇄ published) → played → settled`, with `played` reachable from either `full` or `published`, and `cancelled` reachable from draft/published/full.
@@ -91,9 +109,14 @@ Unique on `(game_id, player_id)`.
 ### events
 `id, event_type text, player_id nullable, game_id nullable, booking_id nullable, metadata jsonb, city, brand, playbook_version text default 'v1', policy_version text default 'v1', created_at`
 Append-only. Full Phase 1 catalog:
-`account_created, auth_link_sent, auth_completed, game_published, game_cancelled, game_settled, booking_created, payment_confirmed, booking_cancelled, booking_expired, spot_released, waitlist_joined, waitlist_notified, waitlist_converted, nudge_sent, reminder_sent, attendance_marked, credit_issued, credit_redeemed, payment_unmatched, admin_booking_created, player_claimed`
+`account_created, auth_link_sent, auth_completed, game_published, game_cancelled, game_settled, booking_created, payment_confirmed, booking_cancelled, booking_expired, spot_released, waitlist_joined, waitlist_notified, waitlist_converted, nudge_sent, reminder_sent, attendance_marked, credit_issued, credit_redeemed, payment_unmatched, admin_booking_created, player_claimed, admin_granted, admin_revoked`
+
+`admin_granted` / `admin_revoked` (v2.5) accompany the elevation RPC in §8. Both carry the acting admin in `metadata.by_player_id`, because the question asked of an elevation log is always *who granted this*.
 
 Every server function that changes state writes its event **in the same transaction** as the state change. A state change without its event row is a bug.
+
+### game_waitlist_public (view, v2.5)
+Nicknames + queue position for a game's waitlist, on the same terms as the roster below: **no email, phone, player id — and no `joined_at`.** Position is computed inside the view precisely because `joined_at` is the column being withheld; publishing the ordering while hiding the timestamps that produce it is the whole point. A queue nobody can see is a queue nobody trusts, which is why this is public rather than owner-only.
 
 ### game_roster_public (view)
 Nicknames + booking statuses for a game. **No email, phone, or player id exposure.** This view is the only thing anonymous users read for rosters. Implement it as a **`SECURITY DEFINER` view/function** (owned by a role with `SELECT` on the base tables) projecting only `nickname` + booking `status`, so anonymous reads bypass the row-owner RLS on `bookings` without leaking any PII. A test asserts anon cannot retrieve `player_id`, `email`, or `phone` (see §11.10).
@@ -132,7 +155,7 @@ Config module with named constants; `policy_version = 'v1'` stamped on events.
 - **Reservation hold:** unpaid reservations hold until game day by default (`expires_at` null unless nudged).
 - **Scarcity nudge:** when a game is full AND waitlist ≥ 1, every unpaid `reserved` booking — **including cash reservations** — gets one email: "pay online within 12h or lose the spot." Sets `nudge_sent_at` and `expires_at = now() + 12h`; on expiry the spot is released to the waitlist like any other. No exemption for cash, and no manual-release surface. Confirmed (prepaid) bookings are never expired by this mechanism — prepaying is spot insurance. One nudge per booking, ever.
 - **Expiry:** cron sweeps bookings where `expires_at < now()` and status = reserved → `expireBooking()` → spot_released → waitlist notification. A payment that lands **after** a booking has expired is credited in full to the player's wallet (see §4 payment reconciliation) — the spot is never reinstated.
-- **Waitlist:** one-tap join on full games. When a spot frees (cancel or expire), email **all active** waitlisted players (those with no `converted_booking_id`) simultaneously (`waitlist_notified`; `notified_at` = the last time notified, **not** a suppression flag — players are re-notified on every subsequent release), first-come-first-served. The race is settled by `create_booking`'s transactional capacity check — first successful insert wins; later attempts get a friendly "spot already taken, you're still on the waitlist" screen. A waitlisted player converts by calling `create_booking` with a `from_waitlist_id` argument, which sets `converted_booking_id` and emits `waitlist_converted` in the same transaction.
+- **Waitlist:** one-tap join on full games. When a spot frees (cancel or expire), email **all active** waitlisted players (those with no `converted_booking_id`) simultaneously (`waitlist_notified`; `notified_at` = the last time notified, **not** a suppression flag — players are re-notified on every subsequent release), first-come-first-served. The race is settled by `create_booking`'s transactional capacity check — first successful insert wins; later attempts get a friendly "spot already taken, you're still on the waitlist" screen. A waitlisted player converts by calling `create_booking` with a `from_waitlist_id` argument, which sets `converted_booking_id` and emits `waitlist_converted` in the same transaction. **The queue is public (v2.5)** — nicknames and positions are readable by anyone through `game_waitlist_public` (§3), and the viewer's own place is highlighted; the timestamps behind the ordering are not exposed.
 - **Game reminder:** every player with an active booking gets one reminder email 24h before `starts_at` (`reminder_sent` event). One per booking, ever.
 
 ---
@@ -172,7 +195,11 @@ All jobs must be idempotent — running twice in a row produces no duplicate ema
   - games (published), game_roster_public: anonymous read.
   - events: no client access whatsoever.
 - **Service-role key:** used **only** server-side by cron and admin API routes to invoke the admin-or-cron RPCs (`confirm_booking`, `expire_booking`) — never to perform direct table writes that bypass RLS, and never exposed under `NEXT_PUBLIC_`. Authorization always happens inside the function (§3), so a service-role call is not a blanket write grant. No secrets in code or git.
-- **Admin elevation:** `is_admin` is granted **only** manually via the Supabase dashboard in Phase 1. There is **no in-app path to elevate a player to admin** — no API route, RPC, or UI toggle ever sets `is_admin`. The admin surface (§9) is *gated by* the flag but can never *grant* it.
+- **Admin elevation (revised v2.5):** `is_admin` is set through exactly one path in the application — the `SECURITY DEFINER` RPC `set_player_admin(player_id, is_admin)` — and through the Supabase dashboard, which remains the bootstrap for the first admin and the recovery path if every admin loses access. **This supersedes the v2.3 rule that no in-app path may exist.** The reason for the change is operational: elevation had to happen at a laptop with dashboard credentials, which meant it happened rarely and always through one person. The reason the original rule existed — that privilege escalation must not be reachable from a player session — is preserved *inside the function*, not by the absence of the function:
+  - **Admin-only.** The caller is resolved from `auth.uid()` and must already be an admin. A non-admin session, an anonymous caller and `service_role` are each refused; `service_role` holds no execute privilege on it at all, so no cron or API route can elevate anyone.
+  - **No self-change, in either direction.** An admin can neither grant themselves rights they lack nor revoke their own, which keeps "the last admin locked everyone out" off the table and makes every row in the log a statement about someone else.
+  - **It writes its event in the same transaction** — `admin_granted` / `admin_revoked` per §3, stamped with the acting admin — so elevation is as auditable as a booking.
+  - The admin surface (§9) is still *gated by* the flag; what changed is that an existing admin may now *pass it on*.
 - **Output escaping / XSS:** all user- or admin-supplied free text is HTML-escaped at render as defence-in-depth behind the §3 input constraints. Nicknames are already charset-restricted at signup (§3); `games.venue` free text — which appears on public game pages, OG cards, and `.ics` files — is **escaped at every render site** (HTML, OG meta `content`, and `.ics` fields) and never interpolated raw.
 
 ---
@@ -194,7 +221,7 @@ All jobs must be idempotent — running twice in a row produces no duplicate ema
 - Add player manually: creates shadow player + booking in one flow, ≤10 seconds
 - Waitlist depth per game (visible number — this is the expansion-trigger sensor)
 - Attendance marking (present / no-show) → game to settled. Unpaid `reserved` bookings are resolved here: either the player pays cash on the pitch (admin `confirm_booking`) or is marked no_show and cancelled during attendance marking — **no `reserved` booking survives into `settled`**.
-- Player list, credit balances, manual credit grants, shadow-player merge
+- Player list, credit balances, manual credit grants, shadow-player merge, admin-rights toggle (v2.5, per the §8 elevation rule)
 - `/admin/stats` per §6
 
 **Transactional emails (all through the `sendEmail()` module, English — except the magic link, see §8),** each with its trigger event:
