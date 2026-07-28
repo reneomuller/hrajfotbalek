@@ -34,7 +34,7 @@ points for any execution session**, not checklist items.
 
 | Phase | Gate | Status | Started | Completed | Notes |
 |-------|------|--------|---------|-----------|-------|
-| 0. Environment + seeded dev database | G1 | Not started | - | - | Human install steps; blocks everything |
+| 0. Environment: local Supabase stack | G1 | Not started | - | - | E1 ruled option A; Docker confirmed 2026-07-28. Blocks everything |
 | 1. Migration 21+23: profile columns, `skill_level`, `credit_reason.topup` | G1 | Not started | - | - | |
 | 2. `complete_signup_v2` + SQL suite | G1 | Not started | - | - | |
 | 3. Signup rebuilt: password account creation | G1 | Not started | - | - | |
@@ -63,21 +63,75 @@ points for any execution session**, not checklist items.
 
 ---
 
-## Phase 0 — Environment + seeded dev database
+## Phase 0 — Environment: local Supabase stack
 
-**Goal:** a non-production database that `npm run seed` and `npm run test:e2e` succeed against, and a pinned toolchain.
-**Depends on:** nothing. **Blocks:** every phase carrying an E2E criterion.
-**Duration:** 60 min of session time after the human install steps complete.
+**Goal:** a seeded local database that `npm run seed` and `npm run test:e2e` succeed against, with no path by which a test runner can reach production.
+**Depends on:** Docker Desktop, installed and running (confirmed 2026-07-28, E1 ruled **option A**).
+**Blocks:** every phase carrying an E2E criterion — which is most of them.
+**Duration:** 120 min of session time, plus one first-run image pull.
 
-Detail lives in `PHASE2_ENVIRONMENT.md`. This phase is complete when
-REQ-ENV-001 is satisfied and the versions in that document are confirmed on the
-machine that will run the build.
+Runbook detail lives in `PHASE2_ENVIRONMENT.md` §4. This phase is the code and
+configuration work that makes the local stack usable; the steps that are purely
+Oliver's are marked in that document.
+
+### 0.1 — Start the stack and pin its Postgres major
+
+`npx supabase start` brings up Postgres, Auth, Storage, Studio and Inbucket on
+the ports already set in `supabase/config.toml` (API 54321, DB 54322, Studio
+54323, Inbucket 54324, Storage 54327).
+
+**`[db]` in `config.toml` has no `major_version` key.** The CLI therefore starts
+whatever it defaults to, and production is **17.6**. A local stack on a
+different major would validate migrations against the wrong planner and the
+wrong enum semantics — and the `credit_reason.topup` sequencing (Phase 1) is
+reasoned from Postgres 17 behaviour. Read the major that `supabase start`
+reports; if it is not 17, pin `major_version = 17` and restart before any
+migration is written.
+
+### 0.2 — Teach the test tooling to prefer the local stack
+
+`playwright.config.ts` reads **`.env.local` by literal filename**
+(`loadEnvLocal()` at line 29, `path.resolve(process.cwd(), ".env.local")`), and
+throws at config time if it is missing. That file holds production credentials.
+As it stands there is no way to point the suite at the local stack without
+overwriting them, which is the single most dangerous shape this environment
+could take.
+
+The change:
+
+- `loadEnvLocal()` prefers **`.env.test.local`** when it exists and falls back
+  to `.env.local` otherwise, reporting in its error message which file it looked
+  for. Local-stack credentials go in `.env.test.local`; production credentials
+  stay in `.env.local`, untouched.
+- `.env.test.local` is gitignored.
+- **A production guard at config time:** if the resolved Supabase URL contains
+  the production project ref, the config **throws** rather than running. A suite
+  that creates and destroys data must not be one stray file away from doing it
+  to real players. This is cheap, and it is the guard that would have made
+  option B acceptable — there is no reason to skip it just because we chose A.
+- `npm run seed` and `npm run test:integration` resolve their env file the same
+  way, so "which database am I about to seed" has one answer, not three.
+
+### 0.3 — Schema, seed, baseline
+
+`npx supabase db reset` applies all 20 migrations from scratch against the local
+database — which also proves, for the first time, that the migration set is
+replayable end to end rather than only incrementally applied. Then `npm run
+seed`, then the suite.
 
 **Acceptance criteria**
-- [ ] [REQ-ENV-001] `npm run seed` succeeds against the dev database
-- [ ] [REQ-ENV-001] `npm run test:e2e` is green against it (28/28 as a baseline)
-- [ ] [REQ-ENV-002] `.env.local` for the dev database is separate from production credentials, and nothing in the repo points a test runner at production
-- [ ] Toolchain versions recorded in `PHASE2_ENVIRONMENT.md` match the machine
+- [ ] [REQ-ENV-001] `npx supabase status` reports every service running, and the Postgres major matches production's 17 (pinned in `config.toml` if it did not)
+- [ ] [REQ-ENV-001] `npx supabase db reset` applies all 20 migrations cleanly from empty — a replay failure here is a real finding, not an environment quirk
+- [ ] [REQ-ENV-001] `npm run seed` succeeds against the local stack
+- [ ] [REQ-ENV-001] `npm run test:e2e` is green against it — **28/28**, the Phase 1 baseline; anything less is the environment, not the product
+- [ ] [REQ-ENV-002] `.env.test.local` holds the local credentials, is gitignored, and `.env.local` is byte-for-byte unchanged
+- [ ] [REQ-ENV-002] The config guard throws when handed a production Supabase URL — asserted by a unit test, not by trying it
+- [ ] The Playwright suite's `EMAIL_DRY_RUN=on` forcing still holds against the local stack, so Inbucket receives auth mail and `sendEmail()` still logs rather than sends
+- [ ] Toolchain versions in `PHASE2_ENVIRONMENT.md` §2 re-confirmed on this machine
+
+**Files:** `playwright.config.ts`, `vitest.integration.config.ts`, `scripts/seed.ts` (env resolution only), `supabase/config.toml` (only if the major needs pinning), `.gitignore`, `PHASE2_ENVIRONMENT.md`
+
+**Explicitly not in this phase:** no product code, no migration, no schema change. If `db reset` surfaces a replay problem in the existing 20 migrations, that is reported at the Phase 0 boundary and fixed under its own decision — not absorbed silently here.
 
 ---
 
