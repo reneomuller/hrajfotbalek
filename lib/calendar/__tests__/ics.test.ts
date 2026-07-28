@@ -1,11 +1,13 @@
 import { describe, expect, it } from "vitest";
 import {
+  DEFAULT_DURATION_MINUTES,
   buildIcsEvent,
   escapeIcsText,
   foldIcsLine,
   formatIcsDate,
   icsFilename,
 } from "@/lib/calendar/ics";
+import { policy } from "@/lib/policy";
 
 const START = "2026-07-25T17:30:00.000Z";
 
@@ -101,15 +103,22 @@ describe("ics event", () => {
     expect(/[^\r]\n/.test(ics)).toBe(false);
   });
 
-  it("defaults to a 90-minute duration", () => {
+  it("defaults to the policy duration", () => {
     const ics = buildIcsEvent(base);
     expect(ics).toContain("DTSTART:20260725T173000Z");
-    expect(ics).toContain("DTEND:20260725T190000Z");
+    // 17:30 + the 60-minute policy default.
+    expect(ics).toContain("DTEND:20260725T183000Z");
+  });
+
+  it("takes its default from the policy module rather than its own constant", () => {
+    // The two used to be separate literals. A calendar entry that disagrees
+    // with the game page is the failure this guards.
+    expect(DEFAULT_DURATION_MINUTES).toBe(policy.game.durationMinutes);
   });
 
   it("honours an explicit duration", () => {
-    const ics = buildIcsEvent({ ...base, durationMinutes: 60 });
-    expect(ics).toContain("DTEND:20260725T183000Z");
+    const ics = buildIcsEvent({ ...base, durationMinutes: 90 });
+    expect(ics).toContain("DTEND:20260725T190000Z");
   });
 
   it("puts the venue in LOCATION", () => {

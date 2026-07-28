@@ -10,8 +10,15 @@
 
 import { policy } from "@/lib/policy";
 
-/** Default match length when the schema carries no end time. */
-export const DEFAULT_DURATION_MINUTES = 90;
+/**
+ * Default match length when the caller supplies no per-game duration.
+ *
+ * Derived from `policy.game.durationMinutes` rather than repeated: this file
+ * carried its own `90` while the policy module carried another, and two
+ * constants that must agree with nothing enforcing it is a calendar entry that
+ * disagrees with the page it came from.
+ */
+export const DEFAULT_DURATION_MINUTES = policy.game.durationMinutes;
 
 /**
  * Escapes a value for an iCalendar TEXT field (RFC 5545 §3.3.11).

@@ -1,8 +1,12 @@
-# hrajsport.cz — Phase 2 Specification (v1.1)
+# hrajsport.cz — Phase 2 Specification (v1.1.1)
 
 ## 0. Revision history
 
 - **v1.0 (2026-07-28)** — initial Phase 2 contract, drafted from the post-launch update inventory and Oliver's rulings of 24–28 Jul.
+- **v1.1.1 (2026-07-28)** — duration ruling, and one stale note removed.
+  - **`duration_minutes` is a free numeric input bounded 30–180, defaulting to 60** (§5.2). 60 is the standard match length; 90 is the occasional per-game choice. This supersedes the v1.1 note that left the 90-vs-60 gap open as a ruling still owed.
+  - **The fallback constant moves 90 → 60 to match**, shipped ahead of the column rather than with it. Safe only because the pre-launch reset emptied the games table, so no existing row's rendering changed — the same edit after rows exist silently rewrites how every past game reads. `lib/calendar/ics.ts` carried a **second, independent `90`**; it now derives from the policy module, so there is one fallback rather than two that must agree.
+  - The v1.1 note about `fix/prelaunch-hardening` being unmerged is removed: it merged as `c59627d`, and this document merged after it, so the precondition it described is satisfied.
 - **v1.1 (2026-07-28)** — pre-pipeline hardening pass. Every entry below is a decision recorded before the build rather than discovered at a gate.
   - **Organizer phone moves off `games` into its own table** (§5). `grant select on public.games to anon, authenticated` is table-wide, so a phone column on `games` would be world-readable the moment it existed, whatever the application did. It now follows the `game_roster_public` pattern: deny-by-default base table, `SECURITY DEFINER` read gated on the caller's active booking.
   - **The top-up flow gets its storage and its functions named** (§4): `credit_topups`, the `create_topup` / `confirm_topup` pair, a `'27'`-prefixed VS series distinct from the booking `'26'` series, and the `topup` addition to the `credit_ledger.reason` enum.
@@ -20,8 +24,6 @@
 
 This document is a **delta specification**. The Phase 1 contract (`letco-prompt-hrajfotbal-phase1-v2.md`, v2.5) remains in force for everything it covers; where this document is silent, v2.5 governs. Where this document speaks, it supersedes. §13 of the Phase 1 contract (spec-first dispute resolution, edit the contract before shipping divergence) applies to this document identically.
 
-> **Note on v2.5.** The v2.5 revision of the Phase 1 contract lands with the pending `fix/prelaunch-hardening` branch. Until that branch merges, `main` carries v2.3 and the references below resolve only on that branch. Merging it is a precondition for treating this document as active.
-
 **Context that changes everything about how Phase 2 is built:** the platform is **live in production with real players and real money**. Phase 1's greenfield liberties are gone. Hard rules for the build:
 
 - All work on feature branches; `main` deploys to production on push.
@@ -35,9 +37,8 @@ This document is a **delta specification**. The Phase 1 contract (`letco-prompt-
 These are not tasks inside a milestone; they are the conditions that make the milestones executable. Each is verifiable, and none of them is a coding session.
 
 1. **A non-production database exists and is seeded.** Either a local Supabase stack (`supabase/config.toml` already describes one) or a second hosted project. `.env.local` currently points every tool in the repo — including Playwright — at production, and production no longer holds a single account the suite can sign in as. Until this exists, **no E2E work is possible at all**, and §8's screenshot loop has nowhere to run. Verified by: `npm run seed` succeeding against it, then `npm run test:e2e` green against it.
-2. **`fix/prelaunch-hardening` is merged**, so the contract this document extends is the one in the repo (see the note above).
-3. **The hosted project's password policy is set** — minimum length 8, matching §3.1. The project default is 6, and client-side validation does not constrain the API.
-4. **The three auth email templates are inventoried and staged** (§3.1). Not switched on before the flow that needs them, but written and reviewed, because a wrong placeholder fails silently and Phase 1 lost a session to exactly that.
+2. **The hosted project's password policy is set** — minimum length 8, matching §3.1. The project default is 6, and client-side validation does not constrain the API.
+3. **The three auth email templates are inventoried and staged** (§3.1). Not switched on before the flow that needs them, but written and reviewed, because a wrong placeholder fails silently and Phase 1 lost a session to exactly that.
 
 ### 1.2 Supersessions of v2.5, in one place
 
@@ -140,10 +141,13 @@ So the phone does not go on `games`:
 
 ### 5.2 Duration
 
-- New nullable column `duration_minutes` on `games` (admin input at create/edit; default 60). Cards and detail render `TUE 28 JUL 19:30–20:30`.
-- **This supersedes the Phase 1 "policy constant only" ruling** — POLISH.md deferred the column until a differently-long game was actually scheduled, and it has been. The constant `policy.game.durationMinutes` remains the fallback for null rows and is not removed.
-- **The fallback and the input default are different numbers, deliberately.** The constant is **90**; the admin input defaults to **60**. Every game created before this column existed is a 90-minute game and must keep rendering as one, while new games default to the length now being scheduled. If that is not the intent, the ruling to make is whether historic rows are backfilled to 90 — not whether the constant changes, because changing it rewrites the past.
-- **Every site that currently reads the constant takes the column-with-fallback treatment**, not only the card and detail:
+- New nullable column `duration_minutes` on `games` — a **free numeric input at create/edit, bounded 30–180, defaulting to 60**. Cards and detail render `TUE 28 JUL 19:30–20:30`.
+- **60 is the standard; 90 is an occasional per-game choice.** That is the inversion of the Phase 1 assumption — the M5 ruling rested on "every game this product runs is in fact 90 minutes" — and it is why the column arrives now.
+- **This supersedes the Phase 1 "policy constant only" ruling** — POLISH.md deferred the column until a differently-long game was actually scheduled, and one has been. The constant `policy.game.durationMinutes` remains the fallback for null rows and is not removed.
+- **The constant moves 90 → 60 to match, and shipped ahead of the column** (2026-07-28). Safe only because the pre-launch reset had emptied the games table: with no rows, no existing game's rendering changed. The same edit made after rows exist rewrites how every past game reads, silently — so if this is ever revisited with live data, the question is whether to backfill, never whether to move the fallback.
+- **There is one fallback, not two.** `lib/calendar/ics.ts` carried its own `DEFAULT_DURATION_MINUTES = 90`, independent of the policy module. It now derives from `policy.game.durationMinutes`, with a test asserting they agree — two constants that must match and nothing enforcing it is a calendar entry that contradicts the page it came from.
+- **The constant stays display-only and `POLICY_VERSION` does not move.** Nothing transitions on a duration — no RPC, no sweep, no state change consults it — so this is not a policy window in the v2.5 §5 sense and stamping a new `policy_version` would falsely imply the cancellation, nudge and expiry windows had changed.
+- **Every site that reads the constant takes the column-with-fallback treatment** once the column ships, not only the card and detail:
   - the `.ics` builder — player-visible in a phone calendar, and covered by existing tests;
   - `lib/games/schemaOrg.ts` `endDate` — structured data fails silently, so its tests are the only feedback loop;
   - the "in progress" label wherever a game's end time is inferred.

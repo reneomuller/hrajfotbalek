@@ -57,25 +57,32 @@ export const policy = {
    * component, and it is display-only: nothing transitions on it. When games
    * gain an `ends_at` column this constant is deleted, not reinterpreted.
    *
-   * M5 DECISION — the constant stays for launch; no `ends_at` column is added.
-   * The open question from the M3 session was whether to make the end time a
-   * per-game column. Two things settle it against, for now:
+   * M5 DECISION (superseded) — the constant stayed for launch and no per-game
+   * column was added, on the reasoning that nothing but display reads an end
+   * time and every game this product ran was in fact 90 minutes. The second
+   * half of that stopped being true, which was always the stated signal to
+   * revisit: "when a game of a genuinely different length is scheduled".
    *
-   *   1. Nothing reads it but display — the "in progress" label and the
-   *      schema.org `endDate` (lib/games/schemaOrg.ts). No RPC, no sweep and
-   *      no state transition consults an end time, so a column would carry no
-   *      authority that this value does not already carry.
-   *   2. A column is not free: a migration, a required field in the admin game
-   *      form, validation against `starts_at`, a backfill for every existing
-   *      row, and one more thing to get wrong at 8pm on a Tuesday. Every game
-   *      this product runs is in fact 90 minutes.
+   * PHASE 2 RULING (2026-07-28, hrajsport.cz spec v1.1.1) — `games` gains a
+   * nullable `duration_minutes`, a free numeric input bounded 30–180 with the
+   * admin form defaulting to 60. **60 is the standard match length; 90 is now
+   * the occasional per-game choice**, which is the exact inversion of the M5
+   * assumption, so this constant moves 90 -> 60 with it.
    *
-   * Revisit when a game of a genuinely different length is scheduled — that is
-   * the signal, not the passage of time. The `venues` table shows the shape it
-   * would take: introduce it nullable, fall back to this constant when null.
+   * Changing it was safe to do ahead of the column because the games table was
+   * empty at the time — the pre-launch reset cleared it — so no existing row's
+   * rendering changed. It would NOT have been safe afterwards: with rows in
+   * place, editing the fallback silently rewrites how every past game reads.
+   *
+   * This stays display-only — nothing transitions on it, so it is not a policy
+   * window and `POLICY_VERSION` does not move. Once `duration_minutes` ships,
+   * every time-range display (card, detail, `.ics`, schema.org `endDate`) reads
+   * the per-game value and falls back here only when it is null. This is the
+   * one fallback: `lib/calendar/ics.ts` derives its default from this value
+   * rather than carrying its own, so the two cannot drift apart again.
    */
   game: {
-    durationMinutes: 90,
+    durationMinutes: 60,
   },
 } as const;
 
