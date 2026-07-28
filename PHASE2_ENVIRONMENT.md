@@ -70,7 +70,7 @@ unit test behind it, not as advice.
 | Supabase CLI | 2.109.1 (devDependency) | fine |
 | Playwright | 1.61.1, browsers `chromium-1228`, `chromium_headless_shell-1228`, `ffmpeg-1011` installed | fine — the suite runs one project, `devices["Pixel 7"]`, which is Chromium; Firefox and WebKit are not needed and not installed |
 | Vercel CLI | 54.9.1 | fine |
-| Docker Desktop | **installed and running** (Oliver, 2026-07-28) | required by option A; version to be recorded at E2's sanity check |
+| Docker Desktop | **29.6.2** (server 29.6.2, aarch64, 8 GB allocated) | verified at Phase 0 |
 | Podman / Colima | absent | not needed |
 | `gh` (GitHub CLI) | **absent** | optional; only affects PR creation from the terminal |
 | `psql` | absent | not required — `scripts/apply-migration.mjs` and `supabase/tests/run.mjs` both use the `pg` package for exactly this reason |
@@ -169,10 +169,10 @@ forgotten: the hosted password minimum of 8 and the three auth email templates
 
 - [x] **E1 decided** — option A, the local Supabase stack
 - [x] **E2 complete** — Docker Desktop installed and running
-- [ ] E3: stack up, every service reporting, Postgres major confirmed as 17 (pinned in `config.toml` if it was not)
-- [ ] E4: `.env.test.local` holds the local credentials, `.env.local` byte-for-byte unchanged, and the production-URL guard has a passing unit test
-- [ ] E5: `db reset` replays all 20 migrations from empty, then `npm run seed` exits 0
-- [ ] E6: 28/28 E2E green against the local stack
-- [ ] The version table in §2 re-checked, with the Docker version filled in
+- [x] **E3** — stack up on **PG 17.6**, matching production exactly; `major_version = 17` was already pinned. `imgproxy` and the pooler stay stopped; neither is used.
+- [x] **E4** — `.env.test.local` holds the local credentials and is gitignored; `.env.local` verified byte-for-byte unchanged by sha256 before and after (`433f1d70…`). The guard has 14 passing unit tests. Three runners now resolve their database the same way: Playwright, `npm run seed` / `test:integration`, and `supabase/tests/run.mjs`.
+- [x] **E5** — `db reset` replayed all 20 migrations from empty with no error, and `npm run seed` exits 0 after the stale waitlist assertion was corrected.
+- [x] **E6** — **28/28 E2E green** from a fresh reset + seed, in 1.2 minutes.
+- [x] The version table in §2 re-checked: **Docker 29.6.2**, server 29.6.2, aarch64, 8 GB allocated.
 
 Until every box is ticked, the execution plan's Phase 1 does not start.

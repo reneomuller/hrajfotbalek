@@ -132,9 +132,9 @@ a rollback file, per repo convention.
 
 | # | Migration | Contents | Notes |
 |---|---|---|---|
-| 21 | `player_profile_columns` | `players`: `country text`, `skill_level skill_level`, `tos_accepted_at timestamptz`, `tos_version text`, `photo_path text` — all nullable. New enum `skill_level (beginner\|intermediate\|advanced)` | No UPDATE grants (F11) |
-| 22 | `rpc_complete_signup_v2` | New function with the full parameter list; old `complete_signup` left orphaned (F2, R4) | Orphan cleanup is a later gated migration |
-| 23 | `credit_reason_topup` | `alter type credit_reason add value 'topup'` | **Alone in its migration** (F6) |
+| 21 | `player_profile_columns` ✅ | `players`: `country text`, `skill_level skill_level`, `tos_accepted_at timestamptz`, `tos_version text`, `photo_path text` — all nullable. New enum `skill_level (beginner\|intermediate\|advanced)`. CHECKs: ISO-3166 shape, photo-path shape, TOS pair | No UPDATE grants (F11) |
+| 22 | `credit_reason_topup` ✅ | `alter type credit_reason add value 'topup'` | **Alone in its migration** (F6). Shipped ahead of `complete_signup_v2` so Phase 1's two migrations land together; the rollback documents why there is no clean down |
+| 23 | `rpc_complete_signup_v2` | New function with the full parameter list; old `complete_signup` left orphaned (F2, R4) | Orphan cleanup is a later gated migration |
 | 24 | `credit_topups` | Table + `'27'` sequence + `next_topup_code()` + RLS + owner-read grant | Uses the enum from 23 |
 | 25 | `rpc_topups` | `create_topup`, `confirm_topup` | Ledger + status + event in one transaction |
 | 26 | `storage_profile_photos` | Bucket, size/MIME limits, `storage.objects` policies | Public read, own-object write |

@@ -34,8 +34,8 @@ points for any execution session**, not checklist items.
 
 | Phase | Gate | Status | Started | Completed | Notes |
 |-------|------|--------|---------|-----------|-------|
-| 0. Environment: local Supabase stack | G1 | Not started | - | - | E1 ruled option A; Docker confirmed 2026-07-28. Blocks everything |
-| 1. Migration 21+23: profile columns, `skill_level`, `credit_reason.topup` | G1 | Not started | - | - | |
+| 0. Environment: local Supabase stack | G1 | **Complete** | 2026-07-28 | 2026-07-28 | `ee48b93`. Stack on PG 17.6 (= production); 20 migrations replay clean; `.env.test.local` split + local-only guard; `reuseExistingServer` hole closed; 28/28 E2E |
+| 1. Migration 21+22: profile columns, `skill_level`, `credit_reason.topup` | G1 | **Complete** | 2026-07-28 | 2026-07-28 | Enum shipped as **22**, not 23 — `complete_signup_v2` moves to 23. `player_profile_columns.sql` 25/25; 17/17 suites |
 | 2. `complete_signup_v2` + SQL suite | G1 | Not started | - | - | |
 | 3. Signup rebuilt: password account creation | G1 | Not started | - | - | |
 | 4. `/terms` + `content/terms.md` placeholder | G1 | Not started | - | - | Human copy owed |

@@ -1,0 +1,25 @@
+-- =============================================================================
+-- Migration 22 — `topup` joins the credit_reason enum
+--
+-- ALONE IN ITS OWN MIGRATION, DELIBERATELY. Postgres will not let a new enum
+-- value be USED in the same transaction that adds it — `alter type … add value`
+-- commits the label, but any statement referencing it before that transaction
+-- ends raises "unsafe use of new value". The migration that writes
+-- `reason = 'topup'` (the top-up RPCs, migration 25) therefore cannot be the
+-- migration that adds it, and the failure if they were combined would arrive at
+-- deploy time rather than at review time.
+--
+-- Splitting it is not overhead; it is the only shape that works.
+--
+-- WHAT IT MEANS. `credit_reason` describes WHY a ledger row exists, and every
+-- existing value is a consequence of something else — a cancellation, an admin
+-- decision, a redemption, a correction. `topup` is the first that is a player
+-- deliberately putting money in. It is the credit side of a payment the player
+-- initiated, and it is not interchangeable with `admin_grant`: a grant is a
+-- gift the platform chose to make, a top-up is money that arrived in the bank.
+-- Telling them apart is what makes "confirmed revenue" (§7) a real number.
+--
+-- Rollback: supabase/rollback/20260728100100_credit_reason_topup_down.sql
+-- =============================================================================
+
+alter type public.credit_reason add value if not exists 'topup';

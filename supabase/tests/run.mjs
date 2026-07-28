@@ -14,7 +14,8 @@
 // runner reads the printed result: any row containing FAIL, or a missing
 // `ALL PASS`, fails the suite and sets a non-zero exit code.
 //
-// SUPABASE_DB_URL is read from .env.local and never printed.
+// SUPABASE_DB_URL comes from .env.test.local (falling back to .env.local),
+// is checked to be a local stack, and is never printed.
 // =============================================================================
 
 import { readFileSync, readdirSync } from 'node:fs';
@@ -23,15 +24,61 @@ import path from 'node:path';
 import pg from 'pg';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
-const envPath = path.resolve(here, '../../.env.local');
+
+/*
+ * `.env.test.local` first, `.env.local` only as a fallback.
+ *
+ * These suites wrap themselves in `begin; … rollback;`, which makes them SAFE
+ * to run against a live database and is why they were originally pointed at
+ * one. Two things have changed. The suites now create fixtures for features
+ * that do not exist in production yet, and — more to the point — "safe because
+ * every suite remembers to roll back" is a property maintained by hand across
+ * seventeen files. A local stack costs nothing and removes the question.
+ *
+ * The URL is checked below, so a fallback to `.env.local` does not silently
+ * become a production run: it stops.
+ */
+const candidates = ['.env.test.local', '.env.local'];
 
 function readDbUrl() {
-  const raw = readFileSync(envPath, 'utf8');
-  for (const line of raw.split('\n')) {
-    const match = line.match(/^\s*SUPABASE_DB_URL\s*=\s*(.*)$/);
-    if (match) return match[1].trim().replace(/^["']|["']$/g, '');
+  for (const candidate of candidates) {
+    let raw;
+    try {
+      raw = readFileSync(path.resolve(here, '../..', candidate), 'utf8');
+    } catch {
+      continue;
+    }
+    for (const line of raw.split('\n')) {
+      const match = line.match(/^\s*SUPABASE_DB_URL\s*=\s*(.*)$/);
+      if (match) {
+        return { url: match[1].trim().replace(/^["']|["']$/g, ''), source: candidate };
+      }
+    }
   }
-  throw new Error('SUPABASE_DB_URL not found in .env.local');
+  throw new Error(`SUPABASE_DB_URL not found in ${candidates.join(' or ')}`);
+}
+
+/** Local-only, on the same terms as lib/env/testDatabase.ts. */
+function assertLocal(url, source) {
+  const allow = ['1', 'true', 'yes'].includes(
+    String(process.env.ALLOW_REMOTE_TEST_DB ?? '').toLowerCase(),
+  );
+  if (allow) return;
+
+  let host;
+  try {
+    host = new URL(url).hostname;
+  } catch {
+    host = null;
+  }
+  if (host && ['localhost', '127.0.0.1', '::1', 'host.docker.internal'].includes(host)) return;
+
+  throw new Error(
+    `The SQL suites refuse to run against the database in ${source}.\n` +
+      'Only a local Supabase stack is allowed. Run `npx supabase start` and put ' +
+      'its DB_URL in .env.test.local.\n' +
+      'Set ALLOW_REMOTE_TEST_DB=1 for one invocation if you genuinely mean to.',
+  );
 }
 
 const requested = process.argv.slice(2);
@@ -41,7 +88,8 @@ const suites = requested.length
       .filter((f) => f.endsWith('.sql'))
       .sort();
 
-const dbUrl = readDbUrl();
+const { url: dbUrl, source: dbSource } = readDbUrl();
+assertLocal(dbUrl, dbSource);
 let failed = 0;
 
 for (const suite of suites) {

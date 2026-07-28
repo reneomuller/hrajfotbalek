@@ -4,6 +4,7 @@ import { moveKickoff } from "./helpers/clock.ts";
 import {
   createScratchGame,
   destroyScratchGame,
+  setWalletTo,
   type ScratchGame,
 } from "./helpers/scaffold.ts";
 
@@ -25,6 +26,26 @@ let game: ScratchGame;
 
 test.beforeEach(async () => {
   game = await createScratchGame();
+
+  /*
+   * Zero the wallets this file books with, BEFORE any booking is made.
+   *
+   * These specs are about payment state — reserved vs confirmed, the paid /
+   * holding / cash / free badges — and a player with wallet credit does not
+   * produce a `reserved` booking at all: `create_booking` applies the credit
+   * and confirms instantly, which is correct behaviour and the wrong starting
+   * position for an assertion about confirming a payment by hand.
+   *
+   * A fresh seed gives RealRunner a 200 CZK balance, which is exactly the price
+   * of a scratch game. Every other spec file already normalises the wallet it
+   * depends on; this one did not, so it passed only when an earlier run had
+   * happened to leave the balance at zero — and failed on a freshly seeded
+   * database, which is the one state that should be most reliable. That is the
+   * failure mode CLAUDE.md warns about: a suite whose result depends on how
+   * often it has been run.
+   */
+  await setWalletTo(players.runner.id, 0);
+  await setWalletTo(players.creditPartial.id, 0);
 });
 
 test.afterEach(async () => {

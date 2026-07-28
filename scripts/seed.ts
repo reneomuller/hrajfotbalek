@@ -507,11 +507,30 @@ async function verify(): Promise<void> {
     problems.push("no booking was derived as payment_method=credit");
   }
 
+  /*
+   * Two waitlist rows, and exactly two.
+   *
+   * This check used to assert ZERO — correct for seed v1, and left behind when
+   * Phase 17 started queueing creditRich and creditPartial on the full game
+   * through `join_waitlist`. From that commit until this one the seed failed
+   * its own verification on every fresh database, which nobody noticed because
+   * the failure only appears when the seed is run against an empty one.
+   *
+   * Asserting the expected count rather than deleting the check keeps what it
+   * was for: the rows have to come from the RPC (so each carries its
+   * `waitlist_joined` event for the depth metric), and a direct insert or a
+   * duplicated join would still show up here.
+   */
+  const EXPECTED_WAITLIST_ROWS = 2;
   const { count: waitlistCount } = await admin
     .from("waitlist")
     .select("*", { count: "exact", head: true })
     .in("player_id", allPlayerIds);
-  if ((waitlistCount ?? 0) !== 0) problems.push(`seed v1 must create no waitlist rows (found ${waitlistCount})`);
+  if ((waitlistCount ?? 0) !== EXPECTED_WAITLIST_ROWS) {
+    problems.push(
+      `seed must create exactly ${EXPECTED_WAITLIST_ROWS} waitlist rows (found ${waitlistCount})`,
+    );
+  }
 
   // No synthetic auth-funnel events: those come from a real signup at the gate.
   const { data: authEvents } = await admin

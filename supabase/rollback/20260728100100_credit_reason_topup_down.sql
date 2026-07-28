@@ -1,0 +1,22 @@
+-- Rollback for 20260728100100_credit_reason_topup.sql
+--
+-- THERE IS NO CLEAN DOWN FOR THIS ONE, and pretending otherwise would be worse
+-- than saying so. Postgres has no `alter type … drop value`. Removing a label
+-- means recreating the type without it and rewriting every column that uses it:
+--
+--   1. rename credit_reason aside
+--   2. create the type afresh without 'topup'
+--   3. alter credit_ledger.reason to the new type with a USING cast
+--   4. drop the renamed type
+--
+-- Step 3 fails outright if any row already reads 'topup' — which is the correct
+-- outcome. Those rows are money a player paid in; they cannot be recategorised
+-- into a reason that misdescribes them just to make a rollback tidy. If a
+-- rollback is genuinely needed, the sequence above belongs in a gated migration
+-- of its own, written against the data that exists at the time.
+--
+-- Leaving an unused label in place costs nothing: no column is constrained by
+-- it, no query enumerates the type, and re-applying the forward migration is a
+-- no-op thanks to `if not exists`.
+
+-- Intentionally empty.
