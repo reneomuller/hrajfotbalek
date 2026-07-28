@@ -90,11 +90,13 @@ above in the meantime.
 
 ## 3. Facts that change how migrations are written
 
-- **Production Postgres is 17.6.** `alter type … add value` is therefore
-  permitted inside a transaction, but the new value still cannot be *used* in
-  the same transaction — which is exactly why `credit_reason.topup` ships alone
-  in Phase 1 of the execution plan (F6). The local stack must be on a matching
-  major; check `supabase start` output before writing migration 23.
+- **Production Postgres is 17.6, and the local stack is 17.6.** Verified at
+  Phase 0: `config.toml` already pins `major_version = 17` (line 42 — an earlier
+  draft of this document said the key was absent, which was a truncated grep
+  rather than a missing key). `alter type … add value` is therefore permitted
+  inside a transaction, but the new value still cannot be *used* in the same
+  transaction — which is exactly why `credit_reason.topup` ships alone in
+  Phase 1 of the execution plan (F6).
 - **`pg_graphql` is not installed.** Nothing in Phase 2 depends on it; noted so
   nobody plans a GraphQL shortcut.
 - **`storage.buckets` is empty.** Phase 7 creates the first bucket this project
@@ -124,10 +126,10 @@ npx supabase start        # first run pulls several GB of images
 npx supabase status
 ```
 *Verify:* every service running on the `config.toml` ports (API 54321, DB 54322,
-Studio 54323, Inbucket 54324, Storage 54327), and **the Postgres major is 17**,
-matching production's 17.6. `[db]` carries no `major_version` key, so if the CLI
-started something else, pin `major_version = 17` and restart before any
-migration is written against it (§3).
+Studio 54323, Mailpit/Inbucket 54324, Storage 54327), and **the Postgres major
+is 17**, matching production's 17.6. ✅ Done — the stack reported 17.6, and
+`major_version = 17` was already pinned in `config.toml`, so nothing needed
+changing. `imgproxy` and the connection pooler stay stopped; neither is used.
 
 **E4 — Split the credentials.** *(session)*
 Local URL and keys into **`.env.test.local`**; production stays in `.env.local`,

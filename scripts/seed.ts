@@ -36,6 +36,7 @@ import {
   players,
   type PlayerFixture,
 } from "./fixtures.ts";
+import { assertTestDatabaseUrl, remoteAllowed } from "../lib/env/testDatabase.ts";
 
 // -----------------------------------------------------------------------------
 // clients
@@ -65,6 +66,18 @@ if (process.env.NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY) {
 if (SERVICE_ROLE_KEY === ANON_KEY) {
   throw new Error("SUPABASE_SERVICE_ROLE_KEY is identical to the anon key.");
 }
+
+/*
+ * The seed creates auth users with a password that is committed to this
+ * repository. That is acceptable on a stack running on this machine and
+ * nowhere else — it is exactly the shape that had to be purged from production
+ * before launch. The npm script points at `.env.test.local`; this guard is what
+ * makes the choice of file non-optional.
+ */
+assertTestDatabaseUrl(SUPABASE_URL, {
+  runner: "npm run seed",
+  allowRemote: remoteAllowed(process.env),
+});
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 const admin: SupabaseClient<any> = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {

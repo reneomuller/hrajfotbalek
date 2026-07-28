@@ -1,6 +1,11 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { defineConfig, devices } from "@playwright/test";
+import {
+  assertTestDatabaseUrl,
+  parseEnvFile,
+  remoteAllowed,
+} from "./lib/env/testDatabase";
 
 /**
  * E2E harness.
@@ -19,40 +24,53 @@ import { defineConfig, devices } from "@playwright/test";
  */
 
 /**
- * `.env.local`, loaded here rather than assumed.
+ * Credentials, loaded here rather than assumed — and checked before use.
  *
  * Playwright does not read dotenv files, and the spec helpers need the
  * Supabase URL and keys in `process.env` before the first test file is even
  * imported. Failing at config time with a clear message beats failing inside a
  * helper with "supabaseUrl is required".
+ *
+ * WHICH FILE, AND WHY IT IS NOT `.env.local`. This suite creates and destroys
+ * data. `.env.local` holds PRODUCTION credentials, because that is the file the
+ * app and the ops scripts read. Preferring `.env.test.local` keeps the two
+ * apart by name rather than by memory, and `assertTestDatabaseUrl` then refuses
+ * anything that is not a stack on this machine — so a missing test file falls
+ * back to `.env.local` and *stops*, rather than quietly running the suite
+ * against real players.
  */
-function loadEnvLocal(): Record<string, string> {
-  const file = path.resolve(process.cwd(), ".env.local");
-  const env: Record<string, string> = {};
+function loadTestEnv(): { env: Record<string, string>; source: string } {
+  const candidates = [".env.test.local", ".env.local"];
 
-  let raw: string;
-  try {
-    raw = readFileSync(file, "utf8");
-  } catch {
-    throw new Error(
-      ".env.local not found. The E2E suite runs against the seeded dev " +
-        "database and needs the same credentials the app uses.",
-    );
+  for (const candidate of candidates) {
+    let raw: string;
+    try {
+      raw = readFileSync(path.resolve(process.cwd(), candidate), "utf8");
+    } catch {
+      continue;
+    }
+
+    const env = parseEnvFile(raw);
+    for (const [key, value] of Object.entries(env)) {
+      // Do not clobber a value deliberately exported by the caller.
+      process.env[key] ??= value;
+    }
+    return { env, source: candidate };
   }
 
-  for (const line of raw.split("\n")) {
-    const match = line.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*)$/);
-    if (!match) continue;
-    const value = match[2].trim().replace(/^["']|["']$/g, "");
-    env[match[1]] = value;
-    // Do not clobber a value deliberately exported by the caller.
-    process.env[match[1]] ??= value;
-  }
-
-  return env;
+  throw new Error(
+    `No environment file found (looked for ${candidates.join(", ")}). The E2E ` +
+      `suite runs against a local Supabase stack: \`npx supabase start\`, then ` +
+      `put the printed URL and keys in .env.test.local.`,
+  );
 }
 
-const envLocal = loadEnvLocal();
+const { env: envLocal, source: envSource } = loadTestEnv();
+
+assertTestDatabaseUrl(process.env.NEXT_PUBLIC_SUPABASE_URL, {
+  runner: `The Playwright suite (credentials from ${envSource})`,
+  allowRemote: remoteAllowed(process.env),
+});
 
 /**
  * Email stays dry-run for the whole suite, whatever `.env.local` says.
@@ -90,7 +108,24 @@ export default defineConfig({
   webServer: {
     command: "npm run dev",
     url: "http://localhost:3000",
-    reuseExistingServer: !process.env.CI,
+    /*
+     * NEVER adopt a server this config did not start.
+     *
+     * `reuseExistingServer: !process.env.CI` meant that any `npm run dev`
+     * already on :3000 was used as-is — including one started from
+     * `.env.local`, i.e. pointed at PRODUCTION, while the specs wrote their
+     * fixtures to the local stack. The result is not a clean failure: the specs
+     * create a game locally, the browser asks production for it, and the page
+     * says "that game does not exist" while the session cookies (minted against
+     * a different project) read as signed out. Fourteen specs failed that way
+     * before this line changed, and the mode is worse than the failure — the
+     * same setup with a live session is a test suite operating on real data.
+     *
+     * Starting our own server every time costs a few seconds and makes the env
+     * in `webServerEnv` authoritative. A port already in use now fails loudly,
+     * which is the correct outcome: stop the stray server.
+     */
+    reuseExistingServer: false,
     timeout: 120_000,
     env: webServerEnv,
   },

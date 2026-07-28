@@ -80,13 +80,14 @@ Oliver's are marked in that document.
 the ports already set in `supabase/config.toml` (API 54321, DB 54322, Studio
 54323, Inbucket 54324, Storage 54327).
 
-**`[db]` in `config.toml` has no `major_version` key.** The CLI therefore starts
-whatever it defaults to, and production is **17.6**. A local stack on a
-different major would validate migrations against the wrong planner and the
-wrong enum semantics — and the `credit_reason.topup` sequencing (Phase 1) is
-reasoned from Postgres 17 behaviour. Read the major that `supabase start`
-reports; if it is not 17, pin `major_version = 17` and restart before any
-migration is written.
+**Resolved at execution: `config.toml` already pins `major_version = 17`** (line
+42), and the stack came up on **17.6** — the same patch as production. An
+earlier draft of this section claimed the key was absent; that was a truncated
+grep, not a missing key, and the correction is recorded here rather than
+quietly dropped. Nothing to pin. The check itself stays in the acceptance
+criteria: a local stack on a different major would validate migrations against
+the wrong planner and the wrong enum semantics, and the `credit_reason.topup`
+sequencing in Phase 1 is reasoned from Postgres 17 behaviour.
 
 ### 0.2 — Teach the test tooling to prefer the local stack
 
