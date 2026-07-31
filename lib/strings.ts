@@ -105,7 +105,32 @@ export const strings = {
 
   auth: {
     loginTitle: "Sign in",
-    loginLede: "We email you a link. No password to remember.",
+    loginLede: "Email and password. If you have never set one, use the code below.",
+    signInSubmit: "Sign in",
+    /*
+     * One message for a wrong password and an unknown address, deliberately.
+     * Telling them apart tells an attacker which half they got right, and tells
+     * a real person nothing they can act on differently.
+     */
+    invalidCredentials: "That email and password do not match.",
+    emailNotConfirmed:
+      "Confirm your email first — open the link we sent when you signed up.",
+
+    /*
+     * The Phase 1 code path, relabelled. It is no longer the way in; it is the
+     * way in for someone who has no password yet, and the recovery route for
+     * someone who has forgotten theirs. It is also the rollback if password
+     * sign-in ever fails, which is why it stays exactly as it was underneath.
+     */
+    forgotPasswordLead: "Forgotten your password, or never set one?",
+    forgotPasswordCta: "Email me a code",
+
+    setPasswordTitle: "Set a password",
+    setPasswordLede:
+      "You are signed in. Choose a password and next time you can skip the email entirely.",
+    setPasswordSubmit: "Save password",
+    setPasswordSkip: "Not now — I'll keep using the code",
+    setPasswordFailed: "We could not save that password. Please try again.",
     emailLabel: "Email",
     emailPlaceholder: "you@example.com",
     sendLink: "Send link",

@@ -39,7 +39,7 @@ points for any execution session**, not checklist items.
 | 2. `complete_signup_v2` + SQL suite | G1 | **Complete** | 2026-07-31 | 2026-07-31 | Migration 23. Two consents (GDPR + TOS) kept separate — see the phase note. `complete_signup_v2.sql` 28/28; 18/18 suites |
 | 3. Signup rebuilt: password account creation | G1 | **Complete** | 2026-08-01 | 2026-08-01 | Flow inverted; profile carried in auth metadata through verification. Both confirmation modes handled. E2E specs land in Phase 11 |
 | 4. `/terms` + terms content | G1 | **Complete** | 2026-08-01 | 2026-08-01 | Real copy delivered: EN + CZ, version 1.0. RU deliberately absent — English shown with a notice. **`/privacy` copy still owed** |
-| 5. Login rework + existing-account migration | G1 | Not started | - | - | R1 |
+| 5. Login rework + existing-account migration | G1 | **Complete** | 2026-08-01 | 2026-08-01 | Password primary; OTP relabelled and unchanged underneath as the R1 rollback; `/login/set-password` is a page, not a gate. Production accounts migrate at the gate, by hand |
 | 6. Account: change password, change email | G1 | Not started | - | - | |
 | 7. Storage bucket + profile photos | G1 | Not started | - | - | |
 | 8. `credit_topups` + `create_topup` / `confirm_topup` + SQL suite | G1 | Not started | - | - | R3 |

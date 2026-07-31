@@ -75,7 +75,20 @@ export const cs: StringsOverlay = {
 
   auth: {
     loginTitle: "Přihlášení",
-    loginLede: "Pošleme ti odkaz e-mailem. Žádné heslo si pamatovat nemusíš.",
+    loginLede: "E-mail a heslo. Pokud sis heslo ještě nenastavil, použij kód níže.",
+    signInSubmit: "Přihlásit se",
+    invalidCredentials: "E-mail a heslo spolu nesouhlasí.",
+    emailNotConfirmed:
+      "Nejdřív potvrď e-mail — otevři odkaz, který jsme ti poslali při registraci.",
+
+    forgotPasswordLead: "Zapomněl jsi heslo, nebo sis ho ještě nenastavil?",
+    forgotPasswordCta: "Poslat mi kód",
+
+    setPasswordTitle: "Nastav si heslo",
+    setPasswordLede: "Jsi přihlášený. Zvol si heslo a příště se obejdeš bez e-mailu.",
+    setPasswordSubmit: "Uložit heslo",
+    setPasswordSkip: "Teď ne — zůstanu u kódu",
+    setPasswordFailed: "Heslo se nepodařilo uložit. Zkus to prosím znovu.",
     emailLabel: "E-mail",
     sendLink: "Poslat odkaz",
     linkSent: "Koukni do schránky — odkaz je na cestě.",

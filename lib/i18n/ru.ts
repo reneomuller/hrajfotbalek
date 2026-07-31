@@ -74,7 +74,20 @@ export const ru: StringsOverlay = {
 
   auth: {
     loginTitle: "Вход",
-    loginLede: "Пришлём ссылку на почту. Пароль запоминать не нужно.",
+    loginLede: "Почта и пароль. Если пароля ещё нет, используй код ниже.",
+    signInSubmit: "Войти",
+    invalidCredentials: "Почта и пароль не совпадают.",
+    emailNotConfirmed:
+      "Сначала подтверди почту — открой ссылку, которую мы прислали при регистрации.",
+
+    forgotPasswordLead: "Забыл пароль или ещё не задавал его?",
+    forgotPasswordCta: "Прислать код",
+
+    setPasswordTitle: "Задай пароль",
+    setPasswordLede: "Ты вошёл. Выбери пароль — и в следующий раз почта не понадобится.",
+    setPasswordSubmit: "Сохранить пароль",
+    setPasswordSkip: "Не сейчас — останусь на коде",
+    setPasswordFailed: "Не удалось сохранить пароль. Попробуй ещё раз.",
     emailLabel: "Почта",
     sendLink: "Отправить ссылку",
     linkSent: "Загляни в почту — ссылка уже летит.",
