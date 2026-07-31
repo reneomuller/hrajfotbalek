@@ -36,7 +36,7 @@ points for any execution session**, not checklist items.
 |-------|------|--------|---------|-----------|-------|
 | 0. Environment: local Supabase stack | G1 | **Complete** | 2026-07-28 | 2026-07-28 | `ee48b93`. Stack on PG 17.6 (= production); 20 migrations replay clean; `.env.test.local` split + local-only guard; `reuseExistingServer` hole closed; 28/28 E2E |
 | 1. Migration 21+22: profile columns, `skill_level`, `credit_reason.topup` | G1 | **Complete** | 2026-07-28 | 2026-07-28 | Enum shipped as **22**, not 23 — `complete_signup_v2` moves to 23. `player_profile_columns.sql` 25/25; 17/17 suites |
-| 2. `complete_signup_v2` + SQL suite | G1 | Not started | - | - | |
+| 2. `complete_signup_v2` + SQL suite | G1 | **Complete** | 2026-07-31 | 2026-07-31 | Migration 23. Two consents (GDPR + TOS) kept separate — see the phase note. `complete_signup_v2.sql` 28/28; 18/18 suites |
 | 3. Signup rebuilt: password account creation | G1 | Not started | - | - | |
 | 4. `/terms` + `content/terms.md` placeholder | G1 | Not started | - | - | Human copy owed |
 | 5. Login rework + existing-account migration | G1 | Not started | - | - | R1 |
@@ -168,13 +168,29 @@ a destructive migration. `complete_signup` stays in place, orphaned, and its
 removal is a later gated item.
 
 **Acceptance criteria**
-- [ ] [REQ-AUTH-005] Nickname charset and case-insensitive uniqueness enforced in the function
-- [ ] [REQ-AUTH-009] TOS required; `tos_accepted_at` and `tos_version` stamped
-- [ ] Country validated as ISO 3166-1 alpha-2; skill required
-- [ ] Player row + `account_created` written in one transaction
-- [ ] Named errors: `NICKNAME_INVALID`, `NICKNAME_TAKEN`, `CONSENT_REQUIRED`, `TOS_REQUIRED`, `COUNTRY_INVALID`, `SKILL_REQUIRED`
-- [ ] [REQ-SEC-001] Identity from `auth.uid()`; no session → refused
-- [ ] SQL suite green using the strict `count(_p::text)` probe
+- [x] [REQ-AUTH-005] Nickname charset and case-insensitive uniqueness enforced in the function
+- [x] [REQ-AUTH-009] TOS required; `tos_accepted_at` and `tos_version` stamped
+- [x] Country validated as ISO 3166-1 alpha-2; skill required
+- [x] Player row + `account_created` written in one transaction
+- [x] Named errors: `NICKNAME_INVALID`, `NICKNAME_TAKEN`, `CONSENT_REQUIRED`, `TOS_REQUIRED`, `TOS_VERSION_REQUIRED`, `COUNTRY_INVALID`, `SKILL_REQUIRED`
+- [x] [REQ-SEC-001] Identity from `auth.uid()`; no session → refused
+- [x] SQL suite green using the strict `count(_p::text)` probe
+
+**Phase note — two consents, kept separate.** Contract §3.1 lists a TOS checkbox
+and no GDPR checkbox; v2.5 §8 requires a GDPR consent checkbox and Phase 2 is
+silent on removing it, so under §1 ("where this document is silent, v2.5
+governs") both are required. They are also different acts — agreeing to the
+rules of a booking service is not consenting to the processing of personal data
+— and v1's own comment records why bundling them makes the consent non-specific
+and therefore invalid. `complete_signup_v2` therefore takes `p_gdpr_consent` and
+`p_tos_accepted` separately, with distinct errors, and Phase 3's form will show
+**two checkboxes**. Flagged for a ruling: collapsing them into one is a legal
+call, not an engineering one.
+
+**Also added beyond the plan:** `TOS_VERSION_REQUIRED`. A TOS acceptance that
+does not say which revision was shown is not auditable, and the column CHECK
+from migration 21 would have rejected it as a raw constraint violation rather
+than a named error.
 
 **Files:** migration + rollback, `supabase/tests/complete_signup_v2.sql`
 
