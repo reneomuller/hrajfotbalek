@@ -1,6 +1,12 @@
-# hrajsport.cz — Phase 2 Specification (v1.1.1)
+# hrajsport.cz — Phase 2 Specification (v1.1.2)
 
 ## 0. Revision history
+
+- **v1.1.2 (2026-07-31)** — four display rulings, all G2. None changes the booking machinery; capacity remains the sole booking limit.
+  - **Format is never derived from capacity** (§5.3a). Cards and detail render the admin-entered string verbatim. A new optional `subs_per_team` renders alongside it — "6v6 · 2 subs per team" — and neither field constrains booking.
+  - **The games list is calendar-density on mobile** (§5.5). Multiple games per screen. The current card, at roughly three-quarters of a phone screen, is a defect; the venue-photo swap helps but does not discharge this.
+  - **The game page is state-aware** (§5.6). A player holding an active booking sees their booking — payment state and cancel action — not a claim CTA. The claim CTA renders only for non-holders while spots remain.
+  - **Semi-transparent panels get ~20% more opaque** (§8). The background is currently winning against the text on top of it.
 
 - **v1.0 (2026-07-28)** — initial Phase 2 contract, drafted from the post-launch update inventory and Oliver's rulings of 24–28 Jul.
 - **v1.1.1 (2026-07-28)** — duration ruling, and one stale note removed.
@@ -159,10 +165,31 @@ So the phone does not go on `games`:
 - New nullable column **`allowed_skill_levels`** (enum array) on `games` — named apart from `players.skill_level` deliberately, because a scalar and an array one letter apart is a bug waiting for a tired afternoon.
 - Restriction is **display and social signaling only** in Phase 2 — booking is not enforced against player skill (revisit with data).
 
+### 5.3a Format and substitutes (v1.1.2)
+
+- **Format is never derived from capacity, in either direction.** `games.format` is admin-entered free text and is rendered **verbatim** on cards, on detail and above the map. A 12-capacity game is not therefore "6v6": the organizer may be running 5v5 with substitutes, or 6v6 with two people who asked to be listed. Inferring the format from the number would print a confident falsehood on a public page.
+- **New optional column `subs_per_team` (int, nullable) on `games`.** Admin input at create/edit. When set, it renders alongside the format — `6v6 · 2 subs per team` — and when null nothing renders. It is descriptive text about how the organizer intends to run the game.
+- **Capacity remains the sole booking limit** and is independent of both fields. `create_booking`'s capacity check is unchanged: it counts active bookings against `games.capacity` and consults neither `format` nor `subs_per_team`. Nothing in this section may be read as a second constraint on booking.
+
 ### 5.4 Venue and share
 
 - **Venue photo panel:** the traced-map panel is replaced by a **venue photo panel** using the existing venue image slot (`public/venues/`, image reference on the venue). Photos are human-supplied real pitch photographs (VENUES.md gets a v2 recipe: photograph the pitch, landscape, Claude crops/grades to the panel frame). Beneath the panel: venue name + **"Open map"** button (existing Google Maps link). A venue without a photo renders name + button only — no empty frame. The traced-map assets remain in the repo, unused.
 - **Share:** game card and detail carry **Copy link** (primary) and **WhatsApp** (secondary) share actions. Copy shows a confirmation toast.
+
+### 5.5 Games list density on mobile (v1.1.2)
+
+- The mobile games list is **compact, calendar-density rows: several games visible at once on a phone**, not one card per screenful.
+- The current card occupies roughly three-quarters of a phone screen. That is recorded here as a **defect**, not a preference: a list that shows one item is a detail page with extra steps, and the product's job on `/games` is to let someone compare Tuesday against Thursday without scrolling.
+- The venue-photo panel (§5.4) reduces the height and is welcome, but **the density requirement stands on its own** and is verified on its own — a photo swap that leaves one game per screen has not satisfied it.
+
+### 5.6 The game page is state-aware (v1.1.2)
+
+What `/game/[id]` offers depends on the viewer's relationship to that game:
+
+- **A player holding an active booking (`reserved` or `confirmed`) sees their booking**, not an invitation to make one. "Claim your spot" does not render for them. Their **payment state** is surfaced — held pending payment, confirmed, cash at the pitch — together with the **cancel action** and the existing cancellation-policy line.
+- **A non-holder sees the claim CTA only while spots remain.** A full game continues to offer the waitlist, per Phase 1.
+- The determination is server-side from the caller's own booking, on the same footing as the organizer-phone gate in §5.1 — never from a nickname match or client state.
+- Rationale: the current page asks a player who has already paid to claim a spot they are standing on. That reads as a broken page, and the player's actual question at that moment — *am I in, and have I paid?* — is the one the page does not answer.
 
 ---
 
@@ -196,6 +223,7 @@ So the phone does not go on `games`:
 ## 8. General UX
 
 - **Toast notifications** for: booking created, sign-in, cancellation + credit ("Refund completed — 150 CZK credited"), top-up confirmed, link copied. One shared component, volt-on-black, auto-dismiss.
+- **Semi-transparent panels get ~20% more opaque (v1.1.2).** Every translucent text surface across the platform — cards, panels, the admin chrome — increases its opacity by roughly a fifth. The pitch background is currently winning against the text sitting on it, and legibility is not a taste question on a phone held outdoors in daylight. The change belongs in the token table (`tailwind.config.ts`), not in the components: the surfaces are already expressed as tokens, so one edit moves all of them and nothing drifts. The volt-on-black character is unchanged — this is opacity, not palette.
 - **The UX iteration loop** (working method, not a feature): the Playwright harness produces screenshot strips of key flows at phone width; Oliver reviews strips and returns batch verdicts; sessions apply. Used at each Phase 2 gate. This runs against the §1.1 dev database — it cannot run against production.
 
 ---

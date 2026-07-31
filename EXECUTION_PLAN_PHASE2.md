@@ -371,6 +371,7 @@ Questions to answer here: **Q1** (shadow claim through password signup),
 **Acceptance criteria**
 - [ ] [REQ-GAME-006] `games.duration_minutes` nullable
 - [ ] [REQ-GAME-009] `games.allowed_skill_levels` nullable enum array
+- [ ] [REQ-GAME-016] **(v1.1.2)** `games.subs_per_team` nullable int, with a sanity CHECK (0–20). Descriptive only — no RPC reads it, and `create_booking`'s capacity check is untouched
 - [ ] [REQ-GAME-002] `game_organizer_contacts` with RLS and **no `anon`/`authenticated` grants at all**
 - [ ] [REQ-GAME-003] `game_organizer_public` exposes the name for published games
 - [ ] [REQ-GAME-004] `game_organizer_phone()` returns the phone only to a caller with an active booking; null otherwise, never an error
@@ -390,6 +391,8 @@ Questions to answer here: **Q1** (shadow claim through password signup),
 - [ ] [REQ-GAME-001] Organizer name required, defaulting to the creating admin's nickname; phone optional
 - [ ] [REQ-GAME-006] Duration free numeric, bounded 30–180, defaulting to 60, validated server-side
 - [ ] [REQ-GAME-009] Skill selector offers All levels (default) or one/two specific levels
+- [ ] [REQ-GAME-016] **(v1.1.2)** Optional substitutes input (`subs_per_team`), validated server-side, left null when not supplied
+- [ ] [REQ-GAME-017] **(v1.1.2)** Format is entered by the admin and stored verbatim. Nothing in the form, the RPC or any render site derives it from capacity — asserted by a test that saves a 12-capacity game with format `5v5` and reads back `5v5`
 - [ ] [REQ-GAME-015] Legacy `games.venue` still populated
 - [ ] Capacity-below-active-bookings and price-locking rules from v2.5 unchanged
 
@@ -422,7 +425,9 @@ Questions to answer here: **Q1** (shadow claim through password signup),
 - [ ] [REQ-GAME-010] Restricted games render badges on card and detail
 - [ ] [REQ-GAME-011] Booking is never blocked by skill
 - [ ] Organizer name renders publicly; the phone renders only for a caller with an active booking
-- [ ] TEST-218, TEST-221 pass
+- [ ] [REQ-GAME-017] **(v1.1.2)** Format renders verbatim on card, detail and above the map; `subs_per_team` renders beside it as `6v6 · 2 subs per team` when set, and nothing when null
+- [ ] [REQ-GAME-018] **(v1.1.2)** `/game/[id]` is state-aware: a holder of a `reserved`/`confirmed` booking sees their payment state and cancel action and **no** claim CTA; a non-holder sees the claim CTA only while spots remain; a full game still offers the waitlist. Determined server-side from the caller's own booking, never from a nickname match
+- [ ] TEST-218, TEST-221, TEST-232, TEST-233 pass
 - [ ] Strings in three languages
 
 **Files:** `components/game/*`, `app/game/[id]/page.tsx`, strings + overlays
@@ -440,7 +445,9 @@ Questions to answer here: **Q1** (shadow claim through password signup),
 - [ ] [REQ-GAME-014] Copy link primary, WhatsApp secondary
 - [ ] [REQ-UX-001] One shared toast component, volt-on-black, auto-dismiss
 - [ ] [REQ-UX-002] Toasts wired for booking created, sign-in, cancellation + credit, top-up confirmed, link copied
-- [ ] TEST-222, TEST-223 pass
+- [ ] [REQ-UX-004] **(v1.1.2)** Translucent surfaces are ~20% more opaque, changed in `tailwind.config.ts` rather than in components — one token edit, no per-component overrides, volt-on-black palette unchanged
+- [ ] [REQ-GAME-019] **(v1.1.2)** The mobile games list is calendar-density: **at least three games visible at once at Pixel-7 width**, asserted in the screenshot strip and by a spec, not by eye. The venue-photo swap alone does not discharge this
+- [ ] TEST-222, TEST-223, TEST-234 pass
 
 **Files:** `components/VenueMapPanel.tsx` → photo panel, `components/game/ShareButton.tsx`, `components/Toast.tsx`, `VENUES.md` (v2 recipe), strings + overlays
 

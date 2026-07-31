@@ -78,6 +78,11 @@ gate that verifies it.
 | REQ-GAME-013 | A venue with no photo renders name + "Open map" only — no empty frame | G2 |
 | REQ-GAME-014 | Card and detail carry Copy link (primary) and WhatsApp (secondary); copy raises a toast | G2 |
 | REQ-GAME-015 | Every `games` insert continues to populate the legacy `games.venue` NOT NULL column (F3) | G2 |
+| REQ-GAME-016 | `games.subs_per_team` (nullable int, CHECK 0–20); admin input; renders beside the format when set, nothing when null (v1.1.2 §5.3a) | G2 |
+| REQ-GAME-017 | Format is admin-entered and rendered verbatim; **never derived from capacity** anywhere. Capacity remains the sole booking limit (v1.1.2 §5.3a) | G2 |
+| REQ-GAME-018 | `/game/[id]` is state-aware: booking holders see payment state + cancel and no claim CTA; non-holders see the claim CTA only while spots remain; server-side determination (v1.1.2 §5.6) | G2 |
+| REQ-GAME-019 | The mobile games list is calendar-density — ≥3 games visible at Pixel-7 width (v1.1.2 §5.5) | G2 |
+| REQ-UX-004 | Translucent surfaces ~20% more opaque, via the token table not the components (v1.1.2 §8) | G2 |
 
 ## A.4 Home, admin, UX (§6–§8)
 
@@ -333,6 +338,27 @@ Scenario: TEST-222 Venue photo panel and its fallback
 Scenario: TEST-223 Copy link raises a toast
   When I tap "Copy link" on a game card
   Then the link is on the clipboard and a toast confirms it
+
+Scenario: TEST-232 Format is what the admin typed, never what capacity implies
+  Given an admin creates a game with capacity 12 and format "5v5"
+  Then the card, the detail page and the panel above the map all read "5v5"
+  And no surface renders "6v6"
+  And booking is still limited by capacity alone
+
+Scenario: TEST-233 The game page knows whether I am already in
+  Given I hold a confirmed booking on a game
+  When I open that game's page
+  Then I see my payment state and a cancel action
+  And "Claim your spot" does not appear
+  Given I hold no booking and spots remain
+  Then the claim CTA appears
+  Given I hold no booking and the game is full
+  Then the waitlist is offered instead
+
+Scenario: TEST-234 The games list shows more than one game at a time
+  Given at least three published games
+  When I open /games at phone width
+  Then at least three of them are visible without scrolling
 
 # ---------- G2: home and admin ----------
 Scenario: TEST-224 Home reads site settings anonymously
