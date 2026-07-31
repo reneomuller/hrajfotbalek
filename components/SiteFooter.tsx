@@ -24,6 +24,17 @@ export async function SiteFooter() {
           {siteFooter.privacy}
         </Link>
         {/*
+          The terms are a document people are asked to accept at signup, so they
+          have to be readable without signing up — and findable again afterwards
+          by someone who wants to check what they agreed to.
+        */}
+        <Link
+          href="/terms"
+          className="font-mono text-[10px] tracking-[2px] text-dim no-underline transition hover:text-volt-dim"
+        >
+          {siteFooter.terms}
+        </Link>
+        {/*
           One reachable address on every page. The WhatsApp group is where the
           community lives, but a product that takes money and holds personal
           data needs a contact that does not require joining a group chat.

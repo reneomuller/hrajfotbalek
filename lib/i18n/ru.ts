@@ -35,6 +35,7 @@ export const ru: StringsOverlay = {
 
   siteFooter: {
     privacy: "Приватность",
+    terms: "Условия",
     contact: "Контакт",
   },
 
@@ -259,5 +260,50 @@ export const ru: StringsOverlay = {
     close: "Закрыть",
     loading: "Загрузка…",
     // `czk` is NOT translated — see the header note on money.
+  },
+
+  /**
+   * FAQ — DRAFT, AWAITING A NATIVE READER.
+   *
+   * Translated from the English finals of 2026-08-01, not from the Czech, so
+   * this is a translation of the source rather than a translation of a
+   * translation. No Russian speaker has reviewed it.
+   *
+   * It ships anyway, and that is the right call for THIS content: these six
+   * answers are product copy, and a clumsy sentence is a smaller harm than a
+   * Russian-speaking player reading an English FAQ on a page that is otherwise
+   * in their language. The judgement does NOT extend to the terms of service —
+   * see `lib/content/legalDocuments.ts`, where Russian is deliberately absent
+   * because an unreviewed contract is legally operative in a way an unreviewed
+   * FAQ is not.
+   *
+   * Flagged for review in the phase report. When a native pass happens, this
+   * comment goes with it.
+   */
+  faq: {
+    title: "Вопросы",
+    items: [
+      { q: "Когда приходить?", a: "За 10 минут до начала." },
+      {
+        q: "Что взять с собой?",
+        a: "Обувь и себя. Манишки, вратарские перчатки и мячи мы обеспечиваем.",
+      },
+      {
+        q: "Как оплатить?",
+        a: "После брони отсканируйте QR-код в приложении своего банка или заплатите наличными на поле.",
+      },
+      {
+        q: "А если я не смогу прийти?",
+        a: "Отмените бронь в любой момент до начала игры — вся сумма вернётся кредитом в ваш кошелёк.",
+      },
+      {
+        q: "А если мест уже нет?",
+        a: "Встаньте в лист ожидания: как только место освободится, мы сразу напишем вам на почту.",
+      },
+      {
+        q: "Нужно ли хорошо играть?",
+        a: "Мы рады игрокам любого уровня; игры любительские, если у игры не указан конкретный уровень.",
+      },
+    ],
   },
 };

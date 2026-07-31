@@ -3,17 +3,26 @@
  *
  * Stamped onto `players.tos_version` by `complete_signup_v2` and rendered on
  * `/terms`, so the record of what someone agreed to and the document they were
- * shown cannot drift apart.
+ * shown cannot drift apart. Every acceptance is recorded against this string —
+ * so it changes when, and only when, the words change.
  *
- * IT SAYS "DRAFT" BECAUSE IT IS ONE. `content/terms.md` ships as a marked
- * placeholder until Oliver supplies the real text (contract §3.1, the same
- * convention as the privacy page). A version string of `v1` would quietly claim
- * otherwise, and the first question anyone asks of a consent record is what
- * exactly was on the screen. When the real copy lands, this bumps — and the
- * players who accepted the draft remain distinguishable from those who did not,
- * which is the entire point of storing a version at all.
+ * 1.0 is the human-authored text delivered 2026-08-01 and effective from that
+ * date, in `content/terms.en.md` (authoritative) and `content/terms.cs.md`.
  */
-export const TERMS_VERSION = "draft-2026-07" as const;
+export const TERMS_VERSION = "1.0" as const;
 
-/** Bumped independently: the two documents change on their own schedules. */
+/**
+ * The privacy policy has NOT been delivered.
+ *
+ * Terms of service and a privacy policy are different documents, and only the
+ * first arrived. `/privacy` therefore keeps its DRAFT banner and this version
+ * keeps saying draft — contract §3.1 and v2.5 §8 both forbid generated legal
+ * copy, and a plausible-looking generated policy is the specific failure mode
+ * they exist to prevent: it gets shipped.
+ *
+ * This matters more than a placeholder page usually would, because the signup
+ * form's second required box is a GDPR data-processing consent that links here.
+ * Asking someone to consent to a document that does not exist is the one part
+ * of signup that cannot be fixed after launch.
+ */
 export const PRIVACY_VERSION = "draft-2026-07" as const;

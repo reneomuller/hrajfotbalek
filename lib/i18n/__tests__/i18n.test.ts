@@ -24,6 +24,9 @@ const PLAYER_FACING = [
   "account",
   "errors",
   "common",
+  // Contract §6, delivered 2026-08-01. Czech is Oliver's; Russian is a flagged
+  // draft. Both are real translations, which is what this list demands.
+  "faq",
 ] as const;
 
 /**

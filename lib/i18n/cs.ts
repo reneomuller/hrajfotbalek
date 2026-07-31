@@ -36,6 +36,7 @@ export const cs: StringsOverlay = {
 
   siteFooter: {
     privacy: "Soukromí",
+    terms: "Podmínky",
     contact: "Kontakt",
   },
 
@@ -260,5 +261,37 @@ export const cs: StringsOverlay = {
     loading: "Načítání…",
     // `czk` is NOT translated. `formatCzk()` renders "200 CZK" in every
     // language on purpose — see the header note.
+  },
+
+  /**
+   * Oliver's Czech, delivered 2026-08-01, marked by him as a draft for a native
+   * pass. Shipped as given: the English is the source, this is the translation,
+   * and a session rewriting either would be inventing copy.
+   */
+  faq: {
+    title: "Otázky",
+    items: [
+      { q: "Kdy mám dorazit?", a: "10 minut před výkopem." },
+      {
+        q: "Co si mám vzít?",
+        a: "Boty a sebe. Rozlišováky, brankářské rukavice i míče jsou zajištěny.",
+      },
+      {
+        q: "Jak zaplatím?",
+        a: "Po rezervaci naskenujte QR kód ve své bankovní aplikaci, nebo zaplaťte hotově na hřišti.",
+      },
+      {
+        q: "Co když nemůžu přijít?",
+        a: "Zrušte rezervaci kdykoli před výkopem a celá částka se vám vrátí jako kredit do peněženky.",
+      },
+      {
+        q: "Co když je zápas plný?",
+        a: "Přidejte se na čekací listinu; jakmile se uvolní místo, okamžitě vám napíšeme e-mail.",
+      },
+      {
+        q: "Musím být dobrý?",
+        a: "Všechny úrovně jsou vítány; zápasy jsou přátelské, pokud u zápasu není uvedena konkrétní úroveň.",
+      },
+    ],
   },
 };

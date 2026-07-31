@@ -33,6 +33,7 @@ export const strings = {
 
   siteFooter: {
     privacy: "Privacy",
+    terms: "Terms",
     copyright: "© hrajfotbal",
     // A real address in the footer of every page. A booking product that takes
     // money and holds personal data needs one reachable line that is not a
@@ -335,6 +336,52 @@ export const strings = {
    * and it is NOT translated: the real policy is a per-language legal text,
    * not a UI string.
    */
+  terms: {
+    title: "Terms of service",
+    versionLabel: "Version",
+    /**
+     * Shown when the reader's language has no authored document and English is
+     * being displayed instead. Never omitted: a person who ticked "I accept the
+     * terms" is entitled to know which language the thing they accepted is in.
+     */
+    notTranslated:
+      "These terms have not been translated into your language yet, so the English text is shown. It is the version that applies.",
+    back: "← Back to the games",
+  },
+
+  /**
+   * The six questions, from contract §6. Answers are the contract's own words.
+   *
+   * Player-facing, so Czech and Russian are required — the Czech is Oliver's,
+   * the Russian is a draft awaiting a native reader (see `lib/i18n/ru.ts`).
+   */
+  faq: {
+    title: "Questions",
+    items: [
+      { q: "When should I show up?", a: "10 minutes before kickoff." },
+      {
+        q: "What should I bring?",
+        a: "Shoes and yourself. Bibs, gloves and balls are provided.",
+      },
+      {
+        q: "How do I pay?",
+        a: "Scan the QR from your banking app after booking, or pay cash at the pitch.",
+      },
+      {
+        q: "What if I can't make it?",
+        a: "Cancel anytime before kickoff for full wallet credit.",
+      },
+      {
+        q: "What if the game is full?",
+        a: "Join the waitlist; we email you the moment a spot opens.",
+      },
+      {
+        q: "Do I need to be good?",
+        a: "All levels welcome; games are casual unless a level badge says otherwise.",
+      },
+    ],
+  },
+
   privacy: {
     title: "Privacy",
     draftBadge: "DRAFT — NOT THE REAL POLICY",

@@ -38,7 +38,7 @@ points for any execution session**, not checklist items.
 | 1. Migration 21+22: profile columns, `skill_level`, `credit_reason.topup` | G1 | **Complete** | 2026-07-28 | 2026-07-28 | Enum shipped as **22**, not 23 — `complete_signup_v2` moves to 23. `player_profile_columns.sql` 25/25; 17/17 suites |
 | 2. `complete_signup_v2` + SQL suite | G1 | **Complete** | 2026-07-31 | 2026-07-31 | Migration 23. Two consents (GDPR + TOS) kept separate — see the phase note. `complete_signup_v2.sql` 28/28; 18/18 suites |
 | 3. Signup rebuilt: password account creation | G1 | Not started | - | - | |
-| 4. `/terms` + `content/terms.md` placeholder | G1 | Not started | - | - | Human copy owed |
+| 4. `/terms` + terms content | G1 | **Complete** | 2026-08-01 | 2026-08-01 | Real copy delivered: EN + CZ, version 1.0. RU deliberately absent — English shown with a notice. **`/privacy` copy still owed** |
 | 5. Login rework + existing-account migration | G1 | Not started | - | - | R1 |
 | 6. Account: change password, change email | G1 | Not started | - | - | |
 | 7. Storage bucket + profile photos | G1 | Not started | - | - | |
