@@ -73,3 +73,28 @@ export function authNavLink(
   }
   return { href: "/login", label: t.nav.logIn };
 }
+
+/**
+ * The signed-out pair: Log in AND Sign up, as two distinct entries.
+ *
+ * Contract §3.1 opens with this, and it is a real requirement rather than a
+ * layout note. Until Phase 2 there was one door, because there was one flow —
+ * an email address got you in whether or not you had been here before. With
+ * passwords those are different acts with different outcomes, and a returning
+ * player who taps "Sign up" hits "there is already an account with that email"
+ * instead of getting in.
+ *
+ * Returns an empty list for a signed-in player: `authNavLink()` already carries
+ * them to their profile, and offering signup to someone holding an account is
+ * the same confusion in the other direction.
+ */
+export function signedOutNavLinks(
+  session: { nickname: string | null },
+  t: Strings = strings,
+): NavLink[] {
+  if (session.nickname) return [];
+  return [
+    { href: "/login", label: t.nav.logIn },
+    { href: "/signup", label: t.auth.signUp },
+  ];
+}

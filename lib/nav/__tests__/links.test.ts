@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { adminNavLinks, authNavLink, primaryNavLinks } from "@/lib/nav/links";
+import {
+  adminNavLinks,
+  authNavLink,
+  primaryNavLinks,
+  signedOutNavLinks,
+} from "@/lib/nav/links";
 import { strings } from "@/lib/strings";
 
 describe("primaryNavLinks", () => {
@@ -81,5 +86,25 @@ describe("adminNavLinks", () => {
     for (const link of adminNavLinks()) {
       expect(link.href.startsWith("/admin/")).toBe(true);
     }
+  });
+});
+
+describe("signedOutNavLinks", () => {
+  it("offers Log in and Sign up as two distinct doors", () => {
+    const links = signedOutNavLinks({ nickname: null });
+    expect(links.map((l) => l.href)).toEqual(["/login", "/signup"]);
+    expect(links[0].label).toBe(strings.nav.logIn);
+    expect(links[1].label).toBe(strings.auth.signUp);
+  });
+
+  it("offers neither to someone who already has an account", () => {
+    // Signup is not a thing you offer a person holding an account, and
+    // authNavLink already carries them to their profile.
+    expect(signedOutNavLinks({ nickname: "Runner" })).toEqual([]);
+  });
+
+  it("treats a session without a nickname as signed out", () => {
+    // A verified account with no player row yet is mid-signup, not a player.
+    expect(signedOutNavLinks({ nickname: null })).toHaveLength(2);
   });
 });

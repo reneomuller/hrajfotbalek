@@ -1,8 +1,11 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { SignupForm } from "./SignupForm";
+import { writeProfileFromMetadata } from "./actions";
 import { getSessionUser, getCurrentPlayer } from "@/lib/auth/session";
-import { getStrings } from "@/lib/i18n/server";
+import { getLocale, getStrings } from "@/lib/i18n/server";
+import { countryOptions } from "@/lib/auth/countries";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getStrings();
@@ -10,11 +13,20 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 /**
- * `/signup` — nickname + consent for a session that has no player row yet.
+ * `/signup` — three states, decided server-side.
  *
- * Gated server-side. Reaching this page without a session means the magic-link
- * round-trip has not happened, and an already-complete player has nothing to do
- * here, so both are redirected away rather than shown a form that cannot work.
+ *   no session          → the account form. This is the new front door, and
+ *                         unlike Phase 1 it is reachable signed out.
+ *   session, no player  → finish the profile. Reached after verification, and
+ *                         also by anyone who arrives credential-first: an OTP
+ *                         login, or a shadow player claiming an identity. The
+ *                         metadata written at signup is tried first, so the
+ *                         common case completes without showing a form at all.
+ *   session and player  → nothing to do here; go where you were going.
+ *
+ * The middle state is the one that matters. It is what a half-finished signup
+ * looks like, and `destinationAfterAuth()` has always routed to it — so the
+ * inverted flow inherits a recovery path rather than needing a new one.
  */
 export default async function SignupPage({
   searchParams,
@@ -22,28 +34,66 @@ export default async function SignupPage({
   searchParams: Promise<{ next?: string }>;
 }) {
   const t = await getStrings();
+  const locale = await getLocale();
   const params = await searchParams;
   const next = params.next && params.next.startsWith("/") ? params.next : "/games";
 
   const user = await getSessionUser();
+  const existing = user ? await getCurrentPlayer() : null;
+  if (existing) redirect(next);
+
+  const countries = countryOptions(locale);
+
   if (!user) {
-    redirect(`/login?next=${encodeURIComponent(next)}`);
+    return (
+      <main className="flex-1 flex items-center justify-center px-6 py-16">
+        <div className="w-full max-w-sm">
+          <h1 className="font-[family-name:var(--font-anton)] text-4xl uppercase tracking-tight">
+            {t.auth.signupTitle}
+          </h1>
+          <p className="mt-3 text-sm opacity-70">{t.auth.signupLede}</p>
+
+          <SignupForm next={next} countries={countries} mode="create" />
+
+          <p className="mt-6 text-sm opacity-70">
+            {t.auth.haveAccount}{" "}
+            <Link href={`/login?next=${encodeURIComponent(next)}`} className="underline">
+              {t.auth.loginTitle}
+            </Link>
+          </p>
+        </div>
+      </main>
+    );
   }
 
-  const existing = await getCurrentPlayer();
-  if (existing) {
-    redirect(next);
-  }
+  /*
+   * A session with no player row. Try the metadata left at signup first: in the
+   * ordinary case the profile is already known and the player never sees this
+   * page — they verify their email and land where they were going.
+   *
+   * `writeProfileFromMetadata()` returns rather than throws for every failure,
+   * so anything it cannot complete falls through to the form below: a nickname
+   * taken while the mail sat unread, a bag from an older build, or a session
+   * that predates this flow entirely.
+   */
+  const written = await writeProfileFromMetadata();
+  if (written.ok) redirect(next);
 
   return (
     <main className="flex-1 flex items-center justify-center px-6 py-16">
       <div className="w-full max-w-sm">
         <h1 className="font-[family-name:var(--font-anton)] text-4xl uppercase tracking-tight">
-          {t.auth.signupTitle}
+          {t.auth.signupFinishTitle}
         </h1>
-        <p className="mt-3 text-sm opacity-70">{t.auth.signupLede}</p>
+        <p className="mt-3 text-sm opacity-70">{t.auth.signupFinishLede}</p>
 
-        <SignupForm next={next} />
+        {written.message ? (
+          <p role="alert" className="mt-4 text-sm text-red-400">
+            {written.message}
+          </p>
+        ) : null}
+
+        <SignupForm next={next} countries={countries} mode="finish" />
       </div>
     </main>
   );

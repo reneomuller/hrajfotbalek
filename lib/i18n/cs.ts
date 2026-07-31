@@ -93,8 +93,47 @@ export const cs: StringsOverlay = {
     callbackRetry: "Vyžádat nový odkaz",
     callbackDetailLabel: "Technický detail",
 
-    signupTitle: "Vyber si přezdívku",
-    signupLede: "Pod tímhle jménem budeš v sestavě.",
+    signupTitle: "Založ si účet",
+    signupLede: "Jeden účet, jedna přezdívka — a jsi v sestavě.",
+    signupFinishTitle: "Dokonči profil",
+    signupFinishLede: "E-mail je potvrzený. Tohle je poslední krok.",
+
+    passwordLabel: "Heslo",
+    passwordHint: "Alespoň 8 znaků",
+    passwordTooShort: "Použij alespoň 8 znaků.",
+
+    countryLabel: "Země",
+    countryPlaceholder: "Vyber svou zemi",
+    countryInvalid: "Vyber prosím zemi ze seznamu.",
+
+    skillLabel: "Jak hraješ?",
+    skillHint: "Zobrazí se na profilu. Rezervaci ti to nikdy nezablokuje.",
+    skillBeginner: "Začátečník",
+    skillIntermediate: "Pokročilý",
+    skillAdvanced: "Zkušený",
+    skillRequired: "Vyber prosím úroveň.",
+
+    phoneLabel: "Telefon (nepovinné)",
+    phoneHint: "Vidí ho jen organizátor, a jen u zápasů, které máš zarezervované.",
+
+    legalGroupLabel: "Než začneš",
+    tosLabel: "Souhlasím s obchodními podmínkami.",
+    tosLink: "Přečíst podmínky",
+    tosRequired: "Pro pokračování prosím potvrď podmínky.",
+    preferencesGroupLabel: "Nepovinné",
+
+    emailTaken:
+      "Účet s tímto e-mailem už existuje. Přihlas se — nebo použij kód, pokud ještě nemáš heslo.",
+    signupFailed: "Účet se nepodařilo založit. Zkus to prosím znovu.",
+
+    verifyTitle: "Potvrď svůj e-mail",
+    verifyBody:
+      "Poslali jsme odkaz na {email}. Otevři ho a účet je hotový — odkaz funguje na jakémkoli zařízení.",
+    verifyHint: "Nic nepřišlo? Zkontroluj spam a pak to zkus znovu.",
+
+    signUp: "Registrace",
+    haveAccount: "Už máš účet?",
+    noAccount: "Jsi tu poprvé?",
     nicknameLabel: "Přezdívka",
     nicknameHint: "Písmena, číslice, mezery, _ a - · max. 20 znaků",
     nicknameInvalid: "Použij jen písmena, číslice, mezery, _ a - (max. 20 znaků).",

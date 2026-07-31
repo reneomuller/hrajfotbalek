@@ -1,6 +1,5 @@
 "use server";
 
-import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import {
   completePostAuth,
@@ -8,6 +7,7 @@ import {
   resumeDestination,
 } from "@/lib/auth/postAuth";
 import { createServerSupabaseClient } from "@/lib/supabase/clients";
+import { siteOrigin } from "@/lib/auth/origin";
 import { getStrings } from "@/lib/i18n/server";
 
 export type PendingAction = "book" | "join_waitlist" | "login";
@@ -35,54 +35,6 @@ function looksLikeEmail(value: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 }
 
-/**
- * The origin the magic link comes back to.
- *
- * This MUST match the origin the browser is currently on. The PKCE code
- * verifier is stored in a cookie, and cookies are scoped to a host — so if the
- * link returns to a different one, the verifier is simply not sent and the
- * exchange fails with "code verifier not found in storage". `localhost`,
- * `127.0.0.1` and a LAN IP are three separate cookie jars even in one browser,
- * which is exactly how this looks like a working login that silently has no
- * session at the end of it.
- */
-async function siteOrigin(): Promise<string> {
-  const h = await headers();
-  const host = h.get("x-forwarded-host") ?? h.get("host") ?? "localhost:3000";
-  const proto = h.get("x-forwarded-proto") ?? (host.startsWith("localhost") ? "http" : "https");
-  const requestOrigin = `${proto}://${host}`;
-
-  const configured = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "");
-  if (!configured) return requestOrigin;
-
-  // Loud, because the resulting failure is otherwise indistinguishable from a
-  // link that simply expired.
-  if (new URL(configured).host !== host) {
-    console.error(
-      `NEXT_PUBLIC_SITE_URL (${configured}) does not match the host this request ` +
-        `arrived on (${host}). The magic link will return to a different origin ` +
-        `than the one holding the PKCE code verifier cookie, and the exchange ` +
-        `will fail. Browse the app on ${configured}, or unset NEXT_PUBLIC_SITE_URL.`,
-    );
-  }
-
-  return configured;
-}
-
-/**
- * Requests a magic link and records `auth_link_sent`.
- *
- * The `redirectTo` payload carries the target game id and the pending action.
- * That payload is what makes Phase 11's deep-link resume possible: a player who
- * taps Book while logged out comes back to their game with the intent intact,
- * rather than landing on a bare home screen having lost their place. Getting it
- * right is cheap here and expensive to retrofit.
- *
- * The magic-link email itself is sent by Supabase's built-in sender and
- * deliberately does NOT route through `sendEmail()` / `EMAIL_DRY_RUN`. That
- * keeps login working on real phones before Resend's DNS verifies; the M5
- * cutover (Phase 30) moves it.
- */
 export async function requestMagicLink(
   _prevState: LoginFormState,
   formData: FormData,

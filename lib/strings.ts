@@ -137,18 +137,69 @@ export const strings = {
     // underlying reason is surfaced rather than swallowed.
     callbackDetailLabel: "Technical detail",
 
-    signupTitle: "Choose your nickname",
-    signupLede: "This is the name that appears in the lineup.",
+    signupTitle: "Create your account",
+    signupLede: "One account, one nickname, and you are in the lineup.",
+    /** Shown on the finish-your-profile pass, when the account already exists. */
+    signupFinishTitle: "Finish your profile",
+    signupFinishLede: "Your email is confirmed. This is the last step.",
     nicknameLabel: "Nickname",
     nicknameHint: "Letters, numbers, spaces, _ and - · up to 20 characters",
     nicknameInvalid:
       "Use only letters, numbers, spaces, _ and - (up to 20 characters).",
     nicknameTaken: "That nickname is taken. Try another.",
+
+    passwordLabel: "Password",
+    passwordHint: "At least 8 characters",
+    passwordTooShort: "Use at least 8 characters.",
+
+    countryLabel: "Country",
+    countryPlaceholder: "Pick your country",
+    countryInvalid: "Please pick your country from the list.",
+
+    skillLabel: "How do you play?",
+    skillHint: "It shows on your profile. It never stops you booking a game.",
+    skillBeginner: "Beginner",
+    skillIntermediate: "Intermediate",
+    skillAdvanced: "Advanced",
+    skillRequired: "Please pick a level.",
+
+    phoneLabel: "Phone (optional)",
+    phoneHint: "Only the organizer sees it, and only for games you have booked.",
+
+    /*
+     * THREE BOXES, TWO OF THEM LEGAL ACTS.
+     *
+     * Accepting the terms and consenting to data processing are separate acts
+     * with separate errors (contract §3.1, ruled 2026-07-31) — one box covering
+     * both makes the consent non-specific, which is what makes it invalid. The
+     * reminders preference is grouped apart from them on purpose: a preference
+     * that looks like a legal act gets ticked unread, and a legal act that
+     * looks like a preference gets ignored.
+     */
+    legalGroupLabel: "Before you start",
+    tosLabel: "I accept the terms of service.",
+    tosLink: "Read the terms",
+    tosRequired: "Please accept the terms to continue.",
     gdprLabel: "I agree to the privacy policy.",
     gdprLink: "Read the privacy policy",
     gdprRequired: "Please agree to the privacy policy to continue.",
+    preferencesGroupLabel: "Optional",
     marketingLabel: "Email me about new games. (Optional)",
     createAccount: "Create my account",
+
+    emailTaken:
+      "There is already an account with that email. Sign in instead — or use the code if you have no password yet.",
+    signupFailed: "We could not create the account. Please try again.",
+
+    /** The waiting room between `signUp()` and a verified email. */
+    verifyTitle: "Confirm your email",
+    verifyBody:
+      "We sent a link to {email}. Open it and your account is ready — the link works on any device.",
+    verifyHint: "No email after a minute or two? Check spam, then try again.",
+
+    signUp: "Sign up",
+    haveAccount: "Already have an account?",
+    noAccount: "New here?",
   },
 
   games: {

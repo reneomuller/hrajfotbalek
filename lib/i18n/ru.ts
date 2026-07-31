@@ -92,8 +92,47 @@ export const ru: StringsOverlay = {
     callbackRetry: "Запросить новую ссылку",
     callbackDetailLabel: "Технические детали",
 
-    signupTitle: "Выбери ник",
-    signupLede: "Под этим именем ты будешь в составе.",
+    signupTitle: "Создай аккаунт",
+    signupLede: "Один аккаунт, один ник — и ты в составе.",
+    signupFinishTitle: "Заверши профиль",
+    signupFinishLede: "Почта подтверждена. Остался последний шаг.",
+
+    passwordLabel: "Пароль",
+    passwordHint: "Минимум 8 символов",
+    passwordTooShort: "Нужно минимум 8 символов.",
+
+    countryLabel: "Страна",
+    countryPlaceholder: "Выбери страну",
+    countryInvalid: "Выбери, пожалуйста, страну из списка.",
+
+    skillLabel: "Как ты играешь?",
+    skillHint: "Показывается в профиле. Бронировать игру это никогда не мешает.",
+    skillBeginner: "Начинающий",
+    skillIntermediate: "Средний уровень",
+    skillAdvanced: "Опытный",
+    skillRequired: "Выбери, пожалуйста, уровень.",
+
+    phoneLabel: "Телефон (необязательно)",
+    phoneHint: "Его видит только организатор и только по играм, которые ты забронировал.",
+
+    legalGroupLabel: "Перед началом",
+    tosLabel: "Я принимаю условия обслуживания.",
+    tosLink: "Читать условия",
+    tosRequired: "Чтобы продолжить, прими условия.",
+    preferencesGroupLabel: "Необязательно",
+
+    emailTaken:
+      "Аккаунт с такой почтой уже есть. Войди — или воспользуйся кодом, если пароля ещё нет.",
+    signupFailed: "Не получилось создать аккаунт. Попробуй ещё раз.",
+
+    verifyTitle: "Подтверди почту",
+    verifyBody:
+      "Мы отправили ссылку на {email}. Открой её — и аккаунт готов; ссылка работает на любом устройстве.",
+    verifyHint: "Письма нет пару минут? Проверь спам и попробуй снова.",
+
+    signUp: "Регистрация",
+    haveAccount: "Уже есть аккаунт?",
+    noAccount: "Впервые здесь?",
     nicknameLabel: "Ник",
     nicknameHint: "Буквы, цифры, пробелы, _ и - · до 20 символов",
     nicknameInvalid: "Только буквы, цифры, пробелы, _ и - (до 20 символов).",

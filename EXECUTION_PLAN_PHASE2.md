@@ -37,7 +37,7 @@ points for any execution session**, not checklist items.
 | 0. Environment: local Supabase stack | G1 | **Complete** | 2026-07-28 | 2026-07-28 | `ee48b93`. Stack on PG 17.6 (= production); 20 migrations replay clean; `.env.test.local` split + local-only guard; `reuseExistingServer` hole closed; 28/28 E2E |
 | 1. Migration 21+22: profile columns, `skill_level`, `credit_reason.topup` | G1 | **Complete** | 2026-07-28 | 2026-07-28 | Enum shipped as **22**, not 23 — `complete_signup_v2` moves to 23. `player_profile_columns.sql` 25/25; 17/17 suites |
 | 2. `complete_signup_v2` + SQL suite | G1 | **Complete** | 2026-07-31 | 2026-07-31 | Migration 23. Two consents (GDPR + TOS) kept separate — see the phase note. `complete_signup_v2.sql` 28/28; 18/18 suites |
-| 3. Signup rebuilt: password account creation | G1 | Not started | - | - | |
+| 3. Signup rebuilt: password account creation | G1 | **Complete** | 2026-08-01 | 2026-08-01 | Flow inverted; profile carried in auth metadata through verification. Both confirmation modes handled. E2E specs land in Phase 11 |
 | 4. `/terms` + terms content | G1 | **Complete** | 2026-08-01 | 2026-08-01 | Real copy delivered: EN + CZ, version 1.0. RU deliberately absent — English shown with a notice. **`/privacy` copy still owed** |
 | 5. Login rework + existing-account migration | G1 | Not started | - | - | R1 |
 | 6. Account: change password, change email | G1 | Not started | - | - | |
@@ -604,6 +604,21 @@ code paths; one real game booked post-cutover; the native cron cadences restored
 and one execution verified before the external jobs retire. **Vercel Pro must be
 active by this gate.**
 
+**Privacy policy copy — deferred to here by ruling (2026-08-01).** The terms
+arrived as version 1.0 and shipped; the privacy policy did not. `/privacy` keeps
+its DRAFT banner until this gate. It sits alongside the domain and the Pro flip
+because it is a public-launch obligation, not a build task:
+
+- [ ] Real privacy copy supplied by a human — **no generated legal text**, per contract §3.1 and v2.5 §8
+- [ ] Shipped with the **same posture as the terms** (ratified 2026-08-01): a document per language under `content/`, never string-table keys; a language with no authored text renders English with the not-translated notice rather than an unreviewed translation
+- [ ] `PRIVACY_VERSION` bumped off `draft-` and the DRAFT banner removed in the same change
+- [ ] Signup's GDPR box, which links here, checked to land on real text
+
+**Why it is a launch blocker rather than a polish item:** the second required
+checkbox at signup is a data-processing consent pointing at that page. Consent
+to a document that does not exist is the one thing that cannot be repaired
+after the fact.
+
 Question to answer here: **Q5** (301 permanence for already-shared links).
 
 Passing this gate is what makes Phase 2 done.
@@ -619,7 +634,9 @@ Passing this gate is what makes Phase 2 done.
 | Dev database provisioned (Docker or second project) | Phase 0 | Oliver |
 | Hosted password minimum set to 8 | G1 | Oliver |
 | Three auth email templates authored in the dashboard | G1 | Oliver |
-| `content/terms.md` real copy | G1 (page ships earlier with a placeholder) | Oliver |
+| ~~`content/terms.md` real copy~~ | ~~G1~~ | **Delivered 2026-08-01, version 1.0 (EN + CS)** |
+| **Privacy policy copy** — deferred by ruling to the public-launch checklist | **G3** | Oliver |
+| Russian terms translation (optional; English applies until then) | post-G3 | Oliver |
 | Venue photographs | Phase 16 / G2 | Oliver |
 | FAQ copy in Czech and Russian | Phase 17 / G2 | Oliver |
 | Player-of-the-Month choice | Phase 17 | Oliver |

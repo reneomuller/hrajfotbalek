@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
-import { authNavLink, primaryNavLinks } from "@/lib/nav/links";
+import { authNavLink, primaryNavLinks, signedOutNavLinks } from "@/lib/nav/links";
 import { getStrings } from "@/lib/i18n/server";
 
 
@@ -26,6 +26,7 @@ export async function SiteHeader({
   const t = await getStrings();
   const { brand, nav } = t;
   const auth = authNavLink({ nickname }, t);
+  const signedOut = signedOutNavLinks({ nickname }, t);
 
   return (
     <header className="fixed inset-x-0 top-0 z-30 border-b border-hairline-chrome bg-ink/[.72] backdrop-blur-md">
@@ -64,12 +65,39 @@ export async function SiteHeader({
               {link.label}
             </Link>
           ))}
-          <Link
-            href={auth.href}
-            className="rounded-control bg-volt px-[14px] py-2 font-condensed text-[13px] font-extrabold uppercase tracking-wide text-surface no-underline"
-          >
-            {auth.label}
-          </Link>
+          {/*
+            Signed out, two doors: a quiet "Log in" and the volt "Sign up".
+            Contract §3.1 requires both to be distinct entries — with passwords
+            they are different acts, and a returning player who taps Sign up
+            gets told their email is taken instead of getting in. Signed in,
+            this collapses back to the single profile button.
+          */}
+          {signedOut.length > 0 ? (
+            <>
+              <Link
+                href={signedOut[0].href}
+                data-testid="nav-login"
+                className="font-condensed text-[13px] font-bold uppercase tracking-wide text-bone no-underline transition hover:text-volt"
+              >
+                {signedOut[0].label}
+              </Link>
+              <Link
+                href={signedOut[1].href}
+                data-testid="nav-signup"
+                className="rounded-control bg-volt px-[14px] py-2 font-condensed text-[13px] font-extrabold uppercase tracking-wide text-surface no-underline"
+              >
+                {signedOut[1].label}
+              </Link>
+            </>
+          ) : (
+            <Link
+              href={auth.href}
+              data-testid="nav-account"
+              className="rounded-control bg-volt px-[14px] py-2 font-condensed text-[13px] font-extrabold uppercase tracking-wide text-surface no-underline"
+            >
+              {auth.label}
+            </Link>
+          )}
         </nav>
       </div>
     </header>

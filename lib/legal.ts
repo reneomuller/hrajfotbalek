@@ -24,5 +24,18 @@ export const TERMS_VERSION = "1.0" as const;
  * form's second required box is a GDPR data-processing consent that links here.
  * Asking someone to consent to a document that does not exist is the one part
  * of signup that cannot be fixed after launch.
+ *
+ * DEFERRED BY RULING (2026-08-01) to the G3 public-launch checklist, alongside
+ * the domain cutover and the Vercel Pro flip. When the text lands it takes the
+ * SAME shape the terms took, which was ratified in the same ruling:
+ *
+ *   - a document per language under `content/`, never string-table keys —
+ *     a table falls back key by key, and half a clause in the wrong language is
+ *     worse than a whole document in a language the reader can identify;
+ *   - a language with no authored text renders English behind the
+ *     not-translated notice, rather than an unreviewed machine translation of a
+ *     document that is legally operative;
+ *   - this constant bumps off `draft-` in the same change that removes the
+ *     banner, so the version and the words can never disagree.
  */
 export const PRIVACY_VERSION = "draft-2026-07" as const;

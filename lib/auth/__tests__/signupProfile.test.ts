@@ -182,7 +182,8 @@ describe("profileFromMetadata", () => {
     expect(profileFromMetadata({ ...good, tos_accepted: false }, "a@b.com")).toBeNull();
     expect(profileFromMetadata({ ...good, gdpr_consent: false }, "a@b.com")).toBeNull();
     // Absent is not the same as true, and must not be read as it.
-    const { tos_accepted: _t, ...noTos } = good;
+    const noTos: Record<string, unknown> = { ...good };
+    delete noTos.tos_accepted;
     expect(profileFromMetadata(noTos, "a@b.com")).toBeNull();
   });
 
