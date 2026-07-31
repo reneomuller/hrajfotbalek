@@ -7,6 +7,7 @@
   - **The games list is calendar-density on mobile** (§5.5). Multiple games per screen. The current card, at roughly three-quarters of a phone screen, is a defect; the venue-photo swap helps but does not discharge this.
   - **The game page is state-aware** (§5.6). A player holding an active booking sees their booking — payment state and cancel action — not a claim CTA. The claim CTA renders only for non-holders while spots remain.
   - **Semi-transparent panels get ~20% more opaque** (§8). The background is currently winning against the text on top of it.
+  - **Field-list correction, ruled 2026-07-31** (§3.1). The signup form carries **three** checkboxes, not two: TOS acceptance and GDPR data-processing consent are distinct legal acts with distinct errors and are never merged, and the optional reminders preference is grouped visually apart from them. The v1.0 list omitted the GDPR box that v2.5 §8 requires and `complete_signup_v2` enforces. `TOS_VERSION_REQUIRED` is ratified in the same ruling: an unversioned acceptance is not auditable.
 
 - **v1.0 (2026-07-28)** — initial Phase 2 contract, drafted from the post-launch update inventory and Oliver's rulings of 24–28 Jul.
 - **v1.1.1 (2026-07-28)** — duration ruling, and one stale note removed.
@@ -75,7 +76,19 @@ For audit. Each is argued where it appears.
 ### 3.1 Signup (new flow)
 
 - Signed-out users see **two distinct entries: "Log in" and "Sign up."**
-- Signup collects, in order: **email** (required), **username/nickname** (required; the existing charset rules from **v2.5 §3** apply — letters, digits, space, dash, underscore, max 20), **password** (required; minimum 8 characters), **country** (required; flag list, scrollable, type-to-jump), **skill level** (required; Beginner / Intermediate / Advanced), **phone** (optional), **TOS checkbox** (required), **game-reminders checkbox** (optional; writes the existing `marketing_opt_in`).
+- Signup collects, in order: **email** (required), **username/nickname** (required; the existing charset rules from **v2.5 §3** apply — letters, digits, space, dash, underscore, max 20), **password** (required; minimum 8 characters), **country** (required; flag list, scrollable, type-to-jump), **skill level** (required; Beginner / Intermediate / Advanced), **phone** (optional), then the three boxes below.
+
+**The three checkboxes (v1.1.2 field-list correction).** The v1.0 list showed a TOS box and a reminders box. It omitted the GDPR consent that v2.5 §8 requires and Phase 2 never removed, and `complete_signup_v2` refuses a signup without it — so the list is corrected here rather than leaving the contract and the form disagreeing:
+
+| Box | Required | Writes |
+|---|---|---|
+| **Terms of service** — "I accept the terms" | yes | `tos_accepted_at`, `tos_version` |
+| **Data-processing consent** — GDPR, links to `/privacy` | yes | the signup is refused without it (`CONSENT_REQUIRED`) |
+| **Game reminders** — optional preference | no | `marketing_opt_in` |
+
+The two required boxes are **distinct legal acts and are never merged**: accepting the rules of a booking service is not consenting to the processing of personal data, and a single box covering both makes the consent non-specific, which is what makes it invalid. They carry distinct errors (`TOS_REQUIRED`, `CONSENT_REQUIRED`) so the form can say which one is missing.
+
+**Grouping is part of the requirement.** The two required legal acts sit together as one visual group; the optional preference is **visually separate** from them. A preference that looks like a legal act invites people to tick it without reading, and a legal act that looks like a preference invites the opposite.
 - **The 8-character minimum is a project setting, not a form rule.** The hosted project defaults to 6 and the API enforces whatever it is set to; a client-side check alone is decoration. Setting it is a §1.1 prerequisite and a G1 checklist line.
 - Email verification happens **once, at signup** (link or code, same email machinery as Phase 1). After verification the account is password-authenticated forever.
 - New columns on `players` (all nullable for existing rows): `country` (ISO 3166-1 alpha-2), `skill_level` (enum: beginner | intermediate | advanced), `tos_accepted_at` (timestamptz), `tos_version` (text).

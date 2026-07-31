@@ -67,7 +67,19 @@ export type CreditReason =
   | "cancellation_credit"
   | "admin_grant"
   | "redemption"
-  | "adjustment";
+  | "adjustment"
+  // Phase 2 (migration 22). The first reason that is a player putting money in
+  // rather than a consequence of something else — deliberately distinct from
+  // `admin_grant`, which is a gift the platform chose to make.
+  | "topup";
+
+/**
+ * Self-declared player ability (Phase 2, migration 21).
+ *
+ * Display and social signalling only: `create_booking` never consults it, and
+ * a restricted game does not refuse a player who does not match.
+ */
+export type SkillLevel = "beginner" | "intermediate" | "advanced";
 
 export type EventType =
   | "account_created"
@@ -151,6 +163,16 @@ export interface Database {
           is_seed: boolean;
           marketing_opt_in: boolean;
           created_at: string;
+          // Phase 2 (migration 21). Nullable without exception: the players who
+          // predate Phase 2 supplied none of this, and a default would assert a
+          // nationality and an ability on their behalf. Written by
+          // `complete_signup_v2` and the storage flow — never by a client, which
+          // is why none of them joins the per-column UPDATE grant.
+          country: string | null;
+          skill_level: SkillLevel | null;
+          tos_accepted_at: string | null;
+          tos_version: string | null;
+          photo_path: string | null;
         };
         Insert: {
           id?: string;
@@ -162,8 +184,19 @@ export interface Database {
           is_seed?: boolean;
           marketing_opt_in?: boolean;
           created_at?: string;
+          country?: string | null;
+          skill_level?: SkillLevel | null;
+          tos_accepted_at?: string | null;
+          tos_version?: string | null;
+          photo_path?: string | null;
         };
-        /** Clients may only update nickname/phone/marketing_opt_in (column grants). */
+        /**
+         * Clients may only update nickname/phone/marketing_opt_in (column grants).
+         *
+         * The Phase 2 profile columns are deliberately absent: consent evidence
+         * and the photo path are written by RPCs and the storage flow, and a
+         * player editing their own `tos_accepted_at` is not a feature.
+         */
         Update: {
           nickname?: string;
           phone?: string | null;
@@ -536,6 +569,30 @@ export interface Database {
         };
         Returns: string;
       };
+
+      /**
+       * Phase 2 signup (migration 23). Supersedes `complete_signup`, which
+       * stays only because dropping it needs a gated migration.
+       *
+       * The two consents are separate arguments with separate errors because
+       * they are separate legal acts — accepting terms is not consenting to
+       * data processing, and one box covering both makes the consent
+       * non-specific. Identity comes from `auth.uid()`; there is no player-id
+       * argument and there must never be one.
+       */
+      complete_signup_v2: {
+        Args: {
+          p_nickname: string;
+          p_gdpr_consent: boolean;
+          p_tos_accepted: boolean;
+          p_tos_version: string;
+          p_country: string;
+          p_skill_level: SkillLevel;
+          p_marketing_opt_in?: boolean;
+          p_phone?: string | null;
+        };
+        Returns: string;
+      };
     };
 
     Enums: {
@@ -544,6 +601,7 @@ export interface Database {
       payment_method: PaymentMethod;
       attendance_status: AttendanceStatus;
       credit_reason: CreditReason;
+      skill_level: SkillLevel;
     };
 
     CompositeTypes: Record<string, never>;

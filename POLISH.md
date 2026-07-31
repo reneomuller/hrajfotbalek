@@ -93,6 +93,18 @@ Scope was frozen at contract v1.1.1, so these are recorded rather than built.
       dropping one is a destructive migration that Phase 2 §1 forbids without a
       named gate sign-off — so `complete_signup_v2` ships alongside it and the
       original is left unused. Dropping it wants its own gated migration.
+- [ ] **`npm run db:types` destroys `lib/types/database.ts`.** That file is
+      hand-authored, not generated: it carries `BookingResult`, `CancelResult`,
+      `ConfirmResult`, `ClientPaymentMethod`, `GameSurface`, the curated
+      `EventType` catalog and explanatory comments, and it types optional RPC
+      arguments as `| null` where the generator emits `?:`. Running the script
+      (now possible, since Docker exists) overwrote all of it and broke six
+      call sites; the file had to be restored from a backup and patched by
+      hand. Either delete the script, or make it append the hand-written block
+      and reconcile the nullability — but do not leave a one-word command that
+      silently deletes a maintained file. The file's own header still says
+      generation is impossible because Docker is missing, which is no longer
+      true.
 - [ ] **`games.venue` (text, NOT NULL) still exists beside `venue_id`.**
       Migration 15 added the `venues` table and never removed the original
       column, so every game insert still has to populate a value nothing reads.
