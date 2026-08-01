@@ -18,13 +18,100 @@ import { SEED_PASSWORD } from "../scripts/fixtures.ts";
  *   listed in the G1 report.
  */
 
-test("the signed-out header offers two distinct doors", async ({ page }) => {
+/*
+ * REQ-AUTH-019 (v1.1.4 §3.1a) — ONE door in the header, and this REVERSES the
+ * two-doors assertion this spec previously carried.
+ *
+ * The earlier reasoning was sound and is worth restating rather than deleting:
+ * with passwords, logging in and signing up are different acts, and a
+ * returning player who taps Sign up is told their email is taken instead of
+ * getting in. What changed is where that distinction belongs. The header is
+ * not it; the LOGIN PAGE is, which is where someone with no account is already
+ * looking.
+ *
+ * So this asserts both halves — the header has one door, and the door leads
+ * somewhere that offers the other one. Asserting only the first half would
+ * pass just as well if signup had become unreachable.
+ */
+test("the signed-out header offers one door, and the login page carries the other", async ({
+  page,
+}) => {
   await page.goto("/games");
 
-  // With passwords these are different acts: a returning player who taps Sign
-  // up gets told their email is taken instead of getting in.
   await expect(page.getByTestId("nav-login")).toBeVisible();
-  await expect(page.getByTestId("nav-signup")).toBeVisible();
+  await expect(page.getByTestId("nav-signup")).toHaveCount(0);
+
+  await page.getByTestId("nav-login").click();
+  await page.waitForURL(/\/login/);
+  await expect(page.getByTestId("login-signup-link")).toBeVisible();
+
+  await page.getByTestId("login-signup-link").click();
+  await page.waitForURL(/\/signup/);
+});
+
+/*
+ * The deep-link intent survives the login → signup hop.
+ *
+ * Someone who taps "Claim your spot" while signed out lands on /login with the
+ * game attached. Losing it at this hop would send them through signup and then
+ * to the home page, having forgotten the game they came for.
+ */
+test("the create-account link carries the booking intent with it", async ({ page }) => {
+  await page.goto("/login?next=%2Fgame%2Fabc%2Fbook&game=abc&action=book");
+
+  const href = await page.getByTestId("login-signup-link").getAttribute("href");
+  expect(href).toContain("/signup?");
+  expect(href).toContain("game=abc");
+  expect(href).toContain("action=book");
+  expect(href).toContain("next=");
+});
+
+/*
+ * REQ-AUTH-019 — signed in, the account entry is an avatar rather than text.
+ */
+test("signed in, the header shows an account avatar and no login button", async ({
+  page,
+  context,
+}) => {
+  await signInAs(context, players.runner);
+  await page.goto("/games");
+
+  const account = page.getByTestId("nav-account");
+  await expect(account).toBeVisible();
+  await expect(page.getByTestId("nav-login")).toHaveCount(0);
+
+  // Initials, because this seeded player has no photo — the ordinary case
+  // rather than a failure (REQ-PROF-004).
+  await expect(account).toHaveText(/[A-Z]/);
+});
+
+/*
+ * REQ-AUTH-019 — the language control is a dropdown, EN → CZ → RU with flags.
+ */
+test("the language dropdown opens, lists all three, and switches", async ({ page }) => {
+  await page.goto("/games");
+
+  const trigger = page.getByTestId("locale-trigger");
+  await expect(trigger).toBeVisible();
+  // Closed to begin with: a dropdown, not three always-visible chips.
+  await expect(page.getByTestId("locale-menu")).toHaveCount(0);
+
+  await trigger.click();
+  const menu = page.getByTestId("locale-menu");
+  await expect(menu).toBeVisible();
+  await expect(menu.getByTestId("locale-en")).toBeVisible();
+  await expect(menu.getByTestId("locale-cs")).toBeVisible();
+  await expect(menu.getByTestId("locale-ru")).toBeVisible();
+
+  await menu.getByTestId("locale-cs").click();
+  // The page comes back in Czech, which is the only assertion that proves the
+  // control did anything.
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText(/Nadcházející/);
+
+  // And back, so the spec leaves the cookie as it found it.
+  await page.getByTestId("locale-trigger").click();
+  await page.getByTestId("locale-en").click();
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText(/Upcoming/);
 });
 
 test("a returning player signs in with a password", async ({ page }) => {

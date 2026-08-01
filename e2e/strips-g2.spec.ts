@@ -134,3 +134,39 @@ test("a restricted game, its organizer, and the roster", async ({ page, context 
     await destroyScratchGame(game.id);
   }
 });
+
+// --- Phase 16 ----------------------------------------------------------------
+
+test("the reworked header, the venue fallback, the share pair and a toast", async ({
+  page,
+  context,
+}) => {
+  const game = await createScratchGame({ durationMinutes: 90, capacity: 6 });
+
+  try {
+    // Signed out: one Log in button, the language dropdown beside it.
+    await page.goto(`/game/${game.id}`, { waitUntil: "networkidle" });
+    await expect(page.getByTestId("nav-login")).toBeVisible();
+    await strip(page, "16-detail-signed-out");
+
+    // The language dropdown open, which is the control the reversal introduced.
+    await page.getByTestId("locale-trigger").click();
+    await expect(page.getByTestId("locale-menu")).toBeVisible();
+    await strip(page, "16-language-dropdown");
+    await page.keyboard.press("Escape");
+
+    // The login page, which now carries the create-account path.
+    await page.goto("/login", { waitUntil: "networkidle" });
+    await strip(page, "16-login-with-signup");
+
+    // Signed in: the avatar entry, and a toast landed by the redirect.
+    await signInAs(context, players.runner);
+    await page.goto(`/game/${game.id}/book`, { waitUntil: "networkidle" });
+    await page.getByTestId("confirm-booking").click();
+    await page.waitForURL(/\/book\/confirmation/);
+    await expect(page.getByTestId("toast")).toBeVisible();
+    await strip(page, "16-toast-booking-created");
+  } finally {
+    await destroyScratchGame(game.id);
+  }
+});

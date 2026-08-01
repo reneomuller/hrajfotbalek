@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { ToastFromQuery } from "@/components/ToastFromQuery";
 import Link from "next/link";
 import { PlayerHistory } from "@/components/account/PlayerHistory";
 import { splitHistory } from "@/lib/booking/history";
@@ -30,8 +31,13 @@ export const dynamic = "force-dynamic";
  * every read below is own-row only, so even a bug in this gate could not
  * surface another player's bookings or ledger.
  */
-export default async function AccountPage() {
+export default async function AccountPage({
+  searchParams,
+}: {
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
+}) {
   const t = await getStrings();
+  const query = searchParams ? await searchParams : {};
   const player = await requireCurrentPlayer("/account");
 
   const [bookings, balanceCzk] = await Promise.all([
@@ -168,6 +174,9 @@ export default async function AccountPage() {
           {t.account.deleteMailto}
         </a>
       </section>
+
+      {/* Signed in, or a cancellation made from this page. */}
+      <ToastFromQuery query={query} />
     </main>
   );
 }

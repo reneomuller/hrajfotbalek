@@ -145,6 +145,8 @@ export const cs: StringsOverlay = {
     verifyHint: "Nic nepřišlo? Zkontroluj spam a pak to zkus znovu.",
 
     signUp: "Registrace",
+    noAccountLead: "Ještě nemáš účet?",
+    createAccountCta: "Založ si ho →",
     haveAccount: "Už máš účet?",
     noAccount: "Jsi tu poprvé?",
     nicknameLabel: "Přezdívka",
@@ -186,6 +188,8 @@ export const cs: StringsOverlay = {
     notFound: "Takový zápas neexistuje, nebo ještě není zveřejněný.",
     backToGames: "← Všechny zápasy",
     viewGame: "Zobrazit zápas",
+    copyLink: "Kopírovat odkaz",
+    copyLinkFailed: "Nepodařilo se zkopírovat — podrž adresní řádek.",
     dayToday: "Dnes",
     dayTomorrow: "Zítra",
     rosterReserved: "drží místo",
@@ -194,6 +198,7 @@ export const cs: StringsOverlay = {
     joinNote: "Jedno ťuknutí a máš místo. Zaplať předem z mobilu.",
     openMap: "OTEVŘÍT MAPU ↗",
     mapAlt: "Mapa místa",
+    venuePhotoAlt: "Hřiště {venue}",
     surface: {
       turf: "Umělá tráva",
       grass: "Tráva",
@@ -384,9 +389,18 @@ export const cs: StringsOverlay = {
     tryAgain: "Zkusit znovu",
   },
 
+  toast: {
+    bookingCreated: "Jsi v sestavě. Místo ti držíme.",
+    signedIn: "Přihlášeno.",
+    bookingCancelled: "Zrušeno — hodnota se ti vrátila do peněženky jako kredit.",
+    topupConfirmed: "Dobití potvrzeno. Zůstatek je aktualizovaný.",
+    linkCopied: "Odkaz zkopírován.",
+  },
+
   common: {
     back: "Zpět",
     close: "Zavřít",
+    dismiss: "Zavřít oznámení",
     loading: "Načítání…",
     // `czk` is NOT translated. `formatCzk()` renders "200 CZK" in every
     // language on purpose — see the header note.

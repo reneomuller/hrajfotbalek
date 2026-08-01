@@ -144,6 +144,8 @@ export const ru: StringsOverlay = {
     verifyHint: "Письма нет пару минут? Проверь спам и попробуй снова.",
 
     signUp: "Регистрация",
+    noAccountLead: "Ещё нет аккаунта?",
+    createAccountCta: "Создать →",
     haveAccount: "Уже есть аккаунт?",
     noAccount: "Впервые здесь?",
     nicknameLabel: "Ник",
@@ -185,6 +187,8 @@ export const ru: StringsOverlay = {
     notFound: "Такого матча нет или он ещё не опубликован.",
     backToGames: "← Все матчи",
     viewGame: "Открыть матч",
+    copyLink: "Копировать ссылку",
+    copyLinkFailed: "Не удалось скопировать — зажми адресную строку.",
     dayToday: "Сегодня",
     dayTomorrow: "Завтра",
     rosterReserved: "держит место",
@@ -193,6 +197,7 @@ export const ru: StringsOverlay = {
     joinNote: "Одно касание — и место твоё. Заплати заранее с телефона.",
     openMap: "ОТКРЫТЬ КАРТУ ↗",
     mapAlt: "Карта площадки",
+    venuePhotoAlt: "Поле {venue}",
     surface: {
       turf: "Искусственный газон",
       grass: "Трава",
@@ -384,9 +389,18 @@ export const ru: StringsOverlay = {
     tryAgain: "Попробовать снова",
   },
 
+  toast: {
+    bookingCreated: "Ты в составе. Место забронировано.",
+    signedIn: "Вход выполнен.",
+    bookingCancelled: "Отменено — сумма вернулась в кошелёк как кредит.",
+    topupConfirmed: "Пополнение подтверждено. Баланс обновлён.",
+    linkCopied: "Ссылка скопирована.",
+  },
+
   common: {
     back: "Назад",
     close: "Закрыть",
+    dismiss: "Скрыть уведомление",
     loading: "Загрузка…",
     // `czk` is NOT translated — see the header note on money.
   },

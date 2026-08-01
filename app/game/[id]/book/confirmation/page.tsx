@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { ToastFromQuery } from "@/components/ToastFromQuery";
 import Link from "next/link";
 import { QrPayment } from "@/components/QrPayment";
 import { requireCurrentPlayer } from "@/lib/auth/session";
@@ -165,6 +166,11 @@ export default async function ConfirmationPage({
           {t.booking.backToGame}
         </Link>
       </div>
+
+      {/* "You're in" — carried here by the redirect `create_booking`'s action
+          performs, because a marker rendered from the action's own state can
+          be unmounted by the revalidation before anyone sees it. */}
+      <ToastFromQuery query={query} />
     </main>
   );
 }

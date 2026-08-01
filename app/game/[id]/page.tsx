@@ -4,8 +4,9 @@ import { Roster } from "@/components/Roster";
 import { AvatarRow } from "@/components/game/AvatarRow";
 import { CapacityBar } from "@/components/game/CapacityBar";
 import { FormatChips } from "@/components/game/FormatChips";
-import { ShareButton } from "@/components/game/ShareButton";
+import { SharePair } from "@/components/game/SharePair";
 import { SkillBadges } from "@/components/game/SkillBadges";
+import { ToastFromQuery } from "@/components/ToastFromQuery";
 import { WaitlistPanel } from "@/components/game/WaitlistPanel";
 import { YourBookingPanel } from "@/components/game/YourBookingPanel";
 import { VenueMapPanel } from "@/components/VenueMapPanel";
@@ -15,7 +16,7 @@ import { readResumeIntent } from "@/lib/booking/resume";
 import { runJoinWaitlist } from "./waitlist/actions";
 import { getCurrentPlayer, getSessionUser } from "@/lib/auth/session";
 import { formatCzk, formatGameDateTime, formatGameTimeSpan } from "@/lib/format";
-import { gameEndsAt } from "@/lib/games/duration";
+import { gameEndsAt, resolveDurationMinutes } from "@/lib/games/duration";
 import {
   getGameById,
   getGameOrganizer,
@@ -396,10 +397,38 @@ export default async function GameDetailPage({ params, searchParams }: GamePageP
         </section>
       )}
 
-      {/* Share to WhatsApp — the channel this whole product replaced, and
-          still where a game actually gets filled. */}
+      {/*
+        PRACTICAL INFORMATION (§5.7, REQ-GAME-023).
+
+        The questions someone asks the first time they turn up, in one block
+        rather than scattered down the page. Arrival and equipment are fixed
+        copy — they are true of every game this product runs — and the duration
+        comes from the same resolver every other surface uses, so this block
+        cannot disagree with the time span at the top of the page.
+      */}
+      <section
+        data-testid="practical-info"
+        className="mt-6 rounded-card border border-hairline bg-surface-card p-5"
+      >
+        <h2 className="m-0 font-condensed text-[17px] font-bold uppercase tracking-wide text-white">
+          {t.games.practicalTitle}
+        </h2>
+        <ul className="mt-3 flex list-none flex-col gap-2 p-0 text-[14px] leading-relaxed text-bone">
+          <li>{t.games.practicalArrival}</li>
+          <li>{t.games.practicalEquipment}</li>
+          <li>
+            <span className="text-muted">{t.games.practicalDuration}: </span>
+            {t.games.practicalDurationValue.replace(
+              "{minutes}",
+              String(resolveDurationMinutes(game.duration_minutes)),
+            )}
+          </li>
+        </ul>
+      </section>
+
+      {/* Copy link primary, WhatsApp secondary (§5.4, REQ-GAME-014). */}
       <div className="mt-8">
-        <ShareButton
+        <SharePair
           venue={game.venue}
           when={formatGameDateTime(game.starts_at)}
           url={`${await siteUrl()}/game/${game.id}`}
@@ -413,6 +442,10 @@ export default async function GameDetailPage({ params, searchParams }: GamePageP
       {(isFull || waitlist.length > 0) && (
         <WaitlistPanel rows={waitlist} viewerNickname={viewerNickname} />
       )}
+
+      {/* Booking created, cancelled, or signed in — whichever the redirect
+          that landed here carried. */}
+      <ToastFromQuery query={query} />
     </main>
   );
 }

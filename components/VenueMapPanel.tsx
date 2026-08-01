@@ -13,14 +13,24 @@ export interface VenueMapPanelProps {
 }
 
 /**
- * The venue panel: a human-supplied photo when there is one, the frame and pin
- * when there is not, and an "open map" link either way.
+ * The venue panel: a real photograph of the pitch when there is one, and the
+ * name plus an "Open map" button when there is not (§5.4, REQ-GAME-012/013).
+ *
+ * NO EMPTY FRAME. This is the part that changed in Phase 16. The panel used to
+ * render its traced-map furniture — vignette, pulsing pin, chips — whether or
+ * not a photo existed, so a venue without one got a 220px box of decoration
+ * that looked like an image still loading. A venue with no photo now renders
+ * the name and the map button and nothing else: a compact bar, not a frame
+ * around an absence.
+ *
+ * THE TRACED-MAP ASSETS STAY IN THE REPO, UNUSED (REQ-GAME-012). They are not
+ * deleted, because deleting them is a decision about art rather than about
+ * this phase, and the panel that drew them is one revert away.
  *
  * NO MAP API. The image is a committed asset under `public/venues/`, chosen by
- * the organizer when they add the venue. That is a deliberate trade: a real map
- * service would mean a key, a bill, a per-render request and a third party
- * learning which pitches this app cares about — for a photo that changes maybe
- * twice a year.
+ * the organizer when they add the venue. A real map service would mean a key,
+ * a bill, a per-render request and a third party learning which pitches this
+ * app cares about — for a photo that changes maybe twice a year.
  *
  * `image_path` reaches an `<img src>`, so it is constrained where it is stored
  * (`venues_image_path_format` admits only `/venues/<file>.<ext>`) rather than
@@ -39,39 +49,55 @@ export async function VenueMapPanel({ venue, venueRow, className }: VenueMapPane
       : null;
 
   const mapQuery = encodeURIComponent(venueRow?.map_query || venue);
+  const mapHref = `https://maps.google.com/?q=${mapQuery}`;
 
-  return (
-    <div className={`relative overflow-hidden bg-surface ${className ?? "h-[200px]"}`}>
-      {image && (
-        <Image
-          src={image}
-          alt={t.games.mapAlt}
-          fill
-          sizes="(max-width: 768px) 100vw, 480px"
-          className="object-cover object-center"
-        />
-      )}
-      <div className="absolute inset-0 bg-map-vignette" />
-
-      {/* Pin — pulsing ring, teardrop, hole. */}
-      <div className="absolute left-1/2 top-[67%] h-12 w-12 -translate-x-1/2 -translate-y-1/2">
-        <span className="absolute inset-0 animate-pulseRing rounded-full border-[1.5px] border-volt" />
-        <span className="absolute left-1/2 top-1/2 h-6 w-6 -translate-x-1/2 -translate-y-[58%] rotate-45 rounded-[50%_50%_50%_0] bg-volt shadow-volt-glow-lg" />
-        <span className="absolute left-1/2 top-[42%] z-[2] h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-surface" />
+  // --- no photo: name + button, and no frame around the absence -------------
+  if (!image) {
+    return (
+      <div
+        data-testid="venue-panel-no-photo"
+        className="flex flex-wrap items-center justify-between gap-3 bg-surface-card px-4 py-3"
+      >
+        <span className="font-mono text-[12px] tracking-[1px] text-bone">◴ {venue}</span>
+        <a
+          href={mapHref}
+          target="_blank"
+          rel="noopener noreferrer"
+          data-testid="venue-open-map"
+          className="rounded-[7px] border border-hairline-volt-strong px-[9px] py-[6px] font-mono text-[9px] tracking-[1px] text-volt no-underline"
+        >
+          {t.games.openMap}
+        </a>
       </div>
+    );
+  }
+
+  // --- the photograph -------------------------------------------------------
+  return (
+    <div
+      data-testid="venue-panel-photo"
+      className={`relative overflow-hidden bg-surface ${className ?? "h-[200px]"}`}
+    >
+      <Image
+        src={image}
+        alt={t.games.venuePhotoAlt.replace("{venue}", venue)}
+        fill
+        sizes="(max-width: 768px) 100vw, 480px"
+        className="object-cover object-center"
+      />
+      {/* Keeps the chips legible over whatever the photograph happens to be
+          bright in — a real pitch photo has sky in it. */}
+      <div className="absolute inset-0 bg-map-vignette" />
 
       <div className="absolute bottom-3 left-[14px] rounded-[7px] border border-hairline-strong bg-surface-overlay px-[10px] py-[6px] font-mono text-[10px] tracking-[1px] text-bone">
         ◴ {venue}
       </div>
 
-      {/*
-        The fallback that survives having no photo: whatever else is true, the
-        player can still find the pitch.
-      */}
       <a
-        href={`https://maps.google.com/?q=${mapQuery}`}
+        href={mapHref}
         target="_blank"
         rel="noopener noreferrer"
+        data-testid="venue-open-map"
         className="absolute right-[14px] top-[14px] rounded-[7px] border border-hairline-volt-strong bg-surface-overlay px-[9px] py-[6px] font-mono text-[9px] tracking-[1px] text-volt no-underline"
       >
         {t.games.openMap}

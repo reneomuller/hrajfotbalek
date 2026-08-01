@@ -580,3 +580,144 @@ test("a row carries the span, venue, format, subs, price, badge and spots", asyn
     await destroyScratchGame(game.id);
   }
 });
+
+/*
+ * REQ-GAME-013 — a venue with no photo renders the name and Open map, and no
+ * empty frame.
+ *
+ * The scratch venue deliberately has no `image_path`, which is why it is the
+ * fixture for this: the panel used to draw its vignette, pin and chips whether
+ * or not a photo existed, so a venue without one got 220px of decoration that
+ * looked like an image still loading.
+ */
+test("a venue with no photo renders name and Open map, with no empty frame", async ({
+  page,
+}) => {
+  const game = await createScratchGame();
+
+  try {
+    await page.goto(`/game/${game.id}`);
+
+    await expect(page.getByTestId("venue-panel-no-photo")).toBeVisible();
+    await expect(page.getByTestId("venue-panel-photo")).toHaveCount(0);
+    await expect(page.getByTestId("venue-open-map")).toBeVisible();
+    await expect(page.getByTestId("venue-panel-no-photo")).toContainText("E2E Scratch Pitch");
+
+    // The frame is what "no empty frame" is about: the panel must not be a
+    // tall box. 96px is generous for one line of text and a button, and well
+    // under the 220px the photo panel occupies.
+    const box = await page.getByTestId("venue-panel-no-photo").boundingBox();
+    expect(box!.height).toBeLessThan(96);
+  } finally {
+    await destroyScratchGame(game.id);
+  }
+});
+
+/*
+ * REQ-GAME-014 / REQ-UX-002 — copy link is the primary share, and it toasts.
+ *
+ * Clipboard permission is granted explicitly: headless Chromium refuses
+ * `navigator.clipboard.writeText` without it, and the component's fallback
+ * would then be what is under test instead of the path a real phone takes.
+ */
+test("copy link puts the URL on the clipboard and raises a toast", async ({
+  page,
+  context,
+}) => {
+  await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+  const game = await createScratchGame();
+
+  try {
+    await page.goto(`/game/${game.id}`);
+
+    const copy = page.getByTestId("share-copy-link");
+    await expect(copy).toBeVisible();
+    // Primary means first: WhatsApp is beside it, not before it.
+    const whatsapp = page.getByTestId("share-whatsapp");
+    await expect(whatsapp).toBeVisible();
+
+    await copy.click();
+
+    await expect(page.getByTestId("toast")).toBeVisible();
+    await expect(page.getByTestId("toast")).toContainText("Link copied");
+
+    const clipboard = await page.evaluate(() => navigator.clipboard.readText());
+    expect(clipboard).toContain(`/game/${game.id}`);
+  } finally {
+    await destroyScratchGame(game.id);
+  }
+});
+
+/*
+ * REQ-UX-002 — the booking and cancellation toasts, which cross a navigation.
+ *
+ * These are the two that CLAUDE.md's warning applies to: a marker rendered
+ * from a `useActionState` result can be unmounted by the revalidation before
+ * it is observed. Both are asserted on the page the SERVER renders next.
+ */
+test("booking and cancelling each raise their toast on the page that follows", async ({
+  page,
+  context,
+}) => {
+  const game = await createScratchGame({ capacity: 4 });
+
+  try {
+    await signInAs(context, players.runner);
+
+    // --- created -----------------------------------------------------------
+    await page.goto(`/game/${game.id}/book`);
+    await page.getByTestId("confirm-booking").click();
+    await page.waitForURL(/\/book\/confirmation/);
+    await expect(page.getByTestId("toast")).toBeVisible();
+    await expect(page.getByTestId("toast")).toContainText("You're in");
+
+    // --- cancelled ---------------------------------------------------------
+    page.on("dialog", (dialog) => void dialog.accept());
+    await page.goto(`/game/${game.id}`);
+    await page.getByTestId("cancel-booking").click();
+
+    // Back on the game page, rendered by the server with the toast in the URL.
+    await expect(page.getByTestId("toast")).toBeVisible();
+    await expect(page.getByTestId("toast")).toContainText("credit");
+    // And the state-aware panel is gone, because the booking is.
+    await expect(page.getByTestId("your-booking")).toHaveCount(0);
+  } finally {
+    await destroyScratchGame(game.id);
+  }
+});
+
+/*
+ * A hand-edited toast parameter renders nothing. The set is closed for exactly
+ * this reason: without it, `?toast=<anything>` would put arbitrary text on the
+ * page in the product's own voice.
+ */
+test("an unrecognised toast parameter renders no toast at all", async ({ page }) => {
+  const game = await createScratchGame();
+
+  try {
+    await page.goto(`/game/${game.id}?toast=You+have+won+a+prize`);
+    await expect(page.getByTestId("toast")).toHaveCount(0);
+  } finally {
+    await destroyScratchGame(game.id);
+  }
+});
+
+/*
+ * REQ-GAME-023 — the practical-info block, in one place rather than scattered.
+ */
+test("the detail carries arrival, equipment and duration in one block", async ({ page }) => {
+  const game = await createScratchGame({ durationMinutes: 90 });
+
+  try {
+    await page.goto(`/game/${game.id}`);
+    const block = page.getByTestId("practical-info");
+    await expect(block).toBeVisible();
+    await expect(block).toContainText("10 minutes before");
+    await expect(block).toContainText("bibs");
+    // The duration agrees with the span at the top of the page, because both
+    // resolve through the same helper.
+    await expect(block).toContainText("90 minutes");
+  } finally {
+    await destroyScratchGame(game.id);
+  }
+});

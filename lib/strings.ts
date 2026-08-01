@@ -223,6 +223,12 @@ export const strings = {
     verifyHint: "No email after a minute or two? Check spam, then try again.",
 
     signUp: "Sign up",
+    // The header carries ONE door as of v1.1.4 (§3.1a), so the create-account
+    // path lives here — which is where someone with no account is already
+    // looking. Removing it from the header without this line would leave
+    // /signup reachable only by typing the URL.
+    noAccountLead: "No account yet?",
+    createAccountCta: "Create one →",
     haveAccount: "Already have an account?",
     noAccount: "New here?",
   },
@@ -270,6 +276,11 @@ export const strings = {
     notFound: "That game does not exist, or is not published yet.",
     backToGames: "← All games",
     viewGame: "View game",
+    // Copy link is the PRIMARY share (§5.4): a copied link goes wherever the
+    // sender is already talking, and WhatsApp is one of those places rather
+    // than all of them.
+    copyLink: "Copy link",
+    copyLinkFailed: "Could not copy — long-press the address bar instead.",
     // The day-picker strip (§5.5). "Today" and "Tomorrow" earn their special
     // case: they are the two days anyone opening this page is deciding
     // between, and "Sun" on a Sunday makes a reader do arithmetic.
@@ -284,6 +295,9 @@ export const strings = {
     joinNote: "One tap to claim. Pay ahead from your phone.",
     openMap: "OPEN MAP ↗",
     mapAlt: "Map of the venue",
+    // The panel is a real photograph of the pitch now, not a traced map, so
+    // the alt text names the venue rather than describing a diagram.
+    venuePhotoAlt: "The pitch at {venue}",
     // Shown on an avatar whose nickname has no letters or digits at all.
     rosterUnknown: "?",
     // Surface labels, keyed by the `games_surface_known` values. A closed set
@@ -977,9 +991,27 @@ export const strings = {
     },
   },
 
+  /**
+   * Toast copy (§8, REQ-UX-002).
+   *
+   * Five moments, one component. The set is closed — `lib/ux/toast.ts` carries
+   * the kinds — so a toast is never free text arriving from a query string.
+   */
+  toast: {
+    bookingCreated: "You're in. Your spot is held.",
+    signedIn: "Signed in.",
+    // Names the amount, because "cancelled" alone leaves the question the
+    // player actually has — where did the money go — unanswered.
+    bookingCancelled: "Cancelled — the value is back in your wallet as credit.",
+    topupConfirmed: "Top-up confirmed. Your balance is updated.",
+    linkCopied: "Link copied.",
+  },
+
   common: {
     back: "Back",
     close: "Close",
+    // The toast's own dismiss, distinct from a dialog's Close.
+    dismiss: "Dismiss",
     loading: "Loading…",
     czk: "CZK",
   },

@@ -27,6 +27,11 @@ const PLAYER_FACING = [
   // Contract §6, delivered 2026-08-01. Czech is Oliver's; Russian is a flagged
   // draft. Both are real translations, which is what this list demands.
   "faq",
+  // Contract §8, Phase 16. Five toasts, and every one of them is read by a
+  // player at the moment something happened to their booking or their money —
+  // which is the worst possible moment to be shown a language they do not
+  // read.
+  "toast",
 ] as const;
 
 /**

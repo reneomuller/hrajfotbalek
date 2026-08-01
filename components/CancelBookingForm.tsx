@@ -30,7 +30,20 @@ function SubmitButton() {
  * credit rather than money, so it is not a fully reversible action from the
  * player's point of view and should not be one tap away by accident.
  */
-export function CancelBookingForm({ bookingId }: { bookingId: string }) {
+export function CancelBookingForm({
+  bookingId,
+  toastTo,
+}: {
+  bookingId: string;
+  /**
+   * Where to land afterwards, so the cancellation toast is rendered by the
+   * SERVER on the next request rather than from this component's action state
+   * — which `revalidatePath` can unmount before anyone sees it (CLAUDE.md).
+   * Omitted, the action returns its state and this renders the inline note,
+   * exactly as it did before Phase 16.
+   */
+  toastTo?: string;
+}) {
   const t = useStrings();
   const [state, formAction] = useActionState(cancelBookingAction, INITIAL);
 
@@ -50,6 +63,7 @@ export function CancelBookingForm({ bookingId }: { bookingId: string }) {
       }}
     >
       <input type="hidden" name="bookingId" value={bookingId} />
+      {toastTo && <input type="hidden" name="toastTo" value={toastTo} />}
       <SubmitButton />
 
       {state.status === "error" && state.code && (

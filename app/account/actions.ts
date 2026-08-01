@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { withToast } from "@/lib/ux/toast";
 import { redirect } from "next/navigation";
 import { notifyWaitlistForGame } from "@/lib/cron/waitlistRelease";
 import { bookingEmailContext } from "@/lib/cron/context";
@@ -106,6 +107,25 @@ export async function cancelBookingAction(
   // The issued credit must show up in the balance immediately — the ledger is
   // the authority and the page recomputes it server-side on the next render.
   revalidatePath("/account");
+  if (booking?.game_id) revalidatePath(`/game/${booking.game_id}`);
+
+  /*
+   * THE TOAST TRAVELS BY REDIRECT, not by the returned state (§8, REQ-UX-002).
+   *
+   * CLAUDE.md records the reason directly: a marker rendered from a
+   * `useActionState` result can be unmounted by the re-render `revalidatePath`
+   * triggers, before anyone — or any assertion — observes it. A redirect
+   * carrying `?toast=` is rendered by the SERVER on the next request, so it
+   * survives.
+   *
+   * `toastTo` is optional and the returned state is unchanged without it, so
+   * the two call sites opt in and nothing that predates them has to move.
+   */
+  const toastTo = String(formData.get("toastTo") ?? "");
+  if (toastTo.startsWith("/")) {
+    redirect(withToast(toastTo, "bookingCancelled"));
+  }
+
   return { status: "cancelled" };
 }
 

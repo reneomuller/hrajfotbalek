@@ -134,6 +134,10 @@ export default async function RootLayout({
             <SiteHeader
               nickname={player?.nickname ?? null}
               isAdmin={player?.is_admin ?? false}
+              photoPath={player?.photo_path ?? null}
+              /* `created_at` moves when the row does, which is when the photo
+                 bytes changed — the same cache-busting value `/account` uses. */
+              photoVersion={player?.created_at ?? null}
             />
             {children}
             <SiteFooter />

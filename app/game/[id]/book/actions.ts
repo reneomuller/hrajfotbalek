@@ -1,6 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { withToast } from "@/lib/ux/toast";
 import { bookingEmailContext } from "@/lib/cron/context";
 import { dispatchEmail } from "@/lib/email/dispatch";
 import { buildSpdString, amountDueCzk, paymentIban } from "@/lib/payments/spd";
@@ -62,7 +63,12 @@ export async function createBookingAction(
   const bookingId = await runCreateBooking(gameId, rawMethod);
   if (typeof bookingId !== "string") return bookingId;
 
-  redirect(`/game/${gameId}/book/confirmation?booking=${bookingId}`);
+  // The booking-created toast rides the redirect the flow already performs —
+  // the acting request and the request that renders the confirmation are
+  // different requests, and a kind in the URL is what survives that.
+  redirect(
+    withToast(`/game/${gameId}/book/confirmation?booking=${bookingId}`, "bookingCreated"),
+  );
 }
 
 /**

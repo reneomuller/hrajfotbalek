@@ -21,12 +21,26 @@ const config: Config = {
         ink: "#080808",
         surface: "#0A0A0A",
         "surface-raised": "#0D0D0D",
-        "surface-card": "rgba(15,15,15,.55)",
+        /*
+         * TRANSLUCENT SURFACES, ~20% MORE OPAQUE (v1.1.2 §8, REQ-UX-004).
+         *
+         * .55 -> .66, .70 -> .84, .82 -> .92, .85 -> .94 — a fifth more alpha
+         * on each, clamped where it would pass 1. The pitch background was
+         * winning against the text sitting on it, and legibility on a phone
+         * held outdoors in daylight is not a taste question.
+         *
+         * THE EDIT IS HERE AND NOWHERE ELSE. The surfaces are already
+         * expressed as tokens, so one change moves all of them and nothing
+         * drifts; a per-component override would be the first of several that
+         * then have to agree. The volt-on-black character is unchanged — this
+         * is opacity, not palette.
+         */
+        "surface-card": "rgba(15,15,15,.66)",
         // The pay/community cards sit at a heavier fill than the step cards.
-        "surface-card-strong": "rgba(15,15,15,.7)",
-        "surface-panel": "rgba(13,13,13,.82)",
-        // Chips and labels laid over the map image.
-        "surface-overlay": "rgba(10,10,10,.85)",
+        "surface-card-strong": "rgba(15,15,15,.84)",
+        "surface-panel": "rgba(13,13,13,.92)",
+        // Chips and labels laid over the venue photo.
+        "surface-overlay": "rgba(10,10,10,.94)",
         // Roster avatar fill and the unfilled half of the capacity bar.
         "surface-avatar": "#222222",
         "surface-seg": "#242424",

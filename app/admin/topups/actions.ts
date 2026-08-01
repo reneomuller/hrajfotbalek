@@ -1,6 +1,8 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
+import { withToast } from "@/lib/ux/toast";
 import { requireAdmin } from "@/lib/auth/requireAdmin";
 import { createServerSupabaseClient, createServiceRoleSupabaseClient } from "@/lib/supabase/clients";
 import { sendRenderedEmail } from "@/lib/email/sendEmail";
@@ -76,4 +78,9 @@ export async function confirmTopupAction(formData: FormData): Promise<void> {
 
   revalidatePath("/admin/topups");
   revalidatePath("/account");
+
+  // The admin confirmed it, so the admin is who gets told. The player learns
+  // by receipt email and by their balance — a toast on a page they are not
+  // looking at is not a notification.
+  redirect(withToast("/admin/topups", "topupConfirmed"));
 }

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { ToastFromQuery } from "@/components/ToastFromQuery";
 import { confirmTopupAction } from "./actions";
 import { requireAdmin } from "@/lib/auth/requireAdmin";
 import { createServiceRoleSupabaseClient } from "@/lib/supabase/clients";
@@ -24,8 +25,13 @@ export const dynamic = "force-dynamic";
  * the case the bank disagrees with the request — and unlike a booking, there is
  * no under/overpayment rule to apply: whatever arrived is what gets credited.
  */
-export default async function AdminTopupsPage() {
+export default async function AdminTopupsPage({
+  searchParams,
+}: {
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
+}) {
   await requireAdmin();
+  const query = searchParams ? await searchParams : {};
   const t = await getStrings();
 
   const admin = createServiceRoleSupabaseClient();
@@ -90,6 +96,10 @@ export default async function AdminTopupsPage() {
           ))}
         </ul>
       )}
+
+      {/* Confirmed — the admin is who acted, so the admin is who is told. The
+          player learns by receipt email and by their balance. */}
+      <ToastFromQuery query={query} />
     </div>
   );
 }

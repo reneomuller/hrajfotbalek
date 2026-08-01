@@ -1,6 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { withToast } from "@/lib/ux/toast";
 import {
   completePostAuth,
   destinationAfterAuth,
@@ -205,7 +206,10 @@ export async function signInWithPassword(
   const { hasPlayer } = await completePostAuth(supabase);
   const resume = resumeDestination({ next, gameId, action });
 
-  redirect(destinationAfterAuth({ hasPlayer, resume }));
+  // The sign-in toast rides the redirect that already happens (§8). Only on
+  // the PASSWORD path: the code path lands on set-password, where "signed in"
+  // is not the news and the next step is.
+  redirect(withToast(destinationAfterAuth({ hasPlayer, resume }), "signedIn"));
 }
 
 /**

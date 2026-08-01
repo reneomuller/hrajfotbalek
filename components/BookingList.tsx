@@ -87,7 +87,7 @@ export async function BookingList({ rows }: BookingListProps) {
                 ) : (
                   <span />
                 )}
-                {showCancel && <CancelBookingForm bookingId={booking.id} />}
+                {showCancel && <CancelBookingForm bookingId={booking.id} toastTo="/account" />}
               </div>
             )}
 

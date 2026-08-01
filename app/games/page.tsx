@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { ToastFromQuery } from "@/components/ToastFromQuery";
 import { EmptyState } from "@/components/EmptyState";
 import { DayPicker } from "@/components/game/DayPicker";
 import { GameRow } from "@/components/game/GameRow";
@@ -124,6 +125,9 @@ export default async function GamesPage({
           ))}
         </div>
       )}
+
+      {/* Signed in, or arrived from a cancellation. */}
+      <ToastFromQuery query={query} />
     </main>
   );
 }

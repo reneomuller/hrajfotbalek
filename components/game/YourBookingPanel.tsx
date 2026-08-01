@@ -86,7 +86,12 @@ export async function YourBookingPanel({
           </Link>
         )}
 
-        {canCancel && <CancelBookingForm bookingId={booking.id} />}
+        {canCancel && (
+          <CancelBookingForm
+            bookingId={booking.id}
+            toastTo={`/game/${booking.game_id}`}
+          />
+        )}
       </div>
     </section>
   );
