@@ -2,7 +2,7 @@ import { mkdir } from "node:fs/promises";
 import path from "node:path";
 import { expect, test } from "@playwright/test";
 import { createScratchGame, destroyScratchGame } from "./helpers/scaffold.ts";
-import { players, signInAs } from "./helpers/session.ts";
+import { apiClientFor, players, signInAs } from "./helpers/session.ts";
 
 /**
  * G2 screenshot strips — the review surface for the UX loop (contract §8).
@@ -59,6 +59,42 @@ test("the time span on the list and on the detail", async ({ page }) => {
     await page.goto(`/game/${game.id}`, { waitUntil: "networkidle" });
     await expect(page.getByTestId("game-time-span")).toBeVisible();
     await strip(page, "14-game-detail-span");
+  } finally {
+    await destroyScratchGame(game.id);
+  }
+});
+
+// --- Phase 15 ----------------------------------------------------------------
+
+test("a restricted game, its organizer, and the roster", async ({ page, context }) => {
+  const game = await createScratchGame({
+    capacity: 12,
+    format: "5v5",
+    subsPerTeam: 2,
+    durationMinutes: 90,
+    allowedSkillLevels: ["intermediate", "advanced"],
+    organizerName: "Jindra",
+    organizerPhone: "+420777654321",
+  });
+
+  try {
+    // Anonymous: badges, format, organizer name — and no phone.
+    await page.goto(`/game/${game.id}`, { waitUntil: "networkidle" });
+    await expect(page.getByTestId("skill-badges")).toBeVisible();
+    await strip(page, "15-game-detail-restricted-anon");
+
+    // Holding a spot: the booking panel replaces the claim CTA, and the phone
+    // appears with the line that explains why it is visible.
+    const runner = await apiClientFor(players.runner);
+    await runner.rpc("create_booking", { p_game_id: game.id, p_payment_method: "cash" });
+
+    await signInAs(context, players.runner);
+    await page.goto(`/game/${game.id}`, { waitUntil: "networkidle" });
+    await expect(page.getByTestId("your-booking")).toBeVisible();
+    await strip(page, "15-game-detail-holder");
+
+    await page.goto("/games", { waitUntil: "networkidle" });
+    await strip(page, "15-games-list-badges");
   } finally {
     await destroyScratchGame(game.id);
   }

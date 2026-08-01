@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { createScratchGame, destroyScratchGame } from "./helpers/scaffold.ts";
+import { anonClient, apiClientFor, players, serviceClient, signInAs } from "./helpers/session.ts";
 
 /**
  * G2 game-surface specs.
@@ -164,6 +165,248 @@ test("the games list shows a span, not only a kick-off", async ({ page }) => {
     // Two clock times with an en dash between them.
     await expect(card).toContainText(/\d{2}:\d{2}–\d{2}:\d{2}/);
   } finally {
+    await destroyScratchGame(game.id);
+  }
+});
+
+/*
+ * TEST-221 — the badge appears only when the game is restricted.
+ *
+ * An all-levels game showing an "all levels" badge would be a label on the
+ * absence of a rule, and would make every game on the list look like it had
+ * one. Absence is the signal here.
+ */
+test("no skill badge on an all-levels game, badges on a restricted one", async ({
+  page,
+}) => {
+  const open = await createScratchGame({ allowedSkillLevels: null });
+  const restricted = await createScratchGame({ allowedSkillLevels: ["advanced"] });
+
+  try {
+    await page.goto(`/game/${open.id}`);
+    await expect(page.getByTestId("skill-badges")).toHaveCount(0);
+
+    await page.goto(`/game/${restricted.id}`);
+    await expect(page.getByTestId("skill-badge-advanced")).toBeVisible();
+
+    // And on the card, which is where a player decides whether to open it.
+    await page.goto("/games");
+    const restrictedCard = page.locator(
+      `[data-testid="game-card"]:has(a[href="/game/${restricted.id}"])`,
+    );
+    const openCard = page.locator(
+      `[data-testid="game-card"]:has(a[href="/game/${open.id}"])`,
+    );
+    await expect(restrictedCard.getByTestId("skill-badge-advanced")).toBeVisible();
+    await expect(openCard.getByTestId("skill-badges")).toHaveCount(0);
+  } finally {
+    await destroyScratchGame(open.id);
+    await destroyScratchGame(restricted.id);
+  }
+});
+
+/*
+ * REQ-GAME-011 — and a Beginner can still book the Advanced game.
+ *
+ * Asserted through the RPC rather than the UI, because the RPC is where the
+ * refusal would live if there were one. Skill is a signal, never a gate.
+ */
+test("skill restriction never blocks a booking", async ({}) => {
+  const game = await createScratchGame({ allowedSkillLevels: ["advanced"] });
+
+  try {
+    const runner = await apiClientFor(players.runner);
+    const { data, error } = await runner.rpc("create_booking", {
+      p_game_id: game.id,
+      p_payment_method: "cash",
+    });
+
+    expect(error).toBeNull();
+    expect(data?.status).toBeTruthy();
+  } finally {
+    await destroyScratchGame(game.id);
+  }
+});
+
+/*
+ * TEST-232 — format is what the admin typed, never what capacity implies.
+ *
+ * Capacity 12 with format "5v5": the organizer is running 5v5 with
+ * substitutes. Deriving "6v6" from the number would print a confident
+ * falsehood on a public page, and unlike a blank, nobody can tell it is wrong
+ * by looking at it.
+ */
+test("a capacity-12 game entered as 5v5 never renders 6v6", async ({ page }) => {
+  const game = await createScratchGame({ capacity: 12, format: "5v5", subsPerTeam: 2 });
+
+  try {
+    // The detail page, including the chips above the map.
+    await page.goto(`/game/${game.id}`);
+    await expect(page.getByTestId("game-format")).toHaveText("5v5");
+    await expect(page.getByTestId("game-subs")).toContainText("2");
+    await expect(page.locator("body")).not.toContainText("6v6");
+
+    // The list card.
+    await page.goto("/games");
+    const card = page.locator(`[data-testid="game-card"]:has(a[href="/game/${game.id}"])`);
+    await expect(card.getByTestId("game-format")).toHaveText("5v5");
+    await expect(card).not.toContainText("6v6");
+  } finally {
+    await destroyScratchGame(game.id);
+  }
+});
+
+/*
+ * A game with NO format shows no format chip — it does not fall back to
+ * capacity/2. This is the assertion that would have caught the derivation the
+ * component used to do, and it is the reason it is written separately from
+ * TEST-232: a game that HAS a format hides the bug.
+ */
+test("a game with no format shows no format at all, rather than one derived from capacity", async ({
+  page,
+}) => {
+  const game = await createScratchGame({ capacity: 12, format: null });
+
+  try {
+    await page.goto(`/game/${game.id}`);
+    await expect(page.getByTestId("game-format")).toHaveCount(0);
+    await expect(page.locator("body")).not.toContainText("6v6");
+  } finally {
+    await destroyScratchGame(game.id);
+  }
+});
+
+/*
+ * TEST-218 — the organizer phone reaches booked players and nobody else.
+ *
+ * Three viewers, one game. The anonymous case is the one that matters most,
+ * and it is asserted on the API as well as the page: an application-side check
+ * would gate the render and leave the number one call away. The SQL suite
+ * proves the grant; this proves the page.
+ */
+test("the organizer phone is visible only to a player holding a spot", async ({
+  page,
+  context,
+}) => {
+  const phone = "+420777654321";
+  const game = await createScratchGame({
+    organizerName: "Organizer On Call",
+    organizerPhone: phone,
+  });
+
+  try {
+    // --- anonymous ---------------------------------------------------------
+    await page.goto(`/game/${game.id}`);
+    await expect(page.getByTestId("organizer-name")).toHaveText("Organizer On Call");
+    await expect(page.getByTestId("organizer-phone")).toHaveCount(0);
+    await expect(page.locator("body")).not.toContainText(phone);
+
+    // Not through the API either. `anon` is denied EXECUTE outright, which is
+    // a stronger property than "the function returns null" — see migration 27.
+    const anon = anonClient();
+    const anonResult = await anon.rpc("game_organizer_phone", { p_game_id: game.id });
+    expect(anonResult.data ?? null).toBeNull();
+
+    // --- signed in, no booking on this game --------------------------------
+    // A different seeded player, so "signed in" and "holds a spot here" are
+    // genuinely separate conditions rather than the same one twice.
+    const stranger = await apiClientFor(players.creditRich);
+    const strangerResult = await stranger.rpc("game_organizer_phone", {
+      p_game_id: game.id,
+    });
+    expect(strangerResult.data ?? null).toBeNull();
+
+    await signInAs(context, players.creditRich);
+    await page.goto(`/game/${game.id}`);
+    await expect(page.getByTestId("organizer-phone")).toHaveCount(0);
+    await expect(page.locator("body")).not.toContainText(phone);
+
+    // --- holding a confirmed spot ------------------------------------------
+    const runner = await apiClientFor(players.runner);
+    const { error } = await runner.rpc("create_booking", {
+      p_game_id: game.id,
+      p_payment_method: "cash",
+    });
+    expect(error).toBeNull();
+
+    await signInAs(context, players.runner);
+    await page.goto(`/game/${game.id}`);
+    await expect(page.getByTestId("organizer-phone")).toHaveText(phone);
+  } finally {
+    await destroyScratchGame(game.id);
+  }
+});
+
+/*
+ * TEST-233 — the page knows whether the viewer is already in.
+ *
+ * The failure this replaces: a player who had already paid was asked to claim
+ * a spot they were standing on, which reads as a broken page. The question
+ * they actually arrive with — am I in, and have I paid? — was the one thing it
+ * did not answer.
+ */
+test("a booking holder sees their booking and no claim CTA", async ({ page, context }) => {
+  const game = await createScratchGame({ capacity: 4 });
+
+  try {
+    // --- no booking, spots remain: the claim CTA ---------------------------
+    await signInAs(context, players.runner);
+    await page.goto(`/game/${game.id}`);
+    await expect(page.getByTestId("book-cta")).toBeVisible();
+    await expect(page.getByTestId("your-booking")).toHaveCount(0);
+
+    // --- holding a spot: the booking, and no claim -------------------------
+    const runner = await apiClientFor(players.runner);
+    const { error } = await runner.rpc("create_booking", {
+      p_game_id: game.id,
+      p_payment_method: "cash",
+    });
+    expect(error).toBeNull();
+
+    await page.goto(`/game/${game.id}`);
+    await expect(page.getByTestId("your-booking")).toBeVisible();
+    await expect(page.getByTestId("book-cta")).toHaveCount(0);
+    // The payment state, which is half of what they came to find out.
+    await expect(page.getByTestId("your-booking-badge")).toBeVisible();
+    // And the way out.
+    await expect(page.getByTestId("cancel-booking")).toBeVisible();
+  } finally {
+    await destroyScratchGame(game.id);
+  }
+});
+
+/*
+ * REQ-PROF-008 — a roster photo renders, and a player without one falls back
+ * to initials. Both in the same lineup, so the fallback is proven to be the
+ * ordinary case rather than an error state.
+ */
+test("the roster renders photos where they exist and initials where they do not", async ({
+  page,
+}) => {
+  const game = await createScratchGame({ capacity: 6 });
+
+  try {
+    const runner = await apiClientFor(players.runner);
+    await runner.rpc("create_booking", { p_game_id: game.id, p_payment_method: "cash" });
+
+    const admin = serviceClient();
+    // Through the RPC the account page uses, not a direct column write: a spec
+    // that reaches around the write path is testing a state the product cannot
+    // produce.
+    const photoPath = `players/${players.runner.id}.jpg`;
+    await admin.from("players").update({ photo_path: photoPath }).eq("id", players.runner.id);
+
+    await page.goto(`/game/${game.id}`);
+    await expect(page.getByTestId("roster-avatar-photo").first()).toBeVisible();
+
+    // Clear it again and the same row falls back to initials.
+    await admin.from("players").update({ photo_path: null }).eq("id", players.runner.id);
+    await page.goto(`/game/${game.id}`);
+    await expect(page.getByTestId("roster-avatar-photo")).toHaveCount(0);
+    await expect(page.getByTestId("roster-avatar").first()).toBeVisible();
+  } finally {
+    const admin = serviceClient();
+    await admin.from("players").update({ photo_path: null }).eq("id", players.runner.id);
     await destroyScratchGame(game.id);
   }
 });

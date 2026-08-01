@@ -2,10 +2,12 @@ import Link from "next/link";
 import { AvatarRow } from "@/components/game/AvatarRow";
 import { CapacityBar } from "@/components/game/CapacityBar";
 import { FormatChips } from "@/components/game/FormatChips";
+import { SkillBadges } from "@/components/game/SkillBadges";
 import { ShareButton } from "@/components/game/ShareButton";
 import { VenueMapPanel, type VenueMapPanelProps } from "@/components/VenueMapPanel";
 import { formatCzk, formatGameTimeSpan } from "@/lib/format";
 import { gameEndsAt } from "@/lib/games/duration";
+import type { RosterAvatar } from "@/lib/games/queries";
 import { gameUrgency, spotsLeftLabel, urgencyLabel } from "@/lib/games/urgency";
 import { getStrings } from "@/lib/i18n/server";
 import type { Database } from "@/lib/types/database";
@@ -24,14 +26,18 @@ export type GameCardGame = Pick<
   | "format"
   | "surface"
   | "duration_minutes"
+  | "allowed_skill_levels"
+  | "subs_per_team"
 >;
 
 export interface GameCardProps {
   game: GameCardGame;
   /** Active bookings (reserved + confirmed) counted server-side. */
   bookedCount: number;
-  /** Nicknames on the roster, in join order. From `game_roster_public`. */
-  roster?: string[];
+  /** The roster's avatars — nickname and photo path, from `game_roster_public`. */
+  roster?: RosterAvatar[];
+  /** Storage origin for the roster photos; absent means initials everywhere. */
+  supabaseUrl?: string;
   /** The venue row behind `game.venue_id`, for the map panel's photo. */
   venueRow?: VenueMapPanelProps["venueRow"];
   /** Absolute URL to this game, for the share link. */
@@ -68,6 +74,7 @@ export async function GameCard({
   venueRow = null,
   shareUrl,
   onWaitlist = false,
+  supabaseUrl,
 }: GameCardProps) {
   const t = await getStrings();
   const urgency = gameUrgency(bookedCount, game.capacity);
@@ -93,12 +100,16 @@ export async function GameCard({
             <div className="font-mono text-[11px] uppercase tracking-[1px] text-chalk">
               {when}
             </div>
-            <FormatChips
-              format={game.format}
-              surface={game.surface}
-              capacity={game.capacity}
-              size="slim"
-            />
+            <div className="flex flex-wrap items-center gap-2">
+              <FormatChips
+                format={game.format}
+                surface={game.surface}
+                subsPerTeam={game.subs_per_team}
+                size="slim"
+              />
+              {/* Only on a restricted game — REQ-GAME-009/010. */}
+              <SkillBadges levels={game.allowed_skill_levels} size="slim" />
+            </div>
           </div>
 
           {/* The card's link. `before:` covers the whole card — see the note. */}
@@ -148,7 +159,7 @@ export async function GameCard({
         <CapacityBar bookedCount={bookedCount} capacity={game.capacity} size="slim" />
 
         <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-2 pl-2">
-          <AvatarRow names={roster} max={8} size="slim" />
+          <AvatarRow players={roster} max={8} size="slim" supabaseUrl={supabaseUrl} />
           <span
             data-testid="spots-left"
             className={`text-[12px] ${urgency === "full" ? "text-faint" : "text-muted-dim"}`}

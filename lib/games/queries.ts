@@ -1,4 +1,6 @@
+import { canOfferCancel } from "@/lib/booking/badges";
 import { isInProgress } from "@/lib/games/duration";
+import { policy } from "@/lib/policy";
 import { createServerSupabaseClient } from "@/lib/supabase/clients";
 import type { Database } from "@/lib/types/database";
 
@@ -143,6 +145,121 @@ export async function getGameById(id: string): Promise<GameWithCount | null> {
 }
 
 /**
+ * What an avatar needs, and nothing more.
+ *
+ * `photoPath` joined the roster view in Phase 15 (§4a). The initials avatar
+ * remains the fallback everywhere and is the ORDINARY case, not an error
+ * state: most players will never upload a photo.
+ */
+export interface RosterAvatar {
+  nickname: string;
+  photoPath: string | null;
+}
+
+export interface GameOrganizer {
+  /** Published on the card and the detail for anyone. */
+  name: string | null;
+  /**
+   * Null for everyone except a caller holding a `reserved` or `confirmed`
+   * booking on this game — and null rather than an error, so "no phone
+   * recorded" and "not yours to see" are indistinguishable to the caller.
+   */
+  phone: string | null;
+}
+
+/**
+ * The organizer of a game, through the two exits §5.1 built.
+ *
+ * NEITHER OF THESE IS A TABLE READ. `game_organizer_contacts` grants nothing
+ * to `anon` or `authenticated`, which is the entire reason the phone does not
+ * live on `games` — SELECT there is granted table-wide, so a phone column
+ * would have been world-readable the moment it existed, whatever this code
+ * did about it.
+ *
+ * `game_organizer_phone()` resolves the caller's identity from the session
+ * inside the function. Nothing here passes an id, and nothing here decides
+ * who may see the number: an application-side check would gate the render and
+ * leave the number one API call away.
+ */
+export async function getGameOrganizer(gameId: string): Promise<GameOrganizer> {
+  const supabase = await createServerSupabaseClient();
+
+  const [nameResult, phoneResult] = await Promise.all([
+    supabase.rpc("game_organizer_public", { p_game_id: gameId }),
+    supabase.rpc("game_organizer_phone", { p_game_id: gameId }),
+  ]);
+
+  return {
+    name: nameResult.error ? null : ((nameResult.data as string | null) ?? null),
+    // An anonymous caller is DENIED execute on the phone function, so this
+    // errors rather than returning null for them. Both outcomes mean the same
+    // thing here and both render as nothing.
+    phone: phoneResult.error ? null : ((phoneResult.data as string | null) ?? null),
+  };
+}
+
+export interface OwnBookingOnGame {
+  booking: Database["public"]["Tables"]["bookings"]["Row"];
+  /**
+   * Whether to OFFER the cancel affordance. Mirrors `cancel_booking`, which
+   * remains the enforcement authority and is called regardless.
+   *
+   * Decided here rather than during render for the same reason `hasStarted`
+   * is: reading the clock in a component is impure, and the lint rule that
+   * says so is enforcing a real property — a server-rendered page and its
+   * hydration must not disagree about what time it is.
+   */
+  canCancel: boolean;
+}
+
+/**
+ * The signed-in player's own active booking on a game, or null.
+ *
+ * REQ-GAME-018. The determination that makes `/game/[id]` state-aware, and it
+ * is made SERVER-SIDE from the caller's own row — never from a nickname match
+ * against the public roster, which is display-grade and would let anyone see
+ * "their" booking by choosing a nickname.
+ *
+ * `bookings_select_own` RLS is the enforcement: the policy restricts the row
+ * set to bookings whose player maps to `auth.uid()`, so a signed-out visitor
+ * gets nothing and a signed-in one gets only their own. No `player_id` filter
+ * is written here, for the same reason it is absent in `lib/booking/queries.ts`
+ * — writing one would suggest this code is the enforcement point.
+ */
+export async function getOwnActiveBooking(
+  gameId: string,
+): Promise<OwnBookingOnGame | null> {
+  const supabase = await createServerSupabaseClient();
+
+  const { data: booking, error } = await supabase
+    .from("bookings")
+    .select("*")
+    .eq("game_id", gameId)
+    .in("status", ["reserved", "confirmed"])
+    .maybeSingle();
+
+  if (error || !booking) return null;
+
+  const { data: game } = await supabase
+    .from("games")
+    .select("starts_at")
+    .eq("id", gameId)
+    .maybeSingle();
+
+  return {
+    booking,
+    canCancel:
+      game != null &&
+      canOfferCancel(
+        booking.status,
+        game.starts_at,
+        Date.now(),
+        policy.cancellation.cutoffHoursBeforeStart,
+      ),
+  };
+}
+
+/**
  * The venue a game is at, or null when the game predates `venue_id`.
  *
  * A separate query rather than a PostgREST embed: the hand-authored `Database`
@@ -167,13 +284,15 @@ export async function getVenue(venueId: string | null): Promise<VenueRow | null>
 export async function getRoster(gameId: string): Promise<RosterRow[]> {
   const supabase = await createServerSupabaseClient();
 
-  // PII BOUNDARY: this projection is nickname + status only, and must stay
-  // that way. The view cannot expose player_id/email/phone — it does not
-  // project them — but selecting `*` here would still be a latent hazard if
-  // the view were ever widened, so the columns are named explicitly.
+  // PII BOUNDARY: this projection is nickname, status and photo_path, and must
+  // stay that way. The view cannot expose player_id/email/phone — it does not
+  // project them — but selecting `*` here would still be a latent hazard, and
+  // Phase 15 is the proof: the view GAINED a column and this list is where a
+  // reviewer sees that the widening reached the render deliberately rather
+  // than by a wildcard nobody looked at.
   const { data, error } = await supabase
     .from("game_roster_public")
-    .select("game_id, nickname, status")
+    .select("game_id, nickname, status, photo_path")
     .eq("game_id", gameId);
 
   if (error || !data) return [];
@@ -196,24 +315,26 @@ export async function getRoster(gameId: string): Promise<RosterRow[]> {
  */
 export async function listRostersByGame(
   gameIds: string[],
-): Promise<Map<string, string[]>> {
-  const rosters = new Map<string, string[]>();
+): Promise<Map<string, RosterAvatar[]>> {
+  const rosters = new Map<string, RosterAvatar[]>();
   if (gameIds.length === 0) return rosters;
 
   const supabase = await createServerSupabaseClient();
   const { data, error } = await supabase
     .from("game_roster_public")
-    .select("game_id, nickname")
+    .select("game_id, nickname, photo_path")
     .in("game_id", gameIds);
 
   if (error || !data) return rosters;
 
   for (const row of data) {
     const list = rosters.get(row.game_id) ?? [];
-    list.push(row.nickname);
+    list.push({ nickname: row.nickname, photoPath: row.photo_path });
     rosters.set(row.game_id, list);
   }
-  for (const list of rosters.values()) list.sort((a, b) => a.localeCompare(b));
+  for (const list of rosters.values()) {
+    list.sort((a, b) => a.nickname.localeCompare(b.nickname));
+  }
 
   return rosters;
 }

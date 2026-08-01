@@ -433,11 +433,19 @@ export interface Database {
 
     Views: {
       /** Anonymous roster surface — game_id, nickname, status and nothing else. */
+      /**
+       * The PII boundary. Projects these four columns and NO OTHERS — no
+       * player_id, no email, no phone. `photo_path` joined in Phase 15
+       * (migration 29) under contract §4a, ratified in advance, shipping with
+       * the rendering that consumes it. Any further column is a new ruling.
+       */
       game_roster_public: {
         Row: {
           game_id: string;
           nickname: string;
           status: BookingStatus;
+          /** Nullable: most players never upload one, and initials are the fallback. */
+          photo_path: string | null;
         };
         Relationships: [];
       };

@@ -43,6 +43,9 @@ export default async function LandingPage() {
   // Absolute, for the share link — a wa.me message carrying a relative path is
   // a message nobody can open.
   const base = await siteUrl();
+  // Storage origin for the roster photos (§4a). Absent, avatars fall back to
+  // initials, which is the ordinary case rather than a failure.
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
 
   return (
     <>
@@ -129,9 +132,13 @@ export default async function LandingPage() {
               <NextMatchCard
                 game={nextGame.game}
                 bookedCount={nextGame.bookedCount}
-                roster={roster.map((row) => row.nickname)}
+                roster={roster.map((row) => ({
+                  nickname: row.nickname,
+                  photoPath: row.photo_path,
+                }))}
                 venueRow={venueRow}
                 shareUrl={`${base}/game/${nextGame.game.id}`}
+                supabaseUrl={supabaseUrl}
               />
             ) : (
               <div

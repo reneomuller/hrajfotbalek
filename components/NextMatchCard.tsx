@@ -2,10 +2,12 @@ import Link from "next/link";
 import { AvatarRow } from "@/components/game/AvatarRow";
 import { CapacityBar } from "@/components/game/CapacityBar";
 import { FormatChips } from "@/components/game/FormatChips";
+import { SkillBadges } from "@/components/game/SkillBadges";
 import { ShareButton } from "@/components/game/ShareButton";
 import { VenueMapPanel, type VenueMapPanelProps } from "@/components/VenueMapPanel";
 import { formatGameTimeSpan } from "@/lib/format";
 import { gameEndsAt } from "@/lib/games/duration";
+import type { RosterAvatar } from "@/lib/games/queries";
 import { gameUrgency, spotsLeftLabel, urgencyLabel } from "@/lib/games/urgency";
 import { getStrings } from "@/lib/i18n/server";
 import type { GameCardGame } from "@/components/GameCard";
@@ -27,8 +29,10 @@ import type { GameCardGame } from "@/components/GameCard";
 export interface NextMatchCardProps {
   game: GameCardGame;
   bookedCount: number;
-  /** Nicknames of the active roster, in join order. */
-  roster: string[];
+  /** The active roster's avatars — nickname and photo path. */
+  roster: RosterAvatar[];
+  /** Storage origin for the roster photos; absent means initials everywhere. */
+  supabaseUrl?: string;
   /**
    * The venue row behind `game.venue_id`, when there is one.
    *
@@ -48,6 +52,7 @@ export async function NextMatchCard({
   roster,
   venueRow,
   shareUrl,
+  supabaseUrl,
 }: NextMatchCardProps) {
   const t = await getStrings();
   const { games, landing } = t;
@@ -72,12 +77,15 @@ export async function NextMatchCard({
             <div className="font-mono text-[11px] uppercase tracking-[1px] text-chalk">
               {when}
             </div>
-            <FormatChips
-              format={game.format}
-              surface={game.surface}
-              capacity={game.capacity}
-              size="slim"
-            />
+            <div className="flex flex-wrap items-center gap-2">
+              <FormatChips
+                format={game.format}
+                surface={game.surface}
+                subsPerTeam={game.subs_per_team}
+                size="slim"
+              />
+              <SkillBadges levels={game.allowed_skill_levels} size="slim" />
+            </div>
           </div>
 
           <div className="mt-[10px] font-condensed text-match-title font-bold text-white">
@@ -112,7 +120,7 @@ export async function NextMatchCard({
         <CapacityBar bookedCount={bookedCount} capacity={game.capacity} />
 
         <div className="mt-[18px] flex flex-wrap items-center gap-x-3 gap-y-2 pl-2">
-          <AvatarRow names={roster} max={14} />
+          <AvatarRow players={roster} max={14} supabaseUrl={supabaseUrl} />
           <span className="text-[13px] text-muted-dim">
             <b className={isFull ? "text-faint" : "text-volt"}>
               {spotsLeftLabel(bookedCount, game.capacity, t)}

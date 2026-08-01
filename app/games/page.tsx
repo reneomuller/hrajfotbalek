@@ -34,6 +34,8 @@ export default async function GamesPage() {
   // and venues are one query each for the whole list rather than one per card:
   // a twenty-game list should be a handful of round trips, not sixty.
   const signedIn = (await getSessionUser()) !== null;
+  // Storage origin for the roster photos (§4a); absent means initials.
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
   const [rosters, venues, waitlisted, nextOwn, base] = await Promise.all([
     listRostersByGame(gameIds),
     getVenues(games.map(({ game }) => game.venue_id)),
@@ -87,6 +89,7 @@ export default async function GamesPage() {
               venueRow={game.venue_id ? (venues.get(game.venue_id) ?? null) : null}
               shareUrl={`${base}/game/${game.id}`}
               onWaitlist={waitlisted.has(game.id)}
+              supabaseUrl={supabaseUrl}
             />
           ))}
         </div>

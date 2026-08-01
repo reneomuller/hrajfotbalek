@@ -5,7 +5,9 @@ import { AvatarRow } from "@/components/game/AvatarRow";
 import { CapacityBar } from "@/components/game/CapacityBar";
 import { FormatChips } from "@/components/game/FormatChips";
 import { ShareButton } from "@/components/game/ShareButton";
+import { SkillBadges } from "@/components/game/SkillBadges";
 import { WaitlistPanel } from "@/components/game/WaitlistPanel";
+import { YourBookingPanel } from "@/components/game/YourBookingPanel";
 import { VenueMapPanel } from "@/components/VenueMapPanel";
 import { WaitlistButton } from "@/components/WaitlistButton";
 import { isOnWaitlist, waitlistPosition } from "@/lib/booking/waitlistConvert";
@@ -14,7 +16,14 @@ import { runJoinWaitlist } from "./waitlist/actions";
 import { getCurrentPlayer, getSessionUser } from "@/lib/auth/session";
 import { formatCzk, formatGameDateTime, formatGameTimeSpan } from "@/lib/format";
 import { gameEndsAt } from "@/lib/games/duration";
-import { getGameById, getRoster, getVenue, getWaitlist } from "@/lib/games/queries";
+import {
+  getGameById,
+  getGameOrganizer,
+  getOwnActiveBooking,
+  getRoster,
+  getVenue,
+  getWaitlist,
+} from "@/lib/games/queries";
 import { gameEventSchema } from "@/lib/games/schemaOrg";
 import { gameUrgency, spotsLeftLabel, urgencyLabel } from "@/lib/games/urgency";
 import { siteUrl } from "@/lib/site";
@@ -90,16 +99,34 @@ export default async function GameDetailPage({ params, searchParams }: GamePageP
 
   const { game, bookedCount, spotsLeft, hasStarted, inProgress, isCancelled } = result;
   const roster = await getRoster(game.id);
+  // Storage origin for the roster photos. Read here rather than inside
+  // `AvatarRow` so the component stays renderable in isolation; absent, every
+  // avatar falls back to initials, which is the correct degradation.
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
   const venueRow = await getVenue(game.venue_id);
   // The queue is public — see migration 20 and getWaitlist(). Fetched for every
   // visitor, signed in or not, because "who is waiting" is part of what makes a
   // full game worth queueing for.
   const waitlist = await getWaitlist(game.id);
 
+  // §5.1 — two different kinds of fact through two different exits. The name is
+  // public; the phone comes back non-null only for a caller holding a spot, and
+  // the function decides that from the session, not from anything passed here.
+  const organizer = await getGameOrganizer(game.id);
+
+  // REQ-GAME-018. Resolved from the caller's OWN booking row under RLS. A
+  // nickname match against the public roster would be display-grade and would
+  // hand anyone "their" booking by choosing the right nickname.
+  const ownBooking = await getOwnActiveBooking(game.id);
+
   const endsAt = gameEndsAt(game.starts_at, game.duration_minutes);
   const isFull = spotsLeft === 0;
   const urgency = gameUrgency(bookedCount, game.capacity);
   const canAct = !isCancelled && !hasStarted;
+
+  // A holder is never offered a claim (§5.6). Everything below branches on
+  // this one value rather than each block deciding for itself.
+  const holdsSpot = ownBooking !== null;
 
   // Label only. The write is gated in `createBookingAction`, not here — an
   // anonymous visitor may still walk the whole flow and authenticate at the
@@ -185,14 +212,22 @@ export default async function GameDetailPage({ params, searchParams }: GamePageP
         <span className="font-mono text-[13px] text-muted">
           {formatCzk(game.price_czk)}
         </span>
-        {/* Format and surface, when the organizer said. Chips, above the map —
-            the same pair the cards carry, from the same component. */}
+        {/* Format, substitutes and surface, exactly as the organizer entered
+            them. Above the map, per §5.3a — and derived from capacity nowhere. */}
         <FormatChips
           format={game.format}
           surface={game.surface}
-          capacity={game.capacity}
+          subsPerTeam={game.subs_per_team}
         />
+        {/* Nothing at all on an all-levels game (§5.3, REQ-GAME-009). */}
+        <SkillBadges levels={game.allowed_skill_levels} />
       </div>
+
+      {game.allowed_skill_levels && (
+        <p className="mt-2 font-mono text-[11px] tracking-[1px] text-faint">
+          {t.games.skillNotEnforced}
+        </p>
+      )}
 
       <div className="mt-6 overflow-hidden rounded-card border border-hairline">
         <VenueMapPanel venue={game.venue} venueRow={venueRow} className="h-[220px]" />
@@ -241,7 +276,14 @@ export default async function GameDetailPage({ params, searchParams }: GamePageP
         <CapacityBar bookedCount={bookedCount} capacity={game.capacity} />
 
         <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-2 pl-2">
-          <AvatarRow names={roster.map((row) => row.nickname)} max={14} />
+          <AvatarRow
+            players={roster.map((row) => ({
+              nickname: row.nickname,
+              photoPath: row.photo_path,
+            }))}
+            max={14}
+            supabaseUrl={supabaseUrl}
+          />
           {!isFull && (
             <span data-testid="spots-left" className="text-[13px] text-muted-dim">
               <b className="text-volt">{spotsLeftLabel(bookedCount, game.capacity, t)}</b>
@@ -273,7 +315,26 @@ export default async function GameDetailPage({ params, searchParams }: GamePageP
         </p>
       )}
 
-      {canAct && isFull && (
+      {/*
+        §5.6 — THREE STATES, AND THEY ARE MUTUALLY EXCLUSIVE.
+
+        A holder sees their booking and no claim CTA. A non-holder sees the
+        claim only while spots remain. A full game offers the waitlist to a
+        non-holder, per Phase 1.
+
+        `holdsSpot` gates the other two rather than each block deciding for
+        itself: the failure being fixed here is a page that asked a player who
+        had already paid to claim a spot they were standing on, and that
+        happens whenever two blocks disagree about who the viewer is.
+      */}
+      {ownBooking && (
+        <YourBookingPanel
+          booking={ownBooking.booking}
+          canCancel={ownBooking.canCancel}
+        />
+      )}
+
+      {canAct && !holdsSpot && isFull && (
         <>
           <p
             data-testid="full-notice"
@@ -289,7 +350,7 @@ export default async function GameDetailPage({ params, searchParams }: GamePageP
         </>
       )}
 
-      {canAct && !isFull && (
+      {canAct && !holdsSpot && !isFull && (
         <Link
           href={`/game/${game.id}/book`}
           data-testid="book-cta"
@@ -297,6 +358,42 @@ export default async function GameDetailPage({ params, searchParams }: GamePageP
         >
           {signedIn ? t.booking.claimSpot : t.booking.logInToClaim}
         </Link>
+      )}
+
+      {/*
+        The organizer. The NAME is public — it tells a player who is running
+        the game. The PHONE arrives non-null only for someone holding a spot,
+        decided inside `game_organizer_phone()` from the session; there is no
+        branch here that could be wrong about it, because there is nothing here
+        to branch on. The note beside it says why they can see it, so the
+        number does not read as something that leaked.
+      */}
+      {organizer.name && (
+        <section
+          data-testid="game-organizer"
+          className="mt-6 rounded-card border border-hairline bg-surface-card p-5"
+        >
+          <div className="font-mono text-[10px] uppercase tracking-eyebrow text-volt-dim">
+            {t.games.organizerLabel}
+          </div>
+          <p className="mt-2 text-[14px] text-bone" data-testid="organizer-name">
+            {organizer.name}
+          </p>
+          {organizer.phone && (
+            <>
+              <a
+                href={`tel:${organizer.phone}`}
+                data-testid="organizer-phone"
+                className="mt-1 inline-block font-mono text-[14px] text-volt no-underline"
+              >
+                {organizer.phone}
+              </a>
+              <p className="mt-1 text-[12px] leading-snug text-muted-dim">
+                {t.games.organizerPhoneNote}
+              </p>
+            </>
+          )}
+        </section>
       )}
 
       {/* Share to WhatsApp — the channel this whole product replaced, and
@@ -309,7 +406,7 @@ export default async function GameDetailPage({ params, searchParams }: GamePageP
         />
       </div>
 
-      <Roster rows={roster} />
+      <Roster rows={roster} supabaseUrl={supabaseUrl} />
 
       {/* The queue, in public. Rendered whenever the game is full or anyone is
           already waiting — an empty panel on a half-full game would be noise. */}

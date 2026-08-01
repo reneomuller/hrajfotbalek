@@ -198,6 +198,30 @@ export const cs: StringsOverlay = {
       indoor: "Hala",
       sand: "Písek",
     },
+    subsPerTeam: "{count} náhradníci na tým",
+    skillLevel: {
+      beginner: "Začátečník",
+      intermediate: "Pokročilý",
+      advanced: "Zkušený",
+    },
+    skillNotEnforced: "Vítáni jsou všichni — je to vodítko, ne pravidlo.",
+
+    organizerLabel: "Pořadatel",
+    organizerPhoneNote: "Vidíš ho, protože máš na tomhle zápase místo.",
+
+    yourBookingTitle: "Jsi v sestavě",
+    yourBookingHeld: "Místo ti držíme — potvrď ho platbou.",
+    yourBookingConfirmed: "Zaplaceno. Uvidíme se na hřišti.",
+    yourBookingCash: "Platíš hotově na hřišti.",
+    yourBookingPay: "Zaplatit za místo",
+    yourBookingManage: "Spravovat rezervaci",
+
+    practicalTitle: "Než přijdeš",
+    practicalArrival: "Přijď 10 minut před výkopem.",
+    practicalEquipment: "Rozlišováky, brankářské rukavice a míče jsou k dispozici.",
+    practicalDuration: "Délka",
+    practicalDurationValue: "{minutes} minut",
+
     notesLabel: "Dobré vědět",
     capacityLabel: "Kapacita",
     startsLabel: "Výkop",

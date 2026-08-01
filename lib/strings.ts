@@ -290,6 +290,43 @@ export const strings = {
       indoor: "Indoor",
       sand: "Sand",
     },
+    // "2 subs per team" — renders beside the format when the organizer set it,
+    // and nothing at all when they did not (§5.3a). It describes how the game
+    // is run; it constrains no booking.
+    subsPerTeam: "{count} subs per team",
+    // Level badges. Rendered ONLY on a restricted game — an all-levels game
+    // carries no badge anywhere, which is what makes a badge mean something.
+    skillLevel: {
+      beginner: "Beginner",
+      intermediate: "Intermediate",
+      advanced: "Advanced",
+    },
+    // Said plainly beside the badges, because a badge alone reads as a door
+    // policy. Skill is a signal here and never a gate — `create_booking` does
+    // not consult it.
+    skillNotEnforced: "All welcome — this is a guide, not a rule.",
+
+    // --- organizer -----------------------------------------------------------
+    organizerLabel: "Organizer",
+    // Shown to a player holding a spot, and to nobody else. The line says so,
+    // so the number does not look like something that leaked.
+    organizerPhoneNote: "Visible to you because you have a spot on this game.",
+
+    // --- your booking (§5.6) -------------------------------------------------
+    yourBookingTitle: "You are in",
+    yourBookingHeld: "Your spot is held — pay to confirm it.",
+    yourBookingConfirmed: "Paid. See you on the pitch.",
+    yourBookingCash: "Paying cash at the pitch.",
+    yourBookingPay: "Pay for this spot",
+    yourBookingManage: "Manage your booking",
+
+    // --- practical info (§5.7) -----------------------------------------------
+    practicalTitle: "Before you come",
+    practicalArrival: "Come 10 minutes before kick-off.",
+    practicalEquipment: "Training bibs, goalie gloves and balls are provided.",
+    practicalDuration: "Duration",
+    practicalDurationValue: "{minutes} minutes",
+
     notesLabel: "Good to know",
     capacityLabel: "Capacity",
     startsLabel: "Kick-off",

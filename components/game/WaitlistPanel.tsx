@@ -53,8 +53,14 @@ export async function WaitlistPanel({
       ) : (
         <>
           <div className="mt-4 pl-2">
+            {/*
+              INITIALS ONLY, and deliberately. §4a widened the ROSTER view by
+              one column; `game_waitlist_public` was not part of that ruling and
+              projects no photo path. Passing null here is the honest shape —
+              inventing a lookup would reach around a boundary a ruling drew.
+            */}
             <AvatarRow
-              names={rows.map((row) => row.nickname)}
+              players={rows.map((row) => ({ nickname: row.nickname, photoPath: null }))}
               highlight={viewerNickname}
               max={14}
             />

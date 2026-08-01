@@ -57,7 +57,7 @@ test("a logged-in player cannot read another player's rows", async () => {
   expect(events.data ?? []).toHaveLength(0);
 });
 
-test("the anonymous roster exposes a nickname and a status, and nothing else", async () => {
+test("the anonymous roster exposes a nickname, a status and a photo path, and nothing else", async () => {
   const game = await createScratchGame();
 
   try {
@@ -76,9 +76,16 @@ test("the anonymous roster exposes a nickname and a status, and nothing else", a
     // The whole projection, checked by its shape rather than by naming the
     // columns we hope are absent: a new column added to the view would
     // otherwise sail through this test.
+    //
+    // `photo_path` was added in Phase 15 (migration 29) under contract §4a,
+    // ratified in advance. This list moving is the mechanism working: the
+    // widening could not happen without someone editing this line and the
+    // matching one in `supabase/tests/04_game_roster_public.sql` on purpose.
     for (const row of data ?? []) {
       const keys = Object.keys(row).sort();
-      expect(keys).toEqual(["game_id", "nickname", "status"]);
+      expect(keys).toEqual(["game_id", "nickname", "photo_path", "status"]);
+      // No email address rode along with it — the cheapest possible check for
+      // the single worst thing this view could ever leak.
       expect(JSON.stringify(row)).not.toContain("@");
     }
 

@@ -197,6 +197,30 @@ export const ru: StringsOverlay = {
       indoor: "Зал",
       sand: "Песок",
     },
+    subsPerTeam: "{count} запасных на команду",
+    skillLevel: {
+      beginner: "Новичок",
+      intermediate: "Средний",
+      advanced: "Опытный",
+    },
+    skillNotEnforced: "Рады всем — это ориентир, а не правило.",
+
+    organizerLabel: "Организатор",
+    organizerPhoneNote: "Виден тебе, потому что у тебя есть место на этом матче.",
+
+    yourBookingTitle: "Ты в составе",
+    yourBookingHeld: "Место забронировано — подтверди его оплатой.",
+    yourBookingConfirmed: "Оплачено. Увидимся на поле.",
+    yourBookingCash: "Платишь наличными на поле.",
+    yourBookingPay: "Оплатить место",
+    yourBookingManage: "Управлять бронью",
+
+    practicalTitle: "Перед приходом",
+    practicalArrival: "Приходи за 10 минут до начала.",
+    practicalEquipment: "Манишки, вратарские перчатки и мячи предоставляются.",
+    practicalDuration: "Длительность",
+    practicalDurationValue: "{minutes} минут",
+
     notesLabel: "Полезно знать",
     capacityLabel: "Вместимость",
     startsLabel: "Начало",
