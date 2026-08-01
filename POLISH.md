@@ -82,16 +82,21 @@ One line per item. Move to DONE when shipped. Sessions: only touch items explici
 - [ ] Game detail: venue address line once the column exists (carried over)
 
 ## Noticed during the Phase 2 build — NOT in the plan
-- [ ] **`waitlist.spec.ts:82` is intermittently flaky.** "cancel → credit →
-      release → convert" failed once waiting for `getByTestId("confirmation")`
-      after `convert-waitlist`, then passed in isolation and passed again in a
-      full run from a fresh seed — twice observed failing, four times passing,
-      no code near it changed. Most likely the CLAUDE.md hazard in its original
-      form: a server action cancelled by navigation, or an assertion racing a
-      `revalidatePath` re-render. It is a real defect in the spec's timing, not
-      in the product, and it will eventually fail in someone's face at a gate.
-      Worth a retry-free fix that asserts database state rather than the
-      rendered confirmation.
+- [ ] **The E2E suite is timing-fragile under host load.** Three consecutive
+      full runs each failed exactly one spec, a DIFFERENT one each time
+      (`waitlist.spec.ts:82`, `booking.spec.ts:29`, `admin.spec.ts:170`), always
+      a 5-second `toBeVisible` / `toContainText` wait on an element that appears
+      after a server action. The same code passed 28/28 twice the same day, and
+      all ten of those specs passed when re-run in isolation. Host load average
+      was **26+** at the time, with the Supabase containers idle at 1–2% — so
+      the contention is outside this project.
+      It is still worth fixing, because a suite that fails one spec per run is a
+      suite nobody trusts, and it will burn a gate walk. Two candidate fixes,
+      neither of which is "add retries": raise the `expect` timeout in
+      `playwright.config.ts` (the assertions are about state, not speed — the
+      performance criteria have their own explicit timings), and follow the
+      CLAUDE.md rule more strictly by asserting database state rather than a
+      rendered confirmation where the spec's real subject is the transition.
 
 ## Noticed during Phase 2 planning (2026-07-28) — deliberately NOT in the plan
 Scope was frozen at contract v1.1.1, so these are recorded rather than built.

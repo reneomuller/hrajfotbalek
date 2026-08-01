@@ -276,6 +276,26 @@ export const cs: StringsOverlay = {
     creditEmpty: "Zatím žádný kredit.",
     showQr: "Zobrazit QR platbu",
     creditHint: "Kredit se automaticky uplatní u další rezervace.",
+    securityTitle: "Přihlášení a zabezpečení",
+
+    changePasswordTitle: "Změnit heslo",
+    currentPasswordLabel: "Současné heslo",
+    newPasswordLabel: "Nové heslo",
+    changePasswordSubmit: "Změnit heslo",
+    changePasswordDone: "Heslo změněno.",
+    currentPasswordWrong:
+      "Tohle není tvoje současné heslo. Pokud sis žádné nenastavil, odhlas se a použij kód z e-mailu.",
+
+    changeEmailTitle: "Změnit e-mail",
+    newEmailLabel: "Nový e-mail",
+    changeEmailSubmit: "Poslat potvrzení",
+    changeEmailHint:
+      "Potvrzení pošleme na tvou současnou i na novou adresu. E-mail se změní, až potvrdíš obě.",
+    changeEmailSent:
+      "Poslali jsme dvě potvrzení — jedno na {current}, druhé na {next}. Otevři obě.",
+    changeEmailSame: "Tuhle adresu už používáš.",
+    changeEmailFailed: "Změnu e-mailu se nepodařilo spustit. Zkus to prosím znovu.",
+
     deleteAccount: "Smazat účet",
     deleteAccountHint: "Napiš nám a tvoje data smažeme.",
     deleteSubject: "Žádost o smazání účtu",

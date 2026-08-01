@@ -276,6 +276,26 @@ export const ru: StringsOverlay = {
     creditEmpty: "Кредита пока нет.",
     showQr: "Показать QR для оплаты",
     creditHint: "Кредит автоматически применится к следующей брони.",
+    securityTitle: "Вход и безопасность",
+
+    changePasswordTitle: "Сменить пароль",
+    currentPasswordLabel: "Текущий пароль",
+    newPasswordLabel: "Новый пароль",
+    changePasswordSubmit: "Сменить пароль",
+    changePasswordDone: "Пароль изменён.",
+    currentPasswordWrong:
+      "Это не твой текущий пароль. Если ты его не задавал, выйди и войди по коду из письма.",
+
+    changeEmailTitle: "Сменить почту",
+    newEmailLabel: "Новая почта",
+    changeEmailSubmit: "Отправить подтверждения",
+    changeEmailHint:
+      "Подтверждение придёт на текущий адрес и на новый. Почта сменится только после того, как подтвердишь оба.",
+    changeEmailSent:
+      "Отправили два подтверждения — на {current} и на {next}. Открой оба.",
+    changeEmailSame: "Это уже твой адрес.",
+    changeEmailFailed: "Не удалось начать смену почты. Попробуй ещё раз.",
+
     deleteAccount: "Удалить аккаунт",
     deleteAccountHint: "Напиши нам — и мы удалим твои данные.",
     deleteSubject: "Запрос на удаление аккаунта",

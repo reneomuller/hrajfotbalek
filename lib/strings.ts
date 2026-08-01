@@ -384,6 +384,34 @@ export const strings = {
     creditEmpty: "No credit yet.",
     showQr: "Show payment QR",
     creditHint: "Credit is applied automatically to your next booking.",
+    securityTitle: "Sign-in and security",
+
+    changePasswordTitle: "Change password",
+    currentPasswordLabel: "Current password",
+    newPasswordLabel: "New password",
+    changePasswordSubmit: "Change password",
+    changePasswordDone: "Password changed.",
+    currentPasswordWrong:
+      "That is not your current password. If you have never set one, sign out and use the emailed code instead.",
+
+    changeEmailTitle: "Change email",
+    newEmailLabel: "New email",
+    changeEmailSubmit: "Send confirmations",
+    /*
+     * Both addresses have to confirm — Supabase's `double_confirm_changes`,
+     * kept on deliberately (contract §3.3, ruled 2026-07-28). An email change
+     * is an account takeover in one step if the old mailbox has no say, so the
+     * UI states the two-confirmation requirement BEFORE the button rather than
+     * after it: someone who expects one email and gets two assumes something
+     * broke, and someone who expects two knows the change is not done yet.
+     */
+    changeEmailHint:
+      "We send a confirmation to your current address and to the new one. Your email changes only after you confirm both.",
+    changeEmailSent:
+      "Two confirmations are on their way — one to {current}, one to {next}. Open both.",
+    changeEmailSame: "That is already your email.",
+    changeEmailFailed: "We could not start the email change. Please try again.",
+
     deleteAccount: "Delete my account",
     deleteAccountHint: "Email us and we remove your data.",
     deleteMailto: "privacy@hrajfotbal.com",

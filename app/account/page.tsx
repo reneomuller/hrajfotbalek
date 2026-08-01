@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { BookingList } from "@/components/BookingList";
 import { CreditBalance } from "@/components/CreditBalance";
+import { ChangeEmailForm, ChangePasswordForm } from "@/components/account/SecurityForms";
 import { requireCurrentPlayer } from "@/lib/auth/session";
 import { getOwnCreditBalance, listOwnBookings } from "@/lib/booking/queries";
 import { getStrings } from "@/lib/i18n/server";
@@ -73,12 +74,37 @@ export default async function AccountPage() {
       </section>
 
       {/*
+        Sign-in and security, above the deletion block.
+
+        Contract §3.3 puts both controls above the delete mailto, and the order
+        is the point: the two things a person can fix themselves come before the
+        one thing that needs an email to a human. Someone who arrives here
+        wanting out of a compromised account should meet "change your password"
+        before "ask us to delete everything".
+      */}
+      <section className="mt-12 border-t border-hairline pt-6">
+        <h2 className="m-0 font-condensed text-lg font-bold uppercase tracking-wide text-white">
+          {t.account.securityTitle}
+        </h2>
+        <div className="mt-5 flex flex-col gap-8 sm:flex-row sm:gap-10">
+          <div className="flex-1">
+            <ChangePasswordForm />
+          </div>
+          <div className="flex-1">
+            <ChangeEmailForm currentEmail={player.email} />
+          </div>
+        </div>
+      </section>
+
+      {/*
         Deletion is by email request only — there is deliberately no self-serve
         deletion UI. Deletion is implemented as ANONYMIZATION: the nickname
         becomes `deleted-player-<id>`, email and phone are nulled, and the row
         is retained so `events` and `credit_ledger` stay keyed to it. A hard
         delete would orphan the ledger, which is exactly what the wallet's
-        integrity rests on.
+        integrity rests on. Phase 2 adds one thing to that list: the profile
+        photo object is deleted from storage, since nulling text columns leaves
+        a public image of someone who asked to be forgotten.
       */}
       <section className="mt-12 border-t border-hairline pt-6">
         <h2 className="m-0 font-mono text-[11px] uppercase tracking-eyebrow text-faint">

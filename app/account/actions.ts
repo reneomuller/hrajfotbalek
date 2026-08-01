@@ -8,6 +8,9 @@ import { dispatchEmail } from "@/lib/email/dispatch";
 import { createServerSupabaseClient, createServiceRoleSupabaseClient } from "@/lib/supabase/clients";
 import { getSessionUser } from "@/lib/auth/session";
 import { toBookingErrorCode, type BookingErrorCode } from "@/lib/booking/errors";
+import { getStrings } from "@/lib/i18n/server";
+import { siteOrigin } from "@/lib/auth/origin";
+import { PASSWORD_MIN_LENGTH } from "@/lib/auth/signupProfile";
 
 /**
  * Sign out.
@@ -142,4 +145,118 @@ async function dispatchCancellationEmail(
   } catch (error) {
     console.error("cancellation email dispatch failed", error);
   }
+}
+
+/* ---------------------------------------------------------------------------
+ * Sign-in and security
+ * ------------------------------------------------------------------------ */
+
+export interface SecurityActionState {
+  status: "idle" | "done" | "error";
+  message?: string;
+}
+
+/**
+ * Change password, with the current one required.
+ *
+ * WHY RE-AUTHENTICATE AT ALL. `updateUser({ password })` needs only a session,
+ * so without this check an unattended phone is a permanent account takeover:
+ * whoever picks it up sets a new password, and the owner is locked out of their
+ * own bookings and wallet. Asking for the current password costs one field and
+ * closes that.
+ *
+ * There is no "verify this password" endpoint, so the check is a sign-in with
+ * the address already on the session. It issues a fresh session for the same
+ * user, which is harmless — and it is the only way to be sure the person typing
+ * is the person who set the password rather than the person holding the phone.
+ *
+ * A player who never set a password cannot pass this and should not: the
+ * message points them at the emailed code, which is the path that identifies
+ * them by their inbox instead.
+ */
+export async function changePasswordAction(
+  _prevState: SecurityActionState,
+  formData: FormData,
+): Promise<SecurityActionState> {
+  const t = await getStrings();
+  const current = String(formData.get("currentPassword") ?? "");
+  const next = String(formData.get("newPassword") ?? "");
+
+  if (next.length < PASSWORD_MIN_LENGTH) {
+    return { status: "error", message: t.auth.passwordTooShort };
+  }
+
+  const supabase = await createServerSupabaseClient();
+  const { data: userData } = await supabase.auth.getUser();
+  const email = userData.user?.email;
+  if (!email) redirect("/login");
+
+  const { error: reauthError } = await supabase.auth.signInWithPassword({
+    email,
+    password: current,
+  });
+  if (reauthError) {
+    return { status: "error", message: t.account.currentPasswordWrong };
+  }
+
+  const { error } = await supabase.auth.updateUser({ password: next });
+  if (error) {
+    console.error("updateUser(password) failed", error.message);
+    return { status: "error", message: t.auth.setPasswordFailed };
+  }
+
+  return { status: "done", message: t.account.changePasswordDone };
+}
+
+/**
+ * Start an email change. It completes in two inboxes, not here.
+ *
+ * `double_confirm_changes` is on (contract §3.3, ruled 2026-07-28), so Supabase
+ * mails BOTH the current address and the new one and swaps the address only
+ * when both are confirmed. Nothing observable happens on this page — which is
+ * exactly why the copy says two emails are coming before the button is pressed.
+ *
+ * The old mailbox having a veto is the point: without it, a session left open
+ * anywhere becomes a permanent account transfer, and the person who owned the
+ * account would learn about it from a bounce.
+ */
+export async function changeEmailAction(
+  _prevState: SecurityActionState,
+  formData: FormData,
+): Promise<SecurityActionState> {
+  const t = await getStrings();
+  const nextEmail = String(formData.get("newEmail") ?? "").trim().toLowerCase();
+
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(nextEmail)) {
+    return { status: "error", message: t.auth.emailInvalid };
+  }
+
+  const supabase = await createServerSupabaseClient();
+  const { data: userData } = await supabase.auth.getUser();
+  const current = userData.user?.email;
+  if (!current) redirect("/login");
+
+  if (current.toLowerCase() === nextEmail) {
+    return { status: "error", message: t.account.changeEmailSame };
+  }
+
+  // Both confirmation links come back through the shared callback, so the
+  // session that results goes through the same post-auth path as every other
+  // way in rather than a bespoke one.
+  const { error } = await supabase.auth.updateUser(
+    { email: nextEmail },
+    { emailRedirectTo: new URL("/auth/callback", await siteOrigin()).toString() },
+  );
+
+  if (error) {
+    console.error("updateUser(email) failed", error.message);
+    return { status: "error", message: t.account.changeEmailFailed };
+  }
+
+  return {
+    status: "done",
+    message: t.account.changeEmailSent
+      .replace("{current}", current)
+      .replace("{next}", nextEmail),
+  };
 }
