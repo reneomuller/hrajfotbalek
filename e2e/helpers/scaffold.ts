@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { execAsOwner } from "./clock.ts";
 import { apiClientFor, players, serviceClient } from "./session.ts";
 
 /**
@@ -257,4 +258,23 @@ export async function clearActiveBookings(playerKey: keyof typeof players): Prom
   for (const row of (data ?? []) as { id: string }[]) {
     await session.rpc("cancel_booking", { p_booking_id: row.id });
   }
+}
+
+/**
+ * Removes every wallet row a spec created for a player.
+ *
+ * THROUGH THE OWNER CONNECTION, and it has to be. `credit_ledger` and
+ * `credit_topups` are append-only by privilege: `service_role` has no UPDATE
+ * on either and no DELETE on `credit_topups`, so a PostgREST `.delete()` is
+ * refused without raising — which is how the first version of the pass spec
+ * quietly left seven confirmed top-ups in the seed database and then failed on
+ * a `.single()` that found them all.
+ *
+ * `walletBalance()` above is the read side and stays on the service client;
+ * only teardown needs this.
+ */
+export async function resetWallet(playerId: string): Promise<void> {
+  await execAsOwner("delete from public.credit_ledger where player_id = $1", [playerId]);
+  await execAsOwner("delete from public.events where player_id = $1 and event_type in ('topup_requested','topup_confirmed','credit_expired')", [playerId]);
+  await execAsOwner("delete from public.credit_topups where player_id = $1", [playerId]);
 }

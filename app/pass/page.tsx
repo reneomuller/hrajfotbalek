@@ -1,0 +1,68 @@
+import type { Metadata } from "next";
+import { PassTierCard } from "@/components/pass/PassTierCard";
+import { getSessionUser } from "@/lib/auth/session";
+import { formatCzk } from "@/lib/format";
+import { listPassTiers } from "@/lib/pass/queries";
+import { getStrings } from "@/lib/i18n/server";
+
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getStrings();
+  return { title: t.pass.title, description: t.pass.lede };
+}
+
+export const dynamic = "force-dynamic";
+
+/**
+ * `/pass` — the tiers, with the expiry stated before the button (§4.2).
+ *
+ * A PASS IS DISCOUNTED WALLET CREDIT WITH AN EXPIRY. Not a ticket, not a
+ * counter of games. The copy says so and the page shows CZK with a
+ * games-equivalent beside it, because unit-credits were rejected for a good
+ * reason: per-game pricing already varies, and a "5 games" balance starts
+ * owing fractions of a game the moment two games cost differently.
+ *
+ * THE EXPIRY IS ON EVERY CARD, above the button, in its own line. §4.2 is
+ * explicit: "An expiry discovered after purchase is a complaint; an expiry
+ * read before purchase is a choice." That is the whole reason this page exists
+ * rather than a dropdown on the top-up form.
+ *
+ * Readable signed out. Someone deciding whether this product is worth an
+ * account should be able to see what it costs first; the buy button is what
+ * needs a session, and it says so.
+ */
+export default async function PassPage() {
+  const t = await getStrings();
+  const [tiers, user] = await Promise.all([listPassTiers(), getSessionUser()]);
+
+  return (
+    <main className="relative z-10 mx-auto w-full max-w-shell px-gutter pb-16 pt-24">
+      <h1 className="m-0 font-display text-section-title uppercase tracking-wide text-white">
+        {t.pass.title}
+      </h1>
+      <p className="mt-3 max-w-[520px] text-[14px] leading-relaxed text-muted">
+        {t.pass.lede}
+      </p>
+
+      <div className="mt-8 flex flex-col gap-3" data-testid="pass-tiers">
+        {tiers.map((tier) => (
+          <PassTierCard key={tier.games} tier={tier} signedIn={user !== null} />
+        ))}
+      </div>
+
+      <section className="mt-10 rounded-card border border-hairline bg-surface-card p-5">
+        <h2 className="m-0 font-condensed text-[17px] font-bold uppercase tracking-wide text-white">
+          {t.pass.howItWorks}
+        </h2>
+        <p className="mt-2 text-[14px] leading-relaxed text-bone">
+          {t.pass.howItWorksBody}
+        </p>
+        {/* The reference price, stated once. Every tier's arithmetic is built
+            on it, and a page that shows six prices without it makes the reader
+            do the division themselves. */}
+        <p className="mt-3 font-mono text-[12px] tracking-[1px] text-faint">
+          {t.pass.tierPerGame.replace("{amount}", formatCzk(150))}
+        </p>
+      </section>
+    </main>
+  );
+}

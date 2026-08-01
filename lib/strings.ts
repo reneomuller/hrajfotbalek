@@ -965,11 +965,32 @@ export const strings = {
       subject: "Your wallet has been topped up",
       heading: "Money in the wallet",
       body: "We received {amount} and added it to your wallet.",
+      // The three that differ only for a pass (§4.2, REQ-PASS-005).
+      receivedLabel: "Received",
       creditedLabel: "Credited",
+      expiresLabel: "Expires",
+      noExpiry: "Never",
       balanceLabel: "New balance",
       spendNote:
         "It applies automatically to your next booking — no code to enter.",
       cta: "Open my account",
+    },
+
+    /**
+     * The three-day heads-up (§4.2, REQ-PASS-004).
+     *
+     * Links to the GAMES LIST, not to the account page. Someone told their
+     * credit is running out does not need to look at a balance — they need to
+     * book something, and there is still time.
+     */
+    passExpiring: {
+      subject: "Your credit runs out in 3 days",
+      heading: "Use it before it goes",
+      body: "You have {amount} of pass credit left and it expires on {date}.",
+      remainingLabel: "Left",
+      gamesLabel: "Roughly this many games",
+      expiresLabel: "Expires",
+      cta: "Find a game",
     },
 
     common: {
@@ -1062,6 +1083,42 @@ export const strings = {
    * Five moments, one component. The set is closed — `lib/ux/toast.ts` carries
    * the kinds — so a toast is never free text arriving from a query string.
    */
+  /**
+   * The game pass (§4.2).
+   *
+   * A pass is DISCOUNTED WALLET CREDIT WITH AN EXPIRY — not a ticket and not a
+   * counter of games — and the copy says so, because a player who thinks they
+   * bought five games will feel cheated when a game costs 200.
+   */
+  pass: {
+    title: "Game pass",
+    lede: "Pre-buy games at a discount. It goes into your wallet as credit and applies itself to your next booking.",
+    panelTitle: "Top up your pass",
+    panelBody: "Pre-buy games at a discount.",
+    panelCta: "See the passes →",
+    tierGames: "{count} games",
+    tierOneGame: "1 game",
+    tierPerGame: "{amount} a game",
+    tierCredited: "You get {amount} of credit",
+    tierSaving: "Save {amount}",
+    tierNoSaving: "The standard price",
+    // Stated LOUDLY and before the button, per §4.2: an expiry discovered
+    // after purchase is a complaint; an expiry read before it is a choice.
+    tierExpiresOne: "Expires 1 month after it lands",
+    tierExpiresMany: "Expires {count} months after it lands",
+    tierNeverExpires: "Never expires",
+    tierBuy: "Buy this pass",
+    // The honest framing of what is actually stored.
+    equivalence: "≈ {count} games",
+    howItWorks: "How it works",
+    howItWorksBody:
+      "You pay by QR like any other top-up. Once the payment is confirmed the credit lands in your wallet and is spent automatically — soonest-expiring first, so a pass is never left behind while permanent credit is used up.",
+    batchesTitle: "Your credit",
+    batchesExpiring: "{amount} left · expires {date}",
+    batchesNever: "{amount} · never expires",
+    batchesNone: "No expiring credit.",
+  },
+
   toast: {
     bookingCreated: "You're in. Your spot is held.",
     signedIn: "Signed in.",

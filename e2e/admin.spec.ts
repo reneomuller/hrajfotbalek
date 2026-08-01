@@ -505,11 +505,24 @@ test("the game surface carries edit, roster, paid, attendance and cancel", async
 test("the stats page reports a hand-computed window", async ({ page, context }) => {
   await signInAs(context, players.organizer);
 
-  // Baseline, before any fixture exists.
-  await page.goto("/admin/stats?window=day");
+  /*
+   * THE MONTH WINDOW, and the expectation is DERIVED from the range the page
+   * itself reports rather than assumed.
+   *
+   * The first version used `day` with two games an hour or two out. That is
+   * fine at three in the afternoon and wrong at half past eleven at night: the
+   * second game crosses Prague midnight into tomorrow, falls outside today's
+   * window, and the capacity delta comes back 4 instead of 8. A spec that
+   * passes depending on the hour it runs is the flake CLAUDE.md warns about —
+   * re-running "fixes" nothing and the failure is never reproducible.
+   *
+   * So: the widest window, and the fixtures are checked against its printed
+   * bounds. The assertion stays hand-computed — it is still "these games, that
+   * many spots" — it just no longer assumes which side of a boundary they fell.
+   */
+  await page.goto("/admin/stats?window=month");
   const baseline = await readStats(page);
 
-  // Two games kicking off today, capacity 4 each: 8 spots.
   const first = await createScratchGame({ capacity: 4, hoursFromNow: 1 });
   const second = await createScratchGame({ capacity: 4, hoursFromNow: 2 });
 
@@ -545,11 +558,21 @@ test("the stats page reports a hand-computed window", async ({ page, context }) 
     });
     expect(cancelError).toBeNull();
 
-    await page.goto("/admin/stats?window=day");
+    // The bounds the page is reporting, read before the assertions so the
+    // expectation and the figures describe the same period.
+    const range = await readRange(page);
+
+    await page.goto("/admin/stats?window=month");
     const after = await readStats(page);
 
-    // Capacity: two games of four.
-    expect(after.capacity - baseline.capacity).toBe(8);
+    // Which of the fixtures the window actually holds. Almost always both.
+    const inWindow = [first, second].filter((game) =>
+      withinRange(game.startsAt, range),
+    );
+    expect(inWindow.length).toBeGreaterThanOrEqual(1);
+
+    // Capacity: four spots per game that landed in the window.
+    expect(after.capacity - baseline.capacity).toBe(inWindow.length * 4);
     // Sold: three created, one cancelled — two still active.
     expect(after.sold - baseline.sold).toBe(2);
     // Revenue: two payments confirmed at 200, and cancelling does NOT retract
@@ -563,6 +586,23 @@ test("the stats page reports a hand-computed window", async ({ page, context }) 
     await destroyScratchGame(second.id);
   }
 });
+
+/** The printed window bounds, as instants. */
+async function readRange(
+  page: import("@playwright/test").Page,
+): Promise<{ from: number; to: number }> {
+  await page.goto("/admin/stats?window=month");
+  const text = (await page.getByTestId("stat-range").textContent()) ?? "";
+  // "1 Aug 2026 — 31 Aug 2026". The upper bound printed is the last day INSIDE
+  // the window, so the exclusive bound is the following midnight.
+  const [from, to] = text.split("—").map((part) => Date.parse(part.trim()));
+  return { from, to: to + 86_400_000 };
+}
+
+function withinRange(iso: string, range: { from: number; to: number }): boolean {
+  const at = Date.parse(iso);
+  return at >= range.from && at < range.to;
+}
 
 /** The five numbers off the stats page, as numbers. */
 async function readStats(page: import("@playwright/test").Page) {

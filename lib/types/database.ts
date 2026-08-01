@@ -68,6 +68,12 @@ export type CreditReason =
   | "admin_grant"
   | "redemption"
   | "adjustment"
+  // Phase 20a (migration 31). Credit a player bought at a discount and did not
+  // spend inside the window they accepted at purchase. Distinct from
+  // `adjustment` because filing it there would make it indistinguishable from
+  // an admin fixing a mistake, on the one row a player is most likely to ask
+  // about.
+  | "pass_expiry"
   // Phase 2 (migration 22). The first reason that is a player putting money in
   // rather than a consequence of something else — deliberately distinct from
   // `admin_grant`, which is a gift the platform chose to make.
@@ -119,7 +125,10 @@ export type EventType =
   // Phase 2 (migration 30). Every site-setting change names the admin and the
   // new value: a public claim about the size of the community with no audit
   // trail is a number nobody can account for.
-  | "site_setting_changed";
+  | "site_setting_changed"
+  // Phase 20a (migration 32). Written by the sweep, alongside the compensating
+  // negative ledger row.
+  | "credit_expired";
 
 /**
  * Return contract of create_booking / admin_create_booking (SQL composite
@@ -271,6 +280,13 @@ export interface Database {
           brand: string;
           policy_version: string;
           created_at: string;
+          /**
+           * Phase 20a. The tier the player chose, when they chose one. Null
+           * for an ordinary top-up. Recorded for the receipt and the audit
+           * trail; the pass treatment itself keys on the RECEIVED amount, per
+           * §4.2.
+           */
+          pass_games: number | null;
         };
         Insert: never;
         Update: never;
@@ -373,6 +389,24 @@ export interface Database {
       };
 
       /**
+       * Phase 20a, migration 32. The six game-pass tiers. Anon-readable — the
+       * pass panel renders on the games list for a signed-out visitor.
+       */
+      pass_tiers: {
+        Row: {
+          games: number;
+          price_czk: number;
+          /** Always `games * 150`, CHECKed. */
+          credited_czk: number;
+          /** Null = never expires. Only the 1-game tier. */
+          expires_months: number | null;
+        };
+        Insert: never;
+        Update: never;
+        Relationships: [];
+      };
+
+      /**
        * Phase 2, migration 30. ONE ROW, id `singleton`, readable by `anon` —
        * the stats strip and Player of the Month render for signed-out
        * visitors, and without the explicit grant those reads return empty
@@ -445,6 +479,16 @@ export interface Database {
           reason: CreditReason;
           booking_id: string | null;
           created_at: string;
+          /**
+           * Phase 20a, migration 32. Set on a positive BATCH row (a pass
+           * purchase); null everywhere else, which is what "does not expire"
+           * means. BALANCE IS STILL SUM(delta_czk) — no reader filters on this.
+           */
+          expires_at: string | null;
+          /** The batch a redemption, refund or expiry row belongs to. */
+          batch_id: string | null;
+          /** Idempotency guard for the three-day heads-up, on the batch row. */
+          expiry_notified_at: string | null;
         };
         /** Append-only, and appends happen inside RPCs. */
         Insert: never;
@@ -825,6 +869,54 @@ export interface Database {
       set_site_setting: {
         Args: { p_key: string; p_value: Json };
         Returns: undefined;
+      };
+
+      /**
+       * Phase 20a. Requests a pass at the tier's OWN price — a separate
+       * function rather than a defaulted parameter on `create_topup`, which
+       * would create an ambiguous overload that breaks every existing
+       * one-argument call at runtime.
+       */
+      create_pass_topup: {
+        Args: { p_pass_games: number };
+        Returns: TopupRow;
+      };
+
+      /**
+       * Service-role only. Writes a compensating negative row per expired
+       * batch remainder, so balance stays SUM(delta_czk). Returns how many
+       * batches it closed; idempotent, so a second run returns 0.
+       */
+      expire_credit_batches: {
+        Args: Record<string, never>;
+        Returns: number;
+      };
+
+      /**
+       * Service-role only. Batches expiring within `p_days` that have not been
+       * warned about, STAMPED by the same statement that selects them — so a
+       * cron route that runs twice sends once.
+       */
+      batches_expiring_soon: {
+        Args: { p_days?: number };
+        Returns: {
+          batch_id: string;
+          player_id: string;
+          remaining_czk: number;
+          expires_at: string;
+        }[];
+      };
+
+      /** The calling player's own expiring batches, soonest first. */
+      my_credit_batches: {
+        Args: Record<string, never>;
+        Returns: {
+          batch_id: string;
+          original_czk: number;
+          remaining_czk: number;
+          expires_at: string;
+          created_at: string;
+        }[];
       };
 
       complete_signup_v2: {

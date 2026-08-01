@@ -65,7 +65,14 @@ export async function GameRow({
       href={`/game/${game.id}`}
       data-testid="game-row"
       data-urgency={urgency}
-      className="block rounded-card border border-hairline-volt bg-surface-panel px-4 py-3 no-underline transition-colors hover:border-hairline-volt-strong"
+      /*
+        py-[10px] rather than py-3, and the internal gaps below are 6px rather
+        than 8. This row is the density criterion (§5.5) and the numbers are
+        load-bearing: with the pass panel above it, py-3 put the fifth row two
+        pixels below the fold at Pixel-7 height. The spec counts rows fully
+        inside the viewport, so "nearly" does not count.
+      */
+      className="block rounded-card border border-hairline-volt bg-surface-panel px-4 py-[10px] no-underline transition-colors hover:border-hairline-volt-strong"
     >
       {/* Line one — when, where, and how full. */}
       <div className="flex items-baseline justify-between gap-3">
@@ -96,14 +103,14 @@ export async function GameRow({
       </div>
 
       {/* Line two — the fullness bar, at row scale. */}
-      <div className="mt-2">
+      <div className="mt-[6px]">
         <CapacityBar bookedCount={bookedCount} capacity={game.capacity} size="slim" />
       </div>
 
       {/* Line three — what kind of game it is. Chips wrap rather than
           truncate, because a wrapped surface label is legible and a clipped
           one is a puzzle. */}
-      <div className="mt-2 flex flex-wrap items-center gap-2">
+      <div className="mt-[6px] flex flex-wrap items-center gap-2">
         <FormatChips
           format={game.format}
           surface={game.surface}

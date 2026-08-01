@@ -32,6 +32,10 @@ const PLAYER_FACING = [
   // which is the worst possible moment to be shown a language they do not
   // read.
   "toast",
+  // Contract §4.2, Phase 20a. This is MONEY the player is deciding to spend,
+  // and the expiry is the part they must read before the button. A pass page
+  // in a language they cannot read is a complaint waiting to happen.
+  "pass",
 ] as const;
 
 /**

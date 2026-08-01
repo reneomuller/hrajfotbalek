@@ -171,7 +171,7 @@ trigger one email of each family against a real address and confirm arrival:
 - payment confirmed — mark it paid
 - cancellation credit — cancel it
 - waitlist spot open — fill a capacity-1 game, queue, cancel
-- nudge / reminder / expiry — the three cron routes
+- nudge / reminder / expiry / pass-expiry — the four cron routes
 - game cancelled — cancel a throwaway game
 
 Note the fail-safe direction while you are here: a missing or unrecognised
@@ -201,6 +201,7 @@ Three jobs, all `GET`, against the production domain:
 | `/api/cron/expiry` | every 15 min | expires lapsed reservations, releases the spot, notifies the waitlist |
 | `/api/cron/nudge` | every 30 min | one scarcity nudge per unpaid booking on a full game with a queue |
 | `/api/cron/reminder` | every 30 min | one 24h reminder per active booking |
+| `/api/cron/pass-expiry` | hourly | three-day heads-up, then expires spent-out pass batches (§4.2) |
 
 Each job sends the shared secret as a header:
 
@@ -213,7 +214,7 @@ Vercel's own crons use — either is fine. Use the exact value of `CRON_SECRET`
 from the Vercel environment. If `CRON_SECRET` is unset on the server, **every**
 call is rejected, including Vercel's: the guard fails closed.
 
-**Leave the Vercel crons in place as a backstop.** All three routes are
+**Leave the Vercel crons in place as a backstop.** All four routes are
 idempotent — that was proven at the M3 gate — so a daily run overlapping a
 30-minute one produces no duplicate email and no duplicate event. Two schedulers
 are strictly better than one here, because the failure mode of an external

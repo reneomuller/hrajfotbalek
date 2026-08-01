@@ -30,7 +30,7 @@ export function DayPicker({
   return (
     <nav
       data-testid="day-picker"
-      className="mt-6 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      className="mt-4 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
     >
       {/* Progressive enhancement only — see the component. Without it the
           strip still filters; the selected tab is just where it lands. */}

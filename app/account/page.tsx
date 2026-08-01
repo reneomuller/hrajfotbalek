@@ -4,12 +4,14 @@ import Link from "next/link";
 import { PlayerHistory } from "@/components/account/PlayerHistory";
 import { splitHistory } from "@/lib/booking/history";
 import { CreditBalance } from "@/components/CreditBalance";
+import { CreditBatches } from "@/components/account/CreditBatches";
 import { ChangeEmailForm, ChangePasswordForm } from "@/components/account/SecurityForms";
 import { PhotoUpload } from "@/components/account/PhotoUpload";
 import { avatarUrl } from "@/lib/storage/avatar";
 import { initials } from "@/lib/roster/initials";
 import { requireCurrentPlayer } from "@/lib/auth/session";
 import { getOwnCreditBalance, listOwnBookings } from "@/lib/booking/queries";
+import { listMyBatches } from "@/lib/pass/queries";
 import { getStrings } from "@/lib/i18n/server";
 import { signOutAction } from "./actions";
 
@@ -40,9 +42,13 @@ export default async function AccountPage({
   const query = searchParams ? await searchParams : {};
   const player = await requireCurrentPlayer("/account");
 
-  const [bookings, balanceCzk] = await Promise.all([
+  const [bookings, balanceCzk, batches] = await Promise.all([
     listOwnBookings(),
     getOwnCreditBalance(),
+    // The wallet broken into batches (§4.2). A single number cannot say that
+    // 750 of a 900 balance runs out on the 3rd, which is the one thing a pass
+    // holder needs in order to use it.
+    listMyBatches(),
   ]);
 
   const photoUrl = avatarUrl(
@@ -112,6 +118,7 @@ export default async function AccountPage({
 
       <div className="mt-8 flex flex-wrap items-center gap-4">
         <CreditBalance balanceCzk={balanceCzk} />
+        <CreditBatches batches={batches} />
         {/* The entry point sits ON the wallet, because "top up" is a thought
             someone has while looking at a balance, not while reading a menu. */}
         <Link

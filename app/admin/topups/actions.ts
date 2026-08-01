@@ -47,7 +47,7 @@ export async function confirmTopupAction(formData: FormData): Promise<void> {
   const admin = createServiceRoleSupabaseClient();
   const { data: topup } = await admin
     .from("credit_topups")
-    .select("payment_code, player_id")
+    .select("payment_code, player_id, received_amount_czk")
     .eq("id", topupId)
     .maybeSingle();
 
@@ -59,10 +59,35 @@ export async function confirmTopupAction(formData: FormData): Promise<void> {
       .maybeSingle();
 
     if (player?.email) {
+      /*
+       * THE EXPIRY COMES OFF THE LEDGER ROW THE RPC JUST WROTE, not from the
+       * tier table (§4.2, REQ-PASS-005). Re-deriving it here would mean
+       * re-implementing the exact-price match in TypeScript, and the first
+       * time the two disagreed the receipt would be the wrong one — which is
+       * the document a dispute is argued from.
+       */
+      const { data: batch } = await admin
+        .from("credit_ledger")
+        .select("expires_at")
+        .eq("player_id", topup.player_id)
+        .not("expires_at", "is", null)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      const received = topup.received_amount_czk ?? data.credited_czk;
+      // Only a batch written by THIS confirmation is this receipt's expiry. A
+      // player with an older pass would otherwise be told their ordinary
+      // top-up expires.
+      const expiresAt =
+        data.credited_czk !== received ? (batch?.expires_at ?? null) : null;
+
       const rendered = topupReceiptEmail({
         nickname: player.nickname,
+        receivedCzk: received,
         creditedCzk: data.credited_czk,
         balanceCzk: data.balance_czk,
+        expiresAt,
         variableSymbol: topup.payment_code,
         accountUrl: `${await siteUrl()}/account`,
       });

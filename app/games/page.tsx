@@ -4,6 +4,7 @@ import { EmptyState } from "@/components/EmptyState";
 import { DayPicker } from "@/components/game/DayPicker";
 import { GameRow } from "@/components/game/GameRow";
 import { NextGameStrip } from "@/components/game/NextGameStrip";
+import { PassPanel } from "@/components/pass/PassPanel";
 import { getOwnNextBooking } from "@/lib/booking/queries";
 import { getSessionUser } from "@/lib/auth/session";
 import { buildDayTabs, pragueDayKey, resolveSelectedDay } from "@/lib/games/days";
@@ -103,6 +104,10 @@ export default async function GamesPage({
       )}
 
       <DayPicker tabs={dayTabs} selected={selectedDay} />
+
+      {/* Between the day-picker and the list, per §4.2. Someone scanning for a
+          game is the person for whom pre-buying games is worth anything. */}
+      <PassPanel />
 
       {games.length === 0 ? (
         <div className="mt-8">

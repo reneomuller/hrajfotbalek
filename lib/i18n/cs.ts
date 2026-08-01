@@ -395,6 +395,32 @@ export const cs: StringsOverlay = {
     tryAgain: "Zkusit znovu",
   },
 
+  pass: {
+    title: "Herní permanentka",
+    lede: "Předplať si zápasy se slevou. Přistane ti v peněžence jako kredit a sám se použije na další rezervaci.",
+    panelTitle: "Dobij si permanentku",
+    panelBody: "Předplať si zápasy se slevou.",
+    panelCta: "Zobrazit permanentky →",
+    tierGames: "{count} zápasů",
+    tierOneGame: "1 zápas",
+    tierPerGame: "{amount} za zápas",
+    tierCredited: "Dostaneš kredit {amount}",
+    tierSaving: "Ušetříš {amount}",
+    tierNoSaving: "Běžná cena",
+    tierExpiresOne: "Platí 1 měsíc od připsání",
+    tierExpiresMany: "Platí {count} měsíce od připsání",
+    tierNeverExpires: "Bez expirace",
+    tierBuy: "Koupit permanentku",
+    equivalence: "≈ {count} zápasů",
+    howItWorks: "Jak to funguje",
+    howItWorksBody:
+      "Zaplatíš QR kódem jako každé jiné dobití. Po potvrzení platby ti kredit přistane v peněžence a utrácí se automaticky — nejdřív ten, co vyprší nejdřív, aby ti permanentka nepropadla.",
+    batchesTitle: "Tvůj kredit",
+    batchesExpiring: "Zbývá {amount} · vyprší {date}",
+    batchesNever: "{amount} · bez expirace",
+    batchesNone: "Žádný kredit s expirací.",
+  },
+
   toast: {
     bookingCreated: "Jsi v sestavě. Místo ti držíme.",
     signedIn: "Přihlášeno.",

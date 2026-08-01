@@ -395,6 +395,32 @@ export const ru: StringsOverlay = {
     tryAgain: "Попробовать снова",
   },
 
+  pass: {
+    title: "Игровой абонемент",
+    lede: "Купи матчи заранее со скидкой. Деньги попадут в кошелёк как кредит и сами применятся к следующей брони.",
+    panelTitle: "Пополни абонемент",
+    panelBody: "Купи матчи заранее со скидкой.",
+    panelCta: "Посмотреть абонементы →",
+    tierGames: "{count} матчей",
+    tierOneGame: "1 матч",
+    tierPerGame: "{amount} за матч",
+    tierCredited: "Получишь кредит {amount}",
+    tierSaving: "Экономия {amount}",
+    tierNoSaving: "Обычная цена",
+    tierExpiresOne: "Действует 1 месяц с момента зачисления",
+    tierExpiresMany: "Действует {count} месяца с момента зачисления",
+    tierNeverExpires: "Без срока",
+    tierBuy: "Купить абонемент",
+    equivalence: "≈ {count} матчей",
+    howItWorks: "Как это работает",
+    howItWorksBody:
+      "Платишь по QR, как за обычное пополнение. После подтверждения кредит попадает в кошелёк и тратится автоматически — сначала тот, что сгорит раньше, чтобы абонемент не пропал.",
+    batchesTitle: "Твой кредит",
+    batchesExpiring: "Осталось {amount} · сгорает {date}",
+    batchesNever: "{amount} · без срока",
+    batchesNone: "Кредита со сроком нет.",
+  },
+
   toast: {
     bookingCreated: "Ты в составе. Место забронировано.",
     signedIn: "Вход выполнен.",

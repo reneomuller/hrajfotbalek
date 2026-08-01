@@ -1,0 +1,21 @@
+-- =============================================================================
+-- Migration 31 — credit_reason gains 'pass_expiry'
+--
+-- ALONE IN ITS MIGRATION, and it has to be (F6). `alter type … add value`
+-- cannot be used in the transaction that adds it, so the sweep that writes
+-- rows with this reason ships in migration 33, behind it. This is the same
+-- shape `credit_reason.topup` took in migration 22 and for the same reason.
+--
+-- WHY A DEDICATED REASON RATHER THAN `adjustment`. The ledger is the audit
+-- trail for money, and every existing reason names a distinct kind of
+-- movement: a cancellation returning value, a gift the platform chose to make,
+-- a spend, a correction, a player putting money in. An expiry is none of
+-- those — it is value the player bought at a discount and did not use in the
+-- window they accepted at purchase. Filing it under `adjustment` would make it
+-- indistinguishable from an admin fixing a mistake, on the one row a player is
+-- most likely to ask about.
+--
+-- Rollback: supabase/rollback/20260802140000_credit_reason_pass_expiry_down.sql
+-- =============================================================================
+
+alter type public.credit_reason add value 'pass_expiry';

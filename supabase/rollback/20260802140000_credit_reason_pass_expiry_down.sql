@@ -1,0 +1,17 @@
+-- Rollback for 20260802140000_credit_reason_pass_expiry.sql
+--
+-- THERE IS NO CLEAN DOWN, for the same reason migration 22's rollback records:
+-- Postgres has no `alter type … drop value`. Removing a label means renaming
+-- the type aside, recreating it without the label, altering `credit_ledger`
+-- with a USING cast, and dropping the old type — and that final alter fails
+-- outright if any row already reads `pass_expiry`.
+--
+-- Failing is the correct outcome there. Those rows are the record of credit a
+-- player bought at a discount and did not spend inside the window they
+-- accepted; recategorising them into a reason that misdescribes them, to make
+-- a rollback tidy, would be falsifying a money trail.
+--
+-- Leaving an unused label costs nothing: no column is constrained by it and no
+-- query enumerates the type.
+
+-- Intentionally empty.

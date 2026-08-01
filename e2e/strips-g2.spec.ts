@@ -1,7 +1,7 @@
 import { mkdir } from "node:fs/promises";
 import path from "node:path";
 import { expect, test } from "@playwright/test";
-import { createScratchGame, destroyScratchGame } from "./helpers/scaffold.ts";
+import { createScratchGame, destroyScratchGame, resetWallet } from "./helpers/scaffold.ts";
 import { apiClientFor, players, serviceClient, signInAs } from "./helpers/session.ts";
 import { pragueDayKey } from "../lib/games/days.ts";
 
@@ -281,5 +281,48 @@ test("the venue photo panel, which is the one strip needing a venue that has one
   } finally {
     await destroyScratchGame(withPhoto.id);
     await destroyScratchGame(withoutPhoto.id);
+  }
+});
+
+// --- Phase 20a ---------------------------------------------------------------
+
+test("the pass tiers, the panel above the list, and the wallet in batches", async ({
+  page,
+  context,
+}) => {
+  const game = await createScratchGame({ hoursFromNow: 24 * 26 });
+
+  try {
+    // The panel, in its contracted position between the day-picker and the
+    // list (§4.2).
+    await page.goto(`/games?day=${pragueDayKey(game.startsAt)}`, {
+      waitUntil: "networkidle",
+    });
+    await expect(page.getByTestId("pass-panel")).toBeVisible();
+    await strip(page, "20a-games-list-pass-panel");
+
+    // The tiers, with every expiry stated above its button.
+    await page.goto("/pass", { waitUntil: "networkidle" });
+    await expect(page.getByTestId("pass-tier")).toHaveCount(6);
+    await strip(page, "20a-pass-tiers");
+
+    // A real pass in a real wallet, shown as a batch with its date and its
+    // games-equivalent rather than as one opaque total.
+    const player = await apiClientFor(players.creditPartial);
+    const { data: topup } = await player.rpc("create_pass_topup", { p_pass_games: 8 });
+    const admin = serviceClient();
+    await admin.rpc("confirm_topup", {
+      p_topup_id: topup.id,
+      p_confirmed_by: players.organizer.id,
+      p_received_amount_czk: 1080,
+    });
+
+    await signInAs(context, players.creditPartial);
+    await page.goto("/account", { waitUntil: "networkidle" });
+    await expect(page.getByTestId("credit-batch")).toHaveCount(1);
+    await strip(page, "20a-account-batches");
+  } finally {
+    await resetWallet(players.creditPartial.id);
+    await destroyScratchGame(game.id);
   }
 });

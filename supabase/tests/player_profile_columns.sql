@@ -284,10 +284,25 @@ select pg_temp.ok(
           where t.typname = 'credit_reason' and e.enumlabel = 'topup'),
   'credit_reason carries topup, ready for the top-up RPCs');
 
+-- SIX SINCE PHASE 20a, and the edit is deliberate. Migration 31 added
+-- `pass_expiry` for the rows the expiry sweep writes — distinct from
+-- `adjustment` because filing an expiry there would make it indistinguishable
+-- from an admin fixing a mistake, on the one ledger row a player is most
+-- likely to ask about.
+--
+-- The assertion stays EXHAUSTIVE rather than becoming `>= 5`. Its job is that
+-- a label cannot appear or disappear without someone editing this line on
+-- purpose: `credit_reason` is the vocabulary of the money trail, and Postgres
+-- cannot drop an enum value, so an accidental addition is permanent.
 select pg_temp.ok(
   (select count(*) from pg_enum e join pg_type t on t.oid = e.enumtypid
-   where t.typname = 'credit_reason') = 5,
-  'credit_reason gained exactly one label and lost none');
+   where t.typname = 'credit_reason') = 6,
+  'credit_reason carries exactly six labels — nothing appeared or vanished unnoticed');
+
+select pg_temp.ok(
+  exists (select 1 from pg_enum e join pg_type t on t.oid = e.enumtypid
+          where t.typname = 'credit_reason' and e.enumlabel = 'pass_expiry'),
+  'credit_reason carries pass_expiry, ready for the expiry sweep');
 
 -- =============================================================================
 -- anon sees nothing here, as before
