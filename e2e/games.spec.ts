@@ -1,6 +1,20 @@
 import { expect, test } from "@playwright/test";
 import { createScratchGame, destroyScratchGame } from "./helpers/scaffold.ts";
 import { anonClient, apiClientFor, players, serviceClient, signInAs } from "./helpers/session.ts";
+import { pragueDayKey } from "../lib/games/days.ts";
+
+/**
+ * The list URL for the day a given game falls on.
+ *
+ * The games list filters by Prague calendar day (§5.5) and defaults to the
+ * FIRST day that has games — so a spec asserting on a game two weeks out has
+ * to ask for that game's day. Deriving the key from the stored kick-off rather
+ * than from the offset the spec asked for keeps this correct across midnight
+ * and across a DST boundary.
+ */
+function listUrlFor(game: { startsAt: string }): string {
+  return `/games?day=${pragueDayKey(game.startsAt)}`;
+}
 
 /**
  * G2 game-surface specs.
@@ -159,11 +173,11 @@ test("the games list shows a span, not only a kick-off", async ({ page }) => {
   const game = await createScratchGame({ durationMinutes: 90, hoursFromNow: 24 * 20 });
 
   try {
-    await page.goto("/games");
-    const card = page.locator(`[data-testid="game-card"]:has(a[href="/game/${game.id}"])`);
-    await expect(card).toHaveCount(1);
+    await page.goto(listUrlFor(game));
+    const row = page.locator(`[data-testid="game-row"][href="/game/${game.id}"]`);
+    await expect(row).toHaveCount(1);
     // Two clock times with an en dash between them.
-    await expect(card).toContainText(/\d{2}:\d{2}–\d{2}:\d{2}/);
+    await expect(row).toContainText(/\d{2}:\d{2}–\d{2}:\d{2}/);
   } finally {
     await destroyScratchGame(game.id);
   }
@@ -189,16 +203,19 @@ test("no skill badge on an all-levels game, badges on a restricted one", async (
     await page.goto(`/game/${restricted.id}`);
     await expect(page.getByTestId("skill-badge-advanced")).toBeVisible();
 
-    // And on the card, which is where a player decides whether to open it.
-    await page.goto("/games");
-    const restrictedCard = page.locator(
-      `[data-testid="game-card"]:has(a[href="/game/${restricted.id}"])`,
+    // And on the row, which is where a player decides whether to open it.
+    // Both games are created with the same default offset, so one day tab
+    // holds both — asserted rather than assumed by locating each in turn.
+    await page.goto(listUrlFor(restricted));
+    const restrictedRow = page.locator(
+      `[data-testid="game-row"][href="/game/${restricted.id}"]`,
     );
-    const openCard = page.locator(
-      `[data-testid="game-card"]:has(a[href="/game/${open.id}"])`,
-    );
-    await expect(restrictedCard.getByTestId("skill-badge-advanced")).toBeVisible();
-    await expect(openCard.getByTestId("skill-badges")).toHaveCount(0);
+    await expect(restrictedRow.getByTestId("skill-badge-advanced")).toBeVisible();
+
+    await page.goto(listUrlFor(open));
+    const openRow = page.locator(`[data-testid="game-row"][href="/game/${open.id}"]`);
+    await expect(openRow).toHaveCount(1);
+    await expect(openRow.getByTestId("skill-badges")).toHaveCount(0);
   } finally {
     await destroyScratchGame(open.id);
     await destroyScratchGame(restricted.id);
@@ -246,11 +263,11 @@ test("a capacity-12 game entered as 5v5 never renders 6v6", async ({ page }) => 
     await expect(page.getByTestId("game-subs")).toContainText("2");
     await expect(page.locator("body")).not.toContainText("6v6");
 
-    // The list card.
-    await page.goto("/games");
-    const card = page.locator(`[data-testid="game-card"]:has(a[href="/game/${game.id}"])`);
-    await expect(card.getByTestId("game-format")).toHaveText("5v5");
-    await expect(card).not.toContainText("6v6");
+    // The list row.
+    await page.goto(listUrlFor(game));
+    const row = page.locator(`[data-testid="game-row"][href="/game/${game.id}"]`);
+    await expect(row.getByTestId("game-format")).toHaveText("5v5");
+    await expect(row).not.toContainText("6v6");
   } finally {
     await destroyScratchGame(game.id);
   }
@@ -407,6 +424,159 @@ test("the roster renders photos where they exist and initials where they do not"
   } finally {
     const admin = serviceClient();
     await admin.from("players").update({ photo_path: null }).eq("id", players.runner.id);
+    await destroyScratchGame(game.id);
+  }
+});
+
+/*
+ * TEST-234 / REQ-GAME-019 — density, counted rather than eyeballed.
+ *
+ * v1.1.2 set "at least three" against a card layout. v1.1.4 tightens it to
+ * "well more than three at Pixel-7 width", so this counts the rows whose
+ * bounding box lies ENTIRELY within the viewport — a row half off the bottom
+ * edge is not a game you can see, and a criterion satisfied by a partially
+ * visible row is a criterion that means nothing.
+ *
+ * Pixel 7 is the project's only viewport (`playwright.config.ts`), so "phone
+ * width" needs no setup here.
+ */
+test("well more than three games are visible at phone width, without scrolling", async ({
+  page,
+}) => {
+  // Six on the SAME Prague day, because the day picker filters the list — a
+  // spec that spread them across days would be measuring the picker, not the
+  // density.
+  //
+  // Pinned to mid-afternoon UTC on a day two weeks out: Prague is UTC+1 or
+  // UTC+2 depending on the season, and both put these six firmly inside one
+  // local day rather than near a boundary the run could straddle.
+  const day = pragueDayKey(new Date(Date.now() + 14 * 24 * 3600_000));
+  const games = await Promise.all(
+    ["14:00", "14:30", "15:00", "15:30", "16:00", "16:30"].map((time) =>
+      createScratchGame({ startsAt: `${day}T${time}:00.000Z`, capacity: 12 }),
+    ),
+  );
+
+  try {
+    await page.goto(`/games?day=${day}`);
+
+    const viewport = page.viewportSize();
+    expect(viewport).not.toBeNull();
+
+    const rows = page.getByTestId("game-row");
+    await expect(rows.first()).toBeVisible();
+
+    let fullyVisible = 0;
+    for (const row of await rows.all()) {
+      const box = await row.boundingBox();
+      if (box && box.y >= 0 && box.y + box.height <= viewport!.height) fullyVisible += 1;
+    }
+
+    // "Well more than three." Four would technically clear the old bar and
+    // would not clear this one.
+    expect(fullyVisible).toBeGreaterThanOrEqual(5);
+  } finally {
+    await Promise.all(games.map((game) => destroyScratchGame(game.id)));
+  }
+});
+
+/*
+ * REQ-GAME-021 — the day picker filters, and its counts describe the days.
+ */
+test("the day picker filters the list and counts each day", async ({ page }) => {
+  // Two days apart, so the tabs are unambiguous whatever hour the suite runs.
+  const dayOne = await createScratchGame({ hoursFromNow: 24 * 10 });
+  const dayTwoA = await createScratchGame({ hoursFromNow: 24 * 12 });
+  const dayTwoB = await createScratchGame({ hoursFromNow: 24 * 12 + 1 });
+
+  try {
+    await page.goto("/games");
+    await expect(page.getByTestId("day-picker")).toBeVisible();
+
+    // Selecting a day shows that day's games and hides the others.
+    const secondDayRow = page.locator(
+      `[data-testid="game-row"][href="/game/${dayTwoA.id}"]`,
+    );
+    const firstDayRow = page.locator(
+      `[data-testid="game-row"][href="/game/${dayOne.id}"]`,
+    );
+
+    // Find the tab holding the two-game day by its count, rather than by
+    // guessing a label — the weekday depends on when the suite runs.
+    const tabs = page.getByTestId("day-tab");
+    await expect(tabs.first()).toBeVisible();
+
+    // Click through to the day carrying dayTwoA and assert the other day's
+    // game is gone from the list.
+    for (const tab of await tabs.all()) {
+      await tab.click();
+      await page.waitForLoadState("networkidle");
+      if ((await secondDayRow.count()) > 0) break;
+    }
+
+    await expect(secondDayRow).toBeVisible();
+    await expect(page.locator(`[data-testid="game-row"][href="/game/${dayTwoB.id}"]`)).toBeVisible();
+    await expect(firstDayRow).toHaveCount(0);
+  } finally {
+    await destroyScratchGame(dayOne.id);
+    await destroyScratchGame(dayTwoA.id);
+    await destroyScratchGame(dayTwoB.id);
+  }
+});
+
+/*
+ * REQ-GAME-022 — one claim button in the product, and it is not on the list.
+ */
+test("rows say View game and never claim", async ({ page }) => {
+  const game = await createScratchGame({ hoursFromNow: 24 * 16 });
+
+  try {
+    await page.goto(listUrlFor(game));
+    const row = page.locator(`[data-testid="game-row"][href="/game/${game.id}"]`);
+    await expect(row).toBeVisible();
+    await expect(row).toContainText("View game");
+    await expect(row).not.toContainText("Claim");
+
+    // The row is a link to the detail, and the detail is where the claim is.
+    await row.click();
+    await page.waitForURL(`**/game/${game.id}`);
+    await expect(page.getByTestId("book-cta")).toBeVisible();
+  } finally {
+    await destroyScratchGame(game.id);
+  }
+});
+
+/*
+ * REQ-GAME-020 — what each row actually carries.
+ */
+test("a row carries the span, venue, format, subs, price, badge and spots", async ({
+  page,
+}) => {
+  const game = await createScratchGame({
+    hoursFromNow: 24 * 17,
+    capacity: 12,
+    priceCzk: 250,
+    format: "5v5",
+    subsPerTeam: 2,
+    durationMinutes: 90,
+    allowedSkillLevels: ["advanced"],
+  });
+
+  try {
+    await page.goto(listUrlFor(game));
+    const row = page.locator(`[data-testid="game-row"][href="/game/${game.id}"]`);
+    await expect(row).toBeVisible();
+
+    await expect(row.getByTestId("row-time-span")).toContainText(/\d{2}:\d{2}–\d{2}:\d{2}/);
+    await expect(row).toContainText("E2E Scratch Pitch");
+    await expect(row.getByTestId("game-format")).toHaveText("5v5");
+    await expect(row.getByTestId("game-subs")).toContainText("2");
+    await expect(row).toContainText("250 CZK");
+    await expect(row.getByTestId("skill-badge-advanced")).toBeVisible();
+    await expect(row.getByTestId("row-spots")).toContainText("12 spots left");
+    // No venue photo on the list (§5.5) — the photo belongs to the detail.
+    await expect(row.locator("img")).toHaveCount(0);
+  } finally {
     await destroyScratchGame(game.id);
   }
 });

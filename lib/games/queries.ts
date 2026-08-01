@@ -89,6 +89,22 @@ async function countRosterByGame(gameIds: string[]): Promise<Map<string, number>
   return counts;
 }
 
+export interface UpcomingGames {
+  games: GameWithCount[];
+  /**
+   * The instant the list was decorated at.
+   *
+   * RETURNED RATHER THAN RE-READ BY THE CALLER, for two reasons. Reading the
+   * clock during render is impure — the lint rule saying so is enforcing a
+   * real property, since a server render and its hydration must not disagree
+   * about what time it is. And the day-picker strip has to label "Today" from
+   * the SAME instant `hasStarted` and `inProgress` were computed from; two
+   * readings a few milliseconds apart across midnight would put a game on a
+   * tab labelled by the other day.
+   */
+  now: number;
+}
+
 /**
  * Upcoming publicly-visible games, soonest first.
  *
@@ -97,28 +113,31 @@ async function countRosterByGame(gameIds: string[]): Promise<Map<string, number>
  * from anon and authenticated alike. Stating it here as well means a future
  * policy change cannot silently widen this surface.
  */
-export async function listUpcomingGames(limit = 20): Promise<GameWithCount[]> {
+export async function listUpcomingGames(limit = 20): Promise<UpcomingGames> {
   const supabase = await createServerSupabaseClient();
+  const now = Date.now();
 
   const { data: games, error } = await supabase
     .from("games")
     .select("*")
     .in("status", ["published", "full"])
-    .gte("starts_at", new Date().toISOString())
+    .gte("starts_at", new Date(now).toISOString())
     .order("starts_at", { ascending: true })
     .limit(limit);
 
-  if (error || !games) return [];
+  if (error || !games) return { games: [], now };
 
   const counts = await countRosterByGame(games.map((g) => g.id));
-  const now = Date.now();
 
-  return games.map((game) => decorate(game, counts.get(game.id) ?? 0, now));
+  return {
+    games: games.map((game) => decorate(game, counts.get(game.id) ?? 0, now)),
+    now,
+  };
 }
 
 /** The soonest upcoming game, for the landing next-match block. */
 export async function getNextGame(): Promise<GameWithCount | null> {
-  const games = await listUpcomingGames(1);
+  const { games } = await listUpcomingGames(1);
   return games[0] ?? null;
 }
 

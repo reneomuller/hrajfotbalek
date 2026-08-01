@@ -186,6 +186,8 @@ export const cs: StringsOverlay = {
     notFound: "Takový zápas neexistuje, nebo ještě není zveřejněný.",
     backToGames: "← Všechny zápasy",
     viewGame: "Zobrazit zápas",
+    dayToday: "Dnes",
+    dayTomorrow: "Zítra",
     rosterReserved: "drží místo",
     rosterConfirmed: "v sestavě",
     filledLabel: "OBSAZENO",

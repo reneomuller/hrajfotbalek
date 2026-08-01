@@ -3,6 +3,7 @@ import path from "node:path";
 import { expect, test } from "@playwright/test";
 import { createScratchGame, destroyScratchGame } from "./helpers/scaffold.ts";
 import { apiClientFor, players, signInAs } from "./helpers/session.ts";
+import { pragueDayKey } from "../lib/games/days.ts";
 
 /**
  * G2 screenshot strips — the review surface for the UX loop (contract §8).
@@ -61,6 +62,40 @@ test("the time span on the list and on the detail", async ({ page }) => {
     await strip(page, "14-game-detail-span");
   } finally {
     await destroyScratchGame(game.id);
+  }
+});
+
+// --- Phase 15a ---------------------------------------------------------------
+
+test("the games list at row density, with the day picker", async ({ page }) => {
+  // Six on one Prague day, so the strip shows the density criterion being met
+  // rather than whatever the seed happens to hold. Pinned mid-afternoon UTC,
+  // which is comfortably inside one local day at either DST offset.
+  const day = pragueDayKey(new Date(Date.now() + 21 * 24 * 3600_000));
+  const games = await Promise.all(
+    ["14:00", "14:30", "15:00", "15:30", "16:00", "16:30"].map((time) =>
+      createScratchGame({
+        startsAt: `${day}T${time}:00.000Z`,
+        capacity: 12,
+        format: "5v5",
+        subsPerTeam: 2,
+      }),
+    ),
+  );
+  // One restricted game on a second day, so the strip carries both a badge and
+  // a second day tab.
+  const other = await createScratchGame({
+    startsAt: `${pragueDayKey(new Date(Date.now() + 23 * 24 * 3600_000))}T16:00:00.000Z`,
+    allowedSkillLevels: ["advanced"],
+  });
+
+  try {
+    await page.goto(`/games?day=${day}`, { waitUntil: "networkidle" });
+    await expect(page.getByTestId("day-picker")).toBeVisible();
+    await strip(page, "15a-games-list-rows");
+  } finally {
+    await Promise.all(games.map((game) => destroyScratchGame(game.id)));
+    await destroyScratchGame(other.id);
   }
 });
 

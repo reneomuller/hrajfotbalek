@@ -183,7 +183,17 @@ export async function GameCard({
                 : "bg-volt text-surface"
             }`}
           >
-            {urgency === "full" ? t.games.joinWaitlist : t.booking.claimSpot}
+            {/*
+              "VIEW GAME", NOT A CLAIM (§5.6a). The claim button exists once,
+              on the detail, and it is the state-aware one. A CTA that books
+              from a card is a CTA that books the wrong game — and this card
+              has the least context of any surface that carried one, so it was
+              the most likely to be wrong about "already booked".
+
+              A full game still reads differently, because whether there is a
+              spot at all is worth knowing before the tap.
+            */}
+            {urgency === "full" ? t.games.joinWaitlist : t.games.viewGame}
           </Link>
 
           {shareUrl && (

@@ -270,6 +270,11 @@ export const strings = {
     notFound: "That game does not exist, or is not published yet.",
     backToGames: "← All games",
     viewGame: "View game",
+    // The day-picker strip (§5.5). "Today" and "Tomorrow" earn their special
+    // case: they are the two days anyone opening this page is deciding
+    // between, and "Sun" on a Sunday makes a reader do arithmetic.
+    dayToday: "Today",
+    dayTomorrow: "Tomorrow",
     // Roster badges. The view projects booking status only — `reserved` means
     // a spot is held but unpaid, `confirmed` means paid or covered by credit.
     rosterReserved: "holding",

@@ -185,6 +185,8 @@ export const ru: StringsOverlay = {
     notFound: "Такого матча нет или он ещё не опубликован.",
     backToGames: "← Все матчи",
     viewGame: "Открыть матч",
+    dayToday: "Сегодня",
+    dayTomorrow: "Завтра",
     rosterReserved: "держит место",
     rosterConfirmed: "в составе",
     filledLabel: "ЗАНЯТО",

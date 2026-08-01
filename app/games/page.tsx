@@ -1,16 +1,12 @@
 import type { Metadata } from "next";
 import { EmptyState } from "@/components/EmptyState";
-import { GameCard } from "@/components/GameCard";
+import { DayPicker } from "@/components/game/DayPicker";
+import { GameRow } from "@/components/game/GameRow";
 import { NextGameStrip } from "@/components/game/NextGameStrip";
 import { getOwnNextBooking } from "@/lib/booking/queries";
 import { getSessionUser } from "@/lib/auth/session";
-import {
-  getVenues,
-  listOwnWaitlistGameIds,
-  listRostersByGame,
-  listUpcomingGames,
-} from "@/lib/games/queries";
-import { siteUrl } from "@/lib/site";
+import { buildDayTabs, pragueDayKey, resolveSelectedDay } from "@/lib/games/days";
+import { listOwnWaitlistGameIds, listUpcomingGames } from "@/lib/games/queries";
 import { getStrings } from "@/lib/i18n/server";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -25,26 +21,47 @@ export async function generateMetadata(): Promise<Metadata> {
 // than statically cached — a cached spots-left count is a wrong one.
 export const dynamic = "force-dynamic";
 
-export default async function GamesPage() {
+/**
+ * The games list — compact rows and a day picker (§5.5, v1.1.4).
+ *
+ * WHAT THIS PAGE STOPPED DOING, and why each one is a removal rather than a
+ * regression:
+ *
+ *   - NO VENUE PHOTO PER ROW. v1.1.2 hoped the photo would help density; it
+ *     does the opposite. The photo belongs to the detail page, where someone
+ *     deciding about one game benefits from seeing the pitch.
+ *   - NO ROSTER AVATARS PER ROW. Eight overlapping circles are three lines of
+ *     vertical space spent on who else is coming, which is a question the
+ *     detail page answers properly and a list cannot answer at all.
+ *   - NO SHARE BUTTON PER ROW. Sharing is something you do to ONE game, and
+ *     it was also the reason the card could not simply be a link.
+ *   - NO CLAIM CTA (§5.6a). Rows say "View game". A CTA that books from a
+ *     list is a CTA that books the wrong game, and it duplicated the
+ *     already-booked logic across three surfaces.
+ *
+ * Two queries fewer as a direct consequence: the rosters and the venues are no
+ * longer fetched here at all.
+ *
+ * The criterion is "well more than three games visible at Pixel-7 width", and
+ * it is asserted by a spec that counts rows inside the viewport rather than
+ * being eyeballed on a strip.
+ */
+export default async function GamesPage({
+  searchParams,
+}: {
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
+}) {
   const t = await getStrings();
-  const games = await listUpcomingGames();
-  const gameIds = games.map(({ game }) => game.id);
+  const query = searchParams ? await searchParams : {};
+  const { games, now } = await listUpcomingGames();
 
-  // Everything the cards need, resolved in parallel and in bulk. The rosters
-  // and venues are one query each for the whole list rather than one per card:
-  // a twenty-game list should be a handful of round trips, not sixty.
   const signedIn = (await getSessionUser()) !== null;
-  // Storage origin for the roster photos (§4a); absent means initials.
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
-  const [rosters, venues, waitlisted, nextOwn, base] = await Promise.all([
-    listRostersByGame(gameIds),
-    getVenues(games.map(({ game }) => game.venue_id)),
+  const [waitlisted, nextOwn] = await Promise.all([
     // Own-row RLS makes both of these empty for a signed-out visitor, which is
     // the right answer — but skipping them entirely saves two round trips on
     // the anonymous path, which is the common one from a shared link.
     signedIn ? listOwnWaitlistGameIds() : Promise.resolve(new Set<string>()),
     signedIn ? getOwnNextBooking() : Promise.resolve(null),
-    siteUrl(),
   ]);
 
   /*
@@ -56,6 +73,21 @@ export default async function GamesPage() {
   const nextOwnCount = nextOwn
     ? (games.find(({ game }) => game.id === nextOwn.game.id)?.bookedCount ?? 0)
     : 0;
+
+  // `now` comes back FROM the query layer, which is where the clock is read —
+  // and it is the same instant `hasStarted` was computed from, so a game and
+  // the tab it sits under cannot be labelled from two different days.
+  const dayTabs = buildDayTabs(
+    games.map(({ game }) => game.starts_at),
+    now,
+    t,
+  );
+  const requested = typeof query.day === "string" ? query.day : undefined;
+  const selectedDay = resolveSelectedDay(requested, dayTabs);
+
+  const visible = selectedDay
+    ? games.filter(({ game }) => pragueDayKey(game.starts_at) === selectedDay)
+    : games;
 
   return (
     <main className="relative z-10 mx-auto w-full max-w-shell px-gutter pb-16 pt-24">
@@ -69,6 +101,8 @@ export default async function GamesPage() {
         </div>
       )}
 
+      <DayPicker tabs={dayTabs} selected={selectedDay} />
+
       {games.length === 0 ? (
         <div className="mt-8">
           <EmptyState
@@ -79,17 +113,13 @@ export default async function GamesPage() {
           />
         </div>
       ) : (
-        <div className="mt-8 flex flex-col gap-5">
-          {games.map(({ game, bookedCount }) => (
-            <GameCard
+        <div className="mt-4 flex flex-col gap-3" data-testid="game-list">
+          {visible.map(({ game, bookedCount }) => (
+            <GameRow
               key={game.id}
               game={game}
               bookedCount={bookedCount}
-              roster={rosters.get(game.id) ?? []}
-              venueRow={game.venue_id ? (venues.get(game.venue_id) ?? null) : null}
-              shareUrl={`${base}/game/${game.id}`}
               onWaitlist={waitlisted.has(game.id)}
-              supabaseUrl={supabaseUrl}
             />
           ))}
         </div>

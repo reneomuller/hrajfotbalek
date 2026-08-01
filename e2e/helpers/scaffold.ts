@@ -57,6 +57,8 @@ export interface ScratchGame {
   capacity: number;
   priceCzk: number;
   durationMinutes: number | null;
+  /** The stored kick-off, so a spec can work out which day tab holds it. */
+  startsAt: string;
 }
 
 /**
@@ -70,6 +72,7 @@ export async function createScratchGame({
   capacity = 12,
   priceCzk = 200,
   hoursFromNow = 24 * 30,
+  startsAt: startsAtOverride,
   organizerName = "E2E Organizer",
   organizerPhone = null,
   durationMinutes = null,
@@ -81,6 +84,14 @@ export async function createScratchGame({
   capacity?: number;
   priceCzk?: number;
   hoursFromNow?: number;
+  /**
+   * An exact kick-off instant, overriding `hoursFromNow`.
+   *
+   * The games list filters by Prague calendar day, so a spec that needs
+   * several games on ONE day has to pin them rather than offset them from
+   * "now" and hope the run does not straddle midnight.
+   */
+  startsAt?: string;
   organizerName?: string;
   organizerPhone?: string | null;
   durationMinutes?: number | null;
@@ -93,7 +104,8 @@ export async function createScratchGame({
   const organizer = await apiClientFor(players.organizer);
   const admin = serviceClient();
 
-  const startsAt = new Date(Date.now() + hoursFromNow * 3600_000).toISOString();
+  const startsAt =
+    startsAtOverride ?? new Date(Date.now() + hoursFromNow * 3600_000).toISOString();
 
   // v2 since Phase 13 — the function the admin form actually calls. Building
   // fixtures through the orphaned v1 pair would leave every scratch game
@@ -119,7 +131,7 @@ export async function createScratchGame({
     if (publishError) throw new Error(`publish_game: ${publishError.message}`);
   }
 
-  return { id: id as string, capacity, priceCzk, durationMinutes };
+  return { id: id as string, capacity, priceCzk, durationMinutes, startsAt };
 }
 
 /**

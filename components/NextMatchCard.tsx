@@ -55,7 +55,7 @@ export async function NextMatchCard({
   supabaseUrl,
 }: NextMatchCardProps) {
   const t = await getStrings();
-  const { games, landing } = t;
+  const { games } = t;
   const filled = Math.min(bookedCount, game.capacity);
   const urgency = gameUrgency(bookedCount, game.capacity);
   const isFull = urgency === "full";
@@ -137,7 +137,9 @@ export async function NextMatchCard({
             isFull ? "opacity-60" : ""
           }`}
         >
-          {isFull ? games.full : landing.nextMatchCta}
+          {/* "View game", not "Claim your spot" (§5.6a) — one claim button in
+              the product, and it is not on the home page. */}
+          {isFull ? games.full : games.viewGame}
         </Link>
         <div className="mt-[9px] text-center text-[11px] text-hint">
           {games.joinNote}
