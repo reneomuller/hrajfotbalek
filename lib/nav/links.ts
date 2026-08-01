@@ -50,6 +50,7 @@ export function adminNavLinks(): NavLink[] {
     { href: "/admin/games", label: strings.admin.navGames },
     { href: "/admin/players", label: strings.admin.navPlayers },
     { href: "/admin/topups", label: strings.admin.navTopups },
+    { href: "/admin/site", label: strings.admin.navSite },
     { href: "/admin/stats", label: strings.admin.navStats },
   ];
 }

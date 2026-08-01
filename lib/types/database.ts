@@ -103,7 +103,23 @@ export type EventType =
   | "waitlist_converted"
   | "nudge_sent"
   | "reminder_sent"
-  | "attendance_marked";
+  | "attendance_marked"
+  // Phase 1 (migration 20). Present in the CHECK since then; absent from this
+  // union until Phase 17, which is drift in this file rather than in the
+  // database — the header of this file says as much: any disagreement between
+  // the two is a bug here.
+  | "admin_granted"
+  | "admin_revoked"
+  // Phase 2 (migration 24)
+  | "profile_photo_removed"
+  | "player_anonymized"
+  // Phase 2 (migration 25)
+  | "topup_requested"
+  | "topup_confirmed"
+  // Phase 2 (migration 30). Every site-setting change names the admin and the
+  // new value: a public claim about the size of the community with no audit
+  // trail is a number nobody can account for.
+  | "site_setting_changed";
 
 /**
  * Return contract of create_booking / admin_create_booking (SQL composite
@@ -351,6 +367,26 @@ export interface Database {
           updated_at: string;
         };
         /** Written only by `set_game_organizer` / the v2 admin game RPCs. */
+        Insert: never;
+        Update: never;
+        Relationships: [];
+      };
+
+      /**
+       * Phase 2, migration 30. ONE ROW, id `singleton`, readable by `anon` —
+       * the stats strip and Player of the Month render for signed-out
+       * visitors, and without the explicit grant those reads return empty
+       * rather than erroring, which on that surface looks like missing content
+       * rather than a missing permission.
+       */
+      site_settings: {
+        Row: {
+          id: string;
+          settings: Json;
+          updated_at: string;
+          updated_by: string | null;
+        };
+        /** Written only by `set_site_setting`. */
         Insert: never;
         Update: never;
         Relationships: [];
@@ -780,6 +816,15 @@ export interface Database {
       game_organizer_phone: {
         Args: { p_game_id: string };
         Returns: string | null;
+      };
+
+      /**
+       * Admin-only. Closed key set (`active_players`, `player_of_month`),
+       * per-key validation, and an event naming the admin and the new value.
+       */
+      set_site_setting: {
+        Args: { p_key: string; p_value: Json };
+        Returns: undefined;
       };
 
       complete_signup_v2: {

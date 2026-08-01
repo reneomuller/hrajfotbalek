@@ -82,12 +82,28 @@ export const strings = {
       },
     ],
     nextMatchEyebrow: "//",
+    // --- stats strip (§6, REQ-HOME-002) ------------------------------------
+    // Two numbers under the wordmark. Games-per-week is COMPUTED from published
+    // games in the trailing seven days; active players is admin-editable and
+    // honestly framed — it counts the community including the WhatsApp cohort,
+    // not the number of rows in `players`.
+    statsGamesLabel: "Games a week",
+    statsPlayersLabel: "Active players",
+    // Beneath the how-it-works strip, because "what do I bring" is the second
+    // question anyone asks and the answer removes a reason not to come.
+    equipmentLine: "Training bibs, goalie gloves and balls provided.",
+    potmTitle: "Player of the month",
+    potmEmpty: "Nobody picked yet — could be you.",
     nextMatchLabel: "NEXT MATCH",
     nextMatchCta: "Claim your spot",
 
 
     community: {
       title: "JOIN THE COMMUNITY",
+      // v1.1.4 D — the heading carries the SAME admin-editable number the
+      // stats strip shows. One number, one source: a heading with its own
+      // hard-coded figure is a number that goes stale silently.
+      titleWithCount: "JOIN A COMMUNITY OF {count}+ ACTIVE PLAYERS ACROSS PRAGUE",
       body: "New games every week. Follow along and play.",
       whatsapp: "WHATSAPP GROUP",
       whatsappUrl: "https://chat.whatsapp.com/LjPjGf3rf32CNifizwzsW9?mode=gi_t",
@@ -604,6 +620,20 @@ export const strings = {
     topupsEmpty: "No top-ups waiting.",
     topupsConfirm: "✓ Received",
     navTopups: "Top-ups",
+    navSite: "Home page",
+
+    // --- site settings (§6) --------------------------------------------------
+    siteTitle: "Home page",
+    siteLede:
+      "Two numbers the landing page renders for signed-out visitors. Every change is recorded against your account.",
+    siteActivePlayersLabel: "Active players",
+    siteActivePlayersHint:
+      "The community including the WhatsApp crowd — not the number of accounts. Shown in the stats strip and in the community heading, from this one value.",
+    siteActivePlayersSubmit: "Save number",
+    sitePotmLabel: "Player of the month",
+    sitePotmHint: "Renders their photo, or their initials if they have none.",
+    sitePotmNone: "— nobody —",
+    sitePotmSubmit: "Save pick",
 
     // --- shell ---------------------------------------------------------------
     title: "Admin",
@@ -710,6 +740,8 @@ export const strings = {
     durationInvalid: "Duration must be a whole number of minutes between 30 and 180.",
     subsInvalid: "Substitutes per team must be a whole number between 0 and 20.",
     invalidTransition: "That is not possible in this game's current state.",
+    siteSettingInvalid: "That is not a whole number of players.",
+    siteSettingUnknownKey: "That setting does not exist.",
 
     // --- add shadow player ---------------------------------------------------
     addPlayer: "Add a player",

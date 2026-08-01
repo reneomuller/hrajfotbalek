@@ -2,7 +2,7 @@ import { mkdir } from "node:fs/promises";
 import path from "node:path";
 import { expect, test } from "@playwright/test";
 import { createScratchGame, destroyScratchGame } from "./helpers/scaffold.ts";
-import { apiClientFor, players, signInAs } from "./helpers/session.ts";
+import { apiClientFor, players, serviceClient, signInAs } from "./helpers/session.ts";
 import { pragueDayKey } from "../lib/games/days.ts";
 
 /**
@@ -168,5 +168,54 @@ test("the reworked header, the venue fallback, the share pair and a toast", asyn
     await strip(page, "16-toast-booking-created");
   } finally {
     await destroyScratchGame(game.id);
+  }
+});
+
+// --- Phase 17 ----------------------------------------------------------------
+
+test("the reworked home page and the admin surface behind its numbers", async ({
+  page,
+  context,
+}) => {
+  const admin = serviceClient();
+  const { data: before } = await admin
+    .from("site_settings")
+    .select("settings")
+    .eq("id", "singleton")
+    .maybeSingle();
+  const previous = (before?.settings as Record<string, unknown> | undefined) ?? {};
+
+  try {
+    // Give the strip and the heading something real to render.
+    await admin.rpc("set_site_setting", { p_key: "active_players", p_value: 250 });
+    await admin.rpc("set_site_setting", {
+      p_key: "player_of_month",
+      p_value: players.runner.id,
+    });
+
+    await page.goto("/", { waitUntil: "networkidle" });
+    await expect(page.getByTestId("stats-strip")).toBeVisible();
+    await strip(page, "17-home-hero-stats");
+
+    // The second screen: how-it-works with the equipment line, then the three
+    // panels — which is the order §6 puts them in.
+    await page.getByTestId("how-it-works").scrollIntoViewIfNeeded();
+    await strip(page, "17-home-how-it-works");
+
+    await page.getByTestId("faq-panel").scrollIntoViewIfNeeded();
+    await strip(page, "17-home-community-panels");
+
+    await signInAs(context, players.organizer);
+    await page.goto("/admin/site", { waitUntil: "networkidle" });
+    await strip(page, "17-admin-site");
+  } finally {
+    await admin.rpc("set_site_setting", {
+      p_key: "active_players",
+      p_value: previous.active_players ?? 0,
+    });
+    await admin.rpc("set_site_setting", {
+      p_key: "player_of_month",
+      p_value: previous.player_of_month ?? null,
+    });
   }
 });

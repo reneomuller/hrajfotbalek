@@ -22,6 +22,13 @@ const CODES: Array<[string, string]> = [
   ["VENUE_NOT_FOUND", strings.admin.venueRequired],
   ["GAME_NOT_FOUND", strings.games.notFound],
   ["INSUFFICIENT_PERMISSION", strings.errors.insufficientPermission],
+  // Site settings (§6, migration 30). The key errors are developer-facing —
+  // the form only ever sends the two known keys — but an unmapped code falls
+  // back to the generic message, which would say nothing useful about a value
+  // an admin just typed.
+  ["SETTING_VALUE_INVALID", strings.admin.siteSettingInvalid],
+  ["SETTING_KEY_UNKNOWN", strings.admin.siteSettingUnknownKey],
+  ["SETTING_KEY_REQUIRED", strings.admin.siteSettingUnknownKey],
   ["CREDIT_NEGATIVE_BLOCKED", strings.admin.grantNegativeBlocked],
   ["INVALID_CREDIT_DELTA", strings.admin.grantInvalid],
   ["INVALID_CREDIT_REASON", strings.admin.grantInvalid],

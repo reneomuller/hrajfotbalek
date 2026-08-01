@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { FaqPanel } from "@/components/home/FaqPanel";
+import { PlayerOfMonthPanel } from "@/components/home/PlayerOfMonthPanel";
+import { StatsStrip } from "@/components/home/StatsStrip";
 import { NextMatchCard } from "@/components/NextMatchCard";
+import { getHomeContent } from "@/lib/home/queries";
 import { getNextGame, getRoster, getVenue } from "@/lib/games/queries";
 import { siteUrl } from "@/lib/site";
 import { getStrings } from "@/lib/i18n/server";
@@ -46,6 +50,10 @@ export default async function LandingPage() {
   // Storage origin for the roster photos (§4a). Absent, avatars fall back to
   // initials, which is the ordinary case rather than a failure.
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
+  // Admin-editable content plus the computed games-per-week (§6). Every read
+  // behind this is anon-legal, because this page is what a shared WhatsApp
+  // link opens for someone with no account.
+  const home = await getHomeContent();
 
   return (
     <>
@@ -82,37 +90,66 @@ export default async function LandingPage() {
               {landing.heroCta}
             </Link>
 
+            {/* The stats strip sits under the wordmark, in the scrolling
+                section rather than the fixed header (§6). */}
+            <div className="w-full max-w-[440px]">
+              <StatsStrip
+                gamesPerWeek={home.gamesPerWeek}
+                activePlayers={home.activePlayers}
+              />
+            </div>
+
             <div className="mt-[30px] animate-floatY font-mono text-[9px] tracking-eyebrow text-dim">
               {landing.scrollHint}
             </div>
           </div>
 
-          {/* Three-step explainer */}
-          <div className="mt-[26px] flex flex-wrap justify-center gap-3">
-            {landing.steps.map((step) => (
-              <div
-                key={step.index}
-                className="flex min-w-[200px] flex-1 items-start gap-3 rounded-card border border-hairline bg-surface-card px-[18px] py-[15px] text-left"
-              >
-                <div className="font-mono text-[14px] font-bold text-volt">
-                  {step.index}
-                </div>
-                <div>
-                  <div className="font-condensed text-[18px] font-bold tracking-[.3px]">
-                    {step.title}
-                  </div>
-                  <div className="mt-[3px] text-[13px] leading-[1.45] text-muted-dim">
-                    {step.body}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
         </section>
 
-        {/* SCREEN 2 — next match, pay, community, footer */}
+        {/* SCREEN 2 — how it works, next match, community, footer */}
         <div id="next-match" className="flex min-h-[100svh] flex-col pt-nav">
           <div className="flex-1" />
+
+          {/*
+            HOW IT WORKS, MOVED ABOVE FOLD-TWO CONTENT (§6, REQ-HOME-001).
+
+            It used to close the hero, where it competed with the headline and
+            the CTA and was read by nobody who had already decided to scroll.
+            Here it is the first thing on the second screen — the answer to
+            "how does this work", arriving exactly when the question does.
+          */}
+          <section data-testid="how-it-works" className="pb-4">
+            <div className="flex flex-wrap justify-center gap-3">
+              {landing.steps.map((step) => (
+                <div
+                  key={step.index}
+                  className="flex min-w-[200px] flex-1 items-start gap-3 rounded-card border border-hairline bg-surface-card px-[18px] py-[15px] text-left"
+                >
+                  <div className="font-mono text-[14px] font-bold text-volt">
+                    {step.index}
+                  </div>
+                  <div>
+                    <div className="font-condensed text-[18px] font-bold tracking-[.3px]">
+                      {step.title}
+                    </div>
+                    <div className="mt-[3px] text-[13px] leading-[1.45] text-muted-dim">
+                      {step.body}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Directly beneath, per §6: "what do I bring" is the second
+                question anyone asks, and the answer removes a reason not to
+                come. */}
+            <p
+              data-testid="equipment-line"
+              className="mt-3 text-center font-mono text-[11px] tracking-[1px] text-volt-dim"
+            >
+              {landing.equipmentLine}
+            </p>
+          </section>
 
           <section className="pb-3 pt-[10px]">
             <div className="mb-[18px] flex items-baseline gap-3">
@@ -159,10 +196,29 @@ export default async function LandingPage() {
             with `games.price_czk`.
           */}
           <section className="pt-4">
+            {/* THREE EQUAL PANELS (§6, REQ-HOME-005): Join · FAQ · Player of
+                the Month. `flex-1` with a shared min-width, so they sit as
+                three columns on a wide screen and stack in that order on a
+                phone. */}
             <div className="flex flex-wrap items-stretch gap-4">
               <div className="flex min-w-[270px] flex-1 flex-col justify-center rounded-[20px] border border-hairline-volt-soft bg-surface-card-strong p-[22px] text-center">
-                <h3 className="m-0 mb-[6px] font-display text-community-title uppercase text-white">
-                  {landing.community.title}
+                {/*
+                  v1.1.4 D — the heading carries the SAME admin-editable number
+                  the stats strip shows. One number, one source: a heading with
+                  its own hard-coded figure goes stale silently. Falls back to
+                  the plain heading when nothing has been set, rather than
+                  printing "a community of +".
+                */}
+                <h3
+                  data-testid="community-heading"
+                  className="m-0 mb-[6px] font-display text-community-title uppercase text-white"
+                >
+                  {home.activePlayers !== null
+                    ? landing.community.titleWithCount.replace(
+                        "{count}",
+                        String(home.activePlayers),
+                      )
+                    : landing.community.title}
                 </h3>
                 <p className="mx-auto mb-4 max-w-[320px] text-[13px] text-muted-dim">
                   {landing.community.body}
@@ -188,6 +244,13 @@ export default async function LandingPage() {
                   </a>
                 </div>
               </div>
+
+              <FaqPanel />
+
+              <PlayerOfMonthPanel
+                player={home.playerOfMonth}
+                supabaseUrl={supabaseUrl}
+              />
             </div>
           </section>
 
