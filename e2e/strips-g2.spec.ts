@@ -219,3 +219,28 @@ test("the reworked home page and the admin surface behind its numbers", async ({
     });
   }
 });
+
+// --- Phase 18 ----------------------------------------------------------------
+
+test("the merged game surface and the player detail page", async ({ page, context }) => {
+  const game = await createScratchGame({ capacity: 6, hoursFromNow: 24 * 5 });
+
+  try {
+    const runner = await apiClientFor(players.runner);
+    await runner.rpc("create_booking", { p_game_id: game.id, p_payment_method: "qr" });
+
+    await signInAs(context, players.organizer);
+
+    // One surface: identity, payments, roster with attendance, close-out,
+    // the edit form, cancel.
+    await page.goto(`/admin/games/${game.id}`, { waitUntil: "networkidle" });
+    await expect(page.getByTestId("game-form-submit")).toBeVisible();
+    await strip(page, "18-admin-game-merged");
+
+    await page.goto(`/admin/players/${players.runner.id}`, { waitUntil: "networkidle" });
+    await expect(page.getByTestId("admin-player-balance")).toBeVisible();
+    await strip(page, "18-admin-player-detail");
+  } finally {
+    await destroyScratchGame(game.id);
+  }
+});

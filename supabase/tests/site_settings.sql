@@ -64,19 +64,31 @@ $$;
 -- SECURITY DEFINER because `events` has NO client grants at all — not even to
 -- an admin session. That is deliberate (migration 1) and asserted elsewhere;
 -- here it just means the audit trail has to be read as the owner.
+-- SCOPED TO THIS SUITE'S OWN ADMIN, not to the whole table.
+--
+-- The transaction rolls back, so nothing this suite writes survives — but the
+-- count is over rows that already EXIST, and the E2E suite writes
+-- `site_setting_changed` rows of its own. Counting table-wide made this
+-- assertion pass only while nobody else had ever changed a setting, which is a
+-- suite that goes red for a reason unrelated to what it tests.
+--
+-- The fixture admin exists only inside this transaction, so filtering on it
+-- counts exactly this suite's writes.
 create function pg_temp.event_count(p_key text)
 returns bigint language sql security definer as $$
   select count(*) from public.events
    where event_type = 'site_setting_changed'
-     and metadata ->> 'key' = p_key;
+     and metadata ->> 'key' = p_key
+     and player_id = 'aaaa0000-0000-0000-0000-00000000f171';
 $$;
 
-/** The most recent settings event, as "value|admin". */
+/** The most recent settings event written by THIS suite, as "value|admin". */
 create function pg_temp.last_setting_event()
 returns text language sql security definer as $$
   select (metadata ->> 'value') || '|' || coalesce(player_id::text, '')
     from public.events
    where event_type = 'site_setting_changed'
+     and player_id = 'aaaa0000-0000-0000-0000-00000000f171'
    order by created_at desc, id desc
    limit 1;
 $$;

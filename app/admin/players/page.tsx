@@ -53,9 +53,17 @@ export default async function AdminPlayersPage() {
               <div className="min-w-[200px] flex-1">
                 {/* Nickname and email are free text; JSX escapes both. */}
                 <div className="flex items-baseline gap-2">
-                  <span className="font-condensed text-[17px] font-bold text-white">
+                  {/* REQ-ADMIN-001 — the row opens the player. The list answers
+                      "who is here and what do they owe"; the page answers "who
+                      is this person", which is a different question asked at a
+                      different moment. */}
+                  <Link
+                    href={`/admin/players/${player.id}`}
+                    data-testid="admin-player-link"
+                    className="font-condensed text-[17px] font-bold text-white no-underline"
+                  >
                     {player.nickname}
-                  </span>
+                  </Link>
                   {player.isShadow && (
                     <span className="rounded-chip border border-hairline-strong px-2 py-[2px] font-mono text-[9px] uppercase tracking-eyebrow text-muted">
                       {strings.admin.shadowTag}

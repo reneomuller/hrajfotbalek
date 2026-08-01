@@ -741,6 +741,24 @@ export const strings = {
     subsInvalid: "Substitutes per team must be a whole number between 0 and 20.",
     invalidTransition: "That is not possible in this game's current state.",
     siteSettingInvalid: "That is not a whole number of players.",
+
+    // --- player detail (§7, REQ-ADMIN-001) -----------------------------------
+    playerDetailTitle: "Player",
+    playerNoEmail: "No email — shadow player",
+    playerCountry: "Country",
+    playerSkill: "Skill",
+    playerBalance: "Wallet",
+    playerGamesPlayed: "Games played",
+    playerNoShows: "No-shows",
+    playerGamesTitle: "History",
+    playerGamesLede:
+      "Every booking, newest first. No-show marking is available on a game that has already kicked off — the same write the game roster performs.",
+    playerGamesEmpty: "No bookings yet.",
+    playerOpen: "Open →",
+    photoRemove: "Remove photo",
+    photoRemoved: "Photo removed",
+    photoRemoveConfirm:
+      "Remove this player's photo? The image is deleted from storage and cannot be recovered.",
     siteSettingUnknownKey: "That setting does not exist.",
 
     // --- add shadow player ---------------------------------------------------

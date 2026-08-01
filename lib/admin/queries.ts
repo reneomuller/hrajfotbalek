@@ -300,3 +300,110 @@ export function availableTransitions(status: GameStatus): {
     canSettle: status === "played",
   };
 }
+
+export interface AdminPlayerGameRow {
+  bookingId: string;
+  gameId: string;
+  venue: string;
+  startsAt: string;
+  status: Database["public"]["Tables"]["bookings"]["Row"]["status"];
+  attendance: Database["public"]["Tables"]["bookings"]["Row"]["attendance"];
+  priceCzk: number;
+  creditAppliedCzk: number;
+  /**
+   * Whether kick-off has passed.
+   *
+   * Decided here rather than in the row component: attendance on a future game
+   * is a statement nobody can make yet, and reading the clock during render is
+   * impure — the same rule `lib/games/queries.ts` follows for `hasStarted`.
+   * The RPC remains the authority and refuses it regardless.
+   */
+  hasStarted: boolean;
+}
+
+export interface AdminPlayerDetail {
+  player: Database["public"]["Tables"]["players"]["Row"];
+  balanceCzk: number;
+  /**
+   * Games PLAYED, not bookings made.
+   *
+   * A cancelled booking is not a game someone turned up to, and an expired one
+   * is a spot they lost. Counting either would make the number on this page
+   * disagree with the number on the player's own account page, which counts
+   * the same way (`lib/booking/history.ts`).
+   */
+  gamesPlayed: number;
+  noShowCount: number;
+  /** Every booking, newest kick-off first. */
+  games: AdminPlayerGameRow[];
+}
+
+/**
+ * One player, with everything the admin surface shows (REQ-ADMIN-001).
+ *
+ * SERVICE-ROLE, like every other admin read here: `players_select_own`
+ * restricts an authenticated session to its own row, and widening that policy
+ * to admit admins would put an elevation path in a row policy. Reads with the
+ * service key; writes go through `supabase.rpc()` on the admin's own session.
+ */
+export async function getAdminPlayer(playerId: string): Promise<AdminPlayerDetail | null> {
+  const service = createServiceRoleSupabaseClient();
+
+  const { data: player, error } = await service
+    .from("players")
+    .select("*")
+    .eq("id", playerId)
+    .maybeSingle();
+
+  if (error || !player) return null;
+
+  const [{ data: ledger }, { data: bookings }] = await Promise.all([
+    service.from("credit_ledger").select("delta_czk").eq("player_id", playerId),
+    service
+      .from("bookings")
+      .select("id, game_id, status, attendance, price_czk, credit_applied_czk")
+      .eq("player_id", playerId),
+  ]);
+
+  const balanceCzk = (ledger ?? []).reduce((sum, row) => sum + row.delta_czk, 0);
+
+  const gameIds = [...new Set((bookings ?? []).map((b) => b.game_id))];
+  const { data: games } = gameIds.length
+    ? await service.from("games").select("id, venue, starts_at").in("id", gameIds)
+    : { data: [] as { id: string; venue: string; starts_at: string }[] };
+
+  const gamesById = new Map((games ?? []).map((g) => [g.id, g]));
+  const now = Date.now();
+
+  const rows: AdminPlayerGameRow[] = (bookings ?? [])
+    .map((booking) => {
+      const game = gamesById.get(booking.game_id);
+      return {
+        bookingId: booking.id,
+        gameId: booking.game_id,
+        venue: game?.venue ?? "—",
+        startsAt: game?.starts_at ?? "",
+        status: booking.status,
+        attendance: booking.attendance,
+        priceCzk: booking.price_czk,
+        creditAppliedCzk: booking.credit_applied_czk,
+        hasStarted: game ? Date.parse(game.starts_at) <= now : false,
+      };
+    })
+    .sort((a, b) => b.startsAt.localeCompare(a.startsAt));
+
+  const active = rows.filter(
+    (row) => row.status === "confirmed" || row.status === "reserved",
+  );
+
+  return {
+    player,
+    balanceCzk,
+    // Un-marked attendance counts as played, matching `lib/booking/history.ts`
+    // — the organizer marks no-shows, not attendance, so an unmarked booking on
+    // a past game means the player turned up and nobody said otherwise.
+    gamesPlayed: active.filter((row) => row.attendance !== "no_show").length,
+    noShowCount: rows.filter((row) => row.attendance === "no_show").length,
+    games: rows,
+  };
+}

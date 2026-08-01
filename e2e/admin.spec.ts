@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { apiClientFor, players, serviceClient, signInAs } from "./helpers/session.ts";
 import { moveKickoff } from "./helpers/clock.ts";
+import { strings } from "../lib/strings.ts";
 import {
   createScratchGame,
   destroyScratchGame,
@@ -116,7 +117,11 @@ test("the roster tells paid, holding, cash and free apart", async ({ page, conte
   await signInAs(context, players.organizer);
   await page.goto(`/admin/games/${game.id}`);
 
-  const badges = page.getByTestId("admin-roster-row");
+  // `attendance-row` since Phase 18: the roster row and the attendance row are
+  // the same row now (REQ-ADMIN-003). The two questions at close-out — did they
+  // turn up, did they pay — are answered on one line rather than one screen
+  // apart.
+  const badges = page.getByTestId("attendance-row");
   await expect(badges.filter({ hasText: players.runner.nickname })).toContainText(/paid/i);
   await expect(badges.filter({ hasText: players.organizer.nickname })).toContainText(/cash/i);
   await expect(badges.filter({ hasText: players.seedBot.nickname })).toContainText(/free/i);
@@ -235,11 +240,20 @@ test("attendance drives the game to settled with no reserved booking left", asyn
   await page.goto(`/admin/games/${game.id}/attendance`);
   await page.getByTestId("settle-game").click();
 
-  // `settle-done` is the button's own client state and it does not survive the
-  // revalidation: once the game is settled the server stops rendering the
-  // settle control at all. So the assertion is on what the page SAYS, backed
-  // by what the database holds.
-  await expect(page.locator("main")).toContainText(/settled/i);
+  /*
+   * ASSERTED ON THE STATUS CHIP, which the SERVER renders from `game.status`.
+   *
+   * This used to be `expect(page.locator("main")).toContainText(/settled/i)`,
+   * and on the merged surface that became a FALSE GREEN: the payments section
+   * renders "Nothing outstanding — every spot on this game is settled up.",
+   * which matches the pattern whatever the game's status is. A loose text
+   * match over a whole page is a match against every string on it, and the
+   * merge tripled how many strings that is.
+   *
+   * `settle-done` is not the assertion either — it is the button's own client
+   * state, and CLAUDE.md records that those do not survive `revalidatePath`.
+   */
+  await expect(page.getByTestId("admin-game-status")).toHaveText(strings.admin.status.settled);
 
   const { data: settled } = await admin
     .from("games")
@@ -349,7 +363,9 @@ test("the whole admin lifecycle fits inside five minutes", async ({ page, contex
       .getByTestId("mark-present")
       .click();
     await page.getByTestId("settle-game").click();
-    await expect(page.locator("main")).toContainText(/settled/i);
+    await expect(page.getByTestId("admin-game-status")).toHaveText(
+      strings.admin.status.settled,
+    );
 
     const elapsedMinutes = (Date.now() - started) / 60_000;
     expect(elapsedMinutes).toBeLessThan(5);
@@ -363,5 +379,111 @@ test("the whole admin lifecycle fits inside five minutes", async ({ page, contex
     expect(booking.id).toBeTruthy();
   } finally {
     await destroyScratchGame(lifecycleGame);
+  }
+});
+
+/*
+ * TEST-226 — the player detail page, and no-show marking from it.
+ *
+ * REQ-ADMIN-001 and REQ-ADMIN-002. The second half is the one worth being
+ * careful about: §7 asks for the control in two places, and what makes that
+ * safe is that both are surfaces onto ONE write. This asserts the write lands
+ * and emits its event, not merely that a button existed.
+ */
+test("the player detail page shows history and marks a no-show", async ({
+  page,
+  context,
+}) => {
+  const scratch = await createScratchGame({ capacity: 4, hoursFromNow: 24 * 3 });
+
+  try {
+    const runner = await apiClientFor(players.runner);
+    const { data: booking } = await runner.rpc("create_booking", {
+      p_game_id: scratch.id,
+      p_payment_method: "cash",
+    });
+
+    // Attendance is only markable once the game has kicked off — the RPC says
+    // so and the row mirrors it.
+    await moveKickoff(scratch.id, -2);
+
+    await signInAs(context, players.organizer);
+    await page.goto(`/admin/players/${players.runner.id}`);
+
+    // REQ-ADMIN-001 — everything the contract lists.
+    await expect(page.getByTestId("admin-player-email")).toContainText(
+      players.runner.email!,
+    );
+    await expect(page.getByTestId("admin-player-balance")).toBeVisible();
+    await expect(page.getByTestId("admin-player-games-played")).toBeVisible();
+    await expect(page.getByTestId("admin-player-no-shows")).toBeVisible();
+    // No photo on this seeded player, so initials — the ordinary case.
+    await expect(page.getByTestId("admin-player-avatar")).toBeVisible();
+    await expect(page.getByTestId("admin-player-photo")).toHaveCount(0);
+
+    const before = Number(
+      (await page.getByTestId("admin-player-no-shows").textContent()) ?? "0",
+    );
+
+    // REQ-ADMIN-002 — mark it here rather than on the game.
+    const row = page
+      .locator('[data-testid="player-game-row"]')
+      .filter({ hasText: "E2E Scratch Pitch" })
+      .first();
+    await row.getByTestId("player-mark-no-show").click();
+
+    // Wait for what the SERVER renders next, not for the action's own state.
+    await expect(page.getByTestId("admin-player-no-shows")).toHaveText(String(before + 1));
+
+    const admin = serviceClient();
+    const { data: updated } = await admin
+      .from("bookings")
+      .select("attendance")
+      .eq("id", booking.id)
+      .single();
+    expect(updated?.attendance).toBe("no_show");
+
+    // The same RPC the game roster calls, so the same event.
+    const { data: events } = await admin
+      .from("events")
+      .select("event_type")
+      .eq("booking_id", booking.id)
+      .eq("event_type", "attendance_marked");
+    expect((events ?? []).length).toBeGreaterThan(0);
+  } finally {
+    await destroyScratchGame(scratch.id);
+  }
+});
+
+/*
+ * REQ-ADMIN-003 — one surface. The merged page carries every function that
+ * used to be spread across three routes, and the old URLs still resolve.
+ */
+test("the game surface carries edit, roster, paid, attendance and cancel", async ({
+  page,
+  context,
+}) => {
+  const scratch = await createScratchGame({ capacity: 4, hoursFromNow: 24 * 4 });
+
+  try {
+    await signInAs(context, players.organizer);
+    await page.goto(`/admin/games/${scratch.id}`);
+
+    // Edit — the form itself, not a link to it.
+    await expect(page.getByTestId("game-form-submit")).toBeVisible();
+    await expect(page.getByTestId("organizer-name")).toBeVisible();
+    // Add player, and cancel.
+    await expect(page.getByTestId("add-player")).toBeVisible();
+    await expect(page.getByTestId("cancel-game")).toBeVisible();
+
+    // The old routes still land somewhere correct rather than 404ing.
+    await page.goto(`/admin/games/${scratch.id}/edit`);
+    await page.waitForURL(`**/admin/games/${scratch.id}`);
+    await expect(page.getByTestId("game-form-submit")).toBeVisible();
+
+    await page.goto(`/admin/games/${scratch.id}/attendance`);
+    await page.waitForURL(`**/admin/games/${scratch.id}`);
+  } finally {
+    await destroyScratchGame(scratch.id);
   }
 });

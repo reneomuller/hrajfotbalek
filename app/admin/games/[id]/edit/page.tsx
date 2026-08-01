@@ -1,82 +1,19 @@
-import Link from "next/link";
-import { notFound } from "next/navigation";
-import { CancelGameButton } from "@/components/admin/CancelGameButton";
-import { GameForm } from "@/components/admin/GameForm";
-import {
-  availableTransitions,
-  getAdminGame,
-  getGameOrganizer,
-  listVenues,
-} from "@/lib/admin/queries";
-import { requireAdmin } from "@/lib/auth/requireAdmin";
-import { strings } from "@/lib/strings";
-import { updateGameAction } from "../../actions";
-
-export const metadata = { title: strings.admin.editGameTitle };
-
-export const dynamic = "force-dynamic";
+import { redirect } from "next/navigation";
 
 /**
- * Edit a game — and the home of the cancel trigger.
+ * `/admin/games/[id]/edit` — merged into the game surface in Phase 18
+ * (§7, REQ-ADMIN-003).
  *
- * Cancel lives beside edit rather than on its own route because it is the last
- * item on the same list of things an organizer does to a game they are
- * changing their mind about. `app/admin/games/[id]/cancel/actions.ts` (Phase
- * 18) is the action behind it; the button was written then and had no mounting
- * surface until now.
+ * KEPT AS A REDIRECT RATHER THAN DELETED. The route was linked from the games
+ * list, typed from memory by the one person who uses this panel, and navigated
+ * to by URL in `e2e/admin.spec.ts`. A 404 for any of those is a worse outcome
+ * than one extra hop, and the redirect costs nothing to keep.
  */
-export default async function EditGamePage({
+export default async function EditGameRedirect({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const [admin, game, venues, organizer] = await Promise.all([
-    requireAdmin(),
-    getAdminGame(id),
-    listVenues(),
-    getGameOrganizer(id),
-  ]);
-
-  if (!game) notFound();
-
-  const { canEdit, canCancel } = availableTransitions(game.status);
-
-  return (
-    <>
-      <Link
-        href={`/admin/games/${game.id}`}
-        className="font-mono text-[11px] uppercase tracking-eyebrow text-muted no-underline"
-      >
-        {strings.common.back}
-      </Link>
-
-      <h2 className="mt-4 font-condensed text-[22px] font-bold uppercase tracking-wide text-bone">
-        {strings.admin.editGameTitle}
-      </h2>
-      <p className="mt-1 font-mono text-[11px] tracking-[1px] text-muted">
-        {game.venue} · {strings.admin.status[game.status]}
-      </p>
-
-      {canEdit ? (
-        <GameForm
-          action={updateGameAction}
-          venues={venues}
-          game={game}
-          organizer={organizer}
-          defaultOrganizerName={admin.nickname}
-        />
-      ) : (
-        <p className="mt-6 font-mono text-[12px] tracking-[1px] text-faint">
-          {strings.admin.invalidTransition}
-        </p>
-      )}
-
-      {canCancel && (
-        <div className="mt-10 border-t border-hairline-chrome pt-6">
-          <CancelGameButton gameId={game.id} venue={game.venue} />
-        </div>
-      )}
-    </>
-  );
+  redirect(`/admin/games/${id}`);
 }

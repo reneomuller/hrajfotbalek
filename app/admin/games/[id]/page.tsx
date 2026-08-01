@@ -1,28 +1,50 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { AttendanceRow } from "@/components/admin/AttendanceRow";
+import { CancelGameButton } from "@/components/admin/CancelGameButton";
 import { ConfirmPaymentRow } from "@/components/admin/ConfirmPaymentRow";
-import { PaymentBadge } from "@/components/admin/PaymentBadge";
+import { GameForm } from "@/components/admin/GameForm";
+import { SettleButton } from "@/components/admin/SettleButton";
 import { TransitionButton } from "@/components/admin/TransitionButton";
+import { requireAdmin } from "@/lib/auth/requireAdmin";
 import {
   activeBookings,
   availableTransitions,
   getAdminGame,
+  getGameOrganizer,
   listGameBookings,
+  listVenues,
   unpaidBookings,
 } from "@/lib/admin/queries";
-import { formatCzk, formatGameDateTime } from "@/lib/format";
+import { formatCzk, formatGameTimeSpan } from "@/lib/format";
+import { gameEndsAt } from "@/lib/games/duration";
 import { strings } from "@/lib/strings";
-import { publishGameAction } from "../actions";
+import { publishGameAction, updateGameAction } from "../actions";
+import { markPlayedAction } from "./attendance/actions";
 
 export const metadata = { title: strings.admin.manageGame };
 
 export const dynamic = "force-dynamic";
 
 /**
- * The per-game admin surface: what this game is, and what can be done to it.
+ * THE game surface (§7, REQ-ADMIN-003). Manage and Edit are one page now.
  *
- * Phase 21 ships the identity block and the publish transition. Phase 22 adds
- * the roster and the VS-sorted payment list beneath it.
+ * WHAT WAS WRONG WITH THREE PAGES. The organizer's actual task is "deal with
+ * Sunday's game", and that meant: open the game, notice the time is wrong, go
+ * to Edit, come back, confirm two payments, go to Attendance, mark a no-show,
+ * settle. Every one of those hops was a page load holding the same game, and
+ * the split was along OUR boundaries — which RPC does the write — rather than
+ * along anything the organizer was doing.
+ *
+ * So everything that acts on one game is here, in the order the organizer
+ * meets it: what this game is → change it → who has paid → who turned up →
+ * close it out → cancel it. Add-player stays a sub-route because it is a
+ * creation flow with its own form and its own failure modes, and it is linked
+ * from the top of this page rather than buried.
+ *
+ * `/edit` and `/attendance` now redirect here, so every bookmark, every link
+ * in the E2E suite and every URL an organizer typed from memory still lands
+ * somewhere correct.
  */
 export default async function AdminGamePage({
   params,
@@ -30,16 +52,23 @@ export default async function AdminGamePage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const game = await getAdminGame(id);
+  const [admin, game] = await Promise.all([requireAdmin(), getAdminGame(id)]);
   if (!game) notFound();
 
-  const bookings = await listGameBookings(game.id);
+  const [bookings, venues, organizer] = await Promise.all([
+    listGameBookings(game.id),
+    listVenues(),
+    getGameOrganizer(game.id),
+  ]);
+
   const roster = activeBookings(bookings);
   // Already VS-sorted by the query — the order the organizer's banking app
   // lists incoming payments in.
   const pending = unpaidBookings(bookings);
 
-  const { canPublish, canEdit } = availableTransitions(game.status);
+  const { canPublish, canEdit, canPlay, canSettle, canCancel } = availableTransitions(
+    game.status,
+  );
 
   return (
     <>
@@ -65,7 +94,12 @@ export default async function AdminGamePage({
 
       <dl className="mt-4 grid max-w-[420px] grid-cols-[auto_1fr] gap-x-6 gap-y-1 font-mono text-[12px]">
         <dt className="text-muted">{strings.games.startsLabel}</dt>
-        <dd className="m-0 text-bone">{formatGameDateTime(game.starts_at)}</dd>
+        <dd className="m-0 text-bone">
+          {formatGameTimeSpan(
+            game.starts_at,
+            gameEndsAt(game.starts_at, game.duration_minutes),
+          )}
+        </dd>
         <dt className="text-muted">{strings.games.capacityLabel}</dt>
         <dd className="m-0 text-bone">
           {game.activeCount}/{game.capacity}
@@ -95,25 +129,6 @@ export default async function AdminGamePage({
         )}
         {canEdit && (
           <Link
-            href={`/admin/games/${game.id}/edit`}
-            className="rounded-cta border border-hairline-strong px-5 py-3 font-condensed text-[15px] font-extrabold uppercase tracking-wide text-bone no-underline"
-          >
-            {strings.admin.editGame}
-          </Link>
-        )}
-        {/* Close-out. Offered from `full`/`published` onward, and still
-            reachable on a played game that has not been settled yet. */}
-        {game.status !== "draft" && game.status !== "cancelled" && (
-          <Link
-            href={`/admin/games/${game.id}/attendance`}
-            data-testid="attendance-link"
-            className="rounded-cta border border-hairline-strong px-5 py-3 font-condensed text-[15px] font-extrabold uppercase tracking-wide text-bone no-underline"
-          >
-            {strings.admin.attendanceLink}
-          </Link>
-        )}
-        {canEdit && (
-          <Link
             href={`/admin/games/${game.id}/add-player`}
             data-testid="add-player"
             className="rounded-cta border border-hairline-strong px-5 py-3 font-condensed text-[15px] font-extrabold uppercase tracking-wide text-bone no-underline"
@@ -124,9 +139,9 @@ export default async function AdminGamePage({
       </div>
 
       {/* --- reconciliation ---------------------------------------------------
-          The only reconciliation surface in Phase 1. There is deliberately no
-          separate payment queue: the organizer is looking at their banking app,
-          and a second screen to switch to is a second screen to lose. */}
+          The only reconciliation surface. There is deliberately no separate
+          payment queue: the organizer is looking at their banking app, and a
+          second screen to switch to is a second screen to lose. */}
       <section className="mt-12">
         <h3 className="m-0 font-condensed text-[18px] font-bold uppercase tracking-wide text-bone">
           {strings.admin.paymentsTitle}
@@ -145,7 +160,11 @@ export default async function AdminGamePage({
         )}
       </section>
 
-      {/* --- roster ----------------------------------------------------------- */}
+      {/* --- roster, with attendance on the same rows ---------------------------
+          Merged in Phase 18. The two questions at close-out are "did they turn
+          up" and "did they pay", and settle is blocked on the second — so the
+          payment badge and the attendance controls belong on one row rather
+          than one screen apart. */}
       <section className="mt-10">
         <h3 className="m-0 font-condensed text-[18px] font-bold uppercase tracking-wide text-bone">
           {strings.admin.rosterTitle}
@@ -158,25 +177,92 @@ export default async function AdminGamePage({
         ) : (
           <ul className="mt-4 list-none space-y-2 p-0">
             {roster.map((booking) => (
-              <li
-                key={booking.id}
-                data-testid="admin-roster-row"
-                className="flex flex-wrap items-center justify-between gap-4 rounded-card border border-hairline px-5 py-3"
-              >
-                <span className="font-condensed text-[16px] font-bold text-white">
-                  {booking.nickname}
-                </span>
-                <span className="font-mono text-[11px] tracking-[1px] text-muted">
-                  {booking.paymentCode !== null
-                    ? `${strings.admin.vsLabel} ${booking.paymentCode}`
-                    : "—"}
-                </span>
-                <PaymentBadge status={booking.status} method={booking.paymentMethod} />
-              </li>
+              <AttendanceRow key={booking.id} booking={booking} gameId={game.id} />
             ))}
           </ul>
         )}
       </section>
+
+      {/* --- close-out ---------------------------------------------------------
+          The unpaid list is rendered ABOVE the settle button rather than being
+          discovered by pressing it: a `reserved` booking surviving into
+          `settled` is an unreconciled debt with no surface that will ever raise
+          it again. */}
+      <section className="mt-10 border-t border-hairline-chrome pt-6">
+        <h3 className="m-0 mb-4 font-condensed text-[18px] font-bold uppercase tracking-wide text-bone">
+          {strings.admin.attendanceTitle}
+        </h3>
+
+        {canPlay && (
+          <TransitionButton
+            action={markPlayedAction}
+            gameId={game.id}
+            label={strings.admin.markPlayed}
+            testId="mark-played"
+            tone="secondary"
+          />
+        )}
+
+        {canSettle && (
+          <>
+            {pending.length > 0 && (
+              <div
+                data-testid="settle-outstanding"
+                className="mb-4 rounded-card border border-hairline-strong p-4"
+              >
+                <p className="m-0 text-[13px] text-bone">{strings.admin.settleBlocked}</p>
+                <ul className="mt-2 list-none p-0 font-mono text-[12px] text-volt">
+                  {pending.map((booking) => (
+                    <li key={booking.id}>{booking.nickname}</li>
+                  ))}
+                </ul>
+                <p className="mt-2 text-[12px] text-muted">
+                  {strings.admin.settleBlockedHint}
+                </p>
+              </div>
+            )}
+            <SettleButton gameId={game.id} />
+          </>
+        )}
+
+        {!canPlay && !canSettle && game.status !== "settled" && (
+          <p className="font-mono text-[12px] tracking-[1px] text-faint">
+            {strings.admin.settleNeedsPlayed}
+          </p>
+        )}
+
+        {game.status === "settled" && (
+          <p className="font-condensed text-[17px] font-bold uppercase tracking-wide text-volt">
+            {strings.admin.settled}
+          </p>
+        )}
+      </section>
+
+      {/* --- edit ---------------------------------------------------------------
+          Below the operational surfaces, because changing a game is what an
+          organizer does occasionally and reconciling one is what they do every
+          week. A terminal game shows no form: its time and price are what the
+          roster and the ledger already agreed on. */}
+      {canEdit && (
+        <section className="mt-12 border-t border-hairline-chrome pt-6">
+          <h3 className="m-0 font-condensed text-[18px] font-bold uppercase tracking-wide text-bone">
+            {strings.admin.editGameTitle}
+          </h3>
+          <GameForm
+            action={updateGameAction}
+            venues={venues}
+            game={game}
+            organizer={organizer}
+            defaultOrganizerName={admin.nickname}
+          />
+        </section>
+      )}
+
+      {canCancel && (
+        <div className="mt-10 border-t border-hairline-chrome pt-6">
+          <CancelGameButton gameId={game.id} venue={game.venue} />
+        </div>
+      )}
     </>
   );
 }
