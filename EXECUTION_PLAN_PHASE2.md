@@ -17,7 +17,8 @@ Inherited from the Phase 2 contract §1 and the Phase 1 contract v2.5. These are
 not repeated per phase; they are conditions of every phase.
 
 - **Production is live.** Feature branches only; `main` deploys on push.
-- **Migrations are additive.** Any `drop` requires a human gate sign-off naming it.
+- **Migrations are additive.** Any `drop` requires a human gate sign-off naming it — except the `events_event_type_catalog` widening, pre-approved 2026-08-01 while the new list stays a superset (contract §1).
+- **Every migration that emits a new event type must widen that catalog in the same migration.** It has been forgotten once (migration 24 omitted the top-up types), and it fails at the first write rather than at the migration.
 - **RPC-only writes.** `SECURITY DEFINER`, `search_path=''`, schema-qualified, identity from the session — never from an argument.
 - **RLS on in the creating migration**, grants stated explicitly. A missing grant returns empty, not an error.
 - **`reset-platform.mjs` is never run against production. No session flips production `EMAIL_DRY_RUN`.**

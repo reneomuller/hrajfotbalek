@@ -41,6 +41,7 @@ This document is a **delta specification**. The Phase 1 contract (`letco-prompt-
 
 - All work on feature branches; `main` deploys to production on push.
 - Migrations are **additive only** (new tables, new nullable columns, new views/RPCs). No destructive migration ships without an explicit human gate sign-off naming it.
+- **Standing exception, signed off 2026-08-01: widening the `events_event_type_catalog` CHECK.** Postgres cannot extend a CHECK in place, so adding an event type means `drop constraint` + `add constraint`. This is pre-approved for future widenings **provided the new list is a strict superset** — no existing row can violate it, nothing is deleted, and the window where the constraint is absent is inside one transaction. Restate the list in full rather than patching it, so what is in the database always reads as one thing (the migration-20 precedent). A widening that REMOVES a type is not covered and needs its own sign-off.
 - `scripts/reset-platform.mjs` is **never run again** against this database. The E2E suite cannot sign in against production (seed users purged, by design) — E2E development happens against a seeded local/dev database (`npm run seed` there), never production.
 - `EMAIL_DRY_RUN` is **off in production**. Any session testing email paths works locally with the dry-run seam on. No session flips the production flag.
 - RPC-only writes, `SECURITY DEFINER` with `search_path=''`, deny-by-default RLS with explicit grants — all Phase 1 invariants stand unchanged.

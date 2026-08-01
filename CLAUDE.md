@@ -84,6 +84,17 @@ opened unset and the save was rejected before any RPC ran, while React's form
 reset put the typed values back — which read as "the form silently does
 nothing". Backfilled in migration 19.
 
+**The event catalog is one CHECK, and it is easy to forget.** `events.event_type`
+is constrained by `events_event_type_catalog`, a single `check (event_type in
+(...))`. Any migration that emits a NEW event type has to widen it in the same
+migration, and forgetting fails at the first *write* — not at the migration —
+so the error names a constraint that has nothing to do with the feature. It has
+been missed once already (migration 24 added the photo events and omitted the
+top-up ones, so the first `create_topup` failed on the catalog). Postgres cannot
+extend a CHECK in place: drop and re-add, restating the list in full. That
+drop/re-add is **pre-approved** (2026-08-01) as long as the new list is a strict
+superset.
+
 ## Testing
 
 Four suites, and they answer different questions:
