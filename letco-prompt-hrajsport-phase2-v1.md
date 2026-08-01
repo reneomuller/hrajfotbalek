@@ -1,6 +1,10 @@
-# hrajsport.cz — Phase 2 Specification (v1.1.2)
+# hrajsport.cz — Phase 2 Specification (v1.1.3)
 
 ## 0. Revision history
+
+- **v1.1.3 (2026-08-01)** — two build-time findings written back, both ruled rather than assumed. Recorded here as **spec drift resolved**, on the same footing as v2.5's `admin_granted` write-back: the code shipped first because the requirement demanded it, and the contract is being brought level rather than the divergence being left in a commit message.
+  - **`player_anonymized` joins the event catalog** (§4). v2.5 §3 requires every state change to write its event in the same transaction, and anonymization is the largest state change the product performs on a person — it cannot be the silent one.
+  - **`game_roster_public` gains `photo_path`, ratified in advance** (§4a). Rosters showing the photo is the product intent, not an extension of it; the privacy text already discloses that a profile photo appears wherever the nickname does, so a player uploads knowing. **Only that one column crosses**, and the widening ships in the same change as the rendering that uses it (Phase 15) so the justification is visible in the diff. Until then, initials on rosters is correct behaviour rather than a gap.
 
 - **v1.1.2 (2026-07-31)** — four display rulings, all G2. None changes the booking machinery; capacity remains the sole booking limit.
   - **Format is never derived from capacity** (§5.3a). Cards and detail render the admin-entered string verbatim. A new optional `subs_per_team` renders alongside it — "6v6 · 2 subs per team" — and neither field constrains booking.
@@ -9,11 +13,11 @@
   - **Semi-transparent panels get ~20% more opaque** (§8). The background is currently winning against the text on top of it.
   - **Field-list correction, ruled 2026-07-31** (§3.1). The signup form carries **three** checkboxes, not two: TOS acceptance and GDPR data-processing consent are distinct legal acts with distinct errors and are never merged, and the optional reminders preference is grouped visually apart from them. The v1.0 list omitted the GDPR box that v2.5 §8 requires and `complete_signup_v2` enforces. `TOS_VERSION_REQUIRED` is ratified in the same ruling: an unversioned acceptance is not auditable.
 
-- **v1.0 (2026-07-28)** — initial Phase 2 contract, drafted from the post-launch update inventory and Oliver's rulings of 24–28 Jul.
 - **v1.1.1 (2026-07-28)** — duration ruling, and one stale note removed.
   - **`duration_minutes` is a free numeric input bounded 30–180, defaulting to 60** (§5.2). 60 is the standard match length; 90 is the occasional per-game choice. This supersedes the v1.1 note that left the 90-vs-60 gap open as a ruling still owed.
   - **The fallback constant moves 90 → 60 to match**, shipped ahead of the column rather than with it. Safe only because the pre-launch reset emptied the games table, so no existing row's rendering changed — the same edit after rows exist silently rewrites how every past game reads. `lib/calendar/ics.ts` carried a **second, independent `90`**; it now derives from the policy module, so there is one fallback rather than two that must agree.
   - The v1.1 note about `fix/prelaunch-hardening` being unmerged is removed: it merged as `c59627d`, and this document merged after it, so the precondition it described is satisfied.
+
 - **v1.1 (2026-07-28)** — pre-pipeline hardening pass. Every entry below is a decision recorded before the build rather than discovered at a gate.
   - **Organizer phone moves off `games` into its own table** (§5). `grant select on public.games to anon, authenticated` is table-wide, so a phone column on `games` would be world-readable the moment it existed, whatever the application did. It now follows the `game_roster_public` pattern: deny-by-default base table, `SECURITY DEFINER` read gated on the caller's active booking.
   - **The top-up flow gets its storage and its functions named** (§4): `credit_topups`, the `create_topup` / `confirm_topup` pair, a `'27'`-prefixed VS series distinct from the booking `'26'` series, and the `topup` addition to the `credit_ledger.reason` enum.
@@ -24,6 +28,8 @@
   - **Auth email template inventory and the password-length setting become explicit G1 checklist items** (§3.1, §10).
   - **The dev database becomes a scheduled prerequisite** (§1.1) rather than an assumption, since production has no seed users to sign in as.
   - **Corrections:** the nickname charset citation is v2.5 §3, not §8 (§3.1); `site_settings` needs an explicit anon `SELECT` grant (§6); the §4 overpayment sentence is rewritten; the waitlist-depth removal is recorded as a supersession (§7); `games.skill_levels` becomes `games.allowed_skill_levels` to keep it distinct from `players.skill_level`.
+
+- **v1.0 (2026-07-28)** — initial Phase 2 contract, drafted from the post-launch update inventory and Oliver's rulings of 24–28 Jul.
 
 ---
 
@@ -139,7 +145,15 @@ Named here because "same pattern as bookings" does not survive contact with the 
 - **Reconciliation for top-ups is simpler than for bookings, and deliberately different.** A booking has a price, so a payment can be short or long of it and v2.5 §4's under/over rules apply. A top-up has no price — the player chose a number and the bank reports what actually arrived. **The credited amount is always the received amount.** `received_amount_czk` null means "credit the requested amount" (the one-tap path); when supplied, that value is credited and the requested amount is only ever a record of intent. There is no overpayment case and no underpayment case, because there is nothing to be over or under.
 - **Ledger enum.** `credit_ledger.reason` gains `topup`. `alter type … add value` cannot run in the same transaction that uses the new value, so it ships as its own migration ahead of the one that writes it.
 - **Unconfirmed top-ups are not liabilities and not spendable** — the balance is `SUM(delta_czk)` over `credit_ledger`, and a pending top-up writes nothing there. A top-up paid but never confirmed is an admin follow-up, exactly like an unmatched booking payment (v2.5 §4), and is resolved through the same manual credit grant with a `payment_unmatched` event.
-- New events for the v2.5 §3 catalog: `topup_requested`, `topup_confirmed`, `profile_photo_removed`.
+- New events for the v2.5 §3 catalog: `topup_requested`, `topup_confirmed`, `profile_photo_removed`, and **`player_anonymized`** (v1.1.3).
+- **Anonymization is code, not a manual procedure (v1.1.3).** v2.5 §8 has defined deletion as anonymization since Phase 1 and it was performed by hand on request. The photo rule above cannot be done by hand — a storage object has to be deleted — so `anonymize_player` exists: admin-only, nulls the PII including `country` and the TOS stamp, keeps the row so `events` and `credit_ledger` stay keyed to it, writes `player_anonymized`, and returns the storage path for the caller to delete. The replacement nickname is `deleted-<8 hex>`; the obvious `deleted-player-<8 hex>` is 23 characters and the 20-character nickname CHECK rejects it.
+
+### 4a. Photos on rosters (v1.1.3)
+
+- **`game_roster_public` gains `photo_path`** — that column and no other. The view remains the anonymous PII boundary it has always been: no `player_id`, no email, no phone.
+- Ratified in advance because it is the product intent rather than an extension of it: a profile photo that appears only on its owner's account page is a setting, not an avatar. The privacy text discloses that the photo appears wherever the nickname does, so consent is informed at upload time.
+- **The widening ships with the rendering that consumes it**, in Phase 15, so a reviewer sees the migration and its justification in one diff rather than a view quietly gaining a column in advance of any use.
+- Until then the initials avatar on rosters is **correct behaviour, not an unfinished state**.
 
 ---
 

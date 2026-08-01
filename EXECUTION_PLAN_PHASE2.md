@@ -442,6 +442,7 @@ Questions to answer here: **Q1** (shadow claim through password signup),
 - [ ] [REQ-GAME-011] Booking is never blocked by skill
 - [ ] Organizer name renders publicly; the phone renders only for a caller with an active booking
 - [ ] [REQ-GAME-017] **(v1.1.2)** Format renders verbatim on card, detail and above the map; `subs_per_team` renders beside it as `6v6 · 2 subs per team` when set, and nothing when null
+- [ ] [REQ-PROF-008] **(v1.1.3)** `game_roster_public` gains **`photo_path` and no other column**, and the roster/avatar surfaces render it with the initials avatar as fallback. Migration and rendering ship in the SAME change, so the widening's justification is visible in one diff. A SQL assertion re-proves the view still withholds `player_id`, email and phone
 - [ ] [REQ-GAME-018] **(v1.1.2)** `/game/[id]` is state-aware: a holder of a `reserved`/`confirmed` booking sees their payment state and cancel action and **no** claim CTA; a non-holder sees the claim CTA only while spots remain; a full game still offers the waitlist. Determined server-side from the caller's own booking, never from a nickname match
 - [ ] TEST-218, TEST-221, TEST-232, TEST-233 pass
 - [ ] Strings in three languages

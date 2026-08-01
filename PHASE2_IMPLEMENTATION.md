@@ -82,6 +82,7 @@ gate that verifies it.
 | REQ-GAME-017 | Format is admin-entered and rendered verbatim; **never derived from capacity** anywhere. Capacity remains the sole booking limit (v1.1.2 §5.3a) | G2 |
 | REQ-GAME-018 | `/game/[id]` is state-aware: booking holders see payment state + cancel and no claim CTA; non-holders see the claim CTA only while spots remain; server-side determination (v1.1.2 §5.6) | G2 |
 | REQ-GAME-019 | The mobile games list is calendar-density — ≥3 games visible at Pixel-7 width (v1.1.2 §5.5) | G2 |
+| REQ-PROF-008 | `game_roster_public` gains `photo_path` only; rosters render the photo with initials fallback; view + rendering ship together (v1.1.3 §4a) | G2 |
 | REQ-UX-004 | Translucent surfaces ~20% more opaque, via the token table not the components (v1.1.2 §8) | G2 |
 
 ## A.4 Home, admin, UX (§6–§8)
