@@ -259,3 +259,27 @@ test("the reworked stats page, at each window", async ({ page, context }) => {
     await strip(page, name);
   }
 });
+
+// --- Phase 20 ----------------------------------------------------------------
+
+test("the venue photo panel, which is the one strip needing a venue that has one", async ({
+  page,
+}) => {
+  const withPhoto = await createScratchGame({ withVenuePhoto: true, durationMinutes: 90 });
+  const withoutPhoto = await createScratchGame({ durationMinutes: 90 });
+
+  try {
+    await page.goto(`/game/${withPhoto.id}`, { waitUntil: "networkidle" });
+    await expect(page.getByTestId("venue-panel-photo")).toBeVisible();
+    await strip(page, "20-venue-photo-panel");
+
+    // Side by side in the review batch: the fallback is a compact bar, not a
+    // frame around an absence (REQ-GAME-013).
+    await page.goto(`/game/${withoutPhoto.id}`, { waitUntil: "networkidle" });
+    await expect(page.getByTestId("venue-panel-no-photo")).toBeVisible();
+    await strip(page, "20-venue-no-photo-fallback");
+  } finally {
+    await destroyScratchGame(withPhoto.id);
+    await destroyScratchGame(withoutPhoto.id);
+  }
+});

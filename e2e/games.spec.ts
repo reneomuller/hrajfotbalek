@@ -721,3 +721,61 @@ test("the detail carries arrival, equipment and duration in one block", async ({
     await destroyScratchGame(game.id);
   }
 });
+
+/*
+ * TEST-222, the other half — a venue WITH a photo renders the photo panel.
+ *
+ * The fallback case is asserted above with the default scratch venue, which
+ * deliberately has no image. This one needs a venue that does, and the file
+ * has to exist under `public/venues/` — `next/image` 404s for one that does
+ * not, and the assertion would then be on a broken image rather than on the
+ * panel.
+ */
+test("a venue with a photo renders the photo panel, the name and Open map", async ({
+  page,
+}) => {
+  const game = await createScratchGame({ withVenuePhoto: true });
+
+  try {
+    await page.goto(`/game/${game.id}`);
+
+    const panel = page.getByTestId("venue-panel-photo");
+    await expect(panel).toBeVisible();
+    await expect(page.getByTestId("venue-panel-no-photo")).toHaveCount(0);
+
+    // The image itself, and it actually loaded — a 404 through next/image
+    // renders an <img> that is present and zero-sized.
+    const image = panel.locator("img");
+    await expect(image).toBeVisible();
+    const loaded = await image.evaluate(
+      (node) => (node as HTMLImageElement).naturalWidth > 0,
+    );
+    expect(loaded).toBe(true);
+
+    // Name and map, both still on the panel.
+    await expect(panel).toContainText("E2E Photo Pitch");
+    await expect(page.getByTestId("venue-open-map")).toBeVisible();
+  } finally {
+    await destroyScratchGame(game.id);
+  }
+});
+
+/*
+ * REQ-GAME-019 — no venue photo on the LIST, even for a venue that has one.
+ *
+ * Asserted with the photo venue specifically: the density criterion is about
+ * what the list does when a photo exists, and a game with no photo would pass
+ * this trivially.
+ */
+test("the list carries no venue photo even when the venue has one", async ({ page }) => {
+  const game = await createScratchGame({ withVenuePhoto: true, hoursFromNow: 24 * 22 });
+
+  try {
+    await page.goto(listUrlFor(game));
+    const row = page.locator(`[data-testid="game-row"][href="/game/${game.id}"]`);
+    await expect(row).toBeVisible();
+    await expect(row.locator("img")).toHaveCount(0);
+  } finally {
+    await destroyScratchGame(game.id);
+  }
+});

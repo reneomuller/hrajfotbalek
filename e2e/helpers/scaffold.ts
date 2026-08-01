@@ -23,6 +23,19 @@ import { apiClientFor, players, serviceClient } from "./session.ts";
 const VENUE_NAME = "E2E Scratch Pitch";
 
 /**
+ * A second scratch venue that DOES carry a photo.
+ *
+ * The default scratch venue deliberately has none, which is what makes it the
+ * fixture for the "no photo" fallback (REQ-GAME-013). Proving the other half
+ * of §5.4 needs a venue with an `image_path` — and it has to be a file that
+ * actually exists under `public/venues/`, because `next/image` returns a 404
+ * for one that does not and the assertion would be on a broken image rather
+ * than on the panel.
+ */
+const PHOTO_VENUE_NAME = "E2E Photo Pitch";
+const PHOTO_VENUE_IMAGE = "/venues/prazacka.png";
+
+/**
  * The venue is created on demand and deliberately NOT torn down: several specs
  * run in the same session and recreating it per spec would be pure round
  * trips. It is a real row in `venues` and it does show up in the admin venue
@@ -30,6 +43,7 @@ const VENUE_NAME = "E2E Scratch Pitch";
  * production database — `LAUNCH.md` step 1 notes this.
  */
 let cachedVenueId: string | null = null;
+let cachedPhotoVenueId: string | null = null;
 
 /** The venue every disposable game sits at, created once. */
 async function scratchVenueId(admin: SupabaseClient): Promise<string> {
@@ -50,6 +64,31 @@ async function scratchVenueId(admin: SupabaseClient): Promise<string> {
 
   cachedVenueId = data as string;
   return cachedVenueId;
+}
+
+/** The scratch venue that carries a photo, created on demand. */
+async function photoVenueId(admin: SupabaseClient): Promise<string> {
+  if (cachedPhotoVenueId) return cachedPhotoVenueId;
+
+  const existing = await admin
+    .from("venues")
+    .select("id")
+    .eq("name", PHOTO_VENUE_NAME)
+    .maybeSingle();
+  if (existing.data?.id) {
+    cachedPhotoVenueId = existing.data.id as string;
+    return cachedPhotoVenueId;
+  }
+
+  const { data, error } = await admin.rpc("admin_create_venue", {
+    p_name: PHOTO_VENUE_NAME,
+    p_image_path: PHOTO_VENUE_IMAGE,
+    p_map_query: null,
+  });
+  if (error) throw new Error(`create photo venue: ${error.message}`);
+
+  cachedPhotoVenueId = data as string;
+  return cachedPhotoVenueId;
 }
 
 export interface ScratchGame {
@@ -80,6 +119,7 @@ export async function createScratchGame({
   subsPerTeam = null,
   format = null,
   publish = true,
+  withVenuePhoto = false,
 }: {
   capacity?: number;
   priceCzk?: number;
@@ -100,6 +140,8 @@ export async function createScratchGame({
   format?: string | null;
   /** A draft game, for the specs that need one. Published by default. */
   publish?: boolean;
+  /** Put the game at the scratch venue that HAS a photo (REQ-GAME-012). */
+  withVenuePhoto?: boolean;
 } = {}): Promise<ScratchGame> {
   const organizer = await apiClientFor(players.organizer);
   const admin = serviceClient();
@@ -111,7 +153,7 @@ export async function createScratchGame({
   // fixtures through the orphaned v1 pair would leave every scratch game
   // without an organizer, which is exactly the state §5 says cannot exist.
   const { data: id, error } = await organizer.rpc("admin_create_game_v2", {
-    p_venue_id: await scratchVenueId(admin),
+    p_venue_id: withVenuePhoto ? await photoVenueId(admin) : await scratchVenueId(admin),
     p_starts_at: startsAt,
     p_capacity: capacity,
     p_price_czk: priceCzk,
