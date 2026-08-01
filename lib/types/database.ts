@@ -149,6 +149,33 @@ export interface ConfirmResult {
   credit_issued_czk: number;
 }
 
+export type TopupStatus = "pending" | "confirmed" | "cancelled";
+
+/** A row of `credit_topups`. Pending rows are NOT balance. */
+export interface TopupRow {
+  id: string;
+  player_id: string;
+  /** What the player asked for; after confirmation, a record of intent. */
+  amount_czk: number;
+  payment_code: number;
+  status: TopupStatus;
+  /** What actually arrived. Null until confirmed. */
+  received_amount_czk: number | null;
+  confirmed_by: string | null;
+  confirmed_at: string | null;
+  created_at: string;
+}
+
+/** Return contract of confirm_topup (SQL composite public.topup_result). */
+export interface TopupResult {
+  id: string;
+  status: TopupStatus;
+  /** Always the amount RECEIVED — a top-up has no price to be short of. */
+  credited_czk: number;
+  /** The wallet total afterwards, so the receipt needs no second query. */
+  balance_czk: number;
+}
+
 export interface Database {
   public: {
     Tables: {
@@ -202,6 +229,35 @@ export interface Database {
           phone?: string | null;
           marketing_opt_in?: boolean;
         };
+        Relationships: [];
+      };
+
+      /**
+       * Wallet top-ups (migration 25).
+       *
+       * No Insert/Update shapes: `authenticated` holds SELECT and nothing else,
+       * and both writers are SECURITY DEFINER RPCs. A client that could insert
+       * here could mint its own variable symbol.
+       */
+      credit_topups: {
+        Row: {
+          id: string;
+          player_id: string;
+          /** What the player asked for; after confirmation, a record of intent. */
+          amount_czk: number;
+          payment_code: number;
+          status: TopupStatus;
+          /** What actually arrived. Null until confirmed. */
+          received_amount_czk: number | null;
+          confirmed_by: string | null;
+          confirmed_at: string | null;
+          city: string;
+          brand: string;
+          policy_version: string;
+          created_at: string;
+        };
+        Insert: never;
+        Update: never;
         Relationships: [];
       };
 
@@ -580,6 +636,25 @@ export interface Database {
        * non-specific. Identity comes from `auth.uid()`; there is no player-id
        * argument and there must never be one.
        */
+      /** Owner-only. Draws a 27-series VS and inserts a pending top-up. */
+      create_topup: {
+        Args: { p_amount_czk: number };
+        Returns: TopupRow;
+      };
+      /**
+       * Admin-or-service-role. Credits the amount RECEIVED — a null received
+       * amount means the amount asked for. Ledger, status and event land in one
+       * transaction under a per-player advisory lock.
+       */
+      confirm_topup: {
+        Args: {
+          p_topup_id: string;
+          p_confirmed_by?: string | null;
+          p_received_amount_czk?: number | null;
+        };
+        Returns: TopupResult;
+      };
+
       /** Owner-only. Derives players/<own id>.<ext>; never takes a path. */
       set_profile_photo: {
         Args: { p_extension: string };

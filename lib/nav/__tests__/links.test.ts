@@ -74,10 +74,14 @@ describe("authNavLink", () => {
 });
 
 describe("adminNavLinks", () => {
-  it("covers the three admin sections", () => {
+  it("covers every admin section, in order", () => {
+    // Top-ups joined in Phase 2: reconciling a wallet payment is a routine
+    // admin job, and a section reachable only by typing the URL is a section
+    // nobody uses.
     expect(adminNavLinks()).toEqual([
       { href: "/admin/games", label: strings.admin.navGames },
       { href: "/admin/players", label: strings.admin.navPlayers },
+      { href: "/admin/topups", label: strings.admin.navTopups },
       { href: "/admin/stats", label: strings.admin.navStats },
     ]);
   });

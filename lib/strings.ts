@@ -384,6 +384,19 @@ export const strings = {
     creditEmpty: "No credit yet.",
     showQr: "Show payment QR",
     creditHint: "Credit is applied automatically to your next booking.",
+    topupTitle: "Top up your wallet",
+    topupLede: "Add credit now, and it applies to your next booking automatically.",
+    topupCta: "Top up credit",
+    topupAmountLabel: "Amount",
+    topupCustomLabel: "Or another amount (CZK)",
+    topupSubmit: "Get the payment QR",
+    topupOutOfRange: "Choose an amount between 50 and 2000 CZK.",
+    topupPendingTitle: "Waiting for your payment",
+    topupPendingBody:
+      "Scan the code in your banking app. Your wallet updates once the organizer confirms the payment arrived.",
+    topupConfirmedTitle: "This top-up is already in your wallet.",
+    topupBackToAccount: "← Back to my account",
+
     photoTitle: "Profile photo",
     photoUpload: "Upload a photo",
     photoReplace: "Replace photo",
@@ -516,6 +529,13 @@ export const strings = {
   },
 
   admin: {
+    topupsTitle: "Wallet top-ups",
+    topupsLede:
+      "Pending top-ups, sorted by variable symbol — the same order as your bank statement. Leave the amount blank to credit what was asked for.",
+    topupsEmpty: "No top-ups waiting.",
+    topupsConfirm: "✓ Received",
+    navTopups: "Top-ups",
+
     // --- shell ---------------------------------------------------------------
     title: "Admin",
     navGames: "Games",
@@ -775,6 +795,21 @@ export const strings = {
    * the copy with it.
    */
   emails: {
+    /**
+     * Top-up receipt. Emails stay English — there is no per-player language in
+     * the database, only a cookie (see lib/i18n/locales.ts).
+     */
+    topupReceipt: {
+      subject: "Your wallet has been topped up",
+      heading: "Money in the wallet",
+      body: "We received {amount} and added it to your wallet.",
+      creditedLabel: "Credited",
+      balanceLabel: "New balance",
+      spendNote:
+        "It applies automatically to your next booking — no code to enter.",
+      cta: "Open my account",
+    },
+
     common: {
       when: "When",
       where: "Where",

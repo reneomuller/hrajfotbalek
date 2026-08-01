@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { BookingList } from "@/components/BookingList";
 import { CreditBalance } from "@/components/CreditBalance";
 import { ChangeEmailForm, ChangePasswordForm } from "@/components/account/SecurityForms";
@@ -102,8 +103,17 @@ export default async function AccountPage() {
         </div>
       </section>
 
-      <div className="mt-8">
+      <div className="mt-8 flex flex-wrap items-center gap-4">
         <CreditBalance balanceCzk={balanceCzk} />
+        {/* The entry point sits ON the wallet, because "top up" is a thought
+            someone has while looking at a balance, not while reading a menu. */}
+        <Link
+          href="/account/topup"
+          data-testid="topup-cta"
+          className="rounded-control border border-hairline-volt px-4 py-2 font-condensed text-[13px] font-bold uppercase tracking-wide text-volt no-underline transition hover:bg-volt/10"
+        >
+          {t.account.topupCta}
+        </Link>
       </div>
 
       <section className="mt-10">
