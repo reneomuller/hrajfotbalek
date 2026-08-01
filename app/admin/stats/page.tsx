@@ -1,21 +1,59 @@
+import Link from "next/link";
 import { StatCard } from "@/components/admin/StatCard";
-import { formatCzk, formatGameDateTime } from "@/lib/format";
+import { requireAdmin } from "@/lib/auth/requireAdmin";
+import { formatCzk, formatDate } from "@/lib/format";
 import { getAdminStats, ratio } from "@/lib/stats/queries";
+import { readStatWindow, STAT_WINDOWS, type StatWindow } from "@/lib/stats/window";
 import { strings } from "@/lib/strings";
 
 export const metadata = { title: strings.admin.statsTitle };
 
 export const dynamic = "force-dynamic";
 
+const WINDOW_LABEL: Record<StatWindow, string> = {
+  day: strings.admin.statWindowDay,
+  week: strings.admin.statWindowWeek,
+  month: strings.admin.statWindowMonth,
+};
+
 /**
  * `/admin/stats` — read-only, gated by the admin layout.
  *
- * Six metric groups, all of them aggregates over the append-only event log and
- * the tables. There is no write on this page and no action attached to it.
+ * FIVE METRICS, ALL BOUNDED (§7, REQ-ADMIN-005/006). Before Phase 19 every
+ * number here was since-the-beginning-of-time, which is a figure that can only
+ * go up and therefore says nothing about whether anything is working.
+ *
+ * The window is a `?window=` link rather than client state, for the same
+ * reasons the games list's day picker is: the selection is shareable, the back
+ * button is correct, and the filtering stays where the data is. `requireAdmin()`
+ * runs here as well as in the layout — the clock is read once, in this
+ * function, and handed to the pure range helpers.
  */
-export default async function AdminStatsPage() {
-  const stats = await getAdminStats();
-  const { funnel, conversion, noShow, dropOff, waitlistDepth } = stats;
+export default async function AdminStatsPage({
+  searchParams,
+}: {
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  await requireAdmin();
+  const query = searchParams ? await searchParams : {};
+
+  const window = readStatWindow(query);
+  // The clock is read in the query layer, which hands back the exact bounds the
+  // numbers were computed against — so the label and the figures cannot end up
+  // describing different periods.
+  const stats = await getAdminStats(window);
+
+  const { range, noShow, fillRate, confirmedRevenueCzk, newReturning, cancellations } =
+    stats;
+
+  // A window can legitimately hold nothing — "today" usually does — and a page
+  // of dashes reads as broken rather than as empty.
+  const isEmpty =
+    fillRate.capacity === 0 &&
+    noShow.marked === 0 &&
+    confirmedRevenueCzk === 0 &&
+    newReturning.newPlayers + newReturning.returning === 0 &&
+    cancellations.total === 0;
 
   return (
     <>
@@ -26,102 +64,87 @@ export default async function AdminStatsPage() {
         {strings.admin.statsLede}
       </p>
 
-      {/* --- funnel ------------------------------------------------------------ */}
-      <section className="mt-8">
-        <div className="flex flex-wrap gap-4">
-          <StatCard
-            testId="stat-signups"
-            label={strings.admin.statFunnelSignups}
-            value={String(funnel.signups)}
-          />
-          <StatCard
-            testId="stat-first-booking"
-            label={strings.admin.statFunnelBooked}
-            value={String(funnel.firstBookings)}
-            detail={`${ratio(funnel.firstBookings, funnel.signups)} ${strings.admin.statOf} ${funnel.signups}`}
-          />
-          <StatCard
-            testId="stat-attended"
-            label={strings.admin.statFunnelAttended}
-            value={String(funnel.attended)}
-            hint={strings.admin.statFunnel}
-          />
-        </div>
-      </section>
+      {/* --- the window -------------------------------------------------------- */}
+      <nav data-testid="stat-window-picker" className="mt-6 flex flex-wrap gap-2">
+        {STAT_WINDOWS.map((option) => {
+          const isSelected = option === window;
+          return (
+            <Link
+              key={option}
+              href={`/admin/stats?window=${option}`}
+              data-testid={`stat-window-${option}`}
+              data-selected={isSelected ? "true" : "false"}
+              aria-current={isSelected ? "page" : undefined}
+              className={`rounded-chip border px-3 py-2 font-mono text-[11px] uppercase tracking-[1px] no-underline ${
+                isSelected
+                  ? "border-hairline-volt bg-volt text-surface"
+                  : "border-hairline-strong text-muted"
+              }`}
+            >
+              {WINDOW_LABEL[option]}
+            </Link>
+          );
+        })}
+      </nav>
 
-      {/* --- money and behaviour ----------------------------------------------- */}
-      <section className="mt-4">
-        <div className="flex flex-wrap gap-4">
-          <StatCard
-            testId="stat-conversion"
-            label={strings.admin.statConversion}
-            value={ratio(conversion.paymentsConfirmed, conversion.bookingsCreated)}
-            detail={`${conversion.paymentsConfirmed} ${strings.admin.statOf} ${conversion.bookingsCreated}`}
-            hint={strings.admin.statConversionHint}
-          />
-          <StatCard
-            testId="stat-no-show"
-            label={strings.admin.statNoShow}
-            value={ratio(noShow.noShows, noShow.marked)}
-            detail={`${noShow.noShows} ${strings.admin.statOf} ${noShow.marked}`}
-            hint={strings.admin.statNoShowHint}
-          />
-          <StatCard
-            testId="stat-credit"
-            label={strings.admin.statCredit}
-            value={formatCzk(stats.creditOutstandingCzk)}
-            hint={strings.admin.statCreditHint}
-          />
-          <StatCard
-            testId="stat-drop-off"
-            label={strings.admin.statDropOff}
-            value={ratio(dropOff.completed, dropOff.linksSent)}
-            detail={`${dropOff.completed} ${strings.admin.statOf} ${dropOff.linksSent}`}
-            hint={strings.admin.statDropOffHint}
-          />
-        </div>
-      </section>
+      {/* The bounds, stated. A metric with an invisible window is a metric two
+          people can read differently and both be right. */}
+      <p data-testid="stat-range" className="mt-2 font-mono text-[11px] text-faint">
+        {strings.admin.statWindowRange
+          .replace("{from}", formatDate(range.from))
+          // The upper bound is exclusive, so the last day INSIDE the window is
+          // the one before it — printing the bound itself would claim a day the
+          // numbers do not include.
+          .replace("{to}", formatDate(new Date(Date.parse(range.to) - 1)))}
+      </p>
 
-      {/* --- waitlist depth ----------------------------------------------------
-          Per game, not averaged: an average hides the one game everybody wants,
-          which is exactly the game the number exists to find. */}
-      <section className="mt-10">
-        <h3 className="m-0 font-condensed text-[18px] font-bold uppercase tracking-wide text-bone">
-          {strings.admin.statWaitlist}
-        </h3>
-        <p className="mt-1 text-[12px] text-muted-dim">{strings.admin.statWaitlistHint}</p>
-
-        {waitlistDepth.length === 0 ? (
-          <p className="mt-4 font-mono text-[12px] tracking-[1px] text-faint">
-            {strings.admin.statWaitlistEmpty}
-          </p>
-        ) : (
-          <ul className="mt-4 list-none space-y-2 p-0">
-            {waitlistDepth.map((row) => (
-              <li
-                key={row.gameId}
-                data-testid="stat-waitlist-row"
-                data-waiting={row.waiting}
-                className="flex flex-wrap items-center justify-between gap-4 rounded-card border border-hairline px-5 py-3"
-              >
-                <span className="font-condensed text-[16px] font-bold text-white">
-                  {row.venue}
-                </span>
-                <span className="font-mono text-[11px] tracking-[1px] text-muted">
-                  {formatGameDateTime(row.startsAt)}
-                </span>
-                <span
-                  className={`font-mono text-[18px] font-bold ${
-                    row.waiting > 0 ? "text-volt" : "text-faint"
-                  }`}
-                >
-                  {row.waiting}
-                </span>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
+      {isEmpty ? (
+        <p
+          data-testid="stats-empty"
+          className="mt-8 font-mono text-[12px] tracking-[1px] text-faint"
+        >
+          {strings.admin.statsEmptyWindow}
+        </p>
+      ) : (
+        <section className="mt-8">
+          <div className="flex flex-wrap gap-4">
+            <StatCard
+              testId="stat-fill-rate"
+              label={strings.admin.statFillRate}
+              value={ratio(fillRate.sold, fillRate.capacity)}
+              detail={`${fillRate.sold} ${strings.admin.statOf} ${fillRate.capacity}`}
+              hint={strings.admin.statFillRateHint}
+            />
+            <StatCard
+              testId="stat-revenue"
+              label={strings.admin.statRevenue}
+              value={formatCzk(confirmedRevenueCzk)}
+              hint={strings.admin.statRevenueHint}
+            />
+            <StatCard
+              testId="stat-no-show"
+              label={strings.admin.statNoShow}
+              value={ratio(noShow.noShows, noShow.marked)}
+              detail={`${noShow.noShows} ${strings.admin.statOf} ${noShow.marked}`}
+              hint={strings.admin.statNoShowHint}
+            />
+            <StatCard
+              testId="stat-new-returning"
+              label={strings.admin.statNewReturning}
+              value={`${newReturning.newPlayers} / ${newReturning.returning}`}
+              detail={`${strings.admin.statNew} / ${strings.admin.statReturning}`}
+              hint={strings.admin.statNewReturningHint}
+            />
+            <StatCard
+              testId="stat-cancellations"
+              label={strings.admin.statCancellations}
+              value={String(cancellations.total)}
+              detail={`${cancellations.withCredit} ${strings.admin.statCancellationsWithCredit}`}
+              hint={strings.admin.statCancellationsHint}
+            />
+          </div>
+        </section>
+      )}
     </>
   );
 }

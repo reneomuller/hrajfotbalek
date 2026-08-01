@@ -487,3 +487,149 @@ test("the game surface carries edit, roster, paid, attendance and cancel", async
     await destroyScratchGame(scratch.id);
   }
 });
+
+/*
+ * TEST-227 — the stats page against a hand-computed window.
+ *
+ * BUILT FROM SCRATCH RATHER THAN ASSERTED OVER THE SEED. The seed tableau is
+ * shared and the other specs mutate it, so a "known week" that included seeded
+ * games would be a number that depended on what had run before it. Instead
+ * this creates its own games inside TODAY's window, computes what each metric
+ * must be by hand, and reads the page.
+ *
+ * The `day` window is used deliberately: it is the narrowest, so the fixtures
+ * this spec creates are the only things in it apart from whatever else the run
+ * has done today — which is why every assertion below is a DELTA against a
+ * baseline read first, not an absolute.
+ */
+test("the stats page reports a hand-computed window", async ({ page, context }) => {
+  await signInAs(context, players.organizer);
+
+  // Baseline, before any fixture exists.
+  await page.goto("/admin/stats?window=day");
+  const baseline = await readStats(page);
+
+  // Two games kicking off today, capacity 4 each: 8 spots.
+  const first = await createScratchGame({ capacity: 4, hoursFromNow: 1 });
+  const second = await createScratchGame({ capacity: 4, hoursFromNow: 2 });
+
+  try {
+    const runner = await apiClientFor(players.runner);
+    const rich = await apiClientFor(players.creditRich);
+
+    // Three active bookings across the two games.
+    const { data: a } = await runner.rpc("create_booking", {
+      p_game_id: first.id,
+      p_payment_method: "cash",
+    });
+    await rich.rpc("create_booking", { p_game_id: first.id, p_payment_method: "cash" });
+    const { data: c } = await runner.rpc("create_booking", {
+      p_game_id: second.id,
+      p_payment_method: "cash",
+    });
+
+    // One confirmed payment, so revenue is exactly one game's price.
+    const admin = serviceClient();
+    await admin.rpc("confirm_booking", {
+      p_booking_id: a.id,
+      p_confirmed_by: players.organizer.id,
+    });
+
+    // One cancellation, which issued credit because the booking was paid.
+    await admin.rpc("confirm_booking", {
+      p_booking_id: c.id,
+      p_confirmed_by: players.organizer.id,
+    });
+    const { error: cancelError } = await runner.rpc("cancel_booking", {
+      p_booking_id: c.id,
+    });
+    expect(cancelError).toBeNull();
+
+    await page.goto("/admin/stats?window=day");
+    const after = await readStats(page);
+
+    // Capacity: two games of four.
+    expect(after.capacity - baseline.capacity).toBe(8);
+    // Sold: three created, one cancelled — two still active.
+    expect(after.sold - baseline.sold).toBe(2);
+    // Revenue: two payments confirmed at 200, and cancelling does NOT retract
+    // the payment_confirmed event — the money did arrive.
+    expect(after.revenue - baseline.revenue).toBe(2 * first.priceCzk);
+    // Cancellations: one, and it issued credit.
+    expect(after.cancellations - baseline.cancellations).toBe(1);
+    expect(after.cancelledWithCredit - baseline.cancelledWithCredit).toBe(1);
+  } finally {
+    await destroyScratchGame(first.id);
+    await destroyScratchGame(second.id);
+  }
+});
+
+/** The five numbers off the stats page, as numbers. */
+async function readStats(page: import("@playwright/test").Page) {
+  // An empty window renders the empty state instead of the tiles, which is a
+  // legitimate baseline — every figure is zero.
+  if ((await page.getByTestId("stats-empty").count()) > 0) {
+    return { capacity: 0, sold: 0, revenue: 0, cancellations: 0, cancelledWithCredit: 0 };
+  }
+
+  // Read from the card's own value/detail hooks rather than by scraping the
+  // whole card: the headline runs straight into the sub-line otherwise, and
+  // "1" followed by "1 with credit" reads as eleven.
+  const detailOf = async (testId: string) =>
+    (await page.getByTestId(testId).getByTestId("stat-detail").textContent()) ?? "";
+  const valueOf = async (testId: string) =>
+    (await page.getByTestId(testId).getByTestId("stat-value").textContent()) ?? "";
+
+  // "12 of 20" — the detail line under the percentage.
+  const fillMatch = (await detailOf("stat-fill-rate")).match(/(\d+)\s*of\s*(\d+)/);
+  const revenue = await valueOf("stat-revenue");
+  const cancels = await valueOf("stat-cancellations");
+  const cancelDetail = await detailOf("stat-cancellations");
+
+  return {
+    sold: Number(fillMatch?.[1] ?? 0),
+    capacity: Number(fillMatch?.[2] ?? 0),
+    revenue: Number((revenue.match(/([\d,\s]+)\s*CZK/)?.[1] ?? "0").replace(/[,\s]/g, "")),
+    cancellations: Number(cancels.match(/\d+/)?.[0] ?? 0),
+    cancelledWithCredit: Number(cancelDetail.match(/(\d+)\s*with credit/)?.[1] ?? 0),
+  };
+}
+
+/*
+ * REQ-ADMIN-004 — the three removed metrics are gone from the page.
+ */
+test("the removed metrics do not render", async ({ page, context }) => {
+  await signInAs(context, players.organizer);
+  await page.goto("/admin/stats?window=month");
+
+  await expect(page.getByTestId("stat-credit")).toHaveCount(0);
+  await expect(page.getByTestId("stat-drop-off")).toHaveCount(0);
+  await expect(page.getByTestId("stat-waitlist-row")).toHaveCount(0);
+  await expect(page.locator("body")).not.toContainText("Magic-link");
+  await expect(page.locator("body")).not.toContainText("Waitlist depth");
+});
+
+/*
+ * REQ-ADMIN-006 — every metric is filterable, and the window is visible.
+ */
+test("the window picker switches the range", async ({ page, context }) => {
+  await signInAs(context, players.organizer);
+
+  await page.goto("/admin/stats");
+  // Week is the default: a day is often empty and a month is too coarse to
+  // notice anything changing.
+  await expect(page.getByTestId("stat-window-week")).toHaveAttribute(
+    "data-selected",
+    "true",
+  );
+
+  const weekRange = await page.getByTestId("stat-range").textContent();
+
+  await page.getByTestId("stat-window-month").click();
+  await page.waitForURL(/window=month/);
+  await expect(page.getByTestId("stat-window-month")).toHaveAttribute(
+    "data-selected",
+    "true",
+  );
+  await expect(page.getByTestId("stat-range")).not.toHaveText(weekRange ?? "");
+});

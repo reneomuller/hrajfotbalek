@@ -244,3 +244,18 @@ test("the merged game surface and the player detail page", async ({ page, contex
     await destroyScratchGame(game.id);
   }
 });
+
+// --- Phase 19 ----------------------------------------------------------------
+
+test("the reworked stats page, at each window", async ({ page, context }) => {
+  await signInAs(context, players.organizer);
+
+  for (const [name, window] of [
+    ["19-admin-stats-week", "week"],
+    ["19-admin-stats-month", "month"],
+  ] as const) {
+    await page.goto(`/admin/stats?window=${window}`, { waitUntil: "networkidle" });
+    await expect(page.getByTestId("stat-window-picker")).toBeVisible();
+    await strip(page, name);
+  }
+});

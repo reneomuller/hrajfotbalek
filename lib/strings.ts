@@ -783,24 +783,39 @@ export const strings = {
 
     // --- stats ---------------------------------------------------------------
     statsTitle: "Stats",
-    statsLede: "Everything below is a query over the event log. Nothing here writes.",
-    statFunnel: "Signup → booking → played",
-    statFunnelSignups: "Signed up",
-    statFunnelBooked: "Booked at least once",
-    statFunnelAttended: "Turned up",
-    statConversion: "Booking → payment",
-    statConversionHint: "Share of bookings ever confirmed as paid.",
+    statsLede:
+      "Everything below is a query over the event log, bounded by the window you pick. Nothing here writes.",
+
+    // --- the window (§7, REQ-ADMIN-006) --------------------------------------
+    // Prague calendar windows, not rolling spans: "this week" means the week
+    // the games were played in, and a rolling number moves while you read it.
+    statWindowDay: "Today",
+    statWindowWeek: "This week",
+    statWindowMonth: "This month",
+    statWindowRange: "{from} — {to}",
+
+    // --- the metrics that arrived in Phase 19 --------------------------------
+    statFillRate: "Fill rate",
+    statFillRateHint: "Spots taken against capacity, over games in this window.",
+    statRevenue: "Confirmed revenue",
+    // The distinction the metric exists to make.
+    statRevenueHint:
+      "Money that arrived. Credit applied is excluded — that is a liability being discharged, not a payment.",
+    statNewReturning: "New vs returning",
+    statNewReturningHint:
+      "A booking is new if it is that player's first ever, whenever their first was.",
+    statNew: "new",
+    statReturning: "returning",
+    statCancellations: "Cancellations",
+    statCancellationsHint: "Split by whether credit was issued — that is, whether money had been applied.",
+    statCancellationsWithCredit: "with credit",
     statNoShow: "No-show rate",
-    statNoShowHint: "Of the bookings whose attendance has been marked.",
-    statCredit: "Credit outstanding",
-    statCreditHint: "Money already taken that is still owed in football.",
-    statDropOff: "Magic-link drop-off",
-    statDropOffHint: "Sign-in links sent versus sign-ins completed.",
-    statWaitlist: "Waitlist depth",
-    statWaitlistHint:
-      "The expansion signal: when this stays deep, add a slot or a venue.",
-    statWaitlistEmpty: "No upcoming games with anyone waiting.",
+    statNoShowHint: "Of the bookings whose attendance has been marked, on games in this window.",
     statOf: "of",
+    // Shown in place of every tile when the window holds nothing. "Today"
+    // legitimately holds nothing most days, and a page of dashes reads as
+    // broken rather than as empty.
+    statsEmptyWindow: "Nothing happened in this window.",
 
     // --- players, credit grants, merge ---------------------------------------
     playersTitle: "Players",

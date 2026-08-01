@@ -27,9 +27,26 @@ export function StatCard({
       <div className="font-mono text-[10px] uppercase tracking-eyebrow text-volt-dim">
         {label}
       </div>
-      <div className="mt-2 font-display text-[38px] leading-none text-white">{value}</div>
+      {/*
+        The headline and the sub-line carry their own hooks, so an assertion
+        can read one number rather than scraping the card. Without them a
+        regex over the card's text runs the value straight into the detail —
+        "1" and "1 with credit" become "11", which is how the Phase 19 spec
+        first read eleven cancellations where there was one.
+      */}
+      <div
+        data-testid="stat-value"
+        className="mt-2 font-display text-[38px] leading-none text-white"
+      >
+        {value}
+      </div>
       {detail && (
-        <div className="mt-2 font-mono text-[11px] tracking-[1px] text-muted">{detail}</div>
+        <div
+          data-testid="stat-detail"
+          className="mt-2 font-mono text-[11px] tracking-[1px] text-muted"
+        >
+          {detail}
+        </div>
       )}
       {hint && <p className="mt-2 text-[12px] leading-snug text-muted-dim">{hint}</p>}
     </div>
