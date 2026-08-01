@@ -42,7 +42,7 @@ points for any execution session**, not checklist items.
 | 5. Login rework + existing-account migration | G1 | **Complete** | 2026-08-01 | 2026-08-01 | Password primary; OTP relabelled and unchanged underneath as the R1 rollback; `/login/set-password` is a page, not a gate. Production accounts migrate at the gate, by hand |
 | 6. Account: change password, change email | G1 | **Complete** | 2026-08-01 | 2026-08-01 | Re-auth required before a password change; email change double-confirmed and the UI says so before the button |
 | 7. Storage bucket + profile photos | G1 | **Complete (admin removal UI deferred to 18)** | 2026-08-01 | 2026-08-01 | Migration 24: bucket, 4 storage policies, `set_profile_photo` / `remove_profile_photo` / `anonymize_player`. `profile_photos.sql` 30/30. **`player_anonymized` event needs contract ratification**; roster photo rendering needs a view change — see the boundary note |
-| 8. `credit_topups` + `create_topup` / `confirm_topup` + SQL suite | G1 | Not started | - | - | R3 |
+| 8. `credit_topups` + `create_topup` / `confirm_topup` + SQL suite | G1 | **Complete** | 2026-08-01 | 2026-08-01 | Migration 25. `credit_topups.sql` 44/44 adversarial; per-player advisory lock on confirm; 20/20 suites |
 | 9. Top-up UI + QR + admin confirm + receipt email | G1 | Not started | - | - | |
 | 10. Account history | G1 | Not started | - | - | |
 | 11. G1 E2E specs + screenshot strips | G1 | Not started | - | - | |
