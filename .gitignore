@@ -45,3 +45,6 @@ next-env.d.ts
 # Playwright output — run artifacts, never committed.
 test-results/
 playwright-report/
+
+# Screenshot strips — review artefacts for the UX loop, not baselines.
+screenshots/

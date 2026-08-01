@@ -45,8 +45,8 @@ points for any execution session**, not checklist items.
 | 8. `credit_topups` + `create_topup` / `confirm_topup` + SQL suite | G1 | **Complete** | 2026-08-01 | 2026-08-01 | Migration 25. `credit_topups.sql` 44/44 adversarial; per-player advisory lock on confirm; 20/20 suites |
 | 9. Top-up UI + QR + admin confirm + receipt email | G1 | **Complete** | 2026-08-01 | 2026-08-01 | Reuses the booking QR component; admin list VS-sorted; receipt sent after the transaction, never inside it |
 | 10. Account history | G1 | **Complete** | 2026-08-01 | 2026-08-01 | Split on kickoff, not status; un-marked attendance counts as played |
-| 11. G1 E2E specs + screenshot strips | G1 | Not started | - | - | |
-| **🛑 GATE G1 — Auth + profile** | **G1** | **Not verified** | - | - | **STOP** |
+| 11. G1 E2E specs + screenshot strips | G1 | **Complete** | 2026-08-01 | 2026-08-01 | 48/48 E2E (28 Phase 1 + 20 new); 12 phone-width strips in `screenshots/g1/`. Inbox-dependent paths deliberately human-verified |
+| **🛑 GATE G1 — Auth + profile** | **G1** | **Awaiting human verification** | - | - | **STOP** — all 12 build phases complete; gate walk is Oliver's |
 | 12. Migrations 27+28: duration, skill levels, organizer contacts | G2 | Not started | - | - | R2 |
 | 13. Admin game form: organizer, duration, skill | G2 | Not started | - | - | |
 | 14. Duration rendered everywhere | G2 | Not started | - | - | |
