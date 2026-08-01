@@ -218,7 +218,7 @@ Credited value is always `games × 150`. The 1-game tier is deliberately not a d
 - **A heads-up email goes out 3 days before a batch expires**, riding the same cron.
 - **`/account` shows batches** — amount, expiry date, and the games-equivalent — rather than one opaque total.
 
-#### Substrate — NEEDS RATIFICATION BEFORE THE PASS PHASE BUILDS
+#### Substrate — RATIFIED 2026-08-01
 
 Expiry cannot be expressed in today's ledger: `credit_ledger` is flat, and balance is `SUM(delta_czk)`. Making credit expire requires knowing which movements belong to which batch, which touches `create_booking` and `cancel_booking` — the two functions Phase 1 proved and this contract otherwise leaves alone. The recommended shape:
 
@@ -228,7 +228,9 @@ Expiry cannot be expressed in today's ledger: `credit_ledger` is flat, and balan
 
 The tradeoff in that last point, stated because it is the part worth objecting to: balance remains the ledger sum — the one invariant every surface, every test and the whole wallet rests on — at the cost of a window between an expiry instant and the next sweep in which expired credit is still spendable. That window is at most the cron interval (15 minutes once Vercel Pro lands), and it errs in the player's favour. The alternative — a balance function that excludes expired remainders — is always correct but makes balance no longer equal to the ledger sum, and every reader of that sum has to be found and changed.
 
-**The pass phase does not begin until this is ratified**, because getting it wrong means either money that cannot be spent or money spent twice.
+**Ruled 2026-08-01: the recommendation above stands, and the spendable window is accepted.** It is bounded by the cron interval, it errs in the player's favour, and every expiry it touches is auditable through the sweep's events. The alternative was rejected for a reason worth keeping: breaking balance-equals-ledger-sum midway through a live project multiplies risk across every reader of that sum — `create_booking`, the account page, admin stats, the E2E helpers — for no gain a player could see.
+
+Anything that reads a balance must therefore keep reading `SUM(delta_czk)`. A future session tempted to "fix" the transient window by filtering expired rows out of the balance query would be re-opening the rejected option one caller at a time.
 
 ## 5. Games: setup and display
 

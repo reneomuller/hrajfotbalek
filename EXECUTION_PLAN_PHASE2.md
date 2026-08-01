@@ -48,16 +48,17 @@ points for any execution session**, not checklist items.
 | 10. Account history | G1 | **Complete** | 2026-08-01 | 2026-08-01 | Split on kickoff, not status; un-marked attendance counts as played |
 | 11. G1 E2E specs + screenshot strips | G1 | **Complete** | 2026-08-01 | 2026-08-01 | 48/48 E2E (28 Phase 1 + 20 new); 12 phone-width strips in `screenshots/g1/`. Inbox-dependent paths deliberately human-verified |
 | **🛑 GATE G1 — Auth + profile** | **G1** | **Awaiting human verification** | - | - | **STOP** — all 12 build phases complete; gate walk is Oliver's |
-| 12. Migrations 27+28: duration, skill levels, organizer contacts | G2 | Not started | - | - | R2 |
+| 12. Migrations 26+27: duration, skill, subs, organizer contacts | G2 | **Complete** | 2026-08-02 | 2026-08-02 | R2 closed. `game_organizer_contacts.sql` 24/24; 21/21 suites. **Found: default PUBLIC EXECUTE meant `anon` could call the phone function** — revoked |
 | 13. Admin game form: organizer, duration, skill | G2 | Not started | - | - | |
 | 14. Duration rendered everywhere | G2 | Not started | - | - | |
 | 15. Skill badges + organizer display gating | G2 | Not started | - | - | |
-| 16. Venue photo (detail only) + share + toasts + header rework | G2 | Not started | - | - | v1.1.4 A, C |
+| 15a. Games list rework: compact rows, day picker, View game | G2 | Not started | - | - | v1.1.4 B, C. Own phase and own strip — the density criterion is verified, not eyeballed |
+| 16. Venue photo (detail only) + share + toasts + header rework | G2 | Not started | - | - | v1.1.4 A |
 | 17. `site_settings` + home rework + community count | G2 | Not started | - | - | v1.1.4 D |
 | 18. Admin player detail + manage/edit merge | G2 | Not started | - | - | R9 |
 | 19. Stats rework | G2 | Not started | - | - | R7 |
 | 20. G2 E2E specs + screenshot strips | G2 | Not started | - | - | |
-| **20a. GAME PASS — money, own phase, individual report** | G2 | **Blocked** | - | - | **Does not start until the §4.2 substrate is ratified.** Touches `create_booking` / `cancel_booking` — the Phase 1 money path |
+| **20a. GAME PASS — money, own phase, individual report** | G2 | Not started | - | - | Substrate **ratified 2026-08-01**. Touches `create_booking` / `cancel_booking` — the Phase 1 money path, so its suite re-proves the Phase 1 invariants |
 | **🛑 GATE G2 — Games + content** | **G2** | **Not verified** | - | - | **STOP** |
 | 21. `/football` rewrites + origin-derived surfaces | G3 | Not started | - | - | |
 | 22. Cutover + cron cadence restore | G3 | Not started | - | - | Human-executed; R8 |
