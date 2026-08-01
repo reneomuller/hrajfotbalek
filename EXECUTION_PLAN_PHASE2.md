@@ -4,10 +4,10 @@
 
 > **Version:** 1.0.0
 > **Created:** 2026-07-28
-> **Contract:** `letco-prompt-hrajsport-phase2-v1.md` v1.1.1
+> **Contract:** `letco-prompt-hrajsport-phase2-v1.md` v1.1.4
 > **Inputs:** `PHASE2_ANALYZE.md`, `PHASE2_IMPLEMENTATION.md`
 > **Estimated duration:** ~34 hours (2 040 minutes) across 22 phases
-> **Scope:** frozen at v1.1.1. Discoveries go to `POLISH.md`, never into this plan.
+> **Scope:** frozen at v1.1.4. Discoveries go to `POLISH.md`, never into this plan.
 
 ---
 
@@ -52,11 +52,12 @@ points for any execution session**, not checklist items.
 | 13. Admin game form: organizer, duration, skill | G2 | Not started | - | - | |
 | 14. Duration rendered everywhere | G2 | Not started | - | - | |
 | 15. Skill badges + organizer display gating | G2 | Not started | - | - | |
-| 16. Venue photo panel + copy-link share + toasts | G2 | Not started | - | - | |
-| 17. `site_settings` + home page rework | G2 | Not started | - | - | |
+| 16. Venue photo (detail only) + share + toasts + header rework | G2 | Not started | - | - | v1.1.4 A, C |
+| 17. `site_settings` + home rework + community count | G2 | Not started | - | - | v1.1.4 D |
 | 18. Admin player detail + manage/edit merge | G2 | Not started | - | - | R9 |
 | 19. Stats rework | G2 | Not started | - | - | R7 |
 | 20. G2 E2E specs + screenshot strips | G2 | Not started | - | - | |
+| **20a. GAME PASS — money, own phase, individual report** | G2 | **Blocked** | - | - | **Does not start until the §4.2 substrate is ratified.** Touches `create_booking` / `cancel_booking` — the Phase 1 money path |
 | **🛑 GATE G2 — Games + content** | **G2** | **Not verified** | - | - | **STOP** |
 | 21. `/football` rewrites + origin-derived surfaces | G3 | Not started | - | - | |
 | 22. Cutover + cron cadence restore | G3 | Not started | - | - | Human-executed; R8 |
@@ -262,6 +263,7 @@ produce that state (Q2).
 **Acceptance criteria**
 - [ ] [REQ-AUTH-016] Change password requires the current password
 - [ ] [REQ-AUTH-017] Change email confirms from **both** old and new addresses; the UI says so plainly before submission
+- [ ] [REQ-AUTH-020] **(v1.1.4)** Both controls render as compact text links above the delete link — the Phase 6 two-column layout is a recorded defect
 - [ ] Neither control is reachable without a session
 - [ ] TEST-207, TEST-208 pass
 
@@ -464,7 +466,12 @@ Questions to answer here: **Q1** (shadow claim through password signup),
 - [ ] [REQ-UX-001] One shared toast component, volt-on-black, auto-dismiss
 - [ ] [REQ-UX-002] Toasts wired for booking created, sign-in, cancellation + credit, top-up confirmed, link copied
 - [ ] [REQ-UX-004] **(v1.1.2)** Translucent surfaces are ~20% more opaque, changed in `tailwind.config.ts` rather than in components — one token edit, no per-component overrides, volt-on-black palette unchanged
-- [ ] [REQ-GAME-019] **(v1.1.2)** The mobile games list is calendar-density: **at least three games visible at once at Pixel-7 width**, asserted in the screenshot strip and by a spec, not by eye. The venue-photo swap alone does not discharge this
+- [ ] [REQ-GAME-019] **(v1.1.4, tightened)** The games list is **compact rows with no venue photo**, and **well more than three games are visible at Pixel-7 width** — asserted in the strip and by a spec, not by eye
+- [ ] [REQ-GAME-020] **(v1.1.4)** Each row carries time span, venue, format + subs, surface, price, skill badge only when restricted, and spots-left with the fullness bar
+- [ ] [REQ-GAME-021] **(v1.1.4)** A day-picker strip above the list filters by day and shows each day's count
+- [ ] [REQ-GAME-022] **(v1.1.4)** Cards and rows say **"View game"**; the claim button exists once, on the detail
+- [ ] [REQ-AUTH-019] **(v1.1.4)** Header: one "Log in" button (reversing v1.1.2's two doors), language dropdown to its right (EN→CZ→RU, flags, EN default), and a user-icon account entry when signed in — photo if set, initials otherwise
+- [ ] [REQ-GAME-023] **(v1.1.4)** The detail carries a practical-info block: arrival, equipment provided, organizer, notes, duration
 - [ ] TEST-222, TEST-223, TEST-234 pass
 
 **Files:** `components/VenueMapPanel.tsx` → photo panel, `components/game/ShareButton.tsx`, `components/Toast.tsx`, `VENUES.md` (v2 recipe), strings + overlays

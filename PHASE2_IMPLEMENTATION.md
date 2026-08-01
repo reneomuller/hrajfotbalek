@@ -1,8 +1,8 @@
 # Phase 2 — Stage 2: Requirements, implementation plan, scenarios
 
-**Contract:** `letco-prompt-hrajsport-phase2-v1.md` v1.1.1
+**Contract:** `letco-prompt-hrajsport-phase2-v1.md` v1.1.4
 **Depends on:** `PHASE2_ANALYZE.md` (findings F1–F12, risks R1–R9)
-**Scope:** frozen at v1.1.1.
+**Scope:** frozen at v1.1.4.
 
 ---
 
@@ -81,8 +81,19 @@ gate that verifies it.
 | REQ-GAME-016 | `games.subs_per_team` (nullable int, CHECK 0–20); admin input; renders beside the format when set, nothing when null (v1.1.2 §5.3a) | G2 |
 | REQ-GAME-017 | Format is admin-entered and rendered verbatim; **never derived from capacity** anywhere. Capacity remains the sole booking limit (v1.1.2 §5.3a) | G2 |
 | REQ-GAME-018 | `/game/[id]` is state-aware: booking holders see payment state + cancel and no claim CTA; non-holders see the claim CTA only while spots remain; server-side determination (v1.1.2 §5.6) | G2 |
-| REQ-GAME-019 | The mobile games list is calendar-density — ≥3 games visible at Pixel-7 width (v1.1.2 §5.5) | G2 |
+| REQ-GAME-019 | The games list is compact rows, no venue photo, **well more than 3** games visible at Pixel-7 width (v1.1.4 §5.5, tightening v1.1.2) | G2 |
 | REQ-PROF-008 | `game_roster_public` gains `photo_path` only; rosters render the photo with initials fallback; view + rendering ship together (v1.1.3 §4a) | G2 |
+| REQ-GAME-020 | Each list row: time span, venue, format + subs, surface, price, skill badge when restricted, spots-left + fullness bar (v1.1.4 §5.5) | G2 |
+| REQ-GAME-021 | Day-picker strip above the list, filtering by day with per-day counts (v1.1.4 §5.5) | G2 |
+| REQ-GAME-022 | Cards and rows say "View game"; exactly one claim button, on the detail (v1.1.4 §5.6a) | G2 |
+| REQ-GAME-023 | Detail carries a practical-info block: arrival, equipment, organizer, notes, duration (v1.1.4 §5.7) | G2 |
+| REQ-AUTH-019 | Header: one Log in button, language dropdown right of it (EN→CZ→RU, flags), user-icon account entry when signed in (v1.1.4 §3.1a) | G2 |
+| REQ-AUTH-020 | Account security controls are compact text links above the delete link (v1.1.4 §3.3) | G2 |
+| REQ-PASS-001 | Game pass = discounted wallet credit with expiry, six tiers, credited value = games × 150 (v1.1.4 §4.2) | G2 |
+| REQ-PASS-002 | Exact-pass-price match credits the pass VALUE with expiry; any other amount falls back to credited = received, no expiry (v1.1.4 §4.2) | G2 |
+| REQ-PASS-003 | Consumption soonest-expiring-first; refunds return to the source batch with its original expiry (v1.1.4 §4.2) | G2 |
+| REQ-PASS-004 | Expiry sweep writes an event; heads-up email 3 days before, on the existing cron (v1.1.4 §4.2) | G2 |
+| REQ-PASS-005 | Receipt states received, credited and expires — all three (v1.1.4 §4.2) | G2 |
 | REQ-UX-004 | Translucent surfaces ~20% more opaque, via the token table not the components (v1.1.2 §8) | G2 |
 
 ## A.4 Home, admin, UX (§6–§8)

@@ -1,6 +1,17 @@
-# hrajsport.cz — Phase 2 Specification (v1.1.3)
+# hrajsport.cz — Phase 2 Specification (v1.1.4)
 
 ## 0. Revision history
+
+- **v1.1.4 (2026-08-01)** — the G2 display rulings, one reversal, and the game pass. Folded in before the phases they affect.
+  - **A. One "Log in" button — this REVERSES the two-doors ruling of v1.1.2** (§3.1a). Signup is reached from the login page, not from the header. Recorded as a reversal rather than an edit: the earlier reasoning (with passwords, log-in and sign-up are different acts) was sound and the header is simply not where that distinction earns its space.
+  - **A. Language selector becomes a dropdown**, right of the login button, EN → CZ → RU with a flag beside each, EN default (§3.1a).
+  - **A. Signed in, the account entry is a user icon** — the player's photo when set, initials otherwise — not text (§3.1a).
+  - **B. The games list is compact rows with a day-picker** (§5.5, rewritten). No venue photo on the list; the photo belongs to the detail page. Density tightens from "≥3" to "well more than 3 at Pixel-7 width".
+  - **C. One claim button in the product** (§5.6a). Cards and rows say "View game"; the state-aware claim lives on the detail only.
+  - **D. The community heading carries the active-player number** from `site_settings` (§6).
+  - **E. The game detail gains a practical-info block** — arrival, equipment, organizer, notes, duration (§5.7).
+  - **F. GAME PASS: discounted wallet credit with an expiry** (§4.2). Unit-credits were rejected because per-game pricing varies; CZK with a games-equivalent display gives the same mental model on the existing rails. **This is the single deliberate exception to credited-equals-received**, keyed on an exact pass-price match.
+  - **G. Account security controls become compact text links** above the delete link (§3.3). The half-page two-column layout shipped in Phase 6 is recorded as a defect.
 
 - **v1.1.3 (2026-08-01)** — two build-time findings written back, both ruled rather than assumed. Recorded here as **spec drift resolved**, on the same footing as v2.5's `admin_granted` write-back: the code shipped first because the requirement demanded it, and the contract is being brought level rather than the divergence being left in a commit message.
   - **`player_anonymized` joins the event catalog** (§4). v2.5 §3 requires every state change to write its event in the same transaction, and anonymization is the largest state change the product performs on a person — it cannot be the silent one.
@@ -111,6 +122,12 @@ The two required boxes are **distinct legal acts and are never merged**: accepti
 
 All three are G1 checklist items, verified by receiving each on a real phone. A template that renders a button but no code produces a six-digit box that rejects every code — the Phase 1 failure, repeated per template.
 
+### 3.1a The header (v1.1.4)
+
+- **One "Log in" button. This REVERSES the two-doors ruling of v1.1.2**, which put Log in and Sign up in the header as distinct entries. That reasoning still holds where it applies — with passwords the two are different acts — but the header is not where the distinction earns its space. **The login page carries the create-account path**, which is where someone who has no account is already looking.
+- **Language selector: a standard dropdown, immediately right of the login button.** Order EN → CZ → RU, a flag beside each, EN default. It stays adjacent to the auth control rather than buried, for the reason it always has: someone who cannot read the page must be able to find its way out without reading anything.
+- **Signed in, the account entry is a user icon** — the player's photo when one is set, their initials otherwise — not the word "profile". The photo already exists (§4) and an avatar is a smaller, more recognisable target than text on a phone header.
+
 ### 3.2 Login
 
 - **Password is the primary login.** Email + password, standard form, explicit submit button.
@@ -122,6 +139,7 @@ All three are G1 checklist items, verified by receiving each on a real phone. A 
 ### 3.3 Account management
 
 - `/account` gains: **change password** (current password required), **change email**, both placed above the existing delete-account mailto.
+- **They are compact text links styled like "Delete my account" (v1.1.4), not expanded forms.** The two-column half-page layout shipped in Phase 6 is recorded as a **defect**: these are controls someone uses roughly once, and giving them more vertical space than the wallet and the fixture list pushes the things people actually came for below the fold. Each link opens its form; the resting state is one line.
 - **Change email requires confirmation from both addresses** — the current one and the new one. This is Supabase's `double_confirm_changes` behaviour and it is kept deliberately: an email change is an account takeover in one step if the old mailbox has no say. The UI states plainly that two confirmations are needed and that the address does not change until both land. Ruled 2026-07-28.
 
 ---
@@ -157,6 +175,60 @@ Named here because "same pattern as bookings" does not survive contact with the 
 - Until then the initials avatar on rosters is **correct behaviour, not an unfinished state**.
 
 ---
+
+### 4.2 The game pass (v1.1.4)
+
+**A pass is discounted wallet credit with an expiry date.** It is not a separate currency, not a ticket, and not a counter of games. It buys CZK into the existing wallet at a discount, and that CZK spends through the rails Phase 1 already built.
+
+**Unit-credits were considered and rejected.** A "5 games" balance is a cleaner mental model right up to the moment two games have different prices — and per-game pricing already varies. A pass denominated in games would either forbid that variation or start owing fractions of a game. CZK with a **games-equivalent shown beside it** ("750 CZK ≈ 5 games") gives the same mental model without lying about what is stored.
+
+#### Tiers
+
+| Games | Price | Credited value | Saving | Expires |
+|---|---|---|---|---|
+| 1 | 150 | 150 | — | never |
+| 5 | 700 | 750 | 50 | 1 month |
+| 8 | 1 080 | 1 200 | 120 | 1 month |
+| 12 | 1 560 | 1 800 | 240 | 2 months |
+| 15 | 1 875 | 2 250 | 375 | 2 months |
+| 20 | 2 300 | 3 000 | 700 | 2 months |
+
+Credited value is always `games × 150`. The 1-game tier is deliberately not a discount and does not expire: it is the ordinary top-up, priced honestly and listed alongside so the discount on the others is legible.
+
+#### Purchase
+
+- A panel sits **between the day-picker and the games list**: "Top up your pass" / "Pre-buy games at a discount".
+- It opens a pass page listing every tier with its per-game price, its saving, and **its expiry stated loudly**. An expiry discovered after purchase is a complaint; an expiry read before purchase is a choice.
+- Choosing a tier calls `create_topup` with the **pass price** as the expected amount — same 27-series VS, same SPD QR, same admin confirmation screen. A pass is a top-up with a known amount.
+
+#### The one exception to credited-equals-received
+
+§4.1 states that the credited amount is always the amount received, because a top-up has no price to be short of. **A pass does have a price**, so:
+
+- **On admin confirmation of a received amount that EXACTLY equals the pass price**, the pass **value** is credited — not the amount received — as a batch carrying its expiry date.
+- **Any other received amount falls back to the standing rule**: credited = received, no expiry, no discount. A player who sends 690 against a 700 pass has made a top-up, not bought a pass, and telling them otherwise would either give away 60 CZK or silently swallow 690.
+- The match is on the **exact** figure for that reason: it is the only signal available that distinguishes "bought the 5-pass" from "sent some money".
+- **The receipt states all three numbers — received, credited, expires** — because they differ, and a receipt that showed only one would be the thing a dispute is argued from.
+
+#### Mechanics
+
+- **Credit is consumed soonest-expiring-first.** Otherwise a player with both a pass and ordinary credit watches the pass expire while the permanent credit is spent.
+- **A cancellation refund returns to the batch it came from, with that batch's original expiry.** Refunding pass credit as never-expiring credit would turn a booking-and-cancelling loop into a way to launder an expiry away. Cash- and QR-paid cancellations keep crediting without expiry, unchanged.
+- **An expiry sweep** expires leftover batch remainders at their date, writing an event, on the existing cron.
+- **A heads-up email goes out 3 days before a batch expires**, riding the same cron.
+- **`/account` shows batches** — amount, expiry date, and the games-equivalent — rather than one opaque total.
+
+#### Substrate — NEEDS RATIFICATION BEFORE THE PASS PHASE BUILDS
+
+Expiry cannot be expressed in today's ledger: `credit_ledger` is flat, and balance is `SUM(delta_czk)`. Making credit expire requires knowing which movements belong to which batch, which touches `create_booking` and `cancel_booking` — the two functions Phase 1 proved and this contract otherwise leaves alone. The recommended shape:
+
+- `credit_ledger` gains **two nullable columns**: `expires_at` (set on a positive batch row) and `batch_id` (set on redemption and refund rows, pointing at the batch they draw from or return to). Both nullable, so every existing row stays valid and unexpiring — which is what those rows mean.
+- `create_booking` allocates across batches soonest-expiry-first, writing **one negative row per batch consumed**. `cancel_booking` refunds to `batch_id` with that batch's `expires_at`.
+- **Balance stays `SUM(delta_czk)`**, and the sweep writes a compensating negative row per expired remainder alongside the event.
+
+The tradeoff in that last point, stated because it is the part worth objecting to: balance remains the ledger sum — the one invariant every surface, every test and the whole wallet rests on — at the cost of a window between an expiry instant and the next sweep in which expired credit is still spendable. That window is at most the cron interval (15 minutes once Vercel Pro lands), and it errs in the player's favour. The alternative — a balance function that excludes expired remainders — is always correct but makes balance no longer equal to the ledger sum, and every reader of that sum has to be found and changed.
+
+**The pass phase does not begin until this is ratified**, because getting it wrong means either money that cannot be spent or money spent twice.
 
 ## 5. Games: setup and display
 
@@ -204,11 +276,12 @@ So the phone does not go on `games`:
 - **Venue photo panel:** the traced-map panel is replaced by a **venue photo panel** using the existing venue image slot (`public/venues/`, image reference on the venue). Photos are human-supplied real pitch photographs (VENUES.md gets a v2 recipe: photograph the pitch, landscape, Claude crops/grades to the panel frame). Beneath the panel: venue name + **"Open map"** button (existing Google Maps link). A venue without a photo renders name + button only — no empty frame. The traced-map assets remain in the repo, unused.
 - **Share:** game card and detail carry **Copy link** (primary) and **WhatsApp** (secondary) share actions. Copy shows a confirmation toast.
 
-### 5.5 Games list density on mobile (v1.1.2)
+### 5.5 The games list: compact rows and a day picker (v1.1.4, rewrites v1.1.2)
 
-- The mobile games list is **compact, calendar-density rows: several games visible at once on a phone**, not one card per screenful.
-- The current card occupies roughly three-quarters of a phone screen. That is recorded here as a **defect**, not a preference: a list that shows one item is a detail page with extra steps, and the product's job on `/games` is to let someone compare Tuesday against Thursday without scrolling.
-- The venue-photo panel (§5.4) reduces the height and is welcome, but **the density requirement stands on its own** and is verified on its own — a photo swap that leaves one game per screen has not satisfied it.
+- **Compact rows, and NO venue photo on the list.** v1.1.2 hoped the venue-photo swap would help density; it does the opposite. The photo belongs to the detail page, where someone deciding about one game benefits from seeing the pitch. On a list, it is a scroll cost per row.
+- **Each row carries:** the time span (`19:30–20:30`), venue name, format + substitutes, surface, price, the skill badge **only when restricted**, and spots-left with the fullness bar.
+- **A day-picker strip above the list** — `Today 1 · Sat 2 · Sun 3` — filters by day, the count being the number of games that day. A week of pickup football is a handful of days, not a calendar; the strip is the whole navigation.
+- **Density criterion tightens: well more than three games visible at Pixel-7 width.** v1.1.2 set ≥3 against a card layout; with compact rows that is no longer ambitious. The number is verified in the screenshot strip and by a spec.
 
 ### 5.6 The game page is state-aware (v1.1.2)
 
@@ -221,12 +294,27 @@ What `/game/[id]` offers depends on the viewer's relationship to that game:
 
 ---
 
+### 5.6a One claim button in the product (v1.1.4)
+
+- **Cards and list rows say "View game" and open the detail.** They do not claim.
+- **The claim button exists once, on the game detail**, and it is the state-aware one from §5.6: a holder sees their booking, a non-holder sees the claim while spots remain, a full game offers the waitlist.
+- Why: a CTA that books from a list is a CTA that books the wrong game. It also duplicated the state logic across three surfaces, which is three places for "already booked" to be got wrong — and the homepage card, which has the least context of the three, was the most likely to get it wrong.
+
+### 5.7 Practical information on the game detail (v1.1.4)
+
+The detail page answers the questions someone asks the first time they turn up, in one block rather than scattered:
+
+- **Arrival** — "come 10 minutes before kickoff".
+- **Equipment provided** — training bibs, goalie gloves and balls.
+- Plus the content already specified elsewhere: organizer name (and phone, gated per §5.1), notes, duration and format.
+
 ## 6. Home page
 
 - Language switcher stays (Phase 1).
 - **How-it-works moves up:** the 01 find a game / 02 claim your spot / 03 show up strip relocates above the fold-two content; directly beneath it, the equipment line: **"Training bibs, goalie gloves and balls provided."**
 - **Stats strip** under the wordmark (scrolling section, not the fixed header): **Games per week** (computed from published games, trailing 7 days) and **Active players** (an admin-editable number — a new single-row `site_settings` table, admin RPC to update, honest framing: community size including the WhatsApp cohort).
 - **`site_settings` is read anonymously and must say so.** Both the stats strip and Player of the Month render for signed-out visitors, so the migration grants `select` to `anon` and `authenticated` explicitly. Writes go through the admin RPC only. Without the grant the reads return empty rather than erroring, and an empty stats strip looks like a content bug rather than a permissions one — the most repeated lesson in this project.
+- **The community heading reads "Join a community of {N}+ active players across Prague" (v1.1.4)**, where `{N}` is the admin-editable active-player number from `site_settings` — the same value the stats strip shows. One number, one source; a heading with its own hard-coded figure is a number that goes stale silently.
 - **Community section becomes three equal panels:** Join the Community (existing) · **FAQ** · **Player of the Month** (photo + username, admin-picked via a `site_settings` reference; renders initials avatar if the player has no photo).
 - **FAQ content (final):**
   1. *When should I show up?* — 10 minutes before kickoff.
