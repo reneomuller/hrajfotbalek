@@ -276,6 +276,14 @@ export const ru: StringsOverlay = {
     creditEmpty: "Кредита пока нет.",
     showQr: "Показать QR для оплаты",
     creditHint: "Кредит автоматически применится к следующей брони.",
+    photoTitle: "Фото профиля",
+    photoUpload: "Загрузить фото",
+    photoReplace: "Заменить фото",
+    photoHint: "Квадратная обрезка, до 2 МБ. JPEG, PNG или WebP.",
+    photoBadType: "Такой тип файла не поддерживается. Используй JPEG, PNG или WebP.",
+    photoTooBig: "Изображение больше 2 МБ. Попробуй поменьше.",
+    photoUploadFailed: "Загрузить не удалось. Попробуй ещё раз.",
+
     securityTitle: "Вход и безопасность",
 
     changePasswordTitle: "Сменить пароль",

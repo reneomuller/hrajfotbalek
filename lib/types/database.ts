@@ -580,6 +580,26 @@ export interface Database {
        * non-specific. Identity comes from `auth.uid()`; there is no player-id
        * argument and there must never be one.
        */
+      /** Owner-only. Derives players/<own id>.<ext>; never takes a path. */
+      set_profile_photo: {
+        Args: { p_extension: string };
+        Returns: string;
+      };
+      /** Admin-only moderation. Returns the path the caller must delete. */
+      remove_profile_photo: {
+        Args: { p_player_id: string };
+        Returns: string | null;
+      };
+      /**
+       * Admin-only. v2.5 §8 anonymization plus the Phase 2 photo rule. Returns
+       * the storage path to delete; the row itself is retained so `events` and
+       * `credit_ledger` stay keyed to it.
+       */
+      anonymize_player: {
+        Args: { p_player_id: string };
+        Returns: string | null;
+      };
+
       complete_signup_v2: {
         Args: {
           p_nickname: string;

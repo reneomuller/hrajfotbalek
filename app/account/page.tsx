@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import { BookingList } from "@/components/BookingList";
 import { CreditBalance } from "@/components/CreditBalance";
 import { ChangeEmailForm, ChangePasswordForm } from "@/components/account/SecurityForms";
+import { PhotoUpload } from "@/components/account/PhotoUpload";
+import { avatarUrl } from "@/lib/storage/avatar";
+import { initials } from "@/lib/roster/initials";
 import { requireCurrentPlayer } from "@/lib/auth/session";
 import { getOwnCreditBalance, listOwnBookings } from "@/lib/booking/queries";
 import { getStrings } from "@/lib/i18n/server";
@@ -34,6 +37,12 @@ export default async function AccountPage() {
     getOwnCreditBalance(),
   ]);
 
+  const photoUrl = avatarUrl(
+    process.env.NEXT_PUBLIC_SUPABASE_URL ?? "",
+    player.photo_path,
+    player.created_at,
+  );
+
   const deletionHref =
     `mailto:${t.account.deleteMailto}` +
     `?subject=${encodeURIComponent(t.account.deleteSubject)}` +
@@ -61,6 +70,37 @@ export default async function AccountPage() {
           </button>
         </form>
       </div>
+
+      {/*
+        Profile photo.
+
+        The initials avatar stays the fallback and is what most players will
+        keep — Phase 2 adds an option, not an expectation, so the absent case is
+        the ordinary one and is rendered as a first-class state rather than an
+        empty frame.
+      */}
+      <section className="mt-8 flex items-center gap-5">
+        <span
+          data-testid="account-avatar"
+          className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full border border-hairline-volt bg-surface font-condensed text-2xl font-extrabold text-volt"
+        >
+          {photoUrl ? (
+            /* A Supabase storage URL on a public bucket, rendered at 80px.
+               next/image would proxy it through the optimizer for no benefit
+               and add a billable transform per avatar. */
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={photoUrl} alt="" className="h-full w-full object-cover" />
+          ) : (
+            initials(player.nickname)
+          )}
+        </span>
+        <div className="flex flex-col gap-2">
+          <h2 className="m-0 font-condensed text-base font-bold uppercase tracking-wide text-white">
+            {t.account.photoTitle}
+          </h2>
+          <PhotoUpload hasPhoto={Boolean(player.photo_path)} />
+        </div>
+      </section>
 
       <div className="mt-8">
         <CreditBalance balanceCzk={balanceCzk} />
@@ -99,7 +139,8 @@ export default async function AccountPage() {
       {/*
         Deletion is by email request only — there is deliberately no self-serve
         deletion UI. Deletion is implemented as ANONYMIZATION: the nickname
-        becomes `deleted-player-<id>`, email and phone are nulled, and the row
+        becomes `deleted-<8 hex>` (the 20-character nickname CHECK rejects
+        anything longer), email and phone are nulled, and the row
         is retained so `events` and `credit_ledger` stay keyed to it. A hard
         delete would orphan the ledger, which is exactly what the wallet's
         integrity rests on. Phase 2 adds one thing to that list: the profile

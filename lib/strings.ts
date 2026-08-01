@@ -384,6 +384,14 @@ export const strings = {
     creditEmpty: "No credit yet.",
     showQr: "Show payment QR",
     creditHint: "Credit is applied automatically to your next booking.",
+    photoTitle: "Profile photo",
+    photoUpload: "Upload a photo",
+    photoReplace: "Replace photo",
+    photoHint: "Square crop, up to 2 MB. JPEG, PNG or WebP.",
+    photoBadType: "That file type is not supported. Use a JPEG, PNG or WebP.",
+    photoTooBig: "That image is over 2 MB. Try a smaller one.",
+    photoUploadFailed: "The upload did not work. Please try again.",
+
     securityTitle: "Sign-in and security",
 
     changePasswordTitle: "Change password",

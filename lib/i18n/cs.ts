@@ -276,6 +276,14 @@ export const cs: StringsOverlay = {
     creditEmpty: "Zatím žádný kredit.",
     showQr: "Zobrazit QR platbu",
     creditHint: "Kredit se automaticky uplatní u další rezervace.",
+    photoTitle: "Profilová fotka",
+    photoUpload: "Nahrát fotku",
+    photoReplace: "Vyměnit fotku",
+    photoHint: "Čtvercový ořez, do 2 MB. JPEG, PNG nebo WebP.",
+    photoBadType: "Tenhle typ souboru nepodporujeme. Použij JPEG, PNG nebo WebP.",
+    photoTooBig: "Obrázek má přes 2 MB. Zkus menší.",
+    photoUploadFailed: "Nahrání se nepovedlo. Zkus to prosím znovu.",
+
     securityTitle: "Přihlášení a zabezpečení",
 
     changePasswordTitle: "Změnit heslo",
