@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { NOTES_MAX, parseGameForm } from "@/lib/admin/gameForm";
+import {
+  DURATION_DEFAULT,
+  DURATION_MAX,
+  DURATION_MIN,
+  NOTES_MAX,
+  parseGameForm,
+} from "@/lib/admin/gameForm";
+import { policy } from "@/lib/policy";
 import { strings } from "@/lib/strings";
 
 function form(fields: Record<string, string>): FormData {
@@ -13,6 +20,9 @@ const VALID = {
   startsAtIso: "2026-08-02T18:00:00.000Z",
   capacity: "14",
   priceCzk: "200",
+  // Required since Phase 2 §5. The form pre-fills the creating admin's
+  // nickname, so a real submission always carries one.
+  organizerName: "Oliver",
 };
 
 describe("parseGameForm", () => {
@@ -26,6 +36,11 @@ describe("parseGameForm", () => {
     expect(result.values.format).toBeNull();
     expect(result.values.surface).toBeNull();
     expect(result.values.notes).toBeNull();
+    // The Phase 2 fields default to "not stated", which is a real answer.
+    expect(result.values.durationMinutes).toBeNull();
+    expect(result.values.allowedSkillLevels).toBeNull();
+    expect(result.values.subsPerTeam).toBeNull();
+    expect(result.values.organizerPhone).toBeNull();
   });
 
   it("requires a venue choice", () => {
@@ -141,6 +156,10 @@ describe("parseGameForm", () => {
         format: "9v9",
         surface: "sand",
         notes: "Gate code 4417, park on the north side.",
+        organizerName: "Jindra",
+        organizerPhone: "+420 601 002 003",
+        durationMinutes: "75",
+        subsPerTeam: "3",
       }),
     );
 
@@ -157,21 +176,170 @@ describe("parseGameForm", () => {
       format: "9v9",
       surface: "sand",
       notes: "Gate code 4417, park on the north side.",
+      organizerName: "Jindra",
+      organizerPhone: "+420 601 002 003",
+      durationMinutes: 75,
+      allowedSkillLevels: null,
+      subsPerTeam: 3,
     });
   });
 
   it("reports every bad field at once rather than one per round trip", () => {
     const result = parseGameForm(
-      form({ venueId: "", startsAtIso: "", capacity: "0", priceCzk: "-5", format: "nope" }),
+      form({
+        venueId: "",
+        startsAtIso: "",
+        capacity: "0",
+        priceCzk: "-5",
+        format: "nope",
+        organizerName: "",
+        durationMinutes: "5",
+        subsPerTeam: "99",
+      }),
     );
     expect(result.ok).toBe(false);
     if (result.ok) return;
     expect(Object.keys(result.fieldErrors).sort()).toEqual([
       "capacity",
+      "durationMinutes",
       "format",
+      "organizerName",
       "priceCzk",
       "startsAt",
+      "subsPerTeam",
       "venue",
     ]);
+  });
+});
+
+/**
+ * Phase 2 §5, §5.2, §5.3, §5.3a.
+ *
+ * Every bound here is also a CHECK constraint and a named RPC error — see
+ * `supabase/tests/admin_games_phase2.sql`. These assert the inline error, not
+ * the enforcement.
+ */
+describe("parseGameForm — organizer, duration, skill, substitutes", () => {
+  it("requires an organizer name, because a game nobody is named as running is not a game", () => {
+    const result = parseGameForm(form({ ...VALID, organizerName: "   " }));
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.fieldErrors.organizerName).toBe(strings.admin.organizerNameRequired);
+  });
+
+  it("rejects an organizer name past the 60-character column CHECK", () => {
+    const result = parseGameForm(form({ ...VALID, organizerName: "x".repeat(61) }));
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.fieldErrors.organizerName).toBe(strings.admin.organizerNameTooLong);
+  });
+
+  it("treats a blank phone as the absence of one, not as an empty one", () => {
+    const result = parseGameForm(form({ ...VALID, organizerPhone: "   " }));
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.values.organizerPhone).toBeNull();
+  });
+
+  it("keeps a phone verbatim, so a +420 prefix survives", () => {
+    const result = parseGameForm(form({ ...VALID, organizerPhone: "+420 777 123 456" }));
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.values.organizerPhone).toBe("+420 777 123 456");
+  });
+
+  it("accepts a duration inside the bounds, inclusive at both ends", () => {
+    for (const minutes of [DURATION_MIN, 60, 90, DURATION_MAX]) {
+      const result = parseGameForm(form({ ...VALID, durationMinutes: String(minutes) }));
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      expect(result.values.durationMinutes).toBe(minutes);
+    }
+  });
+
+  it("rejects a duration outside 30–180, and a fractional one", () => {
+    for (const bad of ["29", "181", "0", "-60", "60.5", "sixty"]) {
+      const result = parseGameForm(form({ ...VALID, durationMinutes: bad }));
+      expect(result.ok, bad).toBe(false);
+      if (result.ok) return;
+      expect(result.fieldErrors.durationMinutes).toBe(strings.admin.durationInvalid);
+    }
+  });
+
+  it("leaves a blank duration null — 'not stated' renders as the policy fallback", () => {
+    const result = parseGameForm(form({ ...VALID, durationMinutes: "" }));
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.values.durationMinutes).toBeNull();
+  });
+
+  it("takes the form's default duration from the policy module, so the two cannot drift", () => {
+    expect(DURATION_DEFAULT).toBe(policy.game.durationMinutes);
+  });
+
+  it("accepts 0 substitutes, which means 'none' rather than 'not stated'", () => {
+    const result = parseGameForm(form({ ...VALID, subsPerTeam: "0" }));
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.values.subsPerTeam).toBe(0);
+  });
+
+  it("rejects substitutes outside 0–20", () => {
+    for (const bad of ["-1", "21", "2.5"]) {
+      const result = parseGameForm(form({ ...VALID, subsPerTeam: bad }));
+      expect(result.ok, bad).toBe(false);
+      if (result.ok) return;
+      expect(result.fieldErrors.subsPerTeam).toBe(strings.admin.subsInvalid);
+    }
+  });
+
+  it("reads a skill selection in the canonical order, whatever order it was submitted in", () => {
+    const data = form(VALID);
+    data.append("allowedSkillLevels", "advanced");
+    data.append("allowedSkillLevels", "beginner");
+    const result = parseGameForm(data);
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.values.allowedSkillLevels).toEqual(["beginner", "advanced"]);
+  });
+
+  it("treats no selection as all levels — null, and therefore no badge anywhere", () => {
+    const result = parseGameForm(form(VALID));
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.values.allowedSkillLevels).toBeNull();
+  });
+
+  it("treats every level ticked as the same statement as none ticked", () => {
+    const data = form(VALID);
+    for (const level of ["beginner", "intermediate", "advanced"]) {
+      data.append("allowedSkillLevels", level);
+    }
+    const result = parseGameForm(data);
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.values.allowedSkillLevels).toBeNull();
+  });
+
+  it("ignores a skill value that is not a level, rather than storing it", () => {
+    const data = form(VALID);
+    data.append("allowedSkillLevels", "professional");
+    data.append("allowedSkillLevels", "beginner");
+    const result = parseGameForm(data);
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.values.allowedSkillLevels).toEqual(["beginner"]);
+  });
+
+  it("never derives the format from the capacity (REQ-GAME-017)", () => {
+    // The contract's own case: capacity 12, format 5v5. A 12-capacity game may
+    // be 5v5 with substitutes, and printing 6v6 would be a confident falsehood.
+    const result = parseGameForm(
+      form({ ...VALID, capacity: "12", format: "5v5", subsPerTeam: "2" }),
+    );
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.values.format).toBe("5v5");
+    expect(result.values.capacity).toBe(12);
   });
 });

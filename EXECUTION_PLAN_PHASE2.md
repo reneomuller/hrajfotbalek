@@ -49,7 +49,7 @@ points for any execution session**, not checklist items.
 | 11. G1 E2E specs + screenshot strips | G1 | **Complete** | 2026-08-01 | 2026-08-01 | 48/48 E2E (28 Phase 1 + 20 new); 12 phone-width strips in `screenshots/g1/`. Inbox-dependent paths deliberately human-verified |
 | **🛑 GATE G1 — Auth + profile** | **G1** | **Awaiting human verification** | - | - | **STOP** — all 12 build phases complete; gate walk is Oliver's |
 | 12. Migrations 26+27: duration, skill, subs, organizer contacts | G2 | **Complete** | 2026-08-02 | 2026-08-02 | R2 closed. `game_organizer_contacts.sql` 24/24; 21/21 suites. **Found: default PUBLIC EXECUTE meant `anon` could call the phone function** — revoked |
-| 13. Admin game form: organizer, duration, skill | G2 | Not started | - | - | |
+| 13. Admin game form: organizer, duration, skill | G2 | **Complete** | 2026-08-02 | 2026-08-02 | Migration 28: `admin_create_game_v2` / `admin_update_game_v2`, organizer written in the same transaction. `admin_games_phase2.sql` 28/28; 22/22 suites. **Found: `set_game_organizer` guarded on `is_admin_caller()` alone, so a service-role create failed mid-transaction** — widened to match every other admin RPC |
 | 14. Duration rendered everywhere | G2 | Not started | - | - | |
 | 15. Skill badges + organizer display gating | G2 | Not started | - | - | |
 | 15a. Games list rework: compact rows, day picker, View game | G2 | Not started | - | - | v1.1.4 B, C. Own phase and own strip — the density criterion is verified, not eyeballed |

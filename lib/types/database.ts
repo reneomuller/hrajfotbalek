@@ -279,6 +279,22 @@ export interface Database {
           city: string;
           brand: string;
           created_at: string;
+          /**
+           * Phase 2, migration 26. Nullable, 30–180. DISPLAY ONLY — nothing
+           * transitions on it. Null falls back to `policy.game.durationMinutes`.
+           */
+          duration_minutes: number | null;
+          /**
+           * Phase 2, migration 26. NULL means all levels and NO badge anywhere;
+           * `normalize_skill_levels` collapses the empty array and the
+           * all-three array to NULL so there is one way to say it.
+           */
+          allowed_skill_levels: SkillLevel[] | null;
+          /**
+           * Phase 2, migration 26. Descriptive: renders beside the format.
+           * Constrains nothing — capacity is the sole booking limit.
+           */
+          subs_per_team: number | null;
         };
         Insert: {
           id?: string;
@@ -294,6 +310,9 @@ export interface Database {
           city?: string;
           brand?: string;
           created_at?: string;
+          duration_minutes?: number | null;
+          allowed_skill_levels?: SkillLevel[] | null;
+          subs_per_team?: number | null;
         };
         Update: never;
         Relationships: [];
@@ -311,6 +330,27 @@ export interface Database {
           created_at: string;
         };
         /** Written only by `admin_create_venue`. */
+        Insert: never;
+        Update: never;
+        Relationships: [];
+      };
+
+      /**
+       * Phase 2, migration 27. NO GRANTS to `anon` or `authenticated` — the
+       * name exits through `game_organizer_public()` and the phone only
+       * through `game_organizer_phone()` to a caller holding an active
+       * booking. Reachable from TypeScript with the service-role client only,
+       * which is what the admin edit form uses to pre-fill the field.
+       */
+      game_organizer_contacts: {
+        Row: {
+          game_id: string;
+          organizer_name: string;
+          organizer_phone: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        /** Written only by `set_game_organizer` / the v2 admin game RPCs. */
         Insert: never;
         Update: never;
         Relationships: [];
@@ -672,6 +712,65 @@ export interface Database {
        */
       anonymize_player: {
         Args: { p_player_id: string };
+        Returns: string | null;
+      };
+
+      /**
+       * Phase 2, migration 28. NEW FUNCTIONS rather than replacements: the v1
+       * pair cannot be `create or replace`d into a different parameter list,
+       * and adding DEFAULTed parameters would create an ambiguous overload
+       * that fails at call time on the admin form rather than at migration.
+       *
+       * The organizer contact is written in the same transaction as the game,
+       * so a required field cannot be skipped by a failed second call.
+       */
+      admin_create_game_v2: {
+        Args: {
+          p_venue_id: string;
+          p_starts_at: string;
+          p_capacity: number;
+          p_price_czk: number;
+          p_organizer_name: string;
+          p_format?: string | null;
+          p_surface?: GameSurface | null;
+          p_notes?: string | null;
+          p_organizer_phone?: string | null;
+          p_duration_minutes?: number | null;
+          p_allowed_skill_levels?: SkillLevel[] | null;
+          p_subs_per_team?: number | null;
+        };
+        Returns: string;
+      };
+      admin_update_game_v2: {
+        Args: {
+          p_game_id: string;
+          p_venue_id: string;
+          p_starts_at: string;
+          p_price_czk: number;
+          p_organizer_name: string;
+          p_format?: string | null;
+          p_surface?: GameSurface | null;
+          p_notes?: string | null;
+          p_organizer_phone?: string | null;
+          p_duration_minutes?: number | null;
+          p_allowed_skill_levels?: SkillLevel[] | null;
+          p_subs_per_team?: number | null;
+        };
+        Returns: string;
+      };
+
+      /** The organizer NAME for any published game. Null for draft/cancelled. */
+      game_organizer_public: {
+        Args: { p_game_id: string };
+        Returns: string | null;
+      };
+      /**
+       * The organizer PHONE, only for a caller holding a reserved/confirmed
+       * booking on that game. Null — never an error — for everyone else, so
+       * refusal and absence are indistinguishable.
+       */
+      game_organizer_phone: {
+        Args: { p_game_id: string };
         Returns: string | null;
       };
 

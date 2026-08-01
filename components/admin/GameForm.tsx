@@ -3,9 +3,18 @@
 import { useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
 import type { AdminActionState } from "@/app/admin/games/actions";
-import { SURFACES } from "@/lib/admin/gameForm";
+import {
+  DURATION_DEFAULT,
+  DURATION_MAX,
+  DURATION_MIN,
+  ORGANIZER_NAME_MAX,
+  SKILL_LEVELS,
+  SUBS_MAX,
+  SUBS_MIN,
+  SURFACES,
+} from "@/lib/admin/gameForm";
 import { strings } from "@/lib/strings";
-import type { Database, GameSurface } from "@/lib/types/database";
+import type { Database, GameSurface, SkillLevel } from "@/lib/types/database";
 
 type VenueRow = Database["public"]["Tables"]["venues"]["Row"];
 
@@ -44,6 +53,8 @@ export function GameForm({
   action,
   venues,
   game,
+  organizer,
+  defaultOrganizerName,
 }: {
   action: (state: AdminActionState, formData: FormData) => Promise<AdminActionState>;
   venues: VenueRow[];
@@ -57,7 +68,22 @@ export function GameForm({
     format: string | null;
     surface: GameSurface | null;
     notes: string | null;
+    duration_minutes: number | null;
+    allowed_skill_levels: SkillLevel[] | null;
+    subs_per_team: number | null;
   };
+  /**
+   * The stored contact when editing. Read server-side with the service-role
+   * client, because `game_organizer_contacts` grants nothing to a session —
+   * which is the whole point of the table (§5.1).
+   */
+  organizer?: { organizer_name: string; organizer_phone: string | null } | null;
+  /**
+   * The creating admin's nickname (REQ-GAME-001). A default, not a lock: the
+   * person filling in the form is usually but not always the person running
+   * the game.
+   */
+  defaultOrganizerName?: string;
 }) {
   const [state, formAction] = useActionState(action, INITIAL);
 
@@ -79,8 +105,33 @@ export function GameForm({
   const [surface, setSurface] = useState<string>(game?.surface ?? "");
   const [notes, setNotes] = useState(game?.notes ?? "");
 
+  const [organizerName, setOrganizerName] = useState(
+    organizer?.organizer_name ?? defaultOrganizerName ?? "",
+  );
+  const [organizerPhone, setOrganizerPhone] = useState(organizer?.organizer_phone ?? "");
+  // Blank when creating rather than pre-filled with 60: a number already in the
+  // box is a number nobody chose, and null is a real answer that renders as the
+  // standard length. The placeholder says what blank will mean.
+  const [durationMinutes, setDurationMinutes] = useState(
+    game?.duration_minutes != null ? String(game.duration_minutes) : "",
+  );
+  const [subsPerTeam, setSubsPerTeam] = useState(
+    game?.subs_per_team != null ? String(game.subs_per_team) : "",
+  );
+  const [skillLevels, setSkillLevels] = useState<SkillLevel[]>(
+    game?.allowed_skill_levels ?? [],
+  );
+
   const errors = state.fieldErrors ?? {};
   const isEdit = Boolean(game);
+
+  function toggleSkill(level: SkillLevel) {
+    setSkillLevels((current) =>
+      current.includes(level)
+        ? current.filter((l) => l !== level)
+        : SKILL_LEVELS.filter((l) => l === level || current.includes(l)),
+    );
+  }
 
   return (
     <form action={formAction} className="mt-6 max-w-[560px] space-y-5">
@@ -258,6 +309,120 @@ export function GameForm({
           </select>
         </div>
       </div>
+
+      {/* --- duration / substitutes ---------------------------------------------- */}
+      <div className="flex flex-wrap gap-4">
+        <div className="min-w-[160px] flex-1">
+          <label className={LABEL} htmlFor="durationMinutes">
+            {strings.admin.durationLabel}
+          </label>
+          <input
+            id="durationMinutes"
+            name="durationMinutes"
+            type="number"
+            min={DURATION_MIN}
+            max={DURATION_MAX}
+            className={FIELD}
+            data-testid="duration-minutes"
+            placeholder={String(DURATION_DEFAULT)}
+            value={durationMinutes}
+            onChange={(event) => setDurationMinutes(event.target.value)}
+          />
+          <p className={HINT}>{strings.admin.durationHint}</p>
+          {errors.durationMinutes && <p className={ERROR}>{errors.durationMinutes}</p>}
+        </div>
+
+        <div className="min-w-[160px] flex-1">
+          <label className={LABEL} htmlFor="subsPerTeam">
+            {strings.admin.subsLabel}
+          </label>
+          <input
+            id="subsPerTeam"
+            name="subsPerTeam"
+            type="number"
+            min={SUBS_MIN}
+            max={SUBS_MAX}
+            className={FIELD}
+            data-testid="subs-per-team"
+            value={subsPerTeam}
+            onChange={(event) => setSubsPerTeam(event.target.value)}
+          />
+          <p className={HINT}>{strings.admin.subsHint}</p>
+          {errors.subsPerTeam && <p className={ERROR}>{errors.subsPerTeam}</p>}
+        </div>
+      </div>
+
+      {/* --- skill restriction ---------------------------------------------------- */}
+      {/*
+        CHECKBOXES, NOT A SELECT, and no "All levels" option among them.
+        All-levels is the absence of a selection — the same shape as the NULL
+        column — so there is one way to say it rather than an option that has
+        to be kept in sync with an empty list.
+      */}
+      <fieldset className="rounded-card border border-hairline-chrome p-4">
+        <legend className={LABEL}>{strings.admin.skillHeading}</legend>
+        <div className="mt-2 flex flex-wrap gap-4">
+          {SKILL_LEVELS.map((level) => (
+            <label
+              key={level}
+              className="flex items-center gap-2 font-mono text-[13px] text-bone"
+            >
+              <input
+                type="checkbox"
+                name="allowedSkillLevels"
+                value={level}
+                data-testid={`skill-${level}`}
+                checked={skillLevels.includes(level)}
+                onChange={() => toggleSkill(level)}
+                className="h-4 w-4 accent-volt"
+              />
+              {strings.admin.skillOptions[level]}
+            </label>
+          ))}
+        </div>
+        <p className={HINT}>{strings.admin.skillHint}</p>
+        <p className={HINT}>{strings.admin.skillNote}</p>
+      </fieldset>
+
+      {/* --- organizer ------------------------------------------------------------ */}
+      <fieldset className="rounded-card border border-hairline-chrome p-4">
+        <legend className={LABEL}>{strings.admin.organizerHeading}</legend>
+
+        <div className="mt-2">
+          <label className={LABEL} htmlFor="organizerName">
+            {strings.admin.organizerNameLabel}
+          </label>
+          <input
+            id="organizerName"
+            name="organizerName"
+            className={FIELD}
+            maxLength={ORGANIZER_NAME_MAX}
+            data-testid="organizer-name"
+            value={organizerName}
+            onChange={(event) => setOrganizerName(event.target.value)}
+          />
+          <p className={HINT}>{strings.admin.organizerNameHint}</p>
+          {errors.organizerName && <p className={ERROR}>{errors.organizerName}</p>}
+        </div>
+
+        <div className="mt-4">
+          <label className={LABEL} htmlFor="organizerPhone">
+            {strings.admin.organizerPhoneLabel}
+          </label>
+          <input
+            id="organizerPhone"
+            name="organizerPhone"
+            type="tel"
+            className={FIELD}
+            maxLength={32}
+            data-testid="organizer-phone"
+            value={organizerPhone}
+            onChange={(event) => setOrganizerPhone(event.target.value)}
+          />
+          <p className={HINT}>{strings.admin.organizerPhoneHint}</p>
+          {errors.organizerPhone && <p className={ERROR}>{errors.organizerPhone}</p>}
+        </div>
+      </fieldset>
 
       {/* --- notes -------------------------------------------------------------- */}
       <div>

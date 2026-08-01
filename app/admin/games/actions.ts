@@ -75,14 +75,24 @@ export async function createGameAction(
     return { status: "error", fieldErrors: { venue: toAdminErrorMessage("VENUE_NOT_FOUND") } };
   }
 
-  const { data: gameId, error } = await supabase.rpc("admin_create_game", {
+  // v2, not v1 (migration 28). The v1 pair knows nothing about the organizer,
+  // and Postgres cannot `create or replace` into a different parameter list —
+  // so this is a different function, on the `complete_signup_v2` precedent.
+  // The organizer row is written inside that same transaction, which is what
+  // makes "organizer name is required" true rather than merely intended.
+  const { data: gameId, error } = await supabase.rpc("admin_create_game_v2", {
     p_venue_id: venueId,
     p_starts_at: values.startsAt,
     p_capacity: values.capacity,
     p_price_czk: values.priceCzk,
+    p_organizer_name: values.organizerName,
     p_format: values.format,
     p_surface: values.surface,
     p_notes: values.notes,
+    p_organizer_phone: values.organizerPhone,
+    p_duration_minutes: values.durationMinutes,
+    p_allowed_skill_levels: values.allowedSkillLevels,
+    p_subs_per_team: values.subsPerTeam,
   });
 
   if (error) {
@@ -95,7 +105,13 @@ export async function createGameAction(
   redirect(`/admin/games/${gameId as string}`);
 }
 
-/** Edit venue/time/price/format/surface/notes, and capacity separately. */
+/**
+ * Edit everything the v2 RPC owns, and capacity separately.
+ *
+ * `/games` and `/game/[id]` are revalidated below because duration, format,
+ * substitutes and the skill badge all render there — an edit that does not
+ * reach the public page is an edit the organizer will make twice.
+ */
 export async function updateGameAction(
   _prevState: AdminActionState,
   formData: FormData,
@@ -131,14 +147,19 @@ export async function updateGameAction(
     return { status: "error", fieldErrors: { venue: toAdminErrorMessage("VENUE_NOT_FOUND") } };
   }
 
-  const { error } = await supabase.rpc("admin_update_game", {
+  const { error } = await supabase.rpc("admin_update_game_v2", {
     p_game_id: gameId,
     p_venue_id: venueId,
     p_starts_at: values.startsAt,
     p_price_czk: values.priceCzk,
+    p_organizer_name: values.organizerName,
     p_format: values.format,
     p_surface: values.surface,
     p_notes: values.notes,
+    p_organizer_phone: values.organizerPhone,
+    p_duration_minutes: values.durationMinutes,
+    p_allowed_skill_levels: values.allowedSkillLevels,
+    p_subs_per_team: values.subsPerTeam,
   });
 
   if (error) {

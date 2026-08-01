@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { GameForm } from "@/components/admin/GameForm";
 import { listVenues } from "@/lib/admin/queries";
+import { requireAdmin } from "@/lib/auth/requireAdmin";
 import { strings } from "@/lib/strings";
 import { createGameAction } from "../actions";
 
@@ -16,7 +17,10 @@ export const dynamic = "force-dynamic";
  * path auto-publishes.
  */
 export default async function NewGamePage() {
-  const venues = await listVenues();
+  // The admin's own nickname pre-fills the organizer field (REQ-GAME-001).
+  // `requireAdmin()` is already run by the admin layout; calling it here is how
+  // the page gets the player row, not a second gate.
+  const [admin, venues] = await Promise.all([requireAdmin(), listVenues()]);
 
   return (
     <>
@@ -31,7 +35,11 @@ export default async function NewGamePage() {
         {strings.admin.newGameTitle}
       </h2>
 
-      <GameForm action={createGameAction} venues={venues} />
+      <GameForm
+        action={createGameAction}
+        venues={venues}
+        defaultOrganizerName={admin.nickname}
+      />
     </>
   );
 }

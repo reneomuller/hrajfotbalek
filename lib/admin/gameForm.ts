@@ -1,5 +1,6 @@
+import { policy } from "@/lib/policy";
 import { strings } from "@/lib/strings";
-import type { GameSurface } from "@/lib/types/database";
+import type { GameSurface, SkillLevel } from "@/lib/types/database";
 
 /**
  * Game-form parsing and validation, as a pure function of the submitted
@@ -26,6 +27,29 @@ const IMAGE_FILE_RE = /^[A-Za-z0-9][A-Za-z0-9._-]{0,80}\.(png|jpg|jpeg|webp|avif
 
 export const NOTES_MAX = 500;
 
+/** Mirrors `games_duration_range` and `assert_game_shape`. */
+export const DURATION_MIN = 30;
+export const DURATION_MAX = 180;
+
+/**
+ * What the field is pre-filled with, per the v1.1.1 ruling: 60 is the standard
+ * match length and 90 is the occasional per-game choice.
+ *
+ * Read from the policy module rather than written as 60 here, so the form's
+ * default and the null-row fallback cannot drift apart — the same reasoning
+ * that moved the `.ics` builder's private constant onto this value.
+ */
+export const DURATION_DEFAULT = policy.game.durationMinutes;
+
+/** Mirrors `games_subs_range` and `assert_game_shape`. */
+export const SUBS_MIN = 0;
+export const SUBS_MAX = 20;
+
+export const SKILL_LEVELS: SkillLevel[] = ["beginner", "intermediate", "advanced"];
+
+/** Mirrors `organizer_name_length`. */
+export const ORGANIZER_NAME_MAX = 60;
+
 export interface GameFormValues {
   venueId: string | null;
   newVenueName: string | null;
@@ -37,6 +61,17 @@ export interface GameFormValues {
   format: string | null;
   surface: GameSurface | null;
   notes: string | null;
+  /** Required (§5). The form pre-fills the creating admin's nickname. */
+  organizerName: string;
+  organizerPhone: string | null;
+  durationMinutes: number | null;
+  /**
+   * Null means all levels and no badge. The RPC additionally collapses an
+   * all-three selection to null, so "restricted to everything" cannot be
+   * stored in one place and read as a restriction in another.
+   */
+  allowedSkillLevels: SkillLevel[] | null;
+  subsPerTeam: number | null;
 }
 
 export type GameFormResult =
@@ -108,6 +143,71 @@ export function parseGameForm(form: FormData): GameFormResult {
     fieldErrors.notes = strings.admin.notesTooLong;
   }
 
+  // --- organizer (§5) ---------------------------------------------------------
+  // The name is required. The form pre-fills the creating admin's nickname, so
+  // the required-ness is almost never felt — but a game whose organizer is
+  // blank is a game nobody is named as running, and the RPC refuses it too.
+  const organizerName = text(form, "organizerName");
+  if (!organizerName) {
+    fieldErrors.organizerName = strings.admin.organizerNameRequired;
+  } else if (organizerName.length > ORGANIZER_NAME_MAX) {
+    fieldErrors.organizerName = strings.admin.organizerNameTooLong;
+  }
+
+  // An empty phone is the ABSENCE of a phone, not an empty one. Normalised to
+  // null here and again in `set_game_organizer`, so "has a phone" is never
+  // true for a game with nothing to call.
+  const organizerPhone = text(form, "organizerPhone");
+  if (organizerPhone && (organizerPhone.length < 3 || organizerPhone.length > 32)) {
+    fieldErrors.organizerPhone = strings.admin.organizerPhoneInvalid;
+  }
+
+  // --- duration (§5.2) --------------------------------------------------------
+  // Free numeric, bounded 30–180. Blank is allowed and means "not stated",
+  // which renders as the policy fallback rather than as an error.
+  const durationRaw = text(form, "durationMinutes");
+  let durationMinutes: number | null = null;
+  if (durationRaw) {
+    const parsed = Number(durationRaw);
+    if (
+      !Number.isInteger(parsed) ||
+      parsed < DURATION_MIN ||
+      parsed > DURATION_MAX
+    ) {
+      fieldErrors.durationMinutes = strings.admin.durationInvalid;
+    } else {
+      durationMinutes = parsed;
+    }
+  }
+
+  // --- substitutes (§5.3a) ----------------------------------------------------
+  // 0 is meaningful ("no substitutes") and is why the floor is 0 rather than 1.
+  const subsRaw = text(form, "subsPerTeam");
+  let subsPerTeam: number | null = null;
+  if (subsRaw) {
+    const parsed = Number(subsRaw);
+    if (!Number.isInteger(parsed) || parsed < SUBS_MIN || parsed > SUBS_MAX) {
+      fieldErrors.subsPerTeam = strings.admin.subsInvalid;
+    } else {
+      subsPerTeam = parsed;
+    }
+  }
+
+  // --- skill restriction (§5.3) -----------------------------------------------
+  // Checkboxes, so an unticked form submits nothing at all. "All levels" is the
+  // absence of a selection — one way to say it, matching the NULL column.
+  const selected = form
+    .getAll("allowedSkillLevels")
+    .filter((v): v is string => typeof v === "string")
+    .filter((v) => (SKILL_LEVELS as string[]).includes(v)) as SkillLevel[];
+
+  const deduped = SKILL_LEVELS.filter((level) => selected.includes(level));
+  // Every level ticked is the same statement as none ticked, and the RPC
+  // stores NULL for both. Collapsing it here too keeps the value the form
+  // round-trips identical to the value the database holds.
+  const allowedSkillLevels =
+    deduped.length === 0 || deduped.length === SKILL_LEVELS.length ? null : deduped;
+
   if (Object.keys(fieldErrors).length > 0) return { ok: false, fieldErrors };
 
   return {
@@ -123,6 +223,11 @@ export function parseGameForm(form: FormData): GameFormResult {
       format: format || null,
       surface,
       notes: notes || null,
+      organizerName,
+      organizerPhone: organizerPhone || null,
+      durationMinutes,
+      allowedSkillLevels,
+      subsPerTeam,
     },
   };
 }

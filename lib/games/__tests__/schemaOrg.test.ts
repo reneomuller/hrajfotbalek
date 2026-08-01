@@ -19,6 +19,9 @@ const game: GameRow = {
   city: "Prague",
   brand: "hrajfotbal",
   created_at: "2026-07-01T09:00:00.000Z",
+  duration_minutes: null,
+  allowed_skill_levels: null,
+  subs_per_team: null,
 };
 
 const base = {

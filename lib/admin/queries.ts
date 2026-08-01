@@ -93,6 +93,32 @@ export async function listVenues(): Promise<VenueRow[]> {
   return error || !data ? [] : data;
 }
 
+export type GameOrganizerRow =
+  Database["public"]["Tables"]["game_organizer_contacts"]["Row"];
+
+/**
+ * The stored organizer contact for a game, or null.
+ *
+ * SERVICE-ROLE, and it has to be. `game_organizer_contacts` grants nothing to
+ * `anon` or `authenticated` at all (§5.1) — that is the entire reason the
+ * phone lives off `games`, where SELECT is granted table-wide. An admin's own
+ * session cannot read this table and should not be able to; the edit form
+ * pre-fills from here, under `requireAdmin()`, and the two public exits
+ * (`game_organizer_public`, `game_organizer_phone`) stay the only other ways
+ * out.
+ */
+export async function getGameOrganizer(gameId: string): Promise<GameOrganizerRow | null> {
+  const service = createServiceRoleSupabaseClient();
+
+  const { data, error } = await service
+    .from("game_organizer_contacts")
+    .select("*")
+    .eq("game_id", gameId)
+    .maybeSingle();
+
+  return error || !data ? null : data;
+}
+
 export interface AdminBookingRow {
   id: string;
   playerId: string;

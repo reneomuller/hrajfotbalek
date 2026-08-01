@@ -17,7 +17,9 @@
  * exactly as the rendered form submits it, followed by the same RPC sequence,
  * in the same order, that `createGameAction` and `updateGameAction` perform —
  * including capacity going to `set_game_capacity` rather than to
- * `admin_update_game`. What it does NOT exercise is `requireAdmin()` and the
+ * `admin_update_game_v2`. Phase 13 moved it onto the v2 pair, which is what
+ * the form actually calls — a check pointed at the orphaned v1 functions would
+ * be green while the form was broken. What it does NOT exercise is `requireAdmin()` and the
  * session-bound client: those need a browser session, and they are what the
  * human verifies at the gate. Stated plainly so this is not read as covering
  * more than it does.
@@ -43,6 +45,10 @@ const CREATED = {
   format: "9v9",
   surface: "sand",
   notes: "Gate code 4417, park on the north side.",
+  organizerName: "Check Organizer A",
+  organizerPhone: "+420 601 000 111",
+  durationMinutes: "75",
+  subsPerTeam: "3",
 };
 
 /** A second set, sharing no value with the first — an edit must move all of it. */
@@ -54,6 +60,10 @@ const EDITED = {
   format: "11v11",
   surface: "indoor",
   notes: "Moved to the indoor hall — bring flat shoes.",
+  organizerName: "Check Organizer B",
+  organizerPhone: "+420 601 999 888",
+  durationMinutes: "120",
+  subsPerTeam: "1",
 };
 
 let service: SupabaseClient<Database>;
@@ -94,6 +104,10 @@ describe("admin game form", () => {
         format: CREATED.format,
         surface: CREATED.surface,
         notes: CREATED.notes,
+        organizerName: CREATED.organizerName,
+        organizerPhone: CREATED.organizerPhone,
+        durationMinutes: CREATED.durationMinutes,
+        subsPerTeam: CREATED.subsPerTeam,
       }),
     );
 
@@ -111,14 +125,19 @@ describe("admin game form", () => {
     expect(venueError).toBeNull();
     venueIds.push(venueId as string);
 
-    const { data: created, error } = await service.rpc("admin_create_game", {
+    const { data: created, error } = await service.rpc("admin_create_game_v2", {
       p_venue_id: venueId as string,
       p_starts_at: values.startsAt,
       p_capacity: values.capacity,
       p_price_czk: values.priceCzk,
+      p_organizer_name: values.organizerName,
       p_format: values.format,
       p_surface: values.surface,
       p_notes: values.notes,
+      p_organizer_phone: values.organizerPhone,
+      p_duration_minutes: values.durationMinutes,
+      p_allowed_skill_levels: values.allowedSkillLevels,
+      p_subs_per_team: values.subsPerTeam,
     });
     expect(error).toBeNull();
     gameId = created as string;
@@ -134,6 +153,19 @@ describe("admin game form", () => {
     expect(row!.format).toBe(CREATED.format);
     expect(row!.surface).toBe(CREATED.surface);
     expect(row!.notes).toBe(CREATED.notes);
+    expect(row!.duration_minutes).toBe(Number(CREATED.durationMinutes));
+    expect(row!.subs_per_team).toBe(Number(CREATED.subsPerTeam));
+
+    // The organizer is written in the same transaction as the game, and the
+    // service-role client is the only way to read the table back — no session
+    // holds a grant on it (§5.1).
+    const { data: contact } = await service
+      .from("game_organizer_contacts")
+      .select("*")
+      .eq("game_id", gameId)
+      .single();
+    expect(contact!.organizer_name).toBe(CREATED.organizerName);
+    expect(contact!.organizer_phone).toBe(CREATED.organizerPhone);
 
     // Creation never publishes, and the venue keeps the filename-derived path.
     expect(row!.status).toBe("draft");
@@ -160,6 +192,10 @@ describe("admin game form", () => {
         format: EDITED.format,
         surface: EDITED.surface,
         notes: EDITED.notes,
+        organizerName: EDITED.organizerName,
+        organizerPhone: EDITED.organizerPhone,
+        durationMinutes: EDITED.durationMinutes,
+        subsPerTeam: EDITED.subsPerTeam,
       }),
     );
 
@@ -177,14 +213,19 @@ describe("admin game form", () => {
     expect(venueError).toBeNull();
     venueIds.push(venueId as string);
 
-    const { error } = await service.rpc("admin_update_game", {
+    const { error } = await service.rpc("admin_update_game_v2", {
       p_game_id: gameId!,
       p_venue_id: venueId as string,
       p_starts_at: values.startsAt,
       p_price_czk: values.priceCzk,
+      p_organizer_name: values.organizerName,
       p_format: values.format,
       p_surface: values.surface,
       p_notes: values.notes,
+      p_organizer_phone: values.organizerPhone,
+      p_duration_minutes: values.durationMinutes,
+      p_allowed_skill_levels: values.allowedSkillLevels,
+      p_subs_per_team: values.subsPerTeam,
     });
     expect(error).toBeNull();
 
@@ -205,6 +246,16 @@ describe("admin game form", () => {
     expect(row!.format).toBe(EDITED.format);
     expect(row!.surface).toBe(EDITED.surface);
     expect(row!.notes).toBe(EDITED.notes);
+    expect(row!.duration_minutes).toBe(Number(EDITED.durationMinutes));
+    expect(row!.subs_per_team).toBe(Number(EDITED.subsPerTeam));
+
+    const { data: contact } = await service
+      .from("game_organizer_contacts")
+      .select("*")
+      .eq("game_id", gameId!)
+      .single();
+    expect(contact!.organizer_name).toBe(EDITED.organizerName);
+    expect(contact!.organizer_phone).toBe(EDITED.organizerPhone);
 
     // No value survived from the create — an edit that silently kept one would
     // be the reported bug in miniature.

@@ -2,7 +2,13 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CancelGameButton } from "@/components/admin/CancelGameButton";
 import { GameForm } from "@/components/admin/GameForm";
-import { availableTransitions, getAdminGame, listVenues } from "@/lib/admin/queries";
+import {
+  availableTransitions,
+  getAdminGame,
+  getGameOrganizer,
+  listVenues,
+} from "@/lib/admin/queries";
+import { requireAdmin } from "@/lib/auth/requireAdmin";
 import { strings } from "@/lib/strings";
 import { updateGameAction } from "../../actions";
 
@@ -25,7 +31,12 @@ export default async function EditGamePage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const [game, venues] = await Promise.all([getAdminGame(id), listVenues()]);
+  const [admin, game, venues, organizer] = await Promise.all([
+    requireAdmin(),
+    getAdminGame(id),
+    listVenues(),
+    getGameOrganizer(id),
+  ]);
 
   if (!game) notFound();
 
@@ -48,7 +59,13 @@ export default async function EditGamePage({
       </p>
 
       {canEdit ? (
-        <GameForm action={updateGameAction} venues={venues} game={game} />
+        <GameForm
+          action={updateGameAction}
+          venues={venues}
+          game={game}
+          organizer={organizer}
+          defaultOrganizerName={admin.nickname}
+        />
       ) : (
         <p className="mt-6 font-mono text-[12px] tracking-[1px] text-faint">
           {strings.admin.invalidTransition}

@@ -602,6 +602,29 @@ export const strings = {
     },
     notesLabel: "Notes (optional)",
     notesHint: "Logistics for players — gate codes, parking, what to bring.",
+
+    // --- organizer, duration, skill (Phase 2 §5) ------------------------------
+    organizerHeading: "Organizer",
+    organizerNameLabel: "Organizer name",
+    organizerNameHint: "Shown publicly on the card and the game page.",
+    organizerPhoneLabel: "Organizer phone (optional)",
+    // Says where the number goes, because an organizer deciding whether to give
+    // one needs to know that before they type it, not after.
+    organizerPhoneHint:
+      "Only players holding a spot on this game can see it. Never public, and not readable through the API by anyone else.",
+    durationLabel: "Duration (minutes)",
+    durationHint: "Between 30 and 180. Leave empty to use the standard 60.",
+    skillHeading: "Skill level",
+    skillHint:
+      "Leave everything unticked for all levels — that shows no badge. Ticking every level means the same thing.",
+    skillNote: "Booking is never refused on skill. This is a signal, not a gate.",
+    skillOptions: {
+      beginner: "Beginner",
+      intermediate: "Intermediate",
+      advanced: "Advanced",
+    },
+    subsLabel: "Substitutes per team (optional)",
+    subsHint: "Renders beside the format, like 6v6 · 2 subs per team. Limits nothing.",
     createGame: "Create as draft",
     createGameHint: "A new game is a draft. Publishing it is a separate step.",
     saveGame: "Save changes",
@@ -621,6 +644,11 @@ export const strings = {
     priceInvalid: "Price must be 0 or more.",
     formatInvalid: "Format looks like 6v6 — two numbers with a v between them.",
     notesTooLong: "Notes are limited to 500 characters.",
+    organizerNameRequired: "Name whoever is running this game.",
+    organizerNameTooLong: "The organizer name is limited to 60 characters.",
+    organizerPhoneInvalid: "A phone number is between 3 and 32 characters, or empty.",
+    durationInvalid: "Duration must be a whole number of minutes between 30 and 180.",
+    subsInvalid: "Substitutes per team must be a whole number between 0 and 20.",
     invalidTransition: "That is not possible in this game's current state.",
 
     // --- add shadow player ---------------------------------------------------
