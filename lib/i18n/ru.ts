@@ -203,6 +203,7 @@ export const ru: StringsOverlay = {
     venueLabel: "Где",
     priceLabel: "Цена",
     alreadyStarted: "Этот матч уже начался.",
+    inProgress: "Этот матч идёт прямо сейчас.",
 
     urgencyOpen: "Есть места",
     urgencyLastFew: "Почти заполнен",

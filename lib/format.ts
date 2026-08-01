@@ -53,6 +53,33 @@ export function formatGameDateTime(value: Date | string | number): string {
   return `${get("weekday")} ${get("day")} ${get("month")} ${get("hour")}:${get("minute")}`;
 }
 
+/**
+ * e.g. "Thu 3 Jul 19:30–20:30" — the time SPAN, which is what the contract
+ * asks cards and the detail page to render (§5.2, REQ-GAME-007).
+ *
+ * The dash is an EN DASH (U+2013), not a hyphen: it is a range, and a hyphen
+ * between two clock times reads as a compound word at small sizes on a phone.
+ *
+ * The end time is formatted through the same `Europe/Prague` formatter as the
+ * start, so a game that runs across the DST boundary prints the wall-clock
+ * times a player would actually see on the pitch rather than start + duration
+ * arithmetic done in UTC.
+ */
+export function formatGameTimeSpan(
+  startsAt: Date | string | number,
+  endsAt: Date | string | number,
+): string {
+  return `${formatGameDateTime(startsAt)}–${formatTime(endsAt)}`;
+}
+
+/** e.g. "19:30–20:30" — the span alone, where the date is already implied. */
+export function formatTimeSpan(
+  startsAt: Date | string | number,
+  endsAt: Date | string | number,
+): string {
+  return `${formatTime(startsAt)}–${formatTime(endsAt)}`;
+}
+
 /** e.g. "3 Jul 2026" — date only. */
 export function formatDate(value: Date | string | number): string {
   return new Intl.DateTimeFormat(DISPLAY_LOCALE, {

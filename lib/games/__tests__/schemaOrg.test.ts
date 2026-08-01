@@ -32,6 +32,42 @@ const base = {
   city: "Prague",
 };
 
+/**
+ * REQ-GAME-008 — the endDate reads the per-game column.
+ *
+ * Structured data fails SILENTLY: a consumer that disagrees with the page
+ * simply ignores the block, or indexes the wrong end time. These assertions
+ * are the only feedback loop this surface has.
+ */
+describe("gameEventSchema — endDate", () => {
+  it("ends at start + the game's own duration when one is recorded", () => {
+    const schema = gameEventSchema({
+      ...base,
+      game: { ...game, duration_minutes: 90 },
+    });
+    expect(schema.endDate).toBe("2026-08-01T18:30:00.000Z");
+  });
+
+  it("falls back to the policy constant for a game with no duration", () => {
+    const schema = gameEventSchema(base);
+    const elapsed =
+      Date.parse(schema.endDate as string) - Date.parse(schema.startDate as string);
+    expect(elapsed).toBe(policy.game.durationMinutes * 60_000);
+  });
+
+  it("does not read the constant where a column value exists — 30 and 180 both land", () => {
+    for (const minutes of [30, 180]) {
+      const schema = gameEventSchema({
+        ...base,
+        game: { ...game, duration_minutes: minutes },
+      });
+      const elapsed =
+        Date.parse(schema.endDate as string) - Date.parse(schema.startDate as string);
+      expect(elapsed).toBe(minutes * 60_000);
+    }
+  });
+});
+
 describe("gameEventSchema", () => {
   it("emits a SportsEvent with the canonical context", () => {
     const schema = gameEventSchema(base);

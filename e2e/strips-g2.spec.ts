@@ -1,6 +1,7 @@
 import { mkdir } from "node:fs/promises";
 import path from "node:path";
 import { expect, test } from "@playwright/test";
+import { createScratchGame, destroyScratchGame } from "./helpers/scaffold.ts";
 import { players, signInAs } from "./helpers/session.ts";
 
 /**
@@ -44,4 +45,21 @@ test("the admin game form, with organizer, duration and skill", async ({ page, c
   // "already answered" are what make it unobtrusive rather than an obstacle.
   await expect(page.getByTestId("organizer-name")).toHaveValue(players.organizer.nickname);
   await strip(page, "13-admin-game-form");
+});
+
+// --- Phase 14 ----------------------------------------------------------------
+
+test("the time span on the list and on the detail", async ({ page }) => {
+  const game = await createScratchGame({ durationMinutes: 90, hoursFromNow: 24 * 18 });
+
+  try {
+    await page.goto("/games", { waitUntil: "networkidle" });
+    await strip(page, "14-games-list-span");
+
+    await page.goto(`/game/${game.id}`, { waitUntil: "networkidle" });
+    await expect(page.getByTestId("game-time-span")).toBeVisible();
+    await strip(page, "14-game-detail-span");
+  } finally {
+    await destroyScratchGame(game.id);
+  }
 });

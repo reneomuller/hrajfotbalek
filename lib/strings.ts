@@ -296,6 +296,10 @@ export const strings = {
     venueLabel: "Where",
     priceLabel: "Price",
     alreadyStarted: "This game has already kicked off.",
+    // Distinct from `alreadyStarted`, and the distinction is the point: while
+    // the ball is rolling the page says so, and only once the game has run its
+    // duration does it become past tense.
+    inProgress: "This game is being played right now.",
 
     // --- urgency ladder ------------------------------------------------------
     // Three rungs, and the copy is what distinguishes them: plenty of room

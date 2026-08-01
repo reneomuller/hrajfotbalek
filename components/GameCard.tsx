@@ -4,7 +4,8 @@ import { CapacityBar } from "@/components/game/CapacityBar";
 import { FormatChips } from "@/components/game/FormatChips";
 import { ShareButton } from "@/components/game/ShareButton";
 import { VenueMapPanel, type VenueMapPanelProps } from "@/components/VenueMapPanel";
-import { formatCzk, formatGameDateTime } from "@/lib/format";
+import { formatCzk, formatGameTimeSpan } from "@/lib/format";
+import { gameEndsAt } from "@/lib/games/duration";
 import { gameUrgency, spotsLeftLabel, urgencyLabel } from "@/lib/games/urgency";
 import { getStrings } from "@/lib/i18n/server";
 import type { Database } from "@/lib/types/database";
@@ -22,6 +23,7 @@ export type GameCardGame = Pick<
   | "status"
   | "format"
   | "surface"
+  | "duration_minutes"
 >;
 
 export interface GameCardProps {
@@ -70,7 +72,13 @@ export async function GameCard({
   const t = await getStrings();
   const urgency = gameUrgency(bookedCount, game.capacity);
   const filled = Math.min(bookedCount, game.capacity);
-  const when = formatGameDateTime(game.starts_at);
+  // The SPAN, not the kick-off alone (§5.2, REQ-GAME-007). `gameEndsAt` owns
+  // the null fallback, so this card and the game's own `.ics` entry cannot
+  // disagree about when it finishes.
+  const when = formatGameTimeSpan(
+    game.starts_at,
+    gameEndsAt(game.starts_at, game.duration_minutes),
+  );
 
   return (
     <article

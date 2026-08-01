@@ -4,7 +4,9 @@ import {
   formatCzk,
   formatGameDateTime,
   formatGameTime,
+  formatGameTimeSpan,
   formatTime,
+  formatTimeSpan,
 } from "../format";
 
 /**
@@ -46,6 +48,30 @@ describe("format", () => {
 
   it("renders a full date-time for surfaces without date context", () => {
     expect(formatGameDateTime("2026-07-16T16:30:00Z")).toBe("Thu 16 Jul 18:30");
+  });
+
+  it("renders a time SPAN for the card and the detail page", () => {
+    // REQ-GAME-007. The contract's own shape: kick-off plus the end time.
+    expect(
+      formatGameTimeSpan("2026-07-16T16:30:00Z", "2026-07-16T17:30:00Z"),
+    ).toBe("Thu 16 Jul 18:30–19:30");
+  });
+
+  it("uses an en dash in the span, not a hyphen", () => {
+    // A hyphen between two clock times reads as a compound word at the size a
+    // phone renders this.
+    const span = formatGameTimeSpan("2026-07-16T16:30:00Z", "2026-07-16T17:30:00Z");
+    expect(span).toContain("\u2013");
+    expect(span).not.toContain("-");
+  });
+
+  it("renders the span in Prague wall-clock across the spring gap", () => {
+    // Prague springs forward 02:00 -> 03:00 local at 01:00 UTC on 2026-03-29.
+    // A game spanning it must print the times a player reads on a phone, not
+    // start-plus-duration arithmetic done in UTC.
+    expect(
+      formatTimeSpan("2026-03-29T00:30:00Z", "2026-03-29T01:30:00Z"),
+    ).toBe("01:30–03:30");
   });
 
   it("rejects an invalid datetime rather than rendering a bogus one", () => {

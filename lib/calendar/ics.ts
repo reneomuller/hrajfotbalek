@@ -8,17 +8,21 @@
  * silently refuse to open — no error, no calendar entry, no clue why.
  */
 
+import { resolveDurationMinutes } from "@/lib/games/duration";
 import { policy } from "@/lib/policy";
 
 /**
  * Default match length when the caller supplies no per-game duration.
  *
- * Derived from `policy.game.durationMinutes` rather than repeated: this file
- * carried its own `90` while the policy module carried another, and two
- * constants that must agree with nothing enforcing it is a calendar entry that
- * disagrees with the page it came from.
+ * Derived rather than repeated: this file carried its own `90` while the
+ * policy module carried another, and two constants that must agree with
+ * nothing enforcing it is a calendar entry that disagrees with the page it
+ * came from. Since Phase 14 it resolves through `resolveDurationMinutes`, the
+ * same call the card, the detail page and the schema.org block make — one
+ * fallback shared by four surfaces, rather than four that happen to match
+ * today.
  */
-export const DEFAULT_DURATION_MINUTES = policy.game.durationMinutes;
+export const DEFAULT_DURATION_MINUTES = resolveDurationMinutes(null);
 
 /**
  * Escapes a value for an iCalendar TEXT field (RFC 5545 §3.3.11).

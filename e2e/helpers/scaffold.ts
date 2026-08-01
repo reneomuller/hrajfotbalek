@@ -56,6 +56,7 @@ export interface ScratchGame {
   id: string;
   capacity: number;
   priceCzk: number;
+  durationMinutes: number | null;
 }
 
 /**
@@ -69,28 +70,56 @@ export async function createScratchGame({
   capacity = 12,
   priceCzk = 200,
   hoursFromNow = 24 * 30,
+  organizerName = "E2E Organizer",
+  organizerPhone = null,
+  durationMinutes = null,
+  allowedSkillLevels = null,
+  subsPerTeam = null,
+  format = null,
+  publish = true,
 }: {
   capacity?: number;
   priceCzk?: number;
   hoursFromNow?: number;
+  organizerName?: string;
+  organizerPhone?: string | null;
+  durationMinutes?: number | null;
+  allowedSkillLevels?: ("beginner" | "intermediate" | "advanced")[] | null;
+  subsPerTeam?: number | null;
+  format?: string | null;
+  /** A draft game, for the specs that need one. Published by default. */
+  publish?: boolean;
 } = {}): Promise<ScratchGame> {
   const organizer = await apiClientFor(players.organizer);
   const admin = serviceClient();
 
   const startsAt = new Date(Date.now() + hoursFromNow * 3600_000).toISOString();
 
-  const { data: id, error } = await organizer.rpc("admin_create_game", {
+  // v2 since Phase 13 — the function the admin form actually calls. Building
+  // fixtures through the orphaned v1 pair would leave every scratch game
+  // without an organizer, which is exactly the state §5 says cannot exist.
+  const { data: id, error } = await organizer.rpc("admin_create_game_v2", {
     p_venue_id: await scratchVenueId(admin),
     p_starts_at: startsAt,
     p_capacity: capacity,
     p_price_czk: priceCzk,
+    p_organizer_name: organizerName,
+    p_format: format,
+    p_surface: null,
+    p_notes: null,
+    p_organizer_phone: organizerPhone,
+    p_duration_minutes: durationMinutes,
+    p_allowed_skill_levels: allowedSkillLevels,
+    p_subs_per_team: subsPerTeam,
   });
-  if (error) throw new Error(`admin_create_game: ${error.message}`);
+  if (error) throw new Error(`admin_create_game_v2: ${error.message}`);
 
-  const { error: publishError } = await organizer.rpc("publish_game", { p_game_id: id });
-  if (publishError) throw new Error(`publish_game: ${publishError.message}`);
+  if (publish) {
+    const { error: publishError } = await organizer.rpc("publish_game", { p_game_id: id });
+    if (publishError) throw new Error(`publish_game: ${publishError.message}`);
+  }
 
-  return { id: id as string, capacity, priceCzk };
+  return { id: id as string, capacity, priceCzk, durationMinutes };
 }
 
 /**
@@ -116,6 +145,10 @@ export async function destroyScratchGame(gameId: string): Promise<void> {
   await admin.from("events").delete().eq("game_id", gameId);
   await admin.from("waitlist").delete().eq("game_id", gameId);
   await admin.from("bookings").delete().eq("game_id", gameId);
+  // The organizer contact cascades on the game delete, but deleting it first
+  // keeps teardown in one explicit reverse-dependency order rather than half
+  // stated and half inferred from a foreign key.
+  await admin.from("game_organizer_contacts").delete().eq("game_id", gameId);
   await admin.from("games").delete().eq("id", gameId);
 }
 

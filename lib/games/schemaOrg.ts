@@ -1,5 +1,5 @@
 import type { Database } from "@/lib/types/database";
-import { policy } from "@/lib/policy";
+import { gameEndsAt } from "@/lib/games/duration";
 import { strings } from "@/lib/strings";
 
 type GameRow = Database["public"]["Tables"]["games"]["Row"];
@@ -36,15 +36,14 @@ function eventStatus(game: GameRow): string {
 /**
  * End time.
  *
- * `games` has no `ends_at` column — this comes from `policy.game.durationMinutes`,
- * the same display-only constant the "is it happening now" logic uses. See the
- * note on that policy value: nothing transitions on it, and when a real
- * `ends_at` column exists this reads from the column instead.
+ * READS THE PER-GAME COLUMN, falling back to the policy constant only when the
+ * organizer stated no duration (§5.2, REQ-GAME-008). Structured data fails
+ * SILENTLY — a consumer that disagrees with the page simply ignores the block,
+ * or worse, indexes the wrong end time — so this site cannot be the one left
+ * on the constant. `gameEndsAt` is the single fallback for all four surfaces.
  */
-function endTime(startsAt: string): string {
-  const end = new Date(startsAt);
-  end.setMinutes(end.getMinutes() + policy.game.durationMinutes);
-  return end.toISOString();
+function endTime(game: GameRow): string {
+  return gameEndsAt(game.starts_at, game.duration_minutes).toISOString();
 }
 
 export interface GameEventSchemaInput {
@@ -78,7 +77,7 @@ export function gameEventSchema({
     description: strings.meta.description,
     url,
     startDate: new Date(game.starts_at).toISOString(),
-    endDate: endTime(game.starts_at),
+    endDate: endTime(game),
     eventStatus: eventStatus(game),
     // Everyone is physically on a pitch; there is no stream.
     eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode",

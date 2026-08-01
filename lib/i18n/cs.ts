@@ -204,6 +204,7 @@ export const cs: StringsOverlay = {
     venueLabel: "Kde",
     priceLabel: "Cena",
     alreadyStarted: "Tenhle zápas už začal.",
+    inProgress: "Tenhle zápas se právě hraje.",
 
     urgencyOpen: "Volná místa",
     urgencyLastFew: "Skoro plno",

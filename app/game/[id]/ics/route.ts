@@ -27,6 +27,12 @@ export async function GET(
     uid: game.id,
     venue: game.venue,
     startsAt: game.starts_at,
+    // The per-game duration, or nothing — `buildIcsEvent` falls back to the
+    // same policy constant every other surface does (§5.2, REQ-GAME-008). A
+    // calendar entry whose DTEND disagreed with the page it came from is the
+    // failure this is guarding; it is also the one a player only notices when
+    // they are already standing on the pitch.
+    durationMinutes: game.duration_minutes ?? undefined,
     url: `${await siteUrl()}/game/${game.id}`,
   });
 

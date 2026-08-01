@@ -50,7 +50,7 @@ points for any execution session**, not checklist items.
 | **🛑 GATE G1 — Auth + profile** | **G1** | **Awaiting human verification** | - | - | **STOP** — all 12 build phases complete; gate walk is Oliver's |
 | 12. Migrations 26+27: duration, skill, subs, organizer contacts | G2 | **Complete** | 2026-08-02 | 2026-08-02 | R2 closed. `game_organizer_contacts.sql` 24/24; 21/21 suites. **Found: default PUBLIC EXECUTE meant `anon` could call the phone function** — revoked |
 | 13. Admin game form: organizer, duration, skill | G2 | **Complete** | 2026-08-02 | 2026-08-02 | Migration 28: `admin_create_game_v2` / `admin_update_game_v2`, organizer written in the same transaction. `admin_games_phase2.sql` 28/28; 22/22 suites. **Found: `set_game_organizer` guarded on `is_admin_caller()` alone, so a service-role create failed mid-transaction** — widened to match every other admin RPC |
-| 14. Duration rendered everywhere | G2 | Not started | - | - | |
+| 14. Duration rendered everywhere | G2 | **Complete** | 2026-08-02 | 2026-08-02 | `lib/games/duration.ts` is the one fallback for all four surfaces. In-progress vs kicked-off now distinguishable — the site §5.2 names and the only one that did not exist. TEST-219/220 in `e2e/games.spec.ts`; 53/53 E2E |
 | 15. Skill badges + organizer display gating | G2 | Not started | - | - | |
 | 15a. Games list rework: compact rows, day picker, View game | G2 | Not started | - | - | v1.1.4 B, C. Own phase and own strip — the density criterion is verified, not eyeballed |
 | 16. Venue photo (detail only) + share + toasts + header rework | G2 | Not started | - | - | v1.1.4 A |

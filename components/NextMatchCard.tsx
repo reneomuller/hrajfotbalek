@@ -4,7 +4,8 @@ import { CapacityBar } from "@/components/game/CapacityBar";
 import { FormatChips } from "@/components/game/FormatChips";
 import { ShareButton } from "@/components/game/ShareButton";
 import { VenueMapPanel, type VenueMapPanelProps } from "@/components/VenueMapPanel";
-import { formatGameDateTime } from "@/lib/format";
+import { formatGameTimeSpan } from "@/lib/format";
+import { gameEndsAt } from "@/lib/games/duration";
 import { gameUrgency, spotsLeftLabel, urgencyLabel } from "@/lib/games/urgency";
 import { getStrings } from "@/lib/i18n/server";
 import type { GameCardGame } from "@/components/GameCard";
@@ -53,7 +54,11 @@ export async function NextMatchCard({
   const filled = Math.min(bookedCount, game.capacity);
   const urgency = gameUrgency(bookedCount, game.capacity);
   const isFull = urgency === "full";
-  const when = formatGameDateTime(game.starts_at);
+  // The span, from the same helper the list cards and the detail page use.
+  const when = formatGameTimeSpan(
+    game.starts_at,
+    gameEndsAt(game.starts_at, game.duration_minutes),
+  );
 
   return (
     <div

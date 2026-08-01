@@ -1,3 +1,4 @@
+import { isInProgress } from "@/lib/games/duration";
 import { createServerSupabaseClient } from "@/lib/supabase/clients";
 import type { Database } from "@/lib/types/database";
 
@@ -43,6 +44,16 @@ export interface GameWithCount {
    * honest place for it.
    */
   hasStarted: boolean;
+  /**
+   * Kicked off and not yet finished.
+   *
+   * Distinct from `hasStarted`, which stays true forever: a game that started
+   * ten minutes ago and one that finished two hours ago are the same boolean
+   * and very different sentences to put on a page. Resolves the per-game
+   * duration with the policy fallback, through the same helper the card, the
+   * `.ics` and the schema.org block use (§5.2, REQ-GAME-008).
+   */
+  inProgress: boolean;
   isCancelled: boolean;
 }
 
@@ -52,6 +63,7 @@ function decorate(game: GameRow, bookedCount: number, now: number): GameWithCoun
     bookedCount,
     spotsLeft: Math.max(0, game.capacity - bookedCount),
     hasStarted: new Date(game.starts_at).getTime() <= now,
+    inProgress: isInProgress(game.starts_at, game.duration_minutes, now),
     isCancelled: game.status === "cancelled",
   };
 }

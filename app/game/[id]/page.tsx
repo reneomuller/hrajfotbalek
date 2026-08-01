@@ -12,7 +12,8 @@ import { isOnWaitlist, waitlistPosition } from "@/lib/booking/waitlistConvert";
 import { readResumeIntent } from "@/lib/booking/resume";
 import { runJoinWaitlist } from "./waitlist/actions";
 import { getCurrentPlayer, getSessionUser } from "@/lib/auth/session";
-import { formatCzk, formatGameDateTime } from "@/lib/format";
+import { formatCzk, formatGameDateTime, formatGameTimeSpan } from "@/lib/format";
+import { gameEndsAt } from "@/lib/games/duration";
 import { getGameById, getRoster, getVenue, getWaitlist } from "@/lib/games/queries";
 import { gameEventSchema } from "@/lib/games/schemaOrg";
 import { gameUrgency, spotsLeftLabel, urgencyLabel } from "@/lib/games/urgency";
@@ -87,7 +88,7 @@ export default async function GameDetailPage({ params, searchParams }: GamePageP
     );
   }
 
-  const { game, bookedCount, spotsLeft, hasStarted, isCancelled } = result;
+  const { game, bookedCount, spotsLeft, hasStarted, inProgress, isCancelled } = result;
   const roster = await getRoster(game.id);
   const venueRow = await getVenue(game.venue_id);
   // The queue is public — see migration 20 and getWaitlist(). Fetched for every
@@ -95,6 +96,7 @@ export default async function GameDetailPage({ params, searchParams }: GamePageP
   // full game worth queueing for.
   const waitlist = await getWaitlist(game.id);
 
+  const endsAt = gameEndsAt(game.starts_at, game.duration_minutes);
   const isFull = spotsLeft === 0;
   const urgency = gameUrgency(bookedCount, game.capacity);
   const canAct = !isCancelled && !hasStarted;
@@ -173,8 +175,12 @@ export default async function GameDetailPage({ params, searchParams }: GamePageP
       </h1>
 
       <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-3">
-        <span className="font-mono text-[13px] tracking-[1px] text-volt">
-          {formatGameDateTime(game.starts_at)}
+        {/* The SPAN, not the kick-off alone (§5.2, REQ-GAME-007). The end time
+            comes from `gameEndsAt`, the same call the `.ics` DTEND and the
+            schema.org endDate make, so the page cannot disagree with the
+            calendar entry a player downloads from it. */}
+        <span data-testid="game-time-span" className="font-mono text-[13px] tracking-[1px] text-volt">
+          {formatGameTimeSpan(game.starts_at, endsAt)}
         </span>
         <span className="font-mono text-[13px] text-muted">
           {formatCzk(game.price_czk)}
@@ -250,9 +256,20 @@ export default async function GameDetailPage({ params, searchParams }: GamePageP
         </p>
       )}
 
+      {/*
+        Kicked off, and whether it is still running. `hasStarted` alone cannot
+        tell those apart — a game that started ten minutes ago and one that
+        finished two hours ago are the same boolean and very different
+        sentences. This is the "in progress" site the contract names as reading
+        the per-game duration (§5.2, REQ-GAME-008); `isInProgress` resolves the
+        null fallback in the same place every other surface does.
+      */}
       {!isCancelled && hasStarted && (
-        <p className="mt-5 rounded-control border border-hairline-strong px-4 py-3 font-mono text-[11px] tracking-[1px] text-faint">
-          {t.games.alreadyStarted}
+        <p
+          data-testid={inProgress ? "in-progress-notice" : "started-notice"}
+          className="mt-5 rounded-control border border-hairline-strong px-4 py-3 font-mono text-[11px] tracking-[1px] text-faint"
+        >
+          {inProgress ? t.games.inProgress : t.games.alreadyStarted}
         </p>
       )}
 
