@@ -44,7 +44,7 @@ points for any execution session**, not checklist items.
 | 7. Storage bucket + profile photos | G1 | **Complete (admin removal UI deferred to 18)** | 2026-08-01 | 2026-08-01 | Migration 24: bucket, 4 storage policies, `set_profile_photo` / `remove_profile_photo` / `anonymize_player`. `profile_photos.sql` 30/30. **`player_anonymized` event needs contract ratification**; roster photo rendering needs a view change — see the boundary note |
 | 8. `credit_topups` + `create_topup` / `confirm_topup` + SQL suite | G1 | **Complete** | 2026-08-01 | 2026-08-01 | Migration 25. `credit_topups.sql` 44/44 adversarial; per-player advisory lock on confirm; 20/20 suites |
 | 9. Top-up UI + QR + admin confirm + receipt email | G1 | **Complete** | 2026-08-01 | 2026-08-01 | Reuses the booking QR component; admin list VS-sorted; receipt sent after the transaction, never inside it |
-| 10. Account history | G1 | Not started | - | - | |
+| 10. Account history | G1 | **Complete** | 2026-08-01 | 2026-08-01 | Split on kickoff, not status; un-marked attendance counts as played |
 | 11. G1 E2E specs + screenshot strips | G1 | Not started | - | - | |
 | **🛑 GATE G1 — Auth + profile** | **G1** | **Not verified** | - | - | **STOP** |
 | 12. Migrations 27+28: duration, skill levels, organizer contacts | G2 | Not started | - | - | R2 |

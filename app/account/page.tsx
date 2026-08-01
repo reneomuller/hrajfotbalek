@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { BookingList } from "@/components/BookingList";
+import { PlayerHistory } from "@/components/account/PlayerHistory";
+import { splitHistory } from "@/lib/booking/history";
 import { CreditBalance } from "@/components/CreditBalance";
 import { ChangeEmailForm, ChangePasswordForm } from "@/components/account/SecurityForms";
 import { PhotoUpload } from "@/components/account/PhotoUpload";
@@ -116,12 +117,7 @@ export default async function AccountPage() {
         </Link>
       </div>
 
-      <section className="mt-10">
-        <h2 className="m-0 mb-4 font-condensed text-[17px] font-bold uppercase tracking-wide text-white">
-          {t.account.myBookings}
-        </h2>
-        <BookingList rows={bookings} />
-      </section>
+      <PlayerHistory history={splitHistory(bookings)} />
 
       {/*
         Sign-in and security, above the deletion block.
