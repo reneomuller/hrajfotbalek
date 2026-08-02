@@ -51,8 +51,18 @@ export async function StickyCta({
         The gradient above the bar is what stops content appearing to end
         abruptly under a hard edge.
       */
-      className="fixed inset-x-0 bottom-0 z-30 border-t border-hairline-volt bg-ink/95 backdrop-blur-sm"
-      style={{ paddingBottom: "calc(12px + env(safe-area-inset-bottom))" }}
+      className="fixed inset-x-0 z-30 border-t border-hairline-volt bg-ink/95 pb-3 backdrop-blur-sm"
+      /*
+        ABOVE THE TAB BAR, not behind it. `--tabbar-h` is the bar's footprint
+        including the iPhone home indicator, and 0 at `md` where the bar is not
+        rendered — so this sits on the viewport floor on a desktop and on top
+        of the bar on a phone, from one number. Two hard-coded 64s here and in
+        globals.css is how the button ends up half-covered on one route.
+
+        The bar owns the safe-area inset on a phone, which is why the padding
+        here is a flat 12px: adding the inset again would double it.
+      */
+      style={{ bottom: "var(--tabbar-h)" }}
     >
       <div className="mx-auto w-full max-w-shell px-gutter pt-3">
         <Link

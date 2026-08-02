@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { availableTransitions, listAllGames } from "@/lib/admin/queries";
 import { formatCzk, formatGameDateTime } from "@/lib/format";
+import { ExportCsvLink } from "@/components/admin/ExportCsvLink";
 import { strings } from "@/lib/strings";
 
 export const metadata = { title: strings.admin.gamesTitle };
@@ -23,13 +24,16 @@ export default async function AdminGamesPage() {
         <h2 className="m-0 font-condensed text-[22px] font-bold uppercase tracking-wide text-bone">
           {strings.admin.gamesTitle}
         </h2>
-        <Link
-          href="/admin/games/new"
-          data-testid="new-game"
-          className="rounded-cta bg-volt px-5 py-3 font-condensed text-[15px] font-extrabold uppercase tracking-wide text-surface no-underline"
-        >
-          {strings.admin.newGame}
-        </Link>
+        <div className="flex items-center gap-2">
+          <ExportCsvLink href="/admin/games/export" testId="export-games" />
+          <Link
+            href="/admin/games/new"
+            data-testid="new-game"
+            className="inline-flex min-h-11 items-center rounded-cta bg-volt px-5 font-condensed text-[15px] font-extrabold uppercase tracking-wide text-surface no-underline"
+          >
+            {strings.admin.newGame}
+          </Link>
+        </div>
       </div>
 
       {games.length === 0 ? (

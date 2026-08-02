@@ -97,7 +97,7 @@ test("cancel → credit → release → convert, with nothing pressed in between
   // same request. Cancelling through the API would test a path no player can
   // take and would report the hands-free chain as broken when it is not.
   await signInAs(context, players.organizer);
-  await page.goto("/account");
+  await page.goto("/my-games");
 
   page.once("dialog", (dialog) => dialog.accept());
   await page

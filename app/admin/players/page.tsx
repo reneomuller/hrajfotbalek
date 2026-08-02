@@ -4,6 +4,7 @@ import { GrantCreditForm } from "@/components/admin/GrantCreditForm";
 import { requireAdmin } from "@/lib/auth/requireAdmin";
 import { listPlayers } from "@/lib/admin/queries";
 import { formatCzk } from "@/lib/format";
+import { ExportCsvLink } from "@/components/admin/ExportCsvLink";
 import { strings } from "@/lib/strings";
 
 export const metadata = { title: strings.admin.playersTitle };
@@ -29,13 +30,16 @@ export default async function AdminPlayersPage() {
         <h2 className="m-0 font-condensed text-[22px] font-bold uppercase tracking-wide text-bone">
           {strings.admin.playersTitle}
         </h2>
-        <Link
-          href="/admin/players/merge"
-          data-testid="merge-link"
-          className="font-mono text-[11px] uppercase tracking-eyebrow text-volt no-underline"
-        >
-          {strings.admin.mergeLink}
-        </Link>
+        <div className="flex items-center gap-3">
+          <Link
+            href="/admin/players/merge"
+            data-testid="merge-link"
+            className="font-mono text-[11px] uppercase tracking-eyebrow text-volt no-underline"
+          >
+            {strings.admin.mergeLink}
+          </Link>
+          <ExportCsvLink href="/admin/players/export" testId="export-players" />
+        </div>
       </div>
 
       {players.length === 0 ? (

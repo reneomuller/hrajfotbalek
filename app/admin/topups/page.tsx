@@ -4,6 +4,7 @@ import { confirmTopupAction } from "./actions";
 import { requireAdmin } from "@/lib/auth/requireAdmin";
 import { createServiceRoleSupabaseClient } from "@/lib/supabase/clients";
 import { formatCzk } from "@/lib/format";
+import { ExportCsvLink } from "@/components/admin/ExportCsvLink";
 import { getStrings } from "@/lib/i18n/server";
 
 export const metadata: Metadata = {
@@ -49,9 +50,16 @@ export default async function AdminTopupsPage({
 
   return (
     <div>
-      <h1 className="m-0 font-display text-section-title uppercase tracking-wide text-white">
-        {t.admin.topupsTitle}
-      </h1>
+      <div className="flex flex-wrap items-baseline justify-between gap-3">
+        <h1 className="m-0 font-display text-section-title uppercase tracking-wide text-white">
+          {t.admin.topupsTitle}
+        </h1>
+        {/* The page is a worklist of PENDING top-ups; the file is every one of
+            them. See the route handler — a CSV is opened to answer a question
+            about the past, and one that omitted the confirmed rows would look
+            complete and be useless. */}
+        <ExportCsvLink href="/admin/topups/export" testId="export-topups" />
+      </div>
       <p className="mt-2 text-sm text-white/60">{t.admin.topupsLede}</p>
 
       {(topups ?? []).length === 0 ? (

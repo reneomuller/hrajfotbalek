@@ -6,6 +6,7 @@ import { ConfirmPaymentRow } from "@/components/admin/ConfirmPaymentRow";
 import { GameForm } from "@/components/admin/GameForm";
 import { SettleButton } from "@/components/admin/SettleButton";
 import { TransitionButton } from "@/components/admin/TransitionButton";
+import { ExportCsvLink } from "@/components/admin/ExportCsvLink";
 import { VenueAmenities } from "@/components/admin/VenueAmenities";
 import { VenuePhotoUpload } from "@/components/admin/VenuePhotoUpload";
 import { requireAdmin } from "@/lib/auth/requireAdmin";
@@ -89,12 +90,18 @@ export default async function AdminGamePage({
         <h2 className="m-0 font-condensed text-[22px] font-bold uppercase tracking-wide text-white">
           {game.venue}
         </h2>
-        <span
-          data-testid="admin-game-status"
-          className="font-mono text-[11px] uppercase tracking-eyebrow text-volt-dim"
-        >
-          {strings.admin.status[game.status]}
-        </span>
+        <div className="flex items-center gap-3">
+          <span
+            data-testid="admin-game-status"
+            className="font-mono text-[11px] uppercase tracking-eyebrow text-volt-dim"
+          >
+            {strings.admin.status[game.status]}
+          </span>
+          {/* The roster and its payments — the file an organizer opens beside
+              their banking app. VS-ordered, with what is actually outstanding
+              after wallet credit. */}
+          <ExportCsvLink href={`/admin/games/${game.id}/export`} testId="export-roster" />
+        </div>
       </div>
 
       <dl className="mt-4 grid max-w-[420px] grid-cols-[auto_1fr] gap-x-6 gap-y-1 font-mono text-[12px]">

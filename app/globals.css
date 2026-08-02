@@ -19,6 +19,33 @@
     scroll-behavior: smooth;
   }
 
+  /**
+   * THE BOTTOM TAB BAR'S FOOTPRINT, as one number every layer can read.
+   *
+   * Three things need it and they must agree: the page needs bottom padding so
+   * its last line is not under the bar, the game page's fixed CTA needs to sit
+   * ABOVE the bar rather than behind it, and the bar itself needs its own
+   * height. Three hard-coded 64s is how one of them gets missed and content
+   * ends up permanently unreadable on exactly one route.
+   *
+   * It is a custom property rather than a Tailwind token because it contains
+   * `env(safe-area-inset-bottom)` — the iPhone home indicator's strip — and
+   * Tailwind cannot express `env()` arithmetic in a theme value. A hard-coded
+   * 64px would put the tab labels underneath the indicator.
+   *
+   * Zero at `md`, where the bar is not rendered at all and the header carries
+   * the navigation instead.
+   */
+  :root {
+    --tabbar-h: calc(theme("spacing.tabbar") + env(safe-area-inset-bottom, 0px));
+  }
+
+  @media (min-width: 768px) {
+    :root {
+      --tabbar-h: 0px;
+    }
+  }
+
   body {
     @apply m-0 bg-ink text-bone font-sans antialiased overflow-x-hidden;
   }

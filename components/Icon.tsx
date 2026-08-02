@@ -26,6 +26,10 @@ export type IconName =
   | "link"
   | "arrowLeft"
   | "users"
+  // The bottom tab bar (v1.2 §7).
+  | "ticket"
+  | "list"
+  | "user"
   // The amenity catalog (migration 38). One entry per permitted value, and
   // widening the CHECK means widening this — an amenity with no icon renders
   // as a gap.
@@ -66,6 +70,24 @@ const PATHS: Record<IconName, React.ReactNode> = {
     </>
   ),
   arrowLeft: <path d="M19 12H5m0 0 6-6m-6 6 6 6" />,
+  ticket: (
+    <>
+      <path d="M3 8.4V6.5A1.5 1.5 0 0 1 4.5 5h15A1.5 1.5 0 0 1 21 6.5v1.9a2.6 2.6 0 0 0 0 7.2v1.9a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 17.5v-1.9a2.6 2.6 0 0 0 0-7.2z" />
+      <path d="M14 8.6v1.2M14 13.8V15" />
+    </>
+  ),
+  list: (
+    <>
+      <path d="M9 6.5h11M9 12h11M9 17.5h11" />
+      <path d="m3.6 6.4 1 1 1.8-2M3.6 11.9l1 1 1.8-2M3.6 17.4l1 1 1.8-2" />
+    </>
+  ),
+  user: (
+    <>
+      <circle cx="12" cy="8" r="3.6" />
+      <path d="M4.8 20a7.2 7.2 0 0 1 14.4 0" />
+    </>
+  ),
   users: (
     <>
       <circle cx="9" cy="8" r="3.4" />

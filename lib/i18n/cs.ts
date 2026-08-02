@@ -30,6 +30,10 @@ export const cs: StringsOverlay = {
     cta: "Zaber si místo",
     games: "Zápasy",
     logIn: "Přihlásit se",
+    pass: "Permanentka",
+    myGames: "Moje zápasy",
+    profileShort: "Profil",
+    primary: "Hlavní navigace",
     profile: "Můj profil",
     home: "Hraj Fotbal — domů",
   },
@@ -324,6 +328,11 @@ export const cs: StringsOverlay = {
   },
 
   account: {
+    myGamesTitle: "Moje zápasy",
+    myGamesLink: "Zobrazit všechny moje zápasy →",
+    myGamesEmpty:
+      "Zatím sis nezabral místo. Vyber zápas z nástěnky a objeví se tady.",
+    myGamesEmptyCta: "Najdi zápas →",
     title: "Můj účet",
     myBookings: "Moje rezervace",
     noBookings: "Zatím žádné rezervace.",

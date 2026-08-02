@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Anton, Barlow_Condensed, JetBrains_Mono, Manrope } from "next/font/google";
+import { BottomTabBar } from "@/components/BottomTabBar";
 import { LocaleProvider } from "@/components/LocaleProvider";
 import { SessionProvider } from "@/components/SessionProvider";
 import { SiteBackground } from "@/components/SiteBackground";
@@ -139,8 +140,22 @@ export default async function RootLayout({
                  bytes changed — the same cache-busting value `/account` uses. */
               photoVersion={player?.created_at ?? null}
             />
-            {children}
-            <SiteFooter />
+            {/*
+              `--tabbar-h` is the bottom bar's footprint including the iPhone
+              home indicator, and 0 at `md` where the bar is not rendered. One
+              number, read here and by the game page's fixed CTA, so the last
+              line of a page can never end up permanently behind the bar — see
+              app/globals.css.
+            */}
+            <div className="flex-1" style={{ paddingBottom: "var(--tabbar-h)" }}>
+              {children}
+              <SiteFooter />
+            </div>
+
+            {/* Phone widths only. On a desktop this would be a phone
+                affordance pinned to the bottom of a large screen, miles from
+                anything — the header carries the navigation there. */}
+            <BottomTabBar />
           </SessionProvider>
         </LocaleProvider>
       </body>

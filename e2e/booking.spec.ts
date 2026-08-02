@@ -147,7 +147,9 @@ test("a cancelled booking returns its value as wallet credit", async ({ page, co
     p_confirmed_by: players.organizer.id,
   });
 
-  await page.goto("/account");
+  // The fixture list moved to `/my-games` (v1.2 §7); the balance it credits
+  // still lives on `/account`, which is why the cancel action revalidates both.
+  await page.goto("/my-games");
 
   // Cancelling asks for confirmation on purpose — the value comes back as
   // wallet credit rather than money, so it is not fully reversible from the
@@ -163,12 +165,12 @@ test("a cancelled booking returns its value as wallet credit", async ({ page, co
     .filter({ has: page.locator(`a[href="/game/${game.id}"]`) });
   await row.getByTestId("cancel-booking").click();
 
-  // Re-read the page rather than asserting on the in-place success message:
-  // `revalidatePath("/account")` re-renders the list, so the row that was
-  // clicked may already be gone, and the balance lives in a sibling server
-  // component anyway.
+  // Re-read the ACCOUNT page rather than asserting on the in-place success
+  // message: the cancel revalidates the list this was clicked from, so the row
+  // may already be gone — and the balance lives on the other route now, which
+  // is exactly the thing the two-route revalidation exists to keep in step.
   await expect(async () => {
-    await page.reload();
+    await page.goto("/account");
     await expect(page.getByTestId("credit-balance")).toContainText(String(game.priceCzk));
   }).toPass({ timeout: 15_000 });
 

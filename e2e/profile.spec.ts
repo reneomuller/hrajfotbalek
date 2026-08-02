@@ -122,7 +122,7 @@ test("topped-up credit spends on the next booking", async ({ page, context }) =>
   await expect(page.getByTestId("credit-balance")).toContainText("2,000");
 });
 
-test("the account page shows a photo slot, security controls and history", async ({
+test("the account page shows a photo slot and the security controls", async ({
   page,
   context,
 }) => {
@@ -150,9 +150,14 @@ test("the account page shows a photo slot, security controls and history", async
   await page.getByTestId("change-password-link").click();
   await expect(page.getByTestId("current-password")).toBeVisible();
 
-  // Phase 10: the two tenses, and a played count.
-  await expect(page.getByTestId("games-played")).toBeVisible();
   await expect(page.getByTestId("topup-cta")).toBeVisible();
+
+  // Phase 10's two tenses and the played count are on `/my-games` now (v1.2
+  // §7) — the account page keeps the way there.
+  await expect(page.getByTestId("games-played")).toHaveCount(0);
+  await page.getByTestId("my-games-link").click();
+  await page.waitForURL("**/my-games");
+  await expect(page.getByTestId("games-played")).toBeVisible();
 });
 
 test("another player's top-up is not readable", async () => {

@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
 import { ToastFromQuery } from "@/components/ToastFromQuery";
 import Link from "next/link";
-import { PlayerHistory } from "@/components/account/PlayerHistory";
-import { splitHistory } from "@/lib/booking/history";
 import { CreditBalance } from "@/components/CreditBalance";
 import { CreditBatches } from "@/components/account/CreditBatches";
 import { SecurityLinks } from "@/components/account/SecurityLinks";
@@ -10,7 +8,7 @@ import { PhotoUpload } from "@/components/account/PhotoUpload";
 import { avatarUrl } from "@/lib/storage/avatar";
 import { initials } from "@/lib/roster/initials";
 import { requireCurrentPlayer } from "@/lib/auth/session";
-import { getOwnCreditBalance, listOwnBookings } from "@/lib/booking/queries";
+import { getOwnCreditBalance } from "@/lib/booking/queries";
 import { listMyBatches } from "@/lib/pass/queries";
 import { getStrings } from "@/lib/i18n/server";
 import { signOutAction } from "./actions";
@@ -27,7 +25,9 @@ export async function generateMetadata(): Promise<Metadata> {
 export const dynamic = "force-dynamic";
 
 /**
- * Account page — bookings, wallet, self-cancel, deletion request.
+ * Account page — who you are, your wallet, and the three account controls.
+ *
+ * NO LONGER THE FIXTURE LIST (v1.2 §7): that is `/my-games`, with its own tab.
  *
  * Gated server-side by `requireCurrentPlayer`, and gated a second time by RLS:
  * every read below is own-row only, so even a bug in this gate could not
@@ -42,8 +42,7 @@ export default async function AccountPage({
   const query = searchParams ? await searchParams : {};
   const player = await requireCurrentPlayer("/account");
 
-  const [bookings, balanceCzk, batches] = await Promise.all([
-    listOwnBookings(),
+  const [balanceCzk, batches] = await Promise.all([
     getOwnCreditBalance(),
     // The wallet broken into batches (§4.2). A single number cannot say that
     // 750 of a 900 balance runs out on the 3rd, which is the one thing a pass
@@ -142,7 +141,20 @@ export default async function AccountPage({
         </Link>
       </div>
 
-      <PlayerHistory history={splitHistory(bookings)} />
+      {/*
+        THE FIXTURE LIST MOVED TO `/my-games` (v1.2 §7). It was the single
+        most-visited thing on this page and it sat three-quarters of the way
+        down, behind a photo upload and a wallet, on a page named after
+        administration. It has its own route and its own tab now; this is the
+        way there for anyone who still comes looking here.
+      */}
+      <Link
+        href="/my-games"
+        data-testid="my-games-link"
+        className="mt-8 block font-condensed text-[15px] font-bold uppercase tracking-wide text-volt no-underline"
+      >
+        {t.account.myGamesLink}
+      </Link>
 
       {/*
         Deletion is by email request only — there is deliberately no self-serve

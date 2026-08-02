@@ -106,7 +106,12 @@ export async function cancelBookingAction(
 
   // The issued credit must show up in the balance immediately — the ledger is
   // the authority and the page recomputes it server-side on the next render.
+  // BOTH ROUTES. The balance lives on `/account` and the fixture list moved to
+  // `/my-games` (v1.2 §7); the cancel form is rendered on the second and the
+  // credit it issues shows on the first, so revalidating one of them leaves the
+  // other stale — which reads as "the money did not come back".
   revalidatePath("/account");
+  revalidatePath("/my-games");
   if (booking?.game_id) revalidatePath(`/game/${booking.game_id}`);
 
   /*

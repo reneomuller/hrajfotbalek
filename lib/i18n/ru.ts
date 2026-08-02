@@ -29,6 +29,10 @@ export const ru: StringsOverlay = {
     cta: "Занять место",
     games: "Матчи",
     logIn: "Войти",
+    pass: "Абонемент",
+    myGames: "Мои матчи",
+    profileShort: "Профиль",
+    primary: "Главная навигация",
     profile: "Мой профиль",
     home: "Hraj Fotbal — на главную",
   },
@@ -325,6 +329,11 @@ export const ru: StringsOverlay = {
   },
 
   account: {
+    myGamesTitle: "Мои матчи",
+    myGamesLink: "Все мои матчи →",
+    myGamesEmpty:
+      "Ты ещё не занял место. Выбери матч на доске — и он появится здесь.",
+    myGamesEmptyCta: "Найти матч →",
     title: "Мой аккаунт",
     myBookings: "Мои брони",
     noBookings: "Броней пока нет.",

@@ -4,6 +4,7 @@ import { requireAdmin } from "@/lib/auth/requireAdmin";
 import { formatCzk, formatDate } from "@/lib/format";
 import { getAdminStats, ratio } from "@/lib/stats/queries";
 import { readStatWindow, STAT_WINDOWS, type StatWindow } from "@/lib/stats/window";
+import { ExportCsvLink } from "@/components/admin/ExportCsvLink";
 import { strings } from "@/lib/strings";
 
 export const metadata = { title: strings.admin.statsTitle };
@@ -57,9 +58,17 @@ export default async function AdminStatsPage({
 
   return (
     <>
-      <h2 className="m-0 font-condensed text-[22px] font-bold uppercase tracking-wide text-bone">
-        {strings.admin.statsTitle}
-      </h2>
+      <div className="flex flex-wrap items-baseline justify-between gap-3">
+        <h2 className="m-0 font-condensed text-[22px] font-bold uppercase tracking-wide text-bone">
+          {strings.admin.statsTitle}
+        </h2>
+        {/* The export carries the SELECTED window, so the file matches the
+            screen it was taken from rather than a default period. */}
+        <ExportCsvLink
+          href={`/admin/stats/export?window=${window}`}
+          testId="export-stats"
+        />
+      </div>
       <p className="mt-2 max-w-[560px] text-[13px] leading-relaxed text-muted-dim">
         {strings.admin.statsLede}
       </p>

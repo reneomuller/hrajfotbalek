@@ -28,6 +28,16 @@ export const strings = {
     // place saying something different.
     logIn: "Sign in",
     profile: "My profile",
+    /*
+     * The bottom tab bar's four labels (v1.2 §7). Short because they sit under
+     * a 22px icon in a quarter of a phone's width — "My profile" wraps there
+     * and a wrapped tab label is what makes a tab bar look homemade.
+     */
+    pass: "Pass",
+    myGames: "My games",
+    profileShort: "Profile",
+    /** The accessible name of the tab bar itself. */
+    primary: "Main navigation",
     home: "Hraj Fotbal — home",
     // Shown only to an is_admin session. Hiding it hides nothing — the gate is
     // `requireAdmin()` in the admin layout — but the panel had no door before.
@@ -506,6 +516,12 @@ export const strings = {
   },
 
   account: {
+    // --- /my-games (v1.2 §7) -------------------------------------------------
+    myGamesTitle: "My games",
+    myGamesLink: "See all my games →",
+    myGamesEmpty:
+      "You have not claimed a spot yet. Pick a game from the board and your fixtures will show up here.",
+    myGamesEmptyCta: "Find a game →",
     title: "My account",
     myBookings: "My bookings",
     noBookings: "No bookings yet.",
@@ -683,6 +699,8 @@ export const strings = {
       "Pending top-ups, sorted by variable symbol — the same order as your bank statement. Leave the amount blank to credit what was asked for.",
     topupsEmpty: "No top-ups waiting.",
     topupsConfirm: "✓ Received",
+    // One label for all five exports — see components/admin/ExportCsvLink.tsx.
+    exportCsv: "Export CSV",
     navTopups: "Top-ups",
     navSite: "Home page",
 

@@ -123,6 +123,14 @@ const config: Config = {
       spacing: {
         gutter: "22px",
         nav: "64px",
+        /*
+         * The bottom tab bar's content height, WITHOUT the safe-area inset —
+         * the inset is added at the render site via the `--tabbar-h` custom
+         * property in globals.css, because Tailwind cannot express `env()`
+         * arithmetic in a token and a hard-coded 64px would put the tab labels
+         * under an iPhone's home indicator.
+         */
+        tabbar: "64px",
       },
       borderRadius: {
         chip: "5px",

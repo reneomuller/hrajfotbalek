@@ -8,6 +8,12 @@ import { getStrings } from "@/lib/i18n/server";
 /**
  * Site-wide header, rendered once from the root layout.
  *
+ * PHONE WIDTHS SHED THE LINKS, NOT THE HEADER (v1.2 §7). The bottom tab bar
+ * carries Games, Pass, My games and Profile at thumb height; two controls
+ * saying "Games" on one screen is one of them being ignored. What stays at
+ * every width is the wordmark, the language switcher and the auth control —
+ * see the `md:flex` span below for why the switcher in particular cannot move.
+ *
  * ONE "LOG IN" BUTTON — AND THIS REVERSES v1.1.2'S TWO DOORS (§3.1a, v1.1.4).
  * That ruling put Log in and Sign up in the header as distinct entries, on the
  * reasoning that with passwords they are different acts and a returning player
@@ -76,16 +82,29 @@ export async function SiteHeader({
         </Link>
 
         <nav className="flex shrink-0 items-center gap-2">
-          {primaryNavLinks({ isAdmin }, t).map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              data-testid={`nav-${link.href.split("/")[1]}`}
-              className="font-condensed text-[13px] font-bold uppercase tracking-wide text-bone no-underline transition hover:text-volt"
-            >
-              {link.label}
-            </Link>
-          ))}
+          {/*
+            HIDDEN ON A PHONE, WHERE THE TAB BAR CARRIES THESE (v1.2 §7). Two
+            controls saying "Games" on one screen is one of them being ignored,
+            and the header is the one a thumb cannot reach.
+
+            The wordmark, the language switcher and the auth control below stay
+            at every width. Removing the language switcher from a phone would
+            strand exactly the reader who needs it — §3.1a: someone who cannot
+            read the page must be able to find its way out without reading
+            anything.
+          */}
+          <span className="hidden items-center gap-2 md:flex">
+            {primaryNavLinks({ isAdmin }, t).map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                data-testid={`nav-${link.href.split("/")[1]}`}
+                className="font-condensed text-[13px] font-bold uppercase tracking-wide text-bone no-underline transition hover:text-volt"
+              >
+                {link.label}
+              </Link>
+            ))}
+          </span>
 
           {signedIn ? (
             <Link

@@ -293,3 +293,55 @@ test("C11-admin-amenities", async ({ page, context }) => {
     await destroyScratchGame(game.id);
   }
 });
+
+/** Item 15 — the app shell: bottom tabs, and the CTA stacked above them. */
+test("D15-app-shell", async ({ page, context }) => {
+  const game = await createScratchGame({ hoursFromNow: 24 * 4, capacity: 12 });
+
+  try {
+    await page.goto("/games", { waitUntil: "networkidle" });
+    await expect(page.getByTestId("bottom-tabs")).toBeVisible();
+    await strip(page, "D15-tab-bar-games");
+
+    // The one place two fixed things stack.
+    await page.goto(`/game/${game.id}`, { waitUntil: "networkidle" });
+    await strip(page, "D15-tab-bar-under-sticky-cta");
+
+    await page.goto("/pass", { waitUntil: "networkidle" });
+    await strip(page, "D15-tab-bar-pass-active");
+
+    const { signInAs } = await import("./helpers/session.ts");
+    await signInAs(context, players.runner);
+    await page.goto("/my-games", { waitUntil: "networkidle" });
+    await strip(page, "D15-my-games");
+
+    await page.goto("/account", { waitUntil: "networkidle" });
+    await strip(page, "D15-account-without-fixtures");
+  } finally {
+    await destroyScratchGame(game.id);
+  }
+});
+
+/** Item 16 — the five exports, in place on the tables they belong to. */
+test("D16-admin-exports", async ({ page, context }) => {
+  const game = await createScratchGame({ hoursFromNow: 24 * 6, capacity: 8 });
+
+  try {
+    const { signInAs } = await import("./helpers/session.ts");
+    await signInAs(context, players.organizer);
+
+    for (const [path, testId, name] of [
+      ["/admin/games", "export-games", "D16-admin-games"],
+      ["/admin/players", "export-players", "D16-admin-players"],
+      ["/admin/topups", "export-topups", "D16-admin-topups"],
+      ["/admin/stats", "export-stats", "D16-admin-stats"],
+      [`/admin/games/${game.id}`, "export-roster", "D16-admin-game-roster"],
+    ] as const) {
+      await page.goto(path, { waitUntil: "networkidle" });
+      await expect(page.getByTestId(testId)).toBeVisible();
+      await strip(page, name);
+    }
+  } finally {
+    await destroyScratchGame(game.id);
+  }
+});
