@@ -726,9 +726,11 @@ test("spots left is coloured by absolute count: volt, amber, then red", async ({
  * empty frame.
  *
  * The scratch venue deliberately has no `image_path`, which is why it is the
- * fixture for this: the panel used to draw its vignette, pin and chips whether
- * or not a photo existed, so a venue without one got 220px of decoration that
- * looked like an image still loading.
+ * fixture for this. The ruling survives the v1.2 rebuild unchanged: the hero
+ * used to draw its vignette, pin and chips whether or not a photo existed, so
+ * a venue without one got 220px of decoration that looked like an image still
+ * loading. Now it is a compact text header, and the assertion is the same one
+ * — a photo-less hero must not be a tall box.
  */
 test("a venue with no photo renders name and Open map, with no empty frame", async ({
   page,
@@ -738,16 +740,14 @@ test("a venue with no photo renders name and Open map, with no empty frame", asy
   try {
     await page.goto(`/game/${game.id}`);
 
-    await expect(page.getByTestId("venue-panel-no-photo")).toBeVisible();
-    await expect(page.getByTestId("venue-panel-photo")).toHaveCount(0);
-    await expect(page.getByTestId("venue-open-map")).toBeVisible();
-    await expect(page.getByTestId("venue-panel-no-photo")).toContainText("E2E Scratch Pitch");
+    const hero = page.getByTestId("game-hero");
+    await expect(hero).toHaveAttribute("data-photo", "false");
+    await expect(hero).toContainText("E2E Scratch Pitch");
+    await expect(hero.locator("img")).toHaveCount(0);
 
-    // The frame is what "no empty frame" is about: the panel must not be a
-    // tall box. 96px is generous for one line of text and a button, and well
-    // under the 220px the photo panel occupies.
-    const box = await page.getByTestId("venue-panel-no-photo").boundingBox();
-    expect(box!.height).toBeLessThan(96);
+    // The map link moved into the info card, which is where every other thing
+    // you DO with a game now lives.
+    await expect(page.getByTestId("venue-open-map")).toBeVisible();
   } finally {
     await destroyScratchGame(game.id);
   }
@@ -816,6 +816,17 @@ test("booking and cancelling each raise their toast on the page that follows", a
     await page.goto(`/game/${game.id}`);
     await page.getByTestId("cancel-booking").click();
 
+    /*
+     * WAIT FOR THE REDIRECT BEFORE ASSERTING ON WHAT IT RENDERED. `click()`
+     * returns as soon as the form is submitted, so without this the toast
+     * assertion races the server action that produces it — it passed alone and
+     * failed inside the full suite, which is the shape CLAUDE.md already
+     * names. The URL is also the thing under test: the acting request and the
+     * request that renders the confirmation are different requests, and the
+     * kind travels between them in the query string.
+     */
+    await page.waitForURL(/\?.*toast=/);
+
     // Back on the game page, rendered by the server with the toast in the URL.
     await expect(page.getByTestId("toast")).toBeVisible();
     await expect(page.getByTestId("toast")).toContainText("credit");
@@ -843,20 +854,56 @@ test("an unrecognised toast parameter renders no toast at all", async ({ page })
 });
 
 /*
- * REQ-GAME-023 — the practical-info block, in one place rather than scattered.
+ * REQ-GAME-023 — the practical block, and where the equipment half of it went.
+ *
+ * Arrival and duration are true of the GAME and stay. Equipment moved into the
+ * amenity grid (migration 38), where it is a per-venue fact an organizer can
+ * turn off — rather than a promise a string table made about every pitch this
+ * product would ever run.
  */
-test("the detail carries arrival, equipment and duration in one block", async ({ page }) => {
-  const game = await createScratchGame({ durationMinutes: 90 });
+test("the detail carries arrival and duration, with equipment in the venue grid", async ({
+  page,
+}) => {
+  const game = await createScratchGame({
+    durationMinutes: 90,
+    amenities: ["bibs", "gloves", "showers"],
+  });
 
   try {
     await page.goto(`/game/${game.id}`);
+
     const block = page.getByTestId("practical-info");
     await expect(block).toBeVisible();
     await expect(block).toContainText("10 minutes before");
-    await expect(block).toContainText("bibs");
     // The duration agrees with the span at the top of the page, because both
     // resolve through the same helper.
     await expect(block).toContainText("90 minutes");
+
+    // Equipment is a venue claim now, and it is no longer in this block.
+    await expect(block).not.toContainText("bibs");
+
+    const grid = page.getByTestId("amenity-grid");
+    await expect(grid).toBeVisible();
+    await expect(grid.getByTestId("amenity")).toHaveCount(3);
+    await expect(grid.locator('[data-amenity="bibs"]')).toBeVisible();
+    await expect(grid.locator('[data-amenity="showers"]')).toBeVisible();
+  } finally {
+    await destroyScratchGame(game.id);
+  }
+});
+
+/*
+ * v1.2 §5.7 — a venue that provides nothing renders NO CARD, rather than an
+ * empty one. An empty "What's included" is a claim that the venue provides
+ * nothing; a missing card is the absence of a claim.
+ */
+test("a venue with nothing recorded renders no What's-included card", async ({ page }) => {
+  const game = await createScratchGame({ amenities: [] });
+
+  try {
+    await page.goto(`/game/${game.id}`);
+    await expect(page.getByTestId("game-info-card")).toBeVisible();
+    await expect(page.getByTestId("amenity-grid")).toHaveCount(0);
   } finally {
     await destroyScratchGame(game.id);
   }
@@ -871,7 +918,7 @@ test("the detail carries arrival, equipment and duration in one block", async ({
  * not, and the assertion would then be on a broken image rather than on the
  * panel.
  */
-test("a venue with a photo renders the photo panel, the name and Open map", async ({
+test("a venue with a photo renders it full-bleed, with the name over it", async ({
   page,
 }) => {
   const game = await createScratchGame({ withVenuePhoto: true });
@@ -879,21 +926,32 @@ test("a venue with a photo renders the photo panel, the name and Open map", asyn
   try {
     await page.goto(`/game/${game.id}`);
 
-    const panel = page.getByTestId("venue-panel-photo");
-    await expect(panel).toBeVisible();
-    await expect(page.getByTestId("venue-panel-no-photo")).toHaveCount(0);
+    const hero = page.getByTestId("game-hero");
+    await expect(hero).toHaveAttribute("data-photo", "true");
 
     // The image itself, and it actually loaded — a 404 through next/image
     // renders an <img> that is present and zero-sized.
-    const image = panel.locator("img");
+    const image = hero.locator("img");
     await expect(image).toBeVisible();
     const loaded = await image.evaluate(
       (node) => (node as HTMLImageElement).naturalWidth > 0,
     );
     expect(loaded).toBe(true);
 
-    // Name and map, both still on the panel.
-    await expect(panel).toContainText("E2E Photo Pitch");
+    /*
+     * FULL-BLEED IS THE REQUIREMENT (v1.2 §5.4), so it is measured rather than
+     * looked at: the image must reach both edges of the viewport, not sit
+     * inside the page gutter as the old 220px panel did.
+     */
+    const box = (await image.boundingBox())!;
+    const viewport = page.viewportSize()!;
+    expect(box.x).toBeLessThanOrEqual(1);
+    expect(box.width).toBeGreaterThanOrEqual(viewport.width - 1);
+    // And it is the first thing on the page.
+    expect(box.y).toBeLessThan(40);
+
+    // The name is over the photograph, and the map link is in the info card.
+    await expect(hero).toContainText("E2E Photo Pitch");
     await expect(page.getByTestId("venue-open-map")).toBeVisible();
   } finally {
     await destroyScratchGame(game.id);

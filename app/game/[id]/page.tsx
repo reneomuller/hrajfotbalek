@@ -1,21 +1,21 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Roster } from "@/components/Roster";
-import { AvatarRow } from "@/components/game/AvatarRow";
-import { CapacityBar } from "@/components/game/CapacityBar";
-import { FormatChips } from "@/components/game/FormatChips";
-import { SharePair } from "@/components/game/SharePair";
-import { SkillBadges } from "@/components/game/SkillBadges";
+import { AmenityGrid } from "@/components/game/AmenityGrid";
+import { AvailabilityCard } from "@/components/game/AvailabilityCard";
+import { GameHero } from "@/components/game/GameHero";
+import { InfoCard } from "@/components/game/InfoCard";
+import { OrganizerCard } from "@/components/game/OrganizerCard";
+import { PlayersList } from "@/components/game/PlayersList";
+import { StickyCta } from "@/components/game/StickyCta";
 import { ToastFromQuery } from "@/components/ToastFromQuery";
 import { WaitlistPanel } from "@/components/game/WaitlistPanel";
 import { YourBookingPanel } from "@/components/game/YourBookingPanel";
-import { VenueMapPanel } from "@/components/VenueMapPanel";
 import { WaitlistButton } from "@/components/WaitlistButton";
 import { isOnWaitlist, waitlistPosition } from "@/lib/booking/waitlistConvert";
 import { readResumeIntent } from "@/lib/booking/resume";
 import { runJoinWaitlist } from "./waitlist/actions";
 import { getCurrentPlayer, getSessionUser } from "@/lib/auth/session";
-import { formatCzk, formatGameDateTime, formatGameTimeSpan } from "@/lib/format";
+import { formatCzk, formatGameDateTime } from "@/lib/format";
 import { gameEndsAt, resolveDurationMinutes } from "@/lib/games/duration";
 import {
   getGameById,
@@ -26,7 +26,7 @@ import {
   getWaitlist,
 } from "@/lib/games/queries";
 import { gameEventSchema } from "@/lib/games/schemaOrg";
-import { gameUrgency, spotsLeftLabel, urgencyLabel } from "@/lib/games/urgency";
+import { spotsLeftLabel } from "@/lib/games/urgency";
 import { siteUrl } from "@/lib/site";
 import { getStrings } from "@/lib/i18n/server";
 
@@ -122,8 +122,8 @@ export default async function GameDetailPage({ params, searchParams }: GamePageP
 
   const endsAt = gameEndsAt(game.starts_at, game.duration_minutes);
   const isFull = spotsLeft === 0;
-  const urgency = gameUrgency(bookedCount, game.capacity);
   const canAct = !isCancelled && !hasStarted;
+  const shareUrl = `${await siteUrl()}/game/${game.id}`;
 
   // A holder is never offered a claim (§5.6). Everything below branches on
   // this one value rather than each block deciding for itself.
@@ -174,8 +174,17 @@ export default async function GameDetailPage({ params, searchParams }: GamePageP
     city: game.city,
   });
 
+
   return (
-    <main className="relative z-10 mx-auto w-full max-w-shell px-gutter pb-16 pt-24">
+    <main
+      /*
+        `pb-40` clears the sticky CTA. Without it the last section of the page —
+        the lineup — sits permanently behind an opaque bar, which is the
+        classic sticky-footer bug: the content is there, scrollable, and its
+        final rows can never be read.
+      */
+      className="relative z-10 mx-auto w-full max-w-shell px-gutter pb-40"
+    >
       {/*
         JSON-LD. `JSON.stringify` output is inserted into a <script> body, so
         the one dangerous sequence is a literal `</script>` inside admin-supplied
@@ -190,58 +199,40 @@ export default async function GameDetailPage({ params, searchParams }: GamePageP
         }}
       />
 
-      <Link
-        href="/games"
-        className="font-mono text-[11px] uppercase tracking-eyebrow text-muted no-underline"
-      >
-        {t.games.backToGames}
-      </Link>
+      {/*
+        THE ORDER OF THIS PAGE IS THE ARGUMENT IT MAKES (v1.2 §5).
 
-      {/* `venue` is admin-supplied free text; JSX text interpolation escapes it. */}
-      <h1 className="mt-4 font-display text-section-title uppercase tracking-wide text-white">
-        {game.venue}
-      </h1>
+        Hero, then when-and-where, then how-full, then what's-included, then
+        who. It walks the questions a player asks in the order they ask them:
+        where is it, when is it, can I still get in, what do I bring, who is
+        going. The previous order was roughly the order the features shipped in
+        — heading, chips, price, map, notes, counter, CTA, organizer, practical
+        info, share, roster, waitlist — and the reader had to assemble the
+        answer from four places.
 
-      <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-3">
-        {/* The SPAN, not the kick-off alone (§5.2, REQ-GAME-007). The end time
-            comes from `gameEndsAt`, the same call the `.ics` DTEND and the
-            schema.org endDate make, so the page cannot disagree with the
-            calendar entry a player downloads from it. */}
-        <span data-testid="game-time-span" className="font-mono text-[13px] tracking-[1px] text-volt">
-          {formatGameTimeSpan(game.starts_at, endsAt)}
-        </span>
-        <span className="font-mono text-[13px] text-muted">
-          {formatCzk(game.price_czk)}
-        </span>
-        {/* Format, substitutes and surface, exactly as the organizer entered
-            them. Above the map, per §5.3a — and derived from capacity nowhere. */}
-        <FormatChips
-          format={game.format}
-          surface={game.surface}
-          subsPerTeam={game.subs_per_team}
-        />
-        {/* Nothing at all on an all-levels game (§5.3, REQ-GAME-009). */}
-        <SkillBadges levels={game.allowed_skill_levels} />
-      </div>
+        The claim button is no longer part of this order at all: it is fixed to
+        the bottom of the viewport, so it is reachable from wherever the reader
+        happens to form the decision.
+      */}
+      <GameHero venue={game.venue} venueRow={venueRow} supabaseUrl={supabaseUrl} />
 
-      {game.allowed_skill_levels && (
-        <p className="mt-2 font-mono text-[11px] tracking-[1px] text-faint">
-          {t.games.skillNotEnforced}
-        </p>
-      )}
+      <InfoCard
+        game={game}
+        venueRow={venueRow}
+        endsAt={endsAt}
+        shareUrl={shareUrl}
+        shareWhen={formatGameDateTime(game.starts_at)}
+      />
 
-      <div className="mt-6 overflow-hidden rounded-card border border-hairline">
-        <VenueMapPanel venue={game.venue} venueRow={venueRow} className="h-[220px]" />
-      </div>
-
-      {/* Organizer logistics. Free text; JSX escapes it, and `whitespace-pre-line`
-          keeps the admin's line breaks without interpreting anything else. */}
+      {/* Organizer logistics. Free text; JSX escapes it, and
+          `whitespace-pre-line` keeps the admin's line breaks without
+          interpreting anything else. */}
       {game.notes && (
         <div
           data-testid="game-notes"
-          className="mt-5 rounded-card border border-hairline bg-surface-card p-5"
+          className="mt-4 rounded-card border border-hairline bg-surface-card p-5"
         >
-          <div className="font-mono text-[10px] uppercase tracking-eyebrow text-volt-dim">
+          <div className="font-mono text-[10px] uppercase tracking-eyebrow text-muted">
             {t.games.notesLabel}
           </div>
           <p className="mt-2 whitespace-pre-line text-[14px] leading-relaxed text-bone">
@@ -250,51 +241,10 @@ export default async function GameDetailPage({ params, searchParams }: GamePageP
         </div>
       )}
 
-      {/*
-        The count, in the card's language rather than the game page's old one.
-        This used to be `SpotsCounter`, which drew a single proportional bar —
-        the one surface that disagreed with the reference's notch-per-spot bar.
-        Same component as the cards now, so they cannot drift again.
-      */}
-      <div className="mt-7 rounded-card border border-hairline-volt bg-surface-panel p-5">
-        <div className="mb-3 flex items-baseline justify-between gap-3">
-          <span
-            data-testid="urgency-label"
-            className={`font-mono text-[10px] uppercase tracking-[2px] ${
-              urgency === "full" ? "text-faint" : "text-volt-dim"
-            }`}
-          >
-            {urgencyLabel(urgency, t)}
-          </span>
-          <span
-            data-testid="spots-counter"
-            className="font-mono text-[22px] font-bold text-white"
-          >
-            {String(Math.min(bookedCount, game.capacity)).padStart(2, "0")}/{game.capacity}
-          </span>
-        </div>
-
-        <CapacityBar bookedCount={bookedCount} capacity={game.capacity} />
-
-        <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-2 pl-2">
-          <AvatarRow
-            players={roster.map((row) => ({
-              nickname: row.nickname,
-              photoPath: row.photo_path,
-            }))}
-            max={14}
-            supabaseUrl={supabaseUrl}
-          />
-          {!isFull && (
-            <span data-testid="spots-left" className="text-[13px] text-muted-dim">
-              <b className="text-volt">{spotsLeftLabel(bookedCount, game.capacity, t)}</b>
-            </span>
-          )}
-        </div>
-      </div>
+      <AvailabilityCard bookedCount={bookedCount} capacity={game.capacity} />
 
       {isCancelled && (
-        <p className="mt-5 rounded-control border border-hairline-strong px-4 py-3 font-mono text-[11px] tracking-[1px] text-faint">
+        <p className="mt-4 rounded-control border border-hairline-strong px-4 py-3 font-mono text-[11px] tracking-[1px] text-faint">
           {t.games.cancelled}
         </p>
       )}
@@ -310,7 +260,7 @@ export default async function GameDetailPage({ params, searchParams }: GamePageP
       {!isCancelled && hasStarted && (
         <p
           data-testid={inProgress ? "in-progress-notice" : "started-notice"}
-          className="mt-5 rounded-control border border-hairline-strong px-4 py-3 font-mono text-[11px] tracking-[1px] text-faint"
+          className="mt-4 rounded-control border border-hairline-strong px-4 py-3 font-mono text-[11px] tracking-[1px] text-faint"
         >
           {inProgress ? t.games.inProgress : t.games.alreadyStarted}
         </p>
@@ -326,7 +276,9 @@ export default async function GameDetailPage({ params, searchParams }: GamePageP
         `holdsSpot` gates the other two rather than each block deciding for
         itself: the failure being fixed here is a page that asked a player who
         had already paid to claim a spot they were standing on, and that
-        happens whenever two blocks disagree about who the viewer is.
+        happens whenever two blocks disagree about who the viewer is. The
+        sticky CTA at the bottom is bound by the SAME condition, so there is
+        still exactly one claim button in the product (§5.6a).
       */}
       {ownBooking && (
         <YourBookingPanel
@@ -339,7 +291,7 @@ export default async function GameDetailPage({ params, searchParams }: GamePageP
         <>
           <p
             data-testid="full-notice"
-            className="mt-5 rounded-control border border-hairline-strong px-4 py-3 font-mono text-[11px] tracking-[1px] text-faint"
+            className="mt-4 rounded-control border border-hairline-strong px-4 py-3 font-mono text-[11px] tracking-[1px] text-faint"
           >
             {t.games.fullNotice}
           </p>
@@ -351,71 +303,46 @@ export default async function GameDetailPage({ params, searchParams }: GamePageP
         </>
       )}
 
-      {canAct && !holdsSpot && !isFull && (
-        <Link
-          href={`/game/${game.id}/book`}
-          data-testid="book-cta"
-          className="mt-6 block rounded-cta bg-volt px-6 py-4 text-center font-condensed text-cta font-extrabold uppercase tracking-wide text-surface no-underline"
-        >
-          {signedIn ? t.booking.claimSpot : t.booking.logInToClaim}
-        </Link>
-      )}
+      {/* What the venue provides (§5.7). Nothing renders when nothing is
+          recorded — an empty "What's included" card is a claim that the venue
+          provides nothing. */}
+      <AmenityGrid amenities={venueRow?.amenities ?? null} />
 
       {/*
         The organizer. The NAME is public — it tells a player who is running
         the game. The PHONE arrives non-null only for someone holding a spot,
         decided inside `game_organizer_phone()` from the session; there is no
         branch here that could be wrong about it, because there is nothing here
-        to branch on. The note beside it says why they can see it, so the
-        number does not read as something that leaked.
+        to branch on.
       */}
       {organizer.name && (
-        <section
-          data-testid="game-organizer"
-          className="mt-6 rounded-card border border-hairline bg-surface-card p-5"
-        >
-          <div className="font-mono text-[10px] uppercase tracking-eyebrow text-volt-dim">
-            {t.games.organizerLabel}
-          </div>
-          <p className="mt-2 text-[14px] text-bone" data-testid="organizer-name">
-            {organizer.name}
-          </p>
-          {organizer.phone && (
-            <>
-              <a
-                href={`tel:${organizer.phone}`}
-                data-testid="organizer-phone"
-                className="mt-1 inline-block font-mono text-[14px] text-volt no-underline"
-              >
-                {organizer.phone}
-              </a>
-              <p className="mt-1 text-[12px] leading-snug text-muted-dim">
-                {t.games.organizerPhoneNote}
-              </p>
-            </>
-          )}
-        </section>
+        <OrganizerCard name={organizer.name} phone={organizer.phone} />
+      )}
+
+      <PlayersList rows={roster} supabaseUrl={supabaseUrl} />
+
+      {/* The queue, in public. Rendered whenever the game is full or anyone is
+          already waiting — an empty panel on a half-full game would be noise. */}
+      {(isFull || waitlist.length > 0) && (
+        <WaitlistPanel rows={waitlist} viewerNickname={viewerNickname} />
       )}
 
       {/*
-        PRACTICAL INFORMATION (§5.7, REQ-GAME-023).
-
-        The questions someone asks the first time they turn up, in one block
-        rather than scattered down the page. Arrival and equipment are fixed
-        copy — they are true of every game this product runs — and the duration
-        comes from the same resolver every other surface uses, so this block
-        cannot disagree with the time span at the top of the page.
+        PRACTICAL INFORMATION (§5.7, REQ-GAME-023) — what is left of it.
+        Arrival and duration are true of the game rather than of the venue, so
+        they stay here; equipment moved into the amenity grid above, where it
+        is a per-venue fact an organizer can turn off rather than a promise a
+        string table makes about every pitch forever.
       */}
       <section
         data-testid="practical-info"
-        className="mt-6 rounded-card border border-hairline bg-surface-card p-5"
+        className="mt-4 rounded-card border border-hairline bg-surface-card p-5"
       >
         <h2 className="m-0 font-condensed text-[17px] font-bold uppercase tracking-wide text-white">
           {t.games.practicalTitle}
         </h2>
         <ul className="mt-3 flex list-none flex-col gap-2 p-0 text-[14px] leading-relaxed text-bone">
           <li>{t.games.practicalArrival}</li>
-          <li>{t.games.practicalEquipment}</li>
           <li>
             <span className="text-muted">{t.games.practicalDuration}: </span>
             {t.games.practicalDurationValue.replace(
@@ -426,26 +353,18 @@ export default async function GameDetailPage({ params, searchParams }: GamePageP
         </ul>
       </section>
 
-      {/* Copy link primary, WhatsApp secondary (§5.4, REQ-GAME-014). */}
-      <div className="mt-8">
-        <SharePair
-          venue={game.venue}
-          when={formatGameDateTime(game.starts_at)}
-          url={`${await siteUrl()}/game/${game.id}`}
-        />
-      </div>
-
-      <Roster rows={roster} supabaseUrl={supabaseUrl} />
-
-      {/* The queue, in public. Rendered whenever the game is full or anyone is
-          already waiting — an empty panel on a half-full game would be noise. */}
-      {(isFull || waitlist.length > 0) && (
-        <WaitlistPanel rows={waitlist} viewerNickname={viewerNickname} />
-      )}
-
       {/* Booking created, cancelled, or signed in — whichever the redirect
           that landed here carried. */}
       <ToastFromQuery query={query} />
+
+      {/*
+        THE ONE CLAIM BUTTON, bound by exactly the condition the inline block
+        it replaced used. A holder never sees it; a full game offers the
+        waitlist above instead; a cancelled or started game offers nothing.
+      */}
+      {canAct && !holdsSpot && !isFull && (
+        <StickyCta gameId={game.id} priceCzk={game.price_czk} signedIn={signedIn} />
+      )}
     </main>
   );
 }

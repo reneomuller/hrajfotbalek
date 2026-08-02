@@ -63,11 +63,12 @@ insert into public.bookings (game_id, player_id, status, payment_method, price_c
 
 set local role anon;
 
--- WIDENED IN PHASE 15, and the edit is deliberate rather than accommodating.
--- Contract §4a (v1.1.3) ratified `photo_path` joining this projection, IN
--- ADVANCE, with the rendering that consumes it shipping in the same change.
--- The assertion moves because the ruling moved it; it stays exhaustive because
--- that is what makes the next widening impossible to do quietly.
+-- WIDENED TWICE, and each edit is deliberate rather than accommodating.
+-- Contract §4a (v1.1.3) ratified `photo_path` joining this projection in Phase
+-- 15, and `games_played` joins it in migration 39 under the same rule — the
+-- widening and the rendering that consumes it in one change. The assertion
+-- moves because the ruling moved it; it stays EXHAUSTIVE because that is what
+-- makes the next widening impossible to do quietly.
 --
 -- The withholding assertion below is UNCHANGED and is the one that matters:
 -- player_id, email and phone did not cross and are not going to.
@@ -75,8 +76,8 @@ select pg_temp.ok(
   (select array_agg(column_name::text order by column_name)
      from information_schema.columns
     where table_schema = 'public' and table_name = 'game_roster_public')
-  = array['game_id', 'nickname', 'photo_path', 'status'],
-  'the view projects EXACTLY game_id, nickname, status, photo_path',
+  = array['game_id', 'games_played', 'nickname', 'photo_path', 'status'],
+  'the view projects EXACTLY game_id, nickname, status, photo_path, games_played',
   (select string_agg(column_name, ', ' order by column_name)
      from information_schema.columns
     where table_schema = 'public' and table_name = 'game_roster_public'));

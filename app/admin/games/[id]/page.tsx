@@ -6,6 +6,7 @@ import { ConfirmPaymentRow } from "@/components/admin/ConfirmPaymentRow";
 import { GameForm } from "@/components/admin/GameForm";
 import { SettleButton } from "@/components/admin/SettleButton";
 import { TransitionButton } from "@/components/admin/TransitionButton";
+import { VenueAmenities } from "@/components/admin/VenueAmenities";
 import { VenuePhotoUpload } from "@/components/admin/VenuePhotoUpload";
 import { requireAdmin } from "@/lib/auth/requireAdmin";
 import {
@@ -62,8 +63,8 @@ export default async function AdminGamePage({
     getGameOrganizer(game.id),
   ]);
 
-  const venuePhoto =
-    venues.find((venue) => venue.id === game.venue_id)?.image_path ?? null;
+  const venueRow = venues.find((venue) => venue.id === game.venue_id) ?? null;
+  const venuePhoto = venueRow?.image_path ?? null;
 
   const roster = activeBookings(bookings);
   // Already VS-sorted by the query — the order the organizer's banking app
@@ -263,6 +264,21 @@ export default async function AdminGamePage({
           <VenuePhotoUpload
             venueId={game.venue_id}
             hasPhoto={Boolean(venuePhoto)}
+          />
+
+          {/* What the pitch provides, feeding the game page's "What's
+              included" grid. Same surface as the photo and for the same
+              reason — and like the photo, it writes to the VENUE, so every
+              game at this pitch gets it. */}
+          <h3 className="m-0 mb-3 mt-8 font-condensed text-[18px] font-bold uppercase tracking-wide text-bone">
+            {strings.admin.venueAmenitiesTitle}
+          </h3>
+          <p className="mb-3 max-w-[520px] text-[12px] leading-snug text-muted-dim">
+            {strings.admin.venueAmenitiesHint}
+          </p>
+          <VenueAmenities
+            venueId={game.venue_id}
+            current={venueRow?.amenities ?? []}
           />
         </section>
       )}

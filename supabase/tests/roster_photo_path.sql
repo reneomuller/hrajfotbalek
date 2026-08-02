@@ -115,15 +115,18 @@ select pg_temp.ok_call(
   'no such column',
   'the view still projects no phone');
 
--- The exhaustive form: four columns, named, in order. A future widening has to
--- edit this line, which is the point — it cannot happen quietly.
+-- The exhaustive form: every column, named, IN ORDER. A future widening has to
+-- edit this line, which is the point — it cannot happen quietly. `games_played`
+-- (migration 39) is appended last because `create or replace view` can only
+-- append, which is also what keeps the first four at their existing positions
+-- for any `select *`.
 select pg_temp.ok(
   (select array_agg(attname::text order by attnum)
      from pg_attribute
     where attrelid = 'public.game_roster_public'::regclass
       and attnum > 0 and not attisdropped)
-    = array['game_id', 'nickname', 'status', 'photo_path'],
-  'the view projects exactly these four columns and no fifth');
+    = array['game_id', 'nickname', 'status', 'photo_path', 'games_played'],
+  'the view projects exactly these five columns and no sixth');
 
 -- =============================================================================
 -- The status filter, which the widening must not have disturbed

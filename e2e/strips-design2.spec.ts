@@ -188,3 +188,108 @@ test("B5-admin-numbers", async ({ page, context }) => {
   await expect(page.getByTestId("active-players-input")).toBeVisible();
   await strip(page, "B5-admin-editable-numbers");
 });
+
+/**
+ * Items 8–14 — the rebuilt game detail, in two passes.
+ *
+ * A venue WITH a photo and one without, because the hero is the item where the
+ * two states differ most and "graceful no-photo fallback" is half the ask.
+ * Signed in for the second pass: the organizer's phone, the WhatsApp
+ * affordance and the priced CTA only exist for someone who could act on them.
+ */
+test("C8-C14-game-detail", async ({ page }) => {
+  const game = await createScratchGame({
+    hoursFromNow: 24 * 3,
+    capacity: 12,
+    priceCzk: 250,
+    format: "6v6v6",
+    subsPerTeam: 2,
+    durationMinutes: 90,
+    allowedSkillLevels: ["intermediate"],
+    withVenuePhoto: true,
+    amenities: ["bibs", "gloves", "balls", "water", "showers", "parking", "lockers"],
+  });
+
+  try {
+    // Two players on the roster, so the lineup shows faces and counts rather
+    // than an empty state.
+    const organizer = await apiClientFor(players.organizer);
+    for (const playerId of [players.runner.id, players.creditPartial.id]) {
+      await organizer.rpc("admin_create_booking", {
+        p_game_id: game.id,
+        p_player_id: playerId,
+        p_payment_method: "cash",
+      });
+    }
+
+    // --- signed out: what a shared WhatsApp link opens --------------------
+    await page.goto(`/game/${game.id}`, { waitUntil: "networkidle" });
+
+    // Item 8 — full-bleed hero with the name over it.
+    await expect(page.getByTestId("game-hero")).toHaveAttribute("data-photo", "true");
+    await strip(page, "C8-hero-full-bleed");
+
+    // Items 9 + 10 — the info card and the availability FOMO treatment.
+    await page.getByTestId("game-info-card").scrollIntoViewIfNeeded();
+    await strip(page, "C9-info-card");
+
+    await page.getByTestId("availability-card").scrollIntoViewIfNeeded();
+    await strip(page, "C10-availability");
+
+    // Item 11 — what's included.
+    await page.getByTestId("amenity-grid").scrollIntoViewIfNeeded();
+    await expect(page.getByTestId("amenity")).toHaveCount(7);
+    await strip(page, "C11-whats-included");
+
+    // Item 13 — the players list with games-played counts.
+    await page.getByTestId("players-list").scrollIntoViewIfNeeded();
+    await strip(page, "C13-players-list");
+
+    // Item 14 — the CTA is still there after scrolling to the bottom, which is
+    // the entire reason it is fixed rather than sticky.
+    await page.getByTestId("practical-info").scrollIntoViewIfNeeded();
+    await expect(page.getByTestId("sticky-cta")).toBeInViewport();
+    await strip(page, "C14-sticky-cta-at-the-bottom");
+
+    // --- signed in: the organizer's number and the priced button -----------
+    const { signInAs } = await import("./helpers/session.ts");
+    await signInAs(page.context(), players.organizer);
+    await page.goto(`/game/${game.id}`, { waitUntil: "networkidle" });
+
+    // Item 12 — organizer with avatar and a WhatsApp affordance.
+    await page.getByTestId("game-organizer").scrollIntoViewIfNeeded();
+    await strip(page, "C12-organizer-card");
+  } finally {
+    await destroyScratchGame(game.id);
+  }
+});
+
+/** Item 8 — the no-photo fallback, which is half of what "graceful" means. */
+test("C8-game-detail-no-photo", async ({ page }) => {
+  const game = await createScratchGame({ hoursFromNow: 24 * 5, amenities: [] });
+
+  try {
+    await page.goto(`/game/${game.id}`, { waitUntil: "networkidle" });
+    await expect(page.getByTestId("game-hero")).toHaveAttribute("data-photo", "false");
+    // And no "What's included" card at all, rather than an empty one.
+    await expect(page.getByTestId("amenity-grid")).toHaveCount(0);
+    await strip(page, "C8-hero-no-photo");
+  } finally {
+    await destroyScratchGame(game.id);
+  }
+});
+
+/** Item 11 — the admin surface behind the grid. */
+test("C11-admin-amenities", async ({ page, context }) => {
+  const game = await createScratchGame({ hoursFromNow: 24 * 7 });
+
+  try {
+    const { signInAs } = await import("./helpers/session.ts");
+    await signInAs(context, players.organizer);
+    await page.goto(`/admin/games/${game.id}`, { waitUntil: "networkidle" });
+    await page.getByTestId("amenity-bibs").scrollIntoViewIfNeeded();
+    await strip(page, "C11-admin-what-this-pitch-provides");
+  } finally {
+    await destroyScratchGame(game.id);
+  }
+});

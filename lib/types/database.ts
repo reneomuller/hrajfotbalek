@@ -357,11 +357,18 @@ export interface Database {
           /** `/venues/<file>` under `public/`, CHECK-constrained. Never a URL. */
           image_path: string | null;
           map_query: string | null;
+          /**
+           * Closed catalog (migration 38) — `venues_amenities_catalog` is the
+           * enforcement and `lib/venues/amenities.ts` is the render list. Never
+           * null: the column defaults to an empty array, because "no amenities
+           * recorded" and "we do not know" are the same thing here.
+           */
+          amenities: string[];
           city: string;
           brand: string;
           created_at: string;
         };
-        /** Written only by `admin_create_venue`. */
+        /** Written only by `admin_create_venue` and `set_venue_amenities`. */
         Insert: never;
         Update: never;
         Relationships: [];
@@ -526,6 +533,14 @@ export interface Database {
           status: BookingStatus;
           /** Nullable: most players never upload one, and initials are the fallback. */
           photo_path: string | null;
+          /**
+           * PLAYED and SETTLED games only (migration 39) — never bookings on
+           * upcoming ones. Nullable because `count(*)` through the correlated
+           * subquery is typed nullable by Postgres even though it cannot be;
+           * the render site treats a null as "do not print a count" rather than
+           * as zero.
+           */
+          games_played: number | null;
         };
         Relationships: [];
       };
@@ -801,6 +816,14 @@ export interface Database {
       clear_venue_photo: {
         Args: { p_venue_id: string };
         Returns: string | null;
+      };
+      /**
+       * Admin-only. REPLACES the venue's amenity set — unticking a box has to
+       * be a real operation — and returns it deduplicated and sorted.
+       */
+      set_venue_amenities: {
+        Args: { p_venue_id: string; p_amenities: string[] };
+        Returns: string[];
       };
 
       /** Admin-only moderation. Returns the path the caller must delete. */

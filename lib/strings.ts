@@ -316,6 +316,11 @@ export const strings = {
     filledLabel: "FILLED",
     joinNote: "One tap to claim. Pay ahead from your phone.",
     openMap: "OPEN MAP ↗",
+    // The full-width version on the rebuilt detail page. The short one is a
+    // chip over a photograph where space is the constraint; this one is a
+    // 44px-tall row where the constraint is that someone standing outside the
+    // pitch in the dark can hit it.
+    openMapFull: "Open location in Maps",
     mapAlt: "Map of the venue",
     // The panel is a real photograph of the pitch now, not a traced map, so
     // the alt text names the venue rather than describing a diagram.
@@ -349,6 +354,10 @@ export const strings = {
 
     // --- organizer -----------------------------------------------------------
     organizerLabel: "Organizer",
+    // Shown under the name when there is no phone to show — a card with a face
+    // and a name and then nothing reads as something that failed to load.
+    organizerRole: "Runs this game",
+    organizerWhatsApp: "Message the organizer on WhatsApp",
     // Shown to a player holding a spot, and to nobody else. The line says so,
     // so the number does not look like something that leaked.
     organizerPhoneNote: "Visible to you because you have a spot on this game.",
@@ -362,9 +371,50 @@ export const strings = {
     yourBookingManage: "Manage your booking",
 
     // --- practical info (§5.7) -----------------------------------------------
+    // --- availability / lineup (v1.2 §5.6) ----------------------------------
+    availabilityLabel: "Availability",
+    // The supporting detail under the bar. Was "07/12" in 22px mono, which is
+    // two numbers the reader has to subtract before it means anything.
+    playersOfCapacity: "{booked} / {capacity} players",
+    playersTitle: "Players ({count})",
+    /*
+     * How many games this player has actually PLAYED — settled or played
+     * games, never bookings. A counter that rose when you booked would be
+     * measuring intent.
+     *
+     * THREE FORMS, and the third is the one that matters. "0 games" beside
+     * someone standing in their first lineup reads as a verdict on them; "First
+     * game" reads as a welcome, and it is the same fact. The singular exists
+     * because "1 games" is the kind of thing a reader notices and nothing else
+     * on the page recovers from.
+     */
+    gamesPlayed: "{count} games",
+    gamePlayedOne: "1 game",
+    gamesPlayedNone: "First game",
+
+    // --- what's included (v1.2 §5.7) ----------------------------------------
+    includedTitle: "What's included",
+    /*
+     * The amenity catalog, in the same order `lib/venues/amenities.ts` renders
+     * it. Every key here has a matching value in `venues_amenities_catalog`
+     * (migration 38) and an icon in `components/Icon.tsx` — three places, one
+     * list, and widening any of them means widening all three.
+     */
+    amenities: {
+      bibs: "Bibs provided",
+      gloves: "Goalkeeper gloves",
+      balls: "Match balls",
+      water: "Water",
+      drinks: "Drinks",
+      showers: "Showers",
+      lockers: "Lockers",
+      parking: "Parking",
+      wifi: "WiFi",
+      first_aid: "First aid",
+    },
+
     practicalTitle: "Before you come",
     practicalArrival: "Come 10 minutes before kick-off.",
-    practicalEquipment: "Training bibs, goalie gloves and balls are provided.",
     practicalDuration: "Duration",
     practicalDurationValue: "{minutes} minutes",
 
@@ -692,6 +742,11 @@ export const strings = {
     venueImageHint:
       "A file already committed under public/venues/ — e.g. prazacka.jpg. Leave empty for no photo.",
     // --- venue photograph (§5.4, migration 34) --------------------------------
+    venueAmenitiesTitle: "What this pitch provides",
+    venueAmenitiesHint:
+      "Ticked items appear on the game page as \"What's included\". This is a property of the VENUE, so every game at this pitch shows the same set — and unticking one is how you stop the page promising it.",
+    venueAmenitiesSubmit: "Save what's provided",
+    venueAmenitiesFailed: "We could not save that. Please try again.",
     venuePhotoTitle: "Pitch photo",
     venuePhotoUpload: "Upload a photo",
     venuePhotoReplace: "Replace the photo",
@@ -1166,6 +1221,9 @@ export const strings = {
     batchesExpiring: "{amount} left · expires {date}",
     batchesNever: "{amount} · never expires",
     batchesNone: "No expiring credit.",
+    // Under the sticky claim button on a game page. Someone about to pay full
+    // price for one game is exactly who pre-buying is worth anything to.
+    tryThePass: "Or try the Game Pass →",
   },
 
   toast: {

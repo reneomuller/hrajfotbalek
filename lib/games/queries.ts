@@ -303,15 +303,16 @@ export async function getVenue(venueId: string | null): Promise<VenueRow | null>
 export async function getRoster(gameId: string): Promise<RosterRow[]> {
   const supabase = await createServerSupabaseClient();
 
-  // PII BOUNDARY: this projection is nickname, status and photo_path, and must
-  // stay that way. The view cannot expose player_id/email/phone — it does not
-  // project them — but selecting `*` here would still be a latent hazard, and
-  // Phase 15 is the proof: the view GAINED a column and this list is where a
-  // reviewer sees that the widening reached the render deliberately rather
-  // than by a wildcard nobody looked at.
+  // PII BOUNDARY: this projection is nickname, status, photo_path and
+  // games_played, and must stay that way. The view cannot expose
+  // player_id/email/phone — it does not project them — but selecting `*` here
+  // would still be a latent hazard, and this list is the proof twice over: the
+  // view gained `photo_path` in Phase 15 and `games_played` in migration 39,
+  // and each time a reviewer sees the widening reach the render deliberately
+  // rather than through a wildcard nobody looked at.
   const { data, error } = await supabase
     .from("game_roster_public")
-    .select("game_id, nickname, status, photo_path")
+    .select("game_id, nickname, status, photo_path, games_played")
     .eq("game_id", gameId);
 
   if (error || !data) return [];

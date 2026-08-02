@@ -77,13 +77,21 @@ test("the anonymous roster exposes a nickname, a status and a photo path, and no
     // columns we hope are absent: a new column added to the view would
     // otherwise sail through this test.
     //
-    // `photo_path` was added in Phase 15 (migration 29) under contract §4a,
-    // ratified in advance. This list moving is the mechanism working: the
-    // widening could not happen without someone editing this line and the
-    // matching one in `supabase/tests/04_game_roster_public.sql` on purpose.
+    // `photo_path` was added in Phase 15 (migration 29) and `games_played` in
+    // migration 39, both under contract §4a and both ratified in advance. This
+    // list moving is the mechanism working: neither widening could happen
+    // without someone editing this line and the matching ones in
+    // `supabase/tests/04_game_roster_public.sql` and `roster_photo_path.sql`
+    // on purpose.
     for (const row of data ?? []) {
       const keys = Object.keys(row).sort();
-      expect(keys).toEqual(["game_id", "nickname", "photo_path", "status"]);
+      expect(keys).toEqual([
+        "game_id",
+        "games_played",
+        "nickname",
+        "photo_path",
+        "status",
+      ]);
       // No email address rode along with it — the cheapest possible check for
       // the single worst thing this view could ever leak.
       expect(JSON.stringify(row)).not.toContain("@");

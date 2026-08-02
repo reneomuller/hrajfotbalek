@@ -121,6 +121,7 @@ export async function createScratchGame({
   format = null,
   publish = true,
   withVenuePhoto = false,
+  amenities,
 }: {
   capacity?: number;
   priceCzk?: number;
@@ -143,6 +144,16 @@ export async function createScratchGame({
   publish?: boolean;
   /** Put the game at the scratch venue that HAS a photo (REQ-GAME-012). */
   withVenuePhoto?: boolean;
+  /**
+   * What the scratch VENUE provides (migration 38).
+   *
+   * Undefined leaves it alone; an explicit array replaces it. The scratch
+   * venues are shared across specs and this writes to the venue rather than
+   * the game, so a spec that sets it must set it to what it needs rather than
+   * assuming what the last one left — which is why `undefined` and `[]` mean
+   * different things here.
+   */
+  amenities?: string[];
 } = {}): Promise<ScratchGame> {
   const organizer = await apiClientFor(players.organizer);
   const admin = serviceClient();
@@ -153,8 +164,18 @@ export async function createScratchGame({
   // v2 since Phase 13 — the function the admin form actually calls. Building
   // fixtures through the orphaned v1 pair would leave every scratch game
   // without an organizer, which is exactly the state §5 says cannot exist.
+  const venueId = withVenuePhoto ? await photoVenueId(admin) : await scratchVenueId(admin);
+
+  if (amenities !== undefined) {
+    const { error: amenityError } = await organizer.rpc("set_venue_amenities", {
+      p_venue_id: venueId,
+      p_amenities: amenities,
+    });
+    if (amenityError) throw new Error(`set_venue_amenities: ${amenityError.message}`);
+  }
+
   const { data: id, error } = await organizer.rpc("admin_create_game_v2", {
-    p_venue_id: withVenuePhoto ? await photoVenueId(admin) : await scratchVenueId(admin),
+    p_venue_id: venueId,
     p_starts_at: startsAt,
     p_capacity: capacity,
     p_price_czk: priceCzk,

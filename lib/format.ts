@@ -80,6 +80,28 @@ export function formatTimeSpan(
   return `${formatTime(startsAt)}–${formatTime(endsAt)}`;
 }
 
+/**
+ * e.g. "Thu 3 Jul" — the game's DAY, with no time and no year.
+ *
+ * The weekday is the part a player reads first — "which evening is this" — and
+ * the year is noise on a page that only ever shows games in the next few weeks.
+ * Distinct from `formatDate`, which carries the year and drops the weekday
+ * because it is used on receipts and ledger rows, where the opposite is true.
+ */
+export function formatGameDate(value: Date | string | number): string {
+  const parts = new Intl.DateTimeFormat(DISPLAY_LOCALE, {
+    timeZone: DISPLAY_TIME_ZONE,
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+  }).formatToParts(toDate(value));
+
+  const get = (type: Intl.DateTimeFormatPartTypes) =>
+    parts.find((p) => p.type === type)?.value ?? "";
+
+  return `${get("weekday")} ${get("day")} ${get("month")}`;
+}
+
 /** e.g. "3 Jul 2026" — date only. */
 export function formatDate(value: Date | string | number): string {
   return new Intl.DateTimeFormat(DISPLAY_LOCALE, {

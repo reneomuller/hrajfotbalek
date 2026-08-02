@@ -213,6 +213,39 @@ async function seed(): Promise<void> {
     venueIds.set(name, data as string);
   }
 
+  /*
+   * What each pitch provides (migration 38).
+   *
+   * DELIBERATELY UNEVEN. If every seeded venue carried the same set, the
+   * "What's included" grid would render identically everywhere and nothing
+   * would exercise the case the column exists for — a pitch that does NOT lend
+   * gloves. So one venue is bare metal, one is fully equipped, and the rest sit
+   * between. The bare one is also the fixture proving the grid disappears
+   * entirely rather than rendering an empty card.
+   */
+  const venueAmenities: Record<string, string[]> = {
+    "Praha 3 — Pražačka": ["bibs", "gloves", "balls", "water", "showers", "parking"],
+    "Praha 7 — Letná": ["bibs", "balls", "showers", "lockers", "drinks", "wifi", "first_aid"],
+    "Praha 4 — Podolí": ["bibs", "gloves", "balls"],
+    "Praha 8 — Libeň": ["bibs", "balls", "water", "parking"],
+    "Praha 5 — Smíchov": ["bibs", "gloves", "balls", "showers", "lockers"],
+    "Praha 6 — Dejvice": [],
+  };
+
+  for (const [name, amenities] of Object.entries(venueAmenities)) {
+    const venueId = venueIds.get(name);
+    if (!venueId) continue;
+    check(
+      `set amenities ${name}`,
+      (
+        await admin.rpc("set_venue_amenities", {
+          p_venue_id: venueId,
+          p_amenities: amenities,
+        })
+      ).error,
+    );
+  }
+
   // Games are inserted as DRAFT and reach every other status through the real
   // transition RPCs. games.status is a state-bearing column: the insert is a
   // base row, but no UPDATE of it happens outside an RPC.
