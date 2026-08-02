@@ -167,17 +167,35 @@ insert into public.games (id, venue, venue_id, starts_at, capacity, price_czk, s
 -- =============================================================================
 
 select pg_temp.ok(
-  (select count(*) = 6 from public.pass_tiers),
-  'six tiers ship');
+  (select count(*) = 5 from public.pass_tiers),
+  'five tiers ship — the pass starts at five games (migration 36)');
 
 select pg_temp.ok(
   (select bool_and(credited_czk = games * 150) from public.pass_tiers),
   'credited value is always games x 150 — the CHECK, restated as an assertion');
 
+-- THE 1-GAME TIER IS GONE, and the assertion is that it cannot come back: the
+-- floor is a CHECK rather than a convention, so the next person restoring a
+-- seed list by copying the old one is refused rather than quietly reinstating
+-- an "offer" that offers nothing.
 select pg_temp.ok(
-  (select price_czk = 150 and credited_czk = 150 and expires_months is null
-     from public.pass_tiers where games = 1),
-  'the 1-game tier is not a discount and does not expire — the ordinary top-up, priced honestly');
+  (select not exists (select 1 from public.pass_tiers where games < 5)),
+  'no tier below five games survives');
+
+-- A `do` block rather than `ok_call`: that helper wraps its argument as a
+-- sub-select, and a data-modifying statement cannot be one (error 42601). The
+-- same reason the top-up probes elsewhere in this file are do-blocks.
+do $$
+begin
+  insert into public.pass_tiers (games, price_czk, credited_czk, expires_months)
+  values (1, 150, 150, null);
+
+  perform pg_temp.ok(false,
+    'a sub-five tier is refused by the constraint, not merely absent from the seed');
+exception when check_violation then
+  perform pg_temp.ok(sqlerrm like '%pass_tiers_minimum_games%',
+    'a sub-five tier is refused by the constraint, not merely absent from the seed');
+end $$;
 
 select pg_temp.ok(
   (select price_czk = 700 and credited_czk = 750 and expires_months = 1
@@ -185,13 +203,13 @@ select pg_temp.ok(
   'the 5-pass: 700 buys 750, expiring in a month');
 
 select pg_temp.ok(
-  (select count(distinct price_czk) = 6 from public.pass_tiers),
+  (select count(distinct price_czk) = count(*) from public.pass_tiers),
   'every tier price is distinct — the exact-price match depends on it');
 
 select set_config('role', 'anon', true);
 select pg_temp.ok_call(
   $q$select count(*) from public.pass_tiers$q$,
-  '6',
+  '5',
   'anon reads the tiers — the pass panel renders for a signed-out visitor');
 reset role;
 

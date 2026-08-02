@@ -20,7 +20,17 @@ import type { GameSurface, SkillLevel } from "@/lib/types/database";
 export const SURFACES: GameSurface[] = ["turf", "grass", "indoor", "sand"];
 
 /** Mirrors `games_format_format`. */
-const FORMAT_RE = /^[0-9]{1,2}v[0-9]{1,2}$/;
+/**
+ * Two sides, or three. `6v6`, `7v7v7`.
+ *
+ * MIRRORS `games_format_format` (migration 35) and must keep mirroring it. The
+ * database is the enforcement; this exists so an organizer is told at the field
+ * rather than by a constraint-name error after submitting. The three-way was
+ * added because eighteen players on one pitch is routinely run as 6v6v6 with
+ * the losing side rotating off, and until now the only way to record that was
+ * to leave the field blank.
+ */
+const FORMAT_RE = /^[0-9]{1,2}v[0-9]{1,2}(v[0-9]{1,2})?$/;
 
 /** Mirrors `venues_image_path_format`, minus the leading directory. */
 const IMAGE_FILE_RE = /^[A-Za-z0-9][A-Za-z0-9._-]{0,80}\.(png|jpg|jpeg|webp|avif)$/i;

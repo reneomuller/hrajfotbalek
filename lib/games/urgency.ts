@@ -21,6 +21,46 @@ import { strings, type Strings } from "@/lib/strings";
 
 export type Urgency = "open" | "lastFew" | "full";
 
+/**
+ * THE COLOUR LADDER, which is a different question from the copy ladder above.
+ *
+ * `gameUrgency` asks "is this game nearly gone, relative to its own size" — a
+ * proportion, because three spots on a 22-a-side game is not the same news as
+ * three on a 12. `spotsTone` asks "what colour is this number", and v1.2 §5.5
+ * rules that in ABSOLUTE spots: amber at ten or fewer, red at three or fewer.
+ *
+ * They are deliberately not the same function. Colour is read pre-attentively,
+ * before the reader has taken in the capacity — it has to mean the same thing
+ * on every row of a list where the games are different sizes, and a
+ * proportional colour would paint a nearly-empty 8-a-side red beside a
+ * half-full 20-a-side in volt. The copy, which is read after the number, can
+ * afford to be relative.
+ *
+ * THE CONSEQUENCE IS VISIBLE AND INTENDED: a 16-spot game with 4 left is amber
+ * while its eyebrow still reads "Spots open", because four of sixteen is not
+ * proportionally urgent and four spots is still few. Recorded so the next
+ * reader does not "fix" it into agreement.
+ */
+export type SpotsTone = "plenty" | "few" | "critical" | "full";
+
+/** Ten or fewer spots turns the number amber. */
+export const SPOTS_TONE_FEW = 10;
+/** Three or fewer turns it red. */
+export const SPOTS_TONE_CRITICAL = 3;
+
+/** How many spots are actually left, floored at zero. */
+export function spotsLeftCount(bookedCount: number, capacity: number): number {
+  return Math.max(0, Math.trunc(capacity) - Math.max(0, Math.trunc(bookedCount)));
+}
+
+export function spotsTone(bookedCount: number, capacity: number): SpotsTone {
+  const left = spotsLeftCount(bookedCount, capacity);
+  if (left === 0) return "full";
+  if (left <= SPOTS_TONE_CRITICAL) return "critical";
+  if (left <= SPOTS_TONE_FEW) return "few";
+  return "plenty";
+}
+
 /** How many spots left still counts as "almost full", for a given capacity. */
 export function lastFewThreshold(capacity: number): number {
   const spots = Math.max(0, Math.trunc(capacity));

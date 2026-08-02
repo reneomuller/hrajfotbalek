@@ -69,6 +69,11 @@ const INTENTIONALLY_UNTRANSLATED = new Set([
   // "you@example.com" is an example address, not a sentence — it reads the
   // same in all three languages and localising the domain would be noise.
   "auth.emailPlaceholder",
+  // "Game Pass" is the product's NAME. The strapline under it is translated in
+  // both overlays; the name is not, so that a player can be told about it in a
+  // WhatsApp group where three languages are spoken and everyone recognises
+  // the same two words on the panel.
+  "pass.panelTitle",
 ]);
 
 function flatten(value: unknown, prefix = ""): Map<string, string> {

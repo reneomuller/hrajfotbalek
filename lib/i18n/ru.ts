@@ -401,15 +401,13 @@ export const ru: StringsOverlay = {
   pass: {
     title: "Игровой абонемент",
     lede: "Купи матчи заранее со скидкой. Деньги попадут в кошелёк как кредит и сами применятся к следующей брони.",
-    panelTitle: "Пополни абонемент",
-    panelBody: "Купи матчи заранее со скидкой.",
-    panelCta: "Посмотреть абонементы →",
+    // The product name stays English in every locale — see lib/strings.ts.
+    panelTitle: "Game Pass",
+    panelBody: "Купи матчи заранее со скидкой",
     tierGames: "{count} матчей",
-    tierOneGame: "1 матч",
     tierPerGame: "{amount} за матч",
     tierCredited: "Получишь кредит {amount}",
     tierSaving: "Экономия {amount}",
-    tierNoSaving: "Обычная цена",
     tierExpiresOne: "Действует 1 месяц с момента зачисления",
     tierExpiresMany: "Действует {count} месяца с момента зачисления",
     tierNeverExpires: "Без срока",

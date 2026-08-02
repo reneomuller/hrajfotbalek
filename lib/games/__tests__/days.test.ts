@@ -42,57 +42,85 @@ describe("pragueDayKey", () => {
 describe("buildDayTabs", () => {
   const now = "2026-08-03T09:00:00Z"; // Monday, 11:00 in Prague
 
-  it("counts the games on each day and orders the tabs by date", () => {
-    const tabs = buildDayTabs(
-      [
-        "2026-08-05T17:00:00Z",
-        "2026-08-03T17:00:00Z",
-        "2026-08-04T17:00:00Z",
-        "2026-08-04T19:00:00Z",
-      ],
-      now,
-      strings,
-    );
+  it("runs a CONTINUOUS window from today — rest days included", () => {
+    // Monday and Wednesday, with nothing on Tuesday. Tuesday still gets a chip.
+    // Closing up the gaps was what made the strip unable to answer "how far
+    // away is this": two adjacent chips meant consecutive days or three weeks
+    // apart with equal likelihood.
+    const tabs = buildDayTabs(["2026-08-03T17:00:00Z", "2026-08-05T17:00:00Z"], now);
 
-    expect(tabs.map((t) => [t.key, t.count])).toEqual([
+    expect(tabs.slice(0, 3).map((t) => [t.key, t.count])).toEqual([
       ["2026-08-03", 1],
-      ["2026-08-04", 2],
+      ["2026-08-04", 0],
       ["2026-08-05", 1],
     ]);
   });
 
-  it("labels today and tomorrow relatively, and the rest by weekday", () => {
-    const tabs = buildDayTabs(
-      ["2026-08-03T17:00:00Z", "2026-08-04T17:00:00Z", "2026-08-05T17:00:00Z"],
-      now,
-      strings,
-    );
+  it("carries a real date on every chip — weekday over day of month", () => {
+    const tabs = buildDayTabs(["2026-08-03T17:00:00Z"], now);
 
-    expect(tabs.map((t) => t.label)).toEqual([
-      strings.games.dayToday,
-      strings.games.dayTomorrow,
-      "Wed",
-    ]);
+    // The 3rd of August 2026 is a Monday. The chip reads MON over 3, which is
+    // a date; the old strip read "Today 1", where the 1 was a game count that
+    // every reader took for a date.
+    expect(tabs[0]).toMatchObject({
+      key: "2026-08-03",
+      weekday: "MON",
+      dayOfMonth: "3",
+      isToday: true,
+    });
+    expect(tabs[1]).toMatchObject({ weekday: "TUE", dayOfMonth: "4", isToday: false });
   });
 
-  it("gives no tab to a day with no games — the count is never zero", () => {
-    // Monday and Wednesday, with nothing on Tuesday.
-    const tabs = buildDayTabs(["2026-08-03T17:00:00Z", "2026-08-05T17:00:00Z"], now, strings);
-    expect(tabs).toHaveLength(2);
-    expect(tabs.every((tab) => tab.count > 0)).toBe(true);
-    expect(tabs.map((t) => t.key)).not.toContain("2026-08-04");
+  it("starts at today, never before it", () => {
+    // A game that already kicked off today still belongs to today's chip, but
+    // nothing earlier is drawn: the list is upcoming games.
+    const tabs = buildDayTabs(["2026-08-03T17:00:00Z"], now);
+    expect(tabs[0].key).toBe("2026-08-03");
+    expect(tabs.every((t) => t.key >= "2026-08-03")).toBe(true);
   });
 
-  it("returns nothing at all when there are no games", () => {
-    expect(buildDayTabs([], now, strings)).toEqual([]);
+  it("covers a fortnight even when the board is empty", () => {
+    // The strip is a calendar. An empty board is a fortnight of rest days,
+    // which the picker declines to render at all — but that is the picker's
+    // decision to make, not this function's.
+    const tabs = buildDayTabs([], now);
+    expect(tabs).toHaveLength(14);
+    expect(tabs.every((t) => t.count === 0)).toBe(true);
+  });
+
+  it("EXTENDS past the fortnight to reach the furthest game", () => {
+    // The window is a floor, not a cap. A strip that stopped at day fourteen
+    // would make a game on day twenty unreachable by filter — the same class
+    // of defect as the mode-not-filter bug this control already had once.
+    const tabs = buildDayTabs(["2026-08-25T17:00:00Z"], now);
+    expect(tabs.at(-1)!.key).toBe("2026-08-25");
+    expect(tabs.length).toBeGreaterThan(14);
+  });
+
+  it("crosses a month boundary without repeating or skipping a date", () => {
+    const tabs = buildDayTabs([], "2026-08-25T09:00:00Z");
+    const keys = tabs.map((t) => t.key);
+    expect(new Set(keys).size).toBe(keys.length);
+    expect(keys).toContain("2026-08-31");
+    expect(keys).toContain("2026-09-01");
+  });
+
+  it("crosses the autumn DST change without repeating or skipping a date", () => {
+    // Prague falls back on 2026-10-25, making that a 25-hour day. A window
+    // built by adding 86,400,000ms to a local midnight lands twice on the
+    // 25th; this one is built from midday, which no offset shift can move.
+    const tabs = buildDayTabs([], "2026-10-20T09:00:00Z");
+    const keys = tabs.map((t) => t.key);
+    expect(new Set(keys).size).toBe(keys.length);
+    expect(keys).toContain("2026-10-24");
+    expect(keys).toContain("2026-10-25");
+    expect(keys).toContain("2026-10-26");
   });
 
   it("puts a late-evening game on the day the players would name it", () => {
     // 22:30Z on Monday is 00:30 Tuesday in Prague, and belongs to Tuesday.
-    const tabs = buildDayTabs(["2026-08-03T22:30:00Z"], now, strings);
-    expect(tabs).toHaveLength(1);
-    expect(tabs[0].key).toBe("2026-08-04");
-    expect(tabs[0].label).toBe(strings.games.dayTomorrow);
+    const tabs = buildDayTabs(["2026-08-03T22:30:00Z"], now);
+    expect(tabs.find((t) => t.count > 0)!.key).toBe("2026-08-04");
   });
 });
 
@@ -148,12 +176,21 @@ describe("groupByDay", () => {
 
 describe("resolveSelectedDay", () => {
   const tabs = [
-    { key: "2026-08-03", label: "Today", count: 1 },
-    { key: "2026-08-05", label: "Wed", count: 2 },
+    { key: "2026-08-03", weekday: "MON", dayOfMonth: "3", count: 1, isToday: true },
+    { key: "2026-08-04", weekday: "TUE", dayOfMonth: "4", count: 0, isToday: false },
+    { key: "2026-08-05", weekday: "WED", dayOfMonth: "5", count: 2, isToday: false },
   ];
 
   it("honours a requested day that has games", () => {
     expect(resolveSelectedDay("2026-08-05", tabs)).toBe("2026-08-05");
+  });
+
+  it("refuses a day that is drawn but empty", () => {
+    // The strip covers a rolling fortnight so it can be a calendar; the filter
+    // still only accepts days there is something to filter to. Without this, a
+    // link shared on the day of a game and opened after it lands on an empty
+    // list instead of the whole board.
+    expect(resolveSelectedDay("2026-08-04", tabs)).toBeNull();
   });
 
   it("selects NOTHING by default — the whole list is the resting state", () => {

@@ -303,7 +303,7 @@ test("the pass tiers, the panel above the list, and the wallet in batches", asyn
 
     // The tiers, with every expiry stated above its button.
     await page.goto("/pass", { waitUntil: "networkidle" });
-    await expect(page.getByTestId("pass-tier")).toHaveCount(6);
+    await expect(page.getByTestId("pass-tier")).toHaveCount(5);
     await strip(page, "20a-pass-tiers");
 
     // A real pass in a real wallet, shown as a batch with its date and its

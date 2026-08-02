@@ -700,7 +700,7 @@ export const strings = {
     priceLabel: "Price (CZK)",
     priceHint: "Applies to future bookings only — existing bookings keep their price.",
     formatLabel: "Format (optional)",
-    formatHint: "Like 6v6. Leave empty if it varies.",
+    formatHint: "Like 6v6, or 6v6v6 for a rotating three-way. Leave empty if it varies.",
     surfaceLabel: "Surface (optional)",
     surfaceNone: "Not specified",
     surfaceOptions: {
@@ -751,7 +751,7 @@ export const strings = {
     capacityBelowBooked:
       "Capacity cannot go below the players already booked. Cancel a booking first.",
     priceInvalid: "Price must be 0 or more.",
-    formatInvalid: "Format looks like 6v6 — two numbers with a v between them.",
+    formatInvalid: "Format looks like 6v6, or 6v6v6 — two or three numbers with a v between them.",
     notesTooLong: "Notes are limited to 500 characters.",
     organizerNameRequired: "Name whoever is running this game.",
     organizerNameTooLong: "The organizer name is limited to 60 characters.",
@@ -1112,15 +1112,36 @@ export const strings = {
   pass: {
     title: "Game pass",
     lede: "Pre-buy games at a discount. It goes into your wallet as credit and applies itself to your next booking.",
-    panelTitle: "Top up your pass",
-    panelBody: "Pre-buy games at a discount.",
-    panelCta: "See the passes →",
+    /*
+     * "Game Pass" IS THE PRODUCT NAME and stays in English in every locale —
+     * see the Czech and Russian overlays, which translate the strapline beneath
+     * it and leave this alone. A name that changes per locale is a name nobody
+     * can be told about in a WhatsApp group where three languages are spoken.
+     *
+     * There is no CTA string any more: the whole panel is the link and the
+     * arrow says so. "See the passes →" beside a title and a strapline was the
+     * third phrase that pushed the panel past a 360px viewport.
+     */
+    panelTitle: "Game Pass",
+    panelBody: "Pre-buy games at a discount",
+    /*
+     * THE 1-GAME TIER IS GONE (ruled 2026-08-02), and with it `tierOneGame` and
+     * `tierNoSaving`. It was listed at par — 150 for 150, never expiring — on
+     * the reasoning that a reference point makes the other discounts legible.
+     * In practice it was an "offer" that offered nothing, sitting first, where
+     * the best offer should be; a reader who stopped at the top of the page
+     * concluded the pass was not a discount at all. The reference price is
+     * still stated once, in "How it works", which is where an explanation
+     * belongs rather than in a card with a Buy button on it.
+     *
+     * The row is deleted from `pass_tiers` too (migration 36), not merely
+     * hidden — a tier the page will not sell but `create_pass_topup` will still
+     * accept is a price list with a second, invisible entry.
+     */
     tierGames: "{count} games",
-    tierOneGame: "1 game",
     tierPerGame: "{amount} a game",
     tierCredited: "You get {amount} of credit",
     tierSaving: "Save {amount}",
-    tierNoSaving: "The standard price",
     // Stated LOUDLY and before the button, per §4.2: an expiry discovered
     // after purchase is a complaint; an expiry read before it is a choice.
     tierExpiresOne: "Expires 1 month after it lands",

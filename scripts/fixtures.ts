@@ -36,6 +36,20 @@ export interface GameFixture {
   startsInHours: number;
   capacity: number;
   priceCzk: number;
+  /**
+   * `6v6`, or `6v6v6` for a rotating three-way. Null means the organizer did
+   * not say, which is a real state and one game keeps it.
+   *
+   * THESE WERE ALL NULL UNTIL v1.2, and that was a hole in the fixtures rather
+   * than a decision: every seeded game rendered no format chip and no surface
+   * chip, so the row's chip line was never actually exercised by a strip or a
+   * spec. It read as "the chips do not work". The same shape of gap as the
+   * skill badges, found the same way.
+   */
+  format: string | null;
+  surface: "turf" | "grass" | "indoor" | "sand" | null;
+  /** Detail-page only — rows deliberately do not carry it (v1.2 §5.5). */
+  subsPerTeam: number | null;
 }
 
 /** Shared password for seeded auth users. Dev fixtures only. */
@@ -117,6 +131,9 @@ export const games = {
     startsInHours: 24 * 10,
     capacity: 12,
     priceCzk: 200,
+    format: "6v6",
+    surface: "turf",
+    subsPerTeam: 2,
   },
   published: {
     id: "5eed0000-0000-0000-0000-00000000b002",
@@ -124,6 +141,9 @@ export const games = {
     startsInHours: 24 * 5,
     capacity: 12,
     priceCzk: 200,
+    format: "6v6",
+    surface: "turf",
+    subsPerTeam: 2,
   },
   full: {
     id: "5eed0000-0000-0000-0000-00000000b003",
@@ -131,6 +151,9 @@ export const games = {
     startsInHours: 24 * 6,
     capacity: 2,
     priceCzk: 200,
+    format: "1v1",
+    surface: "indoor",
+    subsPerTeam: null,
   },
   played: {
     id: "5eed0000-0000-0000-0000-00000000b004",
@@ -138,6 +161,9 @@ export const games = {
     startsInHours: 24 * 3,
     capacity: 12,
     priceCzk: 200,
+    format: "6v6",
+    surface: "grass",
+    subsPerTeam: 1,
   },
   settled: {
     id: "5eed0000-0000-0000-0000-00000000b005",
@@ -145,6 +171,9 @@ export const games = {
     startsInHours: 24 * 4,
     capacity: 12,
     priceCzk: 200,
+    format: "6v6",
+    surface: "turf",
+    subsPerTeam: null,
   },
   cancelled: {
     id: "5eed0000-0000-0000-0000-00000000b006",
@@ -152,6 +181,9 @@ export const games = {
     startsInHours: 24 * 7,
     capacity: 12,
     priceCzk: 200,
+    format: "6v6",
+    surface: "turf",
+    subsPerTeam: null,
   },
   /** Where wallet credit is minted, via real overpayment confirmations. */
   creditSource: {
@@ -160,6 +192,9 @@ export const games = {
     startsInHours: 24 * 8,
     capacity: 12,
     priceCzk: 200,
+    format: "4v4v4",
+    surface: "indoor",
+    subsPerTeam: null,
   },
   /** Holds the expired-booking fixture. */
   expiry: {
@@ -168,6 +203,9 @@ export const games = {
     startsInHours: 24 * 9,
     capacity: 12,
     priceCzk: 200,
+    format: "6v6",
+    surface: "sand",
+    subsPerTeam: null,
   },
   /**
    * Output-escaping fixture. `venue` is admin-supplied free text that reaches
@@ -183,6 +221,12 @@ export const games = {
     startsInHours: 24 * 11,
     capacity: 12,
     priceCzk: 200,
+    // The "organizer said nothing" case, kept deliberately. Required-and-null
+    // rather than absent so adding a fourth optional field cannot skip it
+    // silently — every game must state what it does not have.
+    format: null,
+    surface: null,
+    subsPerTeam: null,
   },
 } satisfies Record<string, GameFixture>;
 

@@ -82,7 +82,6 @@ export default async function GamesPage({
   const dayTabs = buildDayTabs(
     games.map(({ game }) => game.starts_at),
     now,
-    t,
   );
   const requested = typeof query.day === "string" ? query.day : undefined;
   const selectedDay = resolveSelectedDay(requested, dayTabs);
@@ -130,7 +129,7 @@ export default async function GamesPage({
           />
         </div>
       ) : (
-        <div className="mt-4 flex flex-col gap-5" data-testid="game-list">
+        <div className="mt-3 flex flex-col gap-4" data-testid="game-list">
           {grouped.map((day) => (
             <section key={day.key} data-testid="day-group" data-day={day.key}>
               {/* The heading carries the date as well as the relative word:
@@ -138,11 +137,11 @@ export default async function GamesPage({
                   past it. */}
               <h2
                 data-testid="day-heading"
-                className="m-0 mb-2 font-mono text-[10px] uppercase tracking-eyebrow text-volt-dim"
+                className="m-0 mb-[6px] font-mono text-[10px] uppercase tracking-eyebrow text-volt-dim"
               >
                 {day.label}
               </h2>
-              <div className="flex flex-col gap-3">
+              <div className="flex flex-col gap-2">
                 {day.items.map(({ game, bookedCount }) => (
                   <GameRow
                     key={game.id}

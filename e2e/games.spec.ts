@@ -6,11 +6,13 @@ import { pragueDayKey } from "../lib/games/days.ts";
 /**
  * The list URL for the day a given game falls on.
  *
- * The games list filters by Prague calendar day (§5.5) and defaults to the
- * FIRST day that has games — so a spec asserting on a game two weeks out has
- * to ask for that game's day. Deriving the key from the stored kick-off rather
- * than from the offset the spec asked for keeps this correct across midnight
- * and across a DST boundary.
+ * The list now defaults to EVERY upcoming game, so this is no longer needed to
+ * make a game two weeks out visible — a plain `/games` finds it. It is kept
+ * because it still isolates one game's row from a board that grows as specs
+ * add scratch games, which is what most of the callers actually wanted.
+ *
+ * Deriving the key from the stored kick-off rather than from the offset the
+ * spec asked for keeps it correct across midnight and across a DST boundary.
  */
 function listUrlFor(game: { startsAt: string }): string {
   return `/games?day=${pragueDayKey(game.startsAt)}`;
@@ -481,10 +483,12 @@ test("well more than three games are visible at phone width, without scrolling",
 });
 
 /*
- * REQ-GAME-021 — the day picker filters, and its counts describe the days.
+ * REQ-GAME-021 — the day strip is a calendar of REAL DATES that filters the
+ * list (v1.2 §5.5). It used to print a game count beside a weekday, which
+ * every reader took for a date.
  */
-test("the day picker filters the list and counts each day", async ({ page }) => {
-  // Two days apart, so the tabs are unambiguous whatever hour the suite runs.
+test("the day strip filters the list, by the date on the chip", async ({ page }) => {
+  // Two days apart, so the chips are unambiguous whatever hour the suite runs.
   const dayOne = await createScratchGame({ hoursFromNow: 24 * 10 });
   const dayTwoA = await createScratchGame({ hoursFromNow: 24 * 12 });
   const dayTwoB = await createScratchGame({ hoursFromNow: 24 * 12 + 1 });
@@ -493,34 +497,76 @@ test("the day picker filters the list and counts each day", async ({ page }) => 
     await page.goto("/games");
     await expect(page.getByTestId("day-picker")).toBeVisible();
 
-    // Selecting a day shows that day's games and hides the others.
-    const secondDayRow = page.locator(
-      `[data-testid="game-row"][href="/game/${dayTwoA.id}"]`,
-    );
-    const firstDayRow = page.locator(
-      `[data-testid="game-row"][href="/game/${dayOne.id}"]`,
-    );
+    const secondDayRow = page.locator(`[data-testid="game-row"][href="/game/${dayTwoA.id}"]`);
+    const firstDayRow = page.locator(`[data-testid="game-row"][href="/game/${dayOne.id}"]`);
 
-    // Find the tab holding the two-game day by its count, rather than by
-    // guessing a label — the weekday depends on when the suite runs.
-    const tabs = page.getByTestId("day-tab");
-    await expect(tabs.first()).toBeVisible();
+    /*
+     * The chip is addressed BY ITS DATE, which is the whole point of the
+     * change: `data-day` and the day of the month printed on it are the same
+     * fact, so a spec can find the right chip without clicking through every
+     * one of them hoping. The old version looped over the tabs until a row
+     * appeared, because there was nothing on a tab to identify it by.
+     */
+    const targetDay = pragueDayKey(dayTwoA.startsAt);
+    const chip = page.locator(`[data-testid="day-tab"][data-day="${targetDay}"]`);
+    await expect(chip).toHaveAttribute("data-empty", "false");
+    await expect(chip).toContainText(String(Number(targetDay.slice(8, 10))));
 
-    // Click through to the day carrying dayTwoA and assert the other day's
-    // game is gone from the list.
-    for (const tab of await tabs.all()) {
-      await tab.click();
-      await page.waitForLoadState("networkidle");
-      if ((await secondDayRow.count()) > 0) break;
-    }
+    await chip.click();
+    await page.waitForURL(`**/games?day=${targetDay}`);
 
     await expect(secondDayRow).toBeVisible();
     await expect(page.locator(`[data-testid="game-row"][href="/game/${dayTwoB.id}"]`)).toBeVisible();
     await expect(firstDayRow).toHaveCount(0);
+
+    // Tapping the selected chip again clears the filter — the gesture people
+    // try first is toggling the thing they just tapped.
+    await chip.click();
+    await page.waitForURL("**/games");
+    await expect(firstDayRow).toBeVisible();
+    await expect(secondDayRow).toBeVisible();
   } finally {
     await destroyScratchGame(dayOne.id);
     await destroyScratchGame(dayTwoA.id);
     await destroyScratchGame(dayTwoB.id);
+  }
+});
+
+/*
+ * v1.2 §5.5 — the strip is a CONTINUOUS calendar, so it can answer "how far
+ * away is this". Closing up the empty days made two adjacent chips mean either
+ * consecutive days or three weeks apart.
+ */
+test("the day strip runs continuously from today, marking rest days", async ({ page }) => {
+  await page.goto("/games");
+
+  const chips = page.getByTestId("day-tab");
+  await expect(chips.first()).toBeVisible();
+
+  // Consecutive dates, no gaps, starting today.
+  const days = await chips.evaluateAll((nodes) =>
+    nodes.map((n) => (n as HTMLElement).dataset.day!),
+  );
+  expect(days.length).toBeGreaterThanOrEqual(14);
+  expect(days[0]).toBe(
+    new Intl.DateTimeFormat("en-CA", {
+      timeZone: "Europe/Prague",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }).format(new Date()),
+  );
+  for (let i = 1; i < days.length; i += 1) {
+    const previous = new Date(`${days[i - 1]}T12:00:00Z`);
+    const current = new Date(`${days[i]}T12:00:00Z`);
+    expect(current.getTime() - previous.getTime()).toBe(86_400_000);
+  }
+
+  // A rest day is drawn but is not a link: a chip whose only outcome is an
+  // empty list is a tap spent to learn nothing.
+  const rest = page.locator('[data-testid="day-tab"][data-empty="true"]').first();
+  if ((await rest.count()) > 0) {
+    expect(await rest.evaluate((node) => node.tagName)).not.toBe("A");
   }
 });
 
@@ -547,9 +593,10 @@ test("rows say View game and never claim", async ({ page }) => {
 });
 
 /*
- * REQ-GAME-020 — what each row actually carries.
+ * REQ-GAME-020 — what each row actually carries, and what it deliberately does
+ * NOT (v1.2 §5.5).
  */
-test("a row carries the span, venue, format, subs, price, badge and spots", async ({
+test("a row carries the span, venue, format, badge and spots — and no price", async ({
   page,
 }) => {
   const game = await createScratchGame({
@@ -570,14 +617,107 @@ test("a row carries the span, venue, format, subs, price, badge and spots", asyn
     await expect(row.getByTestId("row-time-span")).toContainText(/\d{2}:\d{2}–\d{2}:\d{2}/);
     await expect(row).toContainText("E2E Scratch Pitch");
     await expect(row.getByTestId("game-format")).toHaveText("5v5");
-    await expect(row.getByTestId("game-subs")).toContainText("2");
-    await expect(row).toContainText("250 CZK");
     await expect(row.getByTestId("skill-badge-advanced")).toBeVisible();
     await expect(row.getByTestId("row-spots")).toContainText("12 spots left");
+
+    /*
+     * PRICE AND SUBSTITUTES ARE DETAIL-PAGE FACTS, and this game is built to
+     * prove it: the price is 250 rather than the usual 200 so a leaked value
+     * cannot hide behind another row's, and `subsPerTeam` is set rather than
+     * null so an absent chip means suppressed rather than unset.
+     */
+    await expect(row).not.toContainText("250");
+    await expect(row).not.toContainText("CZK");
+    await expect(row.getByTestId("game-subs")).toHaveCount(0);
+
     // No venue photo on the list (§5.5) — the photo belongs to the detail.
     await expect(row.locator("img")).toHaveCount(0);
+
+    // Both of them ARE on the detail, so this is a move rather than a loss.
+    await row.click();
+    await page.waitForURL(`**/game/${game.id}`);
+    await expect(page.getByTestId("game-subs")).toContainText("2");
+    await expect(page.locator("body")).toContainText("250");
   } finally {
     await destroyScratchGame(game.id);
+  }
+});
+
+/*
+ * v1.2 §5.5 — the spots-left count is the FOMO element, and its colour is the
+ * absolute ladder rather than the proportional one the copy uses.
+ */
+test("spots left is coloured by absolute count: volt, amber, then red", async ({ page }) => {
+  /*
+   * Four games rather than one game filling up. Spots-left is `capacity minus
+   * booked`, so an empty game of capacity N sits on the rung N earns — which
+   * reaches every rung with a single booking in the whole test instead of
+   * twenty throwaway players. The last one needs the booking, because "full"
+   * is the only rung an empty game cannot reach.
+   *
+   * The capacities sit ON the thresholds rather than near them: 10 is exactly
+   * the amber line and 3 exactly the red one, so an off-by-one in either
+   * comparison fails this rather than passing by luck.
+   */
+  const plenty = await createScratchGame({ hoursFromNow: 24 * 18, capacity: 20 });
+  const few = await createScratchGame({ hoursFromNow: 24 * 18 + 1, capacity: 10 });
+  const critical = await createScratchGame({ hoursFromNow: 24 * 18 + 2, capacity: 3 });
+  const full = await createScratchGame({ hoursFromNow: 24 * 18 + 3, capacity: 1 });
+
+  try {
+    const organizer = await apiClientFor(players.organizer);
+    // One booking apiece, on two different players: a player holds at most one
+    // active booking, and these two games need a filled segment to look at.
+    for (const [gameId, playerId] of [
+      [full.id, players.runner.id],
+      [critical.id, players.creditPartial.id],
+    ] as const) {
+      const { error } = await organizer.rpc("admin_create_booking", {
+        p_game_id: gameId,
+        p_player_id: playerId,
+        p_payment_method: "cash",
+      });
+      expect(error).toBeNull();
+    }
+
+    await page.goto("/games");
+
+    const toneOf = (id: string) =>
+      page.locator(`[data-testid="game-row"][href="/game/${id}"]`).getByTestId("spots-left");
+
+    await expect(toneOf(plenty.id)).toHaveAttribute("data-tone", "plenty");
+    await expect(toneOf(few.id)).toHaveAttribute("data-tone", "few");
+    await expect(toneOf(critical.id)).toHaveAttribute("data-tone", "critical");
+    await expect(toneOf(full.id)).toHaveAttribute("data-tone", "full");
+    await expect(toneOf(full.id)).toContainText("Full");
+
+    /*
+     * THE BAR TAKES THE SAME TONE AS THE NUMBER. This is the assertion that
+     * matters most: the two are rendered by different components from one
+     * table, and a bar that disagreed with the count beside it would be worse
+     * than no colour at all.
+     */
+    const filledSegment = (id: string) =>
+      page
+        .locator(`[data-testid="game-row"][href="/game/${id}"]`)
+        .getByTestId("capacity-segments")
+        .locator("i")
+        .first();
+
+    // Capacity 3, one booked: two left, still red — and the one filled notch
+    // is red with it.
+    await expect(filledSegment(critical.id)).toHaveClass(/bg-danger/);
+
+    // A full game's notches must not use the UNFILLED grey, or a complete bar
+    // and an empty one render identically and the reader concludes nobody
+    // signed up.
+    await expect(filledSegment(full.id)).toHaveClass(/bg-subtle/);
+    await expect(filledSegment(full.id)).not.toHaveClass(/bg-surface-seg/);
+  } finally {
+    await destroyScratchGame(plenty.id);
+    await destroyScratchGame(few.id);
+    await destroyScratchGame(critical.id);
+    await destroyScratchGame(full.id);
   }
 });
 

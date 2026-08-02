@@ -227,6 +227,14 @@ async function seed(): Promise<void> {
           starts_at: startsAt(g.startsInHours),
           capacity: g.capacity,
           price_czk: g.priceCzk,
+          // Optional detail, and OPTIONAL IS PART OF THE FIXTURE: hostileVenue
+          // leaves all three null so the "organizer said nothing" case stays on
+          // the board. Every other game carries a format and a surface, which
+          // until v1.2 none of them did — so the chip line on a row rendered
+          // empty everywhere and read as broken rather than as unset.
+          format: g.format ?? null,
+          surface: g.surface ?? null,
+          subs_per_team: g.subsPerTeam ?? null,
           status: "draft",
         })),
       )

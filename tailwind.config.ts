@@ -65,8 +65,25 @@ const config: Config = {
         "hairline-volt-soft": "rgba(200,255,0,.16)",
         "hairline-volt": "rgba(200,255,0,.18)",
         "hairline-volt-strong": "rgba(200,255,0,.3)",
+        /*
+         * THE SPOTS-LEFT LADDER (v1.2 §5.5). Volt at rest, amber when a game is
+         * filling, red when it is nearly gone — the number and the bar take the
+         * same colour, because two things saying the same thing in two colours
+         * is two things to reconcile.
+         *
+         * Volt stays the "plenty" rung rather than a true green: the reference
+         * uses green because green is its brand, and ours is volt. Substituting
+         * a second green here would put two accents on one row.
+         *
+         * Both are chosen for legibility against #0A0A0A rather than for being
+         * canonical orange and red — this is the one place the palette carries
+         * meaning rather than character, so contrast wins.
+         */
+        warn: "#FFA31A",
+        danger: "#FF5A4E",
         // External brand
         whatsapp: "#25D366",
+        instagram: "#E1306C",
       },
       fontFamily: {
         display: ["var(--font-anton)", "sans-serif"],

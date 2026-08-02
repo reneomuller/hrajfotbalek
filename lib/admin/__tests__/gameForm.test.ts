@@ -113,6 +113,18 @@ describe("parseGameForm", () => {
     expect(bad.fieldErrors.format).toBe(strings.admin.formatInvalid);
   });
 
+  it("accepts a three-way split, and stops at three", () => {
+    // Eighteen players on one pitch is routinely run as 6v6v6 with the losing
+    // side rotating off. Until migration 35 the only way to record that was to
+    // leave the field blank, which is why so many games render no format chip.
+    expect(parseGameForm(form({ ...VALID, format: "6v6v6" })).ok).toBe(true);
+    expect(parseGameForm(form({ ...VALID, format: "7v7v7" })).ok).toBe(true);
+    // Not an open repeat. Four sides is not a thing anyone has asked for, and
+    // an unbounded pattern is how this becomes free text by degrees.
+    expect(parseGameForm(form({ ...VALID, format: "5v5v5v5" })).ok).toBe(false);
+    expect(parseGameForm(form({ ...VALID, format: "6v6v" })).ok).toBe(false);
+  });
+
   it("drops an unknown surface instead of sending it to the CHECK", () => {
     const result = parseGameForm(form({ ...VALID, surface: "lava" }));
     expect(result.ok).toBe(true);

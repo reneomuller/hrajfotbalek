@@ -30,13 +30,13 @@ import { pragueDayKey } from "../lib/games/days.ts";
 const clearWallet = resetWallet;
 
 /*
- * REQ-PASS-001 — the six tiers, with the expiry stated before the button.
+ * REQ-PASS-001 — the tiers, with the expiry stated before the button.
  */
 test("the pass page lists every tier with its saving and its expiry", async ({ page }) => {
   await page.goto("/pass");
 
   const tiers = page.getByTestId("pass-tier");
-  await expect(tiers).toHaveCount(6);
+  await expect(tiers).toHaveCount(5);
 
   // The 5-pass, as the contract prices it.
   const five = page.locator('[data-testid="pass-tier"][data-games="5"]');
@@ -45,17 +45,33 @@ test("the pass page lists every tier with its saving and its expiry", async ({ p
   await expect(five.getByTestId("pass-tier-saving")).toContainText("50");
   await expect(five.getByTestId("pass-tier-expiry")).toContainText("1 month");
 
-  // The 1-game tier is deliberately not a discount, and does not expire.
-  const one = page.locator('[data-testid="pass-tier"][data-games="1"]');
-  await expect(one.getByTestId("pass-tier-price")).toContainText("150");
-  await expect(one.getByTestId("pass-tier-expiry")).toContainText("Never");
-  await expect(one.getByTestId("pass-tier-saving")).not.toContainText("Save");
+  /*
+   * THE 1-GAME TIER IS GONE (ruled 2026-08-02), and gone from the table rather
+   * than hidden by the page. It was listed at par so the other discounts would
+   * read as discounts; in practice it sat first, where the best offer belongs,
+   * and offered nothing.
+   */
+  await expect(page.locator('[data-testid="pass-tier"][data-games="1"]')).toHaveCount(0);
+  await expect(page.locator("body")).not.toContainText("The standard price");
 
-  // EVERY tier states an expiry, above its button. §4.2: an expiry discovered
-  // after purchase is a complaint; one read before it is a choice.
+  // Every remaining tier IS a discount, and states an expiry above its button.
+  // §4.2: an expiry discovered after purchase is a complaint; one read before
+  // it is a choice.
   for (const tier of await tiers.all()) {
     await expect(tier.getByTestId("pass-tier-expiry")).toBeVisible();
+    await expect(tier.getByTestId("pass-tier-saving")).toContainText("Save");
   }
+});
+
+/*
+ * The floor is a CONSTRAINT, not a convention: filtering the tier out of the
+ * page would leave `create_pass_topup(1)` working — a price list with a
+ * second, invisible entry.
+ */
+test("a one-game pass cannot be bought through the RPC either", async () => {
+  const player = await apiClientFor(players.runner);
+  const { error } = await player.rpc("create_pass_topup", { p_pass_games: 1 });
+  expect(error).not.toBeNull();
 });
 
 /*
@@ -75,13 +91,13 @@ test("a signed-out visitor can read the tiers and reach them from the games list
     // Between the day-picker and the list (§4.2), not below the fold.
     await panel.click();
     await page.waitForURL(/\/pass/);
-    await expect(page.getByTestId("pass-tier")).toHaveCount(6);
+    await expect(page.getByTestId("pass-tier")).toHaveCount(5);
 
     // And through the API, because a missing grant would render as "no tiers"
     // rather than as an error.
     const anon = anonClient();
     const { data } = await anon.from("pass_tiers").select("games");
-    expect((data ?? []).length).toBe(6);
+    expect((data ?? []).length).toBe(5);
   } finally {
     await destroyScratchGame(game.id);
   }

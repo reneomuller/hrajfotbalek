@@ -401,15 +401,13 @@ export const cs: StringsOverlay = {
   pass: {
     title: "Herní permanentka",
     lede: "Předplať si zápasy se slevou. Přistane ti v peněžence jako kredit a sám se použije na další rezervaci.",
-    panelTitle: "Dobij si permanentku",
-    panelBody: "Předplať si zápasy se slevou.",
-    panelCta: "Zobrazit permanentky →",
+    // The product name stays English in every locale — see lib/strings.ts.
+    panelTitle: "Game Pass",
+    panelBody: "Předplať si zápasy se slevou",
     tierGames: "{count} zápasů",
-    tierOneGame: "1 zápas",
     tierPerGame: "{amount} za zápas",
     tierCredited: "Dostaneš kredit {amount}",
     tierSaving: "Ušetříš {amount}",
-    tierNoSaving: "Běžná cena",
     tierExpiresOne: "Platí 1 měsíc od připsání",
     tierExpiresMany: "Platí {count} měsíce od připsání",
     tierNeverExpires: "Bez expirace",

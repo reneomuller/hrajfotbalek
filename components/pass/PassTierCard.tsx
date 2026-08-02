@@ -11,10 +11,18 @@ import { getStrings } from "@/lib/i18n/server";
  * read before deciding: "An expiry discovered after purchase is a complaint;
  * an expiry read before purchase is a choice."
  *
- * The 1-game tier renders "the standard price" rather than a saving of 0 CZK.
- * It is deliberately not a discount and is listed so the discount on the
- * others is legible — printing "Save 0 CZK" would make it look like a broken
- * offer instead of the reference point it is.
+ * EVERY TIER ON THIS PAGE IS A DISCOUNT, as of the 2026-08-02 ruling. The
+ * 1-game tier — 150 for 150, no expiry — used to sit at the top as a reference
+ * point, and the reference-point argument was wrong in practice: the first card
+ * a reader saw was the one that saved them nothing, and the page read as "the
+ * pass is not a discount". Tiers now start at five, the row is gone from
+ * `pass_tiers` (migration 36), and the reference price is stated once in the
+ * "How it works" panel where an explanation belongs.
+ *
+ * The saving is therefore unconditional here. There is no "standard price"
+ * branch to fall back to, because a tier that saves nothing can no longer
+ * exist: `pass_tiers_not_a_penalty` already forbade costing more than it
+ * credits, and the seed no longer contains one at par.
  */
 export async function PassTierCard({
   tier,
@@ -25,10 +33,7 @@ export async function PassTierCard({
 }) {
   const t = await getStrings();
 
-  const heading =
-    tier.games === 1
-      ? t.pass.tierOneGame
-      : t.pass.tierGames.replace("{count}", String(tier.games));
+  const heading = t.pass.tierGames.replace("{count}", String(tier.games));
 
   const expiry =
     tier.expiresMonths === null
@@ -62,15 +67,8 @@ export async function PassTierCard({
         </span>
       </div>
 
-      <p
-        data-testid="pass-tier-saving"
-        className={`mt-2 font-mono text-[12px] ${
-          tier.savingCzk > 0 ? "text-volt" : "text-faint"
-        }`}
-      >
-        {tier.savingCzk > 0
-          ? t.pass.tierSaving.replace("{amount}", formatCzk(tier.savingCzk))
-          : t.pass.tierNoSaving}
+      <p data-testid="pass-tier-saving" className="mt-2 font-mono text-[12px] text-volt">
+        {t.pass.tierSaving.replace("{amount}", formatCzk(tier.savingCzk))}
       </p>
 
       {/* LOUD, and above the button. */}

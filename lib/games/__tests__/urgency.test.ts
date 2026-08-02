@@ -2,7 +2,9 @@ import { describe, expect, it } from "vitest";
 import {
   gameUrgency,
   lastFewThreshold,
+  spotsLeftCount,
   spotsLeftLabel,
+  spotsTone,
   urgencyLabel,
 } from "@/lib/games/urgency";
 import { strings } from "@/lib/strings";
@@ -25,6 +27,47 @@ describe("lastFewThreshold", () => {
     for (const capacity of [1, 2, 3, 5, 7]) {
       expect(lastFewThreshold(capacity)).toBeGreaterThanOrEqual(1);
     }
+  });
+});
+
+describe("spotsTone", () => {
+  /*
+   * v1.2 §5.5 — the COLOUR ladder, which is absolute where `gameUrgency` is
+   * proportional. Colour is read before the reader has taken in the capacity,
+   * so it has to mean the same thing on every row of a list of differently
+   * sized games.
+   */
+  it("is volt above ten spots, amber at ten or fewer, red at three or fewer", () => {
+    expect(spotsTone(0, 20)).toBe("plenty"); // 20 left
+    expect(spotsTone(9, 20)).toBe("plenty"); // 11 left
+    expect(spotsTone(10, 20)).toBe("few"); // 10 left
+    expect(spotsTone(16, 20)).toBe("few"); // 4 left
+    expect(spotsTone(17, 20)).toBe("critical"); // 3 left
+    expect(spotsTone(19, 20)).toBe("critical"); // 1 left
+    expect(spotsTone(20, 20)).toBe("full");
+  });
+
+  it("reports full rather than critical when nothing is left", () => {
+    // "0 spots left" in red would be an alarm about a decision nobody can act
+    // on. Full is a state, not an urgency.
+    expect(spotsTone(12, 12)).toBe("full");
+    expect(spotsTone(13, 12)).toBe("full"); // overbooked, somehow
+    expect(spotsTone(0, 0)).toBe("full");
+  });
+
+  it("DISAGREES with the copy ladder on a large half-empty game, deliberately", () => {
+    // 16-spot game, 4 left: amber, because four spots is few in absolute terms
+    // and that is what a colour must say consistently. The eyebrow still reads
+    // "spots open", because four of sixteen is not proportionally urgent.
+    // Recorded here so the next reader does not "fix" them into agreement.
+    expect(spotsTone(12, 16)).toBe("few");
+    expect(gameUrgency(12, 16)).toBe("open");
+  });
+
+  it("counts spots without going negative", () => {
+    expect(spotsLeftCount(9, 12)).toBe(3);
+    expect(spotsLeftCount(15, 12)).toBe(0);
+    expect(spotsLeftCount(-4, 12)).toBe(12);
   });
 });
 
