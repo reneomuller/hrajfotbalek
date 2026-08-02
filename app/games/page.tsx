@@ -7,7 +7,7 @@ import { NextGameStrip } from "@/components/game/NextGameStrip";
 import { PassPanel } from "@/components/pass/PassPanel";
 import { getOwnNextBooking } from "@/lib/booking/queries";
 import { getSessionUser } from "@/lib/auth/session";
-import { buildDayTabs, pragueDayKey, resolveSelectedDay } from "@/lib/games/days";
+import { buildDayTabs, groupByDay, pragueDayKey, resolveSelectedDay } from "@/lib/games/days";
 import { listOwnWaitlistGameIds, listUpcomingGames } from "@/lib/games/queries";
 import { getStrings } from "@/lib/i18n/server";
 
@@ -87,9 +87,20 @@ export default async function GamesPage({
   const requested = typeof query.day === "string" ? query.day : undefined;
   const selectedDay = resolveSelectedDay(requested, dayTabs);
 
+  /*
+   * EVERY UPCOMING GAME BY DEFAULT, chronological, grouped under a day heading.
+   *
+   * `selectedDay` is null unless the URL asks for one, so the strip narrows
+   * this rather than defining it. The previous version defaulted to the first
+   * day and offered no way back to the whole list — which meant a game two
+   * days out could not be seen at all, and a skill badge on one of those rows
+   * read as a rendering bug rather than as a hidden row.
+   */
   const visible = selectedDay
     ? games.filter(({ game }) => pragueDayKey(game.starts_at) === selectedDay)
     : games;
+
+  const grouped = groupByDay(visible, ({ game }) => game.starts_at, now, t);
 
   return (
     <main className="relative z-10 mx-auto w-full max-w-shell px-gutter pb-16 pt-24">
@@ -103,7 +114,7 @@ export default async function GamesPage({
         </div>
       )}
 
-      <DayPicker tabs={dayTabs} selected={selectedDay} />
+      <DayPicker tabs={dayTabs} selected={selectedDay} allLabel={t.games.dayFilterAll} />
 
       {/* Between the day-picker and the list, per §4.2. Someone scanning for a
           game is the person for whom pre-buying games is worth anything. */}
@@ -119,14 +130,29 @@ export default async function GamesPage({
           />
         </div>
       ) : (
-        <div className="mt-4 flex flex-col gap-3" data-testid="game-list">
-          {visible.map(({ game, bookedCount }) => (
-            <GameRow
-              key={game.id}
-              game={game}
-              bookedCount={bookedCount}
-              onWaitlist={waitlisted.has(game.id)}
-            />
+        <div className="mt-4 flex flex-col gap-5" data-testid="game-list">
+          {grouped.map((day) => (
+            <section key={day.key} data-testid="day-group" data-day={day.key}>
+              {/* The heading carries the date as well as the relative word:
+                  "Today" alone stops meaning anything once you have scrolled
+                  past it. */}
+              <h2
+                data-testid="day-heading"
+                className="m-0 mb-2 font-mono text-[10px] uppercase tracking-eyebrow text-volt-dim"
+              >
+                {day.label}
+              </h2>
+              <div className="flex flex-col gap-3">
+                {day.items.map(({ game, bookedCount }) => (
+                  <GameRow
+                    key={game.id}
+                    game={game}
+                    bookedCount={bookedCount}
+                    onWaitlist={waitlisted.has(game.id)}
+                  />
+                ))}
+              </div>
+            </section>
           ))}
         </div>
       )}

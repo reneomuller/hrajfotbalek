@@ -96,17 +96,76 @@ function dayLabel(key: string, today: string, tomorrow: string, t: Strings): str
 }
 
 /**
- * The day to show when the URL names one, or asks for something with no games.
+ * The day the URL asked for, or NULL meaning "all of them".
  *
- * FALLS BACK TO THE FIRST TAB rather than to an empty list. A stale link — a
- * game shared on Friday and opened on Monday — otherwise lands on a page that
- * looks broken, and the reader has no way to know the day simply passed.
+ * NULL IS THE DEFAULT AND THE STRIP IS A FILTER, not a mode. The first version
+ * of this fell back to the first tab whenever the URL named nothing, which
+ * made "one day" the only state the list had — you could narrow it but never
+ * widen it again, and a game two days out was invisible until you found the
+ * tab. That is how a restricted game's skill badge came to look like a
+ * rendering bug: the row it was on was simply not on screen.
+ *
+ * An unrecognised day also resolves to null rather than to the first tab. A
+ * stale link — a day shared on Friday, opened on Monday — should show the
+ * whole list, which is the thing the reader can actually act on, not a
+ * different day they did not ask for.
  */
 export function resolveSelectedDay(
   requested: string | undefined,
   tabs: DayTab[],
 ): string | null {
-  if (tabs.length === 0) return null;
-  if (requested && tabs.some((tab) => tab.key === requested)) return requested;
-  return tabs[0].key;
+  if (!requested) return null;
+  return tabs.some((tab) => tab.key === requested) ? requested : null;
+}
+
+/**
+ * Games grouped under their Prague day, in kick-off order.
+ *
+ * The default view is EVERY upcoming game, chronological, with a heading per
+ * day — a week of pickup football is a handful of days and reads perfectly
+ * well as one scrolling list. The headings are what make it scannable without
+ * making it modal.
+ */
+export function groupByDay<T>(
+  items: T[],
+  startsAt: (item: T) => string,
+  now: Date | string | number,
+  t: Strings = strings,
+): { key: string; label: string; items: T[] }[] {
+  const groups = new Map<string, T[]>();
+  for (const item of items) {
+    const key = pragueDayKey(startsAt(item));
+    groups.set(key, [...(groups.get(key) ?? []), item]);
+  }
+
+  const today = pragueDayKey(now);
+  const tomorrow = pragueDayKey(
+    new Date((now instanceof Date ? now : new Date(now)).getTime() + 24 * 3600_000),
+  );
+
+  return [...groups.entries()]
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([key, group]) => ({
+      key,
+      // The heading carries the DATE as well as the relative word — "Today" on
+      // its own tells you nothing about which Saturday you are looking at once
+      // you have scrolled past it.
+      label: dayHeading(key, today, tomorrow, t),
+      items: group,
+    }));
+}
+
+/** "Today · 3 Aug" / "Sat 8 Aug". */
+function dayHeading(key: string, today: string, tomorrow: string, t: Strings): string {
+  const date = new Date(`${key}T12:00:00Z`);
+  const full = new Intl.DateTimeFormat("en-GB", {
+    timeZone: DISPLAY_TIME_ZONE,
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+  }).format(date);
+
+  if (key === today) return `${t.games.dayToday} · ${full}`;
+  if (key === tomorrow) return `${t.games.dayTomorrow} · ${full}`;
+  return full;
 }

@@ -194,8 +194,8 @@ test("the reworked home page and the admin surface behind its numbers", async ({
     });
 
     await page.goto("/", { waitUntil: "networkidle" });
-    await expect(page.getByTestId("stats-strip")).toBeVisible();
-    await strip(page, "17-home-hero-stats");
+    await expect(page.getByTestId("community-heading")).toBeVisible();
+    await strip(page, "17-home-hero");
 
     // The second screen: how-it-works with the equipment line, then the three
     // panels — which is the order §6 puts them in.

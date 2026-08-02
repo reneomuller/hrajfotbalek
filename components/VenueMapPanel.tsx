@@ -1,5 +1,6 @@
 import Image from "next/image";
 import { getStrings } from "@/lib/i18n/server";
+import { venuePhotoUrl } from "@/lib/storage/avatar";
 import type { Database } from "@/lib/types/database";
 
 type VenueRow = Database["public"]["Tables"]["venues"]["Row"];
@@ -43,10 +44,13 @@ export interface VenueMapPanelProps {
  */
 export async function VenueMapPanel({ venue, venueRow, className }: VenueMapPanelProps) {
   const t = await getStrings();
-  const image =
-    venueRow?.image_path && venueRow.image_path.startsWith("/venues/")
-      ? venueRow.image_path
-      : null;
+  // Two shapes, one reader: a committed repo asset or a bucket key. See
+  // `venuePhotoUrl` — the leading slash is what tells them apart.
+  const image = venuePhotoUrl(
+    process.env.NEXT_PUBLIC_SUPABASE_URL ?? "",
+    venueRow?.image_path,
+  );
+  const isRemote = image !== null && !image.startsWith("/");
 
   const mapQuery = encodeURIComponent(venueRow?.map_query || venue);
   const mapHref = `https://maps.google.com/?q=${mapQuery}`;
@@ -78,13 +82,29 @@ export async function VenueMapPanel({ venue, venueRow, className }: VenueMapPane
       data-testid="venue-panel-photo"
       className={`relative overflow-hidden bg-surface ${className ?? "h-[200px]"}`}
     >
-      <Image
-        src={image}
-        alt={t.games.venuePhotoAlt.replace("{venue}", venue)}
-        fill
-        sizes="(max-width: 768px) 100vw, 480px"
-        className="object-cover object-center"
-      />
+      {/*
+        A committed asset goes through next/image, which can optimise a file it
+        can see on disk. A bucket object does not: the optimizer would need a
+        remote-pattern allow-list per Supabase project and would bill a
+        transform per venue per size, to resize a photograph that is already
+        the right shape because an admin uploaded it for this panel.
+      */}
+      {isRemote ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={image}
+          alt={t.games.venuePhotoAlt.replace("{venue}", venue)}
+          className="absolute inset-0 h-full w-full object-cover object-center"
+        />
+      ) : (
+        <Image
+          src={image}
+          alt={t.games.venuePhotoAlt.replace("{venue}", venue)}
+          fill
+          sizes="(max-width: 768px) 100vw, 480px"
+          className="object-cover object-center"
+        />
+      )}
       {/* Keeps the chips legible over whatever the photograph happens to be
           bright in — a real pitch photo has sky in it. */}
       <div className="absolute inset-0 bg-map-vignette" />

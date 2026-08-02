@@ -788,6 +788,21 @@ export interface Database {
         Args: { p_extension: string };
         Returns: string;
       };
+      /**
+       * Phase design-1, migration 34. Admin-only. Derives
+       * `venues/<venue id>.<ext>`, records it, and returns the key for the
+       * caller to upload to — the client never chooses the path.
+       */
+      set_venue_photo: {
+        Args: { p_venue_id: string; p_extension: string };
+        Returns: string;
+      };
+      /** Admin-only. Clears the reference; returns a BUCKET key to delete, or null. */
+      clear_venue_photo: {
+        Args: { p_venue_id: string };
+        Returns: string | null;
+      };
+
       /** Admin-only moderation. Returns the path the caller must delete. */
       remove_profile_photo: {
         Args: { p_player_id: string };

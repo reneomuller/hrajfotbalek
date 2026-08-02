@@ -150,8 +150,8 @@ export const ru: StringsOverlay = {
     verifyHint: "Письма нет пару минут? Проверь спам и попробуй снова.",
 
     signUp: "Регистрация",
-    noAccountLead: "Ещё нет аккаунта?",
-    createAccountCta: "Создать →",
+    noAccountLead: "Ещё не с нами?",
+    createAccountCta: "Регистрация →",
     haveAccount: "Уже есть аккаунт?",
     noAccount: "Впервые здесь?",
     nicknameLabel: "Ник",
@@ -195,6 +195,7 @@ export const ru: StringsOverlay = {
     viewGame: "Открыть матч",
     copyLink: "Копировать ссылку",
     copyLinkFailed: "Не удалось скопировать — зажми адресную строку.",
+    dayFilterAll: "Все",
     dayToday: "Сегодня",
     dayTomorrow: "Завтра",
     rosterReserved: "держит место",
@@ -364,6 +365,8 @@ export const ru: StringsOverlay = {
     changeEmailSame: "Это уже твой адрес.",
     changeEmailFailed: "Не удалось начать смену почты. Попробуй ещё раз.",
 
+    changePasswordLink: "Сменить пароль",
+    changeEmailLink: "Сменить e-mail",
     deleteAccount: "Удалить аккаунт",
     deleteAccountHint: "Напиши нам — и мы удалим твои данные.",
     deleteSubject: "Запрос на удаление аккаунта",

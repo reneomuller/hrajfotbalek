@@ -6,6 +6,7 @@ import { ConfirmPaymentRow } from "@/components/admin/ConfirmPaymentRow";
 import { GameForm } from "@/components/admin/GameForm";
 import { SettleButton } from "@/components/admin/SettleButton";
 import { TransitionButton } from "@/components/admin/TransitionButton";
+import { VenuePhotoUpload } from "@/components/admin/VenuePhotoUpload";
 import { requireAdmin } from "@/lib/auth/requireAdmin";
 import {
   activeBookings,
@@ -60,6 +61,9 @@ export default async function AdminGamePage({
     listVenues(),
     getGameOrganizer(game.id),
   ]);
+
+  const venuePhoto =
+    venues.find((venue) => venue.id === game.venue_id)?.image_path ?? null;
 
   const roster = activeBookings(bookings);
   // Already VS-sorted by the query — the order the organizer's banking app
@@ -243,6 +247,26 @@ export default async function AdminGamePage({
           organizer does occasionally and reconciling one is what they do every
           week. A terminal game shows no form: its time and price are what the
           roster and the ledger already agreed on. */}
+      {/*
+        The pitch photograph, beside the game it belongs to.
+        
+        On the GAME surface rather than a venue screen there isn't one of: the
+        organizer is here anyway, and "add a photo of this pitch" is a thought
+        they have while looking at the game, not while browsing a venue list.
+        It writes to the venue, so every game at that pitch gets it.
+      */}
+      {game.venue_id && (
+        <section className="mt-12 border-t border-hairline-chrome pt-6">
+          <h3 className="m-0 mb-3 font-condensed text-[18px] font-bold uppercase tracking-wide text-bone">
+            {strings.admin.venuePhotoTitle}
+          </h3>
+          <VenuePhotoUpload
+            venueId={game.venue_id}
+            hasPhoto={Boolean(venuePhoto)}
+          />
+        </section>
+      )}
+
       {canEdit && (
         <section className="mt-12 border-t border-hairline-chrome pt-6">
           <h3 className="m-0 font-condensed text-[18px] font-bold uppercase tracking-wide text-bone">

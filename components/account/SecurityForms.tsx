@@ -93,7 +93,7 @@ export function ChangePasswordForm() {
  * Someone expecting one email who receives two assumes something broke;
  * someone expecting two knows the change is not finished yet.
  */
-export function ChangeEmailForm({ currentEmail }: { currentEmail: string | null }) {
+export function ChangeEmailForm({ currentEmail = null }: { currentEmail?: string | null }) {
   const t = useStrings();
   const [state, formAction, pending] = useActionState(changeEmailAction, initialState);
 

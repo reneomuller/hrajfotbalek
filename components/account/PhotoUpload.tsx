@@ -55,7 +55,25 @@ async function cropToSquare(file: File): Promise<Blob> {
   return blob;
 }
 
-export function PhotoUpload({ hasPhoto }: { hasPhoto: boolean }) {
+/**
+ * The avatar IS the control.
+ *
+ * This used to be a bordered button labelled "Upload a photo" sitting under a
+ * heading, and a reviewer looking for "where do I change my picture" did not
+ * find it. Wrapping the avatar in the file label and putting a small volt
+ * pencil on its corner is the shape every product this competes with uses, and
+ * it needs no heading to explain itself.
+ *
+ * `children` is the avatar the page already renders — photo or initials — so
+ * the fallback logic stays in one place rather than being duplicated here.
+ */
+export function PhotoUpload({
+  hasPhoto,
+  children,
+}: {
+  hasPhoto: boolean;
+  children?: React.ReactNode;
+}) {
   const t = useStrings();
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -111,18 +129,50 @@ export function PhotoUpload({ hasPhoto }: { hasPhoto: boolean }) {
     }
   }
 
+  const input = (
+    <input
+      ref={inputRef}
+      type="file"
+      accept="image/jpeg,image/png,image/webp"
+      onChange={onFile}
+      disabled={busy}
+      data-testid="photo-input"
+      className="sr-only"
+    />
+  );
+
+  // Avatar-as-control. The badge is `aria-hidden` because the label already
+  // names the action for a screen reader; announcing a pencil twice is noise.
+  if (children) {
+    return (
+      <label
+        data-testid="photo-avatar-control"
+        aria-label={hasPhoto ? t.account.photoReplace : t.account.photoUpload}
+        className="relative inline-block cursor-pointer"
+      >
+        {input}
+        <span className={busy ? "opacity-50 transition-opacity" : "transition-opacity"}>
+          {children}
+        </span>
+        <span
+          aria-hidden
+          className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full border-2 border-surface bg-volt text-[13px] leading-none text-surface"
+        >
+          ✎
+        </span>
+        {error ? (
+          <span role="alert" data-testid="photo-error" className="sr-only">
+            {error}
+          </span>
+        ) : null}
+      </label>
+    );
+  }
+
   return (
     <div className="flex flex-col gap-2">
       <label className="inline-flex cursor-pointer items-center justify-center rounded-control border border-hairline-volt px-4 py-2 font-condensed text-[13px] font-bold uppercase tracking-wide text-volt transition hover:bg-volt/10">
-        <input
-          ref={inputRef}
-          type="file"
-          accept="image/jpeg,image/png,image/webp"
-          onChange={onFile}
-          disabled={busy}
-          data-testid="photo-input"
-          className="sr-only"
-        />
+        {input}
         {busy ? t.common.loading : hasPhoto ? t.account.photoReplace : t.account.photoUpload}
       </label>
 

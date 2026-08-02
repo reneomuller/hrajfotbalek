@@ -1,5 +1,4 @@
 import { expect, test } from "@playwright/test";
-import { createScratchGame, destroyScratchGame } from "./helpers/scaffold.ts";
 import { players, serviceClient, signInAs } from "./helpers/session.ts";
 
 /**
@@ -38,7 +37,7 @@ async function writeSetting(key: string, value: unknown): Promise<void> {
  * one. This is the most repeated lesson in the project, and this is the table
  * where it would be least visible.
  */
-test("a signed-out visitor sees the stats strip and the community panels", async ({
+test("a signed-out visitor sees the community count and the panels", async ({
   page,
 }) => {
   const previous = await readSetting("active_players");
@@ -49,10 +48,13 @@ test("a signed-out visitor sees the stats strip and the community panels", async
     // No session at all — a fresh context, straight to the landing page.
     await page.goto("/");
 
-    await expect(page.getByTestId("stats-strip")).toBeVisible();
-    await expect(page.getByTestId("stat-active-players")).toContainText("250");
-
-    // v1.1.4 D — the heading carries the SAME number, from the same source.
+    /*
+     * ONE PLACE, AND ONE ONLY. The stats strip that also carried this number
+     * was removed on review: the same figure in two places invites the reader
+     * to check whether they agree, which is a job the page should not hand
+     * out. The community heading is where it lives.
+     */
+    await expect(page.getByTestId("stats-strip")).toHaveCount(0);
     await expect(page.getByTestId("community-heading")).toContainText("250");
 
     // REQ-HOME-005 — three panels.
@@ -84,37 +86,15 @@ test("the FAQ carries all six entries and they open", async ({ page }) => {
 });
 
 /*
- * REQ-HOME-002 — games per week is COMPUTED, not typed.
- *
- * Trailing seven days rather than upcoming: this is a claim about how much
- * football actually gets played, and an upcoming count would read zero every
- * Sunday night and look like the product had died.
+ * The games-per-week tile is gone entirely, along with the stats strip that
+ * held it. Asserted rather than merely deleted: a removal nobody checks is a
+ * removal that comes back.
  */
-test("games per week counts published games in the trailing week", async ({ page }) => {
+test("the games-per-week tile no longer renders", async ({ page }) => {
   await page.goto("/");
-  const before = await readGamesPerWeek(page);
-
-  // Two days ago — inside the window, and already played.
-  const recent = await createScratchGame({ hoursFromNow: -48 });
-  // Twenty days ago — outside it.
-  const old = await createScratchGame({ hoursFromNow: -24 * 20 });
-
-  try {
-    await page.goto("/");
-    const after = await readGamesPerWeek(page);
-    expect(after).toBe(before + 1);
-  } finally {
-    await destroyScratchGame(recent.id);
-    await destroyScratchGame(old.id);
-  }
+  await expect(page.getByTestId("stat-games-per-week")).toHaveCount(0);
+  await expect(page.getByTestId("stats-strip")).toHaveCount(0);
 });
-
-async function readGamesPerWeek(page: import("@playwright/test").Page): Promise<number> {
-  const tile = page.getByTestId("stat-games-per-week");
-  if ((await tile.count()) === 0) return 0;
-  const text = (await tile.textContent()) ?? "0";
-  return Number(text.match(/\d+/)?.[0] ?? 0);
-}
 
 /*
  * TEST-225 — an admin changes the number, the home page reflects it, and an
@@ -140,9 +120,8 @@ test("an admin changes the active-player number and the change is recorded", asy
     await page.getByTestId("active-players-submit").click();
     await expect(page.getByTestId("active-players-saved")).toBeVisible();
 
-    // The home page reflects it — both places, from the one value.
+    // The home page reflects it — in the one place it now appears.
     await page.goto("/");
-    await expect(page.getByTestId("stat-active-players")).toContainText("312");
     await expect(page.getByTestId("community-heading")).toContainText("312");
 
     // And the event records the change. A public claim about the size of the

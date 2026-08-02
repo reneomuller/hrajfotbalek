@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { FaqPanel } from "@/components/home/FaqPanel";
 import { PlayerOfMonthPanel } from "@/components/home/PlayerOfMonthPanel";
-import { StatsStrip } from "@/components/home/StatsStrip";
 import { NextMatchCard } from "@/components/NextMatchCard";
 import { getHomeContent } from "@/lib/home/queries";
 import { getNextGame, getRoster, getVenue } from "@/lib/games/queries";
@@ -90,35 +89,23 @@ export default async function LandingPage() {
               {landing.heroCta}
             </Link>
 
-            {/* The stats strip sits under the wordmark, in the scrolling
-                section rather than the fixed header (§6). */}
-            <div className="w-full max-w-[440px]">
-              <StatsStrip
-                gamesPerWeek={home.gamesPerWeek}
-                activePlayers={home.activePlayers}
-              />
-            </div>
-
             <div className="mt-[30px] animate-floatY font-mono text-[9px] tracking-eyebrow text-dim">
               {landing.scrollHint}
             </div>
           </div>
 
-        </section>
-
-        {/* SCREEN 2 — how it works, next match, community, footer */}
-        <div id="next-match" className="flex min-h-[100svh] flex-col pt-nav">
-          <div className="flex-1" />
-
           {/*
-            HOW IT WORKS, MOVED ABOVE FOLD-TWO CONTENT (§6, REQ-HOME-001).
+            HOW IT WORKS — BACK WHERE IT WAS, closing the hero.
 
-            It used to close the hero, where it competed with the headline and
-            the CTA and was read by nobody who had already decided to scroll.
-            Here it is the first thing on the second screen — the answer to
-            "how does this work", arriving exactly when the question does.
+            Phase 17 moved this to the top of the second screen on the reading
+            of §6 that it belongs "above fold-two content". Reverted on review:
+            the strip is part of the hero's rhythm, and lifting it out left the
+            first screen ending on a scroll hint with nothing under the fold
+            line to explain the product. The equipment line stays attached to
+            it, which is the part of §6 that was actually load-bearing —
+            "what do I bring" is the second question anyone asks.
           */}
-          <section data-testid="how-it-works" className="pb-4">
+          <div data-testid="how-it-works" className="mt-[26px]">
             <div className="flex flex-wrap justify-center gap-3">
               {landing.steps.map((step) => (
                 <div
@@ -140,16 +127,18 @@ export default async function LandingPage() {
               ))}
             </div>
 
-            {/* Directly beneath, per §6: "what do I bring" is the second
-                question anyone asks, and the answer removes a reason not to
-                come. */}
             <p
               data-testid="equipment-line"
               className="mt-3 text-center font-mono text-[11px] tracking-[1px] text-volt-dim"
             >
               {landing.equipmentLine}
             </p>
-          </section>
+          </div>
+        </section>
+
+        {/* SCREEN 2 — next match, community, footer */}
+        <div id="next-match" className="flex min-h-[100svh] flex-col pt-nav">
+          <div className="flex-1" />
 
           <section className="pb-3 pt-[10px]">
             <div className="mb-[18px] flex items-baseline gap-3">

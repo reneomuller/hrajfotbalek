@@ -17,12 +17,17 @@ import { createServerSupabaseClient } from "@/lib/supabase/clients";
  */
 
 export interface HomeContent {
-  /** Admin-editable community size. Null when never set. */
+  /**
+   * Admin-editable community size. Null when never set.
+   *
+   * ONE PLACE ON THE PAGE, and one only: the community heading. The stats
+   * strip that also showed it was removed on review — the same number in two
+   * places invites the reader to check whether they agree, which is a job the
+   * page should not be handing out.
+   */
   activePlayers: number | null;
   /** The admin's pick, or null. */
   playerOfMonth: { nickname: string; photoPath: string | null } | null;
-  /** Published games with a kick-off in the trailing 7 days (REQ-HOME-002). */
-  gamesPerWeek: number;
 }
 
 interface SettingsShape {
@@ -33,12 +38,13 @@ interface SettingsShape {
 export async function getHomeContent(): Promise<HomeContent> {
   const supabase = await createServerSupabaseClient();
 
-  const [settingsResult, gamesResult] = await Promise.all([
-    supabase.from("site_settings").select("settings").eq("id", "singleton").maybeSingle(),
-    countGamesThisWeek(),
-  ]);
+  const { data } = await supabase
+    .from("site_settings")
+    .select("settings")
+    .eq("id", "singleton")
+    .maybeSingle();
 
-  const settings = (settingsResult.data?.settings ?? {}) as SettingsShape;
+  const settings = (data?.settings ?? {}) as SettingsShape;
 
   // Guarded rather than cast. The column is jsonb and the RPC validates on the
   // way in, but this is a public page: a value that somehow is not a number
@@ -54,36 +60,7 @@ export async function getHomeContent(): Promise<HomeContent> {
   return {
     activePlayers,
     playerOfMonth: playerOfMonthId ? await getPlayerCard(playerOfMonthId) : null,
-    gamesPerWeek: gamesResult,
   };
-}
-
-/**
- * Games per week — published games whose kick-off falls in the trailing 7 days
- * (REQ-HOME-002).
- *
- * TRAILING, NOT UPCOMING, and the difference matters: this is a claim about
- * how much football this crew actually plays, which is answered by what has
- * happened rather than by what is currently on the board. An upcoming count
- * would read as zero every Sunday night and look like the product had died.
- *
- * `played` and `settled` are included alongside `published` and `full` for the
- * same reason — a game last Tuesday is now `settled`, and it still happened.
- * `cancelled` and `draft` are not: one did not happen and the other was never
- * public.
- */
-async function countGamesThisWeek(): Promise<number> {
-  const supabase = await createServerSupabaseClient();
-  const since = new Date(Date.now() - 7 * 24 * 3600_000).toISOString();
-
-  const { count, error } = await supabase
-    .from("games")
-    .select("id", { count: "exact", head: true })
-    .in("status", ["published", "full", "played", "settled"])
-    .gte("starts_at", since)
-    .lte("starts_at", new Date().toISOString());
-
-  return error ? 0 : (count ?? 0);
 }
 
 /**

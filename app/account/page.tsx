@@ -5,7 +5,7 @@ import { PlayerHistory } from "@/components/account/PlayerHistory";
 import { splitHistory } from "@/lib/booking/history";
 import { CreditBalance } from "@/components/CreditBalance";
 import { CreditBatches } from "@/components/account/CreditBatches";
-import { ChangeEmailForm, ChangePasswordForm } from "@/components/account/SecurityForms";
+import { SecurityLinks } from "@/components/account/SecurityLinks";
 import { PhotoUpload } from "@/components/account/PhotoUpload";
 import { avatarUrl } from "@/lib/storage/avatar";
 import { initials } from "@/lib/roster/initials";
@@ -67,10 +67,11 @@ export default async function AccountPage({
       <h1 className="m-0 font-display text-section-title uppercase tracking-wide text-white">
         {t.account.title}
       </h1>
-      <div className="mt-2 flex flex-wrap items-center justify-between gap-3">
-        <p className="m-0 font-mono text-[12px] tracking-[1px] text-muted">
-          {player.nickname}
-        </p>
+      <div className="mt-2 flex flex-wrap items-center justify-end gap-3">
+        {/* The nickname used to sit here too. It now leads the avatar block
+            below, at a size that reads as an identity rather than as a caption
+            — and saying it twice on one screen was the page telling the reader
+            nothing twice. */}
 
         {/* Sign out — a server action, so the session cookies are cleared
             server-side rather than merely navigated away from. */}
@@ -86,17 +87,23 @@ export default async function AccountPage({
       </div>
 
       {/*
-        Profile photo.
+        Profile photo — AT THE TOP, WITH THE EDIT AFFORDANCE ON THE AVATAR.
+
+        The upload was mounted here before but read as a caption under a
+        heading: a reviewer looking for "where do I change my picture" did not
+        find it. The avatar itself is now the control, with a visible edit
+        badge on it, which is the shape every product this competes with uses.
 
         The initials avatar stays the fallback and is what most players will
-        keep — Phase 2 adds an option, not an expectation, so the absent case is
-        the ordinary one and is rendered as a first-class state rather than an
-        empty frame.
+        keep — Phase 2 added an option, not an expectation, so the absent case
+        is the ordinary one and is rendered as a first-class state rather than
+        an empty frame.
       */}
       <section className="mt-8 flex items-center gap-5">
+        <PhotoUpload hasPhoto={Boolean(player.photo_path)}>
         <span
           data-testid="account-avatar"
-          className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full border border-hairline-volt bg-surface font-condensed text-2xl font-extrabold text-volt"
+          className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-volt bg-surface font-condensed text-2xl font-extrabold text-volt shadow-volt-glow"
         >
           {photoUrl ? (
             /* A Supabase storage URL on a public bucket, rendered at 80px.
@@ -108,11 +115,16 @@ export default async function AccountPage({
             initials(player.nickname)
           )}
         </span>
-        <div className="flex flex-col gap-2">
-          <h2 className="m-0 font-condensed text-base font-bold uppercase tracking-wide text-white">
-            {t.account.photoTitle}
-          </h2>
-          <PhotoUpload hasPhoto={Boolean(player.photo_path)} />
+        </PhotoUpload>
+
+        <div className="flex flex-col gap-1">
+          <span
+            data-testid="account-nickname"
+            className="font-condensed text-[22px] font-bold leading-tight text-white"
+          >
+            {player.nickname}
+          </span>
+          <span className="font-mono text-[11px] text-muted">{t.account.photoHint}</span>
         </div>
       </section>
 
@@ -133,29 +145,6 @@ export default async function AccountPage({
       <PlayerHistory history={splitHistory(bookings)} />
 
       {/*
-        Sign-in and security, above the deletion block.
-
-        Contract §3.3 puts both controls above the delete mailto, and the order
-        is the point: the two things a person can fix themselves come before the
-        one thing that needs an email to a human. Someone who arrives here
-        wanting out of a compromised account should meet "change your password"
-        before "ask us to delete everything".
-      */}
-      <section className="mt-12 border-t border-hairline pt-6">
-        <h2 className="m-0 font-condensed text-lg font-bold uppercase tracking-wide text-white">
-          {t.account.securityTitle}
-        </h2>
-        <div className="mt-5 flex flex-col gap-8 sm:flex-row sm:gap-10">
-          <div className="flex-1">
-            <ChangePasswordForm />
-          </div>
-          <div className="flex-1">
-            <ChangeEmailForm currentEmail={player.email} />
-          </div>
-        </div>
-      </section>
-
-      {/*
         Deletion is by email request only — there is deliberately no self-serve
         deletion UI. Deletion is implemented as ANONYMIZATION: the nickname
         becomes `deleted-<8 hex>` (the 20-character nickname CHECK rejects
@@ -166,19 +155,31 @@ export default async function AccountPage({
         photo object is deleted from storage, since nulling text columns leaves
         a public image of someone who asked to be forgotten.
       */}
-      <section className="mt-12 border-t border-hairline pt-6">
-        <h2 className="m-0 font-mono text-[11px] uppercase tracking-eyebrow text-faint">
-          {t.account.deleteAccount}
-        </h2>
-        <p className="mt-2 text-[13px] leading-snug text-muted">
-          {t.account.deleteAccountHint}
-        </p>
+      {/*
+        THREE LINKS, ONE STACK, ALL THE SAME WEIGHT (§3.3, REQ-AUTH-020).
+
+        Change password, change email, delete account — in that order, because
+        the two things a person can fix themselves come before the one that
+        needs an email to a human. Someone arriving here wanting out of a
+        compromised account should meet "change your password" before "ask us
+        to delete everything".
+
+        No heading, no card, no columns. The two-column panel this replaces is
+        a recorded defect: these are controls used roughly once each, and they
+        were given more vertical space than the wallet and the fixture list.
+        Small, grey, and identical to each other is the entire design.
+      */}
+      <section
+        data-testid="account-security"
+        className="mt-12 border-t border-hairline pt-6"
+      >
+        <SecurityLinks />
         <a
           href={deletionHref}
           data-testid="deletion-mailto"
-          className="mt-3 inline-block font-mono text-[12px] text-volt no-underline"
+          className="block py-2 font-mono text-[12px] text-muted no-underline transition hover:text-bone"
         >
-          {t.account.deleteMailto}
+          {t.account.deleteAccount}
         </a>
       </section>
 

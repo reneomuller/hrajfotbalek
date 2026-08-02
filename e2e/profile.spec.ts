@@ -134,9 +134,21 @@ test("the account page shows a photo slot, security controls and history", async
   await expect(page.getByTestId("account-avatar")).toBeVisible();
   await expect(page.getByTestId("photo-input")).toBeAttached();
 
-  // Phase 6: both controls, above the deletion mailto.
+  /*
+   * REQ-AUTH-020 — both controls are COMPACT TEXT LINKS now, stacked directly
+   * above the deletion link and styled exactly like it. The two-column panel
+   * they replace is a recorded defect: these are used roughly once each and
+   * were taking more vertical space than the wallet and the fixture list.
+   *
+   * So the resting state is three lines, and the form is disclosed in place.
+   */
+  await expect(page.getByTestId("current-password")).toHaveCount(0);
+  await expect(page.getByTestId("change-password-link")).toBeVisible();
+  await expect(page.getByTestId("change-email-link")).toBeVisible();
+  await expect(page.getByTestId("deletion-mailto")).toBeVisible();
+
+  await page.getByTestId("change-password-link").click();
   await expect(page.getByTestId("current-password")).toBeVisible();
-  await expect(page.getByTestId("new-email")).toBeVisible();
 
   // Phase 10: the two tenses, and a played count.
   await expect(page.getByTestId("games-played")).toBeVisible();

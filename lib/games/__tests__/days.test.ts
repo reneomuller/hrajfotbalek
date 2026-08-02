@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { buildDayTabs, pragueDayKey, resolveSelectedDay } from "@/lib/games/days";
+import {
+  buildDayTabs,
+  groupByDay,
+  pragueDayKey,
+  resolveSelectedDay,
+} from "@/lib/games/days";
 import { strings } from "@/lib/strings";
 
 /**
@@ -91,6 +96,56 @@ describe("buildDayTabs", () => {
   });
 });
 
+describe("groupByDay", () => {
+  const now = "2026-08-03T09:00:00Z"; // Monday
+
+  it("groups by Prague day, in kick-off order, with a heading per day", () => {
+    const groups = groupByDay(
+      [
+        { at: "2026-08-05T17:00:00Z" },
+        { at: "2026-08-03T17:00:00Z" },
+        { at: "2026-08-03T19:00:00Z" },
+      ],
+      (item) => item.at,
+      now,
+      strings,
+    );
+
+    expect(groups.map((g) => g.key)).toEqual(["2026-08-03", "2026-08-05"]);
+    expect(groups[0].items).toHaveLength(2);
+    expect(groups[1].items).toHaveLength(1);
+  });
+
+  it("carries the date in the heading as well as the relative word", () => {
+    // "Today" alone stops meaning anything once you have scrolled past it.
+    const groups = groupByDay(
+      [{ at: "2026-08-03T17:00:00Z" }, { at: "2026-08-04T17:00:00Z" }],
+      (item) => item.at,
+      now,
+      strings,
+    );
+
+    expect(groups[0].label).toContain(strings.games.dayToday);
+    expect(groups[0].label).toContain("3 Aug");
+    expect(groups[1].label).toContain(strings.games.dayTomorrow);
+    expect(groups[1].label).toContain("4 Aug");
+  });
+
+  it("puts a late-evening game under the day the players would name", () => {
+    const groups = groupByDay(
+      [{ at: "2026-08-03T22:30:00Z" }],
+      (item) => item.at,
+      now,
+      strings,
+    );
+    expect(groups[0].key).toBe("2026-08-04");
+  });
+
+  it("returns nothing for an empty list", () => {
+    expect(groupByDay([], () => "", now, strings)).toEqual([]);
+  });
+});
+
 describe("resolveSelectedDay", () => {
   const tabs = [
     { key: "2026-08-03", label: "Today", count: 1 },
@@ -101,16 +156,20 @@ describe("resolveSelectedDay", () => {
     expect(resolveSelectedDay("2026-08-05", tabs)).toBe("2026-08-05");
   });
 
-  it("falls back to the first day rather than showing an empty list", () => {
-    // The stale-link case: a game shared on Friday, opened on Monday. An empty
-    // page looks broken, and the reader has no way to know the day passed.
-    expect(resolveSelectedDay("2026-07-30", tabs)).toBe("2026-08-03");
-    expect(resolveSelectedDay(undefined, tabs)).toBe("2026-08-03");
+  it("selects NOTHING by default — the whole list is the resting state", () => {
+    // The strip is a filter, not a mode. Defaulting to the first day made "one
+    // day" the only state the list had: you could narrow it and never widen it
+    // again, and a game two days out was invisible until you found its tab.
+    expect(resolveSelectedDay(undefined, tabs)).toBeNull();
   });
 
-  it("ignores a junk day parameter instead of filtering everything away", () => {
-    expect(resolveSelectedDay("'; drop table games;--", tabs)).toBe("2026-08-03");
-    expect(resolveSelectedDay("", tabs)).toBe("2026-08-03");
+  it("falls back to the whole list for a stale or junk day", () => {
+    // A day shared on Friday and opened on Monday should show everything —
+    // the thing the reader can act on — not a different day they did not ask
+    // for.
+    expect(resolveSelectedDay("2026-07-30", tabs)).toBeNull();
+    expect(resolveSelectedDay("'; drop table games;--", tabs)).toBeNull();
+    expect(resolveSelectedDay("", tabs)).toBeNull();
   });
 
   it("selects nothing when there is nothing to select", () => {

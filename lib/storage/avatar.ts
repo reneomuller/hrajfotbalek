@@ -68,3 +68,35 @@ export function rejectPhoto(file: { type: string; size: number }): PhotoRejectio
   if (file.size > MAX_PHOTO_BYTES) return { reason: "size" };
   return null;
 }
+
+export const VENUE_PHOTOS_BUCKET = "venue-photos";
+
+/**
+ * The renderable URL for a venue's `image_path`, whichever shape it is.
+ *
+ * TWO SHAPES, ONE READER (migration 34):
+ *   `/venues/x.jpg`        a committed repo asset — served by Next from
+ *                          `public/`, so the path IS the URL
+ *   `venues/<uuid>.jpg`    a key in the venue-photos bucket
+ *
+ * The leading slash is the discriminator, which is why the CHECK constraint
+ * anchors both patterns rather than accepting anything image-shaped. Anything
+ * that is neither returns null and the panel falls back to name + Open map —
+ * the correct behaviour for a value that should not be in the column.
+ */
+export function venuePhotoUrl(
+  supabaseUrl: string,
+  imagePath: string | null | undefined,
+): string | null {
+  if (!imagePath) return null;
+
+  if (imagePath.startsWith("/venues/")) return imagePath;
+
+  if (imagePath.startsWith("venues/")) {
+    if (!supabaseUrl) return null;
+    const base = supabaseUrl.replace(/\/$/, "");
+    return `${base}/storage/v1/object/public/${VENUE_PHOTOS_BUCKET}/${imagePath}`;
+  }
+
+  return null;
+}

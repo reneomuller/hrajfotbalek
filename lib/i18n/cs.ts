@@ -151,8 +151,8 @@ export const cs: StringsOverlay = {
     verifyHint: "Nic nepřišlo? Zkontroluj spam a pak to zkus znovu.",
 
     signUp: "Registrace",
-    noAccountLead: "Ještě nemáš účet?",
-    createAccountCta: "Založ si ho →",
+    noAccountLead: "Ještě nejsi člen?",
+    createAccountCta: "Registrace →",
     haveAccount: "Už máš účet?",
     noAccount: "Jsi tu poprvé?",
     nicknameLabel: "Přezdívka",
@@ -196,6 +196,7 @@ export const cs: StringsOverlay = {
     viewGame: "Zobrazit zápas",
     copyLink: "Kopírovat odkaz",
     copyLinkFailed: "Nepodařilo se zkopírovat — podrž adresní řádek.",
+    dayFilterAll: "Vše",
     dayToday: "Dnes",
     dayTomorrow: "Zítra",
     rosterReserved: "drží místo",
@@ -364,6 +365,8 @@ export const cs: StringsOverlay = {
     changeEmailSame: "Tuhle adresu už používáš.",
     changeEmailFailed: "Změnu e-mailu se nepodařilo spustit. Zkus to prosím znovu.",
 
+    changePasswordLink: "Změnit heslo",
+    changeEmailLink: "Změnit e-mail",
     deleteAccount: "Smazat účet",
     deleteAccountHint: "Napiš nám a tvoje data smažeme.",
     deleteSubject: "Žádost o smazání účtu",

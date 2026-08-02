@@ -23,7 +23,10 @@ export const strings = {
   nav: {
     cta: "Claim your spot",
     games: "Games",
-    logIn: "Log in",
+    // "Sign in" rather than "Log in": it is the verb the rest of the auth
+    // copy already uses ("Sign in", "Sign out"), and the header was the one
+    // place saying something different.
+    logIn: "Sign in",
     profile: "My profile",
     home: "Hraj Fotbal — home",
     // Shown only to an is_admin session. Hiding it hides nothing — the gate is
@@ -243,8 +246,8 @@ export const strings = {
     // path lives here — which is where someone with no account is already
     // looking. Removing it from the header without this line would leave
     // /signup reachable only by typing the URL.
-    noAccountLead: "No account yet?",
-    createAccountCta: "Create one →",
+    noAccountLead: "Not a member yet?",
+    createAccountCta: "Sign up →",
     haveAccount: "Already have an account?",
     noAccount: "New here?",
   },
@@ -300,6 +303,7 @@ export const strings = {
     // The day-picker strip (§5.5). "Today" and "Tomorrow" earn their special
     // case: they are the two days anyone opening this page is deciding
     // between, and "Sun" on a Sunday makes a reader do arithmetic.
+    dayFilterAll: "All",
     dayToday: "Today",
     dayTomorrow: "Tomorrow",
     // Roster badges. The view projects booking status only — `reserved` means
@@ -518,6 +522,11 @@ export const strings = {
     changeEmailSame: "That is already your email.",
     changeEmailFailed: "We could not start the email change. Please try again.",
 
+    // The two security controls read as links, in the same voice as the
+    // deletion link they sit above (§3.3). Verbs, not nouns: these are things
+    // you do, and "Password" alone would read as a heading.
+    changePasswordLink: "Change my password",
+    changeEmailLink: "Change my email",
     deleteAccount: "Delete my account",
     deleteAccountHint: "Email us and we remove your data.",
     deleteMailto: "privacy@hrajfotbal.com",
@@ -673,6 +682,16 @@ export const strings = {
     venueImageLabel: "Image file",
     venueImageHint:
       "A file already committed under public/venues/ — e.g. prazacka.jpg. Leave empty for no photo.",
+    // --- venue photograph (§5.4, migration 34) --------------------------------
+    venuePhotoTitle: "Pitch photo",
+    venuePhotoUpload: "Upload a photo",
+    venuePhotoReplace: "Replace the photo",
+    venuePhotoHint:
+      "Landscape, taken at the pitch. It shows on every game here, above the map. Up to 4 MB, jpg/png/webp.",
+    venuePhotoBadType: "That is not a jpg, png or webp.",
+    venuePhotoTooBig: "That file is over 4 MB. Photograph it again at a lower size.",
+    venuePhotoFailed: "The upload did not go through. Try again.",
+    venuePhotoNoVenue: "Save the game first — a photo attaches to a venue, and this one is new.",
     venueMapQueryLabel: "Map search (optional)",
     venueMapQueryHint: "What to search for in Google Maps. Defaults to the venue name.",
     startsAtLabel: "Kick-off",
