@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 /**
- * `/admin/site` — the two home-page numbers (§6).
+ * `/admin/site` — the home page's editable content (§6).
  *
  * The player list is read with the service-role client, like every other admin
  * read in this codebase: `players_select_own` restricts an authenticated
@@ -44,6 +44,7 @@ export default async function AdminSitePage() {
 
       <SiteSettingsForms
         activePlayers={home.activePlayers}
+        gamesPerWeek={home.gamesPerWeek}
         players={players ?? []}
         currentPlayerOfMonth={home.playerOfMonth?.nickname ?? null}
       />

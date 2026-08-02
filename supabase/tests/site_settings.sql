@@ -209,6 +209,42 @@ select pg_temp.ok_call(
   'raise:SETTING_VALUE_INVALID',
   'a fractional active-player count is refused — people are whole numbers');
 
+-- --- games per week (migration 37) --------------------------------------------
+--
+-- THE SAME VALIDATION, ASSERTED SEPARATELY. The two numeric keys share one
+-- branch inside the function precisely so they cannot diverge — which is worth
+-- nothing unless something checks that the second key actually reaches it. A
+-- key added to the `in` list and forgotten in the validation is a setting that
+-- silently accepts "lots".
+
+do $$
+begin
+  perform public.set_site_setting('games_per_week', '7'::jsonb);
+
+  perform pg_temp.ok(
+    pg_temp.setting('games_per_week') = '7',
+    'games-per-week stores as a number');
+
+  perform pg_temp.ok(
+    pg_temp.event_count('games_per_week') = 1,
+    'a games-per-week change is audited like any other setting');
+end $$;
+
+select pg_temp.ok_call(
+  $q$select public.set_site_setting('games_per_week', '"lots"'::jsonb)$q$,
+  'raise:SETTING_VALUE_INVALID',
+  'a non-numeric games-per-week is refused');
+
+select pg_temp.ok_call(
+  $q$select public.set_site_setting('games_per_week', '-1'::jsonb)$q$,
+  'raise:SETTING_VALUE_INVALID',
+  'a negative games-per-week is refused');
+
+select pg_temp.ok_call(
+  $q$select public.set_site_setting('games_per_week', '7.5'::jsonb)$q$,
+  'raise:SETTING_VALUE_INVALID',
+  'a fractional games-per-week is refused — the copy renders it with a plus, not a point');
+
 -- --- player of the month ------------------------------------------------------
 
 do $$

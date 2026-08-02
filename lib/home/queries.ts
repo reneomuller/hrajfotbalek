@@ -20,18 +20,29 @@ export interface HomeContent {
   /**
    * Admin-editable community size. Null when never set.
    *
-   * ONE PLACE ON THE PAGE, and one only: the community heading. The stats
-   * strip that also showed it was removed on review — the same number in two
-   * places invites the reader to check whether they agree, which is a job the
-   * page should not be handing out.
+   * ONE PLACE ON THE PAGE, and one only: the stats panel. It briefly lived in
+   * the community heading as well, and the same number in two places invites
+   * the reader to check whether they agree — a job the page should not be
+   * handing out. v1.2 §6 moved it out of the heading and gave it a peer.
    */
   activePlayers: number | null;
+  /**
+   * Admin-editable games-per-week claim. Null when never set.
+   *
+   * A CLAIM, NOT A MEASUREMENT (migration 37). This was computed from published
+   * games in the trailing seven days until v1.2, which answered a different
+   * question: "7+ games every week" is a promise about what a visitor will
+   * find, and a trailing count is a report on the fortnight just gone. A quiet
+   * August would have advertised "2 games every week" to every shared link.
+   */
+  gamesPerWeek: number | null;
   /** The admin's pick, or null. */
   playerOfMonth: { nickname: string; photoPath: string | null } | null;
 }
 
 interface SettingsShape {
   active_players?: unknown;
+  games_per_week?: unknown;
   player_of_month?: unknown;
 }
 
@@ -46,21 +57,28 @@ export async function getHomeContent(): Promise<HomeContent> {
 
   const settings = (data?.settings ?? {}) as SettingsShape;
 
-  // Guarded rather than cast. The column is jsonb and the RPC validates on the
-  // way in, but this is a public page: a value that somehow is not a number
-  // renders as absent, never as `NaN` or `[object Object]`.
-  const activePlayers =
-    typeof settings.active_players === "number" && Number.isFinite(settings.active_players)
-      ? Math.trunc(settings.active_players)
-      : null;
-
   const playerOfMonthId =
     typeof settings.player_of_month === "string" ? settings.player_of_month : null;
 
   return {
-    activePlayers,
+    activePlayers: wholeNumber(settings.active_players),
+    gamesPerWeek: wholeNumber(settings.games_per_week),
     playerOfMonth: playerOfMonthId ? await getPlayerCard(playerOfMonthId) : null,
   };
+}
+
+/**
+ * A jsonb value as a whole number, or null.
+ *
+ * GUARDED RATHER THAN CAST. The column is jsonb and `set_site_setting`
+ * validates on the way in, but this is a public page reached from a shared
+ * WhatsApp link: a value that somehow is not a number has to render as absent,
+ * never as `NaN` or `[object Object]`. Shared by both numeric settings for the
+ * same reason the RPC validates them in one branch — two copies of this rule is
+ * how one of them ends up printing a decimal.
+ */
+function wholeNumber(value: unknown): number | null {
+  return typeof value === "number" && Number.isFinite(value) ? Math.trunc(value) : null;
 }
 
 /**

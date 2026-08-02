@@ -37,36 +37,73 @@ async function writeSetting(key: string, value: unknown): Promise<void> {
  * one. This is the most repeated lesson in the project, and this is the table
  * where it would be least visible.
  */
-test("a signed-out visitor sees the community count and the panels", async ({
-  page,
-}) => {
-  const previous = await readSetting("active_players");
+test("a signed-out visitor sees both numbers and the four panels", async ({ page }) => {
+  const previousPlayers = await readSetting("active_players");
+  const previousGames = await readSetting("games_per_week");
 
   try {
     await writeSetting("active_players", 250);
+    await writeSetting("games_per_week", 9);
 
     // No session at all — a fresh context, straight to the landing page.
     await page.goto("/");
 
     /*
-     * ONE PLACE, AND ONE ONLY. The stats strip that also carried this number
-     * was removed on review: the same figure in two places invites the reader
-     * to check whether they agree, which is a job the page should not hand
-     * out. The community heading is where it lives.
+     * ONE PLACE PER NUMBER, AND ONE ONLY. The old stats strip carried the
+     * active-player count as well as the community heading, and the same
+     * figure in two places invites the reader to check whether they agree —
+     * a job the page should not hand out. v1.2 §6 gives the numbers their own
+     * panel and takes the count back out of the heading.
      */
     await expect(page.getByTestId("stats-strip")).toHaveCount(0);
-    await expect(page.getByTestId("community-heading")).toContainText("250");
+    await expect(page.getByTestId("community-heading")).not.toContainText("250");
+    await expect(page.getByTestId("stat-players-value")).toContainText("250");
+    await expect(page.getByTestId("stat-games-value")).toContainText("9");
 
-    // REQ-HOME-005 — three panels.
+    // Both render with the "+", because both are floors rather than counts.
+    await expect(page.getByTestId("stat-games-value")).toContainText("+");
+
+    // REQ-HOME-005 as amended — four panels.
+    await expect(page.getByTestId("community-panel")).toBeVisible();
+    await expect(page.getByTestId("stats-panel")).toBeVisible();
     await expect(page.getByTestId("faq-panel")).toBeVisible();
     await expect(page.getByTestId("potm-panel")).toBeVisible();
+
+    // Real brand marks, not coloured dots — an SVG inside each link.
+    await expect(page.getByTestId("community-whatsapp").locator("svg")).toBeVisible();
+    await expect(page.getByTestId("community-instagram").locator("svg")).toBeVisible();
 
     // REQ-HOME-001 — how-it-works, with the equipment line beneath it.
     await expect(page.getByTestId("how-it-works")).toBeVisible();
     await expect(page.getByTestId("equipment-line")).toContainText("bibs");
   } finally {
-    await writeSetting("active_players", previous ?? 0);
+    await writeSetting("active_players", previousPlayers ?? 0);
+    await writeSetting("games_per_week", previousGames ?? 7);
   }
+});
+
+/*
+ * v1.2 §6 — the home page shows the next THREE games, in the list's own row.
+ *
+ * The single "NEXT MATCH" card could only answer "is there a game". The
+ * question a visitor arrives with is "is there a game I can make", which one
+ * card answers "no" to as often as not.
+ */
+test("the home page shows the next three games as list rows", async ({ page }) => {
+  await page.goto("/");
+
+  const rows = page.getByTestId("next-matches").getByTestId("game-row");
+  await expect(rows.first()).toBeVisible();
+  expect(await rows.count()).toBeLessThanOrEqual(3);
+
+  // THE SAME COMPONENT AS THE LIST, which is what keeps the two surfaces from
+  // drifting: no price, a spots-left count with a tone, and a link to the game.
+  await expect(rows.first().getByTestId("spots-left")).toHaveAttribute("data-tone", /.+/);
+  await expect(rows.first()).not.toContainText("CZK");
+
+  // A section showing three of something says that three is not all of it.
+  await page.getByTestId("next-matches-all").click();
+  await page.waitForURL("**/games");
 });
 
 /*
@@ -86,14 +123,27 @@ test("the FAQ carries all six entries and they open", async ({ page }) => {
 });
 
 /*
- * The games-per-week tile is gone entirely, along with the stats strip that
- * held it. Asserted rather than merely deleted: a removal nobody checks is a
- * removal that comes back.
+ * Games-per-week is an ADMIN CLAIM now, not a computed count (migration 37).
+ *
+ * The distinction is the whole point and is asserted directly: the page shows
+ * what the setting says even when it disagrees with how many games are actually
+ * on the board. A trailing-seven-day count would have advertised a quiet
+ * fortnight in August as the normal rate.
  */
-test("the games-per-week tile no longer renders", async ({ page }) => {
-  await page.goto("/");
-  await expect(page.getByTestId("stat-games-per-week")).toHaveCount(0);
-  await expect(page.getByTestId("stats-strip")).toHaveCount(0);
+test("games-per-week is what the admin set, not what the board holds", async ({ page }) => {
+  const previous = await readSetting("games_per_week");
+
+  try {
+    await writeSetting("games_per_week", 42);
+    await page.goto("/");
+    await expect(page.getByTestId("stat-games-value")).toContainText("42");
+
+    // The old strip is still gone. A removal nobody checks is a removal that
+    // comes back.
+    await expect(page.getByTestId("stats-strip")).toHaveCount(0);
+  } finally {
+    await writeSetting("games_per_week", previous ?? 7);
+  }
 });
 
 /*
@@ -118,11 +168,27 @@ test("an admin changes the active-player number and the change is recorded", asy
 
     await page.getByTestId("active-players-input").fill("312");
     await page.getByTestId("active-players-submit").click();
-    await expect(page.getByTestId("active-players-saved")).toBeVisible();
+
+    /*
+     * WAIT ON THE DATABASE, NOT ON THE SUCCESS MARKER.
+     *
+     * `active-players-saved` is rendered from a `useActionState` result, and
+     * the action calls `revalidatePath("/admin/site")` — so the re-render can
+     * unmount the marker before Playwright ever observes it. This spec passed
+     * in isolation and failed inside the full suite for exactly that reason,
+     * which is the flake CLAUDE.md names: client-state success markers do not
+     * survive `revalidatePath`, so assert on what the server renders next or on
+     * the row itself.
+     *
+     * It also stops the navigation below from racing the action: `click()`
+     * returns as soon as the form is submitted, and navigating immediately
+     * afterwards aborts an in-flight server action.
+     */
+    await expect.poll(() => readSetting("active_players"), { timeout: 10_000 }).toBe(312);
 
     // The home page reflects it — in the one place it now appears.
     await page.goto("/");
-    await expect(page.getByTestId("community-heading")).toContainText("312");
+    await expect(page.getByTestId("stat-players-value")).toContainText("312");
 
     // And the event records the change. A public claim about the size of the
     // community with no audit trail is a number nobody can account for.

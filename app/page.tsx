@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { CommunityPanel } from "@/components/home/CommunityPanel";
 import { FaqPanel } from "@/components/home/FaqPanel";
 import { PlayerOfMonthPanel } from "@/components/home/PlayerOfMonthPanel";
-import { NextMatchCard } from "@/components/NextMatchCard";
+import { StatsPanel } from "@/components/home/StatsPanel";
+import { GameRow } from "@/components/game/GameRow";
 import { getHomeContent } from "@/lib/home/queries";
-import { getNextGame, getRoster, getVenue } from "@/lib/games/queries";
+import { listUpcomingGames } from "@/lib/games/queries";
 import { siteUrl } from "@/lib/site";
 import { getStrings } from "@/lib/i18n/server";
 
@@ -36,22 +38,26 @@ export const dynamic = "force-dynamic";
 export default async function LandingPage() {
   const t = await getStrings();
   const { landing } = t;
-  const nextGame = await getNextGame();
-  // The reference shows the lineup as overlapping avatars, so the block needs
-  // nicknames as well as the count. Same anon-readable view the game page uses.
-  const roster = nextGame ? await getRoster(nextGame.game.id) : [];
-  // The venue behind the game, for the map panel's photo. Null for a game
-  // created before venues existed — the panel holds its own without one.
-  const venueRow = nextGame ? await getVenue(nextGame.game.venue_id) : null;
-  // Absolute, for the share link — a wa.me message carrying a relative path is
-  // a message nobody can open.
-  const base = await siteUrl();
-  // Storage origin for the roster photos (§4a). Absent, avatars fall back to
-  // initials, which is the ordinary case rather than a failure.
+
+  /*
+   * THREE GAMES, NOT ONE (v1.2 §6). This page showed a single "NEXT MATCH"
+   * card: a venue photo, a countdown, overlapping avatars and a claim button,
+   * about 400px of one game. It could only ever answer "is there a game", and
+   * the question a visitor arrives with is "is there a game I CAN MAKE" — which
+   * a single card answers "no" to as often as not, on a Tuesday, for a game on
+   * Thursday that they cannot do.
+   *
+   * So: the next three, in the same compact row the games list uses. Not a
+   * similar row — the SAME component, so the price stays off it, the format
+   * stays on it and the spots-left ladder cannot drift between the two
+   * surfaces. Three of them fit in less height than the one card did.
+   */
+  const { games } = await listUpcomingGames(3);
+  // Storage origin for the Player-of-the-Month photo (§4a). Absent, the panel
+  // falls back to initials, which is the ordinary case rather than a failure.
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
-  // Admin-editable content plus the computed games-per-week (§6). Every read
-  // behind this is anon-legal, because this page is what a shared WhatsApp
-  // link opens for someone with no account.
+  // Admin-editable content (§6). Every read behind this is anon-legal, because
+  // this page is what a shared WhatsApp link opens for someone with no account.
   const home = await getHomeContent();
 
   return (
@@ -141,35 +147,34 @@ export default async function LandingPage() {
           <div className="flex-1" />
 
           <section className="pb-3 pt-[10px]">
-            <div className="mb-[18px] flex items-baseline gap-3">
+            <div className="mb-[14px] flex items-baseline gap-3">
               <div className="font-mono text-[10px] tracking-eyebrow text-volt-dim">
                 {landing.nextMatchEyebrow}
               </div>
               <h2 className="m-0 font-display text-section-title uppercase tracking-wide text-white">
-                {landing.nextMatchLabel}
+                {landing.nextMatchesLabel}
               </h2>
+              {/* The way to the rest of them. A section showing three of
+                  something needs to say that three is not all of it. */}
+              <Link
+                href="/games"
+                data-testid="next-matches-all"
+                className="ml-auto shrink-0 font-mono text-[10px] uppercase tracking-eyebrow text-volt no-underline"
+              >
+                {landing.nextMatchesAll}
+              </Link>
             </div>
 
-            {/*
-              The reference's match card, wired to live data: date, counter,
-              capacity bar, lineup avatars and spots-left all come from the DB.
-            */}
-            {nextGame ? (
-              <NextMatchCard
-                game={nextGame.game}
-                bookedCount={nextGame.bookedCount}
-                roster={roster.map((row) => ({
-                  nickname: row.nickname,
-                  photoPath: row.photo_path,
-                }))}
-                venueRow={venueRow}
-                shareUrl={`${base}/game/${nextGame.game.id}`}
-                supabaseUrl={supabaseUrl}
-              />
+            {games.length > 0 ? (
+              <div data-testid="next-matches" className="flex flex-col gap-2">
+                {games.map(({ game, bookedCount }) => (
+                  <GameRow key={game.id} game={game} bookedCount={bookedCount} />
+                ))}
+              </div>
             ) : (
               <div
                 data-testid="next-game"
-                className="flex min-h-[220px] items-center justify-center overflow-hidden rounded-panel border border-hairline-volt bg-surface-panel p-6"
+                className="flex min-h-[120px] items-center justify-center overflow-hidden rounded-card border border-hairline-volt bg-surface-panel p-6"
               >
                 <p className="font-mono text-[11px] tracking-[1px] text-faint">
                   {t.games.empty}
@@ -185,54 +190,27 @@ export default async function LandingPage() {
             with `games.price_czk`.
           */}
           <section className="pt-4">
-            {/* THREE EQUAL PANELS (§6, REQ-HOME-005): Join · FAQ · Player of
-                the Month. `flex-1` with a shared min-width, so they sit as
-                three columns on a wide screen and stack in that order on a
-                phone. */}
+            {/*
+              FOUR PANELS (§6, REQ-HOME-005 as amended v1.2): Join · Numbers ·
+              FAQ · Player of the Month. `flex-1` with a shared min-width, so
+              they sit as columns on a wide screen and stack in that order on a
+              phone.
+
+              The first two were ONE panel, whose heading was itself a statistic
+              — "JOIN A COMMUNITY OF 500+ ACTIVE PLAYERS ACROSS PRAGUE" — with
+              the WhatsApp and Instagram links beneath it. That heading did two
+              jobs and did neither: as a call to action it buried the verb in
+              the middle of a claim, and as a statistic it could carry exactly
+              one number, so the second one had nowhere to live. Splitting them
+              gives the invitation a verb and the numbers a home.
+            */}
             <div className="flex flex-wrap items-stretch gap-4">
-              <div className="flex min-w-[270px] flex-1 flex-col justify-center rounded-[20px] border border-hairline-volt-soft bg-surface-card-strong p-[22px] text-center">
-                {/*
-                  v1.1.4 D — the heading carries the SAME admin-editable number
-                  the stats strip shows. One number, one source: a heading with
-                  its own hard-coded figure goes stale silently. Falls back to
-                  the plain heading when nothing has been set, rather than
-                  printing "a community of +".
-                */}
-                <h3
-                  data-testid="community-heading"
-                  className="m-0 mb-[6px] font-display text-community-title uppercase text-white"
-                >
-                  {home.activePlayers !== null
-                    ? landing.community.titleWithCount.replace(
-                        "{count}",
-                        String(home.activePlayers),
-                      )
-                    : landing.community.title}
-                </h3>
-                <p className="mx-auto mb-4 max-w-[320px] text-[13px] text-muted-dim">
-                  {landing.community.body}
-                </p>
-                <div className="flex flex-wrap justify-center gap-[10px]">
-                  <a
-                    href={landing.community.whatsappUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-[9px] rounded-cta border border-hairline-link px-5 py-[13px] font-condensed text-[15px] font-bold tracking-wide text-bone no-underline transition hover:border-whatsapp"
-                  >
-                    <span className="inline-block h-5 w-5 rounded-full bg-whatsapp" />
-                    {landing.community.whatsapp}
-                  </a>
-                  <a
-                    href={landing.community.instagramUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-[9px] rounded-cta border border-hairline-link px-5 py-[13px] font-condensed text-[15px] font-bold tracking-wide text-bone no-underline transition hover:border-volt"
-                  >
-                    <span className="inline-block h-5 w-5 rounded-[6px] bg-instagram" />
-                    {landing.community.instagram}
-                  </a>
-                </div>
-              </div>
+              <CommunityPanel />
+
+              <StatsPanel
+                gamesPerWeek={home.gamesPerWeek}
+                activePlayers={home.activePlayers}
+              />
 
               <FaqPanel />
 

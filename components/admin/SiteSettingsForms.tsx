@@ -4,6 +4,7 @@ import { useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
 import {
   setActivePlayersAction,
+  setGamesPerWeekAction,
   setPlayerOfMonthAction,
   type SiteSettingState,
 } from "@/app/admin/site/actions";
@@ -17,12 +18,12 @@ const LABEL = "block font-mono text-[10px] uppercase tracking-eyebrow text-muted
 const HINT = "mt-1 text-[12px] leading-snug text-muted-dim";
 
 /**
- * The two site-setting forms.
+ * The three site-setting forms.
  *
- * TWO FORMS, TWO ACTIONS, rather than one form saving both. They are edited on
- * completely different cadences — the community number moves a few times a
- * year, the Player of the Month once a month — and one combined save would
- * mean re-submitting a number nobody was looking at, which is how a value gets
+ * ONE FORM PER SETTING, rather than one form saving all of them. They are
+ * edited on completely different cadences — the two claims move a few times a
+ * year, the Player of the Month once a month — and one combined save would mean
+ * re-submitting values nobody was looking at, which is how a number gets
  * overwritten by a stale render.
  *
  * Both inputs are CONTROLLED, for the reason `GameForm` documents: React
@@ -34,43 +35,83 @@ const HINT = "mt-1 text-[12px] leading-snug text-muted-dim";
  */
 export function SiteSettingsForms({
   activePlayers,
+  gamesPerWeek,
   players,
   currentPlayerOfMonth,
 }: {
   activePlayers: number | null;
+  gamesPerWeek: number | null;
   players: { id: string; nickname: string }[];
   currentPlayerOfMonth: string | null;
 }) {
   return (
     <div className="mt-6 max-w-[560px] space-y-8">
-      <ActivePlayersForm activePlayers={activePlayers} />
+      <NumberForm
+        action={setGamesPerWeekAction}
+        name="gamesPerWeek"
+        current={gamesPerWeek}
+        label={strings.admin.siteGamesPerWeekLabel}
+        hint={strings.admin.siteGamesPerWeekHint}
+        submitLabel={strings.admin.siteGamesPerWeekSubmit}
+        testId="games-per-week"
+      />
+      <NumberForm
+        action={setActivePlayersAction}
+        name="activePlayers"
+        current={activePlayers}
+        label={strings.admin.siteActivePlayersLabel}
+        hint={strings.admin.siteActivePlayersHint}
+        submitLabel={strings.admin.siteActivePlayersSubmit}
+        testId="active-players"
+      />
       <PlayerOfMonthForm players={players} current={currentPlayerOfMonth} />
     </div>
   );
 }
 
-function ActivePlayersForm({ activePlayers }: { activePlayers: number | null }) {
-  const [state, formAction] = useActionState(setActivePlayersAction, INITIAL);
-  const [value, setValue] = useState(activePlayers !== null ? String(activePlayers) : "");
+/**
+ * One numeric claim. Shared by both, because they differ only in their copy —
+ * two near-identical form components is how one of them keeps a `min` the other
+ * loses.
+ */
+function NumberForm({
+  action,
+  name,
+  current,
+  label,
+  hint,
+  submitLabel,
+  testId,
+}: {
+  action: (state: SiteSettingState, formData: FormData) => Promise<SiteSettingState>;
+  name: string;
+  current: number | null;
+  label: string;
+  hint: string;
+  submitLabel: string;
+  testId: string;
+}) {
+  const [state, formAction] = useActionState(action, INITIAL);
+  const [value, setValue] = useState(current !== null ? String(current) : "");
 
   return (
     <form action={formAction} className="space-y-2">
-      <label className={LABEL} htmlFor="activePlayers">
-        {strings.admin.siteActivePlayersLabel}
+      <label className={LABEL} htmlFor={name}>
+        {label}
       </label>
       <input
-        id="activePlayers"
-        name="activePlayers"
+        id={name}
+        name={name}
         type="number"
         min={0}
         className={FIELD}
-        data-testid="active-players-input"
+        data-testid={`${testId}-input`}
         value={value}
         onChange={(event) => setValue(event.target.value)}
       />
-      <p className={HINT}>{strings.admin.siteActivePlayersHint}</p>
-      <Submit label={strings.admin.siteActivePlayersSubmit} testId="active-players-submit" />
-      <Result state={state} testId="active-players-saved" />
+      <p className={HINT}>{hint}</p>
+      <Submit label={submitLabel} testId={`${testId}-submit`} />
+      <Result state={state} testId={`${testId}-saved`} />
     </form>
   );
 }

@@ -28,24 +28,47 @@ export async function setActivePlayersAction(
   _prev: SiteSettingState,
   formData: FormData,
 ): Promise<SiteSettingState> {
+  return setNumberSetting("active_players", formData.get("activePlayers"));
+}
+
+export async function setGamesPerWeekAction(
+  _prev: SiteSettingState,
+  formData: FormData,
+): Promise<SiteSettingState> {
+  return setNumberSetting("games_per_week", formData.get("gamesPerWeek"));
+}
+
+/**
+ * The shared body of the two numeric settings.
+ *
+ * ONE FUNCTION, because they are one rule: a whole number, not negative,
+ * written through the RPC and revalidating the home page. Two copies of it is
+ * how `games_per_week` ends up accepting a decimal a year from now because only
+ * `active_players` was fixed — the same reasoning that put both keys in one
+ * validation branch inside `set_site_setting`.
+ *
+ * The RPC validates independently and is the actual enforcement. This check
+ * exists so the admin is told in the form rather than by a Postgres error
+ * string, which is a different job.
+ */
+async function setNumberSetting(
+  key: "active_players" | "games_per_week",
+  raw: FormDataEntryValue | null,
+): Promise<SiteSettingState> {
   await requireAdmin();
 
-  const raw = String(formData.get("activePlayers") ?? "").trim();
-  const value = Number(raw);
-  if (!raw || !Number.isInteger(value) || value < 0) {
+  const text = String(raw ?? "").trim();
+  const value = Number(text);
+  if (!text || !Number.isInteger(value) || value < 0) {
     return { status: "error", message: toAdminErrorMessage("SETTING_VALUE_INVALID") };
   }
 
   const supabase = await createServerSupabaseClient();
-  const { error } = await supabase.rpc("set_site_setting", {
-    p_key: "active_players",
-    p_value: value,
-  });
+  const { error } = await supabase.rpc("set_site_setting", { p_key: key, p_value: value });
 
   if (error) return { status: "error", message: toAdminErrorMessage(error.message) };
 
-  // The number renders in two places on the home page — the stats strip and
-  // the community heading — and both come from this one value.
+  // Both numbers render on the home page's stats panel, from these values.
   revalidatePath("/");
   revalidatePath("/admin/site");
   return { status: "saved" };

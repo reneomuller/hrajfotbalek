@@ -43,7 +43,7 @@ test("01-home", async ({ page }) => {
   await page.getByTestId("how-it-works").scrollIntoViewIfNeeded();
   await strip(page, "01-home-how-it-works");
 
-  await page.getByTestId("community-heading").scrollIntoViewIfNeeded();
+  await page.getByTestId("community-panel").scrollIntoViewIfNeeded();
   await strip(page, "01-home-community");
 });
 

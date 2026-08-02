@@ -90,23 +90,25 @@ export const strings = {
     // games in the trailing seven days; active players is admin-editable and
     // honestly framed — it counts the community including the WhatsApp cohort,
     // not the number of rows in `players`.
-    statsGamesLabel: "Games a week",
+    // Both numbers are admin-editable claims (§6, v1.2) — the "+" is rendered
+    // by the panel, so these are the captions under the figure and not the
+    // sentence. "7+ / games every week" reads as one line on the card.
+    statsGamesLabel: "Games every week",
     statsPlayersLabel: "Active players",
     // Beneath the how-it-works strip, because "what do I bring" is the second
     // question anyone asks and the answer removes a reason not to come.
     equipmentLine: "Training bibs, goalie gloves and balls provided.",
+    // Was "NEXT MATCH", one card. Three rows now — see the section comment in
+    // app/page.tsx: one card could only ever answer "is there a game", and the
+    // question a visitor arrives with is "is there a game I can make".
+    nextMatchesLabel: "NEXT MATCHES",
+    nextMatchesAll: "All games →",
     potmTitle: "Player of the month",
     potmEmpty: "Nobody picked yet — could be you.",
-    nextMatchLabel: "NEXT MATCH",
-    nextMatchCta: "Claim your spot",
 
 
     community: {
-      title: "JOIN THE COMMUNITY",
-      // v1.1.4 D — the heading carries the SAME admin-editable number the
-      // stats strip shows. One number, one source: a heading with its own
-      // hard-coded figure is a number that goes stale silently.
-      titleWithCount: "JOIN A COMMUNITY OF {count}+ ACTIVE PLAYERS ACROSS PRAGUE",
+      title: "JOIN OUR COMMUNITY",
       body: "New games every week. Follow along and play.",
       whatsapp: "WHATSAPP GROUP",
       whatsappUrl: "https://chat.whatsapp.com/LjPjGf3rf32CNifizwzsW9?mode=gi_t",
@@ -575,7 +577,10 @@ export const strings = {
    * the Russian is a draft awaiting a native reader (see `lib/i18n/ru.ts`).
    */
   faq: {
-    title: "Questions",
+    // "FAQ", not "Questions". The panel beside it is a list of numbers and the
+    // one under it is a person — this heading has to be recognised as a
+    // convention at a glance rather than read as a word.
+    title: "FAQ",
     items: [
       { q: "When should I show up?", a: "10 minutes before kickoff." },
       {
@@ -634,10 +639,14 @@ export const strings = {
     // --- site settings (§6) --------------------------------------------------
     siteTitle: "Home page",
     siteLede:
-      "Two numbers the landing page renders for signed-out visitors. Every change is recorded against your account.",
+      "What the landing page tells signed-out visitors. Every change is recorded against your account.",
+    siteGamesPerWeekLabel: "Games every week",
+    siteGamesPerWeekHint:
+      "Rendered with a + after it, so this is the FLOOR you are willing to promise — not last week's count. It was computed from the trailing seven days until v1.2, which advertised a quiet fortnight as the normal rate.",
+    siteGamesPerWeekSubmit: "Save number",
     siteActivePlayersLabel: "Active players",
     siteActivePlayersHint:
-      "The community including the WhatsApp crowd — not the number of accounts. Shown in the stats strip and in the community heading, from this one value.",
+      "The community including the WhatsApp crowd — not the number of accounts. Rendered with a + after it, in the stats panel.",
     siteActivePlayersSubmit: "Save number",
     sitePotmLabel: "Player of the month",
     sitePotmHint: "Renders their photo, or their initials if they have none.",

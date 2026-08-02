@@ -2,7 +2,7 @@ import { mkdir } from "node:fs/promises";
 import path from "node:path";
 import { expect, test } from "@playwright/test";
 import { createScratchGame, destroyScratchGame } from "./helpers/scaffold.ts";
-import { apiClientFor, players } from "./helpers/session.ts";
+import { apiClientFor, players, serviceClient } from "./helpers/session.ts";
 
 /**
  * Design pass 2 strips — the review surface for Oliver's per-stage verdicts.
@@ -140,4 +140,51 @@ test("A4-pass", async ({ page }) => {
   } finally {
     await destroyScratchGame(game.id);
   }
+});
+
+/**
+ * Items 5–7 — the home page.
+ *
+ * The settings are written first so the strip shows real numbers rather than a
+ * panel that happens to be empty on this machine, and put back afterwards:
+ * `site_settings` is a singleton and every spec touching it shares one row.
+ */
+test("B5-B7-home", async ({ page }) => {
+  const admin = serviceClient();
+  await admin.rpc("set_site_setting", { p_key: "games_per_week", p_value: 7 });
+  await admin.rpc("set_site_setting", { p_key: "active_players", p_value: 500 });
+  await admin.rpc("set_site_setting", {
+    p_key: "player_of_month",
+    p_value: players.runner.id,
+  });
+
+  await page.goto("/", { waitUntil: "networkidle" });
+
+  // Item 7 — three list rows where one card used to be.
+  await page.getByTestId("next-matches").scrollIntoViewIfNeeded();
+  await expect(page.getByTestId("next-matches")).toBeVisible();
+  await strip(page, "B7-next-matches");
+
+  // Item 5 — the split: an invitation with real brand marks, then the numbers.
+  await page.getByTestId("community-panel").scrollIntoViewIfNeeded();
+  await strip(page, "B5-community-and-stats");
+
+  await page.getByTestId("stats-panel").scrollIntoViewIfNeeded();
+  await strip(page, "B5-stats-panel");
+
+  // Item 6 — the heading reads FAQ.
+  await page.getByTestId("faq-panel").scrollIntoViewIfNeeded();
+  await expect(page.getByTestId("faq-panel")).toContainText("FAQ");
+  await strip(page, "B6-faq-heading");
+});
+
+/** Item 5 — both numbers are admin-editable, on one screen. */
+test("B5-admin-numbers", async ({ page, context }) => {
+  const { signInAs } = await import("./helpers/session.ts");
+  await signInAs(context, players.organizer);
+
+  await page.goto("/admin/site", { waitUntil: "networkidle" });
+  await expect(page.getByTestId("games-per-week-input")).toBeVisible();
+  await expect(page.getByTestId("active-players-input")).toBeVisible();
+  await strip(page, "B5-admin-editable-numbers");
 });
