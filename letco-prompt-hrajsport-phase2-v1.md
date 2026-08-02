@@ -1,6 +1,11 @@
-# hrajsport.cz — Phase 2 Specification (v1.1.4)
+# hrajsport.cz — Phase 2 Specification (v1.1.5)
 
 ## 0. Revision history
+
+- **v1.1.5 (2026-08-02)** — one clarification and two gate rulings, recorded during the G2 build.
+  - **A. The pass exception is keyed on INTENT AND AMOUNT** (§4.2). **Recorded as a clarification, not a reversal**: v1.1.4's wording was drafted to distinguish a correctly-paid pass from a mispaid one, and it was read — correctly, as written — as also reaching out to transform an ordinary top-up that happened to be for the same number. It was never meant to do the second thing. The exception now requires that the top-up was *created* as a pass purchase **and** that the received amount exactly equals that tier's price. A player who typed 700 into the ordinary top-up form meant 700 CZK of permanent credit; crediting 750 with a one-month expiry would transform their money without consent, and an unasked bonus is not a kindness when it does that. Both halves of the exact-figure rule are untouched: 690 against a 700 pass is still a top-up, and 700 against a 700 pass is still the pass.
+  - **B. Q3 ratified** (§6, §10). An event naming the acting admin and the new value is a sufficient audit trail for a site setting — consistent with how every other admin act in this product is recorded, and no weaker.
+  - **C. Q4 ratified** (§5.4, §10). **No minimum number of venue photographs before the panel ships.** The name + "Open map" fallback IS the design for a venue without a photo, not a placeholder waiting on one; photos accumulate venue by venue per `VENUES.md`. One committed asset is enough to prove the rendering.
 
 - **v1.1.4 (2026-08-01)** — the G2 display rulings, one reversal, and the game pass. Folded in before the phases they affect.
   - **A. One "Log in" button — this REVERSES the two-doors ruling of v1.1.2** (§3.1a). Signup is reached from the login page, not from the header. Recorded as a reversal rather than an edit: the earlier reasoning (with passwords, log-in and sign-up are different acts) was sound and the header is simply not where that distinction earns its space.
@@ -205,9 +210,12 @@ Credited value is always `games × 150`. The 1-game tier is deliberately not a d
 
 §4.1 states that the credited amount is always the amount received, because a top-up has no price to be short of. **A pass does have a price**, so:
 
-- **On admin confirmation of a received amount that EXACTLY equals the pass price**, the pass **value** is credited — not the amount received — as a batch carrying its expiry date.
-- **Any other received amount falls back to the standing rule**: credited = received, no expiry, no discount. A player who sends 690 against a 700 pass has made a top-up, not bought a pass, and telling them otherwise would either give away 60 CZK or silently swallow 690.
-- The match is on the **exact** figure for that reason: it is the only signal available that distinguishes "bought the 5-pass" from "sent some money".
+- **The exception applies only when BOTH hold (clarified v1.1.5):** the top-up was **created as a pass purchase** — a tier was chosen, recorded on the row — **and** the received amount **exactly equals that tier's price**. Then the pass **value** is credited, not the amount received, as a batch carrying its expiry date.
+- **Everything else falls back to the standing rule**: credited = received, no expiry, no discount.
+  - A player who sends 690 against a 700 pass has made a top-up, not bought a pass, and telling them otherwise would either give away 60 CZK or silently swallow 690.
+  - **An ordinary top-up of a coincidental tier amount is an ordinary top-up.** Free entry admits 50–2000, so someone typing 700 into the top-up form is entirely plausible. They meant 700 CZK of permanent credit; crediting 750 with a one-month expiry would transform their money without consent. An unasked bonus is not a kindness when it attaches an expiry to credit that had none.
+  - A pass paid at *another* tier's price is a mispayment too, not a purchase of that other tier. Crediting the higher value on the strength of a coincidence would hand over money nobody asked for.
+- **Intent is what the amount is checked against.** The exact figure was always the right test; what v1.1.5 fixes is *which* price it is exact against — the tier the player chose, rather than any tier in the table. Intent cannot be asserted by a caller: it is written from the tier itself when the pass is requested.
 - **The receipt states all three numbers — received, credited, expires** — because they differ, and a receipt that showed only one would be the thing a dispute is argued from.
 
 #### Mechanics

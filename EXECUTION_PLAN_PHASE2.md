@@ -4,7 +4,7 @@
 
 > **Version:** 1.0.0
 > **Created:** 2026-07-28
-> **Contract:** `letco-prompt-hrajsport-phase2-v1.md` v1.1.4
+> **Contract:** `letco-prompt-hrajsport-phase2-v1.md` v1.1.5
 > **Inputs:** `PHASE2_ANALYZE.md`, `PHASE2_IMPLEMENTATION.md`
 > **Estimated duration:** ~34 hours (2 040 minutes) across 22 phases
 > **Scope:** frozen at v1.1.4. Discoveries go to `POLISH.md`, never into this plan.
@@ -58,7 +58,7 @@ points for any execution session**, not checklist items.
 | 18. Admin player detail + manage/edit merge | G2 | **Complete** | 2026-08-02 | 2026-08-02 | R9. Three routes became one; `/edit` and `/attendance` redirect. Phase 7's deferred photo-removal UI landed. **Found: `toContainText(/settled/i)` matched `paymentsEmpty` on the merged page — a false green that also raced the DB read.** Also fixed the Phase 17 suite counting events table-wide. 84/84 E2E |
 | 19. Stats rework | G2 | **Complete** | 2026-08-02 | 2026-08-02 | R7. Full rewrite per F7 — no query had a date bound. 16 new unit tests on the window maths, including both DST transitions. TEST-227 asserts deltas against a baseline rather than absolutes. **Found: `StatCard` ran its value into its detail, so a scrape read 11 cancellations where there was 1** — value/detail now carry their own hooks. 88/88 E2E |
 | 20. G2 E2E specs + screenshot strips | G2 | **Complete** | 2026-08-02 | 2026-08-02 | Most TEST-2xx landed in their own phases; this closed TEST-222's photo half and mapped the lot in `e2e/G2_COVERAGE.md`. 91/91 E2E, 21 strips |
-| **20a. GAME PASS — money, own phase, individual report** | G2 | **Complete** | 2026-08-02 | 2026-08-02 | Migrations 31–33. `game_pass.sql` 54/54 incl. the Phase 1 invariants through the allocator; `booking_race.mjs` 19/19 with the two races re-run on batch wallets. **Four defects found — see the individual report** |
+| **20a. GAME PASS — money, own phase, individual report** | G2 | **Complete** | 2026-08-02 | 2026-08-02 | Migrations 31–33. `game_pass.sql` 54/54 incl. the Phase 1 invariants through the allocator; `booking_race.mjs` 19/19 with the two races re-run on batch wallets. **Four defects found — see the individual report**. §4.2 keying clarified 2026-08-02 to intent AND amount; migration 33 amended in place (never applied to production) |
 | **🛑 GATE G2 — Games + content** | **G2** | **Not verified** | - | - | **STOP** |
 | 21. `/football` rewrites + origin-derived surfaces | G3 | Not started | - | - | |
 | 22. Cutover + cron cadence restore | G3 | Not started | - | - | Human-executed; R8 |
@@ -561,8 +561,12 @@ community section; stats rework verified against a known week of data; toasts
 observed. Duration verified in the `.ics` and the structured data, not only on
 screen.
 
-Questions to answer here: **Q3** (site-settings audit trail), **Q4** (how many
-venue photos before the panel ships).
+Questions answered here, both ruled 2026-08-02 and folded into contract
+v1.1.5: **Q3** — an event naming the admin and the new value is a sufficient
+audit trail for a site setting, consistent with every other admin act.
+**Q4** — no minimum number of venue photographs: the name + Open-map fallback
+IS the design for a photo-less venue, and one committed asset proves the
+rendering.
 
 **STOP — do not proceed past this gate without explicit human confirmation.**
 

@@ -323,3 +323,79 @@ async function balanceOf(playerId: string): Promise<number> {
     .eq("player_id", playerId);
   return (data ?? []).reduce((sum, row) => sum + row.delta_czk, 0);
 }
+
+/*
+ * THE CLARIFIED KEYING (§4.2, ruled 2026-08-02) — intent AND amount.
+ *
+ * Asserted through the ORDINARY TOP-UP PATH, because that is where the harm
+ * would land: free entry admits 50–2000, so a player typing 700 into the
+ * top-up form is entirely plausible. Under amount-only keying they would have
+ * received 750 CZK carrying a one-month expiry they never agreed to — money
+ * they meant to keep, quietly converted into money that runs out.
+ */
+test("an ordinary top-up of a tier amount is credited as typed, with no expiry", async () => {
+  await clearWallet(players.creditPartial.id);
+
+  try {
+    const player = await apiClientFor(players.creditPartial);
+    // The ordinary RPC, no tier — exactly what the top-up form calls.
+    const { data: topup, error: createError } = await player.rpc("create_topup", {
+      p_amount_czk: 700,
+    });
+    expect(createError).toBeNull();
+    expect(topup!.pass_games).toBeNull();
+
+    const admin = serviceClient();
+    const { data: result } = await admin.rpc("confirm_topup", {
+      p_topup_id: topup!.id,
+      p_confirmed_by: players.organizer.id,
+      p_received_amount_czk: 700,
+    });
+
+    // 700, never 750.
+    expect(result!.credited_czk).toBe(700);
+    expect(await balanceOf(players.creditPartial.id)).toBe(700);
+
+    // And nothing expires.
+    const { data: batches } = await admin
+      .from("credit_ledger")
+      .select("expires_at")
+      .eq("player_id", players.creditPartial.id)
+      .not("expires_at", "is", null);
+    expect((batches ?? []).length).toBe(0);
+  } finally {
+    await clearWallet(players.creditPartial.id);
+  }
+});
+
+/*
+ * The counterpart, so the pair reads as one rule: the SAME 700, against a
+ * chosen 5-pass, still credits 750 with an expiry.
+ */
+test("a chosen 5-pass received at 700 still credits 750 with an expiry", async () => {
+  await clearWallet(players.creditPartial.id);
+
+  try {
+    const player = await apiClientFor(players.creditPartial);
+    const { data: topup } = await player.rpc("create_pass_topup", { p_pass_games: 5 });
+    expect(topup!.pass_games).toBe(5);
+
+    const admin = serviceClient();
+    const { data: result } = await admin.rpc("confirm_topup", {
+      p_topup_id: topup!.id,
+      p_confirmed_by: players.organizer.id,
+      p_received_amount_czk: 700,
+    });
+
+    expect(result!.credited_czk).toBe(750);
+
+    const { data: batches } = await admin
+      .from("credit_ledger")
+      .select("expires_at")
+      .eq("player_id", players.creditPartial.id)
+      .not("expires_at", "is", null);
+    expect((batches ?? []).length).toBe(1);
+  } finally {
+    await clearWallet(players.creditPartial.id);
+  }
+});

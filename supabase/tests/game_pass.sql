@@ -274,6 +274,101 @@ begin
     'the event records received, credited AND expires — a receipt showing one is what a dispute is argued from');
 end $$;
 
+-- =============================================================================
+-- THE CLARIFIED KEYING (ruled 2026-08-02): intent AND amount
+--
+-- An ordinary top-up of a coincidental tier amount is an ORDINARY TOP-UP.
+-- Free entry admits 50–2000, so a player typing 700 into the top-up form is
+-- entirely plausible — and crediting them 750 with a one-month expiry would
+-- transform money they meant to keep permanently. This is the assertion that
+-- says it cannot happen.
+-- =============================================================================
+
+do $$
+declare
+  v_topup public.credit_topups;
+  v_result public.topup_result;
+begin
+  perform pg_temp.reset_wallet('bbbb0000-0000-0000-0000-0000000020a2');
+
+  perform pg_temp.act_as('b0000000-0000-0000-0000-0000000020a2');
+  -- The ORDINARY path: no tier chosen, an amount that happens to equal one.
+  v_topup := public.create_topup(700);
+
+  perform pg_temp.ok(
+    v_topup.pass_games is null,
+    'an ordinary top-up records no tier, whatever the amount');
+
+  perform pg_temp.as_service();
+  v_result := public.confirm_topup(v_topup.id, 'aaaa0000-0000-0000-0000-0000000020a1', 700);
+
+  perform pg_temp.ok(
+    v_result.credited_czk = 700,
+    'an ordinary 700 credits 700 — never 750. The player meant 700 CZK that keeps',
+    v_result.credited_czk::text);
+
+  perform pg_temp.ok(
+    pg_temp.batch_count('bbbb0000-0000-0000-0000-0000000020a2') = 0,
+    'and it carries NO expiry — an unasked bonus is not a kindness when it makes money run out');
+end $$;
+
+reset role;
+
+-- A pass paid at ANOTHER tier's price is a mispayment, not a purchase of that
+-- other tier. Crediting 1200 on the strength of a coincidence would hand over
+-- 450 CZK nobody asked for.
+do $$
+declare
+  v_topup public.credit_topups;
+  v_result public.topup_result;
+begin
+  perform pg_temp.reset_wallet('bbbb0000-0000-0000-0000-0000000020a2');
+
+  perform pg_temp.act_as('b0000000-0000-0000-0000-0000000020a2');
+  v_topup := public.create_pass_topup(5);   -- 700
+
+  perform pg_temp.as_service();
+  v_result := public.confirm_topup(
+    v_topup.id, 'aaaa0000-0000-0000-0000-0000000020a1', 1080);  -- the 8-pass price
+
+  perform pg_temp.ok(
+    v_result.credited_czk = 1080,
+    'a 5-pass paid at the 8-pass price credits what arrived, not the 8-pass value',
+    v_result.credited_czk::text);
+
+  perform pg_temp.ok(
+    pg_temp.batch_count('bbbb0000-0000-0000-0000-0000000020a2') = 0,
+    'and no expiry — it is a mispaid pass, which is a top-up');
+end $$;
+
+reset role;
+
+-- And the chosen tier, paid exactly, still gets the pass. Restated here beside
+-- its counter-cases so the whole rule reads in one place.
+do $$
+declare
+  v_topup public.credit_topups;
+  v_result public.topup_result;
+begin
+  perform pg_temp.reset_wallet('bbbb0000-0000-0000-0000-0000000020a2');
+
+  perform pg_temp.act_as('b0000000-0000-0000-0000-0000000020a2');
+  v_topup := public.create_pass_topup(5);
+
+  perform pg_temp.as_service();
+  v_result := public.confirm_topup(v_topup.id, 'aaaa0000-0000-0000-0000-0000000020a1', 700);
+
+  perform pg_temp.ok(
+    v_result.credited_czk = 750,
+    'a CHOSEN 5-pass paid at exactly 700 still credits 750');
+
+  perform pg_temp.ok(
+    pg_temp.batch_count('bbbb0000-0000-0000-0000-0000000020a2') = 1,
+    'and it lands as a batch with an expiry');
+end $$;
+
+reset role;
+
 -- Any other amount falls back to the standing rule.
 do $$
 declare

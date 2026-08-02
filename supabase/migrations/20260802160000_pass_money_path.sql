@@ -554,15 +554,31 @@ comment on function public.create_pass_topup(integer) is
 -- §4.1 states the credited amount is always the amount received, because a
 -- top-up has no price to be short of. A PASS DOES HAVE A PRICE, so:
 --
---   * a received amount that EXACTLY equals a pass price credits the pass
---     VALUE, as a batch carrying its expiry;
---   * any other amount falls back to the standing rule — credited = received,
+--   * a top-up CREATED AS A PASS PURCHASE, received at EXACTLY that tier's
+--     price, credits the pass VALUE as a batch carrying its expiry;
+--   * everything else falls back to the standing rule — credited = received,
 --     no expiry, no discount.
 --
--- The match is on the exact figure because it is the only signal that
--- distinguishes "bought the 5-pass" from "sent some money". A player who sends
--- 690 against a 700 pass has made a top-up, and telling them otherwise would
--- either give away 60 CZK or silently swallow 690.
+-- KEYED ON INTENT **AND** AMOUNT (ruled 2026-08-02, clarifying §4.2). The
+-- original wording keyed on the received amount alone, and it was drafted to
+-- tell a correctly-paid pass from a mispaid one — not to reach out and
+-- transform an ordinary top-up that happened to be for the same number.
+--
+-- That distinction is not academic. Free entry admits any amount from 50 to
+-- 2000, so someone typing 700 into the ordinary top-up form is entirely
+-- plausible — and under amount-only keying they would receive 750 CZK carrying
+-- a one-month expiry they never agreed to. An unasked bonus is not a kindness
+-- when it converts permanent credit into expiring credit: the player meant 700
+-- CZK that keeps.
+--
+-- Both halves of the exact-figure rule survive intact. A player who sends 690
+-- against a 700 pass has made a top-up, and is credited 690 with no expiry —
+-- telling them otherwise would either give away 60 CZK or silently swallow
+-- 690. A player who sends 700 against a 700 pass gets the pass they chose.
+--
+-- `credit_topups.pass_games` is what carries the intent, written by
+-- `create_pass_topup` from the tier itself. There is no field in which a
+-- caller can assert it.
 -- =============================================================================
 
 create or replace function public.confirm_topup(
@@ -583,6 +599,9 @@ declare
   v_balance    integer;
   v_tier       public.pass_tiers;
   v_expires_at timestamptz := null;
+  -- Set only when BOTH halves of the rule hold. `found` alone is not enough:
+  -- the tier row is found whenever a tier was chosen, whatever arrived.
+  v_is_pass    boolean := false;
 begin
   if not (public.is_admin_caller() or public.is_service_role()) then
     raise exception 'INSUFFICIENT_PERMISSION' using detail = 'admin or service role only';
@@ -609,14 +628,27 @@ begin
 
   v_credited := v_received;
 
-  -- The pass match. An exact hit on a tier price credits that tier's value and
-  -- stamps the expiry; anything else leaves `v_credited = v_received` and no
-  -- expiry, which is §4.1 unchanged.
-  select * into v_tier from public.pass_tiers where price_czk = v_received;
-  if found then
-    v_credited := v_tier.credited_czk;
-    if v_tier.expires_months is not null then
-      v_expires_at := now() + make_interval(months => v_tier.expires_months);
+  /*
+   * THE PASS MATCH: intent AND amount, both required.
+   *
+   * `pass_games` is null on every ordinary top-up, so the whole branch is
+   * skipped for them and `v_credited` stays `v_received` — §4.1 unchanged, and
+   * an ordinary 700 can never become 750.
+   *
+   * When a tier WAS chosen, the received amount must equal that tier's price
+   * exactly. Not "some tier's price": paying the 8-pass amount against a
+   * 5-pass request is a mispayment, and crediting the 8-pass value would hand
+   * over 450 CZK nobody asked for on the strength of a coincidence.
+   */
+  if v_topup.pass_games is not null then
+    select * into v_tier from public.pass_tiers where games = v_topup.pass_games;
+
+    if found and v_received = v_tier.price_czk then
+      v_is_pass  := true;
+      v_credited := v_tier.credited_czk;
+      if v_tier.expires_months is not null then
+        v_expires_at := now() + make_interval(months => v_tier.expires_months);
+      end if;
     end if;
   end if;
 
@@ -646,7 +678,10 @@ begin
             'received_czk', v_received,
             'credited_czk', v_credited,
             'expires_at', v_expires_at,
-            'pass_games', case when v_tier.games is not null then v_tier.games end,
+            -- The tier that was HONOURED, not merely the one requested. A
+            -- mispaid pass records null here and reads, correctly, as an
+            -- ordinary top-up in the audit trail.
+            'pass_games', case when v_is_pass then v_tier.games end,
             'confirmed_by', v_actor),
           v_topup.city, v_topup.brand, v_topup.policy_version);
 

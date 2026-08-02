@@ -151,11 +151,16 @@ comment on table public.pass_tiers is
 -- states it, the admin screen shows it, and the audit trail otherwise cannot
 -- distinguish a 5-pass purchase from someone who happened to send 700.
 --
--- NOTE FOR THE GATE. §4.2 keys the pass treatment on the RECEIVED amount
--- matching a pass price, and that is what migration 33 implements. This column
--- means a stricter rule — pass treatment only when a tier was actually chosen
--- — is one predicate away if it is ever wanted. It is not applied here,
--- because the contract is explicit and this is money.
+-- THIS COLUMN IS LOAD-BEARING, not merely descriptive (ruled 2026-08-02).
+-- §4.2's keying was clarified to require intent AND amount: the pass treatment
+-- applies only when a top-up was CREATED as a pass purchase and the received
+-- amount equals that tier's price. `pass_games` is what carries the intent, so
+-- `confirm_topup` reads it rather than scanning the tier table for a price
+-- that happens to match.
+--
+-- Written by `create_pass_topup` from the tier itself. There is no field in
+-- which a caller can assert it, which is what makes it trustworthy as the
+-- first half of a money rule.
 -- -----------------------------------------------------------------------------
 
 alter table public.credit_topups
@@ -163,8 +168,9 @@ alter table public.credit_topups
 
 comment on column public.credit_topups.pass_games is
   'The tier the player chose, when they chose one. Null for an ordinary '
-  'top-up. Recorded for the receipt and the audit trail; the pass treatment '
-  'itself keys on the received amount, per §4.2.';
+  'top-up. The pass treatment requires this to be set AND the received amount '
+  'to equal that tier''s price (§4.2 as clarified 2026-08-02) — so an ordinary '
+  'top-up that happens to match a tier price is never transformed.';
 
 -- =============================================================================
 -- The event type — WIDENED IN THE SAME MIGRATION, before anything emits it
