@@ -50,6 +50,32 @@
     @apply m-0 bg-ink text-bone font-sans antialiased overflow-x-hidden;
   }
 
+  /**
+   * THE FOCUS RING, on every focusable element, once.
+   *
+   * A colour token alone is not a focus indicator — it has to be drawn.
+   * Defining it here rather than per component is the only way it reaches
+   * everything: a ring applied component by component is a ring that is
+   * missing from whichever control nobody remembered, and the control
+   * nobody remembered is usually the one a keyboard user needs.
+   *
+   * `:focus-visible`, not `:focus`. The browser decides when a focus ring is
+   * warranted, which means a mouse click on a button does not draw one and a
+   * Tab to the same button does. Using `:focus` instead is how products end
+   * up with rings on every click and someone eventually removes them
+   * entirely — taking the keyboard affordance with them.
+   *
+   * 2px at 2px offset, in FULL-OPACITY volt. `hairline-volt` at .30 computes
+   * to roughly 2.4:1 on `surface-raised`, under the 3:1 WCAG 1.4.11 requires
+   * of a non-text indicator, so the selected-state outline cannot double as
+   * this. The offset is what keeps it visible on a volt-filled control, where
+   * a ring drawn on the element's own edge would disappear into the fill.
+   */
+  :focus-visible {
+    outline: 2px solid theme("colors.focus-ring");
+    outline-offset: 2px;
+  }
+
   ::selection {
     @apply bg-volt text-surface;
   }
