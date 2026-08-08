@@ -22,14 +22,14 @@ import { getStrings } from "@/lib/i18n/server";
  * background read as a rendering glitch. A slow pulse is enough.
  */
 function Bar({ className }: { className: string }) {
-  return <div className={`rounded-chip bg-surface-avatar ${className}`} />;
+  return <div className={`rounded-pill bg-surface-avatar ${className}`} />;
 }
 
 export function GameCardSkeleton() {
   return (
     <div
       aria-hidden="true"
-      className="animate-pulse rounded-card border border-hairline bg-surface-card px-4 py-[10px]"
+      className="animate-pulse rounded-card bg-surface px-4 py-[10px]"
     >
       {/* Time span, and the spots-left count opposite it. */}
       <div className="flex items-center justify-between gap-3">

@@ -28,7 +28,7 @@ export function AddPlayerForm({ gameId }: { gameId: string }) {
     return (
       <div
         data-testid="add-player-done"
-        className="mt-6 rounded-card border border-hairline-volt bg-surface-card p-5"
+        className="mt-6 rounded-card border border-hairline-volt bg-surface p-5"
       >
         <p className="m-0 font-condensed text-[17px] font-bold uppercase tracking-wide text-volt">
           {strings.admin.addPlayerDone}
@@ -59,7 +59,7 @@ export function AddPlayerForm({ gameId }: { gameId: string }) {
           className={FIELD}
           data-testid="add-player-nickname"
         />
-        <p className="mt-1 text-[12px] text-muted-dim">{strings.auth.nicknameHint}</p>
+        <p className="mt-1 text-[12px] text-muted">{strings.auth.nicknameHint}</p>
         {state.fieldErrors?.nickname && (
           <p className="mt-1 text-[12px] text-volt">{state.fieldErrors.nickname}</p>
         )}
@@ -76,7 +76,7 @@ export function AddPlayerForm({ gameId }: { gameId: string }) {
           className={FIELD}
           data-testid="add-player-email"
         />
-        <p className="mt-1 text-[12px] text-muted-dim">{strings.admin.addPlayerEmailHint}</p>
+        <p className="mt-1 text-[12px] text-muted">{strings.admin.addPlayerEmailHint}</p>
       </div>
 
       <fieldset className="border-0 p-0">
@@ -123,7 +123,7 @@ function SubmitButton() {
       type="submit"
       disabled={pending}
       data-testid="add-player-submit"
-      className="w-full rounded-cta bg-volt px-6 py-4 font-condensed text-cta font-extrabold uppercase tracking-wide text-surface disabled:opacity-60"
+      className="w-full rounded-control bg-volt px-6 py-4 font-condensed text-cta font-extrabold uppercase tracking-wide text-surface disabled:opacity-60"
     >
       {pending ? strings.common.loading : strings.admin.addPlayerSubmit}
     </button>

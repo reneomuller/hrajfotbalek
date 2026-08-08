@@ -94,7 +94,7 @@ export function VenueAmenities({
           onClick={save}
           disabled={pending}
           data-testid="amenities-submit"
-          className="w-fit rounded-cta bg-volt px-5 py-3 font-condensed text-[15px] font-extrabold uppercase tracking-wide text-surface disabled:opacity-60"
+          className="w-fit rounded-control bg-volt px-5 py-3 font-condensed text-[15px] font-extrabold uppercase tracking-wide text-surface disabled:opacity-60"
         >
           {pending ? strings.common.loading : strings.admin.venueAmenitiesSubmit}
         </button>

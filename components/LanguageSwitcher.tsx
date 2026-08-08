@@ -90,7 +90,7 @@ export function LanguageSwitcher() {
         // label is right for the person who cannot read the current one.
         aria-label="EN / CZ / RU"
         data-testid="locale-trigger"
-        className="flex items-center gap-1 rounded-chip border border-hairline-strong px-2 py-[6px] font-mono text-[10px] tracking-[1px] text-bone transition hover:border-hairline-volt disabled:opacity-50"
+        className="flex items-center gap-1 rounded-pill border border-hairline-strong px-2 py-[6px] font-mono text-[10px] tracking-[1px] text-bone transition hover:border-hairline-volt disabled:opacity-50"
       >
         <span aria-hidden>{FLAGS[active]}</span>
         {LOCALE_LABELS[active].short}
@@ -117,7 +117,7 @@ export function LanguageSwitcher() {
                   lang={locale}
                   onClick={() => choose(locale)}
                   data-testid={`locale-${locale}`}
-                  className={`flex w-full items-center gap-2 rounded-chip px-2 py-2 text-left font-mono text-[11px] tracking-[1px] transition ${
+                  className={`flex w-full items-center gap-2 rounded-pill px-2 py-2 text-left font-mono text-[11px] tracking-[1px] transition ${
                     isActive ? "bg-volt/[.12] text-volt" : "text-bone hover:bg-white/[.05]"
                   }`}
                 >

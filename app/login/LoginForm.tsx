@@ -12,7 +12,7 @@ import { useStrings } from "@/components/LocaleProvider";
 const initialState: LoginFormState = { status: "idle" };
 
 const FIELD_CLASS =
-  "rounded-control border border-hairline-link bg-transparent px-4 py-3 text-base outline-none transition-colors focus:border-volt";
+  "rounded-control border border-hairline-strong bg-transparent px-4 py-3 text-base outline-none transition-colors focus:border-volt";
 const LABEL_CLASS =
   "font-[family-name:var(--font-jetbrains-mono)] text-xs uppercase tracking-widest opacity-60";
 
@@ -82,7 +82,7 @@ export function LoginForm({
           type="submit"
           disabled={pending}
           data-testid="login-submit"
-          className="rounded-cta bg-volt px-4 py-[15px] font-condensed text-cta font-extrabold uppercase tracking-wide text-surface transition disabled:opacity-50"
+          className="rounded-control bg-volt px-4 py-[15px] font-condensed text-cta font-extrabold uppercase tracking-wide text-surface transition disabled:opacity-50"
         >
           {pending ? t.common.loading : t.auth.signInSubmit}
         </button>
@@ -150,7 +150,7 @@ function CodeRequestForm({
           type="submit"
           disabled={pending}
           data-testid="request-code"
-          className="rounded-cta border border-hairline-volt px-4 py-[15px] font-condensed text-cta font-extrabold uppercase tracking-wide text-volt transition disabled:opacity-50"
+          className="rounded-control border border-hairline-volt px-4 py-[15px] font-condensed text-cta font-extrabold uppercase tracking-wide text-volt transition disabled:opacity-50"
         >
           {pending ? t.common.loading : t.auth.forgotPasswordCta}
         </button>
@@ -233,7 +233,7 @@ function CodeForm({
           maxLength={8}
           data-testid="otp-input"
           placeholder={t.auth.otpPlaceholder}
-          className="rounded-control border border-hairline-link bg-transparent px-4 py-3 text-center font-mono text-xl tracking-[8px] outline-none transition-colors focus:border-volt"
+          className="rounded-control border border-hairline-strong bg-transparent px-4 py-3 text-center font-mono text-xl tracking-[8px] outline-none transition-colors focus:border-volt"
         />
       </label>
 
@@ -241,7 +241,7 @@ function CodeForm({
         type="submit"
         disabled={pending}
         data-testid="otp-submit"
-        className="rounded-cta border border-hairline-volt px-4 py-[15px] font-condensed text-cta font-extrabold uppercase tracking-wide text-volt transition disabled:opacity-50"
+        className="rounded-control border border-hairline-volt px-4 py-[15px] font-condensed text-cta font-extrabold uppercase tracking-wide text-volt transition disabled:opacity-50"
       >
         {pending ? t.common.loading : t.auth.otpSubmit}
       </button>

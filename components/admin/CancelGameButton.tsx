@@ -15,7 +15,7 @@ function ConfirmButton() {
       type="submit"
       disabled={pending}
       data-testid="cancel-game-confirm"
-      className="w-full rounded-cta border border-hairline-link bg-transparent px-6 py-4 font-condensed text-cta font-extrabold uppercase tracking-wide text-bone disabled:opacity-60"
+      className="w-full rounded-control border border-hairline-strong bg-transparent px-6 py-4 font-condensed text-cta font-extrabold uppercase tracking-wide text-bone disabled:opacity-60"
     >
       {pending ? strings.common.loading : strings.admin.cancelGameConfirm}
     </button>
@@ -38,7 +38,7 @@ export function CancelGameButton({ gameId, venue }: { gameId: string; venue: str
     return (
       <div
         data-testid="cancel-game-result"
-        className="rounded-card border border-hairline-volt bg-surface-card p-5"
+        className="rounded-card border border-hairline-volt bg-surface p-5"
       >
         <div className="font-condensed text-[17px] font-bold uppercase tracking-wide text-volt">
           {strings.admin.cancelGameDone}
@@ -65,7 +65,7 @@ export function CancelGameButton({ gameId, venue }: { gameId: string; venue: str
         type="button"
         data-testid="cancel-game"
         onClick={() => setArmed(true)}
-        className="w-full rounded-cta border border-hairline-strong px-6 py-4 font-condensed text-cta font-extrabold uppercase tracking-wide text-muted"
+        className="w-full rounded-control border border-hairline-strong px-6 py-4 font-condensed text-cta font-extrabold uppercase tracking-wide text-muted"
       >
         {strings.admin.cancelGame}
       </button>

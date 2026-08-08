@@ -83,7 +83,7 @@ export async function GameRow({
         pixels below the fold at Pixel-7 height. The spec counts rows fully
         inside the viewport, so "nearly" does not count.
       */
-      className="block rounded-card border border-hairline-volt bg-surface-panel px-4 py-[10px] no-underline transition-colors hover:border-hairline-volt-strong"
+      className="block rounded-card border border-hairline-volt bg-surface px-4 py-[10px] no-underline transition-colors hover:border-hairline-volt"
     >
       {/* Line one — when it starts, and how much of it is left. The two
           things a scanning reader is actually comparing between rows. */}
@@ -124,7 +124,7 @@ export async function GameRow({
         {onWaitlist && (
           <span
             data-testid="on-waitlist-badge"
-            className="rounded-chip border border-hairline-volt bg-volt/[.08] px-2 py-[2px] font-mono text-[9px] uppercase tracking-eyebrow text-volt"
+            className="rounded-pill border border-hairline-volt bg-volt/[.08] px-2 py-[2px] font-mono text-[9px] uppercase tracking-eyebrow text-volt"
           >
             {t.games.onWaitlistBadge}
           </span>

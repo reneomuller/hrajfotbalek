@@ -35,7 +35,7 @@ export async function NextGameStrip({
     <Link
       href={`/game/${game.id}`}
       data-testid="next-game-strip"
-      className="block rounded-card border border-hairline-volt bg-surface-card-strong px-5 py-4 no-underline transition-colors hover:border-hairline-volt-strong"
+      className="block rounded-card border border-hairline-volt bg-surface px-5 py-4 no-underline transition-colors hover:border-hairline-volt"
     >
       <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
         <span className="font-mono text-[10px] uppercase tracking-eyebrow text-volt-dim">
@@ -51,7 +51,7 @@ export async function NextGameStrip({
         <span className="font-condensed text-[20px] font-bold text-white">
           {game.venue}
         </span>
-        <span className="font-mono text-[11px] uppercase tracking-[1px] text-chalk">
+        <span className="font-mono text-[11px] uppercase tracking-[1px] text-bone">
           {formatGameDateTime(game.starts_at)}
         </span>
       </div>

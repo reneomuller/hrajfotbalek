@@ -27,7 +27,7 @@ export function EmptyState({
   const isExternal = ctaHref?.startsWith("http") ?? false;
 
   return (
-    <div className="rounded-card border border-hairline bg-surface-card px-6 py-10 text-center">
+    <div className="rounded-card bg-surface px-6 py-10 text-center">
       {/* The mark, quiet. Volt at this size reads as a wink, not an error. */}
       <p className="m-0 font-condensed text-[34px] font-extrabold italic leading-none tracking-[-1px] text-volt-dim opacity-40">
         {strings.brand.monogramLead}

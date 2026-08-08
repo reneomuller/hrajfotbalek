@@ -73,7 +73,7 @@ export function CopyLinkButton({
         type="button"
         onClick={() => void copy()}
         data-testid="share-copy-link"
-        className={`inline-flex items-center gap-2 rounded-control border border-hairline-volt bg-volt/[.08] px-3 py-2 font-mono uppercase tracking-eyebrow text-volt transition hover:border-hairline-volt-strong ${
+        className={`inline-flex items-center gap-2 rounded-control border border-hairline-volt bg-volt/[.08] px-3 py-2 font-mono uppercase tracking-eyebrow text-volt transition hover:border-hairline-volt ${
           size === "slim" ? "text-[9px]" : "text-[10px]"
         }`}
       >

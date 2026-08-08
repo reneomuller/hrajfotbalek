@@ -32,7 +32,7 @@ export async function AmenityGrid({ amenities }: { amenities: string[] | null })
   return (
     <section
       data-testid="amenity-grid"
-      className="mt-4 rounded-card border border-hairline bg-surface-card p-5"
+      className="mt-4 rounded-card bg-surface p-5"
     >
       <h2 className="m-0 font-condensed text-[17px] font-bold uppercase tracking-wide text-white">
         {t.games.includedTitle}

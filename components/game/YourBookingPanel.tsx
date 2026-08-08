@@ -48,7 +48,7 @@ export async function YourBookingPanel({
     <section
       data-testid="your-booking"
       data-status={booking.status}
-      className="mt-6 rounded-card border border-hairline-volt bg-surface-panel p-5"
+      className="mt-6 rounded-card border border-hairline-volt bg-surface p-5"
     >
       <div className="flex flex-wrap items-baseline justify-between gap-3">
         <h2 className="m-0 font-condensed text-[17px] font-bold uppercase tracking-wide text-white">
@@ -56,7 +56,7 @@ export async function YourBookingPanel({
         </h2>
         <span
           data-testid="your-booking-badge"
-          className={`rounded-chip border px-2 py-1 font-mono text-[10px] uppercase tracking-eyebrow ${TONE_CLASS[badge.tone]}`}
+          className={`rounded-pill border px-2 py-1 font-mono text-[10px] uppercase tracking-eyebrow ${TONE_CLASS[badge.tone]}`}
         >
           {badge.label}
         </span>
@@ -80,7 +80,7 @@ export async function YourBookingPanel({
           <Link
             href={`/game/${booking.game_id}/book/confirmation?booking=${booking.id}`}
             data-testid="your-booking-pay"
-            className="rounded-cta bg-volt px-5 py-3 font-condensed text-[15px] font-extrabold uppercase tracking-wide text-surface no-underline"
+            className="rounded-control bg-volt px-5 py-3 font-condensed text-[15px] font-extrabold uppercase tracking-wide text-surface no-underline"
           >
             {t.games.yourBookingPay}
           </Link>

@@ -92,7 +92,7 @@ export default async function ConfirmationPage({
 
         {/* Instant-confirmed outcomes: nothing to pay, so no payment block. */}
         {(isCredit || isSeed) && (
-          <p className="mt-6 rounded-card border border-hairline-volt bg-surface-card p-5 text-[14px] leading-relaxed text-bone">
+          <p className="mt-6 rounded-card border border-hairline-volt bg-surface p-5 text-[14px] leading-relaxed text-bone">
             {isSeed ? t.booking.coveredBySeed : t.booking.coveredByCredit}
           </p>
         )}
@@ -123,7 +123,7 @@ export default async function ConfirmationPage({
             </div>
 
             {booking.payment_method === "cash" && (
-              <p className="mt-4 rounded-card border border-hairline bg-surface-card p-4 text-[14px] leading-relaxed text-muted">
+              <p className="mt-4 rounded-card bg-surface p-4 text-[14px] leading-relaxed text-muted">
                 {t.booking.payByCashHint}
               </p>
             )}
@@ -154,7 +154,7 @@ export default async function ConfirmationPage({
         <a
           href={`/game/${game.id}/ics`}
           data-testid="ics-link"
-          className="mt-8 block rounded-cta border border-hairline-volt px-6 py-4 text-center font-condensed text-cta font-extrabold uppercase tracking-wide text-volt no-underline"
+          className="mt-8 block rounded-control border border-hairline-volt px-6 py-4 text-center font-condensed text-cta font-extrabold uppercase tracking-wide text-volt no-underline"
         >
           {t.booking.addToCalendar}
         </a>

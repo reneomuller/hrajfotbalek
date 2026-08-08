@@ -35,7 +35,7 @@ export async function CreditBatches({ batches }: { batches: CreditBatch[] }) {
           <li
             key={batch.batchId}
             data-testid="credit-batch"
-            className="flex flex-wrap items-baseline justify-between gap-3 rounded-card border border-hairline bg-surface-card px-4 py-3"
+            className="flex flex-wrap items-baseline justify-between gap-3 rounded-card bg-surface px-4 py-3"
           >
             <span className="font-mono text-[13px] text-bone">
               {t.pass.batchesExpiring

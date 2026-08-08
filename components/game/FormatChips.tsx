@@ -44,7 +44,7 @@ export async function FormatChips({
       {format && (
         <span
           data-testid="game-format"
-          className={`rounded-chip bg-volt px-2 py-1 font-mono ${text} font-bold tracking-[1px] text-surface`}
+          className={`rounded-pill bg-volt px-2 py-1 font-mono ${text} font-bold tracking-[1px] text-surface`}
         >
           {format}
         </span>
@@ -60,7 +60,7 @@ export async function FormatChips({
       {surface && (
         <span
           data-testid="game-surface"
-          className={`rounded-chip border border-hairline-strong px-2 py-1 font-mono ${text} font-bold uppercase tracking-[1px] text-muted`}
+          className={`rounded-pill border border-hairline-strong px-2 py-1 font-mono ${text} font-bold uppercase tracking-[1px] text-muted`}
         >
           {t.games.surface[surface]}
         </span>

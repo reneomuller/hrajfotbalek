@@ -122,7 +122,7 @@ export default async function AdminPlayerPage({
         <h3 className="m-0 font-condensed text-[18px] font-bold uppercase tracking-wide text-bone">
           {strings.admin.playerGamesTitle}
         </h3>
-        <p className="mt-1 max-w-[520px] text-[13px] leading-relaxed text-muted-dim">
+        <p className="mt-1 max-w-[520px] text-[13px] leading-relaxed text-muted">
           {strings.admin.playerGamesLede}
         </p>
 

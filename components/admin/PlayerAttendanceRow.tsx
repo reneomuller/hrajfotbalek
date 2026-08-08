@@ -40,7 +40,7 @@ export function PlayerAttendanceRow({ row }: { row: AdminPlayerGameRow }) {
       data-testid="player-game-row"
       data-attendance={row.attendance ?? ""}
       data-status={row.status}
-      className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 rounded-card border border-hairline bg-surface-card px-5 py-3"
+      className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 rounded-card bg-surface px-5 py-3"
     >
       <div className="min-w-[180px] flex-1">
         <Link

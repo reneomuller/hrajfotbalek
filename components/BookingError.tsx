@@ -24,7 +24,7 @@ export function BookingError({ code, gameId }: BookingErrorProps) {
     <div
       data-testid="booking-error"
       data-error-code={code}
-      className="rounded-card border border-hairline-strong bg-surface-card p-5"
+      className="rounded-card border border-hairline-strong bg-surface p-5"
     >
       <div className="font-condensed text-[19px] font-bold uppercase tracking-wide text-white">
         {title}

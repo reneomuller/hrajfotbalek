@@ -144,7 +144,7 @@ export async function GameHero({
           {address && (
             <p
               data-testid="game-hero-address"
-              className="mt-[6px] text-[14px] leading-snug text-chalk"
+              className="mt-[6px] text-[14px] leading-snug text-bone"
             >
               {address}
             </p>

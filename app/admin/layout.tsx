@@ -44,7 +44,7 @@ export default async function AdminLayout({
 
   return (
     <div className="relative z-10 mx-auto w-full max-w-shell px-gutter pb-16 pt-24">
-      <header className="flex flex-wrap items-baseline justify-between gap-3 border-b border-hairline-chrome pb-4">
+      <header className="flex flex-wrap items-baseline justify-between gap-3 border-b border-hairline pb-4">
         <div className="flex items-baseline gap-4">
           <h1 className="m-0 font-display text-section-title uppercase tracking-wide text-white">
             {strings.admin.title}

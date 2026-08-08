@@ -44,7 +44,7 @@ export async function BookingList({ rows }: BookingListProps) {
             key={booking.id}
             data-testid="booking-row"
             data-status={booking.status}
-            className="rounded-card border border-hairline bg-surface-card p-5"
+            className="rounded-card bg-surface p-5"
           >
             <div className="flex items-baseline justify-between gap-3">
               <Link
@@ -55,7 +55,7 @@ export async function BookingList({ rows }: BookingListProps) {
               </Link>
               <span
                 data-testid="booking-badge"
-                className={`shrink-0 rounded-chip border px-[10px] py-1 font-mono text-[10px] uppercase tracking-eyebrow ${TONE_CLASS[badge.tone]}`}
+                className={`shrink-0 rounded-pill border px-[10px] py-1 font-mono text-[10px] uppercase tracking-eyebrow ${TONE_CLASS[badge.tone]}`}
               >
                 {badge.label}
               </span>

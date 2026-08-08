@@ -72,7 +72,7 @@ export default async function AdminTopupsPage({
             <li
               key={topup.id}
               data-testid="pending-topup"
-              className="flex flex-wrap items-center justify-between gap-3 rounded-card border border-hairline-link p-4"
+              className="flex flex-wrap items-center justify-between gap-3 rounded-card border border-hairline-strong p-4"
             >
               <div className="flex flex-col">
                 <span className="font-mono text-sm text-volt">{topup.payment_code}</span>
@@ -90,7 +90,7 @@ export default async function AdminTopupsPage({
                   placeholder={String(topup.amount_czk)}
                   min={1}
                   data-testid="received-amount"
-                  className="w-24 rounded-control border border-hairline-link bg-transparent px-3 py-2 text-sm outline-none focus:border-volt"
+                  className="w-24 rounded-control border border-hairline-strong bg-transparent px-3 py-2 text-sm outline-none focus:border-volt"
                 />
                 <button
                   type="submit"

@@ -20,7 +20,7 @@ export async function FaqPanel() {
   return (
     <div
       data-testid="faq-panel"
-      className="flex min-w-[270px] flex-1 flex-col rounded-[20px] border border-hairline-volt-soft bg-surface-card-strong p-[22px]"
+      className="flex min-w-[270px] flex-1 flex-col rounded-[20px] border border-hairline-volt bg-surface p-[22px]"
     >
       <h3 className="m-0 mb-3 font-display text-community-title uppercase text-white">
         {t.faq.title}
@@ -35,7 +35,7 @@ export async function FaqPanel() {
                 <span className="mr-2 hidden text-volt group-open:inline">−</span>
                 {item.q}
               </summary>
-              <p className="m-0 pb-[10px] pl-5 text-[13px] leading-relaxed text-muted-dim">
+              <p className="m-0 pb-[10px] pl-5 text-[13px] leading-relaxed text-muted">
                 {item.a}
               </p>
             </details>

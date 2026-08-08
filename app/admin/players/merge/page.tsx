@@ -31,7 +31,7 @@ export default async function MergePlayersPage() {
       <h2 className="mt-4 font-condensed text-[22px] font-bold uppercase tracking-wide text-bone">
         {strings.admin.mergeTitle}
       </h2>
-      <p className="mt-3 max-w-[560px] text-[13px] leading-relaxed text-muted-dim">
+      <p className="mt-3 max-w-[560px] text-[13px] leading-relaxed text-muted">
         {strings.admin.mergeLede}
       </p>
 

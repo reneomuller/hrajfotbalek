@@ -28,7 +28,7 @@ export async function PassPanel() {
     <Link
       href="/pass"
       data-testid="pass-panel"
-      className="mt-2 flex items-center justify-between gap-3 rounded-card border border-hairline-volt bg-volt/[.06] px-4 py-2 no-underline transition-colors hover:border-hairline-volt-strong"
+      className="mt-2 flex items-center justify-between gap-3 rounded-card border border-hairline-volt bg-volt/[.06] px-4 py-2 no-underline transition-colors hover:border-hairline-volt"
     >
       <span className="min-w-0">
         <span
@@ -39,7 +39,7 @@ export async function PassPanel() {
         </span>
         <span
           data-testid="pass-panel-body"
-          className="mt-[1px] block truncate font-mono text-[11px] text-muted-dim"
+          className="mt-[1px] block truncate font-mono text-[11px] text-muted"
         >
           {t.pass.panelBody}
         </span>

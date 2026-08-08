@@ -35,7 +35,7 @@ export default async function NotFound() {
 
       <Link
         href="/games"
-        className="mt-8 rounded-cta bg-volt px-6 py-[15px] font-condensed text-cta font-extrabold uppercase italic tracking-wide text-surface no-underline"
+        className="mt-8 rounded-control bg-volt px-6 py-[15px] font-condensed text-cta font-extrabold uppercase italic tracking-wide text-surface no-underline"
       >
         {notFound.cta}
       </Link>

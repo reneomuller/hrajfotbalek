@@ -36,7 +36,7 @@ export function AttendanceRow({
     <li
       data-testid="attendance-row"
       data-attendance={marked ?? ""}
-      className="flex flex-wrap items-center justify-between gap-4 rounded-card border border-hairline bg-surface-card px-5 py-3"
+      className="flex flex-wrap items-center justify-between gap-4 rounded-card bg-surface px-5 py-3"
     >
       <span className="min-w-[140px] flex-1 font-condensed text-[16px] font-bold text-white">
         {booking.nickname}
@@ -97,7 +97,7 @@ function MarkButton({
       value={value}
       disabled={pending}
       data-testid={testId}
-      className={`rounded-cta px-4 py-2 font-condensed text-[13px] font-extrabold uppercase tracking-wide disabled:opacity-60 ${
+      className={`rounded-control px-4 py-2 font-condensed text-[13px] font-extrabold uppercase tracking-wide disabled:opacity-60 ${
         active
           ? "bg-volt text-surface"
           : "border border-hairline-strong bg-transparent text-bone"

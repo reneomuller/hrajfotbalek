@@ -21,7 +21,7 @@ export function PaymentBadge({
     <span
       data-testid="payment-badge"
       data-tone={badge.tone}
-      className={`rounded-chip border px-[10px] py-1 font-mono text-[10px] uppercase tracking-eyebrow ${TONE[badge.tone]}`}
+      className={`rounded-pill border px-[10px] py-1 font-mono text-[10px] uppercase tracking-eyebrow ${TONE[badge.tone]}`}
     >
       {badge.label}
     </span>

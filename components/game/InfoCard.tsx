@@ -59,7 +59,7 @@ export async function InfoCard({
   return (
     <section
       data-testid="game-info-card"
-      className="mt-4 rounded-card border border-hairline bg-surface-card p-5"
+      className="mt-4 rounded-card bg-surface p-5"
     >
       {/* When. The SPAN, not the kick-off alone (§5.2, REQ-GAME-007) — the end
           comes from `gameEndsAt`, the same call the `.ics` DTEND and the
@@ -107,7 +107,7 @@ export async function InfoCard({
       </div>
 
       {game.allowed_skill_levels && (
-        <p className="mt-3 font-mono text-[11px] tracking-[1px] text-faint">
+        <p className="mt-3 font-mono text-small tracking-[1px] text-faint">
           {t.games.skillNotEnforced}
         </p>
       )}

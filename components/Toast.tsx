@@ -84,7 +84,7 @@ function ToastBody({
   return (
     <div
       data-testid="toast"
-      className="pointer-events-auto flex max-w-[420px] items-center gap-3 rounded-card border border-hairline-volt bg-surface-overlay px-4 py-3 shadow-volt-glow"
+      className="pointer-events-auto flex max-w-[420px] items-center gap-3 rounded-card border border-hairline-volt bg-surface-overlay px-4 py-3"
     >
       <span aria-hidden className="h-2 w-2 shrink-0 rounded-full bg-volt" />
       <span className="text-[13px] leading-snug text-bone">{message}</span>
@@ -93,7 +93,7 @@ function ToastBody({
         onClick={() => setDismissed(true)}
         aria-label={closeLabel}
         data-testid="toast-close"
-        className="ml-1 shrink-0 rounded-chip px-2 py-1 font-mono text-[11px] text-muted transition hover:text-bone"
+        className="ml-1 shrink-0 rounded-pill px-2 py-1 font-mono text-[11px] text-muted transition hover:text-bone"
       >
         ✕
       </button>

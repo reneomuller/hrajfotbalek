@@ -49,7 +49,7 @@ export default async function PassPage() {
         ))}
       </div>
 
-      <section className="mt-10 rounded-card border border-hairline bg-surface-card p-5">
+      <section className="mt-10 rounded-card bg-surface p-5">
         <h2 className="m-0 font-condensed text-[17px] font-bold uppercase tracking-wide text-white">
           {t.pass.howItWorks}
         </h2>

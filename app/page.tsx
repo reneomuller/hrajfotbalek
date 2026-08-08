@@ -90,12 +90,12 @@ export default async function LandingPage() {
             {/* Primary CTA — the games list, not an in-page anchor. */}
             <Link
               href="/games"
-              className="mt-[30px] inline-flex items-center gap-[9px] rounded-cta bg-volt px-[26px] py-[15px] font-condensed text-cta font-extrabold uppercase tracking-wide text-surface no-underline"
+              className="mt-[30px] inline-flex items-center gap-[9px] rounded-control bg-volt px-[26px] py-[15px] font-condensed text-cta font-extrabold uppercase tracking-wide text-surface no-underline"
             >
               {landing.heroCta}
             </Link>
 
-            <div className="mt-[30px] animate-floatY font-mono text-[9px] tracking-eyebrow text-dim">
+            <div className="mt-[30px] animate-floatY font-mono text-[9px] tracking-eyebrow text-faint">
               {landing.scrollHint}
             </div>
           </div>
@@ -116,7 +116,7 @@ export default async function LandingPage() {
               {landing.steps.map((step) => (
                 <div
                   key={step.index}
-                  className="flex min-w-[200px] flex-1 items-start gap-3 rounded-card border border-hairline bg-surface-card px-[18px] py-[15px] text-left"
+                  className="flex min-w-[200px] flex-1 items-start gap-3 rounded-card bg-surface px-[18px] py-[15px] text-left"
                 >
                   <div className="font-mono text-[14px] font-bold text-volt">
                     {step.index}
@@ -125,7 +125,7 @@ export default async function LandingPage() {
                     <div className="font-condensed text-[18px] font-bold tracking-[.3px]">
                       {step.title}
                     </div>
-                    <div className="mt-[3px] text-[13px] leading-[1.45] text-muted-dim">
+                    <div className="mt-[3px] text-[13px] leading-[1.45] text-muted">
                       {step.body}
                     </div>
                   </div>
@@ -174,7 +174,7 @@ export default async function LandingPage() {
             ) : (
               <div
                 data-testid="next-game"
-                className="flex min-h-[120px] items-center justify-center overflow-hidden rounded-card border border-hairline-volt bg-surface-panel p-6"
+                className="flex min-h-[120px] items-center justify-center overflow-hidden rounded-card border border-hairline-volt bg-surface p-6"
               >
                 <p className="font-mono text-[11px] tracking-[1px] text-faint">
                   {t.games.empty}
@@ -224,15 +224,15 @@ export default async function LandingPage() {
           <div className="flex-1" />
 
           {/* FOOTER */}
-          <footer className="flex flex-wrap items-center justify-between gap-2 border-t border-hairline-chrome pb-6 pt-5">
-            <div className="font-condensed text-[14px] font-bold tracking-wide text-footer-dim">
+          <footer className="flex flex-wrap items-center justify-between gap-2 border-t border-hairline pb-6 pt-5">
+            <div className="font-condensed text-[14px] font-bold tracking-wide text-muted">
               {landing.footer.wordmarkLead}{" "}
               <span className="text-volt-dim">
                 {landing.footer.wordmarkAccent}
               </span>{" "}
               {landing.footer.city}
             </div>
-            <div className="font-mono text-[9px] tracking-[2px] text-dim">
+            <div className="font-mono text-[9px] tracking-[2px] text-faint">
               {landing.footer.tagline}
             </div>
           </footer>

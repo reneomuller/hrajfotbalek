@@ -38,7 +38,7 @@ export async function ShareButton({
       rel="noopener noreferrer"
       data-testid="share-whatsapp"
       aria-label={t.games.shareWhatsApp}
-      className={`inline-flex items-center gap-2 rounded-control border border-hairline-link px-3 py-2 font-mono uppercase tracking-eyebrow text-bone no-underline transition hover:border-whatsapp ${
+      className={`inline-flex items-center gap-2 rounded-control border border-hairline-strong px-3 py-2 font-mono uppercase tracking-eyebrow text-bone no-underline transition hover:border-whatsapp ${
         size === "slim" ? "text-[9px]" : "text-[10px]"
       }`}
     >

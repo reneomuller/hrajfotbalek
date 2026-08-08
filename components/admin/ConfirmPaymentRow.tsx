@@ -37,7 +37,7 @@ export function ConfirmPaymentRow({
     <li
       data-testid="pending-booking"
       data-vs={booking.paymentCode ?? ""}
-      className="rounded-card border border-hairline bg-surface-card px-5 py-4"
+      className="rounded-card bg-surface px-5 py-4"
     >
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="min-w-[180px] flex-1">
@@ -127,7 +127,7 @@ function ConfirmButton({ showAmount }: { showAmount: boolean }) {
       type="submit"
       disabled={pending}
       data-testid="mark-paid"
-      className="rounded-cta bg-volt px-5 py-3 font-condensed text-[15px] font-extrabold uppercase tracking-wide text-surface disabled:opacity-60"
+      className="rounded-control bg-volt px-5 py-3 font-condensed text-[15px] font-extrabold uppercase tracking-wide text-surface disabled:opacity-60"
     >
       {pending
         ? strings.common.loading

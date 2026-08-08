@@ -23,7 +23,7 @@ const INITIAL: AdminActionState = { status: "idle" };
 const FIELD =
   "mt-1 w-full rounded-control border border-hairline-strong bg-surface px-3 py-2 font-mono text-[13px] text-bone";
 const LABEL = "block font-mono text-[10px] uppercase tracking-eyebrow text-muted";
-const HINT = "mt-1 text-[12px] leading-snug text-muted-dim";
+const HINT = "mt-1 text-[12px] leading-snug text-muted";
 const ERROR = "mt-1 text-[12px] text-volt";
 
 /**
@@ -163,7 +163,7 @@ export function GameForm({
       </div>
 
       {venueChoice === "new" && (
-        <div className="space-y-4 rounded-card border border-hairline-volt-soft bg-surface-card p-4">
+        <div className="space-y-4 rounded-card border border-hairline-volt bg-surface p-4">
           <div>
             <label className={LABEL} htmlFor="newVenueName">
               {strings.admin.venueNameLabel}
@@ -359,7 +359,7 @@ export function GameForm({
         column — so there is one way to say it rather than an option that has
         to be kept in sync with an empty list.
       */}
-      <fieldset className="rounded-card border border-hairline-chrome p-4">
+      <fieldset className="rounded-card p-4">
         <legend className={LABEL}>{strings.admin.skillHeading}</legend>
         <div className="mt-2 flex flex-wrap gap-4">
           {SKILL_LEVELS.map((level) => (
@@ -385,7 +385,7 @@ export function GameForm({
       </fieldset>
 
       {/* --- organizer ------------------------------------------------------------ */}
-      <fieldset className="rounded-card border border-hairline-chrome p-4">
+      <fieldset className="rounded-card p-4">
         <legend className={LABEL}>{strings.admin.organizerHeading}</legend>
 
         <div className="mt-2">
@@ -466,7 +466,7 @@ function SubmitButton({ isEdit }: { isEdit: boolean }) {
       type="submit"
       disabled={pending}
       data-testid="game-form-submit"
-      className="w-full rounded-cta bg-volt px-6 py-4 font-condensed text-cta font-extrabold uppercase tracking-wide text-surface disabled:opacity-60"
+      className="w-full rounded-control bg-volt px-6 py-4 font-condensed text-cta font-extrabold uppercase tracking-wide text-surface disabled:opacity-60"
     >
       {pending
         ? strings.common.loading

@@ -15,7 +15,7 @@ const INITIAL: SiteSettingState = { status: "idle" };
 const FIELD =
   "mt-1 w-full rounded-control border border-hairline-strong bg-surface px-3 py-2 font-mono text-[13px] text-bone";
 const LABEL = "block font-mono text-[10px] uppercase tracking-eyebrow text-muted";
-const HINT = "mt-1 text-[12px] leading-snug text-muted-dim";
+const HINT = "mt-1 text-[12px] leading-snug text-muted";
 
 /**
  * The three site-setting forms.
@@ -164,7 +164,7 @@ function Submit({ label, testId }: { label: string; testId: string }) {
       type="submit"
       disabled={pending}
       data-testid={testId}
-      className="rounded-cta bg-volt px-5 py-3 font-condensed text-[15px] font-extrabold uppercase tracking-wide text-surface disabled:opacity-60"
+      className="rounded-control bg-volt px-5 py-3 font-condensed text-[15px] font-extrabold uppercase tracking-wide text-surface disabled:opacity-60"
     >
       {pending ? strings.common.loading : label}
     </button>

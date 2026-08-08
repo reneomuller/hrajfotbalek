@@ -61,7 +61,7 @@ export function BottomTabBar() {
     <nav
       data-testid="bottom-tabs"
       aria-label={t.nav.primary}
-      className="fixed inset-x-0 bottom-0 z-40 border-t border-hairline-chrome bg-ink/95 backdrop-blur-md md:hidden"
+      className="fixed inset-x-0 bottom-0 z-40 border-t border-hairline bg-ink/95 backdrop-blur-md md:hidden"
       // The safe-area inset, and only here: the bar is the bottom-most thing on
       // a phone, so it owns the home indicator's strip and nothing above it has
       // to think about it.

@@ -32,7 +32,7 @@ export async function PlayerOfMonthPanel({
   return (
     <div
       data-testid="potm-panel"
-      className="flex min-w-[270px] flex-1 flex-col items-center justify-center rounded-[20px] border border-hairline-volt-soft bg-surface-card-strong p-[22px] text-center"
+      className="flex min-w-[270px] flex-1 flex-col items-center justify-center rounded-[20px] border border-hairline-volt bg-surface p-[22px] text-center"
     >
       <h3 className="m-0 mb-4 font-display text-community-title uppercase text-white">
         {t.landing.potmTitle}
@@ -42,7 +42,7 @@ export async function PlayerOfMonthPanel({
         <>
           <span
             data-testid="potm-avatar"
-            className="flex h-[72px] w-[72px] items-center justify-center overflow-hidden rounded-full border-2 border-volt bg-surface-avatar font-condensed text-[26px] font-bold text-volt shadow-volt-glow"
+            className="flex h-[72px] w-[72px] items-center justify-center overflow-hidden rounded-full border-2 border-volt bg-surface-avatar font-condensed text-[26px] font-bold text-volt"
           >
             {photo ? (
               // eslint-disable-next-line @next/next/no-img-element
@@ -64,7 +64,7 @@ export async function PlayerOfMonthPanel({
           </div>
         </>
       ) : (
-        <p className="m-0 max-w-[240px] text-[13px] text-muted-dim">
+        <p className="m-0 max-w-[240px] text-[13px] text-muted">
           {t.landing.potmEmpty}
         </p>
       )}

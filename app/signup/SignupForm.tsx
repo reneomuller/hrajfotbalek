@@ -11,7 +11,7 @@ import { useStrings } from "@/components/LocaleProvider";
 const initialState: SignupFormState = { status: "idle" };
 
 const FIELD_CLASS =
-  "rounded-control border border-hairline-link bg-transparent px-4 py-3 text-base outline-none transition-colors focus:border-volt";
+  "rounded-control border border-hairline-strong bg-transparent px-4 py-3 text-base outline-none transition-colors focus:border-volt";
 const LABEL_CLASS =
   "font-[family-name:var(--font-jetbrains-mono)] text-xs uppercase tracking-widest opacity-60";
 
@@ -145,7 +145,7 @@ export function SignupForm({
           {SKILL_LEVELS.map((level) => (
             <label
               key={level}
-              className="flex cursor-pointer items-center gap-2 rounded-control border border-hairline-link px-3 py-2 text-sm has-[:checked]:border-volt has-[:checked]:text-volt"
+              className="flex cursor-pointer items-center gap-2 rounded-control border border-hairline-strong px-3 py-2 text-sm has-[:checked]:border-volt has-[:checked]:text-volt"
             >
               <input type="radio" name="skill" value={level} required className="accent-volt" />
               {level === "beginner"
@@ -174,7 +174,7 @@ export function SignupForm({
         makes it invalid. The grouping is part of the requirement, not styling:
         a preference that looks like a legal act gets ticked unread.
       */}
-      <fieldset className="flex flex-col gap-3 rounded-card border border-hairline-link p-4">
+      <fieldset className="flex flex-col gap-3 rounded-card border border-hairline-strong p-4">
         <legend className={`px-2 ${LABEL_CLASS}`}>{t.auth.legalGroupLabel}</legend>
 
         <label className="flex items-start gap-3 text-sm">
@@ -211,7 +211,7 @@ export function SignupForm({
       <button
         type="submit"
         disabled={pending}
-        className="rounded-cta bg-volt px-4 py-[15px] font-condensed text-cta font-extrabold uppercase tracking-wide text-surface transition disabled:opacity-50"
+        className="rounded-control bg-volt px-4 py-[15px] font-condensed text-cta font-extrabold uppercase tracking-wide text-surface transition disabled:opacity-50"
       >
         {pending ? t.common.loading : t.auth.createAccount}
       </button>

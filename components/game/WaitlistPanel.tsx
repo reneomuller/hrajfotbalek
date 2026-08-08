@@ -47,7 +47,7 @@ export async function WaitlistPanel({
       </div>
 
       {rows.length === 0 ? (
-        <p className="mt-3 font-mono text-[11px] tracking-[1px] text-faint">
+        <p className="mt-3 font-mono text-small tracking-[1px] text-faint">
           {t.games.waitlistEmpty}
         </p>
       ) : (
@@ -100,7 +100,7 @@ export async function WaitlistPanel({
             number says how many joined ahead, not who gets served first — and
             a queue that looks ordered but is not is worse than no number.
           */}
-          <p className="mt-3 text-[12px] leading-snug text-muted-dim">
+          <p className="mt-3 text-[12px] leading-snug text-muted">
             {t.games.waitlistHint}
           </p>
         </>

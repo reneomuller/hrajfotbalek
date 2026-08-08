@@ -69,7 +69,7 @@ export default async function AdminStatsPage({
           testId="export-stats"
         />
       </div>
-      <p className="mt-2 max-w-[560px] text-[13px] leading-relaxed text-muted-dim">
+      <p className="mt-2 max-w-[560px] text-[13px] leading-relaxed text-muted">
         {strings.admin.statsLede}
       </p>
 
@@ -84,7 +84,7 @@ export default async function AdminStatsPage({
               data-testid={`stat-window-${option}`}
               data-selected={isSelected ? "true" : "false"}
               aria-current={isSelected ? "page" : undefined}
-              className={`rounded-chip border px-3 py-2 font-mono text-[11px] uppercase tracking-[1px] no-underline ${
+              className={`rounded-pill border px-3 py-2 font-mono text-[11px] uppercase tracking-[1px] no-underline ${
                 isSelected
                   ? "border-hairline-volt bg-volt text-surface"
                   : "border-hairline-strong text-muted"

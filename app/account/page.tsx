@@ -78,7 +78,7 @@ export default async function AccountPage({
           <button
             type="submit"
             data-testid="sign-out"
-            className="rounded-control border border-hairline-link px-[14px] py-2 font-condensed text-[13px] font-bold uppercase tracking-wide text-bone transition hover:border-volt hover:text-volt"
+            className="rounded-control border border-hairline-strong px-[14px] py-2 font-condensed text-[13px] font-bold uppercase tracking-wide text-bone transition hover:border-volt hover:text-volt"
           >
             {t.auth.signOut}
           </button>
@@ -102,7 +102,7 @@ export default async function AccountPage({
         <PhotoUpload hasPhoto={Boolean(player.photo_path)}>
         <span
           data-testid="account-avatar"
-          className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-volt bg-surface font-condensed text-2xl font-extrabold text-volt shadow-volt-glow"
+          className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-volt bg-surface font-condensed text-2xl font-extrabold text-volt"
         >
           {photoUrl ? (
             /* A Supabase storage URL on a public bucket, rendered at 80px.

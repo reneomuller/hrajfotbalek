@@ -17,8 +17,8 @@ export interface PlayersListProps {
  *
  * PII BOUNDARY — the single highest-risk surface in the product, and this
  * component is the second half of the mechanism. The rows arrive from
- * `game_roster_public`, which projects five columns and nothing else; the prop
- * type here is narrowed to the four it renders, so no additional field can
+ * `game_roster_public`, which projects four columns and nothing else; the prop
+ * type here is narrowed to the three it renders, so no additional field can
  * reach the markup — and therefore the RSC payload — without someone editing
  * this type on purpose. Migration 39 adding `games_played` is that mechanism
  * working as intended: the view gained a column under contract §4a, and
@@ -46,14 +46,14 @@ export async function PlayersList({ rows, supabaseUrl }: PlayersListProps) {
   return (
     <section
       data-testid="players-list"
-      className="mt-4 rounded-card border border-hairline bg-surface-card p-5"
+      className="mt-4 rounded-card bg-surface p-5"
     >
       <h2 className="m-0 font-mono text-[10px] uppercase tracking-eyebrow text-muted">
         {t.games.playersTitle.replace("{count}", String(rows.length))}
       </h2>
 
       {rows.length === 0 ? (
-        <p className="mt-3 text-[14px] text-muted-dim">{t.games.rosterEmpty}</p>
+        <p className="mt-3 text-[14px] text-muted">{t.games.rosterEmpty}</p>
       ) : (
         <ul className="mt-3 flex list-none flex-col p-0" data-testid="roster">
           {rows.map((row, i) => (

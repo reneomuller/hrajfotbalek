@@ -27,7 +27,7 @@ export function SetPasswordForm({ next }: { next: string }) {
           minLength={PASSWORD_MIN_LENGTH}
           autoComplete="new-password"
           data-testid="new-password"
-          className="rounded-control border border-hairline-link bg-transparent px-4 py-3 text-base outline-none transition-colors focus:border-volt"
+          className="rounded-control border border-hairline-strong bg-transparent px-4 py-3 text-base outline-none transition-colors focus:border-volt"
         />
         <span className="text-xs opacity-50">{t.auth.passwordHint}</span>
       </label>
@@ -36,7 +36,7 @@ export function SetPasswordForm({ next }: { next: string }) {
         type="submit"
         disabled={pending}
         data-testid="save-password"
-        className="rounded-cta bg-volt px-4 py-[15px] font-condensed text-cta font-extrabold uppercase tracking-wide text-surface transition disabled:opacity-50"
+        className="rounded-control bg-volt px-4 py-[15px] font-condensed text-cta font-extrabold uppercase tracking-wide text-surface transition disabled:opacity-50"
       >
         {pending ? t.common.loading : t.auth.setPasswordSubmit}
       </button>

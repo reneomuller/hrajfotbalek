@@ -20,7 +20,7 @@ function SubmitButton({ label }: { label: string }) {
       type="submit"
       disabled={pending}
       data-testid="confirm-booking"
-      className="mt-6 w-full rounded-cta bg-volt px-6 py-4 font-condensed text-cta font-extrabold uppercase tracking-wide text-surface disabled:opacity-60"
+      className="mt-6 w-full rounded-control bg-volt px-6 py-4 font-condensed text-cta font-extrabold uppercase tracking-wide text-surface disabled:opacity-60"
     >
       {pending ? t.common.loading : label}
     </button>
@@ -55,7 +55,7 @@ export function PaymentMethodChoice({ gameId }: PaymentMethodChoiceProps) {
         </legend>
 
         <div className="flex flex-col gap-3">
-          <label className="flex cursor-pointer items-start gap-3 rounded-card border border-hairline bg-surface-card p-4 has-[:checked]:border-hairline-volt">
+          <label className="flex cursor-pointer items-start gap-3 rounded-card bg-surface p-4 has-[:checked]:border-hairline-volt">
             <input
               type="radio"
               name="method"
@@ -73,7 +73,7 @@ export function PaymentMethodChoice({ gameId }: PaymentMethodChoiceProps) {
             </span>
           </label>
 
-          <label className="flex cursor-pointer items-start gap-3 rounded-card border border-hairline bg-surface-card p-4 has-[:checked]:border-hairline-volt">
+          <label className="flex cursor-pointer items-start gap-3 rounded-card bg-surface p-4 has-[:checked]:border-hairline-volt">
             <input type="radio" name="method" value="cash" className="mt-1 accent-volt" />
             <span>
               <span className="block font-condensed text-[16px] font-bold uppercase tracking-wide text-bone">

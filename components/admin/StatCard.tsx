@@ -22,7 +22,7 @@ export function StatCard({
   return (
     <div
       data-testid={testId}
-      className="min-w-[220px] flex-1 rounded-card border border-hairline bg-surface-card p-5"
+      className="min-w-[220px] flex-1 rounded-card bg-surface p-5"
     >
       <div className="font-mono text-[10px] uppercase tracking-eyebrow text-volt-dim">
         {label}
@@ -48,7 +48,7 @@ export function StatCard({
           {detail}
         </div>
       )}
-      {hint && <p className="mt-2 text-[12px] leading-snug text-muted-dim">{hint}</p>}
+      {hint && <p className="mt-2 text-[12px] leading-snug text-muted">{hint}</p>}
     </div>
   );
 }

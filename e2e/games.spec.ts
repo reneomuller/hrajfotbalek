@@ -711,7 +711,13 @@ test("spots left is coloured by absolute count: volt, amber, then red", async ({
     // A full game's notches must not use the UNFILLED grey, or a complete bar
     // and an empty one render identically and the reader concludes nobody
     // signed up.
-    await expect(filledSegment(full.id)).toHaveClass(/bg-subtle/);
+    //
+    // `bg-muted` since ruling A: `subtle` was one of the six greys that
+    // collapsed into `muted`. The assertion that CARRIES the meaning is the
+    // second one — that the filled notch differs from the unfilled track —
+    // and it survives any renaming. The first names a token and therefore
+    // fails whenever the palette moves, which is what happened here.
+    await expect(filledSegment(full.id)).toHaveClass(/bg-muted/);
     await expect(filledSegment(full.id)).not.toHaveClass(/bg-surface-seg/);
   } finally {
     await destroyScratchGame(plenty.id);

@@ -67,7 +67,7 @@ export default async function MyGamesPage({
          */
         <div
           data-testid="my-games-empty"
-          className="mt-8 rounded-card border border-hairline bg-surface-card p-6"
+          className="mt-8 rounded-card bg-surface p-6"
         >
           <p className="m-0 text-[15px] leading-relaxed text-bone">
             {t.account.myGamesEmpty}
@@ -75,7 +75,7 @@ export default async function MyGamesPage({
           <Link
             href="/games"
             data-testid="my-games-empty-cta"
-            className="mt-4 inline-block rounded-cta bg-volt px-5 py-3 font-condensed text-[15px] font-extrabold uppercase tracking-wide text-surface no-underline"
+            className="mt-4 inline-block rounded-control bg-volt px-5 py-3 font-condensed text-[15px] font-extrabold uppercase tracking-wide text-surface no-underline"
           >
             {t.account.myGamesEmptyCta}
           </Link>

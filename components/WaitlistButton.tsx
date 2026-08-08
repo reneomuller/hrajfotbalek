@@ -17,7 +17,7 @@ function SubmitButton() {
       type="submit"
       disabled={pending}
       data-testid="join-waitlist"
-      className="w-full rounded-cta bg-volt px-6 py-4 font-condensed text-cta font-extrabold uppercase tracking-wide text-surface disabled:opacity-60"
+      className="w-full rounded-control bg-volt px-6 py-4 font-condensed text-cta font-extrabold uppercase tracking-wide text-surface disabled:opacity-60"
     >
       {pending ? t.common.loading : t.games.joinWaitlist}
     </button>
@@ -56,7 +56,7 @@ export function WaitlistButton({
     return (
       <div
         data-testid="waitlist-joined"
-        className="mt-6 rounded-card border border-hairline-volt bg-surface-card p-5"
+        className="mt-6 rounded-card border border-hairline-volt bg-surface p-5"
       >
         <p className="m-0 font-condensed text-[17px] font-bold uppercase tracking-wide text-volt">
           {state.status === "already" || alreadyOnList

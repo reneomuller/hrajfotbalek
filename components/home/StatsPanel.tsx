@@ -38,7 +38,7 @@ export async function StatsPanel({
   return (
     <div
       data-testid="stats-panel"
-      className="flex min-w-[270px] flex-1 flex-col justify-center gap-5 rounded-[20px] border border-hairline-volt-soft bg-surface-card-strong p-[22px]"
+      className="flex min-w-[270px] flex-1 flex-col justify-center gap-5 rounded-[20px] border border-hairline-volt bg-surface p-[22px]"
     >
       {shown.map((stat) => (
         <div key={stat.key} data-testid={`stat-${stat.key}`}>

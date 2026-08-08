@@ -15,11 +15,11 @@ export async function SiteFooter() {
   const t = await getStrings();
   const { siteFooter } = t;
   return (
-    <footer className="relative z-10 mx-auto flex w-full max-w-shell flex-wrap items-center justify-between gap-2 border-t border-hairline-chrome px-gutter py-5">
+    <footer className="relative z-10 mx-auto flex w-full max-w-shell flex-wrap items-center justify-between gap-2 border-t border-hairline px-gutter py-5">
       <div className="flex items-center gap-4">
         <Link
           href="/privacy"
-          className="font-mono text-[10px] tracking-[2px] text-dim no-underline transition hover:text-volt-dim"
+          className="font-mono text-[10px] tracking-[2px] text-faint no-underline transition hover:text-volt-dim"
         >
           {siteFooter.privacy}
         </Link>
@@ -30,7 +30,7 @@ export async function SiteFooter() {
         */}
         <Link
           href="/terms"
-          className="font-mono text-[10px] tracking-[2px] text-dim no-underline transition hover:text-volt-dim"
+          className="font-mono text-[10px] tracking-[2px] text-faint no-underline transition hover:text-volt-dim"
         >
           {siteFooter.terms}
         </Link>
@@ -43,12 +43,12 @@ export async function SiteFooter() {
         */}
         <a
           href={`mailto:${siteFooter.contactEmail}`}
-          className="font-mono text-[10px] tracking-[2px] text-dim no-underline transition hover:text-volt-dim"
+          className="font-mono text-[10px] tracking-[2px] text-faint no-underline transition hover:text-volt-dim"
         >
           {siteFooter.contact}
         </a>
       </div>
-      <div className="font-mono text-[10px] tracking-[2px] text-dim">
+      <div className="font-mono text-[10px] tracking-[2px] text-faint">
         {siteFooter.copyright}
       </div>
     </footer>

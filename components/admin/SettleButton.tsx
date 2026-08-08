@@ -61,7 +61,7 @@ function Submit() {
       type="submit"
       disabled={pending}
       data-testid="settle-game"
-      className="rounded-cta bg-volt px-6 py-4 font-condensed text-cta font-extrabold uppercase tracking-wide text-surface disabled:opacity-60"
+      className="rounded-control bg-volt px-6 py-4 font-condensed text-cta font-extrabold uppercase tracking-wide text-surface disabled:opacity-60"
     >
       {pending ? strings.common.loading : strings.admin.settleGame}
     </button>

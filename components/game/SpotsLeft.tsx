@@ -42,7 +42,7 @@ export const TONE_FILL: Record<SpotsTone, string> = {
   plenty: "bg-volt",
   few: "bg-warn",
   critical: "bg-danger",
-  full: "bg-subtle",
+  full: "bg-muted",
 };
 
 export async function SpotsLeft({

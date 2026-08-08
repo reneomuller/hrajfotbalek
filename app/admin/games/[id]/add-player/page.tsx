@@ -40,7 +40,7 @@ export default async function AddPlayerPage({
       <p className="mt-1 font-mono text-[11px] tracking-[1px] text-muted">
         {game.venue} · {game.activeCount}/{game.capacity}
       </p>
-      <p className="mt-3 max-w-[480px] text-[13px] leading-relaxed text-muted-dim">
+      <p className="mt-3 max-w-[480px] text-[13px] leading-relaxed text-muted">
         {strings.admin.addPlayerLede}
       </p>
 

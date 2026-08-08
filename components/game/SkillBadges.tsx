@@ -39,7 +39,7 @@ export async function SkillBadges({
         <span
           key={level}
           data-testid={`skill-badge-${level}`}
-          className={`rounded-chip border border-hairline-volt bg-volt/[.08] px-2 py-1 font-mono ${text} font-bold uppercase tracking-[1px] text-volt`}
+          className={`rounded-pill border border-hairline-volt bg-volt/[.08] px-2 py-1 font-mono ${text} font-bold uppercase tracking-[1px] text-volt`}
         >
           {t.games.skillLevel[level]}
         </span>

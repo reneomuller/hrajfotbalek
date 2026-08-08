@@ -42,7 +42,7 @@ export async function OrganizerCard({
   return (
     <section
       data-testid="game-organizer"
-      className="mt-4 rounded-card border border-hairline bg-surface-card p-5"
+      className="mt-4 rounded-card bg-surface p-5"
     >
       <div className="font-mono text-[10px] uppercase tracking-eyebrow text-muted">
         {t.games.organizerLabel}
@@ -70,7 +70,7 @@ export async function OrganizerCard({
               {phone}
             </a>
           ) : (
-            <p className="m-0 text-[13px] text-muted-dim">{t.games.organizerRole}</p>
+            <p className="m-0 text-[13px] text-muted">{t.games.organizerRole}</p>
           )}
         </div>
 
@@ -89,7 +89,7 @@ export async function OrganizerCard({
       </div>
 
       {phone && (
-        <p className="mt-3 text-[12px] leading-snug text-muted-dim">
+        <p className="mt-3 text-[12px] leading-snug text-muted">
           {t.games.organizerPhoneNote}
         </p>
       )}

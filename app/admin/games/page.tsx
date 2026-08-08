@@ -29,7 +29,7 @@ export default async function AdminGamesPage() {
           <Link
             href="/admin/games/new"
             data-testid="new-game"
-            className="inline-flex min-h-11 items-center rounded-cta bg-volt px-5 font-condensed text-[15px] font-extrabold uppercase tracking-wide text-surface no-underline"
+            className="inline-flex min-h-11 items-center rounded-control bg-volt px-5 font-condensed text-[15px] font-extrabold uppercase tracking-wide text-surface no-underline"
           >
             {strings.admin.newGame}
           </Link>
@@ -49,7 +49,7 @@ export default async function AdminGamesPage() {
                 key={game.id}
                 data-testid="admin-game-row"
                 data-status={game.status}
-                className="flex flex-wrap items-center justify-between gap-4 rounded-card border border-hairline bg-surface-card px-5 py-4"
+                className="flex flex-wrap items-center justify-between gap-4 rounded-card bg-surface px-5 py-4"
               >
                 <div className="min-w-[220px] flex-1">
                   {/* `venue` is admin-supplied free text; JSX escapes it. */}

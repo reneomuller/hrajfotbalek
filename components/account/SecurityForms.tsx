@@ -12,7 +12,7 @@ import { useStrings } from "@/components/LocaleProvider";
 const initialState: SecurityActionState = { status: "idle" };
 
 const FIELD_CLASS =
-  "rounded-control border border-hairline-link bg-transparent px-4 py-3 text-base outline-none transition-colors focus:border-volt";
+  "rounded-control border border-hairline-strong bg-transparent px-4 py-3 text-base outline-none transition-colors focus:border-volt";
 const LABEL_CLASS =
   "font-[family-name:var(--font-jetbrains-mono)] text-xs uppercase tracking-widest opacity-60";
 
@@ -75,7 +75,7 @@ export function ChangePasswordForm() {
         type="submit"
         disabled={pending}
         data-testid="change-password"
-        className="rounded-cta border border-hairline-volt px-4 py-3 font-condensed text-cta font-extrabold uppercase tracking-wide text-volt transition disabled:opacity-50"
+        className="rounded-control border border-hairline-volt px-4 py-3 font-condensed text-cta font-extrabold uppercase tracking-wide text-volt transition disabled:opacity-50"
       >
         {pending ? t.common.loading : t.account.changePasswordSubmit}
       </button>
@@ -126,7 +126,7 @@ export function ChangeEmailForm({ currentEmail = null }: { currentEmail?: string
         type="submit"
         disabled={pending}
         data-testid="change-email"
-        className="rounded-cta border border-hairline-volt px-4 py-3 font-condensed text-cta font-extrabold uppercase tracking-wide text-volt transition disabled:opacity-50"
+        className="rounded-control border border-hairline-volt px-4 py-3 font-condensed text-cta font-extrabold uppercase tracking-wide text-volt transition disabled:opacity-50"
       >
         {pending ? t.common.loading : t.account.changeEmailSubmit}
       </button>

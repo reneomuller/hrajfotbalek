@@ -75,7 +75,7 @@ export async function AvatarRow({
             data-testid={isYou ? "avatar-you" : "avatar"}
             className={`-ml-2 flex items-center justify-center overflow-hidden rounded-full border-2 font-condensed font-bold ${dim} ${
               isYou
-                ? "border-volt bg-surface-avatar text-volt shadow-volt-glow"
+                ? "border-volt bg-surface-avatar text-volt"
                 : `border-surface-raised bg-surface-avatar ${
                     i % 3 === 0 ? "text-volt" : "text-bone"
                   }`

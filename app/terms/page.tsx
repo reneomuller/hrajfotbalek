@@ -35,7 +35,7 @@ export default async function TermsPage() {
     <main className="relative z-10 mx-auto w-full max-w-shell px-gutter pb-16 pt-24">
       {!doc.isTranslated ? (
         <p
-          className="mb-6 rounded-card border border-hairline-volt-strong bg-surface-card-strong p-4 text-sm text-white/80"
+          className="mb-6 rounded-card border border-hairline-volt bg-surface p-4 text-sm text-white/80"
           role="note"
         >
           {t.terms.notTranslated}

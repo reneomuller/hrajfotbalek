@@ -20,7 +20,7 @@ export async function CreditBalance({ balanceCzk }: CreditBalanceProps) {
   const hasCredit = balanceCzk > 0;
 
   return (
-    <section className="rounded-card border border-hairline-volt bg-surface-card p-5">
+    <section className="rounded-card border border-hairline-volt bg-surface p-5">
       <h2 className="m-0 font-mono text-[11px] uppercase tracking-eyebrow text-volt-dim">
         {t.account.creditBalance}
       </h2>

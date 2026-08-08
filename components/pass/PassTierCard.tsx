@@ -46,7 +46,7 @@ export async function PassTierCard({
     <article
       data-testid="pass-tier"
       data-games={tier.games}
-      className="rounded-card border border-hairline-volt bg-surface-panel p-5"
+      className="rounded-card border border-hairline-volt bg-surface p-5"
     >
       <div className="flex flex-wrap items-baseline justify-between gap-3">
         <h2 className="m-0 font-condensed text-[20px] font-bold uppercase tracking-wide text-white">

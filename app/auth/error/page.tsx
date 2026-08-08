@@ -51,7 +51,7 @@ export default async function AuthErrorPage({
 
         <a
           href="/login"
-          className="mt-8 inline-block rounded-cta bg-volt px-4 py-[15px] font-condensed text-cta font-extrabold uppercase tracking-wide text-surface no-underline"
+          className="mt-8 inline-block rounded-control bg-volt px-4 py-[15px] font-condensed text-cta font-extrabold uppercase tracking-wide text-surface no-underline"
         >
           {t.auth.callbackRetry}
         </a>

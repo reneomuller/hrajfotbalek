@@ -24,7 +24,7 @@ export async function CommunityPanel() {
   return (
     <div
       data-testid="community-panel"
-      className="flex min-w-[270px] flex-1 flex-col rounded-[20px] border border-hairline-volt-soft bg-surface-card-strong p-[22px]"
+      className="flex min-w-[270px] flex-1 flex-col rounded-[20px] border border-hairline-volt bg-surface p-[22px]"
     >
       <h3
         data-testid="community-heading"
@@ -32,7 +32,7 @@ export async function CommunityPanel() {
       >
         {community.title}
       </h3>
-      <p className="mb-4 max-w-[320px] text-[13px] leading-relaxed text-muted-dim">
+      <p className="mb-4 max-w-[320px] text-[13px] leading-relaxed text-muted">
         {community.body}
       </p>
 
@@ -48,7 +48,7 @@ export async function CommunityPanel() {
           target="_blank"
           rel="noopener noreferrer"
           data-testid="community-whatsapp"
-          className="flex min-h-11 items-center gap-3 rounded-cta border border-hairline-link px-4 py-3 font-condensed text-[15px] font-bold tracking-wide text-bone no-underline transition hover:border-whatsapp"
+          className="flex min-h-11 items-center gap-3 rounded-control border border-hairline-strong px-4 py-3 font-condensed text-[15px] font-bold tracking-wide text-bone no-underline transition hover:border-whatsapp"
         >
           <WhatsAppIcon />
           {community.whatsapp}
@@ -58,7 +58,7 @@ export async function CommunityPanel() {
           target="_blank"
           rel="noopener noreferrer"
           data-testid="community-instagram"
-          className="flex min-h-11 items-center gap-3 rounded-cta border border-hairline-link px-4 py-3 font-condensed text-[15px] font-bold tracking-wide text-bone no-underline transition hover:border-instagram"
+          className="flex min-h-11 items-center gap-3 rounded-control border border-hairline-strong px-4 py-3 font-condensed text-[15px] font-bold tracking-wide text-bone no-underline transition hover:border-instagram"
         >
           <InstagramIcon />
           {community.instagram}

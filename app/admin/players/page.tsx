@@ -52,7 +52,7 @@ export default async function AdminPlayersPage() {
             <li
               key={player.id}
               data-testid="admin-player-row"
-              className="flex flex-wrap items-center gap-x-6 gap-y-2 rounded-card border border-hairline bg-surface-card px-5 py-4"
+              className="flex flex-wrap items-center gap-x-6 gap-y-2 rounded-card bg-surface px-5 py-4"
             >
               <div className="min-w-[200px] flex-1">
                 {/* Nickname and email are free text; JSX escapes both. */}
@@ -69,17 +69,17 @@ export default async function AdminPlayersPage() {
                     {player.nickname}
                   </Link>
                   {player.isShadow && (
-                    <span className="rounded-chip border border-hairline-strong px-2 py-[2px] font-mono text-[9px] uppercase tracking-eyebrow text-muted">
+                    <span className="rounded-pill border border-hairline-strong px-2 py-[2px] font-mono text-[9px] uppercase tracking-eyebrow text-muted">
                       {strings.admin.shadowTag}
                     </span>
                   )}
                   {player.isSeed && (
-                    <span className="rounded-chip border border-hairline-strong px-2 py-[2px] font-mono text-[9px] uppercase tracking-eyebrow text-muted">
+                    <span className="rounded-pill border border-hairline-strong px-2 py-[2px] font-mono text-[9px] uppercase tracking-eyebrow text-muted">
                       {strings.admin.seedTag}
                     </span>
                   )}
                   {player.isAdmin && (
-                    <span className="rounded-chip border border-hairline-volt px-2 py-[2px] font-mono text-[9px] uppercase tracking-eyebrow text-volt">
+                    <span className="rounded-pill border border-hairline-volt px-2 py-[2px] font-mono text-[9px] uppercase tracking-eyebrow text-volt">
                       {strings.admin.adminTag}
                     </span>
                   )}

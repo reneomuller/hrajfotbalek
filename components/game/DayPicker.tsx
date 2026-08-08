@@ -78,14 +78,14 @@ export function DayPicker({
             ? "border-hairline-volt bg-volt text-surface"
             : hasGames
               ? "border-hairline-strong text-white hover:border-hairline-volt"
-              : "border-hairline-soft text-dim"
+              : "border-hairline text-faint"
         }`;
 
         const body = (
           <>
             <span
               className={`font-mono text-[9px] uppercase tracking-[1px] ${
-                isSelected ? "text-surface/70" : hasGames ? "text-muted" : "text-dim"
+                isSelected ? "text-surface/70" : hasGames ? "text-muted" : "text-faint"
               }`}
             >
               {tab.weekday}

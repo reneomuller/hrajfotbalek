@@ -111,7 +111,7 @@ export function VenuePhotoUpload({
             : strings.admin.venuePhotoUpload}
       </label>
 
-      <p className="text-[12px] leading-snug text-muted-dim">
+      <p className="text-[12px] leading-snug text-muted">
         {strings.admin.venuePhotoHint}
       </p>
 

@@ -37,7 +37,7 @@ export function TopupForm() {
             className={`rounded-control border px-4 py-2 font-condensed text-sm font-bold transition ${
               amount === String(preset)
                 ? "border-volt text-volt"
-                : "border-hairline-link text-bone hover:border-volt"
+                : "border-hairline-strong text-bone hover:border-volt"
             }`}
           >
             {formatCzk(preset)}
@@ -58,7 +58,7 @@ export function TopupForm() {
           value={amount}
           onChange={(event) => setAmount(event.target.value)}
           data-testid="topup-amount"
-          className="rounded-control border border-hairline-link bg-transparent px-4 py-3 text-base outline-none transition-colors focus:border-volt"
+          className="rounded-control border border-hairline-strong bg-transparent px-4 py-3 text-base outline-none transition-colors focus:border-volt"
         />
       </label>
 
@@ -66,7 +66,7 @@ export function TopupForm() {
         type="submit"
         disabled={pending}
         data-testid="topup-submit"
-        className="rounded-cta bg-volt px-4 py-[15px] font-condensed text-cta font-extrabold uppercase tracking-wide text-surface transition disabled:opacity-50"
+        className="rounded-control bg-volt px-4 py-[15px] font-condensed text-cta font-extrabold uppercase tracking-wide text-surface transition disabled:opacity-50"
       >
         {pending ? t.common.loading : t.account.topupSubmit}
       </button>

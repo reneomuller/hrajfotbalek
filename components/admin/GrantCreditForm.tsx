@@ -66,7 +66,7 @@ export function GrantCreditForm({ playerId }: { playerId: string }) {
         <SubmitButton />
       </div>
 
-      <p className="text-[12px] text-muted-dim">{strings.admin.grantAmountHint}</p>
+      <p className="text-[12px] text-muted">{strings.admin.grantAmountHint}</p>
 
       <label className="flex items-start gap-2 text-[12px] text-bone">
         <input type="checkbox" name="unmatched" data-testid="grant-unmatched" className="mt-1" />
@@ -95,7 +95,7 @@ function SubmitButton() {
       type="submit"
       disabled={pending}
       data-testid="grant-submit"
-      className="rounded-cta bg-volt px-5 py-3 font-condensed text-[14px] font-extrabold uppercase tracking-wide text-surface disabled:opacity-60"
+      className="rounded-control bg-volt px-5 py-3 font-condensed text-[14px] font-extrabold uppercase tracking-wide text-surface disabled:opacity-60"
     >
       {pending ? strings.common.loading : strings.admin.grantSubmit}
     </button>

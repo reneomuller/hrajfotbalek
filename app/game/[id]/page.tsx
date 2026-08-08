@@ -85,7 +85,7 @@ export default async function GameDetailPage({ params, searchParams }: GamePageP
   if (!result) {
     return (
       <main className="relative z-10 mx-auto w-full max-w-shell px-gutter pb-16 pt-24">
-        <p className="font-mono text-[12px] tracking-[1px] text-faint">
+        <p className="font-mono text-small tracking-[1px] text-faint">
           {t.games.notFound}
         </p>
         <Link
@@ -230,7 +230,7 @@ export default async function GameDetailPage({ params, searchParams }: GamePageP
       {game.notes && (
         <div
           data-testid="game-notes"
-          className="mt-4 rounded-card border border-hairline bg-surface-card p-5"
+          className="mt-4 rounded-card bg-surface p-5"
         >
           <div className="font-mono text-[10px] uppercase tracking-eyebrow text-muted">
             {t.games.notesLabel}
@@ -244,7 +244,7 @@ export default async function GameDetailPage({ params, searchParams }: GamePageP
       <AvailabilityCard bookedCount={bookedCount} capacity={game.capacity} />
 
       {isCancelled && (
-        <p className="mt-4 rounded-control border border-hairline-strong px-4 py-3 font-mono text-[11px] tracking-[1px] text-faint">
+        <p className="mt-4 rounded-control border border-hairline-strong px-4 py-3 font-mono text-small tracking-[1px] text-faint">
           {t.games.cancelled}
         </p>
       )}
@@ -336,7 +336,7 @@ export default async function GameDetailPage({ params, searchParams }: GamePageP
       */}
       <section
         data-testid="practical-info"
-        className="mt-4 rounded-card border border-hairline bg-surface-card p-5"
+        className="mt-4 rounded-card bg-surface p-5"
       >
         <h2 className="m-0 font-condensed text-[17px] font-bold uppercase tracking-wide text-white">
           {t.games.practicalTitle}

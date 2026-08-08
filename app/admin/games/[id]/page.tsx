@@ -143,7 +143,7 @@ export default async function AdminGamePage({
           <Link
             href={`/admin/games/${game.id}/add-player`}
             data-testid="add-player"
-            className="rounded-cta border border-hairline-strong px-5 py-3 font-condensed text-[15px] font-extrabold uppercase tracking-wide text-bone no-underline"
+            className="rounded-control border border-hairline-strong px-5 py-3 font-condensed text-[15px] font-extrabold uppercase tracking-wide text-bone no-underline"
           >
             {strings.admin.addPlayer}
           </Link>
@@ -200,7 +200,7 @@ export default async function AdminGamePage({
           discovered by pressing it: a `reserved` booking surviving into
           `settled` is an unreconciled debt with no surface that will ever raise
           it again. */}
-      <section className="mt-10 border-t border-hairline-chrome pt-6">
+      <section className="mt-10 border-t border-hairline pt-6">
         <h3 className="m-0 mb-4 font-condensed text-[18px] font-bold uppercase tracking-wide text-bone">
           {strings.admin.attendanceTitle}
         </h3>
@@ -264,7 +264,7 @@ export default async function AdminGamePage({
         It writes to the venue, so every game at that pitch gets it.
       */}
       {game.venue_id && (
-        <section className="mt-12 border-t border-hairline-chrome pt-6">
+        <section className="mt-12 border-t border-hairline pt-6">
           <h3 className="m-0 mb-3 font-condensed text-[18px] font-bold uppercase tracking-wide text-bone">
             {strings.admin.venuePhotoTitle}
           </h3>
@@ -280,7 +280,7 @@ export default async function AdminGamePage({
           <h3 className="m-0 mb-3 mt-8 font-condensed text-[18px] font-bold uppercase tracking-wide text-bone">
             {strings.admin.venueAmenitiesTitle}
           </h3>
-          <p className="mb-3 max-w-[520px] text-[12px] leading-snug text-muted-dim">
+          <p className="mb-3 max-w-[520px] text-[12px] leading-snug text-muted">
             {strings.admin.venueAmenitiesHint}
           </p>
           <VenueAmenities
@@ -291,7 +291,7 @@ export default async function AdminGamePage({
       )}
 
       {canEdit && (
-        <section className="mt-12 border-t border-hairline-chrome pt-6">
+        <section className="mt-12 border-t border-hairline pt-6">
           <h3 className="m-0 font-condensed text-[18px] font-bold uppercase tracking-wide text-bone">
             {strings.admin.editGameTitle}
           </h3>
@@ -306,7 +306,7 @@ export default async function AdminGamePage({
       )}
 
       {canCancel && (
-        <div className="mt-10 border-t border-hairline-chrome pt-6">
+        <div className="mt-10 border-t border-hairline pt-6">
           <CancelGameButton gameId={game.id} venue={game.venue} />
         </div>
       )}

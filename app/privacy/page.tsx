@@ -34,11 +34,11 @@ export default function PrivacyPage() {
       </h1>
 
       {/* Loud on purpose. This banner is the whole point of the page shipping early. */}
-      <div className="mt-6 rounded-card border border-hairline-volt-strong bg-surface-card-strong p-5">
+      <div className="mt-6 rounded-card border border-hairline-volt bg-surface p-5">
         <p className="m-0 font-mono text-[11px] uppercase tracking-eyebrow text-volt">
           {privacy.draftBadge}
         </p>
-        <p className="mt-3 mb-0 text-sm leading-relaxed text-chalk">
+        <p className="mt-3 mb-0 text-sm leading-relaxed text-bone">
           {privacy.draftWarning}
         </p>
       </div>
@@ -55,7 +55,7 @@ export default function PrivacyPage() {
           {privacy.outline.map((item) => (
             <li
               key={item}
-              className="border-l-2 border-hairline-volt pl-3 text-sm leading-relaxed text-subtle"
+              className="border-l-2 border-hairline-volt pl-3 text-sm leading-relaxed text-muted"
             >
               {item}
             </li>

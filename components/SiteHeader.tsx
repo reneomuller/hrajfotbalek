@@ -64,14 +64,14 @@ export async function SiteHeader({
   );
 
   return (
-    <header className="fixed inset-x-0 top-0 z-30 border-b border-hairline-chrome bg-ink/[.86] backdrop-blur-md">
+    <header className="fixed inset-x-0 top-0 z-30 border-b border-hairline bg-ink/[.86] backdrop-blur-md">
       <div className="mx-auto flex max-w-shell items-center justify-between gap-2 px-gutter py-[11px]">
         <Link
           href="/"
           aria-label={nav.home}
           className="flex shrink-0 items-center gap-[10px] no-underline"
         >
-          <span className="flex h-[38px] w-[38px] items-center justify-center rounded-badge border-[1.5px] border-volt bg-surface font-condensed text-[19px] font-extrabold italic tracking-[-1px]">
+          <span className="flex h-[38px] w-[38px] items-center justify-center rounded-pill border-[1.5px] border-volt bg-surface font-condensed text-[19px] font-extrabold italic tracking-[-1px]">
             <span className="text-white">{brand.monogramLead}</span>
             <span className="text-volt">{brand.monogramAccent}</span>
           </span>

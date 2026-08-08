@@ -32,7 +32,7 @@ export function MergeForm({ players }: { players: AdminPlayerRow[] }) {
     return (
       <div
         data-testid="merge-done"
-        className="mt-6 rounded-card border border-hairline-volt bg-surface-card p-5"
+        className="mt-6 rounded-card border border-hairline-volt bg-surface p-5"
       >
         <p className="m-0 font-condensed text-[17px] font-bold uppercase tracking-wide text-volt">
           {strings.admin.mergeDone}
@@ -91,7 +91,7 @@ export function MergeForm({ players }: { players: AdminPlayerRow[] }) {
       {(shadow || surviving) && (
         <dl
           data-testid="merge-preview"
-          className="grid grid-cols-[auto_1fr_1fr] gap-x-6 gap-y-1 rounded-card border border-hairline p-4 font-mono text-[12px]"
+          className="grid grid-cols-[auto_1fr_1fr] gap-x-6 gap-y-1 rounded-card p-4 font-mono text-[12px]"
         >
           <dt className="text-muted" />
           <dd className="m-0 text-bone">{shadow?.nickname ?? "—"}</dd>
@@ -125,7 +125,7 @@ function SubmitButton({ disabled }: { disabled: boolean }) {
       type="submit"
       disabled={pending || disabled}
       data-testid="merge-submit"
-      className="w-full rounded-cta bg-volt px-6 py-4 font-condensed text-cta font-extrabold uppercase tracking-wide text-surface disabled:opacity-60"
+      className="w-full rounded-control bg-volt px-6 py-4 font-condensed text-cta font-extrabold uppercase tracking-wide text-surface disabled:opacity-60"
     >
       {pending ? strings.common.loading : strings.admin.mergeSubmit}
     </button>
