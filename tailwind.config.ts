@@ -193,23 +193,101 @@ const config: Config = {
         whatsapp: "#25D366",
         instagram: "#E1306C",
       },
+      /*
+       * --- Families: four become two, plus one reserved ---------------
+       *
+       * `condensed` (Barlow Condensed) is DELETED rather than aliased, and
+       * the difference from the colour tokens is deliberate.
+       *
+       * THE RULE, since this config now does both: delete a token when the
+       * ABSENCE of its class produces the intended result, and alias it when
+       * absence produces something else. An ungenerated Tailwind class is not
+       * a build error — it is simply no CSS — so `font-condensed` on an
+       * element now inherits the body font, which IS Manrope, which is
+       * exactly where those 117 call sites were going. Whereas an ungenerated
+       * `text-section-title` inherits the BODY size rather than the title
+       * size, and an ungenerated `rounded-card` is a square corner. Those
+       * have to be aliased or the screen silently degrades.
+       *
+       * `mono` is not deleted and not general-purpose: it is RESERVED for the
+       * variabilní symbol and nothing else. That string is copied into a
+       * Czech banking app and matched by exact comparison; a proportional
+       * font makes 0/O and 1/l confusable, and a mismatched VS is a payment
+       * that arrives unreconciled — the one failure here that costs manual
+       * work to undo.
+       */
       fontFamily: {
         display: ["var(--font-anton)", "sans-serif"],
-        condensed: ["var(--font-barlow-condensed)", "sans-serif"],
         sans: ["var(--font-manrope)", "system-ui", "sans-serif"],
         mono: ["var(--font-jetbrains-mono)", "monospace"],
       },
+
+      /*
+       * --- Scale: seven steps ----------------------------------------
+       *
+       * `hero` drops from clamp(58px,12.5vw,124px). Ruling J requires the
+       * hero lose at least 25% of its height so the three step cards clear
+       * the fold, and the type is the largest part of that height. This one
+       * is deliberate and visible — it is the point of the change rather
+       * than a hazard, which is why it is not in the silent-delta list.
+       *
+       * `body-lg` is ONE step with two documented weight variants — 600 by
+       * default, 700 for the spots figure — not two steps. Code mirrors the
+       * Figma layer rather than inventing a step, because a scale with a
+       * step per weight stops being a scale.
+       *
+       * RULING B, and this is where a reader of the config meets it:
+       * `eyebrow` is the ONLY uppercase style in the product. Every button,
+       * link, nav label, card title, section heading and day label is
+       * sentence case. If a mockup shows tracked capitals anywhere except a
+       * small grey eyebrow, the mockup is wrong.
+       */
       fontSize: {
-        // clamp() pairs from the reference, mobile-first
-        hero: ["clamp(58px,12.5vw,124px)", { lineHeight: "0.9", letterSpacing: "-1.5px" }],
-        "hero-sub": ["clamp(20px,5vw,30px)", { lineHeight: "1.1" }],
-        "section-title": ["clamp(26px,7vw,40px)", { lineHeight: "1.05" }],
-        lede: ["clamp(14px,3.6vw,17px)", { lineHeight: "1.55" }],
-        "match-title": ["clamp(26px,5.8vw,36px)", { lineHeight: "1.02", letterSpacing: "0.2px" }],
-        "card-title": ["clamp(20px,4.5vw,26px)", { letterSpacing: "0.3px" }],
-        "community-title": "clamp(20px,4.6vw,28px)",
-        cta: ["clamp(16px,4vw,19px)", { lineHeight: "1" }],
-        eyebrow: ["clamp(9px,2.4vw,11px)", { letterSpacing: "3px" }],
+        hero: ["clamp(44px,10vw,88px)", { lineHeight: "0.92", letterSpacing: "-1.5px" }],
+        title: ["clamp(24px,6vw,34px)", { lineHeight: "1.05" }],
+        time: ["28px", { lineHeight: "1" }],
+        "body-lg": ["17px", { lineHeight: "1.4" }],
+        body: ["15px", { lineHeight: "1.45" }],
+        small: ["13px", { lineHeight: "1.4" }],
+        eyebrow: ["11px", { letterSpacing: "3px" }],
+
+        /*
+         * RETIRING -> the seven above. Removed in Phase 18.
+         *
+         * These MUST be aliased rather than deleted: an ungenerated
+         * `text-section-title` inherits the body size, so deleting would
+         * silently shrink 19 headings to 15px and no suite would notice.
+         *
+         * The mapping is the one in docs/v13/token-map.md §9, which is marked
+         * INFERRED — the design system gives the seven surviving steps but no
+         * "Replaces" column for type, and none of these seven names appears
+         * in it. `card-title` is the least certain: it sits between `body-lg`
+         * and `title`, and is mapped to `body-lg` on the reading that a card
+         * title is emphasis rather than hierarchy. One call site.
+         */
+        "hero-sub": ["clamp(24px,6vw,34px)", { lineHeight: "1.05" }],
+        "section-title": ["clamp(24px,6vw,34px)", { lineHeight: "1.05" }],
+        "match-title": ["clamp(24px,6vw,34px)", { lineHeight: "1.05" }],
+        "community-title": ["clamp(24px,6vw,34px)", { lineHeight: "1.05" }],
+        "card-title": ["17px", { lineHeight: "1.4" }],
+        lede: ["15px", { lineHeight: "1.45" }],
+        cta: ["17px", { lineHeight: "1.4" }],
+      },
+
+      /*
+       * --- One breakpoint --------------------------------------------
+       *
+       * `md = 768px`, and no other. Replacing Tailwind's default set is safe
+       * here and was checked rather than assumed: `sm:`, `lg:`, `xl:` and
+       * `2xl:` have zero usages across app/ and components/, while `md:` has
+       * four.
+       *
+       * One is enough because only one thing genuinely changes shape — the
+       * nav pill gives way to the header's link row — and naming it once
+       * stops each of the eight build stages choosing its own.
+       */
+      screens: {
+        md: "768px",
       },
       letterSpacing: {
         eyebrow: "3px",
@@ -228,6 +306,38 @@ const config: Config = {
          */
         "grain-tile": "60px 60px",
       },
+      /*
+       * --- Spacing: a 4-point scale ----------------------------------
+       *
+       * 4 / 8 / 12 / 16 / 22 / 32 / 48. `22` is the page gutter and stays the
+       * outer margin on every screen; card padding is `16`; the gap between
+       * cards in a list is `12`; between sections, `32`.
+       *
+       * 22 is the one value off the 4-point grid, and it is kept rather than
+       * rounded to 24 because it is the existing gutter on every screen in
+       * the product — moving it would shift every layout horizontally to
+       * satisfy a rule about arithmetic.
+       */
+      /*
+       * --- Spacing: a 4-point scale ----------------------------------
+       *
+       * 4 / 8 / 12 / 16 / 22 / 32 / 48. `22` is the page gutter and stays the
+       * outer margin on every screen; card padding is `16`; the gap between
+       * cards in a list is `12`; between sections, `32`.
+       *
+       * SIX OF THE SEVEN ARE ALREADY TAILWIND'S DEFAULTS — `1` `2` `3` `4`
+       * `8` `12` resolve to exactly 4/8/12/16/32/48px — so they are NOT
+       * restated here. Redefining a token to the value it already has reads
+       * like a change, invites the next reader to wonder what moved, and
+       * implies the keys NOT listed were removed, which `extend` does not do.
+       * The scale is a rule about which of the existing steps to use, and it
+       * belongs in docs/v13/type-scale.md where it can be read as one.
+       *
+       * `22` is the only value off the 4-point grid and the only one that
+       * needs declaring. It is kept rather than rounded to 24 because it is
+       * the existing gutter on every screen in the product; moving it would
+       * shift every layout sideways to satisfy a rule about arithmetic.
+       */
       spacing: {
         gutter: "22px",
         nav: "64px",
@@ -269,9 +379,21 @@ const config: Config = {
         badge: "999px",
         cta: "14px",
       },
+      /*
+       * --- Elevation: one shadow ------------------------------------
+       *
+       * The claim bar and the nav pill cast UPWARD, so content scrolling
+       * under them reads as under rather than as cut off. That is the only
+       * shadow in the product.
+       *
+       * `volt-glow` and `volt-glow-lg` are DELETED, not aliased, under the
+       * same rule as `font-condensed`: absence produces the intended result.
+       * A glow on everything is the same problem as a border on everything,
+       * and its four call sites simply stop glowing — which is the
+       * retirement. The dead class strings are swept in Phase 17.
+       */
       boxShadow: {
-        "volt-glow": "0 0 10px #C8FF00",
-        "volt-glow-lg": "0 0 16px rgba(200,255,0,.6)",
+        lift: "0 -8px 24px rgba(0,0,0,.6)",
       },
       backgroundImage: {
         "page-vignette":

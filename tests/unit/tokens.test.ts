@@ -25,6 +25,10 @@ import config from "@/tailwind.config";
 
 const colors = config.theme?.extend?.colors as Record<string, string>;
 const radii = config.theme?.extend?.borderRadius as Record<string, string>;
+const families = config.theme?.extend?.fontFamily as Record<string, string[]>;
+const steps = config.theme?.extend?.fontSize as Record<string, unknown>;
+const shadows = config.theme?.extend?.boxShadow as Record<string, string>;
+const screens = config.theme?.extend?.screens as Record<string, string>;
 
 describe("F5 — hairline-volt survives by name and changes value", () => {
   it("resolves to .30, not the .18 it carried in v1.2", () => {
@@ -155,6 +159,79 @@ describe("the collapsed sets", () => {
     expect(colors.volt).toBe("#C8FF00");
     expect(colors.warn).toBe("#FFA31A");
     expect(colors.danger).toBe("#FF5A4E");
+  });
+});
+
+describe("elevation — exactly one shadow", () => {
+  it("declares one entry and no more", () => {
+    expect(Object.keys(shadows)).toHaveLength(1);
+  });
+
+  it("and it is the upward claim-bar/nav-pill lift", () => {
+    // Upward, so content scrolling under the bar reads as UNDER it rather
+    // than as cut off. A downward shadow here would say the opposite.
+    expect(shadows.lift).toBe("0 -8px 24px rgba(0,0,0,.6)");
+    expect(shadows.lift).toContain("-8px");
+  });
+
+  it("no longer defines either glow", () => {
+    // Deleted rather than aliased: absence produces the intended result, which
+    // is no glow. A glow on everything is the same problem as a border on
+    // everything.
+    expect(shadows).not.toHaveProperty("volt-glow");
+    expect(shadows).not.toHaveProperty("volt-glow-lg");
+  });
+});
+
+describe("families — two player-facing, plus the reserved mono", () => {
+  it("declares exactly three", () => {
+    expect(Object.keys(families).sort()).toEqual(["display", "mono", "sans"]);
+  });
+
+  it("no longer defines condensed", () => {
+    // Deleted, not aliased. An ungenerated `font-condensed` inherits the body
+    // font, which is Manrope — exactly where its 117 call sites were headed.
+    expect(families).not.toHaveProperty("condensed");
+  });
+
+  it("keeps mono, which is reserved rather than retired", () => {
+    // The variabilní symbol is copied into a banking app and matched exactly;
+    // a proportional font makes 0/O and 1/l confusable.
+    expect(families.mono?.[0]).toContain("jetbrains");
+  });
+});
+
+describe("one breakpoint", () => {
+  it("declares md and nothing else", () => {
+    expect(Object.keys(screens)).toEqual(["md"]);
+    expect(screens.md).toBe("768px");
+  });
+});
+
+describe("the seven-step scale", () => {
+  it("hero shrank for ruling J", () => {
+    // At least 25% off the hero's height so the three step cards clear the
+    // fold. Deliberate and visible — this is the change, not a hazard.
+    expect(steps.hero).toEqual([
+      "clamp(44px,10vw,88px)",
+      { lineHeight: "0.92", letterSpacing: "-1.5px" },
+    ]);
+  });
+
+  it("carries all seven steps", () => {
+    for (const step of ["hero", "title", "time", "body-lg", "body", "small", "eyebrow"]) {
+      expect(steps).toHaveProperty(step);
+    }
+  });
+
+  it("body-lg is ONE step — the 700 variant is a weight, not a scale step", () => {
+    expect(steps["body-lg"]).toEqual(["17px", { lineHeight: "1.4" }]);
+    expect(steps).not.toHaveProperty("body-lg-700");
+    expect(steps).not.toHaveProperty("body-lg-bold");
+  });
+
+  it("eyebrow is the tracked one, being the only uppercase style", () => {
+    expect(steps.eyebrow).toEqual(["11px", { letterSpacing: "3px" }]);
   });
 });
 
