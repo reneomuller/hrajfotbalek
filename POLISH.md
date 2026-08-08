@@ -129,6 +129,45 @@ Scope was frozen at contract v1.1.1, so these are recorded rather than built.
 
 ## Deferred decisions
 - Waitlist mechanics: notify-all FCFS stays for launch; ordered-priority revisited post-launch with real data (policy v2 candidate)
+- **Schema-wide default ACL still grants `Dxtm` to anon/authenticated — post-deadline, deliberate** (decided 2026-08-08, v1.3 Phase 7)
+
+      Supabase's default privileges for tables created by `postgres` in `public` are
+
+          {postgres=arwdDxtm/postgres, anon=Dxtm/postgres,
+           authenticated=Dxtm/postgres, service_role=Dxtm/postgres}
+
+      so every new table is BORN with TRUNCATE, REFERENCES, TRIGGER and MAINTAIN
+      granted to both client roles. RLS does not restrict TRUNCATE. The older
+      tables escape this only because `20260720100000` and `20260720100100`
+      open with `revoke all ... from anon, authenticated`; a migration that
+      says just `grant select` — which reads as complete — leaves the default
+      standing. Two tables did exactly that and were caught by the v1.3
+      conformance suite: `site_settings` and `pass_tiers`, fixed in
+      `20260808140000_v13_conformance_a.sql`.
+
+      **The narrow fix shipped; the general one did not.** Closing the class
+      rather than the instance means
+
+          alter default privileges in schema public
+            revoke truncate on tables from anon, authenticated;
+
+      which changes what *every future table* inherits. That is a deliberate
+      decision to take on its own terms, not something to slip into a
+      conformance phase during a deadline build — so it is recorded here rather
+      than done. Until it is taken, **every new table in `public` needs an
+      explicit `revoke all` before its grants**, exactly as the 2026-07-20
+      migrations do.
+
+      Two related corrections owed while this is open:
+      - **CLAUDE.md is wrong.** It says "Supabase grants nothing by default
+        here." The default is `Dxtm`, not nothing. The same file already warns
+        that lowercase `d` is DELETE and uppercase `D` is TRUNCATE and that the
+        distinction cost a debugging session — both halves of the trap were
+        written down, and the conclusion drawn from them was the wrong one.
+      - **Production carries the same grants**, having run the same migrations
+        against the same defaults. The revoke migration fixes it on deploy; no
+        separate ops step is needed, but it is worth confirming after the next
+        migration run rather than assuming.
 - [x] Fix shared probe() SQL test helper: false pass on non-volatile functions (planner prunes unread call) — use value-consuming pattern from waitlist_position.sql suite
       (`count(_p::text)`, not `count(*)`, in all 10 suites that define probe().
        Wrapping the cast in a subquery is NOT enough — pruning just moves up a

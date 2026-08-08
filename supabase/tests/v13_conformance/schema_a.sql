@@ -31,8 +31,12 @@ create temp table _results (
   seq serial primary key, label text, passed boolean, detail text
 ) on commit drop;
 
+-- `security definer` so a probe running under `set local role anon` can still
+-- record its own result. Without it the suite dies with "permission denied for
+-- table _results" the moment it tests an unprivileged read — which is the most
+-- interesting thing it does.
 create function pg_temp.ok(cond boolean, label text, detail text default '')
-returns void language plpgsql as $$
+returns void language plpgsql security definer as $$
 begin
   insert into _results (label, passed, detail) values (label, cond, detail);
 end $$;
@@ -270,6 +274,245 @@ select pg_temp.ok(
     where proname in ('create_booking', 'create_booking_internal')
       and prosrc ~* 'allowed_skill_levels') = 0,
   'no booking path enforces skill — the level is displayed, never a gate');
+
+-- =============================================================================
+-- 6. venues.amenities is a closed catalog, written by REPLACEMENT
+--
+-- Unticking is the operation that matters. A setter that merges can only ever
+-- add amenities, so a venue that loses its showers keeps advertising them —
+-- and the failure is invisible, because every amenity shown is one that was
+-- true once.
+-- =============================================================================
+
+select pg_temp.ok(
+  pg_temp.chk('venues', 'venues_amenities_catalog') like '%<@%',
+  'venues.amenities is containment-constrained to a closed catalog',
+  pg_temp.chk('venues', 'venues_amenities_catalog'));
+
+select pg_temp.ok(
+  pg_temp.attempt($q$
+    insert into public.venues (name, amenities)
+    values ('conformance-a venue bad', array['helicopter_pad'])
+  $q$) = 'check_violation',
+  'an amenity outside the catalog is refused');
+
+select pg_temp.ok(
+  pg_temp.chk('venues', 'venues_amenities_distinct') <> 'ABSENT',
+  'venues.amenities rejects duplicates');
+
+-- Replacement, not merge: the setter assigns the array it is given.
+select pg_temp.ok(
+  (select count(*) from pg_proc
+    where proname = 'set_venue_amenities' and prosrc ~* 'amenities\s*=') = 1,
+  'set_venue_amenities ASSIGNS amenities (replace), rather than appending');
+
+select pg_temp.ok(
+  (select count(*) from pg_proc
+    where proname = 'set_venue_amenities' and prosrc ~* '(\|\||array_cat|array_append)') = 0,
+  'set_venue_amenities never concatenates — unticking has to be able to remove');
+
+-- =============================================================================
+-- 7. The venue image reference CHECK was WIDENED, not replaced
+--
+-- Two shapes must both be accepted: a committed repo asset (`/venues/pitch.png`)
+-- and a `venue-photos` bucket key (`venues/<uuid>.png`). Replacing the first
+-- rule with the second would invalidate every venue whose photo ships with the
+-- repository, and the symptom is a broken image rather than a failed write.
+-- =============================================================================
+
+select pg_temp.ok(
+  pg_temp.attempt($q$
+    insert into public.venues (name, image_path)
+    values ('conformance-a venue repo', '/venues/letna.png')
+  $q$) = 'ok',
+  'a committed repo asset path is accepted');
+
+select pg_temp.ok(
+  pg_temp.attempt($q$
+    insert into public.venues (name, image_path)
+    values ('conformance-a venue bucket',
+            'venues/2f1efd48-0000-4000-8000-000000000001.png')
+  $q$) = 'ok',
+  'a venue-photos bucket key is accepted');
+
+select pg_temp.ok(
+  pg_temp.attempt($q$
+    insert into public.venues (name, image_path)
+    values ('conformance-a venue evil', 'https://example.com/x.png')
+  $q$) = 'check_violation',
+  'an absolute URL is refused — the column reaches an <img src>');
+
+-- =============================================================================
+-- 8. site_settings grants — explicit, and no more than explicit
+--
+-- Supabase auto-expose is off and auto-RLS is on, so a table that forgets its
+-- GRANT returns EMPTY rather than erroring, which looks like missing data
+-- instead of a missing grant. The read grants must therefore be asserted
+-- positively.
+--
+-- The write side is asserted negatively, and that is where this suite finds
+-- something. See the TRUNCATE probe.
+-- =============================================================================
+
+select pg_temp.ok(
+  has_table_privilege('anon', 'public.site_settings', 'SELECT'),
+  'site_settings grants SELECT to anon explicitly');
+
+select pg_temp.ok(
+  has_table_privilege('authenticated', 'public.site_settings', 'SELECT'),
+  'site_settings grants SELECT to authenticated explicitly');
+
+select pg_temp.ok(
+  not has_table_privilege('anon', 'public.site_settings', 'INSERT')
+  and not has_table_privilege('anon', 'public.site_settings', 'UPDATE')
+  and not has_table_privilege('anon', 'public.site_settings', 'DELETE'),
+  'anon cannot INSERT, UPDATE or DELETE site_settings — writes go via the RPC');
+
+select pg_temp.ok(
+  not has_table_privilege('authenticated', 'public.site_settings', 'INSERT')
+  and not has_table_privilege('authenticated', 'public.site_settings', 'UPDATE')
+  and not has_table_privilege('authenticated', 'public.site_settings', 'DELETE'),
+  'authenticated cannot INSERT, UPDATE or DELETE site_settings');
+
+/*
+ * TRUNCATE, asserted separately and deliberately.
+ *
+ * RLS does not restrict TRUNCATE. A policy-protected table whose role holds
+ * TRUNCATE is a table that role can empty in one statement, and no policy is
+ * consulted on the way. It is also the privilege most likely to be granted by
+ * accident, because `aclitem` spells DELETE as lowercase `d` and TRUNCATE as
+ * uppercase `D` — an ACL reading `anon=rDxtm` looks like it contains a delete
+ * grant and does not; it contains a truncate grant, which is worse.
+ *
+ * That is not hypothetical here: CLAUDE.md records the same two characters
+ * costing a debugging session on the seed reset.
+ */
+select pg_temp.ok(
+  not has_table_privilege('anon', 'public.site_settings', 'TRUNCATE'),
+  'anon cannot TRUNCATE site_settings',
+  'ACL: ' || (select coalesce(array_to_string(relacl, ' '), 'default')
+              from pg_class c join pg_namespace n on n.oid = c.relnamespace
+              where n.nspname = 'public' and c.relname = 'site_settings'));
+
+select pg_temp.ok(
+  not has_table_privilege('authenticated', 'public.site_settings', 'TRUNCATE'),
+  'authenticated cannot TRUNCATE site_settings');
+
+select pg_temp.ok(
+  not has_table_privilege('anon', 'public.pass_tiers', 'TRUNCATE'),
+  'anon cannot TRUNCATE pass_tiers',
+  'ACL: ' || (select coalesce(array_to_string(relacl, ' '), 'default')
+              from pg_class c join pg_namespace n on n.oid = c.relnamespace
+              where n.nspname = 'public' and c.relname = 'pass_tiers'));
+
+select pg_temp.ok(
+  not has_table_privilege('authenticated', 'public.pass_tiers', 'TRUNCATE'),
+  'authenticated cannot TRUNCATE pass_tiers');
+
+-- The shape of the correct answer, for contrast: games and venues are also
+-- anon-readable and hold no TRUNCATE. The pattern exists in this database
+-- already; two tables diverge from it.
+select pg_temp.ok(
+  has_table_privilege('anon', 'public.games', 'SELECT')
+  and not has_table_privilege('anon', 'public.games', 'TRUNCATE'),
+  'control: games is anon-readable and anon-truncatable is false');
+
+select pg_temp.ok(
+  has_table_privilege('anon', 'public.venues', 'SELECT')
+  and not has_table_privilege('anon', 'public.venues', 'TRUNCATE'),
+  'control: venues is anon-readable and anon-truncatable is false');
+
+-- =============================================================================
+-- 9. The games-per-week figure is a CLAIM, not a measurement
+--
+-- Stored in site_settings and edited by an admin. It is marketing copy with a
+-- number in it; computing it from `games` would make the home page's headline
+-- move on its own whenever a week was quiet.
+-- =============================================================================
+
+select pg_temp.ok(
+  (select settings ? 'games_per_week' from public.site_settings limit 1),
+  'site_settings carries an admin-claimed games_per_week');
+
+select pg_temp.ok(
+  (select count(*) from public.site_settings) = 1,
+  'site_settings is a singleton');
+
+-- =============================================================================
+-- 10. A missing grant FAILS LOUDLY here, rather than reading as empty
+--
+-- The point of the whole suite. Revoke the grant inside this transaction, read
+-- as anon, and confirm the read is DENIED rather than returning zero rows —
+-- because zero rows is exactly what a working policy over an ungranted table
+-- looks like from the application's side, and the two are one careless GRANT
+-- apart.
+--
+-- `count(_p::text)`, never `count(*)`: count(*) reads no column, so the planner
+-- may prune the probe out of the plan entirely and report success for a call
+-- that never ran.
+-- =============================================================================
+
+revoke select on public.site_settings from anon;
+
+set local role anon;
+select pg_temp.ok(
+  pg_temp.attempt(
+    $q$select count(_p::text) from (select settings from public.site_settings) _p$q$
+  ) = 'denied',
+  'with its grant revoked, the read is DENIED — not silently empty');
+reset role;
+
+-- Put it back inside the transaction; the rollback would anyway, but leaving a
+-- revoke standing between here and the rollback would make every later probe
+-- in this file depend on statement order.
+grant select on public.site_settings to anon;
+
+set local role anon;
+select pg_temp.ok(
+  pg_temp.attempt(
+    $q$select count(_p::text) from (select settings from public.site_settings) _p$q$
+  ) = 'ok',
+  'with the grant restored, anon reads site_settings again');
+reset role;
+
+-- =============================================================================
+-- 11. The event catalog is a strict superset of what this round can emit
+--
+-- `events.event_type` is constrained by a single CHECK. Any migration emitting
+-- a NEW event type has to widen it in the SAME migration, and forgetting fails
+-- at the first WRITE rather than at the migration — naming a constraint that
+-- has nothing to do with the feature. It has been missed once already:
+-- migration 24 added the photo events and omitted the top-up ones, so the first
+-- create_topup failed on the catalog.
+-- =============================================================================
+
+select pg_temp.ok(
+  pg_temp.chk('events', 'events_event_type_catalog') like '%''topup_requested''%',
+  'catalog covers topup_requested');
+select pg_temp.ok(
+  pg_temp.chk('events', 'events_event_type_catalog') like '%''topup_confirmed''%',
+  'catalog covers topup_confirmed');
+select pg_temp.ok(
+  pg_temp.chk('events', 'events_event_type_catalog') like '%''profile_photo_removed''%',
+  'catalog covers profile_photo_removed');
+select pg_temp.ok(
+  pg_temp.chk('events', 'events_event_type_catalog') like '%''player_anonymized''%',
+  'catalog covers player_anonymized');
+select pg_temp.ok(
+  pg_temp.chk('events', 'events_event_type_catalog') like '%''credit_expired''%',
+  'catalog covers credit_expired');
+select pg_temp.ok(
+  pg_temp.chk('events', 'events_event_type_catalog') like '%''site_setting_changed''%',
+  'catalog covers site_setting_changed');
+
+-- An uncatalogued type does not merely fail its own insert — it raises, and the
+-- enclosing transaction is the thing that rolls back.
+select pg_temp.ok(
+  pg_temp.attempt($q$
+    insert into public.events (event_type, policy_version)
+    values ('definitely_not_catalogued', 'v1')
+  $q$) = 'check_violation',
+  'an uncatalogued event_type raises rather than being written');
 
 -- =============================================================================
 -- results
