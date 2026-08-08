@@ -5,7 +5,7 @@ import { LocaleProvider } from "@/components/LocaleProvider";
 import { SessionProvider } from "@/components/SessionProvider";
 import { SiteBackground } from "@/components/SiteBackground";
 import { SiteFooter } from "@/components/SiteFooter";
-import { SiteHeader } from "@/components/SiteHeader";
+import { Header } from "@/components/chrome/Header";
 import { getCurrentPlayer } from "@/lib/auth/session";
 import { getLocale, getStrings } from "@/lib/i18n/server";
 import { strings } from "@/lib/strings";
@@ -132,7 +132,7 @@ export default async function RootLayout({
           >
             {/* Mounted once, here, so navigating never restarts the field. */}
             <SiteBackground />
-            <SiteHeader
+            <Header
               nickname={player?.nickname ?? null}
               isAdmin={player?.is_admin ?? false}
               photoPath={player?.photo_path ?? null}
