@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Anton, Barlow_Condensed, JetBrains_Mono, Manrope } from "next/font/google";
-import { BottomTabBar } from "@/components/BottomTabBar";
+import { NavPill } from "@/components/chrome/NavPill";
 import { LocaleProvider } from "@/components/LocaleProvider";
 import { SessionProvider } from "@/components/SessionProvider";
 import { SiteBackground } from "@/components/SiteBackground";
@@ -170,8 +170,9 @@ export default async function RootLayout({
 
             {/* Phone widths only. On a desktop this would be a phone
                 affordance pinned to the bottom of a large screen, miles from
-                anything — the header carries the navigation there. */}
-            <BottomTabBar />
+                anything — the header's link row carries navigation there, and
+                the two are mutually exclusive at every width. */}
+            <NavPill />
           </SessionProvider>
         </LocaleProvider>
       </body>

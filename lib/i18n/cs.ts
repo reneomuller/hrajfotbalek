@@ -30,6 +30,7 @@ export const cs: StringsOverlay = {
     cta: "Zaber si místo",
     games: "Zápasy",
     logIn: "Přihlásit se",
+    homeShort: "Domů",
     pass: "Permanentka",
     myGames: "Moje zápasy",
     profileShort: "Profil",

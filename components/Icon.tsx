@@ -27,6 +27,7 @@ export type IconName =
   | "arrowLeft"
   | "users"
   // The bottom tab bar (v1.2 §7).
+  | "home"
   | "ticket"
   | "list"
   | "user"
@@ -70,6 +71,12 @@ const PATHS: Record<IconName, React.ReactNode> = {
     </>
   ),
   arrowLeft: <path d="M19 12H5m0 0 6-6m-6 6 6 6" />,
+  home: (
+    <>
+      <path d="M4 10.6 12 4l8 6.6" />
+      <path d="M6 9.8V19a1 1 0 0 0 1 1h3.4v-4.6h3.2V20H17a1 1 0 0 0 1-1V9.8" />
+    </>
+  ),
   ticket: (
     <>
       <path d="M3 8.4V6.5A1.5 1.5 0 0 1 4.5 5h15A1.5 1.5 0 0 1 21 6.5v1.9a2.6 2.6 0 0 0 0 7.2v1.9a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 17.5v-1.9a2.6 2.6 0 0 0 0-7.2z" />

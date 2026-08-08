@@ -1,0 +1,128 @@
+"use client";
+
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { Icon, type IconName } from "@/components/Icon";
+import { useStrings } from "@/components/LocaleProvider";
+
+/**
+ * The floating navigation pill (v1.3, ruling K).
+ *
+ * FOUR DESTINATIONS, FLOATING RATHER THAN PINNED. The previous bar was flush to
+ * the bottom edge and full width; this one is inset 16px and rounded, so the
+ * page visibly continues underneath it rather than being cut off by it. That is
+ * the whole difference, and it is why the one surviving shadow in the product
+ * points UPWARD (`shadow-lift`): content scrolling under the pill should read
+ * as under.
+ *
+ * RULING K CHANGED THE CONTENTS: Home is in, My games is out. `/my-games`
+ * SURVIVES AS A ROUTE — what was reversed is the tab, not the extraction — and
+ * it is reached from Profile. The reasoning: My games is a place you go
+ * occasionally and Home is the place the product starts, and a four-item bar
+ * where one item is rarely used is a three-item bar carrying a passenger.
+ *
+ * BELOW `md` ONLY. Above it the header's link row does this job, and the two
+ * are mutually exclusive at every width — two controls saying "Games" on one
+ * screen is one of them being ignored.
+ *
+ * A CLIENT COMPONENT, and only because of the active state. `usePathname` is
+ * the whole reason; the links are plain `<Link>`s and work without JavaScript.
+ *
+ * ACTIVE IS PREFIX-MATCHED AGAINST A LIST, not against the href. `/account/topup`
+ * lights Profile by prefix, but `/game/<id>` — SINGULAR — is not a prefix of
+ * `/games`, and a bar that goes dark the moment you tap into a game detail is a
+ * bar that cannot tell you where you are. So Games declares both routes
+ * explicitly rather than the href doing double duty and quietly failing on the
+ * one path that matters most.
+ *
+ * HOME IS EXACT-MATCHED, for the opposite reason: `/` is a prefix of
+ * everything, so prefix-matching it would light Home on every screen.
+ *
+ * SHOWN SIGNED OUT TOO, leading to routes that redirect to login carrying a
+ * return path. The shape of the product should be legible before you have an
+ * account, and a bar whose contents change under you after signing in is a
+ * different app.
+ */
+
+interface Tab {
+  href: string;
+  label: string;
+  icon: IconName;
+  /** Path prefixes that light this tab. Defaults to `[href]`. */
+  match?: string[];
+  /** `/` would otherwise prefix-match every route in the product. */
+  exact?: boolean;
+}
+
+export function NavPill() {
+  const t = useStrings();
+  const pathname = usePathname();
+
+  const tabs: Tab[] = [
+    { href: "/", label: t.nav.homeShort, icon: "home", exact: true },
+    // `/game/<id>` is the detail page — singular, and not a prefix of /games.
+    { href: "/games", label: t.nav.games, icon: "balls", match: ["/games", "/game/"] },
+    { href: "/pass", label: t.nav.pass, icon: "ticket" },
+    { href: "/account", label: t.nav.profileShort, icon: "user" },
+  ];
+
+  return (
+    <nav
+      data-testid="nav-pill"
+      aria-label={t.nav.primary}
+      /*
+       * `--tabbar-h` already carries the safe-area inset, and the pill sits
+       * 16px above whatever that resolves to. Reading the same custom property
+       * the page's bottom padding reads is what keeps the last line of content
+       * from ending up behind the pill.
+       */
+      className="fixed inset-x-4 z-40 md:hidden"
+      style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 16px)" }}
+    >
+      <ul className="m-0 flex list-none items-stretch gap-1 rounded-pill bg-surface-raised p-1 shadow-lift">
+        {tabs.map((tab) => {
+          const active = tab.exact
+            ? pathname === tab.href
+            : (tab.match ?? [tab.href]).some((prefix) => pathname.startsWith(prefix));
+
+          return (
+            <li key={tab.href} className="flex-1">
+              <Link
+                href={tab.href}
+                data-testid={`tab-${tab.href === "/" ? "home" : tab.href.slice(1)}`}
+                data-active={active ? "true" : "false"}
+                aria-current={active ? "page" : undefined}
+                /*
+                 * The ACTIVE item is a filled volt capsule with ink content —
+                 * fill rather than an outline, because ruling C takes strokes
+                 * off day boxes and chips and the same argument applies here:
+                 * fill and radius carry the surface.
+                 *
+                 * min-h-11 is the 44px target floor. A quarter of a 390px
+                 * screen is 97px wide, so width was never the constraint;
+                 * height is.
+                 */
+                className={`flex min-h-11 flex-col items-center justify-center gap-[2px] rounded-pill no-underline transition-colors ${
+                  active ? "bg-volt text-ink" : "text-muted hover:text-bone"
+                }`}
+              >
+                <Icon name={tab.icon} className="h-[20px] w-[20px]" />
+                {/*
+                  `whitespace-nowrap`, and no truncation. A label that does not
+                  fit is a WORD problem, not a type-size problem — the CS
+                  four-item bar was measured at 390px in
+                  docs/v13/nav-label-check.md and `Permanentka`, the longest
+                  label in any of the three languages, clears its cell by 8px.
+                  If that ever stops being true, change the word.
+                */}
+                <span className="whitespace-nowrap text-small font-semibold">
+                  {tab.label}
+                </span>
+              </Link>
+            </li>
+          );
+        })}
+      </ul>
+    </nav>
+  );
+}

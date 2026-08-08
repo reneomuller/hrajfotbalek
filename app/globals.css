@@ -36,8 +36,27 @@
    * Zero at `md`, where the bar is not rendered at all and the header carries
    * the navigation instead.
    */
+  /**
+   * THE PILL FLOATS NOW, so its footprint is three numbers rather than one.
+   *
+   * The old bar was flush to the bottom edge and full width, so reserving its
+   * height plus the home-indicator strip was enough. The v1.3 pill is inset
+   * 16px from the bottom, which means the page has to clear the pill AND the
+   * gap beneath it, or the last line of content sits in that gap looking like
+   * a rendering fault rather than like content behind a floating control.
+   *
+   *   spacing.tabbar   52px   the pill itself: a 44px target plus 4px padding
+   *                           top and bottom
+   *   16px                    the inset, matching the `bottom` the pill sets
+   *   env(...)                the iPhone home indicator
+   *
+   * One number, read here and by the game page's fixed CTA, so a change to the
+   * pill cannot leave one of them behind.
+   */
   :root {
-    --tabbar-h: calc(theme("spacing.tabbar") + env(safe-area-inset-bottom, 0px));
+    --tabbar-h: calc(
+      theme("spacing.tabbar") + 16px + env(safe-area-inset-bottom, 0px)
+    );
   }
 
   @media (min-width: 768px) {

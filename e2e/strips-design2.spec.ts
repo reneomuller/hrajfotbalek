@@ -300,7 +300,7 @@ test("D15-app-shell", async ({ page, context }) => {
 
   try {
     await page.goto("/games", { waitUntil: "networkidle" });
-    await expect(page.getByTestId("bottom-tabs")).toBeVisible();
+    await expect(page.getByTestId("nav-pill")).toBeVisible();
     await strip(page, "D15-tab-bar-games");
 
     // The one place two fixed things stack.

@@ -33,6 +33,7 @@ export const strings = {
      * a 22px icon in a quarter of a phone's width — "My profile" wraps there
      * and a wrapped tab label is what makes a tab bar look homemade.
      */
+    homeShort: "Home",
     pass: "Pass",
     myGames: "My games",
     profileShort: "Profile",

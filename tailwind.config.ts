@@ -364,7 +364,7 @@ const config: Config = {
          * arithmetic in a token and a hard-coded 64px would put the tab labels
          * under an iPhone's home indicator.
          */
-        tabbar: "64px",
+        tabbar: "52px",
       },
       /*
        * --- Radius: six become three -----------------------------------

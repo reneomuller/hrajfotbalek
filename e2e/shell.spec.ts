@@ -11,16 +11,20 @@ import { players, signInAs } from "./helpers/session.ts";
  */
 
 /*
- * The tab bar is the navigation on a phone, and the header stops duplicating
- * it. Two controls saying "Games" on one screen is one of them being ignored.
+ * The pill is the navigation on a phone, and the header stops duplicating it.
+ * Two controls saying "Games" on one screen is one of them being ignored.
+ *
+ * RULING K changed the contents: Home is in, My games is out. `/my-games`
+ * survives as a ROUTE — reversed was the tab, not the extraction — and the
+ * tests below still walk it, reached from Profile rather than from the pill.
  */
-test("the bottom tab bar carries the navigation at phone width", async ({ page }) => {
+test("the floating nav pill carries the navigation at phone width", async ({ page }) => {
   await page.goto("/games");
 
-  const tabs = page.getByTestId("bottom-tabs");
+  const tabs = page.getByTestId("nav-pill");
   await expect(tabs).toBeVisible();
 
-  for (const id of ["tab-games", "tab-pass", "tab-my-games", "tab-account"]) {
+  for (const id of ["tab-home", "tab-games", "tab-pass", "tab-account"]) {
     await expect(page.getByTestId(id)).toBeVisible();
   }
 
@@ -34,7 +38,7 @@ test("the bottom tab bar carries the navigation at phone width", async ({ page }
    * target a thumb hits reliably, and a bar of four cells across a 412px
    * viewport has no excuse for missing it.
    */
-  for (const id of ["tab-games", "tab-pass", "tab-my-games", "tab-account"]) {
+  for (const id of ["tab-home", "tab-games", "tab-pass", "tab-account"]) {
     const box = (await page.getByTestId(id).boundingBox())!;
     expect(box.height, `${id} height`).toBeGreaterThanOrEqual(44);
     expect(box.width, `${id} width`).toBeGreaterThanOrEqual(44);
@@ -81,7 +85,7 @@ test("the claim button sits above the tab bar, and the page clears both", async 
     await page.goto(`/game/${game.id}`);
 
     const cta = (await page.getByTestId("sticky-cta").boundingBox())!;
-    const bar = (await page.getByTestId("bottom-tabs").boundingBox())!;
+    const bar = (await page.getByTestId("nav-pill").boundingBox())!;
 
     // The button's bottom edge meets the bar's top edge — it is not underneath
     // it and there is no gap showing the page through.

@@ -29,6 +29,7 @@ export const ru: StringsOverlay = {
     cta: "Занять место",
     games: "Матчи",
     logIn: "Войти",
+    homeShort: "Главная",
     pass: "Абонемент",
     myGames: "Мои матчи",
     profileShort: "Профиль",
