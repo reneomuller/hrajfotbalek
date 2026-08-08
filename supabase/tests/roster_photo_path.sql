@@ -125,8 +125,8 @@ select pg_temp.ok(
      from pg_attribute
     where attrelid = 'public.game_roster_public'::regclass
       and attnum > 0 and not attisdropped)
-    = array['game_id', 'nickname', 'status', 'photo_path', 'games_played'],
-  'the view projects exactly these five columns and no sixth');
+    = array['game_id', 'nickname', 'photo_path', 'games_played'],
+  'the view projects exactly these four columns and no fifth');
 
 -- =============================================================================
 -- The status filter, which the widening must not have disturbed

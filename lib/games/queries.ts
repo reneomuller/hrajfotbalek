@@ -303,16 +303,29 @@ export async function getVenue(venueId: string | null): Promise<VenueRow | null>
 export async function getRoster(gameId: string): Promise<RosterRow[]> {
   const supabase = await createServerSupabaseClient();
 
-  // PII BOUNDARY: this projection is nickname, status, photo_path and
-  // games_played, and must stay that way. The view cannot expose
-  // player_id/email/phone — it does not project them — but selecting `*` here
-  // would still be a latent hazard, and this list is the proof twice over: the
-  // view gained `photo_path` in Phase 15 and `games_played` in migration 39,
-  // and each time a reviewer sees the widening reach the render deliberately
-  // rather than through a wildcard nobody looked at.
+  // PII BOUNDARY: this projection is nickname, photo_path and games_played,
+  // and must stay that way. The view cannot expose player_id/email/phone — it
+  // does not project them — but selecting `*` here would still be a latent
+  // hazard, and this list is the proof: the view gained `photo_path` in Phase
+  // 15 and `games_played` in migration 39, and each time a reviewer saw the
+  // widening reach the render deliberately rather than through a wildcard
+  // nobody looked at.
+  //
+  // `status` WAS HERE, and its removal is the lesson. PlayersList stopped
+  // rendering booking status long ago, with a comment explaining that
+  // reserved-versus-confirmed is the difference between having paid and not,
+  // and nobody else's business on a public page. But the view kept projecting
+  // it and this select kept asking for it, so the column was gone from the
+  // page and still on the wire: any holder of the anon key could call
+  // `?select=nickname,status&status=eq.reserved` and get a list of named
+  // players who had not paid. Migration 20260808150000 narrowed the view.
+  //
+  // The general lesson, worth more than the fix: deciding not to SHOW a field
+  // is not deciding not to SEND it, and on a PostgREST-backed project the wire
+  // is a public interface whether or not any component reads from it.
   const { data, error } = await supabase
     .from("game_roster_public")
-    .select("game_id, nickname, status, photo_path, games_played")
+    .select("game_id, nickname, photo_path, games_played")
     .eq("game_id", gameId);
 
   if (error || !data) return [];

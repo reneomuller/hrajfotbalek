@@ -57,7 +57,7 @@ test("a logged-in player cannot read another player's rows", async () => {
   expect(events.data ?? []).toHaveLength(0);
 });
 
-test("the anonymous roster exposes a nickname, a status and a photo path, and nothing else", async () => {
+test("the anonymous roster exposes a nickname and a photo path, and nothing else", async () => {
   const game = await createScratchGame();
 
   try {
@@ -83,6 +83,16 @@ test("the anonymous roster exposes a nickname, a status and a photo path, and no
     // without someone editing this line and the matching ones in
     // `supabase/tests/04_game_roster_public.sql` and `roster_photo_path.sql`
     // on purpose.
+    //
+    // `status` LEFT in migration 20260808150000, and this test is the one that
+    // should have caught it years earlier — it did not, because it asserted
+    // the shape the view HAD rather than the shape the view was supposed to
+    // have, and `status` was in both. The mechanism catches a widening nobody
+    // decided on; it cannot catch a column everyone had already decided to
+    // remove and only removed from the render. `PlayersList.tsx` stopped
+    // showing booking status; the wire kept sending it, and
+    // `?select=nickname,status&status=eq.reserved` listed the players who had
+    // not paid.
     for (const row of data ?? []) {
       const keys = Object.keys(row).sort();
       expect(keys).toEqual([
@@ -90,7 +100,6 @@ test("the anonymous roster exposes a nickname, a status and a photo path, and no
         "games_played",
         "nickname",
         "photo_path",
-        "status",
       ]);
       // No email address rode along with it — the cheapest possible check for
       // the single worst thing this view could ever leak.

@@ -76,8 +76,8 @@ select pg_temp.ok(
   (select array_agg(column_name::text order by column_name)
      from information_schema.columns
     where table_schema = 'public' and table_name = 'game_roster_public')
-  = array['game_id', 'games_played', 'nickname', 'photo_path', 'status'],
-  'the view projects EXACTLY game_id, nickname, status, photo_path, games_played',
+  = array['game_id', 'games_played', 'nickname', 'photo_path'],
+  'the view projects EXACTLY game_id, nickname, photo_path, games_played',
   (select string_agg(column_name, ', ' order by column_name)
      from information_schema.columns
     where table_schema = 'public' and table_name = 'game_roster_public'));
@@ -142,7 +142,17 @@ select pg_temp.ok(
   'a cancelled booking does not appear in the roster');
 
 select pg_temp.ok(
-  (select bool_and(status in ('reserved', 'confirmed')) from public.game_roster_public),
+  /*
+   * Asserted against the view BODY rather than by reading the column.
+   *
+   * The filter is unchanged and still the enforcement point; what changed is
+   * that `status` is no longer published (migration 20260808150000), so there
+   * is no column left to aggregate over. Reading the definition keeps the
+   * assertion honest — the filter has to be IN the view, which is the property
+   * that matters — without re-publishing the value to prove it.
+   */
+  (select pg_get_viewdef('public.game_roster_public'::regclass, true)
+     like '%b.status = ANY (ARRAY[''reserved''::booking_status, ''confirmed''::booking_status])%'),
   'every roster row is an active (reserved/confirmed) booking');
 
 -- =============================================================================

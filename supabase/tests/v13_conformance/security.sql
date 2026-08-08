@@ -384,6 +384,188 @@ select pg_temp.ok(
   'game_waitlist_public withholds player_id and joined_at — order without timestamps');
 
 -- =============================================================================
+-- 9. The two storage buckets
+--
+-- Both are public-read, because a roster avatar and a venue photo are shown to
+-- signed-out visitors. Public-read is therefore the requirement, not the risk —
+-- the risk is who may WRITE, and the limits at which a write is refused.
+-- =============================================================================
+
+select pg_temp.ok(
+  (select public from storage.buckets where id = 'profile-photos'),
+  'profile-photos is public-read');
+
+select pg_temp.ok(
+  (select public from storage.buckets where id = 'venue-photos'),
+  'venue-photos is public-read');
+
+/*
+ * The 2 MB ceiling is enforced at the BUCKET, not in the browser.
+ *
+ * A client-side size check is a courtesy to the user; it is not a limit,
+ * because the upload endpoint is reachable with curl and a resized image is
+ * one request away. `file_size_limit` is the number that actually refuses.
+ */
+select pg_temp.ok(
+  (select file_size_limit from storage.buckets where id = 'profile-photos') = 2097152,
+  'profile-photos refuses anything over 2 MB at the bucket',
+  (select 'limit: ' || file_size_limit::text from storage.buckets where id = 'profile-photos'));
+
+select pg_temp.ok(
+  (select allowed_mime_types from storage.buckets where id = 'profile-photos')
+    @> array['image/jpeg', 'image/png', 'image/webp'],
+  'profile-photos restricts uploads to jpeg, png and webp',
+  (select array_to_string(allowed_mime_types, ',') from storage.buckets where id = 'profile-photos'));
+
+select pg_temp.ok(
+  (select allowed_mime_types from storage.buckets where id = 'venue-photos')
+    @> array['image/jpeg', 'image/png', 'image/webp'],
+  'venue-photos restricts uploads to the same three types');
+
+-- Deny by default, then four explicit policies each. A bucket with RLS on and
+-- no policy is closed; a bucket with a policy nobody scoped is open.
+select pg_temp.ok(
+  (select count(*) from pg_policies
+    where schemaname = 'storage' and tablename = 'objects'
+      and policyname like 'profile_photos_%') = 4,
+  'profile-photos carries four explicit policies (read, insert, update, delete)',
+  (select coalesce(string_agg(policyname, ', '), 'none') from pg_policies
+    where schemaname = 'storage' and tablename = 'objects'
+      and policyname like 'profile_photos_%'));
+
+select pg_temp.ok(
+  (select count(*) from pg_policies
+    where schemaname = 'storage' and tablename = 'objects'
+      and policyname like 'venue_photos_%') = 4,
+  'venue-photos carries the same four-policy shape');
+
+-- Writes are authenticated-only on both. anon reads and never writes.
+select pg_temp.ok(
+  (select count(*) from pg_policies
+    where schemaname = 'storage' and tablename = 'objects'
+      and policyname in ('profile_photos_owner_insert', 'profile_photos_owner_update',
+                         'profile_photos_owner_delete', 'venue_photos_admin_insert',
+                         'venue_photos_admin_update', 'venue_photos_admin_delete')
+      and 'anon' = any(roles)) = 0,
+  'no write policy on either bucket admits anon');
+
+select pg_temp.ok(
+  (select count(*) from pg_policies
+    where schemaname = 'storage' and tablename = 'objects'
+      and policyname in ('profile_photos_public_read', 'venue_photos_public_read')
+      and 'anon' = any(roles)) = 2,
+  'both read policies admit anon — the images are shown signed out');
+
+-- =============================================================================
+-- 10. Anonymization removes the object, not just the columns
+--
+-- A public-read image outliving every column that named its subject is the
+-- worst of both: the row says nobody, and the URL still shows a face. So
+-- `anonymize_player` has to surface the storage path for the caller to delete.
+-- =============================================================================
+
+select pg_temp.ok(
+  (select p.prosrc ~* 'photo_path' from pg_proc p
+     join pg_namespace n on n.oid = p.pronamespace
+    where n.nspname = 'public' and p.proname = 'anonymize_player'),
+  'anonymize_player handles photo_path so the object can be deleted');
+
+select pg_temp.ok(
+  (select p.prosrc ~* 'remove_profile_photo|photo_path\s*=\s*null|set .*photo_path'
+     from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+    where n.nspname = 'public' and p.proname = 'anonymize_player'),
+  'anonymize_player clears the photo reference on the row');
+
+-- =============================================================================
+-- 11. game_roster_public publishes three columns and no fourth
+--
+-- THE FAILURE THIS PROBE WAS WRITTEN FOR. Before migration 20260808150000 the
+-- view projected `b.status`, and the view is granted to anon — so
+--
+--   /rest/v1/game_roster_public?select=nickname,status&status=eq.reserved
+--
+-- returned a list of named players who had not paid. `PlayersList.tsx` had
+-- already stopped RENDERING the column, with a comment saying that reserved
+-- versus confirmed is nobody else's business on a public page. The decision was
+-- executed on the render and not on the projection, so the column was gone from
+-- the page and still on the wire.
+--
+-- Not showing a field is not the same as not sending it.
+-- =============================================================================
+
+select pg_temp.ok(
+  (select count(*) from information_schema.columns
+    where table_schema = 'public' and table_name = 'game_roster_public'
+      and column_name = 'status') = 0,
+  'game_roster_public does NOT project booking status',
+  (select coalesce(string_agg(column_name, ', '), 'none') from information_schema.columns
+    where table_schema = 'public' and table_name = 'game_roster_public'));
+
+select pg_temp.ok(
+  (select count(*) from information_schema.columns
+    where table_schema = 'public' and table_name = 'game_roster_public'
+      and column_name in ('player_id', 'email', 'phone', 'auth_user_id')) = 0,
+  'game_roster_public projects no identifier and no contact column');
+
+select pg_temp.ok(
+  (select count(*) from information_schema.columns
+    where table_schema = 'public' and table_name = 'game_roster_public'
+      and column_name in ('nickname', 'photo_path', 'games_played')) = 3,
+  'game_roster_public still carries nickname, photo_path and games_played');
+
+-- Read it as anon, which is the shape that actually matters: the column list
+-- above is the schema, and this is what a stranger receives.
+set local role anon;
+select pg_temp.ok(
+  pg_temp.call(
+    $q$select count(_p::text) from (select nickname, photo_path, games_played from public.game_roster_public) _p$q$
+  ) <> 'denied',
+  'anon CAN read the three permitted roster columns');
+
+select pg_temp.ok(
+  pg_temp.call(
+    $q$select count(_p::text) from (select status from public.game_roster_public) _p$q$
+  ) like 'error:%',
+  'anon asking for status gets an error — the column is not there to ask for',
+  pg_temp.call($q$select count(_p::text) from (select status from public.game_roster_public) _p$q$));
+reset role;
+
+/*
+ * games_played counts ATTENDANCE, not intent.
+ *
+ * It counts games whose own status is played or settled. A counter that rose
+ * when you booked would measure how often someone signs up, which is a
+ * different and much less flattering number, and it would fall when a game was
+ * cancelled through no fault of the player.
+ */
+select pg_temp.ok(
+  (select pg_get_viewdef('public.game_roster_public'::regclass, true)
+     ~ 'played.*settled'),
+  'games_played counts played and settled games only');
+
+-- =============================================================================
+-- 12. The sibling public view, audited for the same mistake
+--
+-- game_waitlist_public was built to withhold rather than edited to withhold,
+-- and it shows: player_id and joined_at are consumed inside the row_number()
+-- window and never emitted, so the queue order is readable without the
+-- timestamps that produce it.
+-- =============================================================================
+
+select pg_temp.ok(
+  (select count(*) from information_schema.columns
+    where table_schema = 'public' and table_name = 'game_waitlist_public') = 3,
+  'game_waitlist_public projects exactly three columns',
+  (select string_agg(column_name, ', ') from information_schema.columns
+    where table_schema = 'public' and table_name = 'game_waitlist_public'));
+
+select pg_temp.ok(
+  (select count(*) from information_schema.columns
+    where table_schema = 'public' and table_name = 'game_waitlist_public'
+      and column_name in ('player_id', 'joined_at', 'converted_booking_id', 'id')) = 0,
+  'game_waitlist_public emits no id, no join timestamp and no conversion link');
+
+-- =============================================================================
 -- results
 -- =============================================================================
 

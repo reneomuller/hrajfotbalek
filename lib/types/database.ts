@@ -519,18 +519,27 @@ export interface Database {
     };
 
     Views: {
-      /** Anonymous roster surface — game_id, nickname, status and nothing else. */
       /**
+       * Anonymous roster surface — game_id, nickname, photo_path,
+       * games_played, and nothing else.
+       *
        * The PII boundary. Projects these four columns and NO OTHERS — no
        * player_id, no email, no phone. `photo_path` joined in Phase 15
        * (migration 29) under contract §4a, ratified in advance, shipping with
        * the rendering that consumes it. Any further column is a new ruling.
+       *
+       * `status` LEFT in migration 20260808150000, and it is the cautionary
+       * one. The booking status told a signed-out stranger whether a named
+       * player had paid; `PlayersList.tsx` had stopped rendering it long
+       * before, but the view kept projecting it and this type kept declaring
+       * it, so `?select=nickname,status&status=eq.reserved` returned a list of
+       * people who had not paid. A column removed from a render is still on
+       * the wire until it is removed from the projection.
        */
       game_roster_public: {
         Row: {
           game_id: string;
           nickname: string;
-          status: BookingStatus;
           /** Nullable: most players never upload one, and initials are the fallback. */
           photo_path: string | null;
           /**

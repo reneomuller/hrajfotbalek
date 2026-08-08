@@ -7,7 +7,7 @@ import type { Database } from "@/lib/types/database";
 type RosterRow = Database["public"]["Views"]["game_roster_public"]["Row"];
 
 export interface PlayersListProps {
-  rows: Pick<RosterRow, "nickname" | "status" | "photo_path" | "games_played">[];
+  rows: Pick<RosterRow, "nickname" | "photo_path" | "games_played">[];
   /** Storage origin for the photos; absent means initials everywhere. */
   supabaseUrl?: string;
 }
