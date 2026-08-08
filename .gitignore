@@ -48,3 +48,14 @@ playwright-report/
 
 # Screenshot strips — review artefacts for the UX loop, not baselines.
 screenshots/
+
+# Letco injection artifacts (auto-added)
+.claude/.letco-backup/
+.claude/.letco-injection-manifest.json
+.claude/.letco-inject-group-*.json
+.letco-session.lock
+
+# Machine-local agent config — carries session ids and socket paths under a
+# specific home directory. Never committed; the rules and skills beside it are.
+.claude/settings.local.json
+.mcp.json
