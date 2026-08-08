@@ -42,7 +42,7 @@ export async function PlayerOfMonthPanel({
         <>
           <span
             data-testid="potm-avatar"
-            className="flex h-[72px] w-[72px] items-center justify-center overflow-hidden rounded-full border-2 border-volt bg-surface-avatar font-condensed text-[26px] font-bold text-volt"
+            className="flex h-[72px] w-[72px] items-center justify-center overflow-hidden rounded-full border-2 border-volt bg-surface-avatar text-[26px] font-bold text-volt"
           >
             {photo ? (
               // eslint-disable-next-line @next/next/no-img-element
@@ -58,7 +58,7 @@ export async function PlayerOfMonthPanel({
           </span>
           <div
             data-testid="potm-nickname"
-            className="mt-3 font-condensed text-[19px] font-bold text-bone"
+            className="mt-3 text-[19px] font-bold text-bone"
           >
             {player.nickname}
           </div>

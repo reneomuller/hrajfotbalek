@@ -50,7 +50,7 @@ export function AdminRightsButton({
       <SubmitButton isAdmin={isAdmin} />
 
       {state.status === "error" && state.message && (
-        <span role="alert" className="font-mono text-[10px] tracking-[1px] text-muted">
+        <span role="alert" className="text-[10px] tracking-[1px] text-muted">
           {state.message}
         </span>
       )}
@@ -65,9 +65,7 @@ function SubmitButton({ isAdmin }: { isAdmin: boolean }) {
     <button
       type="submit"
       disabled={pending}
-      data-testid={isAdmin ? "revoke-admin" : "make-admin"}
-      className={`bg-transparent font-mono text-[10px] uppercase tracking-eyebrow disabled:opacity-50 ${
-        isAdmin ? "text-muted hover:text-white" : "text-volt"
+      data-testid={isAdmin ? "revoke-admin" : "make-admin"} className={`bg-transparent text-[10px] uppercase tracking-eyebrow disabled:opacity-50 ${ isAdmin ?"text-muted hover:text-white" : "text-volt"
       }`}
     >
       {pending

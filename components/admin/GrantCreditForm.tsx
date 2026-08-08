@@ -26,7 +26,7 @@ export function GrantCreditForm({ playerId }: { playerId: string }) {
         type="button"
         onClick={() => setOpen(true)}
         data-testid="grant-credit-open"
-        className="bg-transparent font-mono text-[10px] uppercase tracking-eyebrow text-volt"
+        className="bg-transparent text-[10px] uppercase tracking-eyebrow text-volt"
       >
         {strings.admin.grantCredit}
       </button>
@@ -39,7 +39,7 @@ export function GrantCreditForm({ playerId }: { playerId: string }) {
 
       <div className="flex flex-wrap items-end gap-3">
         <label className="block">
-          <span className="block font-mono text-[10px] uppercase tracking-eyebrow text-muted">
+          <span className="block text-[10px] uppercase tracking-eyebrow text-muted">
             {strings.admin.grantAmountLabel}
           </span>
           <input
@@ -48,18 +48,18 @@ export function GrantCreditForm({ playerId }: { playerId: string }) {
             step={1}
             required
             data-testid="grant-amount"
-            className="mt-1 w-[130px] rounded-control border border-hairline-strong bg-surface px-3 py-2 font-mono text-[13px] text-bone"
+            className="mt-1 w-[130px] rounded-control border border-hairline-strong bg-surface px-3 py-2 text-[13px] text-bone"
           />
         </label>
 
         <label className="block flex-1">
-          <span className="block font-mono text-[10px] uppercase tracking-eyebrow text-muted">
+          <span className="block text-[10px] uppercase tracking-eyebrow text-muted">
             {strings.admin.grantNoteLabel}
           </span>
           <input
             name="note"
             maxLength={200}
-            className="mt-1 w-full rounded-control border border-hairline-strong bg-surface px-3 py-2 font-mono text-[13px] text-bone"
+            className="mt-1 w-full rounded-control border border-hairline-strong bg-surface px-3 py-2 text-[13px] text-bone"
           />
         </label>
 
@@ -95,7 +95,7 @@ function SubmitButton() {
       type="submit"
       disabled={pending}
       data-testid="grant-submit"
-      className="rounded-control bg-volt px-5 py-3 font-condensed text-[14px] font-extrabold uppercase tracking-wide text-surface disabled:opacity-60"
+      className="rounded-control bg-volt px-5 py-3 text-[14px] font-extrabold uppercase tracking-wide text-surface disabled:opacity-60"
     >
       {pending ? strings.common.loading : strings.admin.grantSubmit}
     </button>

@@ -45,19 +45,17 @@ export function PlayerAttendanceRow({ row }: { row: AdminPlayerGameRow }) {
       <div className="min-w-[180px] flex-1">
         <Link
           href={`/admin/games/${row.gameId}`}
-          className="font-condensed text-[16px] font-bold text-white no-underline"
+          className=" text-[16px] font-bold text-white no-underline"
         >
           {row.venue}
         </Link>
-        <div className="font-mono text-[11px] tracking-[1px] text-muted">
+        <div className="text-[11px] tracking-[1px] text-muted">
           {row.startsAt ? formatGameDateTime(row.startsAt) : "—"}
         </div>
       </div>
 
       <span
-        data-testid="player-game-attendance"
-        className={`font-mono text-[10px] uppercase tracking-eyebrow ${
-          row.attendance === "no_show" ? "text-volt" : "text-faint"
+        data-testid="player-game-attendance"className={` text-[10px] uppercase tracking-eyebrow ${ row.attendance ==="no_show" ? "text-volt" : "text-faint"
         }`}
       >
         {row.attendance === "present"
@@ -96,7 +94,7 @@ function MarkButton({ value, label }: { value: "present" | "no_show"; label: str
       value={value}
       disabled={pending}
       data-testid={`player-mark-${value === "no_show" ? "no-show" : "present"}`}
-      className="rounded-control border border-hairline-strong px-3 py-2 font-mono text-[10px] uppercase tracking-eyebrow text-bone disabled:opacity-50"
+      className="rounded-control border border-hairline-strong px-3 py-2 text-[10px] uppercase tracking-eyebrow text-bone disabled:opacity-50"
     >
       {label}
     </button>

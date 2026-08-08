@@ -38,20 +38,20 @@ export async function NextGameStrip({
       className="block rounded-card border border-hairline-volt bg-surface px-5 py-4 no-underline transition-colors hover:border-hairline-volt"
     >
       <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-        <span className="font-mono text-[10px] uppercase tracking-eyebrow text-volt-dim">
+        <span className="text-[10px] uppercase tracking-eyebrow text-volt-dim">
           {t.games.nextGameStrip}
         </span>
-        <span className="font-mono text-[10px] uppercase tracking-eyebrow text-volt">
+        <span className="text-[10px] uppercase tracking-eyebrow text-volt">
           {t.games.nextGameStripCta}
         </span>
       </div>
 
       <div className="mt-2 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
         {/* `venue` is admin-supplied free text; JSX escapes it. */}
-        <span className="font-condensed text-[20px] font-bold text-white">
+        <span className=" text-[20px] font-bold text-white">
           {game.venue}
         </span>
-        <span className="font-mono text-[11px] uppercase tracking-[1px] text-bone">
+        <span className="text-[11px] uppercase tracking-[1px] text-bone">
           {formatGameDateTime(game.starts_at)}
         </span>
       </div>

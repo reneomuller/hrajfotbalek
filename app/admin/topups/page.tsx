@@ -76,7 +76,7 @@ export default async function AdminTopupsPage({
             >
               <div className="flex flex-col">
                 <span className="font-mono text-sm text-volt">{topup.payment_code}</span>
-                <span className="font-condensed text-base font-bold text-white">
+                <span className=" text-base font-bold text-white">
                   {nameById.get(topup.player_id) ?? topup.player_id}
                 </span>
                 <span className="text-sm text-white/60">{formatCzk(topup.amount_czk)}</span>
@@ -95,7 +95,7 @@ export default async function AdminTopupsPage({
                 <button
                   type="submit"
                   data-testid="confirm-topup"
-                  className="rounded-control bg-volt px-4 py-2 font-condensed text-sm font-extrabold uppercase tracking-wide text-surface"
+                  className="rounded-control bg-volt px-4 py-2 text-sm font-extrabold uppercase tracking-wide text-surface"
                 >
                   {t.admin.topupsConfirm}
                 </button>

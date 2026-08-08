@@ -78,7 +78,7 @@ export default async function AccountPage({
           <button
             type="submit"
             data-testid="sign-out"
-            className="rounded-control border border-hairline-strong px-[14px] py-2 font-condensed text-[13px] font-bold uppercase tracking-wide text-bone transition hover:border-volt hover:text-volt"
+            className="rounded-control border border-hairline-strong px-[14px] py-2 text-[13px] font-bold uppercase tracking-wide text-bone transition hover:border-volt hover:text-volt"
           >
             {t.auth.signOut}
           </button>
@@ -102,7 +102,7 @@ export default async function AccountPage({
         <PhotoUpload hasPhoto={Boolean(player.photo_path)}>
         <span
           data-testid="account-avatar"
-          className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-volt bg-surface font-condensed text-2xl font-extrabold text-volt"
+          className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-volt bg-surface text-2xl font-extrabold text-volt"
         >
           {photoUrl ? (
             /* A Supabase storage URL on a public bucket, rendered at 80px.
@@ -119,11 +119,11 @@ export default async function AccountPage({
         <div className="flex flex-col gap-1">
           <span
             data-testid="account-nickname"
-            className="font-condensed text-[22px] font-bold leading-tight text-white"
+            className=" text-[22px] font-bold leading-tight text-white"
           >
             {player.nickname}
           </span>
-          <span className="font-mono text-[11px] text-muted">{t.account.photoHint}</span>
+          <span className="text-[11px] text-muted">{t.account.photoHint}</span>
         </div>
       </section>
 
@@ -135,7 +135,7 @@ export default async function AccountPage({
         <Link
           href="/account/topup"
           data-testid="topup-cta"
-          className="rounded-control border border-hairline-volt px-4 py-2 font-condensed text-[13px] font-bold uppercase tracking-wide text-volt no-underline transition hover:bg-volt/10"
+          className="rounded-control border border-hairline-volt px-4 py-2 text-[13px] font-bold uppercase tracking-wide text-volt no-underline transition hover:bg-volt/10"
         >
           {t.account.topupCta}
         </Link>
@@ -151,7 +151,7 @@ export default async function AccountPage({
       <Link
         href="/my-games"
         data-testid="my-games-link"
-        className="mt-8 block font-condensed text-[15px] font-bold uppercase tracking-wide text-volt no-underline"
+        className="mt-8 block text-[15px] font-bold uppercase tracking-wide text-volt no-underline"
       >
         {t.account.myGamesLink}
       </Link>
@@ -189,7 +189,7 @@ export default async function AccountPage({
         <a
           href={deletionHref}
           data-testid="deletion-mailto"
-          className="block py-2 font-mono text-[12px] text-muted no-underline transition hover:text-bone"
+          className="block py-2 text-[12px] text-muted no-underline transition hover:text-bone"
         >
           {t.account.deleteAccount}
         </a>

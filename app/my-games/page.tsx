@@ -75,7 +75,7 @@ export default async function MyGamesPage({
           <Link
             href="/games"
             data-testid="my-games-empty-cta"
-            className="mt-4 inline-block rounded-control bg-volt px-5 py-3 font-condensed text-[15px] font-extrabold uppercase tracking-wide text-surface no-underline"
+            className="mt-4 inline-block rounded-control bg-volt px-5 py-3 text-[15px] font-extrabold uppercase tracking-wide text-surface no-underline"
           >
             {t.account.myGamesEmptyCta}
           </Link>

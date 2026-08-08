@@ -44,7 +44,7 @@ export async function OrganizerCard({
       data-testid="game-organizer"
       className="mt-4 rounded-card bg-surface p-5"
     >
-      <div className="font-mono text-[10px] uppercase tracking-eyebrow text-muted">
+      <div className="text-[10px] uppercase tracking-eyebrow text-muted">
         {t.games.organizerLabel}
       </div>
 
@@ -52,7 +52,7 @@ export async function OrganizerCard({
         <span
           data-testid="organizer-avatar"
           aria-hidden
-          className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border-2 border-volt bg-surface-avatar font-condensed text-[15px] font-bold text-volt"
+          className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border-2 border-volt bg-surface-avatar text-[15px] font-bold text-volt"
         >
           {initials(name, t)}
         </span>
@@ -65,7 +65,7 @@ export async function OrganizerCard({
             <a
               href={`tel:${phone}`}
               data-testid="organizer-phone"
-              className="font-mono text-[13px] text-volt no-underline"
+              className="text-[13px] text-volt no-underline"
             >
               {phone}
             </a>

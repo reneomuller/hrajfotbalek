@@ -55,7 +55,7 @@ export async function QrPayment({
       data-testid="qr-payment"
       className="rounded-card border border-hairline-volt bg-surface p-5"
     >
-      <h2 className="m-0 font-condensed text-[17px] font-bold uppercase tracking-wide text-white">
+      <h2 className="m-0 text-[17px] font-bold uppercase tracking-wide text-white">
         {t.payment.qrTitle}
       </h2>
       <p className="mt-2 text-[13px] leading-snug text-muted">
@@ -79,7 +79,7 @@ export async function QrPayment({
 
       {/* Plain-text fallback — everything needed to pay by hand. */}
       <dl className="mt-5 grid grid-cols-[auto_1fr] gap-x-4 gap-y-2">
-        <dt className="font-mono text-[11px] uppercase tracking-eyebrow text-faint">
+        <dt className="text-[11px] uppercase tracking-eyebrow text-faint">
           {t.payment.account}
         </dt>
         <dd
@@ -89,17 +89,17 @@ export async function QrPayment({
           {iban}
         </dd>
 
-        <dt className="font-mono text-[11px] uppercase tracking-eyebrow text-faint">
+        <dt className="text-[11px] uppercase tracking-eyebrow text-faint">
           {t.payment.amount}
         </dt>
         <dd
           data-testid="fallback-amount"
-          className="m-0 text-right font-mono text-[12px] text-bone"
+          className="m-0 text-right text-[12px] text-bone"
         >
           {formatCzk(amountCzk)}
         </dd>
 
-        <dt className="font-mono text-[11px] uppercase tracking-eyebrow text-faint">
+        <dt className="text-[11px] uppercase tracking-eyebrow text-faint">
           {t.payment.variableSymbol}
         </dt>
         <dd

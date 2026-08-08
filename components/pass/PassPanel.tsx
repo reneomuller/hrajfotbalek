@@ -33,13 +33,13 @@ export async function PassPanel() {
       <span className="min-w-0">
         <span
           data-testid="pass-panel-title"
-          className="block truncate font-condensed text-[15px] font-bold uppercase tracking-wide text-white"
+          className="block truncate text-[15px] font-bold uppercase tracking-wide text-white"
         >
           {t.pass.panelTitle}
         </span>
         <span
           data-testid="pass-panel-body"
-          className="mt-[1px] block truncate font-mono text-[11px] text-muted"
+          className="mt-[1px] block truncate text-[11px] text-muted"
         >
           {t.pass.panelBody}
         </span>
@@ -50,7 +50,7 @@ export async function PassPanel() {
         the line past the viewport. `aria-hidden` because the accessible name
         comes from the title, which already says where this goes.
       */}
-      <span aria-hidden className="shrink-0 font-mono text-[16px] leading-none text-volt">
+      <span aria-hidden className="shrink-0 text-[16px] leading-none text-volt">
         →
       </span>
     </Link>

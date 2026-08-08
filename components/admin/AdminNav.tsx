@@ -27,10 +27,7 @@ export function AdminNav() {
             key={link.href}
             href={link.href}
             aria-current={current ? "page" : undefined}
-            data-testid={`admin-nav-${link.href.split("/")[2]}`}
-            className={`font-mono text-[11px] uppercase tracking-eyebrow no-underline transition ${
-              current
-                ? "text-volt underline decoration-volt/40 underline-offset-[6px]"
+            data-testid={`admin-nav-${link.href.split("/")[2]}`} className={` text-[11px] uppercase tracking-eyebrow no-underline transition ${ current ?"text-volt underline decoration-volt/40 underline-offset-[6px]"
                 : "text-muted hover:text-volt"
             }`}
           >

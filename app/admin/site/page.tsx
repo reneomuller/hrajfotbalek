@@ -35,7 +35,7 @@ export default async function AdminSitePage() {
 
   return (
     <>
-      <h2 className="font-condensed text-[22px] font-bold uppercase tracking-wide text-bone">
+      <h2 className=" text-[22px] font-bold uppercase tracking-wide text-bone">
         {strings.admin.siteTitle}
       </h2>
       <p className="mt-2 max-w-[560px] text-[13px] leading-relaxed text-muted">

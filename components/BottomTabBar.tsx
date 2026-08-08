@@ -87,7 +87,7 @@ export function BottomTabBar() {
                 }`}
               >
                 <Icon name={tab.icon} className="h-[22px] w-[22px]" />
-                <span className="font-mono text-[9px] uppercase tracking-[1px]">
+                <span className="text-[9px] uppercase tracking-[1px]">
                   {tab.label}
                 </span>
               </Link>

@@ -36,10 +36,7 @@ export async function ShareButton({
       href={whatsAppShareUrl({ venue, when, url }, t)}
       target="_blank"
       rel="noopener noreferrer"
-      data-testid="share-whatsapp"
-      aria-label={t.games.shareWhatsApp}
-      className={`inline-flex items-center gap-2 rounded-control border border-hairline-strong px-3 py-2 font-mono uppercase tracking-eyebrow text-bone no-underline transition hover:border-whatsapp ${
-        size === "slim" ? "text-[9px]" : "text-[10px]"
+      data-testid="share-whatsapp"aria-label={t.games.shareWhatsApp} className={`inline-flex items-center gap-2 rounded-control border border-hairline-strong px-3 py-2 uppercase tracking-eyebrow text-bone no-underline transition hover:border-whatsapp ${ size ==="slim" ? "text-[9px]" : "text-[10px]"
       }`}
     >
       <span aria-hidden className="inline-block h-[10px] w-[10px] rounded-full bg-whatsapp" />

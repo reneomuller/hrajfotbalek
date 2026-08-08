@@ -51,7 +51,7 @@ function Submit({ label, games }: { label: string; games: number }) {
       type="submit"
       disabled={pending}
       data-testid={`buy-pass-${games}`}
-      className="w-full rounded-control bg-volt px-5 py-3 font-condensed text-[15px] font-extrabold uppercase tracking-wide text-surface disabled:opacity-60"
+      className="w-full rounded-control bg-volt px-5 py-3 text-[15px] font-extrabold uppercase tracking-wide text-surface disabled:opacity-60"
     >
       {pending ? t.common.loading : label}
     </button>

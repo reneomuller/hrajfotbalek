@@ -93,7 +93,7 @@ function ToastBody({
         onClick={() => setDismissed(true)}
         aria-label={closeLabel}
         data-testid="toast-close"
-        className="ml-1 shrink-0 rounded-pill px-2 py-1 font-mono text-[11px] text-muted transition hover:text-bone"
+        className="ml-1 shrink-0 rounded-pill px-2 py-1 text-[11px] text-muted transition hover:text-bone"
       >
         ✕
       </button>

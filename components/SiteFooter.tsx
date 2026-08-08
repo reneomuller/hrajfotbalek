@@ -19,7 +19,7 @@ export async function SiteFooter() {
       <div className="flex items-center gap-4">
         <Link
           href="/privacy"
-          className="font-mono text-[10px] tracking-[2px] text-faint no-underline transition hover:text-volt-dim"
+          className="text-[10px] tracking-[2px] text-faint no-underline transition hover:text-volt-dim"
         >
           {siteFooter.privacy}
         </Link>
@@ -30,7 +30,7 @@ export async function SiteFooter() {
         */}
         <Link
           href="/terms"
-          className="font-mono text-[10px] tracking-[2px] text-faint no-underline transition hover:text-volt-dim"
+          className="text-[10px] tracking-[2px] text-faint no-underline transition hover:text-volt-dim"
         >
           {siteFooter.terms}
         </Link>
@@ -43,12 +43,12 @@ export async function SiteFooter() {
         */}
         <a
           href={`mailto:${siteFooter.contactEmail}`}
-          className="font-mono text-[10px] tracking-[2px] text-faint no-underline transition hover:text-volt-dim"
+          className="text-[10px] tracking-[2px] text-faint no-underline transition hover:text-volt-dim"
         >
           {siteFooter.contact}
         </a>
       </div>
-      <div className="font-mono text-[10px] tracking-[2px] text-faint">
+      <div className="text-[10px] tracking-[2px] text-faint">
         {siteFooter.copyright}
       </div>
     </footer>

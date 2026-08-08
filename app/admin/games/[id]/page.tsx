@@ -80,20 +80,20 @@ export default async function AdminGamePage({
     <>
       <Link
         href="/admin/games"
-        className="font-mono text-[11px] uppercase tracking-eyebrow text-muted no-underline"
+        className="text-[11px] uppercase tracking-eyebrow text-muted no-underline"
       >
         {strings.games.backToGames}
       </Link>
 
       <div className="mt-4 flex flex-wrap items-baseline justify-between gap-3">
         {/* Free text, escaped by JSX. */}
-        <h2 className="m-0 font-condensed text-[22px] font-bold uppercase tracking-wide text-white">
+        <h2 className="m-0 text-[22px] font-bold uppercase tracking-wide text-white">
           {game.venue}
         </h2>
         <div className="flex items-center gap-3">
           <span
             data-testid="admin-game-status"
-            className="font-mono text-[11px] uppercase tracking-eyebrow text-volt-dim"
+            className="text-[11px] uppercase tracking-eyebrow text-volt-dim"
           >
             {strings.admin.status[game.status]}
           </span>
@@ -104,7 +104,7 @@ export default async function AdminGamePage({
         </div>
       </div>
 
-      <dl className="mt-4 grid max-w-[420px] grid-cols-[auto_1fr] gap-x-6 gap-y-1 font-mono text-[12px]">
+      <dl className="mt-4 grid max-w-[420px] grid-cols-[auto_1fr] gap-x-6 gap-y-1 text-[12px]">
         <dt className="text-muted">{strings.games.startsLabel}</dt>
         <dd className="m-0 text-bone">
           {formatGameTimeSpan(
@@ -125,7 +125,7 @@ export default async function AdminGamePage({
       </dl>
 
       {game.status === "draft" && (
-        <p className="mt-6 rounded-control border border-hairline-strong px-4 py-3 font-mono text-[11px] tracking-[1px] text-faint">
+        <p className="mt-6 rounded-control border border-hairline-strong px-4 py-3 text-[11px] tracking-[1px] text-faint">
           {strings.admin.draftNotPublic}
         </p>
       )}
@@ -143,7 +143,7 @@ export default async function AdminGamePage({
           <Link
             href={`/admin/games/${game.id}/add-player`}
             data-testid="add-player"
-            className="rounded-control border border-hairline-strong px-5 py-3 font-condensed text-[15px] font-extrabold uppercase tracking-wide text-bone no-underline"
+            className="rounded-control border border-hairline-strong px-5 py-3 text-[15px] font-extrabold uppercase tracking-wide text-bone no-underline"
           >
             {strings.admin.addPlayer}
           </Link>
@@ -155,12 +155,12 @@ export default async function AdminGamePage({
           payment queue: the organizer is looking at their banking app, and a
           second screen to switch to is a second screen to lose. */}
       <section className="mt-12">
-        <h3 className="m-0 font-condensed text-[18px] font-bold uppercase tracking-wide text-bone">
+        <h3 className="m-0 text-[18px] font-bold uppercase tracking-wide text-bone">
           {strings.admin.paymentsTitle}
         </h3>
 
         {pending.length === 0 ? (
-          <p className="mt-3 font-mono text-[12px] tracking-[1px] text-faint">
+          <p className="mt-3 text-[12px] tracking-[1px] text-faint">
             {strings.admin.paymentsEmpty}
           </p>
         ) : (
@@ -178,12 +178,12 @@ export default async function AdminGamePage({
           payment badge and the attendance controls belong on one row rather
           than one screen apart. */}
       <section className="mt-10">
-        <h3 className="m-0 font-condensed text-[18px] font-bold uppercase tracking-wide text-bone">
+        <h3 className="m-0 text-[18px] font-bold uppercase tracking-wide text-bone">
           {strings.admin.rosterTitle}
         </h3>
 
         {roster.length === 0 ? (
-          <p className="mt-3 font-mono text-[12px] tracking-[1px] text-faint">
+          <p className="mt-3 text-[12px] tracking-[1px] text-faint">
             {strings.admin.rosterEmpty}
           </p>
         ) : (
@@ -201,7 +201,7 @@ export default async function AdminGamePage({
           `settled` is an unreconciled debt with no surface that will ever raise
           it again. */}
       <section className="mt-10 border-t border-hairline pt-6">
-        <h3 className="m-0 mb-4 font-condensed text-[18px] font-bold uppercase tracking-wide text-bone">
+        <h3 className="m-0 mb-4 text-[18px] font-bold uppercase tracking-wide text-bone">
           {strings.admin.attendanceTitle}
         </h3>
 
@@ -223,7 +223,7 @@ export default async function AdminGamePage({
                 className="mb-4 rounded-card border border-hairline-strong p-4"
               >
                 <p className="m-0 text-[13px] text-bone">{strings.admin.settleBlocked}</p>
-                <ul className="mt-2 list-none p-0 font-mono text-[12px] text-volt">
+                <ul className="mt-2 list-none p-0 text-[12px] text-volt">
                   {pending.map((booking) => (
                     <li key={booking.id}>{booking.nickname}</li>
                   ))}
@@ -238,13 +238,13 @@ export default async function AdminGamePage({
         )}
 
         {!canPlay && !canSettle && game.status !== "settled" && (
-          <p className="font-mono text-[12px] tracking-[1px] text-faint">
+          <p className="text-[12px] tracking-[1px] text-faint">
             {strings.admin.settleNeedsPlayed}
           </p>
         )}
 
         {game.status === "settled" && (
-          <p className="font-condensed text-[17px] font-bold uppercase tracking-wide text-volt">
+          <p className=" text-[17px] font-bold uppercase tracking-wide text-volt">
             {strings.admin.settled}
           </p>
         )}
@@ -265,7 +265,7 @@ export default async function AdminGamePage({
       */}
       {game.venue_id && (
         <section className="mt-12 border-t border-hairline pt-6">
-          <h3 className="m-0 mb-3 font-condensed text-[18px] font-bold uppercase tracking-wide text-bone">
+          <h3 className="m-0 mb-3 text-[18px] font-bold uppercase tracking-wide text-bone">
             {strings.admin.venuePhotoTitle}
           </h3>
           <VenuePhotoUpload
@@ -277,7 +277,7 @@ export default async function AdminGamePage({
               included" grid. Same surface as the photo and for the same
               reason — and like the photo, it writes to the VENUE, so every
               game at this pitch gets it. */}
-          <h3 className="m-0 mb-3 mt-8 font-condensed text-[18px] font-bold uppercase tracking-wide text-bone">
+          <h3 className="m-0 mb-3 mt-8 text-[18px] font-bold uppercase tracking-wide text-bone">
             {strings.admin.venueAmenitiesTitle}
           </h3>
           <p className="mb-3 max-w-[520px] text-[12px] leading-snug text-muted">
@@ -292,7 +292,7 @@ export default async function AdminGamePage({
 
       {canEdit && (
         <section className="mt-12 border-t border-hairline pt-6">
-          <h3 className="m-0 font-condensed text-[18px] font-bold uppercase tracking-wide text-bone">
+          <h3 className="m-0 text-[18px] font-bold uppercase tracking-wide text-bone">
             {strings.admin.editGameTitle}
           </h3>
           <GameForm

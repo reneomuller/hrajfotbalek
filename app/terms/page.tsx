@@ -73,7 +73,7 @@ export default async function TermsPage() {
         })}
       </article>
 
-      <p className="mt-8 font-mono text-[11px] uppercase tracking-eyebrow text-volt">
+      <p className="mt-8 text-[11px] uppercase tracking-eyebrow text-volt">
         {t.terms.versionLabel} {TERMS_VERSION}
       </p>
 

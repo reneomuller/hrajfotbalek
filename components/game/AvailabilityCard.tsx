@@ -37,13 +37,11 @@ export async function AvailabilityCard({
       className="mt-4 rounded-card border border-hairline-volt bg-surface p-5"
     >
       <div className="flex items-baseline justify-between gap-3">
-        <span className="font-mono text-[10px] uppercase tracking-eyebrow text-muted">
+        <span className="text-[10px] uppercase tracking-eyebrow text-muted">
           {t.games.availabilityLabel}
         </span>
         <span
-          data-testid="urgency-label"
-          className={`font-mono text-[10px] uppercase tracking-[2px] ${
-            urgency === "full" ? "text-faint" : "text-volt-dim"
+          data-testid="urgency-label"className={` text-[10px] uppercase tracking-[2px] ${ urgency ==="full" ? "text-faint" : "text-volt-dim"
           }`}
         >
           {urgencyLabel(urgency, t)}

@@ -47,12 +47,12 @@ export default async function ConfirmationPage({
   if (!found) {
     return (
       <main className="relative z-10 mx-auto w-full max-w-shell px-gutter pb-16 pt-24">
-        <p className="font-mono text-[12px] tracking-[1px] text-faint">
+        <p className="text-[12px] tracking-[1px] text-faint">
           {t.booking.bookingNotFound}
         </p>
         <Link
           href={`/game/${gameId}`}
-          className="mt-6 inline-block font-mono text-[11px] uppercase tracking-eyebrow text-volt no-underline"
+          className="mt-6 inline-block text-[11px] uppercase tracking-eyebrow text-volt no-underline"
         >
           {t.booking.backToGame}
         </Link>
@@ -76,7 +76,7 @@ export default async function ConfirmationPage({
         data-status={booking.status}
         data-method={booking.payment_method}
       >
-        <div className="font-mono text-[11px] uppercase tracking-eyebrow text-volt">
+        <div className="text-[11px] uppercase tracking-eyebrow text-volt">
           {booking.status === "confirmed"
             ? t.booking.confirmed
             : t.booking.reserved}
@@ -86,7 +86,7 @@ export default async function ConfirmationPage({
           {game.venue}
         </h1>
 
-        <div className="mt-3 font-mono text-[13px] tracking-[1px] text-volt">
+        <div className="mt-3 text-[13px] tracking-[1px] text-volt">
           {formatGameDateTime(game.starts_at)}
         </div>
 
@@ -99,10 +99,10 @@ export default async function ConfirmationPage({
 
         {booking.credit_applied_czk > 0 && !isCredit && !isSeed && (
           <div className="mt-6 flex items-baseline justify-between gap-3 border-b border-hairline pb-3">
-            <span className="font-mono text-[12px] text-muted">
+            <span className="text-[12px] text-muted">
               {t.booking.creditApplied}
             </span>
-            <span className="font-mono text-[13px] text-volt">
+            <span className="text-[13px] text-volt">
               −{formatCzk(booking.credit_applied_czk)}
             </span>
           </div>
@@ -111,7 +111,7 @@ export default async function ConfirmationPage({
         {needsPayment && (
           <div className="mt-4">
             <div className="flex items-baseline justify-between gap-3">
-              <span className="font-mono text-[12px] text-muted">
+              <span className="text-[12px] text-muted">
                 {t.booking.amountDue}
               </span>
               <span
@@ -154,14 +154,14 @@ export default async function ConfirmationPage({
         <a
           href={`/game/${game.id}/ics`}
           data-testid="ics-link"
-          className="mt-8 block rounded-control border border-hairline-volt px-6 py-4 text-center font-condensed text-cta font-extrabold uppercase tracking-wide text-volt no-underline"
+          className="mt-8 block rounded-control border border-hairline-volt px-6 py-4 text-center text-cta font-extrabold uppercase tracking-wide text-volt no-underline"
         >
           {t.booking.addToCalendar}
         </a>
 
         <Link
           href={`/game/${game.id}`}
-          className="mt-8 inline-block font-mono text-[11px] uppercase tracking-eyebrow text-volt no-underline"
+          className="mt-8 inline-block text-[11px] uppercase tracking-eyebrow text-volt no-underline"
         >
           {t.booking.backToGame}
         </Link>

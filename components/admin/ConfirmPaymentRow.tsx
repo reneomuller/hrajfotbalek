@@ -42,7 +42,7 @@ export function ConfirmPaymentRow({
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="min-w-[180px] flex-1">
           {/* Nickname is player-supplied free text; JSX escapes it. */}
-          <div className="font-condensed text-[17px] font-bold text-white">
+          <div className=" text-[17px] font-bold text-white">
             {booking.nickname}
           </div>
           <div className="mt-1 font-mono text-[11px] tracking-[1px] text-muted">
@@ -62,7 +62,7 @@ export function ConfirmPaymentRow({
           <input type="hidden" name="gameId" value={gameId} />
           {showAmount && (
             <label className="flex items-center gap-2">
-              <span className="font-mono text-[10px] uppercase tracking-eyebrow text-muted">
+              <span className="text-[10px] uppercase tracking-eyebrow text-muted">
                 {strings.admin.receivedLabel}
               </span>
               <input
@@ -71,7 +71,7 @@ export function ConfirmPaymentRow({
                 min={0}
                 defaultValue={booking.amountDueCzk}
                 data-testid="received-amount"
-                className="w-[110px] rounded-control border border-hairline-strong bg-surface px-3 py-2 font-mono text-[13px] text-bone"
+                className="w-[110px] rounded-control border border-hairline-strong bg-surface px-3 py-2 text-[13px] text-bone"
               />
             </label>
           )}
@@ -84,7 +84,7 @@ export function ConfirmPaymentRow({
           type="button"
           onClick={() => setShowAmount((open) => !open)}
           data-testid="amount-differs"
-          className="bg-transparent font-mono text-[10px] uppercase tracking-eyebrow text-muted"
+          className="bg-transparent text-[10px] uppercase tracking-eyebrow text-muted"
         >
           {showAmount ? strings.common.close : strings.admin.amountDiffers}
         </button>
@@ -127,7 +127,7 @@ function ConfirmButton({ showAmount }: { showAmount: boolean }) {
       type="submit"
       disabled={pending}
       data-testid="mark-paid"
-      className="rounded-control bg-volt px-5 py-3 font-condensed text-[15px] font-extrabold uppercase tracking-wide text-surface disabled:opacity-60"
+      className="rounded-control bg-volt px-5 py-3 text-[15px] font-extrabold uppercase tracking-wide text-surface disabled:opacity-60"
     >
       {pending
         ? strings.common.loading

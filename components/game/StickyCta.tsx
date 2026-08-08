@@ -68,7 +68,7 @@ export async function StickyCta({
         <Link
           href={`/game/${gameId}/book`}
           data-testid="book-cta"
-          className="flex min-h-[52px] items-center justify-center rounded-control bg-volt px-6 font-condensed text-cta font-extrabold uppercase tracking-wide text-surface no-underline transition active:scale-[.985]"
+          className="flex min-h-[52px] items-center justify-center rounded-control bg-volt px-6 text-cta font-extrabold uppercase tracking-wide text-surface no-underline transition active:scale-[.985]"
         >
           {`${signedIn ? t.booking.claimSpot : t.booking.logInToClaim} · ${formatCzk(
             priceCzk,
@@ -81,7 +81,7 @@ export async function StickyCta({
         <Link
           href="/pass"
           data-testid="sticky-pass-link"
-          className="mt-2 block text-center font-mono text-[11px] uppercase tracking-eyebrow text-volt-dim no-underline"
+          className="mt-2 block text-center text-[11px] uppercase tracking-eyebrow text-volt-dim no-underline"
         >
           {t.pass.tryThePass}
         </Link>

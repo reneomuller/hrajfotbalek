@@ -21,8 +21,8 @@ type VenueRow = Database["public"]["Tables"]["venues"]["Row"];
 const INITIAL: AdminActionState = { status: "idle" };
 
 const FIELD =
-  "mt-1 w-full rounded-control border border-hairline-strong bg-surface px-3 py-2 font-mono text-[13px] text-bone";
-const LABEL = "block font-mono text-[10px] uppercase tracking-eyebrow text-muted";
+  "mt-1 w-full rounded-control border border-hairline-strong bg-surface px-3 py-2 text-[13px] text-bone";
+const LABEL = "block text-[10px] uppercase tracking-eyebrow text-muted";
 const HINT = "mt-1 text-[12px] leading-snug text-muted";
 const ERROR = "mt-1 text-[12px] text-volt";
 
@@ -365,7 +365,7 @@ export function GameForm({
           {SKILL_LEVELS.map((level) => (
             <label
               key={level}
-              className="flex items-center gap-2 font-mono text-[13px] text-bone"
+              className="flex items-center gap-2 text-[13px] text-bone"
             >
               <input
                 type="checkbox"
@@ -466,7 +466,7 @@ function SubmitButton({ isEdit }: { isEdit: boolean }) {
       type="submit"
       disabled={pending}
       data-testid="game-form-submit"
-      className="w-full rounded-control bg-volt px-6 py-4 font-condensed text-cta font-extrabold uppercase tracking-wide text-surface disabled:opacity-60"
+      className="w-full rounded-control bg-volt px-6 py-4 text-cta font-extrabold uppercase tracking-wide text-surface disabled:opacity-60"
     >
       {pending
         ? strings.common.loading

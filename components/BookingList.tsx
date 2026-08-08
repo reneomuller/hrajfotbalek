@@ -49,30 +49,23 @@ export async function BookingList({ rows }: BookingListProps) {
             <div className="flex items-baseline justify-between gap-3">
               <Link
                 href={`/game/${game.id}`}
-                className="font-condensed text-[18px] font-bold uppercase tracking-wide text-white no-underline"
+                className=" text-[18px] font-bold uppercase tracking-wide text-white no-underline"
               >
                 {game.venue}
               </Link>
               <span
-                data-testid="booking-badge"
-                className={`shrink-0 rounded-pill border px-[10px] py-1 font-mono text-[10px] uppercase tracking-eyebrow ${TONE_CLASS[badge.tone]}`}
-              >
-                {badge.label}
-              </span>
-            </div>
-
-            <div className="mt-2 flex flex-wrap items-baseline gap-x-4 gap-y-1">
-              <span className="font-mono text-[12px] tracking-[1px] text-volt">
+                data-testid="booking-badge"className={`shrink-0 rounded-pill border px-[10px] py-1 text-[10px] uppercase tracking-eyebrow ${TONE_CLASS[badge.tone]}`} > {badge.label} </span> </div> <div className="mt-2 flex flex-wrap items-baseline gap-x-4 gap-y-1">
+              <span className="text-[12px] tracking-[1px] text-volt">
                 {formatGameDateTime(game.starts_at)}
               </span>
               {booking.credit_applied_czk > 0 && (
-                <span className="font-mono text-[12px] text-muted">
+                <span className="text-[12px] text-muted">
                   {t.booking.creditApplied} −
                   {formatCzk(booking.credit_applied_czk)}
                 </span>
               )}
               {booking.status === "reserved" && amountDue > 0 && (
-                <span className="font-mono text-[12px] text-bone">
+                <span className="text-[12px] text-bone">
                   {t.booking.amountDue} {formatCzk(amountDue)}
                 </span>
               )}
@@ -81,7 +74,7 @@ export async function BookingList({ rows }: BookingListProps) {
             {(showCancel || booking.payment_code !== null) && (
               <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
                 {booking.payment_code !== null ? (
-                  <span className="font-mono text-[11px] tracking-[1px] text-faint">
+                  <span className="text-[11px] tracking-[1px] text-faint">
                     {t.payment.variableSymbol} {booking.payment_code}
                   </span>
                 ) : (
@@ -102,7 +95,7 @@ export async function BookingList({ rows }: BookingListProps) {
               <Link
                 href={`/game/${game.id}/book/confirmation?booking=${booking.id}`}
                 data-testid="show-qr"
-                className="mt-4 block rounded-control border border-hairline-volt px-4 py-3 text-center font-condensed text-[15px] font-bold uppercase tracking-wide text-volt no-underline"
+                className="mt-4 block rounded-control border border-hairline-volt px-4 py-3 text-center text-[15px] font-bold uppercase tracking-wide text-volt no-underline"
               >
                 {t.account.showQr}
               </Link>

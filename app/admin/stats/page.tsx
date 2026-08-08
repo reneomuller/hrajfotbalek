@@ -59,7 +59,7 @@ export default async function AdminStatsPage({
   return (
     <>
       <div className="flex flex-wrap items-baseline justify-between gap-3">
-        <h2 className="m-0 font-condensed text-[22px] font-bold uppercase tracking-wide text-bone">
+        <h2 className="m-0 text-[22px] font-bold uppercase tracking-wide text-bone">
           {strings.admin.statsTitle}
         </h2>
         {/* The export carries the SELECTED window, so the file matches the
@@ -83,10 +83,7 @@ export default async function AdminStatsPage({
               href={`/admin/stats?window=${option}`}
               data-testid={`stat-window-${option}`}
               data-selected={isSelected ? "true" : "false"}
-              aria-current={isSelected ? "page" : undefined}
-              className={`rounded-pill border px-3 py-2 font-mono text-[11px] uppercase tracking-[1px] no-underline ${
-                isSelected
-                  ? "border-hairline-volt bg-volt text-surface"
+              aria-current={isSelected ? "page": undefined} className={`rounded-pill border px-3 py-2 text-[11px] uppercase tracking-[1px] no-underline ${ isSelected ?"border-hairline-volt bg-volt text-surface"
                   : "border-hairline-strong text-muted"
               }`}
             >
@@ -98,7 +95,7 @@ export default async function AdminStatsPage({
 
       {/* The bounds, stated. A metric with an invisible window is a metric two
           people can read differently and both be right. */}
-      <p data-testid="stat-range" className="mt-2 font-mono text-[11px] text-faint">
+      <p data-testid="stat-range" className="mt-2 text-[11px] text-faint">
         {strings.admin.statWindowRange
           .replace("{from}", formatDate(range.from))
           // The upper bound is exclusive, so the last day INSIDE the window is
@@ -110,7 +107,7 @@ export default async function AdminStatsPage({
       {isEmpty ? (
         <p
           data-testid="stats-empty"
-          className="mt-8 font-mono text-[12px] tracking-[1px] text-faint"
+          className="mt-8 text-[12px] tracking-[1px] text-faint"
         >
           {strings.admin.statsEmptyWindow}
         </p>

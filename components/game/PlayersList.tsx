@@ -48,7 +48,7 @@ export async function PlayersList({ rows, supabaseUrl }: PlayersListProps) {
       data-testid="players-list"
       className="mt-4 rounded-card bg-surface p-5"
     >
-      <h2 className="m-0 font-mono text-[10px] uppercase tracking-eyebrow text-muted">
+      <h2 className="m-0 text-[10px] uppercase tracking-eyebrow text-muted">
         {t.games.playersTitle.replace("{count}", String(rows.length))}
       </h2>
 
@@ -78,7 +78,7 @@ export async function PlayersList({ rows, supabaseUrl }: PlayersListProps) {
                 <span
                   data-testid="player-games-played"
                   data-count={row.games_played}
-                  className="shrink-0 font-mono text-[12px] text-muted"
+                  className="shrink-0 text-[12px] text-muted"
                 >
                   {gamesPlayedLabel(row.games_played, t)}
                 </span>
@@ -128,7 +128,7 @@ async function Avatar({
   return (
     <span
       data-testid="roster-avatar"
-      className={`flex h-[34px] w-[34px] shrink-0 items-center justify-center overflow-hidden rounded-full bg-surface-avatar font-condensed text-[12px] font-bold ${
+      className={`flex h-[34px] w-[34px] shrink-0 items-center justify-center overflow-hidden rounded-full bg-surface-avatar text-[12px] font-bold ${
         index % 3 === 0 ? "text-volt" : "text-bone"
       }`}
     >

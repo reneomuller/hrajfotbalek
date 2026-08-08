@@ -48,7 +48,7 @@ export async function CommunityPanel() {
           target="_blank"
           rel="noopener noreferrer"
           data-testid="community-whatsapp"
-          className="flex min-h-11 items-center gap-3 rounded-control border border-hairline-strong px-4 py-3 font-condensed text-[15px] font-bold tracking-wide text-bone no-underline transition hover:border-whatsapp"
+          className="flex min-h-11 items-center gap-3 rounded-control border border-hairline-strong px-4 py-3 text-[15px] font-bold tracking-wide text-bone no-underline transition hover:border-whatsapp"
         >
           <WhatsAppIcon />
           {community.whatsapp}
@@ -58,7 +58,7 @@ export async function CommunityPanel() {
           target="_blank"
           rel="noopener noreferrer"
           data-testid="community-instagram"
-          className="flex min-h-11 items-center gap-3 rounded-control border border-hairline-strong px-4 py-3 font-condensed text-[15px] font-bold tracking-wide text-bone no-underline transition hover:border-instagram"
+          className="flex min-h-11 items-center gap-3 rounded-control border border-hairline-strong px-4 py-3 text-[15px] font-bold tracking-wide text-bone no-underline transition hover:border-instagram"
         >
           <InstagramIcon />
           {community.instagram}

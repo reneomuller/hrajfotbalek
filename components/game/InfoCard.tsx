@@ -107,7 +107,7 @@ export async function InfoCard({
       </div>
 
       {game.allowed_skill_levels && (
-        <p className="mt-3 font-mono text-small tracking-[1px] text-faint">
+        <p className="mt-3 text-small tracking-[1px] text-faint">
           {t.games.skillNotEnforced}
         </p>
       )}
@@ -121,7 +121,7 @@ export async function InfoCard({
           target="_blank"
           rel="noopener noreferrer"
           data-testid="venue-open-map"
-          className="flex min-h-11 items-center gap-2 font-condensed text-[15px] font-bold tracking-wide text-volt no-underline"
+          className="flex min-h-11 items-center gap-2 text-[15px] font-bold tracking-wide text-volt no-underline"
         >
           <Icon name="pin" className="h-[18px] w-[18px]" />
           {t.games.openMapFull}

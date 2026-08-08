@@ -16,7 +16,7 @@ function SubmitButton() {
       type="submit"
       disabled={pending}
       data-testid="cancel-booking"
-      className="rounded-control border border-hairline-strong px-4 py-2 font-mono text-[11px] uppercase tracking-eyebrow text-muted disabled:opacity-50"
+      className="rounded-control border border-hairline-strong px-4 py-2 text-[11px] uppercase tracking-eyebrow text-muted disabled:opacity-50"
     >
       {pending ? t.common.loading : t.booking.cancelBooking}
     </button>
@@ -49,7 +49,7 @@ export function CancelBookingForm({
 
   if (state.status === "cancelled") {
     return (
-      <p className="m-0 font-mono text-[11px] uppercase tracking-eyebrow text-volt-dim">
+      <p className="m-0 text-[11px] uppercase tracking-eyebrow text-volt-dim">
         {t.account.cancelSuccess}
       </p>
     );

@@ -36,18 +36,18 @@ export async function WaitlistPanel({
   return (
     <section className="mt-8" data-testid="waitlist-panel">
       <div className="flex flex-wrap items-baseline justify-between gap-3">
-        <h2 className="m-0 font-condensed text-[17px] font-bold uppercase tracking-wide text-white">
+        <h2 className="m-0 text-[17px] font-bold uppercase tracking-wide text-white">
           {t.games.waitlistTitle}
         </h2>
         {rows.length > 0 && (
-          <span className="font-mono text-[10px] uppercase tracking-eyebrow text-volt-dim">
+          <span className="text-[10px] uppercase tracking-eyebrow text-volt-dim">
             {rows.length} {t.games.waitlistCount}
           </span>
         )}
       </div>
 
       {rows.length === 0 ? (
-        <p className="mt-3 font-mono text-small tracking-[1px] text-faint">
+        <p className="mt-3 text-small tracking-[1px] text-faint">
           {t.games.waitlistEmpty}
         </p>
       ) : (
@@ -78,7 +78,7 @@ export async function WaitlistPanel({
                   }`}
                 >
                   <span className="flex items-baseline gap-3">
-                    <span className="font-mono text-[11px] tracking-[1px] text-volt-dim">
+                    <span className="text-[11px] tracking-[1px] text-volt-dim">
                       #{row.position}
                     </span>
                     <span className={`text-[14px] ${isYou ? "text-volt" : "text-bone"}`}>
@@ -86,7 +86,7 @@ export async function WaitlistPanel({
                     </span>
                   </span>
                   {isYou && (
-                    <span className="font-mono text-[10px] uppercase tracking-eyebrow text-volt">
+                    <span className="text-[10px] uppercase tracking-eyebrow text-volt">
                       {t.games.waitlistYou}
                     </span>
                   )}

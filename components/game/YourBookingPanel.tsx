@@ -51,19 +51,11 @@ export async function YourBookingPanel({
       className="mt-6 rounded-card border border-hairline-volt bg-surface p-5"
     >
       <div className="flex flex-wrap items-baseline justify-between gap-3">
-        <h2 className="m-0 font-condensed text-[17px] font-bold uppercase tracking-wide text-white">
+        <h2 className="m-0 text-[17px] font-bold uppercase tracking-wide text-white">
           {t.games.yourBookingTitle}
         </h2>
         <span
-          data-testid="your-booking-badge"
-          className={`rounded-pill border px-2 py-1 font-mono text-[10px] uppercase tracking-eyebrow ${TONE_CLASS[badge.tone]}`}
-        >
-          {badge.label}
-        </span>
-      </div>
-
-      {/* The payment state, in a sentence rather than only as a chip. */}
-      <p className="mt-2 text-[14px] leading-relaxed text-bone">
+          data-testid="your-booking-badge"className={`rounded-pill border px-2 py-1 text-[10px] uppercase tracking-eyebrow ${TONE_CLASS[badge.tone]}`} > {badge.label} </span> </div> {/* The payment state, in a sentence rather than only as a chip. */} <p className="mt-2 text-[14px] leading-relaxed text-bone">
         {booking.status === "confirmed"
           ? t.games.yourBookingConfirmed
           : booking.payment_method === "cash"
@@ -72,7 +64,7 @@ export async function YourBookingPanel({
       </p>
 
       {booking.status === "reserved" && amountDue > 0 && (
-        <p className="mt-1 font-mono text-[13px] text-muted">{formatCzk(amountDue)}</p>
+        <p className="mt-1 text-[13px] text-muted">{formatCzk(amountDue)}</p>
       )}
 
       <div className="mt-4 flex flex-wrap items-center gap-3">
@@ -80,7 +72,7 @@ export async function YourBookingPanel({
           <Link
             href={`/game/${booking.game_id}/book/confirmation?booking=${booking.id}`}
             data-testid="your-booking-pay"
-            className="rounded-control bg-volt px-5 py-3 font-condensed text-[15px] font-extrabold uppercase tracking-wide text-surface no-underline"
+            className="rounded-control bg-volt px-5 py-3 text-[15px] font-extrabold uppercase tracking-wide text-surface no-underline"
           >
             {t.games.yourBookingPay}
           </Link>

@@ -54,12 +54,12 @@ export default async function AdminLayout({
 
         <div className="flex items-baseline gap-4">
           {/* Whose session is acting. Free text, escaped by JSX. */}
-          <span className="font-mono text-[11px] tracking-[1px] text-faint">
+          <span className="text-[11px] tracking-[1px] text-faint">
             {admin.nickname}
           </span>
           <Link
             href="/"
-            className="font-mono text-[11px] uppercase tracking-eyebrow text-muted no-underline"
+            className="text-[11px] uppercase tracking-eyebrow text-muted no-underline"
           >
             {strings.admin.backToSite}
           </Link>

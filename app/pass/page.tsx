@@ -50,7 +50,7 @@ export default async function PassPage() {
       </div>
 
       <section className="mt-10 rounded-card bg-surface p-5">
-        <h2 className="m-0 font-condensed text-[17px] font-bold uppercase tracking-wide text-white">
+        <h2 className="m-0 text-[17px] font-bold uppercase tracking-wide text-white">
           {t.pass.howItWorks}
         </h2>
         <p className="mt-2 text-[14px] leading-relaxed text-bone">
@@ -59,7 +59,7 @@ export default async function PassPage() {
         {/* The reference price, stated once. Every tier's arithmetic is built
             on it, and a page that shows six prices without it makes the reader
             do the division themselves. */}
-        <p className="mt-3 font-mono text-[12px] tracking-[1px] text-faint">
+        <p className="mt-3 text-[12px] tracking-[1px] text-faint">
           {t.pass.tierPerGame.replace("{amount}", formatCzk(150))}
         </p>
       </section>

@@ -71,11 +71,11 @@ export async function SiteHeader({
           aria-label={nav.home}
           className="flex shrink-0 items-center gap-[10px] no-underline"
         >
-          <span className="flex h-[38px] w-[38px] items-center justify-center rounded-pill border-[1.5px] border-volt bg-surface font-condensed text-[19px] font-extrabold italic tracking-[-1px]">
+          <span className="flex h-[38px] w-[38px] items-center justify-center rounded-pill border-[1.5px] border-volt bg-surface text-[19px] font-extrabold italic tracking-[-1px]">
             <span className="text-white">{brand.monogramLead}</span>
             <span className="text-volt">{brand.monogramAccent}</span>
           </span>
-          <span className="font-condensed text-[16px] font-bold leading-none tracking-wide text-bone">
+          <span className=" text-[16px] font-bold leading-none tracking-wide text-bone">
             {brand.wordmarkLead}{" "}
             <span className="text-volt">{brand.wordmarkAccent}</span>
           </span>
@@ -99,7 +99,7 @@ export async function SiteHeader({
                 key={link.href}
                 href={link.href}
                 data-testid={`nav-${link.href.split("/")[1]}`}
-                className="font-condensed text-[13px] font-bold uppercase tracking-wide text-bone no-underline transition hover:text-volt"
+                className=" text-[13px] font-bold uppercase tracking-wide text-bone no-underline transition hover:text-volt"
               >
                 {link.label}
               </Link>
@@ -112,7 +112,7 @@ export async function SiteHeader({
               data-testid="nav-account"
               aria-label={nav.profile}
               title={nickname}
-              className="flex h-[34px] w-[34px] items-center justify-center overflow-hidden rounded-full border-[1.5px] border-volt bg-surface-avatar font-condensed text-[13px] font-bold text-volt no-underline"
+              className="flex h-[34px] w-[34px] items-center justify-center overflow-hidden rounded-full border-[1.5px] border-volt bg-surface-avatar text-[13px] font-bold text-volt no-underline"
             >
               {photo ? (
                 /* A plain <img>, like the roster avatars: a 34px circle from a
@@ -134,7 +134,7 @@ export async function SiteHeader({
             <Link
               href="/login"
               data-testid="nav-login"
-              className="rounded-control bg-volt px-[14px] py-2 font-condensed text-[13px] font-extrabold uppercase tracking-wide text-surface no-underline"
+              className="rounded-control bg-volt px-[14px] py-2 text-[13px] font-extrabold uppercase tracking-wide text-surface no-underline"
             >
               {nav.logIn}
             </Link>

@@ -74,7 +74,7 @@ function Row({
           would make two rarely-used controls the loudest thing on the page.
           `py-2` keeps the touch target honest without adding visual weight.
         */
-        className="block w-full bg-transparent py-2 text-left font-mono text-[12px] text-muted no-underline transition hover:text-bone"
+        className="block w-full bg-transparent py-2 text-left text-[12px] text-muted no-underline transition hover:text-bone"
       >
         {label}
       </button>

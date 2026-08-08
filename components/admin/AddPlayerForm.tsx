@@ -10,8 +10,8 @@ import { strings } from "@/lib/strings";
 const INITIAL: AddPlayerState = { status: "idle" };
 
 const FIELD =
-  "mt-1 w-full rounded-control border border-hairline-strong bg-surface px-3 py-2 font-mono text-[13px] text-bone";
-const LABEL = "block font-mono text-[10px] uppercase tracking-eyebrow text-muted";
+  "mt-1 w-full rounded-control border border-hairline-strong bg-surface px-3 py-2 text-[13px] text-bone";
+const LABEL = "block text-[10px] uppercase tracking-eyebrow text-muted";
 
 /**
  * Add-player form — one screen, one submit, ≤10s end to end.
@@ -30,12 +30,12 @@ export function AddPlayerForm({ gameId }: { gameId: string }) {
         data-testid="add-player-done"
         className="mt-6 rounded-card border border-hairline-volt bg-surface p-5"
       >
-        <p className="m-0 font-condensed text-[17px] font-bold uppercase tracking-wide text-volt">
+        <p className="m-0 text-[17px] font-bold uppercase tracking-wide text-volt">
           {strings.admin.addPlayerDone}
         </p>
         <Link
           href={`/admin/games/${gameId}`}
-          className="mt-4 inline-block font-mono text-[11px] uppercase tracking-eyebrow text-muted no-underline"
+          className="mt-4 inline-block text-[11px] uppercase tracking-eyebrow text-muted no-underline"
         >
           {strings.common.back}
         </Link>
@@ -100,7 +100,7 @@ export function AddPlayerForm({ gameId }: { gameId: string }) {
           <p className="m-0">{strings.admin.addPlayerDuplicate}</p>
           <Link
             href="/admin/players/merge"
-            className="mt-2 inline-block font-mono text-[11px] uppercase tracking-eyebrow text-volt no-underline"
+            className="mt-2 inline-block text-[11px] uppercase tracking-eyebrow text-volt no-underline"
           >
             {strings.admin.addPlayerGoToMerge}
           </Link>
@@ -123,7 +123,7 @@ function SubmitButton() {
       type="submit"
       disabled={pending}
       data-testid="add-player-submit"
-      className="w-full rounded-control bg-volt px-6 py-4 font-condensed text-cta font-extrabold uppercase tracking-wide text-surface disabled:opacity-60"
+      className="w-full rounded-control bg-volt px-6 py-4 text-cta font-extrabold uppercase tracking-wide text-surface disabled:opacity-60"
     >
       {pending ? strings.common.loading : strings.admin.addPlayerSubmit}
     </button>

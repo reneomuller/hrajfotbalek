@@ -27,14 +27,14 @@ export default async function AdminPlayersPage() {
   return (
     <>
       <div className="flex flex-wrap items-baseline justify-between gap-3">
-        <h2 className="m-0 font-condensed text-[22px] font-bold uppercase tracking-wide text-bone">
+        <h2 className="m-0 text-[22px] font-bold uppercase tracking-wide text-bone">
           {strings.admin.playersTitle}
         </h2>
         <div className="flex items-center gap-3">
           <Link
             href="/admin/players/merge"
             data-testid="merge-link"
-            className="font-mono text-[11px] uppercase tracking-eyebrow text-volt no-underline"
+            className="text-[11px] uppercase tracking-eyebrow text-volt no-underline"
           >
             {strings.admin.mergeLink}
           </Link>
@@ -43,7 +43,7 @@ export default async function AdminPlayersPage() {
       </div>
 
       {players.length === 0 ? (
-        <p className="mt-8 font-mono text-[12px] tracking-[1px] text-faint">
+        <p className="mt-8 text-[12px] tracking-[1px] text-faint">
           {strings.admin.playersEmpty}
         </p>
       ) : (
@@ -64,39 +64,39 @@ export default async function AdminPlayersPage() {
                   <Link
                     href={`/admin/players/${player.id}`}
                     data-testid="admin-player-link"
-                    className="font-condensed text-[17px] font-bold text-white no-underline"
+                    className="text-[17px] font-bold text-white no-underline"
                   >
                     {player.nickname}
                   </Link>
                   {player.isShadow && (
-                    <span className="rounded-pill border border-hairline-strong px-2 py-[2px] font-mono text-[9px] uppercase tracking-eyebrow text-muted">
+                    <span className="rounded-pill border border-hairline-strong px-2 py-[2px] text-[9px] uppercase tracking-eyebrow text-muted">
                       {strings.admin.shadowTag}
                     </span>
                   )}
                   {player.isSeed && (
-                    <span className="rounded-pill border border-hairline-strong px-2 py-[2px] font-mono text-[9px] uppercase tracking-eyebrow text-muted">
+                    <span className="rounded-pill border border-hairline-strong px-2 py-[2px] text-[9px] uppercase tracking-eyebrow text-muted">
                       {strings.admin.seedTag}
                     </span>
                   )}
                   {player.isAdmin && (
-                    <span className="rounded-pill border border-hairline-volt px-2 py-[2px] font-mono text-[9px] uppercase tracking-eyebrow text-volt">
+                    <span className="rounded-pill border border-hairline-volt px-2 py-[2px] text-[9px] uppercase tracking-eyebrow text-volt">
                       {strings.admin.adminTag}
                     </span>
                   )}
                 </div>
-                <div className="mt-1 font-mono text-[11px] tracking-[1px] text-muted">
+                <div className="mt-1 text-[11px] tracking-[1px] text-muted">
                   {player.email ?? strings.admin.noEmail}
                 </div>
               </div>
 
-              <div className="font-mono text-[11px] tracking-[1px] text-muted">
+              <div className="text-[11px] tracking-[1px] text-muted">
                 {strings.admin.bookingsLabel} {player.bookingCount}
               </div>
 
               <div
                 data-testid="player-balance"
                 data-balance={player.balanceCzk}
-                className="font-mono text-[13px] text-volt"
+                className="text-[13px] text-volt"
               >
                 {strings.admin.balanceLabel} {formatCzk(player.balanceCzk)}
               </div>
@@ -108,7 +108,7 @@ export default async function AdminPlayersPage() {
                      will otherwise assume the panel is broken. */
                   <span
                     data-testid="admin-rights-self"
-                    className="font-mono text-[10px] uppercase tracking-eyebrow text-faint"
+                    className="text-[10px] uppercase tracking-eyebrow text-faint"
                   >
                     {strings.admin.adminSelfNote}
                   </span>

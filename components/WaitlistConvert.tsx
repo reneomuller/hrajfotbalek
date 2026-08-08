@@ -19,7 +19,7 @@ function SubmitButton({ label }: { label: string }) {
       type="submit"
       disabled={pending}
       data-testid="convert-waitlist"
-      className="mt-6 w-full rounded-control bg-volt px-6 py-4 font-condensed text-cta font-extrabold uppercase tracking-wide text-surface disabled:opacity-60"
+      className="mt-6 w-full rounded-control bg-volt px-6 py-4 text-cta font-extrabold uppercase tracking-wide text-surface disabled:opacity-60"
     >
       {pending ? t.common.loading : label}
     </button>
@@ -47,7 +47,7 @@ export function WaitlistConvert({ gameId }: { gameId: string }) {
         data-error-code={state.code}
         className="rounded-card border border-hairline-strong bg-surface p-5"
       >
-        <div className="font-condensed text-[19px] font-bold uppercase tracking-wide text-white">
+        <div className=" text-[19px] font-bold uppercase tracking-wide text-white">
           {friendly.title}
         </div>
         <p className="mt-2 text-[14px] leading-relaxed text-muted">{friendly.message}</p>
@@ -60,7 +60,7 @@ export function WaitlistConvert({ gameId }: { gameId: string }) {
       <input type="hidden" name="gameId" value={gameId} />
 
       <fieldset className="m-0 border-0 p-0">
-        <legend className="mb-4 font-condensed text-[17px] font-bold uppercase tracking-wide text-white">
+        <legend className="mb-4 text-[17px] font-bold uppercase tracking-wide text-white">
           {t.booking.choosePayment}
         </legend>
 
@@ -68,7 +68,7 @@ export function WaitlistConvert({ gameId }: { gameId: string }) {
           <label className="flex cursor-pointer items-start gap-3 rounded-card bg-surface p-4 has-[:checked]:border-hairline-volt">
             <input type="radio" name="method" value="qr" defaultChecked className="mt-1 accent-volt" />
             <span>
-              <span className="block font-condensed text-[16px] font-bold uppercase tracking-wide text-bone">
+              <span className="block text-[16px] font-bold uppercase tracking-wide text-bone">
                 {t.booking.payByQr}
               </span>
               <span className="mt-1 block text-[13px] leading-snug text-muted">
@@ -80,7 +80,7 @@ export function WaitlistConvert({ gameId }: { gameId: string }) {
           <label className="flex cursor-pointer items-start gap-3 rounded-card bg-surface p-4 has-[:checked]:border-hairline-volt">
             <input type="radio" name="method" value="cash" className="mt-1 accent-volt" />
             <span>
-              <span className="block font-condensed text-[16px] font-bold uppercase tracking-wide text-bone">
+              <span className="block text-[16px] font-bold uppercase tracking-wide text-bone">
                 {t.booking.payByCash}
               </span>
               <span className="mt-1 block text-[13px] leading-snug text-muted">

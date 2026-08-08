@@ -37,7 +37,7 @@ export default async function WaitlistConvertPage({
   if (!result) {
     return (
       <main className="relative z-10 mx-auto w-full max-w-shell px-gutter pb-16 pt-24">
-        <p className="font-mono text-[12px] tracking-[1px] text-faint">
+        <p className="text-[12px] tracking-[1px] text-faint">
           {t.games.notFound}
         </p>
       </main>
@@ -51,7 +51,7 @@ export default async function WaitlistConvertPage({
     <main className="relative z-10 mx-auto w-full max-w-shell px-gutter pb-16 pt-24">
       <Link
         href={`/game/${game.id}`}
-        className="font-mono text-[11px] uppercase tracking-eyebrow text-muted no-underline"
+        className="text-[11px] uppercase tracking-eyebrow text-muted no-underline"
       >
         {t.booking.backToGame}
       </Link>
@@ -61,10 +61,10 @@ export default async function WaitlistConvertPage({
       </h1>
 
       <div className="mt-3 flex flex-wrap items-baseline gap-x-5 gap-y-2">
-        <span className="font-mono text-[13px] tracking-[1px] text-volt">
+        <span className="text-[13px] tracking-[1px] text-volt">
           {formatGameDateTime(game.starts_at)}
         </span>
-        <span className="font-mono text-[13px] text-muted">
+        <span className="text-[13px] text-muted">
           {formatCzk(game.price_czk)}
         </span>
       </div>
@@ -80,7 +80,7 @@ export default async function WaitlistConvertPage({
         ) : (
           <p
             data-testid="not-on-waitlist"
-            className="rounded-control border border-hairline-strong px-4 py-3 font-mono text-[11px] tracking-[1px] text-faint"
+            className="rounded-control border border-hairline-strong px-4 py-3 text-[11px] tracking-[1px] text-faint"
           >
             {t.games.waitlistNotOnList}
           </p>

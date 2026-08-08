@@ -65,7 +65,7 @@ export async function SpotsLeft({
     <span
       data-testid="spots-left"
       data-tone={tone}
-      className={`font-condensed font-bold leading-none tracking-tight ${
+      className={` font-bold leading-none tracking-tight ${
         size === "hero" ? "text-[30px]" : "text-[16px]"
       } ${TONE_TEXT[tone]}`}
     >

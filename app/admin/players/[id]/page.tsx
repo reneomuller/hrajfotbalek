@@ -51,7 +51,7 @@ export default async function AdminPlayerPage({
     <>
       <Link
         href="/admin/players"
-        className="font-mono text-[11px] uppercase tracking-eyebrow text-muted no-underline"
+        className="text-[11px] uppercase tracking-eyebrow text-muted no-underline"
       >
         {strings.common.back}
       </Link>
@@ -60,7 +60,7 @@ export default async function AdminPlayerPage({
       <div className="mt-4 flex flex-wrap items-center gap-4">
         <span
           data-testid="admin-player-avatar"
-          className="flex h-[64px] w-[64px] items-center justify-center overflow-hidden rounded-full border-2 border-volt bg-surface-avatar font-condensed text-[22px] font-bold text-volt"
+          className="flex h-[64px] w-[64px] items-center justify-center overflow-hidden rounded-full border-2 border-volt bg-surface-avatar text-[22px] font-bold text-volt"
         >
           {photo ? (
             /* Plain <img>, like every other avatar in this product: a public
@@ -79,12 +79,12 @@ export default async function AdminPlayerPage({
 
         <div className="min-w-[200px] flex-1">
           {/* Nickname and email are free text; JSX escapes both. */}
-          <h2 className="m-0 font-condensed text-[22px] font-bold uppercase tracking-wide text-white">
+          <h2 className="m-0 text-[22px] font-bold uppercase tracking-wide text-white">
             {player.nickname}
           </h2>
           <div
             data-testid="admin-player-email"
-            className="font-mono text-[12px] tracking-[1px] text-muted"
+            className="text-[12px] tracking-[1px] text-muted"
           >
             {player.email ?? strings.admin.playerNoEmail}
           </div>
@@ -94,7 +94,7 @@ export default async function AdminPlayerPage({
       </div>
 
       {/* --- the numbers ------------------------------------------------------- */}
-      <dl className="mt-6 grid max-w-[460px] grid-cols-[auto_1fr] gap-x-6 gap-y-1 font-mono text-[12px]">
+      <dl className="mt-6 grid max-w-[460px] grid-cols-[auto_1fr] gap-x-6 gap-y-1 text-[12px]">
         <dt className="text-muted">{strings.admin.playerCountry}</dt>
         <dd data-testid="admin-player-country" className="m-0 text-bone">
           {player.country ?? "—"}
@@ -119,7 +119,7 @@ export default async function AdminPlayerPage({
 
       {/* --- history, with the no-show control -------------------------------- */}
       <section className="mt-10">
-        <h3 className="m-0 font-condensed text-[18px] font-bold uppercase tracking-wide text-bone">
+        <h3 className="m-0 text-[18px] font-bold uppercase tracking-wide text-bone">
           {strings.admin.playerGamesTitle}
         </h3>
         <p className="mt-1 max-w-[520px] text-[13px] leading-relaxed text-muted">
@@ -127,7 +127,7 @@ export default async function AdminPlayerPage({
         </p>
 
         {games.length === 0 ? (
-          <p className="mt-4 font-mono text-[12px] tracking-[1px] text-faint">
+          <p className="mt-4 text-[12px] tracking-[1px] text-faint">
             {strings.admin.playerGamesEmpty}
           </p>
         ) : (

@@ -79,7 +79,7 @@ export default async function LandingPage() {
               <span className="text-volt">.</span>
             </h1>
 
-            <div className="mt-[22px] font-condensed text-hero-sub font-bold uppercase italic tracking-wide text-volt">
+            <div className="mt-[22px] text-hero-sub font-bold uppercase italic tracking-wide text-volt">
               {landing.heroSub}
             </div>
 
@@ -90,12 +90,12 @@ export default async function LandingPage() {
             {/* Primary CTA — the games list, not an in-page anchor. */}
             <Link
               href="/games"
-              className="mt-[30px] inline-flex items-center gap-[9px] rounded-control bg-volt px-[26px] py-[15px] font-condensed text-cta font-extrabold uppercase tracking-wide text-surface no-underline"
+              className="mt-[30px] inline-flex items-center gap-[9px] rounded-control bg-volt px-[26px] py-[15px] text-cta font-extrabold uppercase tracking-wide text-surface no-underline"
             >
               {landing.heroCta}
             </Link>
 
-            <div className="mt-[30px] animate-floatY font-mono text-[9px] tracking-eyebrow text-faint">
+            <div className="mt-[30px] animate-floatY text-[9px] tracking-eyebrow text-faint">
               {landing.scrollHint}
             </div>
           </div>
@@ -118,11 +118,11 @@ export default async function LandingPage() {
                   key={step.index}
                   className="flex min-w-[200px] flex-1 items-start gap-3 rounded-card bg-surface px-[18px] py-[15px] text-left"
                 >
-                  <div className="font-mono text-[14px] font-bold text-volt">
+                  <div className="text-[14px] font-bold text-volt">
                     {step.index}
                   </div>
                   <div>
-                    <div className="font-condensed text-[18px] font-bold tracking-[.3px]">
+                    <div className=" text-[18px] font-bold tracking-[.3px]">
                       {step.title}
                     </div>
                     <div className="mt-[3px] text-[13px] leading-[1.45] text-muted">
@@ -135,7 +135,7 @@ export default async function LandingPage() {
 
             <p
               data-testid="equipment-line"
-              className="mt-3 text-center font-mono text-[11px] tracking-[1px] text-volt-dim"
+              className="mt-3 text-center text-[11px] tracking-[1px] text-volt-dim"
             >
               {landing.equipmentLine}
             </p>
@@ -148,7 +148,7 @@ export default async function LandingPage() {
 
           <section className="pb-3 pt-[10px]">
             <div className="mb-[14px] flex items-baseline gap-3">
-              <div className="font-mono text-[10px] tracking-eyebrow text-volt-dim">
+              <div className="text-[10px] tracking-eyebrow text-volt-dim">
                 {landing.nextMatchEyebrow}
               </div>
               <h2 className="m-0 font-display text-section-title uppercase tracking-wide text-white">
@@ -159,7 +159,7 @@ export default async function LandingPage() {
               <Link
                 href="/games"
                 data-testid="next-matches-all"
-                className="ml-auto shrink-0 font-mono text-[10px] uppercase tracking-eyebrow text-volt no-underline"
+                className="ml-auto shrink-0 text-[10px] uppercase tracking-eyebrow text-volt no-underline"
               >
                 {landing.nextMatchesAll}
               </Link>
@@ -176,7 +176,7 @@ export default async function LandingPage() {
                 data-testid="next-game"
                 className="flex min-h-[120px] items-center justify-center overflow-hidden rounded-card border border-hairline-volt bg-surface p-6"
               >
-                <p className="font-mono text-[11px] tracking-[1px] text-faint">
+                <p className="text-[11px] tracking-[1px] text-faint">
                   {t.games.empty}
                 </p>
               </div>
@@ -225,14 +225,14 @@ export default async function LandingPage() {
 
           {/* FOOTER */}
           <footer className="flex flex-wrap items-center justify-between gap-2 border-t border-hairline pb-6 pt-5">
-            <div className="font-condensed text-[14px] font-bold tracking-wide text-muted">
+            <div className=" text-[14px] font-bold tracking-wide text-muted">
               {landing.footer.wordmarkLead}{" "}
               <span className="text-volt-dim">
                 {landing.footer.wordmarkAccent}
               </span>{" "}
               {landing.footer.city}
             </div>
-            <div className="font-mono text-[9px] tracking-[2px] text-faint">
+            <div className="text-[9px] tracking-[2px] text-faint">
               {landing.footer.tagline}
             </div>
           </footer>

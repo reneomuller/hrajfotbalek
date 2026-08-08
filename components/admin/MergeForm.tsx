@@ -34,10 +34,10 @@ export function MergeForm({ players }: { players: AdminPlayerRow[] }) {
         data-testid="merge-done"
         className="mt-6 rounded-card border border-hairline-volt bg-surface p-5"
       >
-        <p className="m-0 font-condensed text-[17px] font-bold uppercase tracking-wide text-volt">
+        <p className="m-0 text-[17px] font-bold uppercase tracking-wide text-volt">
           {strings.admin.mergeDone}
         </p>
-        <p className="mt-2 font-mono text-[12px] text-muted">
+        <p className="mt-2 text-[12px] text-muted">
           {strings.admin.mergeRowsMoved}: {state.rowsMoved}
         </p>
       </div>
@@ -47,7 +47,7 @@ export function MergeForm({ players }: { players: AdminPlayerRow[] }) {
   return (
     <form action={formAction} className="mt-6 max-w-[560px] space-y-5">
       <div>
-        <label className="block font-mono text-[10px] uppercase tracking-eyebrow text-muted">
+        <label className="block text-[10px] uppercase tracking-eyebrow text-muted">
           {strings.admin.mergeShadowLabel}
         </label>
         <select
@@ -55,7 +55,7 @@ export function MergeForm({ players }: { players: AdminPlayerRow[] }) {
           value={shadowId}
           onChange={(event) => setShadowId(event.target.value)}
           data-testid="merge-shadow"
-          className="mt-1 w-full rounded-control border border-hairline-strong bg-surface px-3 py-2 font-mono text-[13px] text-bone"
+          className="mt-1 w-full rounded-control border border-hairline-strong bg-surface px-3 py-2 text-[13px] text-bone"
         >
           <option value="">—</option>
           {shadows.map((player) => (
@@ -67,7 +67,7 @@ export function MergeForm({ players }: { players: AdminPlayerRow[] }) {
       </div>
 
       <div>
-        <label className="block font-mono text-[10px] uppercase tracking-eyebrow text-muted">
+        <label className="block text-[10px] uppercase tracking-eyebrow text-muted">
           {strings.admin.mergeSurvivingLabel}
         </label>
         <select
@@ -75,7 +75,7 @@ export function MergeForm({ players }: { players: AdminPlayerRow[] }) {
           value={survivingId}
           onChange={(event) => setSurvivingId(event.target.value)}
           data-testid="merge-surviving"
-          className="mt-1 w-full rounded-control border border-hairline-strong bg-surface px-3 py-2 font-mono text-[13px] text-bone"
+          className="mt-1 w-full rounded-control border border-hairline-strong bg-surface px-3 py-2 text-[13px] text-bone"
         >
           <option value="">—</option>
           {players
@@ -91,7 +91,7 @@ export function MergeForm({ players }: { players: AdminPlayerRow[] }) {
       {(shadow || surviving) && (
         <dl
           data-testid="merge-preview"
-          className="grid grid-cols-[auto_1fr_1fr] gap-x-6 gap-y-1 rounded-card p-4 font-mono text-[12px]"
+          className="grid grid-cols-[auto_1fr_1fr] gap-x-6 gap-y-1 rounded-card p-4 text-[12px]"
         >
           <dt className="text-muted" />
           <dd className="m-0 text-bone">{shadow?.nickname ?? "—"}</dd>
@@ -125,7 +125,7 @@ function SubmitButton({ disabled }: { disabled: boolean }) {
       type="submit"
       disabled={pending || disabled}
       data-testid="merge-submit"
-      className="w-full rounded-control bg-volt px-6 py-4 font-condensed text-cta font-extrabold uppercase tracking-wide text-surface disabled:opacity-60"
+      className="w-full rounded-control bg-volt px-6 py-4 text-cta font-extrabold uppercase tracking-wide text-surface disabled:opacity-60"
     >
       {pending ? strings.common.loading : strings.admin.mergeSubmit}
     </button>

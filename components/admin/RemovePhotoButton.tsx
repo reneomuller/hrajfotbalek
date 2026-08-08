@@ -22,7 +22,7 @@ export function RemovePhotoButton({ playerId }: { playerId: string }) {
     return (
       <p
         data-testid="photo-removed"
-        className="m-0 font-mono text-[11px] uppercase tracking-eyebrow text-volt-dim"
+        className="m-0 text-[11px] uppercase tracking-eyebrow text-volt-dim"
       >
         {strings.admin.photoRemoved}
       </p>
@@ -54,7 +54,7 @@ function Submit() {
       type="submit"
       disabled={pending}
       data-testid="remove-photo"
-      className="rounded-control border border-hairline-strong px-3 py-2 font-mono text-[10px] uppercase tracking-eyebrow text-muted disabled:opacity-50"
+      className="rounded-control border border-hairline-strong px-3 py-2 text-[10px] uppercase tracking-eyebrow text-muted disabled:opacity-50"
     >
       {pending ? strings.common.loading : strings.admin.photoRemove}
     </button>

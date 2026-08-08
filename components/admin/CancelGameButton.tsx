@@ -15,7 +15,7 @@ function ConfirmButton() {
       type="submit"
       disabled={pending}
       data-testid="cancel-game-confirm"
-      className="w-full rounded-control border border-hairline-strong bg-transparent px-6 py-4 font-condensed text-cta font-extrabold uppercase tracking-wide text-bone disabled:opacity-60"
+      className="w-full rounded-control border border-hairline-strong bg-transparent px-6 py-4 text-cta font-extrabold uppercase tracking-wide text-bone disabled:opacity-60"
     >
       {pending ? strings.common.loading : strings.admin.cancelGameConfirm}
     </button>
@@ -40,20 +40,20 @@ export function CancelGameButton({ gameId, venue }: { gameId: string; venue: str
         data-testid="cancel-game-result"
         className="rounded-card border border-hairline-volt bg-surface p-5"
       >
-        <div className="font-condensed text-[17px] font-bold uppercase tracking-wide text-volt">
+        <div className=" text-[17px] font-bold uppercase tracking-wide text-volt">
           {strings.admin.cancelGameDone}
         </div>
         <dl className="mt-3 grid grid-cols-[1fr_auto] gap-x-4 gap-y-1 text-[13px]">
           <dt className="text-muted">{strings.admin.cancelledBookings}</dt>
-          <dd className="m-0 text-right font-mono text-bone">{state.bookingsCancelled}</dd>
+          <dd className="m-0 text-right text-bone">{state.bookingsCancelled}</dd>
           <dt className="text-muted">{strings.admin.creditsIssued}</dt>
-          <dd className="m-0 text-right font-mono text-bone">{state.creditsIssued}</dd>
+          <dd className="m-0 text-right text-bone">{state.creditsIssued}</dd>
           <dt className="text-muted">{strings.admin.waitlistCleared}</dt>
-          <dd className="m-0 text-right font-mono text-bone">{state.waitlistCleared}</dd>
+          <dd className="m-0 text-right text-bone">{state.waitlistCleared}</dd>
           <dt className="text-muted">{strings.admin.noticesSent}</dt>
-          <dd className="m-0 text-right font-mono text-bone">{state.noticesSent}</dd>
+          <dd className="m-0 text-right text-bone">{state.noticesSent}</dd>
           <dt className="text-muted">{strings.admin.receiptsSent}</dt>
-          <dd className="m-0 text-right font-mono text-bone">{state.receiptsSent}</dd>
+          <dd className="m-0 text-right text-bone">{state.receiptsSent}</dd>
         </dl>
       </div>
     );
@@ -65,7 +65,7 @@ export function CancelGameButton({ gameId, venue }: { gameId: string; venue: str
         type="button"
         data-testid="cancel-game"
         onClick={() => setArmed(true)}
-        className="w-full rounded-control border border-hairline-strong px-6 py-4 font-condensed text-cta font-extrabold uppercase tracking-wide text-muted"
+        className="w-full rounded-control border border-hairline-strong px-6 py-4 text-cta font-extrabold uppercase tracking-wide text-muted"
       >
         {strings.admin.cancelGame}
       </button>
@@ -82,7 +82,7 @@ export function CancelGameButton({ gameId, venue }: { gameId: string; venue: str
       <button
         type="button"
         onClick={() => setArmed(false)}
-        className="mt-3 w-full bg-transparent font-mono text-[11px] uppercase tracking-eyebrow text-muted"
+        className="mt-3 w-full bg-transparent text-[11px] uppercase tracking-eyebrow text-muted"
       >
         {strings.common.close}
       </button>

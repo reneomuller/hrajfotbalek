@@ -35,7 +35,7 @@ export default function PrivacyPage() {
 
       {/* Loud on purpose. This banner is the whole point of the page shipping early. */}
       <div className="mt-6 rounded-card border border-hairline-volt bg-surface p-5">
-        <p className="m-0 font-mono text-[11px] uppercase tracking-eyebrow text-volt">
+        <p className="m-0 text-[11px] uppercase tracking-eyebrow text-volt">
           {privacy.draftBadge}
         </p>
         <p className="mt-3 mb-0 text-sm leading-relaxed text-bone">
@@ -44,7 +44,7 @@ export default function PrivacyPage() {
       </div>
 
       <section className="mt-10 rounded-card border border-dashed border-hairline-strong p-5">
-        <p className="m-0 text-center font-mono text-[11px] tracking-eyebrow text-volt-dim">
+        <p className="m-0 text-center text-[11px] tracking-eyebrow text-volt-dim">
           {privacy.insertionPoint}
         </p>
         <p className="mt-4 mb-0 text-sm leading-relaxed text-muted">
@@ -75,7 +75,7 @@ export default function PrivacyPage() {
 
       <Link
         href="/games"
-        className="mt-8 inline-block font-mono text-[11px] uppercase tracking-eyebrow text-volt no-underline"
+        className="mt-8 inline-block text-[11px] uppercase tracking-eyebrow text-volt no-underline"
       >
         {privacy.back}
       </Link>

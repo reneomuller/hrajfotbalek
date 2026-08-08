@@ -29,12 +29,12 @@ export function EmptyState({
   return (
     <div className="rounded-card bg-surface px-6 py-10 text-center">
       {/* The mark, quiet. Volt at this size reads as a wink, not an error. */}
-      <p className="m-0 font-condensed text-[34px] font-extrabold italic leading-none tracking-[-1px] text-volt-dim opacity-40">
+      <p className="m-0 text-[34px] font-extrabold italic leading-none tracking-[-1px] text-volt-dim opacity-40">
         {strings.brand.monogramLead}
         {strings.brand.monogramAccent}
       </p>
 
-      <h2 className="mt-5 mb-0 font-condensed text-card-title font-bold uppercase italic tracking-wide text-bone">
+      <h2 className="mt-5 mb-0 text-card-title font-bold uppercase italic tracking-wide text-bone">
         {title}
       </h2>
 
@@ -46,14 +46,14 @@ export function EmptyState({
             href={ctaHref}
             target="_blank"
             rel="noreferrer"
-            className="mt-6 inline-block font-mono text-[11px] uppercase tracking-eyebrow text-volt no-underline"
+            className="mt-6 inline-block text-[11px] uppercase tracking-eyebrow text-volt no-underline"
           >
             {ctaLabel}
           </a>
         ) : (
           <Link
             href={ctaHref}
-            className="mt-6 inline-block font-mono text-[11px] uppercase tracking-eyebrow text-volt no-underline"
+            className="mt-6 inline-block text-[11px] uppercase tracking-eyebrow text-volt no-underline"
           >
             {ctaLabel}
           </Link>

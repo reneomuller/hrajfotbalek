@@ -38,13 +38,13 @@ export function AttendanceRow({
       data-attendance={marked ?? ""}
       className="flex flex-wrap items-center justify-between gap-4 rounded-card bg-surface px-5 py-3"
     >
-      <span className="min-w-[140px] flex-1 font-condensed text-[16px] font-bold text-white">
+      <span className="min-w-[140px] flex-1 text-[16px] font-bold text-white">
         {booking.nickname}
       </span>
 
       <PaymentBadge status={booking.status} method={booking.paymentMethod} />
 
-      <span className="font-mono text-[10px] uppercase tracking-eyebrow text-faint">
+      <span className="text-[10px] uppercase tracking-eyebrow text-faint">
         {marked === "present"
           ? strings.admin.markPresent
           : marked === "no_show"
@@ -97,7 +97,7 @@ function MarkButton({
       value={value}
       disabled={pending}
       data-testid={testId}
-      className={`rounded-control px-4 py-2 font-condensed text-[13px] font-extrabold uppercase tracking-wide disabled:opacity-60 ${
+      className={`rounded-control px-4 py-2 text-[13px] font-extrabold uppercase tracking-wide disabled:opacity-60 ${
         active
           ? "bg-volt text-surface"
           : "border border-hairline-strong bg-transparent text-bone"

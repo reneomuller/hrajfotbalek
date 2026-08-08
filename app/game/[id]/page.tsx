@@ -85,12 +85,12 @@ export default async function GameDetailPage({ params, searchParams }: GamePageP
   if (!result) {
     return (
       <main className="relative z-10 mx-auto w-full max-w-shell px-gutter pb-16 pt-24">
-        <p className="font-mono text-small tracking-[1px] text-faint">
+        <p className="text-small tracking-[1px] text-faint">
           {t.games.notFound}
         </p>
         <Link
           href="/games"
-          className="mt-6 inline-block font-mono text-[11px] uppercase tracking-eyebrow text-volt no-underline"
+          className="mt-6 inline-block text-[11px] uppercase tracking-eyebrow text-volt no-underline"
         >
           {t.games.backToGames}
         </Link>
@@ -232,7 +232,7 @@ export default async function GameDetailPage({ params, searchParams }: GamePageP
           data-testid="game-notes"
           className="mt-4 rounded-card bg-surface p-5"
         >
-          <div className="font-mono text-[10px] uppercase tracking-eyebrow text-muted">
+          <div className="text-[10px] uppercase tracking-eyebrow text-muted">
             {t.games.notesLabel}
           </div>
           <p className="mt-2 whitespace-pre-line text-[14px] leading-relaxed text-bone">
@@ -244,7 +244,7 @@ export default async function GameDetailPage({ params, searchParams }: GamePageP
       <AvailabilityCard bookedCount={bookedCount} capacity={game.capacity} />
 
       {isCancelled && (
-        <p className="mt-4 rounded-control border border-hairline-strong px-4 py-3 font-mono text-small tracking-[1px] text-faint">
+        <p className="mt-4 rounded-control border border-hairline-strong px-4 py-3 text-small tracking-[1px] text-faint">
           {t.games.cancelled}
         </p>
       )}
@@ -260,7 +260,7 @@ export default async function GameDetailPage({ params, searchParams }: GamePageP
       {!isCancelled && hasStarted && (
         <p
           data-testid={inProgress ? "in-progress-notice" : "started-notice"}
-          className="mt-4 rounded-control border border-hairline-strong px-4 py-3 font-mono text-[11px] tracking-[1px] text-faint"
+          className="mt-4 rounded-control border border-hairline-strong px-4 py-3 text-[11px] tracking-[1px] text-faint"
         >
           {inProgress ? t.games.inProgress : t.games.alreadyStarted}
         </p>
@@ -291,7 +291,7 @@ export default async function GameDetailPage({ params, searchParams }: GamePageP
         <>
           <p
             data-testid="full-notice"
-            className="mt-4 rounded-control border border-hairline-strong px-4 py-3 font-mono text-[11px] tracking-[1px] text-faint"
+            className="mt-4 rounded-control border border-hairline-strong px-4 py-3 text-[11px] tracking-[1px] text-faint"
           >
             {t.games.fullNotice}
           </p>
@@ -338,7 +338,7 @@ export default async function GameDetailPage({ params, searchParams }: GamePageP
         data-testid="practical-info"
         className="mt-4 rounded-card bg-surface p-5"
       >
-        <h2 className="m-0 font-condensed text-[17px] font-bold uppercase tracking-wide text-white">
+        <h2 className="m-0 text-[17px] font-bold uppercase tracking-wide text-white">
           {t.games.practicalTitle}
         </h2>
         <ul className="mt-3 flex list-none flex-col gap-2 p-0 text-[14px] leading-relaxed text-bone">

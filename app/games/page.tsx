@@ -137,7 +137,7 @@ export default async function GamesPage({
                   past it. */}
               <h2
                 data-testid="day-heading"
-                className="m-0 mb-[6px] font-mono text-[10px] uppercase tracking-eyebrow text-volt-dim"
+                className="m-0 mb-[6px] text-[10px] uppercase tracking-eyebrow text-volt-dim"
               >
                 {day.label}
               </h2>

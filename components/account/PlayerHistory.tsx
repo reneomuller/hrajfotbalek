@@ -18,7 +18,7 @@ export async function PlayerHistory({ history }: { history: History }) {
     <>
       <section className="mt-10 flex flex-wrap gap-6" data-testid="history-counts">
         <div>
-          <p className="m-0 font-mono text-[11px] uppercase tracking-eyebrow text-faint">
+          <p className="m-0 text-[11px] uppercase tracking-eyebrow text-faint">
             {t.account.gamesPlayedLabel}
           </p>
           <p
@@ -33,7 +33,7 @@ export async function PlayerHistory({ history }: { history: History }) {
             earned, and most players will never have a single no-show. */}
         {history.noShows > 0 ? (
           <div>
-            <p className="m-0 font-mono text-[11px] uppercase tracking-eyebrow text-faint">
+            <p className="m-0 text-[11px] uppercase tracking-eyebrow text-faint">
               {t.account.noShowsLabel}
             </p>
             <p className="m-0 font-display text-3xl text-white/70" data-testid="no-shows">
@@ -44,14 +44,14 @@ export async function PlayerHistory({ history }: { history: History }) {
       </section>
 
       <section className="mt-10">
-        <h2 className="m-0 mb-4 font-condensed text-[17px] font-bold uppercase tracking-wide text-white">
+        <h2 className="m-0 mb-4 text-[17px] font-bold uppercase tracking-wide text-white">
           {t.account.upcomingTitle}
         </h2>
         <BookingList rows={history.upcoming} />
       </section>
 
       <section className="mt-10">
-        <h2 className="m-0 mb-4 font-condensed text-[17px] font-bold uppercase tracking-wide text-white">
+        <h2 className="m-0 mb-4 text-[17px] font-bold uppercase tracking-wide text-white">
           {t.account.pastTitle}
         </h2>
 
@@ -66,15 +66,15 @@ export async function PlayerHistory({ history }: { history: History }) {
                 key={booking.id}
                 className="flex flex-wrap items-baseline justify-between gap-2 border-b border-hairline py-3"
               >
-                <span className="font-condensed text-base font-bold text-white">
+                <span className="text-base font-bold text-white">
                   {game.venue}
                 </span>
-                <span className="font-mono text-xs text-white/50">
+                <span className="text-xs text-white/50">
                   {formatGameDateTime(game.starts_at)}
                 </span>
                 {booking.attendance ? (
                   <span
-                    className={`font-mono text-[11px] uppercase tracking-eyebrow ${
+                    className={`text-[11px] uppercase tracking-eyebrow ${
                       booking.attendance === "no_show" ? "text-white/40" : "text-volt"
                     }`}
                   >

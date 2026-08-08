@@ -22,7 +22,7 @@ export function SettleButton({ gameId }: { gameId: string }) {
 
   if (state.status === "saved") {
     return (
-      <p data-testid="settle-done" className="font-condensed text-[17px] font-bold uppercase tracking-wide text-volt">
+      <p data-testid="settle-done" className=" text-[17px] font-bold uppercase tracking-wide text-volt">
         {strings.admin.settled}
       </p>
     );
@@ -36,7 +36,7 @@ export function SettleButton({ gameId }: { gameId: string }) {
       {state.status === "blocked" && (
         <div role="alert" data-testid="settle-blocked" className="mt-3 text-[13px] text-bone">
           <p className="m-0">{strings.admin.settleBlocked}</p>
-          <ul className="mt-2 list-none p-0 font-mono text-[12px] text-volt">
+          <ul className="mt-2 list-none p-0 text-[12px] text-volt">
             {(state.outstanding ?? []).map((nickname) => (
               <li key={nickname}>{nickname}</li>
             ))}
@@ -61,7 +61,7 @@ function Submit() {
       type="submit"
       disabled={pending}
       data-testid="settle-game"
-      className="rounded-control bg-volt px-6 py-4 font-condensed text-cta font-extrabold uppercase tracking-wide text-surface disabled:opacity-60"
+      className="rounded-control bg-volt px-6 py-4 text-cta font-extrabold uppercase tracking-wide text-surface disabled:opacity-60"
     >
       {pending ? strings.common.loading : strings.admin.settleGame}
     </button>

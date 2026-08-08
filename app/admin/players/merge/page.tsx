@@ -23,12 +23,12 @@ export default async function MergePlayersPage() {
     <>
       <Link
         href="/admin/players"
-        className="font-mono text-[11px] uppercase tracking-eyebrow text-muted no-underline"
+        className="text-[11px] uppercase tracking-eyebrow text-muted no-underline"
       >
         {strings.common.back}
       </Link>
 
-      <h2 className="mt-4 font-condensed text-[22px] font-bold uppercase tracking-wide text-bone">
+      <h2 className="mt-4 text-[22px] font-bold uppercase tracking-wide text-bone">
         {strings.admin.mergeTitle}
       </h2>
       <p className="mt-3 max-w-[560px] text-[13px] leading-relaxed text-muted">

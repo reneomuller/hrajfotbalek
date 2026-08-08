@@ -34,7 +34,7 @@ export async function AmenityGrid({ amenities }: { amenities: string[] | null })
       data-testid="amenity-grid"
       className="mt-4 rounded-card bg-surface p-5"
     >
-      <h2 className="m-0 font-condensed text-[17px] font-bold uppercase tracking-wide text-white">
+      <h2 className="m-0 text-[17px] font-bold uppercase tracking-wide text-white">
         {t.games.includedTitle}
       </h2>
 

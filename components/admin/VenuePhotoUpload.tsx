@@ -94,7 +94,7 @@ export function VenuePhotoUpload({
 
   return (
     <div className="flex flex-col gap-2">
-      <label className="inline-flex w-fit cursor-pointer items-center justify-center rounded-control border border-hairline-volt px-4 py-2 font-condensed text-[13px] font-bold uppercase tracking-wide text-volt transition hover:bg-volt/10">
+      <label className="inline-flex w-fit cursor-pointer items-center justify-center rounded-control border border-hairline-volt px-4 py-2 text-[13px] font-bold uppercase tracking-wide text-volt transition hover:bg-volt/10">
         <input
           ref={inputRef}
           type="file"

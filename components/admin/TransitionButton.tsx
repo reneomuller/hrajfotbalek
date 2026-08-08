@@ -59,7 +59,7 @@ function Submit({
 }) {
   const { pending } = useFormStatus();
   const base =
-    "rounded-control px-5 py-3 font-condensed text-[15px] font-extrabold uppercase tracking-wide disabled:opacity-60";
+    "rounded-control px-5 py-3 text-[15px] font-extrabold uppercase tracking-wide disabled:opacity-60";
   const skin =
     tone === "primary"
       ? "bg-volt text-surface"

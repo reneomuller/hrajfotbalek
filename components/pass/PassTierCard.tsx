@@ -49,7 +49,7 @@ export async function PassTierCard({
       className="rounded-card border border-hairline-volt bg-surface p-5"
     >
       <div className="flex flex-wrap items-baseline justify-between gap-3">
-        <h2 className="m-0 font-condensed text-[20px] font-bold uppercase tracking-wide text-white">
+        <h2 className="m-0 text-[20px] font-bold uppercase tracking-wide text-white">
           {heading}
         </h2>
         <span
@@ -60,21 +60,21 @@ export async function PassTierCard({
         </span>
       </div>
 
-      <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 font-mono text-[12px] text-muted">
+      <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-[12px] text-muted">
         <span>{t.pass.tierPerGame.replace("{amount}", formatCzk(tier.perGameCzk))}</span>
         <span data-testid="pass-tier-credited">
           {t.pass.tierCredited.replace("{amount}", formatCzk(tier.creditedCzk))}
         </span>
       </div>
 
-      <p data-testid="pass-tier-saving" className="mt-2 font-mono text-[12px] text-volt">
+      <p data-testid="pass-tier-saving" className="mt-2 text-[12px] text-volt">
         {t.pass.tierSaving.replace("{amount}", formatCzk(tier.savingCzk))}
       </p>
 
       {/* LOUD, and above the button. */}
       <p
         data-testid="pass-tier-expiry"
-        className="mt-3 rounded-control border border-hairline-strong px-3 py-2 font-mono text-[11px] uppercase tracking-[1px] text-bone"
+        className="mt-3 rounded-control border border-hairline-strong px-3 py-2 text-[11px] uppercase tracking-[1px] text-bone"
       >
         {expiry}
       </p>

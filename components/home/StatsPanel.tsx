@@ -54,7 +54,7 @@ export async function StatsPanel({
             {stat.value}
             <span className="text-volt-dim">+</span>
           </div>
-          <div className="mt-[6px] font-mono text-[10px] uppercase tracking-eyebrow text-muted">
+          <div className="mt-[6px] text-[10px] uppercase tracking-eyebrow text-muted">
             {stat.label}
           </div>
         </div>

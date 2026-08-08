@@ -41,7 +41,7 @@ export function ChangePasswordForm() {
 
   return (
     <form action={formAction} className="flex flex-col gap-3">
-      <h3 className="m-0 font-condensed text-base font-bold uppercase tracking-wide text-white">
+      <h3 className="m-0 text-base font-bold uppercase tracking-wide text-white">
         {t.account.changePasswordTitle}
       </h3>
 
@@ -75,7 +75,7 @@ export function ChangePasswordForm() {
         type="submit"
         disabled={pending}
         data-testid="change-password"
-        className="rounded-control border border-hairline-volt px-4 py-3 font-condensed text-cta font-extrabold uppercase tracking-wide text-volt transition disabled:opacity-50"
+        className="rounded-control border border-hairline-volt px-4 py-3 text-cta font-extrabold uppercase tracking-wide text-volt transition disabled:opacity-50"
       >
         {pending ? t.common.loading : t.account.changePasswordSubmit}
       </button>
@@ -99,12 +99,12 @@ export function ChangeEmailForm({ currentEmail = null }: { currentEmail?: string
 
   return (
     <form action={formAction} className="flex flex-col gap-3">
-      <h3 className="m-0 font-condensed text-base font-bold uppercase tracking-wide text-white">
+      <h3 className="m-0 text-base font-bold uppercase tracking-wide text-white">
         {t.account.changeEmailTitle}
       </h3>
 
       {currentEmail ? (
-        <p className="m-0 font-mono text-xs text-white/50">{currentEmail}</p>
+        <p className="m-0 text-xs text-white/50">{currentEmail}</p>
       ) : null}
 
       <label className="flex flex-col gap-2">
@@ -126,7 +126,7 @@ export function ChangeEmailForm({ currentEmail = null }: { currentEmail?: string
         type="submit"
         disabled={pending}
         data-testid="change-email"
-        className="rounded-control border border-hairline-volt px-4 py-3 font-condensed text-cta font-extrabold uppercase tracking-wide text-volt transition disabled:opacity-50"
+        className="rounded-control border border-hairline-volt px-4 py-3 text-cta font-extrabold uppercase tracking-wide text-volt transition disabled:opacity-50"
       >
         {pending ? t.common.loading : t.account.changeEmailSubmit}
       </button>

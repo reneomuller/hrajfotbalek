@@ -26,14 +26,14 @@ export function BookingError({ code, gameId }: BookingErrorProps) {
       data-error-code={code}
       className="rounded-card border border-hairline-strong bg-surface p-5"
     >
-      <div className="font-condensed text-[19px] font-bold uppercase tracking-wide text-white">
+      <div className=" text-[19px] font-bold uppercase tracking-wide text-white">
         {title}
       </div>
       <p className="mt-2 text-[14px] leading-relaxed text-muted">{message}</p>
 
       <Link
         href={`/game/${gameId}`}
-        className="mt-5 inline-block font-mono text-[11px] uppercase tracking-eyebrow text-volt no-underline"
+        className="mt-5 inline-block text-[11px] uppercase tracking-eyebrow text-volt no-underline"
       >
         {t.booking.backToGame}
       </Link>

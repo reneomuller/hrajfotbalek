@@ -90,7 +90,7 @@ export async function GameRow({
       <div className="flex items-baseline justify-between gap-3">
         <span
           data-testid="row-time-span"
-          className="font-mono text-[13px] font-bold tracking-[1px] text-volt"
+          className="text-[13px] font-bold tracking-[1px] text-volt"
         >
           {formatTimeSpan(
             game.starts_at,
@@ -103,7 +103,7 @@ export async function GameRow({
       </div>
 
       <div className="mt-[2px]">
-        <span className="block truncate font-condensed text-[17px] font-bold leading-tight text-white">
+        <span className="block truncate text-[17px] font-bold leading-tight text-white">
           {game.venue}
         </span>
       </div>
@@ -124,12 +124,12 @@ export async function GameRow({
         {onWaitlist && (
           <span
             data-testid="on-waitlist-badge"
-            className="rounded-pill border border-hairline-volt bg-volt/[.08] px-2 py-[2px] font-mono text-[9px] uppercase tracking-eyebrow text-volt"
+            className="rounded-pill border border-hairline-volt bg-volt/[.08] px-2 py-[2px] text-[9px] uppercase tracking-eyebrow text-volt"
           >
             {t.games.onWaitlistBadge}
           </span>
         )}
-        <span className="ml-auto font-mono text-[10px] uppercase tracking-eyebrow text-volt-dim">
+        <span className="ml-auto text-[10px] uppercase tracking-eyebrow text-volt-dim">
           {t.games.viewGame} →
         </span>
       </div>

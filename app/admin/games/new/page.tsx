@@ -26,12 +26,12 @@ export default async function NewGamePage() {
     <>
       <Link
         href="/admin/games"
-        className="font-mono text-[11px] uppercase tracking-eyebrow text-muted no-underline"
+        className="text-[11px] uppercase tracking-eyebrow text-muted no-underline"
       >
         {strings.games.backToGames}
       </Link>
 
-      <h2 className="mt-4 font-condensed text-[22px] font-bold uppercase tracking-wide text-bone">
+      <h2 className="mt-4 text-[22px] font-bold uppercase tracking-wide text-bone">
         {strings.admin.newGameTitle}
       </h2>
 

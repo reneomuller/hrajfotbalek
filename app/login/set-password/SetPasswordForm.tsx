@@ -36,7 +36,7 @@ export function SetPasswordForm({ next }: { next: string }) {
         type="submit"
         disabled={pending}
         data-testid="save-password"
-        className="rounded-control bg-volt px-4 py-[15px] font-condensed text-cta font-extrabold uppercase tracking-wide text-surface transition disabled:opacity-50"
+        className="rounded-control bg-volt px-4 py-[15px] text-cta font-extrabold uppercase tracking-wide text-surface transition disabled:opacity-50"
       >
         {pending ? t.common.loading : t.auth.setPasswordSubmit}
       </button>

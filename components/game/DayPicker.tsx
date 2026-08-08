@@ -59,10 +59,7 @@ export function DayPicker({
         scroll={false}
         data-testid="day-tab-all"
         data-selected={selected === null ? "true" : "false"}
-        aria-current={selected === null ? "page" : undefined}
-        className={`flex h-12 w-12 shrink-0 flex-col items-center justify-center rounded-card border font-mono text-[11px] uppercase tracking-[1px] no-underline transition-colors ${
-          selected === null
-            ? "border-hairline-volt bg-volt text-surface"
+        aria-current={selected === null ? "page": undefined} className={`flex h-12 w-12 shrink-0 flex-col items-center justify-center rounded-card border text-[11px] uppercase tracking-[1px] no-underline transition-colors ${ selected === null ?"border-hairline-volt bg-volt text-surface"
             : "border-hairline-strong text-muted"
         }`}
       >
@@ -78,19 +75,12 @@ export function DayPicker({
             ? "border-hairline-volt bg-volt text-surface"
             : hasGames
               ? "border-hairline-strong text-white hover:border-hairline-volt"
-              : "border-hairline text-faint"
-        }`;
-
-        const body = (
-          <>
-            <span
-              className={`font-mono text-[9px] uppercase tracking-[1px] ${
-                isSelected ? "text-surface/70" : hasGames ? "text-muted" : "text-faint"
+              : "border-hairline text-faint"}`; const body = ( <> <span className={` text-[9px] uppercase tracking-[1px] ${ isSelected ?"text-surface/70" : hasGames ? "text-muted" : "text-faint"
               }`}
             >
               {tab.weekday}
             </span>
-            <span className="font-condensed text-[17px] font-bold leading-none">
+            <span className=" text-[17px] font-bold leading-none">
               {tab.dayOfMonth}
             </span>
             {/*

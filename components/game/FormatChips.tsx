@@ -43,24 +43,13 @@ export async function FormatChips({
     <div className="flex flex-wrap items-center gap-2">
       {format && (
         <span
-          data-testid="game-format"
-          className={`rounded-pill bg-volt px-2 py-1 font-mono ${text} font-bold tracking-[1px] text-surface`}
-        >
-          {format}
-        </span>
-      )}
-      {subsPerTeam !== null && (
-        <span
-          data-testid="game-subs"
-          className={`font-mono ${text} uppercase tracking-[1px] text-muted`}
-        >
-          {t.games.subsPerTeam.replace("{count}", String(subsPerTeam))}
+          data-testid="game-format"className={`rounded-pill bg-volt px-2 py-1 ${text} font-bold tracking-[1px] text-surface`} > {format} </span> )} {subsPerTeam !== null && ( <span data-testid="game-subs"className={`${text} uppercase tracking-[1px] text-muted`} > {t.games.subsPerTeam.replace("{count}", String(subsPerTeam))}
         </span>
       )}
       {surface && (
         <span
           data-testid="game-surface"
-          className={`rounded-pill border border-hairline-strong px-2 py-1 font-mono ${text} font-bold uppercase tracking-[1px] text-muted`}
+          className={`rounded-pill border border-hairline-strong px-2 py-1 ${text} font-bold uppercase tracking-[1px] text-muted`}
         >
           {t.games.surface[surface]}
         </span>

@@ -26,7 +26,7 @@ export async function CreditBatches({ batches }: { batches: CreditBatch[] }) {
 
   return (
     <section className="mt-6" data-testid="credit-batches">
-      <h3 className="m-0 font-condensed text-[15px] font-bold uppercase tracking-wide text-bone">
+      <h3 className="m-0 text-[15px] font-bold uppercase tracking-wide text-bone">
         {t.pass.batchesTitle}
       </h3>
 
@@ -37,12 +37,12 @@ export async function CreditBatches({ batches }: { batches: CreditBatch[] }) {
             data-testid="credit-batch"
             className="flex flex-wrap items-baseline justify-between gap-3 rounded-card bg-surface px-4 py-3"
           >
-            <span className="font-mono text-[13px] text-bone">
+            <span className="text-[13px] text-bone">
               {t.pass.batchesExpiring
                 .replace("{amount}", formatCzk(batch.remainingCzk))
                 .replace("{date}", formatDate(batch.expiresAt))}
             </span>
-            <span className="font-mono text-[11px] text-volt-dim">
+            <span className="text-[11px] text-volt-dim">
               {t.pass.equivalence.replace(
                 "{count}",
                 String(gamesEquivalent(batch.remainingCzk)),
