@@ -52,6 +52,19 @@ begin
   return coalesce(v, 'ABSENT');
 end $$;
 
+-- The definition text of a named CHECK constraint, or ABSENT.
+create function pg_temp.chk(tbl text, name text)
+returns text language plpgsql as $$
+declare v text;
+begin
+  select pg_get_constraintdef(con.oid) into v
+  from pg_constraint con
+  join pg_class c on c.oid = con.conrelid
+  join pg_namespace n on n.oid = c.relnamespace
+  where n.nspname = 'public' and c.relname = tbl and con.conname = name;
+  return coalesce(v, 'ABSENT');
+end $$;
+
 create function pg_temp.attempt(sql text)
 returns text language plpgsql as $$
 begin
@@ -341,6 +354,209 @@ select pg_temp.ok(
   (select count(*) from pg_type t join pg_enum e on e.enumtypid = t.oid
     where t.typname = 'credit_reason' and e.enumlabel = 'pass_expiry') = 1,
   'credit_reason carries pass_expiry, so the sweep row says why it exists');
+
+-- =============================================================================
+-- 8. credit_topups — deny by default, and no client is a writer
+--
+-- A top-up is a claim that money was sent, made by the player and believed
+-- only when an admin confirms it against a bank statement. So the table is
+-- readable by its owner and writable by nobody: both writes go through
+-- `create_topup` and `confirm_topup`, which are SECURITY DEFINER and carry the
+-- authorization inside the function rather than in the route that calls it.
+-- =============================================================================
+
+select pg_temp.ok(
+  (select relrowsecurity from pg_class c join pg_namespace n on n.oid = c.relnamespace
+    where n.nspname = 'public' and c.relname = 'credit_topups'),
+  'credit_topups has RLS enabled');
+
+select pg_temp.ok(
+  not has_table_privilege('authenticated', 'public.credit_topups', 'INSERT')
+  and not has_table_privilege('authenticated', 'public.credit_topups', 'UPDATE')
+  and not has_table_privilege('authenticated', 'public.credit_topups', 'DELETE'),
+  'authenticated cannot write credit_topups directly — the RPCs are the writers');
+
+select pg_temp.ok(
+  not has_table_privilege('anon', 'public.credit_topups', 'SELECT'),
+  'anon cannot read credit_topups at all');
+
+select pg_temp.ok(
+  pg_temp.col('credit_topups', 'received_amount_czk') = 'nullable',
+  'credit_topups.received_amount_czk is nullable — unknown until confirmed');
+
+select pg_temp.ok(
+  pg_temp.col('credit_topups', 'confirmed_at') = 'nullable'
+  and pg_temp.col('credit_topups', 'confirmed_by') = 'nullable',
+  'confirmed_at and confirmed_by are nullable — a pending top-up has neither');
+
+set local role authenticated;
+select pg_temp.ok(
+  pg_temp.attempt($q$
+    insert into public.credit_topups
+      (player_id, amount_czk, payment_code, status, city, brand, policy_version)
+    values ((select player_id from _fx), 750, 2700000001, 'confirmed',
+            'Praha', 'hrajfotbal', 'v1')
+  $q$) = 'denied',
+  'a direct client INSERT into credit_topups is refused — including status=confirmed');
+reset role;
+
+-- =============================================================================
+-- 9. The 27-series is its own sequence, and does not collide with bookings
+--
+-- The variabilní symbol is copied into a Czech banking app and matched back by
+-- exact string. Two series sharing a counter would eventually mint one code for
+-- a booking and a top-up, and the payment would reconcile against the wrong
+-- thing — the one failure here that costs manual work to undo.
+-- =============================================================================
+
+select pg_temp.ok(
+  (select count(*) from pg_sequences
+    where schemaname = 'public' and sequencename = 'topup_payment_code_seq') = 1,
+  'topup_payment_code_seq exists, separate from the booking sequence');
+
+select pg_temp.ok(
+  left(public.next_topup_code()::text, 2) = '27',
+  'a generated top-up VS starts with 27',
+  'sample: ' || public.next_topup_code()::text);
+
+select pg_temp.ok(
+  left(public.next_payment_code()::text, 2) = '26',
+  'a generated booking VS starts with 26 — a different series',
+  'sample: ' || public.next_payment_code()::text);
+
+select pg_temp.ok(
+  length(public.next_topup_code()::text) = 10,
+  'a top-up VS is 10 digits, inside the Czech limit',
+  'length: ' || length(public.next_topup_code()::text)::text);
+
+select pg_temp.ok(
+  public.next_topup_code() <> public.next_payment_code(),
+  'the two series cannot mint the same code');
+
+/*
+ * A KNOWN ASYMMETRY, recorded here rather than fixed.
+ *
+ *   booking_payment_code_seq   maxvalue 99999999
+ *   topup_payment_code_seq     maxvalue 9223372036854775807  (bigint default)
+ *
+ * Both codes are built as `prefix || lpad(nextval::text, 8, '0')`, and `lpad`
+ * pads but never truncates. So the booking series is STRUCTURALLY incapable of
+ * exceeding ten digits — its sequence runs out first — while the top-up series
+ * would silently emit an eleven-digit VS on its hundred-millionth row, past
+ * the Czech limit, and the symptom would be a payment that cannot be matched.
+ *
+ * Not fixed, on purpose: it needs 10^8 top-ups to bite, and capping a sequence
+ * is DDL. It is asserted below as the fact it currently is, so that if anyone
+ * ever changes the padding or the prefix, the length probe above fails first.
+ */
+select pg_temp.ok(
+  (select max_value from pg_sequences
+    where schemaname = 'public' and sequencename = 'booking_payment_code_seq') = 99999999,
+  'the booking sequence is capped so its VS cannot outgrow ten digits');
+
+-- =============================================================================
+-- 10. An unconfirmed top-up is neither a liability nor spendable
+--
+-- It writes NOTHING to the ledger. Money that has been claimed but not seen is
+-- not money, and a pending row that credited on creation would let a player
+-- spend a payment they never made.
+-- =============================================================================
+
+create temp table _ledger_count (stage text, n integer) on commit drop;
+
+insert into _ledger_count
+select 'before_topup', count(*)::integer from public.credit_ledger
+where player_id = (select player_id from _fx);
+
+insert into public.credit_topups
+  (player_id, amount_czk, payment_code, status, city, brand, policy_version)
+values ((select player_id from _fx), 750, public.next_topup_code(), 'pending',
+        'Praha', 'hrajfotbal', 'v1');
+
+insert into _ledger_count
+select 'after_pending_topup', count(*)::integer from public.credit_ledger
+where player_id = (select player_id from _fx);
+
+select pg_temp.ok(
+  (select n from _ledger_count where stage = 'after_pending_topup')
+  = (select n from _ledger_count where stage = 'before_topup'),
+  'a PENDING top-up writes no credit_ledger row',
+  'before=' || (select n from _ledger_count where stage = 'before_topup')::text
+  || ' after=' || (select n from _ledger_count where stage = 'after_pending_topup')::text);
+
+select pg_temp.ok(
+  (select count(*) from pg_type t join pg_enum e on e.enumtypid = t.oid
+    where t.typname = 'credit_reason' and e.enumlabel = 'topup') = 1,
+  'credit_reason carries topup, added ahead of the migration that writes it');
+
+-- =============================================================================
+-- 11. pass_tiers — five real tiers, pegged at 150
+--
+-- The 1-game tier is DELETED FROM THE TABLE rather than filtered out of the
+-- page, and the difference matters: a filtered page is one query away from
+-- showing it again, while a CHECK makes the row unwritable.
+-- =============================================================================
+
+select pg_temp.ok(
+  (select count(*) from public.pass_tiers) = 5,
+  'pass_tiers holds exactly five rows',
+  (select 'count: ' || count(*)::text from public.pass_tiers));
+
+select pg_temp.ok(
+  (select array_agg(games order by games) from public.pass_tiers)
+    = array[5, 8, 12, 15, 20],
+  'the five tiers are 5, 8, 12, 15 and 20 games',
+  (select array_agg(games order by games)::text from public.pass_tiers));
+
+select pg_temp.ok(
+  (select count(*) from public.pass_tiers where credited_czk <> games * 150) = 0,
+  'every tier credits games x 150');
+
+select pg_temp.ok(
+  pg_temp.chk('pass_tiers', 'pass_tiers_credited_rule')
+    = 'CHECK ((credited_czk = (games * 150)))',
+  'the 150 peg is a CHECK, not a convention',
+  pg_temp.chk('pass_tiers', 'pass_tiers_credited_rule'));
+
+select pg_temp.ok(
+  (select count(*) from public.pass_tiers where games = 1) = 0,
+  'no 1-game tier exists');
+
+select pg_temp.ok(
+  pg_temp.attempt($q$
+    insert into public.pass_tiers (games, price_czk, credited_czk, expires_months)
+    values (1, 150, 150, 1)
+  $q$) = 'check_violation',
+  'a 1-game tier is UNWRITABLE — deleted from the table, not filtered from the page');
+
+select pg_temp.ok(
+  pg_temp.attempt($q$
+    insert into public.pass_tiers (games, price_czk, credited_czk, expires_months)
+    values (25, 4000, 3000, 2)
+  $q$) = 'check_violation',
+  'a tier priced above what it credits is refused — a pass is never a penalty');
+
+-- =============================================================================
+-- 12. The v2.5 event types the top-up and photo flows emit
+--
+-- events.event_type is one CHECK, and a migration emitting a new type has to
+-- widen it in the same migration. Forgetting fails at the first WRITE, naming a
+-- constraint that has nothing to do with the feature — migration 24 added the
+-- photo events and omitted the top-up ones, and the first create_topup failed
+-- on the catalog.
+-- =============================================================================
+
+select pg_temp.ok(
+  (select count(*) from pg_constraint con
+     join pg_class c on c.oid = con.conrelid
+     join pg_namespace n on n.oid = c.relnamespace
+    where n.nspname = 'public' and c.relname = 'events'
+      and con.conname = 'events_event_type_catalog'
+      and pg_get_constraintdef(con.oid) like '%''topup_requested''%'
+      and pg_get_constraintdef(con.oid) like '%''topup_confirmed''%'
+      and pg_get_constraintdef(con.oid) like '%''profile_photo_removed''%'
+      and pg_get_constraintdef(con.oid) like '%''player_anonymized''%') = 1,
+  'the catalog covers all four v2.5 event types in one CHECK');
 
 -- =============================================================================
 -- results
