@@ -1,7 +1,9 @@
 # Design system v1.3 — the build document
 
 **Contract:** `letco-prompt-hrajsport-phase2-v1.md` v1.3, rulings A–P
-**Primary viewport:** 390 × 844 (iPhone 14 / Pixel 7 class). Desktop is secondary.
+**Primary viewport:** 390 × 844 (iPhone 14 / Pixel 7 class). Desktop is secondary
+but **specified** — see §1.7; "secondary" previously meant "undefined", which
+left each of the build stages to pick its own breakpoint.
 **Direction:** volt-on-black, unchanged. This round removes variety, it does not
 introduce a palette.
 
@@ -26,6 +28,12 @@ a list of screens.
 **This ships as one change, before any screen** (ruling A). Every surface
 inherits it without being rebuilt, and no later stage gets to re-open a grey.
 
+> **Because ruling A freezes the table for the whole round, every accessibility
+> correction to a token is made here or not at all.** Two are made below: the
+> `faint` tone (§1.2) and the input focus treatment (§2.8). A contrast failure
+> baked into the frozen table cannot be fixed in a later stage without
+> re-opening the ruling.
+
 ## 1.2 Colour
 
 **Accent — unchanged.**
@@ -43,7 +51,9 @@ inherits it without being rebuilt, and no later stage gets to re-open a grey.
 | `warn` | `#FFA31A` | 10 or fewer |
 | `danger` | `#FF5A4E` | 3 or fewer, and `Full` |
 
-Appears **once per card**, on the spots figure (ruling D).
+Appears **once per card**, on the spots figure (ruling D). Colour is never the
+only carrier of that state — the figure states the number, and `Full` states the
+word.
 
 **Surfaces.**
 
@@ -62,11 +72,35 @@ Appears **once per card**, on the spots figure (ruling D).
 
 **Text — nine tones become three.**
 
-| Token | Value | Role | Replaces |
-|---|---|---|---|
-| `bone` | `#E9E7E0` | Primary — titles, values, anything a decision rests on | `bone`, `chalk` |
-| `muted` | `#9A9A9A` | Secondary — supporting facts, durations, subtitles | `muted`, `muted-dim`, `subtle`, `footer-dim` |
-| `faint` | `#6F6F6F` | Tertiary — eyebrows, disabled, timestamps | `faint`, `hint`, `dim` |
+| Token | Value | Contrast on `surface` | Role | Replaces |
+|---|---|---:|---|---|
+| `bone` | `#E9E7E0` | ~15.6:1 | Primary — titles, values, anything a decision rests on | `bone`, `chalk` |
+| `muted` | `#9A9A9A` | ~7.0:1 | Secondary — supporting facts, durations, subtitles | `muted`, `muted-dim`, `subtle`, `footer-dim` |
+| `faint` | `#7E7E7E` | ~4.7:1 | Tertiary — eyebrows, disabled, timestamps | `faint`, `hint`, `dim` |
+
+> **`faint` moves from `#6F6F6F` to `#7E7E7E`, inside ruling A's one change.**
+> `#6F6F6F` computes to roughly 3.8:1 on `surface` and 4.0:1 on `ink` — under
+> the 4.5:1 AA threshold for normal text — and it is assigned to `eyebrow` (11px)
+> and `small` (13px), which carry real content: the day-strip game count, the
+> pass card's expiry line, and the claim bar's `Kicked off 19:00` status. That
+> last one is the whole message of the bar in that state.
+>
+> **Why `#7E7E7E` and not `#8A8A8A`.** `#8A8A8A` clears AA comfortably at
+> 5.6:1, and it is the wrong answer: §1.1 above names `#9A9A9A` and `#8A8A8A` as
+> *the* example of two greys that are the same colour at 390px, and `muted` is
+> `#9A9A9A`. Fixing the contrast by recreating the exact pair this round exists
+> to delete would be a fix that undoes the ruling it is made under. `#7E7E7E` is
+> as low as the AA floor allows — `#7B7B7B` is 4.5:1 exactly — which buys the
+> widest separation from `muted` that still clears the threshold: 28 levels
+> rather than 16.
+>
+> **The band is narrow and that is the real finding.** With `muted` at 6.8:1 and
+> the AA floor at 4.5:1, a third tone has about 30 levels of room. **The rule
+> that keeps it a distinct step:** `faint` is for text that is genuinely
+> tertiary, never for the only statement of a fact. Where a `faint` line is the
+> only place something is said — the claim bar's started state — it renders at
+> `small`, not `eyebrow`. If a fourth tone is ever proposed, this band is the
+> argument against it.
 
 **Hairlines — nine become three.**
 
@@ -79,6 +113,19 @@ Appears **once per card**, on the spots figure (ruling D).
 Per ruling C, **no stroke on a card, chip, panel or day box.** Fill and radius
 carry the surface. If a border is being drawn to separate two things, the gap
 between them is too small.
+
+**Focus — one token, new, and it is not a hairline.**
+
+| Token | Value | Role |
+|---|---|---|
+| `focus-ring` | `#C8FF00` (full-opacity `volt`), 2px, 2px offset | The visible focus indicator on **every** focusable element |
+
+> `hairline-volt` at `rgba(200,255,0,.30)` over `surface-raised` computes to
+> roughly 2.4:1 — below the 3:1 WCAG 1.4.11 requires of a non-text indicator,
+> and it was the only focus affordance the spec named. A focus ring is a
+> different job from a selected outline and gets its own token; the offset keeps
+> it legible against a `volt`-filled control, where a `volt` ring on its own
+> edge would vanish.
 
 **External brand — unchanged.** `whatsapp #25D366`, `instagram` gradient. Used
 only for real brand marks, never as UI accents.
@@ -112,10 +159,14 @@ Barlow Condensed leaves player-facing UI.
 | `hero` | `clamp(44px,10vw,88px)` / 0.92 | display | Upper (wordmark) |
 | `title` | `clamp(24px,6vw,34px)` / 1.05 | display | Sentence |
 | `time` | `28px` / 1.0 | sans 700 | — |
-| `body-lg` | `17px` / 1.4 | sans 600 | Sentence |
+| `body-lg` | `17px` / 1.4 | sans 600, **700 variant** | Sentence |
 | `body` | `15px` / 1.45 | sans 400–600 | Sentence |
 | `small` | `13px` / 1.4 | sans 500 | Sentence |
 | `eyebrow` | `11px`, `+3px` tracking | sans 600 | **UPPER** |
+
+> `body-lg` carries **two documented weight variants of one step** — 600 as the
+> default and 700 for the spots figure (§2.1). It is not two scale steps, and
+> code should mirror the Figma layer rather than inventing one.
 
 > `hero` drops from `clamp(58px,12.5vw,124px)`. Ruling J requires the hero lose
 > ≥25% of its height so the three step cards clear the fold; the type is the
@@ -139,6 +190,30 @@ No shadows except one: the claim bar and the nav pill cast
 *under*. `volt-glow` retires from general use — a glow on everything is the same
 problem as a border on everything.
 
+## 1.7 Breakpoints — one value, and what changes at it
+
+**One breakpoint: `md` = `768px`.** One is enough because only one thing
+genuinely changes shape, and naming it here stops each of the eight build stages
+from choosing its own.
+
+| | Below `md` (390–767) | At and above `md` |
+|---|---|---|
+| **Navigation** | The floating nav pill renders. The header's link row does **not** | The header's link row renders. The nav pill does **not** |
+| **Header** | Wordmark, auth control, language switcher — always, at every width (§3.1a of the contract) | Same, plus the links |
+| **Page gutter** | `22` | `22`, with content capped at `720px` and centred |
+| **Day strip** | 8 boxes, horizontally scrollable | 8 boxes, all visible, no scroll |
+| **Pass tiers** | One per row | Two across |
+| **Home step cards** | One per row | Three across |
+| **Game card** | As drawn | As drawn, wider — no re-layout |
+
+`SCR-APP-CHROME` in the wireframe sketches the desktop link row and the nav pill
+in one frame; they are **mutually exclusive at every width**, and the frame is a
+composite, not a layout.
+
+**Content priority above `md` is per screen** — see the §3 table. The rule
+behind every row of it: nothing is added at desktop width that a phone does not
+get, and nothing is dropped. Width buys layout, not content.
+
 ---
 
 # 2. Components
@@ -146,10 +221,78 @@ problem as a border on everything.
 Build these as a library page before any screen. Every screen is assembled from
 them; nothing is drawn twice.
 
+## 2.0 Accessibility — applies to every component below
+
+Not a section to read once. Each component's own entry restates the parts that
+apply to it, and a component whose entry is silent on these is not ready to
+build. 83 of 144 front-end files are being rewritten this round; this is the one
+moment where building it in is cheap.
+
+**Semantics — the element, not the handler.**
+
+| Thing | Element |
+|---|---|
+| Game card (whole card is the tap target, ruling E) | `<a href>` wrapping the card — **not** a `<div onClick>`. Ruling E made the card a link, not a control |
+| Day box, selected day box, `All` | `<a href>` — the filter is in the URL and the view is shareable |
+| Rest day (no games) | Plain `<div>`: not a link, **not focusable**, no `tabindex` |
+| Past game card | Plain element at 45% opacity, not focusable |
+| Buttons that act (`Claim your spot`, `Save profile`, dismiss, close) | `<button>` |
+| Cancel-booking dialog | `<dialog>` opened with `showModal()` |
+| Nav pill items | `<a href>` inside a `<nav>` |
+| FAQ question | `<button>` controlling a disclosure, `aria-expanded` |
+| Every form | `<form>` with `<label htmlFor>` on every input |
+
+**Focus.** Every focusable element shows the `focus-ring` token (§1.2) on
+`:focus-visible`. Focus is never removed without a replacement, and the ring is
+never the same treatment as the selected state — a selected day box that is not
+focused, and a focused day box that is not selected, must be distinguishable.
+
+**Accessible names for every icon-only control.** None of these has visible
+text, so each carries an `aria-label`:
+
+| Control | Accessible name |
+|---|---|
+| Avatar edit pencil (§3, profile) | "Change your photo" |
+| Toast dismiss | "Dismiss" |
+| Dialog close (×) | "Close" |
+| Header avatar (signed in) | "Your profile" |
+| Language switcher trigger | "Language: English" (the current language, spoken) |
+| Back chevrons | Their destination — "Back to games", not "Back" |
+
+**Dialogs.** `role="dialog"`, `aria-modal="true"`, an accessible name from the
+title, a focus trap, `Escape` closes, and **focus returns to the control that
+opened it**. `<dialog>` + `showModal()` gives the trap and the `Escape` for
+free; the focus return does not come free and must be written.
+
+**Live regions.** The toast is `aria-live="polite"` for success and
+`aria-live="assertive"` for error, with `role="status"` / `role="alert"` to
+match. Inline form errors are associated with their field via
+`aria-describedby` and the field carries `aria-invalid`.
+
+**Keyboard equivalents for anything scrollable or hover-driven.** The day strip
+scrolls horizontally on touch; with a keyboard, each box is a link in tab order
+and the container scrolls the focused box into view. The language menu opens on
+`Enter`/`Space`, moves with arrow keys, closes on `Escape`, and returns focus to
+its trigger.
+
+**Targets.** Minimum **44 × 44px** for nav pill items, day boxes, the toast
+dismiss, the dialog close, the avatar pencil and every text button. Where the
+visual is smaller, the hit area is padded to 44 — the pencil is a 20px glyph in
+a 44px target.
+
+**Contrast.** Text at 4.5:1 minimum (§1.2 is built to clear it); non-text
+indicators — focus ring, selected outline, the ladder colours where they carry
+state — at 3:1 minimum.
+
+**Verification.** axe-core on each stage's screens, zero serious violations, and
+the core flows walked with the keyboard alone: find a game, claim a spot, cancel
+a spot, sign in.
+
 ## 2.1 Game card — canonical (ruling E)
 
 **One component, used on the games list, the home preview, and My Games.** No
-variants per surface.
+variants per surface — including My Games' past rows, which use this card at its
+past state rather than a list-row shape of their own.
 
 ```
 ┌────────────────────────────────────────────┐
@@ -162,15 +305,21 @@ variants per surface.
    surface · radius card · padding 16 · no border
 ```
 
-- **Whole card is the tap target.** No `View game →` (ruling E).
+- **Whole card is the tap target.** No `View game →` (ruling E). It is an
+  `<a href>` (§2.0), so it is keyboard-reachable and openable in a new tab.
 - **Spots figure** is `body-lg` weight 700 in its ladder colour. It is the only
-  coloured text on the card.
+  coloured text on the card, and the number carries the meaning — the colour
+  reinforces it.
 - **Avatar stack**: up to 3 faces at 28px, −8px overlap, then `+N` in a
   `surface-avatar` circle. Replaces the deleted capacity bar (ruling D). Falls
-  back to initials, which the product already does everywhere.
+  back to initials, which the product already does everywhere. **At zero
+  bookings the stack is absent**, not an empty ring — the spots figure already
+  says the game is open.
 - **Format pill**: `pill`, `surface-raised` fill, `small`/muted. No level badge
   (ruling I).
 - **No venue photo on the list.** v1.1.4 B stands; the photo is the detail's.
+- **Overflow:** venue name truncates to one line with an ellipsis; time,
+  duration, format and spots never truncate (§2.13).
 
 **States:**
 
@@ -178,11 +327,13 @@ variants per surface.
 |---|---|
 | Default | As drawn |
 | Full | Spots figure → `Full` in `danger`. Card still tappable — the detail offers the waitlist |
-| **Past** | Whole card at **45% opacity**, not tappable, no press state. New — the product has never drawn this |
+| **Past** | Whole card at **45% opacity**, not tappable, **not focusable**, no press state. New — the product has never drawn this |
+| **Loading** | Replaced by the §2.10 skeleton at this card's exact geometry |
 
 ## 2.2 Day strip (ruling H)
 
-Exactly **8 boxes**, horizontally scrollable, today first.
+Exactly **8 boxes**, horizontally scrollable below `md`, fully visible above it.
+Today first.
 
 ```
 ┌──────┐  ┌──────┐
@@ -195,18 +346,31 @@ Exactly **8 boxes**, horizontally scrollable, today first.
 
 - `control` radius, `surface-raised` fill, **no border**.
 - Selected: `volt` fill, `ink` text.
-- A day with no games is drawn, greyed, and **not a link** (v1.2 A stands).
+- A day with no games is drawn, greyed, **not a link and not focusable**
+  (v1.2 A stands).
 - Tapping a selected day clears the filter. An `All` affordance clears it too.
 - **The strip filters; the list is never truncated by it** (ruling H).
+- **Accessibility:** each active box is an `<a href>`; the focused box scrolls
+  into view; selected state is announced (`aria-current="true"`), not inferred
+  from the fill; minimum 44px target.
 
 ## 2.3 Bottom nav (ruling K)
 
 Floating pill, `surface-raised`, `pill` radius, 16px inset from the screen edge,
 `env(safe-area-inset-bottom)` respected via the existing `--tabbar-h`.
+**Renders below `md` only** (§1.7); above it the header link row does this job.
 
 Four items, in order: **Home · Games · Pass · Profile.**
 Active item sits in a filled `volt` capsule with `ink` icon and label. Labels are
 `small`, sentence case.
+
+- **Accessibility:** a `<nav>` of `<a href>` items, `aria-current="page"` on the
+  active one, 44px minimum target per item, focus ring visible against both the
+  `surface-raised` pill and the `volt` capsule.
+- **Overflow:** labels never truncate and never wrap. `Permanentka` (CS) in a
+  four-item bar at 390px is the tightest case in the product and is a drawn
+  prerequisite (`LETCO_ANALYZE.md` §6 P4). If it does not fit, the label
+  changes; the type does not shrink and the label does not ellipse.
 
 ## 2.4 Claim bar (ruling G)
 
@@ -219,11 +383,34 @@ detail, in every state.**
 | Open, signed in | `150 CZK` | Primary button `Claim your spot` |
 | Open, signed out | `150 CZK` | Primary button `Sign in to claim` |
 | Full | `150 CZK` | Secondary button `Join waitlist` |
+| **On the waitlist** | `150 CZK` | `You are #3 on the waitlist` as `small`/muted — **no button this round** |
 | Holding, paid | `Paid` in volt | Text button `Cancel` |
 | Holding, unpaid | `150 CZK due` in warn | Text button `Cancel` |
 | Started / cancelled | `150 CZK` | `Kicked off 19:00` / `Cancelled` as `small`/faint text — **no button** |
 
 Never transparent (the brief's bug 1), never absent.
+
+> **The waitlist state is new and it is the fourth row for a reason.** Without
+> it a waiting player sees `Join waitlist` indefinitely, with no way to tell
+> whether the tap worked and no way to know where they stand — while the
+> notify-all FCFS emails keep arriving.
+>
+> **It ships without a `Leave waitlist` control, and that is a known gap.**
+> There is no `leave_waitlist` RPC — `join_waitlist`, `waitlist_position` and
+> `notify_waitlist` are the only three that exist — and every state transition
+> here is a `SECURITY DEFINER` RPC, so it cannot be faked from the client.
+> Leaving is quarantined (`LETCO_ANALYZE.md` §2a). The read-only position is
+> still strictly better than the indefinite `Join waitlist` it replaces: the
+> player can tell the tap worked and can see where they stand. **Reserve the
+> right-hand space for the control** so adding it later is not a re-layout.
+
+- **The bar renders in the loading skeleton too** (§2.10), so its height is
+  reserved and the content beneath it does not jump when the data lands.
+- **Overflow:** the price never truncates; the right-hand label wraps to a
+  second line before it truncates, and the bar grows to fit (§2.13). The
+  longest Russian labels here are roughly twice the English.
+- **Accessibility:** the bar is a `<footer>` region with an accessible name; its
+  button is a real `<button>` inside a `<form>` where it submits.
 
 ## 2.5 Buttons
 
@@ -235,11 +422,30 @@ Never transparent (the brief's bug 1), never absent.
 
 Sentence case, always. One primary per screen region.
 
+**State axis — every variant carries all five.** The spec previously gave three
+variants and no states, which is how eight `form_submit` actions reached the
+wireframe with nothing to render while they ran.
+
+| State | Treatment |
+|---|---|
+| Default | As above |
+| Hover / press | Primary → `volt-dim` fill. Secondary → `hairline-volt` outline. Text → `bone` |
+| **Focus** | `focus-ring` (§1.2), 2px, 2px offset, on `:focus-visible` |
+| Disabled | Primary → `volt-dim` fill, `ink` at 55%. `aria-disabled`, not removed from tab order |
+| **Pending** | **Fill drops to `volt-dim`, the label is unchanged, a 16px spinner sits left of it, `pointer-events: none`, and the button is `aria-busy="true"`** |
+
+> **Pending is not decoration; it is the double-submit guard.** `click()` returns
+> as soon as a form is submitted, and a server action is cancelled by navigation
+> — two taps on `Take the spot` put two `create_booking` calls into the same
+> capacity race. Every `form_submit` in `LETCO_UI_WIREFRAME.json` renders this
+> state from its action's pending flag, and the label stays put so the button
+> does not change width mid-press.
+
 ## 2.6 Info row
 
 Icon (20px, `muted`) + label (`body`/muted) + value (`body`/bone, right).
 Rows separated by `hairline`, not by gaps. Used by the detail's info card and
-"Good to know".
+"Good to know". The icon is decorative (`aria-hidden`); the label is the name.
 
 ## 2.7 Pass card (ruling N)
 
@@ -253,24 +459,167 @@ Save 50 CZK           ← `small`/muted
 
 No "you get X CZK of credit" line. No single-game tier (v1.2 E stands).
 
+**The tier list is the five rows `pass_tiers` actually carries** — the 1-game
+tier was deleted from the table by v1.2 E, and there is no 10-game tier:
+
+| Games | Price | Credited | Saving | Expiry line |
+|---:|---:|---:|---:|---|
+| 5 | 700 | 750 | 50 | 1 month expiration |
+| 8 | 1 080 | 1 200 | 120 | 1 month expiration |
+| 12 | 1 560 | 1 800 | 240 | 2 months expiration |
+| 15 | 1 875 | 2 250 | 375 | 2 months expiration |
+| 20 | 2 300 | 3 000 | 700 | 2 months expiration |
+
+**The expiry line renders on every card**, never only on the first. Contract
+§4.2: an expiry discovered after purchase is a complaint; an expiry read before
+purchase is a choice. All five cards render in one vertical list below `md`, two
+across above it; none is emphasised over the others — the per-game price is the
+comparison and it is already the largest thing on each card.
+
 ## 2.8 Form controls (ruling L)
 
-Text field: `surface-raised` fill, `control` radius, no border at rest,
-`hairline-volt` when focused. Label above in `small`/muted.
-Multi-select chips: `pill`, `surface-raised` at rest, `volt`/`ink` when selected.
-Display/edit toggle: the whole block swaps; `Edit details` → `Save profile`.
+Text field: `surface-raised` fill, `control` radius, no border at rest.
+Label above in `small`/muted, always a real `<label htmlFor>`.
+
+**Focus:** the `focus-ring` token — a 2px full-opacity `volt` outline at 2px
+offset. **Not `hairline-volt`**, which computes to roughly 2.4:1 against
+`surface-raised` and fails the 3:1 WCAG 1.4.11 requires of a non-text indicator.
+This was the only focus affordance the spec named, so it was also the only one
+every other focusable element would have inherited.
+
+**Error:** the field takes a 1px `danger` border and `aria-invalid="true"`, and
+the message renders beneath it in `small`/`danger`, associated by
+`aria-describedby`. Colour is never the only signal — the message is the signal.
+
+**Multi-select chips:** `pill`, `surface-raised` at rest, `volt`/`ink` when
+selected, `focus-ring` on focus. They are `<button role="option">` inside a
+labelled group, or checkboxes styled as chips — either way keyboard-operable and
+individually announced as selected or not. **They wrap to as many rows as they
+need**; they never scroll horizontally and never truncate a label. Preferred
+position (§3 screen 7) is the one consumer, and it must be drawn in the state
+where more chips are selected than fit one row.
+
+**Display/edit toggle:** the whole block swaps; `Edit details` → `Save profile`.
+Focus moves to the first field of the edit block when it opens, and back to
+`Edit details` when it closes.
 
 ## 2.9 Empty state (ruling P)
 
 Icon or nothing, `body-lg`/bone line, `body`/muted second line, one primary
 action where an action exists. Never a bare centred sentence.
 
+Used by: the games list at zero, **home's upcoming section at zero**, My games at
+zero, the wallet at zero balance, and the game detail's lineup at zero.
+
 ## 2.10 Skeleton (ruling P)
 
 `surface-raised` blocks at the **exact geometry of the card they replace**, 1.2s
-pulse. Note the trap this round is fixing: the deleted capacity bar looked like a
+pulse, `aria-hidden` with an `aria-live="polite"` "Loading" status beside it.
+Note the trap this round is fixing: the deleted capacity bar looked like a
 skeleton because it was a row of grey segments inside a real card. Skeletons must
 never appear inside a populated card.
+
+**Where each one goes, and what geometry it takes:**
+
+| Surface | Skeleton |
+|---|---|
+| Games list | Card geometry, three blocks. **Drawn** |
+| **Game detail** | Photo block (16:9), info-card block with five rows, availability line, organizer card block, lineup row — **and the claim bar rendered in its own state, so its height is reserved**. This is the surface a shared WhatsApp link opens, and it was the one screen §3 asked for a skeleton on and no frame drew |
+| **Pass** | Wallet block and the five tier cards — the balance and its batches are both loaded |
+| **Profile** | **No skeleton.** Server-rendered empty frame: the labels are static and only the values are loading |
+| **My games** | Card geometry for the upcoming section; the counts render as a server-rendered empty frame |
+
+## 2.11 Error and pending conventions
+
+Twenty-one wireframe actions reach the server. Before this section the product
+had one drawn failure state — sign-in — which means every other failure rendered
+as nothing happening: the "silently does nothing" mode `CLAUDE.md` records as an
+already-paid-for lesson.
+
+**Three surfaces, and every server action picks exactly one.**
+
+| Surface | When | Shape |
+|---|---|---|
+| **Inline field error** | The input that is wrong is on screen and identifiable | §2.8's error treatment, beneath the field, `aria-describedby` |
+| **Form-level error block** | The failure is about the submission, not a field — a race lost, a window closed, a permission refused | `surface-raised` block above the submit button, `danger` icon, `role="alert"`, one sentence plus a way forward |
+| **Error toast** | The action was not a form submission, or its result screen has already replaced the page | §2.12's error variant |
+
+| Action | Failure surface | Success |
+|---|---|---|
+| `createBookingAction` | Form-level block (game filled, already booked, started) | **Server-rendered** confirmation screen |
+| `convertWaitlistAction` | Form-level block (lost the race → still-on-the-waitlist copy) | Server-rendered confirmation |
+| `joinWaitlistAction` | Form-level block; a repeat tap is **not** an error — it reports the existing position | Bar re-renders in its waitlist state |
+| `cancelBookingAction` | Form-level block inside the dialog (window closed, already cancelled) | **Server-rendered** refunded result |
+| `buyPassAction` | Form-level block on the tier | Server-rendered top-up QR |
+| `createTopupAction` | Form-level block, including the RPC's own 50–2000 rejection | Server-rendered QR |
+| `updateProfileAction` | Inline field errors; form-level for anything else | Block returns to display mode with the new values |
+| `changePasswordAction` | Inline field error on the wrong current password | In-place confirmation |
+| `changeEmailAction` | Inline field error on the address | In-place "check both inboxes" |
+| `set_profile_photo` + upload | Inline, beneath the avatar (too large / unsupported type / upload failed) | The new avatar renders |
+| `signOutAction` | Error toast | Redirect to home |
+| `setLocale` | Error toast | Page re-renders in the new language |
+| `signInWithPassword`, `verifyEmailOtp`, `setPassword`, `startSignup` | Form-level block; **`TOS_REQUIRED` and `CONSENT_REQUIRED` are two distinct inline errors on their two boxes** | Redirect to the carried destination |
+
+**Success never depends on client state.** `revalidatePath` unmounts anything
+rendered from a `useActionState` result before it can be read, so every success
+above is either a server-rendered screen or a toast the server emits — never a
+banner a client action wrote.
+
+**Pending is universal.** Every `form_submit` renders §2.5's pending state while
+its action is in flight.
+
+## 2.12 Toast
+
+One component, `surface-raised`, `card` radius, above the claim bar and the nav
+pill, dismissible.
+
+| Variant | Tone | Semantics | Duration |
+|---|---|---|---|
+| Success | `bone` text, `volt` icon | `role="status"`, `aria-live="polite"` | Auto-dismiss at 5s |
+| **Error** | `bone` text, `danger` icon | `role="alert"`, `aria-live="assertive"` | **No auto-dismiss** — an error the reader missed is an error that did not happen |
+
+- **One at a time.** A second toast replaces the first rather than stacking; an
+  error never replaces an error.
+- Dismiss is a `<button aria-label="Dismiss">` at a 44px target.
+- Hovering or focusing pauses the auto-dismiss timer.
+
+**Inventory, restated against the v1.3 surfaces.** Contract §8 lists five
+triggers; ruling G deleted `Copy link` from the game detail, so one of the five
+no longer has a source:
+
+| Contract §8 trigger | v1.3 |
+|---|---|
+| Booking created | **Retired as a toast** — the confirmation is a server-rendered screen (§2.11); a toast on top of it says the same thing twice |
+| Sign-in | Kept |
+| Cancellation + credit | **Retired as a toast** — same reason: the refunded result is a screen |
+| Top-up confirmed | Kept — the player is not on the page when it happens |
+| Link copied | **Gone.** Ruling G deleted the control that fired it |
+
+## 2.13 Truncation and overflow
+
+The wireframe is drawn in English. Czech runs longer and Russian longer still,
+and `font-condensed` → `font-sans` widens every string that survives (F3). Every
+component states what it does when the text does not fit; a component with no
+rule here gets an arbitrary one at build time, per stage, differently.
+
+| Component | Rule |
+|---|---|
+| Game card — venue name | Truncate, one line, ellipsis |
+| Game card — time, duration, format, spots | Never truncate. The venue name yields first |
+| Claim bar — price | Never truncate |
+| Claim bar — right-hand label | Wrap to two lines; the bar grows. Only then truncate |
+| Nav pill — labels | Never truncate, never wrap. If it does not fit, the **word** changes (§2.3) |
+| Home step cards — title | Wrap to two lines |
+| Home step cards — body | Wrap to three lines, then truncate |
+| Info row — value | Wrap to two lines; the label never wraps |
+| Pass card — tier title and per-game price | Never truncate |
+| Chips | Never truncate. The group wraps to more rows (§2.8) |
+| Buttons | Never truncate. Labels wrap to two lines and the button grows |
+| Toast | Wrap to three lines |
+| Lineup names | Truncate at the avatar's width, ellipsis |
+
+Minimum tap width for any truncating interactive element is 44px regardless of
+its content.
 
 ---
 
@@ -278,28 +627,58 @@ never appear inside a populated card.
 
 Mobile-first frames, 390px. `PROPOSAL` marks a frame the brief did not specify.
 
-| # | Screen | States to draw |
-|---|---|---|
-| 1 | Home | Signed out, signed in with a booking |
-| 2 | Games list | Default, day-filtered, `PROPOSAL` empty, `PROPOSAL` loading |
-| 3 | Game detail | Open, full, holding a spot, started, `PROPOSAL` loading |
-| 4 | `PROPOSAL` Claim confirmation | Success, insufficient balance |
-| 5 | `PROPOSAL` Cancel booking | Confirm dialog, refunded-in-kind result (ruling O) |
-| 6 | Pass / credits | Tiers, wallet with balance, `PROPOSAL` zero balance |
-| 7 | Profile | Display mode, edit mode, My Games expanded |
-| 8 | `PROPOSAL` Waitlist | Join confirmation, spot-opened state |
-| 9 | Auth | Sign in, sign up, `PROPOSAL` restyled to the new system |
-| 10 | `PROPOSAL` 404 / error | |
+**Every screen in `LETCO_UI_WIREFRAME.json` appears here with an owning build
+stage** (§5) and a note of whether it is redesigned or inherits the tokens only.
+Eight screens previously fell in no stage, including the two the table itself
+lists as deliverables and the mandatory step between the claim bar and every
+booking.
+
+| # | Screen | States to draw | Stage | Desktop (≥ `md`) content priority |
+|---|---|---|---|---|
+| 0 | Global chrome | Header signed in / signed out, language menu **with flags**, nav pill, footer, toast **success and error** | 0 | Header links replace the nav pill; nothing else changes |
+| 1 | Home | Signed out, signed in with a booking, **upcoming at zero / one / two games** | 5 | Steps three-across; upcoming cards stay one-per-row so the card is never re-laid-out |
+| 2 | Games list | Default, day-filtered, `PROPOSAL` empty, `PROPOSAL` loading | 1 | Day strip fully visible, no scroll; list unchanged |
+| 3 | Game detail | Open, full, holding a spot, started, **on the waitlist**, `PROPOSAL` loading, **empty lineup**, **absent waitlist block** | 2 | Photo caps at `720px`; the claim bar stays fixed — the decision must stay reachable at every width |
+| 4 | `PROPOSAL` Claim confirmation | Success, insufficient balance (routes to the **pass tiers**, §1a of the analysis) | 6 | Single column, capped |
+| 5 | `PROPOSAL` Cancel booking | Confirm dialog, refunded-to-wallet result (ruling O, credit half only), **failure inside the dialog** | 6 | Dialog centred, `480px` max |
+| 6 | Pass / credits | **Five tiers**, wallet with balance **as credits with CZK beneath**, **multi-batch (two expiries, one within three days)**, `PROPOSAL` zero balance | 4 | Tiers two-across; wallet full width above them |
+| 7 | Profile | Display mode, edit mode (**all six ruling-L fields**, position as **chips**, including more chips than fit one row), My Games expanded, **photo crop / uploading / rejected** | 3 | Single column, capped — a form that reflows to two columns changes its reading order |
+| 8 | `PROPOSAL` Waitlist | **Join confirmation**, spot-opened state, not-on-the-list state | 6 / 2 | Single column, capped |
+| 9 | Auth | Sign in, sign up (**contract §3.1 field order**, **both consent errors**), set password, `PROPOSAL` restyled to the new system | 7 | Form capped at `420px`, centred |
+| 10 | `PROPOSAL` 404 / error | 404, sign-in-link failure **with resend, wrong-address and use-a-code paths** | 7 (auth error) / 0 (404) | Centred |
+| 11 | Payment choice | QR platba / cash, error state, **pending on submit** | 6 | Single column, capped |
+| 12 | My games | Upcoming, past (**canonical card, past state**), empty, counts | 3 | Single column, capped |
+| 13 | Top-up payment (QR) | Pending, confirmed | 4 | Single column, capped |
+| 14 | Terms · Privacy | As they stand — **token-inherit only**, strip check | 0 | Prose capped at `640px` |
+
+> **There is no standalone top-up amount chooser.** Ruling N removes the
+> separate top-up-wallet entry point from the player UI; `create_topup` and its
+> VS series are untouched and a pass purchase mints one, which is what screen 13
+> renders. See `LETCO_ANALYZE.md` §1a.
 
 **Home order (ruling J):** hero (≥25% shorter) → three steps → Upcoming Games
 (3 canonical cards + `All games →` primary button at the section's **bottom**) →
 active-players banner → community card → FAQ → footer. No Player of the Month.
-No equipment line.
+No equipment line. **At zero upcoming games the section renders the §2.9 empty
+state with the WhatsApp action**, and at one or two it renders what it has — the
+`All games` button stays in both cases.
 
 **Game detail order (ruling G, M):** venue photo → venue name → info card (date,
 time, format, level, `Open location in Maps`) → availability → organizer (with
 locked state) → player list → `Good to know` → share on WhatsApp → claim bar.
 No price in the info card. No `Copy link`. No "2 subs per team".
+
+**Lineup and waitlist at zero.** `Lineup (0)` renders the §2.9 empty state
+inline — one line, no action, since the claim bar already carries the action.
+**The waitlist block does not render at all when empty**; a heading over nothing
+invites the reader to wonder what is missing. The lineup lists every player;
+`+N` is display-only overflow at narrow widths and expands in place.
+
+**Wallet display (ruling F).** Credits are the headline; the CZK figure sits
+small beneath. Contract §4.2 requires **batches** — amount, expiry date and
+games-equivalent — rather than one opaque total, so the wallet draws a list, and
+the multi-batch state with one batch inside its three-day heads-up window is a
+required frame rather than an edge case.
 
 ---
 
@@ -307,6 +686,7 @@ No price in the info card. No `Copy link`. No "2 subs per team".
 
 New and changed strings only. These go into `lib/strings.ts` and the `lib/i18n/`
 overlays **in the same commit as the English**, or `npm run test:unit` fails.
+That walk gates **every** build stage, not only the copy stage — see §5.
 
 > **Money words are not translated.** Currency and payment terms follow the
 > existing convention in `lib/strings.ts` in every language — a player is about
@@ -325,6 +705,7 @@ overlays **in the same commit as the English**, or `npm run test:unit` fails.
 | home.step3Body | You're in. Time to play. | Jsi v sestavě. Jde se hrát. | Ты в составе. Пора играть. |
 | home.upcomingGames | Upcoming games | Nadcházející zápasy | Ближайшие игры |
 | home.allGames | All games | Všechny zápasy | Все игры |
+| home.joinWhatsapp | Join the WhatsApp group | Přidej se do WhatsApp skupiny | Вступай в группу WhatsApp |
 | nav.home | Home | Domů | Главная |
 | nav.games | Games | Zápasy | Игры |
 | nav.pass | Pass | Permanentka | Абонемент |
@@ -334,34 +715,71 @@ overlays **in the same commit as the English**, or `npm run test:unit` fails.
 | games.past | Finished | Odehráno | Завершено |
 | games.emptyTitle | No games scheduled | Žádné naplánované zápasy | Игр пока нет |
 | games.emptyBody | New games go up every week. | Nové zápasy přibývají každý týden. | Новые игры появляются каждую неделю. |
+| games.loading | Loading games | Načítám zápasy | Загружаем игры |
 | game.claimSpot | Claim your spot | Rezervovat místo | Забронировать место |
 | game.signInToClaim | Sign in to claim | Přihlas se a rezervuj | Войди, чтобы забронировать |
 | game.joinWaitlist | Join waitlist | Zapsat se na čekačku | Записаться в лист ожидания |
+| game.onWaitlist | You are #{n} on the waitlist | Jsi {n}. na čekačce | Ты {n}-й в листе ожидания |
+| game.waitlistJoined | You're on the list. We email everyone the moment a spot opens. | Jsi na čekačce. Až se místo uvolní, napíšeme všem. | Ты в листе ожидания. Как только место освободится, мы напишем всем. |
 | game.paid | Paid | Zaplaceno | Оплачено |
 | game.amountDue | {amount} due | K úhradě {amount} | К оплате {amount} |
 | game.kickedOffAt | Kicked off {time} | Začalo v {time} | Начало в {time} |
 | game.goodToKnow | Good to know | Dobré vědět | Полезно знать |
 | game.organizerLocked | Contact unlocks when you book | Kontakt se odemkne po rezervaci | Контакт откроется после брони |
+| game.lineupEmpty | Nobody has claimed a spot yet | Zatím si nikdo nezabral místo | Пока никто не занял место |
+| game.showAllPlayers | Show all players | Zobrazit všechny hráče | Показать всех игроков |
+| booking.confirmBooking | Confirm booking | Potvrdit rezervaci | Подтвердить бронь |
+| booking.cancellationWindow | {window} — your credit goes back to your wallet. | {window} — kredit se ti vrátí do peněženky. | {window} — кредит вернётся в кошелёк. |
+| booking.gameJustFilled | This game just filled up. | Zápas se právě zaplnil. | Игра только что заполнилась. |
+| booking.someoneTookIt | Someone else took the last spot. | Poslední místo si vzal někdo jiný. | Последнее место занял кто-то другой. |
+| booking.takeTheSpot | Take the spot | Vzít místo | Занять место |
+| booking.cancelTitle | Cancel your spot? | Zrušit rezervaci? | Отменить бронь? |
+| booking.refundCredit | Your credit goes back to your wallet. | Kredit se ti vrátí do peněženky. | Кредит вернётся в кошелёк. |
+| booking.refundToWallet | What you paid goes back as wallet credit. | Co jsi zaplatil, se ti vrátí jako kredit do peněženky. | То, что ты заплатил, вернётся кредитом в кошелёк. |
+| booking.cancelFailed | We couldn't cancel that. Your spot is unchanged. | Zrušení se nepovedlo. Rezervaci máš pořád. | Отменить не вышло. Бронь осталась. |
 | pass.tierTitle | {n} games pass | Permanentka na {n} zápasů | Абонемент на {n} игр |
 | pass.perGame | {amount} per game | {amount} za zápas | {amount} за игру |
 | pass.saves | Save {amount} | Ušetříš {amount} | Экономия {amount} |
 | pass.expiration | 1 month expiration | Platnost 1 měsíc | Срок действия 1 месяц |
+| pass.expiration2Months | 2 months expiration | Platnost 2 měsíce | Срок действия 2 месяца |
 | pass.getThisPass | Get this pass | Získat permanentku | Получить абонемент |
 | wallet.credits | {n} credits | {n} kreditů | {n} кредитов |
 | wallet.creditsOne | 1 credit | 1 kredit | 1 кредит |
+| wallet.inCzk | {amount} in your wallet | {amount} v peněžence | {amount} в кошельке |
 | wallet.topUp | Top up credit | Dobít kredit | Пополнить кредит |
+| wallet.batchExpires | {amount} expires {date} | {amount} platí do {date} | {amount} действует до {date} |
+| wallet.batchExpiresSoon | Expires soon | Brzy vyprší | Скоро сгорает |
 | wallet.empty | No credit yet | Zatím žádný kredit | Кредитов пока нет |
+| wallet.notEnoughCredit | Not enough credit to cover this game. | Na tenhle zápas nemáš dost kreditu. | Кредита на эту игру не хватает. |
 | profile.myGames | My games | Moje zápasy | Мои игры |
 | profile.editDetails | Edit details | Upravit údaje | Изменить данные |
 | profile.saveProfile | Save profile | Uložit profil | Сохранить профиль |
 | profile.displayName | Display name | Zobrazované jméno | Отображаемое имя |
 | profile.position | Preferred position | Preferovaný post | Предпочитаемая позиция |
+| profile.skillLevel | Skill level | Úroveň | Уровень |
 | profile.nationality | Nationality | Národnost | Гражданство |
+| profile.phone | Phone | Telefon | Телефон |
+| profile.email | Email | E-mail | E-mail |
+| profile.changeEmail | Change | Změnit | Изменить |
 | profile.requestEmailChange | Request email change | Požádat o změnu e-mailu | Запросить смену e-mail |
+| profile.changePhoto | Change your photo | Změnit fotku | Изменить фото |
+| profile.photoUploading | Uploading your photo… | Nahrávám fotku… | Загружаем фото… |
+| profile.photoTooLarge | That image is over 2 MB. Pick a smaller one. | Obrázek má přes 2 MB. Vyber menší. | Изображение больше 2 МБ. Выбери поменьше. |
+| profile.photoWrongType | Use a JPG, PNG or WebP image. | Použij JPG, PNG nebo WebP. | Подойдёт JPG, PNG или WebP. |
+| profile.photoFailed | The photo didn't upload. Try again. | Fotka se nenahrála. Zkus to znovu. | Фото не загрузилось. Попробуй ещё раз. |
 | profile.noGames | You haven't joined a game yet | Zatím ses nepřihlásil na žádný zápas | Ты ещё не записался ни на одну игру |
-| booking.cancelTitle | Cancel your spot? | Zrušit rezervaci? | Отменить бронь? |
-| booking.refundCredit | Your credit goes back to your wallet. | Kredit se ti vrátí do peněženky. | Кредит вернётся в кошелёк. |
-| booking.refundCash | We'll refund what you paid. | Vrátíme ti, co jsi zaplatil. | Мы вернём то, что ты заплатил. |
+| signup.tosRequired | Accept the terms of service to continue. | Bez souhlasu s podmínkami to nejde dál. | Без принятия условий продолжить нельзя. |
+| signup.consentRequired | Consent to data processing to continue. | Bez souhlasu se zpracováním údajů to nejde dál. | Без согласия на обработку данных продолжить нельзя. |
+| signup.checkInbox | Check your inbox — we sent a link to {email} | Mrkni do e-mailu — poslali jsme odkaz na {email} | Проверь почту — мы отправили ссылку на {email} |
+| signup.resend | Send the email again | Poslat e-mail znovu | Отправить письмо ещё раз |
+| signup.wrongAddress | Wrong address? Go back and change it | Špatná adresa? Vrať se a oprav ji | Не тот адрес? Вернись и исправь |
+| signup.useCodeInstead | Enter the six-digit code instead | Zadej radši šestimístný kód | Ввести шестизначный код |
+| auth.linkFailed | That link couldn't be used to sign you in. | Tímhle odkazem se přihlásit nepovedlo. | По этой ссылке войти не получилось. |
+| common.saving | Saving… | Ukládám… | Сохраняем… |
+| common.working | Just a moment… | Moment… | Секунду… |
+| common.tryAgain | That didn't go through. Try again. | Neprošlo to. Zkus to znovu. | Не прошло. Попробуй ещё раз. |
+| common.dismiss | Dismiss | Zavřít | Закрыть |
+| common.close | Close | Zavřít | Закрыть |
 
 Czech uses informal *ty* throughout, matching the existing copy. Russian
 follows it — the register is a pickup football game, not a bank.
@@ -369,20 +787,60 @@ follows it — the register is a pickup football game, not a bank.
 `games.spotsLeft` needs Czech and Russian plural forms (`1 místo` / `2–4 místa` /
 `5+ míst`; `1 место` / `2–4 места` / `5+ мест`). The current string table is
 flat; this is the one string in the set that needs a plural helper, and it is
-called out so it is not discovered at implementation time.
+called out so it is not discovered at implementation time. **It lands on the
+Stage 1 card**, so Stage 1 cannot go green without it. `pass.expiration` and
+`pass.expiration2Months` are deliberately two keys rather than one templated
+plural, so the tier list needs no second helper.
+
+**`booking.cancellationWindow` is one sentence, and `{window}` is read from
+`lib/policy.ts`.** The wireframe carried two hand-written windows — *"Free
+cancellation up to 12 hours before start"* on the payment step and contract §6's
+FAQ answer *"Cancel anytime before kickoff for full wallet credit"* — read
+minutes apart by the same player and unable to both be true. `CLAUDE.md` records
+that the real window is a value in `lib/policy.ts` and that policy windows are
+values, never branches, so both surfaces render this one key from that value.
+
+**Read 2026-08-07 (prerequisite P5), and the FAQ was right.**
+`policy.cancellation.cutoffHoursBeforeStart` is **`0`** — *"right up to kickoff,
+with no lead-time cutoff"* — and `cancel_booking` is the enforcement authority,
+raising `CANCEL_WINDOW_CLOSED` once `starts_at <= now()`. The wireframe's twelve
+hours was not a different reading of the policy; it was a different policy.
+`unpaidNudge.hoursBeforeStart` is 12, and it appears to have been read across.
+
+**The refund half says credit, not "in kind".** Ruling O asks for cash back to
+whoever paid cash, and `policy.cancellation.refundAs` is `"credit"` — migration
+`20260720120000` puts it plainly: *there is no cash-refund path anywhere*. Money
+never leaves the system, by Phase 1 design. So the copy promises what the
+product does, and `booking.refundCash` is deleted rather than translated into
+three languages; `booking.refundToWallet` replaces it and is honest to a cash
+payer. `LETCO_ANALYZE.md` §2a quarantines the cash half.
 
 ---
 
 # 5. Build stages
 
-| Stage | Contents | Verifiable by |
-|---|---|---|
-| **0** | Tokens and primitives only. No screen changes. | Strips — every existing screen inherits |
-| **1** | Canonical game card, games list, 8-box strip, list empty + loading | TEST-2xx + strips |
-| **2** | Game detail rebuild, five-state claim bar, organizer locked state | E2E per state |
-| **3** | Nav: Home in, My Games into Profile, profile display/edit | E2E |
-| **4** | Pass + wallet in credits, repricing to 150 | SQL + E2E |
-| **5** | Home reorder + all copy, CS/RU | Unit (i18n walk) + strips |
-| **6** | Claim confirmation, cancel + refund-in-kind, remaining empty states | E2E |
+Mirrors `LETCO_ANALYZE.md` §6 — that document is the source and this table is
+kept identical to it. Prerequisites P1–P5 and the four exit conditions there
+apply here in full; the two that most often get dropped are restated below.
+
+| Stage | Contents | Screens owned | Verifiable by |
+|---|---|---|---|
+| **0** | Token table plus all call-site migrations across **92 of 144 files (64%)**. No screen is redesigned, but **every screen changes appearance** (F5/F6 deltas, ~294 font migrations, ruling C's stroke removal, the `faint` and focus-ring contrast corrections). Global chrome restyled: header, footer, nav pill shell, language menu with flags, toast in success **and** error variants | Global chrome — redesign. 404, terms, privacy — **inherit-only, strip check** | `test:unit`; strips of every screen at 390px and desktop, EN and CS, reviewed expecting the deltas; axe |
+| **1** | Canonical game card, games list, 8-box day strip, list empty **and** loading | Games list — redesign | `test:e2e` list specs + strips |
+| **2** | Game detail rebuild, **seven-state** claim bar (the waitlist state **read-only**, no leave control — quarantined), organizer locked state, detail skeleton with the bar's height reserved, zero lineup, absent waitlist block | Game detail — redesign | `test:e2e`, one spec per bar state |
+| **3** | Nav: Home in, **My games entry point** into Profile (`/my-games` stays a route), profile display/edit with all six ruling-L fields, My games' own empty and loading states | Profile, My games — redesign | `test:e2e` incl. `/my-games` still resolving; axe |
+| **4** | Pass — the five real tiers with per-tier expiry; wallet in credits with batches and the expiring-soon state; zero balance; top-up QR. **Repricing to 150 is an admin data operation** | Pass, top-up QR — redesign | `test:e2e` + **`test:integration` ledger check** |
+| **5** | Home reorder, hero ≥25% shorter, upcoming at zero/one/two, FAQ window from `lib/policy.ts`, copy revision of already-translated keys | Home — redesign | `test:unit` (i18n walk) + strips EN/CS/RU |
+| **6** | Payment choice, claim confirmation, waitlist convert **and join confirmation**, cancel dialog with focus management, **refund as wallet credit** (the issuance already exists; cash-to-cash is quarantined) | Payment choice, confirmation, waitlist convert, cancel dialog — redesign | `test:e2e` asserting on server renders or the database |
+| **7** | Auth restyled: login, signup in contract §3.1 field order with two distinct consent errors, set password, sign-in-link failure with resend / wrong-address / use-a-code | Login, signup, set password, auth error — redesign | `test:e2e` auth specs (one cached session per player) + axe |
 
 Stage 0 first, always. It is the stage that answers the actual complaint.
+
+**Two exit conditions worth restating here**, because they are the two a stage
+table invites you to defer:
+
+1. **CS and RU ship in the same commit as EN, in every stage.** The i18n walk is
+   not Stage 5's gate; it is every stage's gate.
+2. **A stage ships its surfaces' empty, loading, error and pending states.**
+   There is no later stage that collects them (ruling P, and F9 of the
+   analysis).

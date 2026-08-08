@@ -1,0 +1,326 @@
+{
+  "findings": [
+    {
+      "id": "22cb426b-5ff3-414b-913a-caedd52d8d38",
+      "status": "resolved",
+      "summary": "Unquoted the MIME type in the avatar-rejection Examples table and in the crop-step Given (LETCO_TEST_SCENARIOS.md), matching the unquoted MIME tables already used by the REQ-SEC-004 scenarios in the same document; a MIME type is not an asserted path."
+    },
+    {
+      "id": "6339ae25-9dec-478a-97f1-f41d11f45210",
+      "status": "resolved",
+      "summary": "Rewrote the REQ-EH-004 seed Given in LETCO_TEST_SCENARIOS.md to name the bucket and carry the object key bare ('a profile photo object at key p-seed-001/avatar.jpg in the profile-photos bucket'); the public-URL assertion below it already used the absolute /storage/v1/object/public/... form. Storage keys are declared as a non-repo namespace in the new LETCO_IMPLEMENTATION.md section 2.5."
+    },
+    {
+      "id": "a0c38a8e-a130-4e47-9bd7-a2bb3ef27d25",
+      "status": "resolved",
+      "summary": "Rewrote the REQ-DB-014 roster Given in LETCO_TEST_SCENARIOS.md to 'with photo_path pavel/avatar.jpg in the profile-photos bucket' — bucket named, key bare. Storage key namespaces declared in LETCO_IMPLEMENTATION.md section 2.5."
+    },
+    {
+      "id": "5a1cccde-7069-4d7c-86b3-6e3c5e45a856",
+      "status": "resolved",
+      "summary": "Unquoted the key in all five REQ-API-003/REQ-API-004 steps in LETCO_TEST_SCENARIOS.md and named the profile-photos bucket where it was implicit. Storage key namespaces declared in LETCO_IMPLEMENTATION.md section 2.5."
+    },
+    {
+      "id": "f43effd9-5fca-44c9-9de4-013f5b8f12aa",
+      "status": "resolved",
+      "summary": "Unquoted the key in the four REQ-SEC-004/REQ-SEC-005 steps in LETCO_TEST_SCENARIOS.md and named the bucket in the seed Given; the upload step now calls the declared parameterised route (see finding c4a97993). Storage key namespaces declared in LETCO_IMPLEMENTATION.md section 2.5."
+    },
+    {
+      "id": "6040ecec-c9e9-4261-a132-c8a2fc5b3d8d",
+      "status": "resolved",
+      "summary": "Unquoted the key in the two REQ-SEC-003 steps in LETCO_TEST_SCENARIOS.md; the upload step now calls the declared parameterised route (see finding 8efbb78b). The SQL predicate literal 'player-b/avatar.jpg' is left as a single-quoted SQL string — see the caveat below."
+    },
+    {
+      "id": "4a7d330e-7540-4f44-9a3b-0d61e1e405f9",
+      "status": "resolved",
+      "summary": "Normalised the key to p-ales/avatar-01.jpg in LETCO_TEST_SCENARIOS.md (REQ-EH-008 e2e scenario), written bare with the bucket named. The stray 'players/' prefix contradicted set_profile_photo's own-prefix rule (first folder must be the owner id) and every other scenario in the document. The storage URL and the SQL predicate literal in the same scenario were updated to match."
+    },
+    {
+      "id": "f6f7db4f-9605-47cf-a354-6c58007aabef",
+      "status": "resolved",
+      "summary": "Normalised the key to p-eh008/avatar-01.jpg in LETCO_TEST_SCENARIOS.md (REQ-EH-008 component scenario), written bare with the bucket named, for the same own-prefix reason; the mocked upload boundary now names the declared parameterised route."
+    },
+    {
+      "id": "8e53d60d-c56e-4d87-828f-d5814f1f4d34",
+      "status": "resolved",
+      "summary": "Rewrote the REQ-UI-087 scenario in LETCO_TEST_SCENARIOS.md: players.photo_url now points at the public object URL \"/storage/v1/object/public/profile-photos/ales.jpg\" and the img assertion checks src contains \"/profile-photos/ales.jpg\" — which is what the column and the rendered attribute actually hold."
+    },
+    {
+      "id": "6c113bd2-a2d5-4047-94cc-2c52af5aa0fd",
+      "status": "resolved",
+      "summary": "Declared the area rather than moving the file: added section 2.5 'Static Asset Areas' to LETCO_IMPLEMENTATION.md declaring public/maps/*.svg (traced-map assets REQ-UI-100 requires to stay in the repo, unimported) and public/venues/*.jpg. The REQ-UI-100 scenario in LETCO_TEST_SCENARIOS.md is unchanged because its assertion was correct."
+    },
+    {
+      "id": "f3ecdf15-7798-424c-962e-ecb2281afd90",
+      "status": "resolved",
+      "summary": "Repointed to docs/v13/strips/games-390.png in the REQ-UI-016 scenario in LETCO_TEST_SCENARIOS.md — the directory Milestone 24.2 of LETCO_IMPLEMENTATION.md actually declares for the screenshot strips (docs/v13/strips/README.md)."
+    },
+    {
+      "id": "0ca92936-71fc-4c92-b2af-5a8f4c72d4d1",
+      "status": "resolved",
+      "summary": "Repointed both occurrences to docs/v13/strips/home-390.png in the REQ-UI-016 scenario in LETCO_TEST_SCENARIOS.md, matching the strips directory declared by Milestone 24.2 of LETCO_IMPLEMENTATION.md."
+    },
+    {
+      "id": "c0bfb4be-b1fd-4dc2-8c9c-24b5f56e02f4",
+      "status": "resolved",
+      "summary": "Corrected the REQ-UI-027 focus-ring grep in LETCO_TEST_SCENARIOS.md to \"app/**/*.css\", \"app/**/*.tsx\" and \"components/**/*.tsx\". The repo has no src/ directory; section 2.1 of LETCO_IMPLEMENTATION.md measures the change surface over app/ and components/."
+    },
+    {
+      "id": "25b042f2-8d8e-4b42-bdbf-e7610d33ae8a",
+      "status": "resolved",
+      "summary": "Same edit as finding c0bfb4be: the single REQ-UI-027 grep step in LETCO_TEST_SCENARIOS.md now names app/**/*.css, app/**/*.tsx and components/**/*.tsx instead of the non-existent src/ tree."
+    },
+    {
+      "id": "eaf3b151-a19a-4057-be1d-0bbc760fda1a",
+      "status": "resolved",
+      "summary": "Rewrote the REQ-EH-004 seed Given in LETCO_TEST_SCENARIOS.md to 'a venue photo object at key v-seed-001/pitch.jpg in the venue-photos bucket'. Storage key namespaces declared in LETCO_IMPLEMENTATION.md section 2.5."
+    },
+    {
+      "id": "9328df22-e47f-4e2a-812f-62c21da31de7",
+      "status": "resolved",
+      "summary": "Unquoted the key in the two REQ-SEC-010 steps in LETCO_TEST_SCENARIOS.md (bucket named in both); the upload step now calls the declared parameterised route (see finding 7e7b8dec). Storage key namespaces declared in LETCO_IMPLEMENTATION.md section 2.5."
+    },
+    {
+      "id": "653efe9f-4e91-471a-988d-c542e6053a5e",
+      "status": "resolved",
+      "summary": "Changed all eight occurrences in LETCO_TEST_SCENARIOS.md (REQ-UI-100, REQ-UI-101, REQ-UI-103) to \"/venues/prazacka.jpg\" — the committed-asset form the interface contract itself names for venues.image_ref. public/venues/*.jpg is now declared in LETCO_IMPLEMENTATION.md section 2.5."
+    },
+    {
+      "id": "9c925ce9-af33-4160-8d5c-640eea29c11f",
+      "status": "resolved",
+      "summary": "Replaced all ten 'logs in via POST \"/login\"' steps in LETCO_TEST_SCENARIOS.md with POST \"/auth/v1/token\" and added \"grant_type\": \"password\" to each body. /login is a page, not an API; /auth/v1/token is the declared password sign-in in section 6.1 of LETCO_IMPLEMENTATION.md and is what every other sign-in scenario in the document already used."
+    },
+    {
+      "id": "04509f38-5424-4cb0-8f35-163b50273dde",
+      "status": "resolved",
+      "summary": "Two-part fix. (1) Repaired LETCO_INTERFACE_CONTRACT.json so it validates against letco.interface-contract.v1 — an invalid contract is discarded, which is why its negativeSurface entry for POST /rest/v1/credit_topups was not seen as a declaration. (2) Reworded the REQ-DB-009 step in LETCO_TEST_SCENARIOS.md to 'attempts a direct client insert with POST to \"/rest/v1/credit_topups\"', framing it as the probe of a deliberately-absent surface it is; the 403 assertion and every database assertion are unchanged."
+    },
+    {
+      "id": "8efbb78b-00b0-499d-a915-4c2a842737f4",
+      "status": "resolved",
+      "summary": "The REQ-SEC-003 upload step in LETCO_TEST_SCENARIOS.md now calls the declared route POST \"/storage/v1/object/profile-photos/:objectPath\" and names the key in a separate clause ('with objectPath player-b/avatar.jpg'). A concrete two-segment key never matched the single-segment :objectPath parameter declared in section 6.1 of LETCO_IMPLEMENTATION.md and in LETCO_INTERFACE_CONTRACT.json."
+    },
+    {
+      "id": "c4a97993-153e-4cd6-8296-01ec8047dc0b",
+      "status": "resolved",
+      "summary": "Same treatment for the REQ-SEC-004 3 MB upload step in LETCO_TEST_SCENARIOS.md: POST \"/storage/v1/object/profile-photos/:objectPath\" with objectPath player-a/avatar.jpg, matching the declared route in section 6.1 of LETCO_IMPLEMENTATION.md and in LETCO_INTERFACE_CONTRACT.json."
+    },
+    {
+      "id": "7e7b8dec-e6d1-459d-9279-f7234da766ad",
+      "status": "resolved",
+      "summary": "Same treatment for the REQ-SEC-010 venue upload step in LETCO_TEST_SCENARIOS.md: POST \"/storage/v1/object/venue-photos/:objectPath\" with objectPath venue-42/pitch.jpg, matching the declared route in section 6.1 of LETCO_IMPLEMENTATION.md and in LETCO_INTERFACE_CONTRACT.json."
+    },
+    {
+      "id": "5599045a-e484-47fc-8df6-eec4c00def30",
+      "status": "resolved",
+      "summary": "The REQ-EH-008 mocked storage boundary in LETCO_TEST_SCENARIOS.md now names POST \"/storage/v1/object/profile-photos/:objectPath\" with objectPath p-eh008/avatar-02.jpg — the declared route, and with the stray 'players/' prefix dropped so the key matches set_profile_photo's own-prefix rule."
+    },
+    {
+      "id": "58143fe2-3913-44db-b46c-a91953332139",
+      "status": "resolved",
+      "summary": "Compressed http_api.errorModel.envelope in LETCO_INTERFACE_CONTRACT.json from 359 to 293 characters, inside the 300-character limit, keeping the four-key PostgREST envelope, the normalisation statement and the server-action exception. No other document references the envelope text."
+    },
+    {
+      "id": "5c9b6c64-5c30-4d0c-bcef-3c27a6c33134",
+      "status": "resolved",
+      "summary": "Removed the unrecognised 'reqIds' key from every cli.commands entry in LETCO_INTERFACE_CONTRACT.json, leaving 'name'. The four commands and the REQs they serve remain stated in sections 2.2 and 7 of LETCO_IMPLEMENTATION.md, so no requirement attribution is lost."
+    },
+    {
+      "id": "5969427b-e906-4508-b253-6431856e57b0",
+      "status": "resolved",
+      "summary": "Removed the unrecognised 'reqIds' key from every cli.commands entry in LETCO_INTERFACE_CONTRACT.json, leaving 'name'. The four commands and the REQs they serve remain stated in sections 2.2 and 7 of LETCO_IMPLEMENTATION.md, so no requirement attribution is lost."
+    },
+    {
+      "id": "a6b2c94b-b208-43cb-a31f-92fbb2db9d71",
+      "status": "resolved",
+      "summary": "Removed the unrecognised 'reqIds' key from every cli.commands entry in LETCO_INTERFACE_CONTRACT.json, leaving 'name'. The four commands and the REQs they serve remain stated in sections 2.2 and 7 of LETCO_IMPLEMENTATION.md, so no requirement attribution is lost."
+    },
+    {
+      "id": "06030f74-0666-4197-bb15-008cfa247d33",
+      "status": "resolved",
+      "summary": "Removed the unrecognised 'reqIds' key from every cli.commands entry in LETCO_INTERFACE_CONTRACT.json, leaving 'name'. The four commands and the REQs they serve remain stated in sections 2.2 and 7 of LETCO_IMPLEMENTATION.md, so no requirement attribution is lost."
+    },
+    {
+      "id": "4934dde5-709c-4485-b2cf-6efed0aefeb5",
+      "status": "resolved",
+      "summary": "'exports' is not a recognised key of the lib object in letco.interface-contract.v1 and the validator's error set names no replacement, so lib is now an empty object in LETCO_INTERFACE_CONTRACT.json rather than a guessed key that would invalidate the whole document. The two entries it held (lib/i18n/plural.pluralCount for REQ-INT-005/REQ-UI-014 and lib/policy.policy for REQ-INT-006/REQ-UI-135) stay declared in section 2.2 of LETCO_IMPLEMENTATION.md and in LETCO_REQ_INVENTORY.md, which is where the coverage check reads them."
+    },
+    {
+      "id": "39c5d22e-3203-45a7-bf17-f677c07f5901",
+      "status": "resolved",
+      "summary": "Rewrote every web_ui.pages entry in LETCO_INTERFACE_CONTRACT.json to the schema's shape: 'path' renamed to the required 'route', the unrecognised 'name' dropped, 'reqIds' kept unchanged. All 28 pages now carry a route; page names remain in section 6.1 and the phase blocks of LETCO_IMPLEMENTATION.md."
+    },
+    {
+      "id": "88d10eba-17d7-4c05-a388-d07bd0587ff0",
+      "status": "resolved",
+      "summary": "Rewrote every web_ui.pages entry in LETCO_INTERFACE_CONTRACT.json to the schema's shape: 'path' renamed to the required 'route', the unrecognised 'name' dropped, 'reqIds' kept unchanged. All 28 pages now carry a route; page names remain in section 6.1 and the phase blocks of LETCO_IMPLEMENTATION.md."
+    },
+    {
+      "id": "19419057-f3fa-4ab4-9e00-6e961ee905bd",
+      "status": "resolved",
+      "summary": "Rewrote every web_ui.pages entry in LETCO_INTERFACE_CONTRACT.json to the schema's shape: 'path' renamed to the required 'route', the unrecognised 'name' dropped, 'reqIds' kept unchanged. All 28 pages now carry a route; page names remain in section 6.1 and the phase blocks of LETCO_IMPLEMENTATION.md."
+    },
+    {
+      "id": "6cfa9680-45d5-465f-a704-6cc0be75cdd9",
+      "status": "resolved",
+      "summary": "Rewrote every web_ui.pages entry in LETCO_INTERFACE_CONTRACT.json to the schema's shape: 'path' renamed to the required 'route', the unrecognised 'name' dropped, 'reqIds' kept unchanged. All 28 pages now carry a route; page names remain in section 6.1 and the phase blocks of LETCO_IMPLEMENTATION.md."
+    },
+    {
+      "id": "3fbb70df-7745-414f-a087-fd2d76bcd7ec",
+      "status": "resolved",
+      "summary": "Rewrote every web_ui.pages entry in LETCO_INTERFACE_CONTRACT.json to the schema's shape: 'path' renamed to the required 'route', the unrecognised 'name' dropped, 'reqIds' kept unchanged. All 28 pages now carry a route; page names remain in section 6.1 and the phase blocks of LETCO_IMPLEMENTATION.md."
+    },
+    {
+      "id": "228e6749-d330-4338-9922-ad93badd64a5",
+      "status": "resolved",
+      "summary": "Rewrote every web_ui.pages entry in LETCO_INTERFACE_CONTRACT.json to the schema's shape: 'path' renamed to the required 'route', the unrecognised 'name' dropped, 'reqIds' kept unchanged. All 28 pages now carry a route; page names remain in section 6.1 and the phase blocks of LETCO_IMPLEMENTATION.md."
+    },
+    {
+      "id": "9b352e40-2c41-4b0d-b0c1-a980abcabc87",
+      "status": "resolved",
+      "summary": "Rewrote every web_ui.pages entry in LETCO_INTERFACE_CONTRACT.json to the schema's shape: 'path' renamed to the required 'route', the unrecognised 'name' dropped, 'reqIds' kept unchanged. All 28 pages now carry a route; page names remain in section 6.1 and the phase blocks of LETCO_IMPLEMENTATION.md."
+    },
+    {
+      "id": "a70b4cec-ef7d-4249-a0d6-f39a04f86d94",
+      "status": "resolved",
+      "summary": "Rewrote every web_ui.pages entry in LETCO_INTERFACE_CONTRACT.json to the schema's shape: 'path' renamed to the required 'route', the unrecognised 'name' dropped, 'reqIds' kept unchanged. All 28 pages now carry a route; page names remain in section 6.1 and the phase blocks of LETCO_IMPLEMENTATION.md."
+    },
+    {
+      "id": "ca5dd20a-b6ce-4b18-8da0-d215a1b3cf2d",
+      "status": "resolved",
+      "summary": "Rewrote every web_ui.pages entry in LETCO_INTERFACE_CONTRACT.json to the schema's shape: 'path' renamed to the required 'route', the unrecognised 'name' dropped, 'reqIds' kept unchanged. All 28 pages now carry a route; page names remain in section 6.1 and the phase blocks of LETCO_IMPLEMENTATION.md."
+    },
+    {
+      "id": "5a026ea2-8bb8-452e-944b-306b0f133ffb",
+      "status": "resolved",
+      "summary": "Rewrote every web_ui.pages entry in LETCO_INTERFACE_CONTRACT.json to the schema's shape: 'path' renamed to the required 'route', the unrecognised 'name' dropped, 'reqIds' kept unchanged. All 28 pages now carry a route; page names remain in section 6.1 and the phase blocks of LETCO_IMPLEMENTATION.md."
+    },
+    {
+      "id": "e333a15e-d030-4522-b3d5-2a07c6e5d515",
+      "status": "resolved",
+      "summary": "Rewrote every web_ui.pages entry in LETCO_INTERFACE_CONTRACT.json to the schema's shape: 'path' renamed to the required 'route', the unrecognised 'name' dropped, 'reqIds' kept unchanged. All 28 pages now carry a route; page names remain in section 6.1 and the phase blocks of LETCO_IMPLEMENTATION.md."
+    },
+    {
+      "id": "fb181f0d-7bd0-4613-ad3a-9830ffd1c150",
+      "status": "resolved",
+      "summary": "Rewrote every web_ui.pages entry in LETCO_INTERFACE_CONTRACT.json to the schema's shape: 'path' renamed to the required 'route', the unrecognised 'name' dropped, 'reqIds' kept unchanged. All 28 pages now carry a route; page names remain in section 6.1 and the phase blocks of LETCO_IMPLEMENTATION.md."
+    },
+    {
+      "id": "93d39875-df55-4112-8172-4bec75a151f7",
+      "status": "resolved",
+      "summary": "Rewrote every web_ui.pages entry in LETCO_INTERFACE_CONTRACT.json to the schema's shape: 'path' renamed to the required 'route', the unrecognised 'name' dropped, 'reqIds' kept unchanged. All 28 pages now carry a route; page names remain in section 6.1 and the phase blocks of LETCO_IMPLEMENTATION.md."
+    },
+    {
+      "id": "8c54e953-78a0-4154-b467-6eae896dcad6",
+      "status": "resolved",
+      "summary": "Rewrote every web_ui.pages entry in LETCO_INTERFACE_CONTRACT.json to the schema's shape: 'path' renamed to the required 'route', the unrecognised 'name' dropped, 'reqIds' kept unchanged. All 28 pages now carry a route; page names remain in section 6.1 and the phase blocks of LETCO_IMPLEMENTATION.md."
+    },
+    {
+      "id": "ccc8177f-8d6a-4f54-9146-cd6238465798",
+      "status": "resolved",
+      "summary": "Rewrote every web_ui.pages entry in LETCO_INTERFACE_CONTRACT.json to the schema's shape: 'path' renamed to the required 'route', the unrecognised 'name' dropped, 'reqIds' kept unchanged. All 28 pages now carry a route; page names remain in section 6.1 and the phase blocks of LETCO_IMPLEMENTATION.md."
+    },
+    {
+      "id": "d4f3ebb1-303c-44dc-a05b-75e833a8d59c",
+      "status": "resolved",
+      "summary": "Rewrote every web_ui.pages entry in LETCO_INTERFACE_CONTRACT.json to the schema's shape: 'path' renamed to the required 'route', the unrecognised 'name' dropped, 'reqIds' kept unchanged. All 28 pages now carry a route; page names remain in section 6.1 and the phase blocks of LETCO_IMPLEMENTATION.md."
+    },
+    {
+      "id": "b413e6f9-7dc4-4457-9652-ad3de473709d",
+      "status": "resolved",
+      "summary": "Rewrote every web_ui.pages entry in LETCO_INTERFACE_CONTRACT.json to the schema's shape: 'path' renamed to the required 'route', the unrecognised 'name' dropped, 'reqIds' kept unchanged. All 28 pages now carry a route; page names remain in section 6.1 and the phase blocks of LETCO_IMPLEMENTATION.md."
+    },
+    {
+      "id": "a352787b-ce34-4647-adce-b89581d6a8e6",
+      "status": "resolved",
+      "summary": "Rewrote every web_ui.pages entry in LETCO_INTERFACE_CONTRACT.json to the schema's shape: 'path' renamed to the required 'route', the unrecognised 'name' dropped, 'reqIds' kept unchanged. All 28 pages now carry a route; page names remain in section 6.1 and the phase blocks of LETCO_IMPLEMENTATION.md."
+    },
+    {
+      "id": "9cd22dd7-9ce6-40bf-9093-191a039da4a0",
+      "status": "resolved",
+      "summary": "Rewrote every web_ui.pages entry in LETCO_INTERFACE_CONTRACT.json to the schema's shape: 'path' renamed to the required 'route', the unrecognised 'name' dropped, 'reqIds' kept unchanged. All 28 pages now carry a route; page names remain in section 6.1 and the phase blocks of LETCO_IMPLEMENTATION.md."
+    },
+    {
+      "id": "b2ca1dd2-c2dc-4a58-b77c-af6fd6c28e49",
+      "status": "resolved",
+      "summary": "Rewrote every web_ui.pages entry in LETCO_INTERFACE_CONTRACT.json to the schema's shape: 'path' renamed to the required 'route', the unrecognised 'name' dropped, 'reqIds' kept unchanged. All 28 pages now carry a route; page names remain in section 6.1 and the phase blocks of LETCO_IMPLEMENTATION.md."
+    },
+    {
+      "id": "68549c11-f98c-4b03-9652-1c21fc2a5bc8",
+      "status": "resolved",
+      "summary": "Rewrote every web_ui.pages entry in LETCO_INTERFACE_CONTRACT.json to the schema's shape: 'path' renamed to the required 'route', the unrecognised 'name' dropped, 'reqIds' kept unchanged. All 28 pages now carry a route; page names remain in section 6.1 and the phase blocks of LETCO_IMPLEMENTATION.md."
+    },
+    {
+      "id": "215582c7-2f28-497e-8d8a-c3785c710148",
+      "status": "resolved",
+      "summary": "Rewrote every web_ui.pages entry in LETCO_INTERFACE_CONTRACT.json to the schema's shape: 'path' renamed to the required 'route', the unrecognised 'name' dropped, 'reqIds' kept unchanged. All 28 pages now carry a route; page names remain in section 6.1 and the phase blocks of LETCO_IMPLEMENTATION.md."
+    },
+    {
+      "id": "7b2ed899-d935-4a6a-a483-b65b1f1db369",
+      "status": "resolved",
+      "summary": "Rewrote every web_ui.pages entry in LETCO_INTERFACE_CONTRACT.json to the schema's shape: 'path' renamed to the required 'route', the unrecognised 'name' dropped, 'reqIds' kept unchanged. All 28 pages now carry a route; page names remain in section 6.1 and the phase blocks of LETCO_IMPLEMENTATION.md."
+    },
+    {
+      "id": "b2504daf-3c1d-4b8b-a99f-f98c9f53354a",
+      "status": "resolved",
+      "summary": "Rewrote every web_ui.pages entry in LETCO_INTERFACE_CONTRACT.json to the schema's shape: 'path' renamed to the required 'route', the unrecognised 'name' dropped, 'reqIds' kept unchanged. All 28 pages now carry a route; page names remain in section 6.1 and the phase blocks of LETCO_IMPLEMENTATION.md."
+    },
+    {
+      "id": "ff454ff8-55e3-4adc-b21b-f3647a960e27",
+      "status": "resolved",
+      "summary": "Rewrote every web_ui.pages entry in LETCO_INTERFACE_CONTRACT.json to the schema's shape: 'path' renamed to the required 'route', the unrecognised 'name' dropped, 'reqIds' kept unchanged. All 28 pages now carry a route; page names remain in section 6.1 and the phase blocks of LETCO_IMPLEMENTATION.md."
+    },
+    {
+      "id": "857024ce-deb0-4292-8e98-90245c07e5d3",
+      "status": "resolved",
+      "summary": "Rewrote every web_ui.pages entry in LETCO_INTERFACE_CONTRACT.json to the schema's shape: 'path' renamed to the required 'route', the unrecognised 'name' dropped, 'reqIds' kept unchanged. All 28 pages now carry a route; page names remain in section 6.1 and the phase blocks of LETCO_IMPLEMENTATION.md."
+    },
+    {
+      "id": "0196f3a5-f8eb-4dab-9a6c-ca813b01431b",
+      "status": "resolved",
+      "summary": "Rewrote every web_ui.pages entry in LETCO_INTERFACE_CONTRACT.json to the schema's shape: 'path' renamed to the required 'route', the unrecognised 'name' dropped, 'reqIds' kept unchanged. All 28 pages now carry a route; page names remain in section 6.1 and the phase blocks of LETCO_IMPLEMENTATION.md."
+    },
+    {
+      "id": "d3fe7a97-bafd-4855-ae08-313e2ffe0540",
+      "status": "resolved",
+      "summary": "Rewrote every web_ui.pages entry in LETCO_INTERFACE_CONTRACT.json to the schema's shape: 'path' renamed to the required 'route', the unrecognised 'name' dropped, 'reqIds' kept unchanged. All 28 pages now carry a route; page names remain in section 6.1 and the phase blocks of LETCO_IMPLEMENTATION.md."
+    },
+    {
+      "id": "40c4135a-dbe2-4b37-ba99-073a59be4669",
+      "status": "resolved",
+      "summary": "Rewrote every web_ui.pages entry in LETCO_INTERFACE_CONTRACT.json to the schema's shape: 'path' renamed to the required 'route', the unrecognised 'name' dropped, 'reqIds' kept unchanged. All 28 pages now carry a route; page names remain in section 6.1 and the phase blocks of LETCO_IMPLEMENTATION.md."
+    },
+    {
+      "id": "f646b8d8-f811-42e6-8ec0-424c5a272cec",
+      "status": "resolved",
+      "summary": "Rewrote every web_ui.pages entry in LETCO_INTERFACE_CONTRACT.json to the schema's shape: 'path' renamed to the required 'route', the unrecognised 'name' dropped, 'reqIds' kept unchanged. All 28 pages now carry a route; page names remain in section 6.1 and the phase blocks of LETCO_IMPLEMENTATION.md."
+    },
+    {
+      "id": "869b12b7-0606-4bff-a13d-add7a8ac5675",
+      "status": "resolved",
+      "summary": "Rewrote every web_ui.pages entry in LETCO_INTERFACE_CONTRACT.json to the schema's shape: 'path' renamed to the required 'route', the unrecognised 'name' dropped, 'reqIds' kept unchanged. All 28 pages now carry a route; page names remain in section 6.1 and the phase blocks of LETCO_IMPLEMENTATION.md."
+    },
+    {
+      "id": "fb350d94-b35f-4cc1-852c-045af031c4ec",
+      "status": "resolved",
+      "summary": "Rewrote every web_ui.pages entry in LETCO_INTERFACE_CONTRACT.json to the schema's shape: 'path' renamed to the required 'route', the unrecognised 'name' dropped, 'reqIds' kept unchanged. All 28 pages now carry a route; page names remain in section 6.1 and the phase blocks of LETCO_IMPLEMENTATION.md."
+    },
+    {
+      "id": "da9f4fc0-c37b-4a95-a271-de12ab92b9c9",
+      "status": "resolved",
+      "summary": "Rewrote every web_ui.pages entry in LETCO_INTERFACE_CONTRACT.json to the schema's shape: 'path' renamed to the required 'route', the unrecognised 'name' dropped, 'reqIds' kept unchanged. All 28 pages now carry a route; page names remain in section 6.1 and the phase blocks of LETCO_IMPLEMENTATION.md."
+    },
+    {
+      "id": "c61185c7-cb57-4928-8513-29aa76fe24e8",
+      "status": "resolved",
+      "summary": "Rewrote every web_ui.pages entry in LETCO_INTERFACE_CONTRACT.json to the schema's shape: 'path' renamed to the required 'route', the unrecognised 'name' dropped, 'reqIds' kept unchanged. All 28 pages now carry a route; page names remain in section 6.1 and the phase blocks of LETCO_IMPLEMENTATION.md."
+    },
+    {
+      "id": "e7f73651-aa9e-4959-9103-e5e6099e2477",
+      "status": "resolved",
+      "summary": "Prefixed each substantive '**Done when:**' criterion in all 57 milestones of LETCO_IMPLEMENTATION.md with the REQ-ID(s) it verifies (171 of 228 criteria; the trailing generic 'Build passes, tests pass, committed' / 'Artifact verification recorded in the plan' line is left untagged). Attribution went from 0.0% to 100.0% of milestones, against a 70.0% floor. Every REQ-ID used was validated to appear on its own phase's '**REQs covered:**' line, so no phase claims a requirement it does not own; LETCO_REQ_INVENTORY.md/.json needed no change because no requirement was re-scoped, split or dropped."
+    }
+  ],
+  "completedAt": "2026-08-08T09:42:20Z",
+  "notes": "Caveat carried from the agreed plan: two storage keys still appear inside single-quoted SQL predicate literals in LETCO_TEST_SCENARIOS.md ('player-b/avatar.jpg' at the REQ-SEC-003 e2e scenario and 'p-ales/avatar-01.jpg' at the REQ-EH-008 e2e scenario, the latter updated to match the normalised key). Every double-quoted occurrence is gone. If findings 6040ecec and 4a7d330e reappear, the checker reads single-quoted strings too and the fix is to restructure those two SQL predicates."
+}
