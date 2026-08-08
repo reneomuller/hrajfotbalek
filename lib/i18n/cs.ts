@@ -459,6 +459,7 @@ export const cs: StringsOverlay = {
     bookingCancelled: "Zrušeno — hodnota se ti vrátila do peněženky jako kredit.",
     topupConfirmed: "Dobití potvrzeno. Zůstatek je aktualizovaný.",
     linkCopied: "Odkaz zkopírován.",
+    failed: "Neprošlo to. Zkus to znovu.",
   },
 
   common: {

@@ -1246,6 +1246,29 @@ export const strings = {
   },
 
   toast: {
+    /*
+     * THE INVENTORY, and what happened to it (§8).
+     *
+     * Contract §8 named five triggers. Three of them no longer have a source:
+     *
+     *   bookingCreated      the result is a server-rendered confirmation
+     *                       SCREEN, and a toast announcing what the page in
+     *                       front of you already says is noise
+     *   bookingCancelled    same — the cancellation result is a screen
+     *   linkCopied          ruling G deleted the control that fired it
+     *
+     * They are still defined and still called, because their call sites live
+     * in the booking and cancellation flows that STAGE 6 rebuilds — retiring
+     * the strings here would break live paths that this phase does not own.
+     * They are removed with the flows, in phases 44 and 45.
+     *
+     * Two survive with a live source: `signedIn` and `topupConfirmed`. Neither
+     * has a screen of its own to state the fact.
+     *
+     * `failed` is new, and it is what makes the error variant usable: an
+     * assertive, non-auto-dismissing toast with nothing to say is a variant
+     * that exists only in a component file.
+     */
     bookingCreated: "You're in. Your spot is held.",
     signedIn: "Signed in.",
     // Names the amount, because "cancelled" alone leaves the question the
@@ -1253,6 +1276,8 @@ export const strings = {
     bookingCancelled: "Cancelled — the value is back in your wallet as credit.",
     topupConfirmed: "Top-up confirmed. Your balance is updated.",
     linkCopied: "Link copied.",
+    /** The error variant. Deliberately blames nothing and offers the retry. */
+    failed: "That didn't go through. Try again.",
   },
 
   common: {

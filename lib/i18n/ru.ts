@@ -459,6 +459,7 @@ export const ru: StringsOverlay = {
     bookingCancelled: "Отменено — сумма вернулась в кошелёк как кредит.",
     topupConfirmed: "Пополнение подтверждено. Баланс обновлён.",
     linkCopied: "Ссылка скопирована.",
+    failed: "Не прошло. Попробуй ещё раз.",
   },
 
   common: {
