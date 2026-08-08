@@ -4,7 +4,7 @@ import { BottomTabBar } from "@/components/BottomTabBar";
 import { LocaleProvider } from "@/components/LocaleProvider";
 import { SessionProvider } from "@/components/SessionProvider";
 import { SiteBackground } from "@/components/SiteBackground";
-import { SiteFooter } from "@/components/SiteFooter";
+import { Footer } from "@/components/chrome/Footer";
 import { Header } from "@/components/chrome/Header";
 import { getCurrentPlayer } from "@/lib/auth/session";
 import { getLocale, getStrings } from "@/lib/i18n/server";
@@ -147,9 +147,25 @@ export default async function RootLayout({
               line of a page can never end up permanently behind the bar — see
               app/globals.css.
             */}
-            <div className="flex-1" style={{ paddingBottom: "var(--tabbar-h)" }}>
+            {/*
+              THE READING COLUMN. Full width below `md`, capped at 720px and
+              centred at and above it.
+
+              Imposed here rather than on each page because every page already
+              opens with `mx-auto w-full max-w-shell px-gutter`, and editing
+              twenty of them to say a different number is twenty chances to
+              miss one — the missed one then being the single screen that
+              stretches to 1280px while the rest do not.
+
+              The gutter stays on the pages. This wrapper adds no padding, so
+              nothing is padded twice.
+            */}
+            <div
+              className="mx-auto w-full flex-1 md:max-w-content"
+              style={{ paddingBottom: "var(--tabbar-h)" }}
+            >
               {children}
-              <SiteFooter />
+              <Footer />
             </div>
 
             {/* Phone widths only. On a desktop this would be a phone

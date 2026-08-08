@@ -294,7 +294,23 @@ const config: Config = {
         wide: "0.5px",
       },
       maxWidth: {
+        /*
+         * `shell` is CHROME width — the header's inner row, which spans wider
+         * than the reading column so the wordmark and the auth control sit at
+         * the edges of the screen rather than floating in the middle of it.
+         *
+         * `content` is READING width. Capped at 720px and centred at and above
+         * `md`, because a games list stretched across 1280px is a list whose
+         * left edge and right edge are read by different eye movements. Below
+         * `md` it does nothing: the viewport is already narrower than the cap,
+         * and the 22px gutter is what holds content off the edge.
+         *
+         * Two tokens rather than one because the two jobs genuinely differ,
+         * and collapsing them would either cramp the header or stretch the
+         * text.
+         */
         shell: "980px",
+        content: "720px",
       },
       backgroundSize: {
         /*
