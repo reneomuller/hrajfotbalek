@@ -81,12 +81,41 @@ function assertLocal(url, source) {
   );
 }
 
+/*
+ * Suite discovery, one directory deep.
+ *
+ * The v1.3 conformance suites live in `v13_conformance/` rather than beside
+ * the others, because they answer a different question: the flat suites test
+ * behaviour this repository built, while those assert that the database
+ * already matches a contract the redesign is about to build on. Mixing them
+ * would make "which of these am I allowed to fix by writing code" ambiguous.
+ *
+ * One level, not arbitrary recursion — a nesting depth nobody needs is a
+ * discovery order nobody can predict. Directories sort after the flat suites
+ * so the established ones run first and a conformance failure reads as the
+ * last thing rather than the middle thing.
+ */
+function discover() {
+  const entries = readdirSync(here, { withFileTypes: true });
+  const flat = entries
+    .filter((e) => e.isFile() && e.name.endsWith('.sql'))
+    .map((e) => e.name)
+    .sort();
+  const nested = entries
+    .filter((e) => e.isDirectory())
+    .flatMap((dir) =>
+      readdirSync(path.join(here, dir.name))
+        .filter((f) => f.endsWith('.sql'))
+        .map((f) => `${dir.name}/${f}`),
+    )
+    .sort();
+  return [...flat, ...nested];
+}
+
 const requested = process.argv.slice(2);
 const suites = requested.length
   ? requested.map((name) => (name.endsWith('.sql') ? name : `${name}.sql`))
-  : readdirSync(here)
-      .filter((f) => f.endsWith('.sql'))
-      .sort();
+  : discover();
 
 const { url: dbUrl, source: dbSource } = readDbUrl();
 assertLocal(dbUrl, dbSource);
