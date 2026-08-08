@@ -83,6 +83,91 @@ assertTestDatabaseUrl(process.env.NEXT_PUBLIC_SUPABASE_URL, {
 const webServerEnv = { ...envLocal, EMAIL_DRY_RUN: "on" };
 process.env.EMAIL_DRY_RUN = "on";
 
+/**
+ * …and then check that the forcing worked.
+ *
+ * Forcing a value and verifying it are different guarantees. The two lines
+ * above are the force; they are also two lines that a later edit can reorder,
+ * spell wrong, or drop while refactoring `webServerEnv`, and the result would
+ * be a suite that mails real addresses on every run while looking exactly like
+ * a suite that does not. Nothing downstream would complain: `isDryRun()` fails
+ * toward silence, so the only observable difference is mail arriving.
+ *
+ * So the value is read back through the product's own predicate. Anything that
+ * is not dry-run stops the harness here, at config time, with the offending
+ * value named — rather than defaulting to safe and hoping.
+ */
+const EMAIL_OFF_VALUES = new Set(["off", "false", "0", "no"]);
+
+function resolvesToDryRun(raw: string | undefined): boolean {
+  const value = raw?.trim().toLowerCase();
+  if (value === undefined || value === "") return true;
+  return !EMAIL_OFF_VALUES.has(value);
+}
+
+/*
+ * Check 1 — the environment file must SAY dry run, not merely be overridden
+ * into it.
+ *
+ * This is the check that can actually fire. The forcing above makes the suite
+ * safe whatever the file says, which is precisely the problem: a
+ * non-production env file carrying `EMAIL_DRY_RUN=off` is a misconfiguration
+ * that the override would hide indefinitely, until the day some other runner —
+ * the seed script, an integration check, a manual `npm run dev` — reads the
+ * same file without an override and mails the fixture addresses.
+ *
+ * Unset fails too, deliberately, and this is the one place in the codebase
+ * where absence is not treated as dry run. Everywhere else the fail-safe
+ * default is right: a missing setting should log rather than send. Here the
+ * missing setting is evidence that the file was never written against the
+ * contract, and the harness would rather say so than paper over it.
+ */
+const declared = envLocal.EMAIL_DRY_RUN;
+if (declared === undefined || declared.trim() === "") {
+  throw new Error(
+    `${envSource} does not set EMAIL_DRY_RUN.\n\n` +
+      `The E2E harness forces dry run regardless, so this is not an immediate ` +
+      `danger — it is an unconfigured environment file, and the next runner to ` +
+      `read it without an override will not be so lucky. Add EMAIL_DRY_RUN=on ` +
+      `to ${envSource}; see .env.local.example.`,
+  );
+}
+if (!resolvesToDryRun(declared)) {
+  throw new Error(
+    `${envSource} sets EMAIL_DRY_RUN=${declared} — a SENDING configuration in ` +
+      `a non-production environment file.\n\n` +
+      `The suite drives the cron routes, which fan mail out to every player on ` +
+      `a game. The harness would have overridden this for its own server, but ` +
+      `the file is wrong and every other runner that reads it is exposed. ` +
+      `\`off\` belongs in exactly one file on one machine: the production ` +
+      `.env.local.`,
+  );
+}
+
+/*
+ * Check 2 — and the forcing still has to have worked.
+ *
+ * Cheap, and it is a tripwire rather than a discovery: it fires only if the
+ * two assignments above are edited into ineffectiveness. That is a real way
+ * for this to break and a silent one, since `isDryRun()` fails toward silence
+ * and the only observable symptom would be mail arriving.
+ */
+for (const [label, value] of [
+  ["the Playwright process", process.env.EMAIL_DRY_RUN],
+  ["the web server it starts", webServerEnv.EMAIL_DRY_RUN],
+] as const) {
+  if (!resolvesToDryRun(value)) {
+    throw new Error(
+      `EMAIL_DRY_RUN resolves to "${value}" for ${label} — that is a SENDING ` +
+        `configuration.\n\n` +
+        `The harness forces dry run and then verifies the force; this failure ` +
+        `means the forcing in playwright.config.ts stopped taking effect. Fix ` +
+        `that rather than setting EMAIL_DRY_RUN=on in your shell — the guard ` +
+        `is what stands between a test run and mailing real people.`,
+    );
+  }
+}
+
 export default defineConfig({
   testDir: "./e2e",
   // The concurrency specs deliberately race two requests against one another

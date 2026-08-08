@@ -32,8 +32,12 @@ yarn-error.log*
 
 # env files — real credentials never get committed.
 .env*
-# ...except the documented contract, which carries placeholders only.
+# ...except the documented contracts, which carry placeholders only.
+# `.env.example` is the production side; `.env.local.example` is the
+# non-production side that is copied to `.env.test.local`. Both are templates
+# and neither is a file any runner reads.
 !.env.example
+!.env.local.example
 
 # vercel
 .vercel
