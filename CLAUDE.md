@@ -7,6 +7,28 @@ plpgsql RPCs) + Resend. Volt-on-black, mobile-first, three languages.
 This file is for the next session. It is not a tour of the code — it is the
 handful of rules that are load-bearing and the mistakes that were expensive.
 
+## Before designing a surface, read `SCOPE.md`
+
+`SCOPE.md` is the boundary of the v1.3 round: three requests refused with
+reasoning, seven items quarantined behind backend capability they do not have,
+eleven more out of scope for Phase 2, and the rule that this is a front-end
+round — no new entity, no new foreign key, no new account state, no schema
+migration.
+
+It exists because the failure it prevents has already happened once. The
+pipeline's `analyze` document is the raw design brief, which is the *input*
+that produced contract v1.3 rather than the output of adjudicating it. A plan
+generated from the brief alone faithfully rebuilds decisions that were
+overruled and schedules work that was explicitly deferred, and nothing about
+the result looks wrong — it looks like a thorough plan. **Contract v1.3
+(`8ffe390`, rulings A–P) wins wherever the two disagree.**
+
+The specific trap most likely to catch a later session: ruling O says a
+cancellation refunds **in kind**, and only the credit half exists. `refundAs`
+is `"credit"` and there is no cash-refund path anywhere in the system. Reading
+"in kind" as a specification produces a cash-out feature that the quarantine
+explicitly defers.
+
 ## The rules that are not negotiable
 
 **Every state transition is a `SECURITY DEFINER` plpgsql RPC** with
