@@ -45,7 +45,7 @@ export function PlayerAttendanceRow({ row }: { row: AdminPlayerGameRow }) {
       <div className="min-w-[180px] flex-1">
         <Link
           href={`/admin/games/${row.gameId}`}
-          className=" text-[16px] font-bold text-white no-underline"
+          className="text-[16px] font-bold text-white no-underline"
         >
           {row.venue}
         </Link>
@@ -55,7 +55,9 @@ export function PlayerAttendanceRow({ row }: { row: AdminPlayerGameRow }) {
       </div>
 
       <span
-        data-testid="player-game-attendance"className={` text-[10px] uppercase tracking-eyebrow ${ row.attendance ==="no_show" ? "text-volt" : "text-faint"
+        data-testid="player-game-attendance"
+        className={` text-[10px] uppercase tracking-eyebrow ${
+          row.attendance === "no_show" ? "text-volt" : "text-faint"
         }`}
       >
         {row.attendance === "present"

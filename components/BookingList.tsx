@@ -49,12 +49,19 @@ export async function BookingList({ rows }: BookingListProps) {
             <div className="flex items-baseline justify-between gap-3">
               <Link
                 href={`/game/${game.id}`}
-                className=" text-[18px] font-bold uppercase tracking-wide text-white no-underline"
+                className="text-[18px] font-bold uppercase tracking-wide text-white no-underline"
               >
                 {game.venue}
               </Link>
               <span
-                data-testid="booking-badge"className={`shrink-0 rounded-pill border px-[10px] py-1 text-[10px] uppercase tracking-eyebrow ${TONE_CLASS[badge.tone]}`} > {badge.label} </span> </div> <div className="mt-2 flex flex-wrap items-baseline gap-x-4 gap-y-1">
+                data-testid="booking-badge"
+                className={`shrink-0 rounded-pill border px-[10px] py-1 text-[10px] uppercase tracking-eyebrow ${TONE_CLASS[badge.tone]}`}
+              >
+                {badge.label}
+              </span>
+            </div>
+
+            <div className="mt-2 flex flex-wrap items-baseline gap-x-4 gap-y-1">
               <span className="text-[12px] tracking-[1px] text-volt">
                 {formatGameDateTime(game.starts_at)}
               </span>

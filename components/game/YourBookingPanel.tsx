@@ -55,7 +55,15 @@ export async function YourBookingPanel({
           {t.games.yourBookingTitle}
         </h2>
         <span
-          data-testid="your-booking-badge"className={`rounded-pill border px-2 py-1 text-[10px] uppercase tracking-eyebrow ${TONE_CLASS[badge.tone]}`} > {badge.label} </span> </div> {/* The payment state, in a sentence rather than only as a chip. */} <p className="mt-2 text-[14px] leading-relaxed text-bone">
+          data-testid="your-booking-badge"
+          className={`rounded-pill border px-2 py-1 text-[10px] uppercase tracking-eyebrow ${TONE_CLASS[badge.tone]}`}
+        >
+          {badge.label}
+        </span>
+      </div>
+
+      {/* The payment state, in a sentence rather than only as a chip. */}
+      <p className="mt-2 text-[14px] leading-relaxed text-bone">
         {booking.status === "confirmed"
           ? t.games.yourBookingConfirmed
           : booking.payment_method === "cash"

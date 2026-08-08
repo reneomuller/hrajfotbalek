@@ -65,7 +65,9 @@ function SubmitButton({ isAdmin }: { isAdmin: boolean }) {
     <button
       type="submit"
       disabled={pending}
-      data-testid={isAdmin ? "revoke-admin" : "make-admin"} className={`bg-transparent text-[10px] uppercase tracking-eyebrow disabled:opacity-50 ${ isAdmin ?"text-muted hover:text-white" : "text-volt"
+      data-testid={isAdmin ? "revoke-admin" : "make-admin"}
+      className={`bg-transparent text-[10px] uppercase tracking-eyebrow disabled:opacity-50 ${
+        isAdmin ? "text-muted hover:text-white" : "text-volt"
       }`}
     >
       {pending

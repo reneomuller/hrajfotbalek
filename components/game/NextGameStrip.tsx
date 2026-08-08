@@ -48,7 +48,7 @@ export async function NextGameStrip({
 
       <div className="mt-2 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
         {/* `venue` is admin-supplied free text; JSX escapes it. */}
-        <span className=" text-[20px] font-bold text-white">
+        <span className="text-[20px] font-bold text-white">
           {game.venue}
         </span>
         <span className="text-[11px] uppercase tracking-[1px] text-bone">

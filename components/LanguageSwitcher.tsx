@@ -112,7 +112,13 @@ export function LanguageSwitcher() {
               <li key={locale}>
                 <button
                   type="button"
-                  role="option"aria-selected={isActive} lang={locale} onClick={() => choose(locale)} data-testid={`locale-${locale}`} className={`flex w-full items-center gap-2 rounded-pill px-2 py-2 text-left text-[11px] tracking-[1px] transition ${ isActive ?"bg-volt/[.12] text-volt" : "text-bone hover:bg-white/[.05]"
+                  role="option"
+                  aria-selected={isActive}
+                  lang={locale}
+                  onClick={() => choose(locale)}
+                  data-testid={`locale-${locale}`}
+                  className={`flex w-full items-center gap-2 rounded-pill px-2 py-2 text-left text-[11px] tracking-[1px] transition ${
+                    isActive ? "bg-volt/[.12] text-volt" : "text-bone hover:bg-white/[.05]"
                   }`}
                 >
                   <span aria-hidden>{FLAGS[locale]}</span>

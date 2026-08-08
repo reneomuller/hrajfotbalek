@@ -41,7 +41,9 @@ export async function AvailabilityCard({
           {t.games.availabilityLabel}
         </span>
         <span
-          data-testid="urgency-label"className={` text-[10px] uppercase tracking-[2px] ${ urgency ==="full" ? "text-faint" : "text-volt-dim"
+          data-testid="urgency-label"
+          className={` text-[10px] uppercase tracking-[2px] ${
+            urgency === "full" ? "text-faint" : "text-volt-dim"
           }`}
         >
           {urgencyLabel(urgency, t)}

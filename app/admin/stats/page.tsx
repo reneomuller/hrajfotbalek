@@ -83,7 +83,10 @@ export default async function AdminStatsPage({
               href={`/admin/stats?window=${option}`}
               data-testid={`stat-window-${option}`}
               data-selected={isSelected ? "true" : "false"}
-              aria-current={isSelected ? "page": undefined} className={`rounded-pill border px-3 py-2 text-[11px] uppercase tracking-[1px] no-underline ${ isSelected ?"border-hairline-volt bg-volt text-surface"
+              aria-current={isSelected ? "page" : undefined}
+              className={`rounded-pill border px-3 py-2 text-[11px] uppercase tracking-[1px] no-underline ${
+                isSelected
+                  ? "border-hairline-volt bg-volt text-surface"
                   : "border-hairline-strong text-muted"
               }`}
             >
