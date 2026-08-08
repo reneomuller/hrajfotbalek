@@ -174,7 +174,7 @@ export default async function LandingPage() {
             ) : (
               <div
                 data-testid="next-game"
-                className="flex min-h-[120px] items-center justify-center overflow-hidden rounded-card border border-hairline-volt bg-surface p-6"
+                className="flex min-h-[120px] items-center justify-center overflow-hidden rounded-card bg-surface p-6"
               >
                 <p className="text-[11px] tracking-[1px] text-faint">
                   {t.games.empty}

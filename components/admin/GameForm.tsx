@@ -163,7 +163,7 @@ export function GameForm({
       </div>
 
       {venueChoice === "new" && (
-        <div className="space-y-4 rounded-card border border-hairline-volt bg-surface p-4">
+        <div className="space-y-4 rounded-card bg-surface p-4">
           <div>
             <label className={LABEL} htmlFor="newVenueName">
               {strings.admin.venueNameLabel}

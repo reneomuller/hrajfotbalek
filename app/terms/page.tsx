@@ -32,10 +32,10 @@ export default async function TermsPage() {
   const doc = loadLegalDocument("terms", locale);
 
   return (
-    <main className="relative z-10 mx-auto w-full max-w-shell px-gutter pb-16 pt-24">
+    <main className="relative z-10 mx-auto w-full max-w-[640px] px-gutter pb-16 pt-24">
       {!doc.isTranslated ? (
         <p
-          className="mb-6 rounded-card border border-hairline-volt bg-surface p-4 text-sm text-white/80"
+          className="mb-6 rounded-card bg-surface p-4 text-sm text-white/80"
           role="note"
         >
           {t.terms.notTranslated}
@@ -58,7 +58,7 @@ export default async function TermsPage() {
             return (
               <h1
                 key={index}
-                className="m-0 font-display text-section-title uppercase tracking-wide text-white"
+                className="m-0 font-display text-title text-bone"
               >
                 {spans}
               </h1>
@@ -73,7 +73,7 @@ export default async function TermsPage() {
         })}
       </article>
 
-      <p className="mt-8 text-[11px] uppercase tracking-eyebrow text-volt">
+      <p className="mt-8 text-eyebrow uppercase text-volt">
         {t.terms.versionLabel} {TERMS_VERSION}
       </p>
 

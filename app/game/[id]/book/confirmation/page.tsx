@@ -92,7 +92,7 @@ export default async function ConfirmationPage({
 
         {/* Instant-confirmed outcomes: nothing to pay, so no payment block. */}
         {(isCredit || isSeed) && (
-          <p className="mt-6 rounded-card border border-hairline-volt bg-surface p-5 text-[14px] leading-relaxed text-bone">
+          <p className="mt-6 rounded-card bg-surface p-5 text-[14px] leading-relaxed text-bone">
             {isSeed ? t.booking.coveredBySeed : t.booking.coveredByCredit}
           </p>
         )}

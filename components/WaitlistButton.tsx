@@ -56,7 +56,7 @@ export function WaitlistButton({
     return (
       <div
         data-testid="waitlist-joined"
-        className="mt-6 rounded-card border border-hairline-volt bg-surface p-5"
+        className="mt-6 rounded-card bg-surface p-5"
       >
         <p className="m-0 text-[17px] font-bold uppercase tracking-wide text-volt">
           {state.status === "already" || alreadyOnList

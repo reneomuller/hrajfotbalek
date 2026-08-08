@@ -60,10 +60,8 @@ export function DayPicker({
         data-testid="day-tab-all"
         data-selected={selected === null ? "true" : "false"}
         aria-current={selected === null ? "page" : undefined}
-        className={`flex h-12 w-12 shrink-0 flex-col items-center justify-center rounded-card border text-[11px] uppercase tracking-[1px] no-underline transition-colors ${
-          selected === null
-            ? "border-hairline-volt bg-volt text-surface"
-            : "border-hairline-strong text-muted"
+        className={`flex h-12 w-12 shrink-0 flex-col items-center justify-center rounded-card text-[11px] uppercase tracking-[1px] no-underline transition-colors ${
+          selected === null ? "bg-volt text-surface" : "bg-surface-raised text-muted"
         }`}
       >
         {allLabel}
@@ -73,12 +71,18 @@ export function DayPicker({
         const isSelected = tab.key === selected;
         const hasGames = tab.count > 0;
 
-        const shell = `flex h-12 w-12 shrink-0 flex-col items-center justify-center gap-[1px] rounded-card border no-underline transition-colors ${
+        /*
+         * Ruling C: no stroke on a day box. Fill and radius carry it, so the
+         * three states are three FILLS rather than three border colours:
+         * selected is volt, a day with games is raised, a rest day is flat
+         * against the page and reads as unavailable without needing a word.
+         */
+        const shell = `flex h-12 w-12 shrink-0 flex-col items-center justify-center gap-[1px] rounded-card no-underline transition-colors ${
           isSelected
-            ? "border-hairline-volt bg-volt text-surface"
+            ? "bg-volt text-surface"
             : hasGames
-              ? "border-hairline-strong text-white hover:border-hairline-volt"
-              : "border-hairline text-faint"
+              ? "bg-surface-raised text-bone hover:bg-surface"
+              : "bg-surface text-faint"
         }`;
 
         const body = (

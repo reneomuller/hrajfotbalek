@@ -38,7 +38,7 @@ export function CancelGameButton({ gameId, venue }: { gameId: string; venue: str
     return (
       <div
         data-testid="cancel-game-result"
-        className="rounded-card border border-hairline-volt bg-surface p-5"
+        className="rounded-card bg-surface p-5"
       >
         <div className=" text-[17px] font-bold uppercase tracking-wide text-volt">
           {strings.admin.cancelGameDone}

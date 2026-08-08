@@ -53,7 +53,7 @@ export async function QrPayment({
   return (
     <section
       data-testid="qr-payment"
-      className="rounded-card border border-hairline-volt bg-surface p-5"
+      className="rounded-card bg-surface p-5"
     >
       <h2 className="m-0 text-[17px] font-bold uppercase tracking-wide text-white">
         {t.payment.qrTitle}

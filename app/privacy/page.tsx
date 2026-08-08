@@ -28,14 +28,14 @@ export default function PrivacyPage() {
   const contactEmail = account.deleteMailto;
 
   return (
-    <main className="relative z-10 mx-auto w-full max-w-shell px-gutter pb-16 pt-24">
-      <h1 className="m-0 font-display text-section-title uppercase tracking-wide text-white">
+    <main className="relative z-10 mx-auto w-full max-w-[640px] px-gutter pb-16 pt-24">
+      <h1 className="m-0 font-display text-title text-bone">
         {privacy.title}
       </h1>
 
       {/* Loud on purpose. This banner is the whole point of the page shipping early. */}
-      <div className="mt-6 rounded-card border border-hairline-volt bg-surface p-5">
-        <p className="m-0 text-[11px] uppercase tracking-eyebrow text-volt">
+      <div className="mt-6 rounded-card bg-surface p-5">
+        <p className="m-0 text-eyebrow uppercase text-volt">
           {privacy.draftBadge}
         </p>
         <p className="mt-3 mb-0 text-sm leading-relaxed text-bone">
@@ -75,7 +75,7 @@ export default function PrivacyPage() {
 
       <Link
         href="/games"
-        className="mt-8 inline-block text-[11px] uppercase tracking-eyebrow text-volt no-underline"
+        className="mt-8 inline-block text-eyebrow uppercase text-volt no-underline"
       >
         {privacy.back}
       </Link>

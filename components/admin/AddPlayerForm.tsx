@@ -28,7 +28,7 @@ export function AddPlayerForm({ gameId }: { gameId: string }) {
     return (
       <div
         data-testid="add-player-done"
-        className="mt-6 rounded-card border border-hairline-volt bg-surface p-5"
+        className="mt-6 rounded-card bg-surface p-5"
       >
         <p className="m-0 text-[17px] font-bold uppercase tracking-wide text-volt">
           {strings.admin.addPlayerDone}

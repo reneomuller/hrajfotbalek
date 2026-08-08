@@ -79,7 +79,7 @@ export default async function AdminPlayersPage() {
                     </span>
                   )}
                   {player.isAdmin && (
-                    <span className="rounded-pill border border-hairline-volt px-2 py-[2px] text-[9px] uppercase tracking-eyebrow text-volt">
+                    <span className="rounded-pill px-2 py-[2px] text-[9px] uppercase tracking-eyebrow text-volt">
                       {strings.admin.adminTag}
                     </span>
                   )}

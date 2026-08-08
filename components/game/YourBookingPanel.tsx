@@ -48,7 +48,7 @@ export async function YourBookingPanel({
     <section
       data-testid="your-booking"
       data-status={booking.status}
-      className="mt-6 rounded-card border border-hairline-volt bg-surface p-5"
+      className="mt-6 rounded-card bg-surface p-5"
     >
       <div className="flex flex-wrap items-baseline justify-between gap-3">
         <h2 className="m-0 text-[17px] font-bold uppercase tracking-wide text-white">

@@ -34,7 +34,7 @@ export async function AvailabilityCard({
   return (
     <section
       data-testid="availability-card"
-      className="mt-4 rounded-card border border-hairline-volt bg-surface p-5"
+      className="mt-4 rounded-card bg-surface p-5"
     >
       <div className="flex items-baseline justify-between gap-3">
         <span className="text-[10px] uppercase tracking-eyebrow text-muted">
