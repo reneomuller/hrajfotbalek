@@ -1,4 +1,5 @@
 import { DISPLAY_TIME_ZONE } from "@/lib/format";
+import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/locales";
 import { strings, type Strings } from "@/lib/strings";
 
 /**
@@ -41,7 +42,7 @@ export function pragueDayKey(value: Date | string | number): string {
 export interface DayTab {
   /** `2026-08-03` — the value carried in the URL. */
   key: string;
-  /** "THU" — the weekday, three letters. */
+  /** "Thu" — the weekday, three letters, sentence case (ruling B). */
   weekday: string;
   /** "22" — the day of the month, as printed. */
   dayOfMonth: string;
@@ -51,8 +52,16 @@ export interface DayTab {
   isToday: boolean;
 }
 
-/** How many days the strip covers before it is extended to reach the last game. */
-export const DAY_STRIP_MIN_DAYS = 14;
+/**
+ * How many boxes the strip has. Exactly this many, always (v1.3 §2.2, ruling H).
+ *
+ * NOT A FLOOR ANY MORE. It was fourteen days extended to reach the furthest
+ * scheduled game, which meant the control's width was a function of the
+ * schedule: eight boxes one week and twenty-three the next, from the same
+ * code. A control that cannot be laid out cannot be made to fit above `md`
+ * without scrolling, which is what §2.2 asks for.
+ */
+export const DAY_STRIP_DAYS = 8;
 
 /**
  * A ROLLING CALENDAR STRIP: every day from today forward, with its real date.
@@ -70,19 +79,24 @@ export const DAY_STRIP_MIN_DAYS = 14;
  *     the strip could not answer "how far out is this" at all.
  *
  * So: every day is present, in order, carrying its weekday and its day of the
- * month. The count survives as `count` but is not printed — it is what the
- * strip uses to mark which days actually have football on, which is a dot
- * rather than a numeral.
+ * month. The count is printed too, as of v1.3 §2.2 — the ambiguity that took it
+ * off the chip ("Sat 2" reading as the 2nd) was a ONE-LINE layout problem, and
+ * the box now has three lines: weekday, then date, then count. A number under a
+ * date cannot be mistaken for the date above it.
  *
- * THE WINDOW IS A FLOOR, NOT A CAP. Fourteen days by default, extended to the
- * last scheduled game whenever that is further out. A strip that stopped at day
- * fourteen would make a game on day twenty unreachable by filter — which is the
- * same class of defect as the mode-not-filter bug this control already had once.
+ * EXACTLY EIGHT BOXES, AND THE WINDOW IS NOW A CAP (ruling H). It used to be a
+ * floor of fourteen that extended to the last scheduled game, so that every
+ * game had a day to be filtered by. That reasoning does not survive ruling H's
+ * other half — **the strip filters and the list is never truncated by it** — so
+ * a game outside the window is still on the default list, in its day group,
+ * reachable by scrolling. What it loses is a chip, and a chip is a filter, not
+ * a route.
  */
 export function buildDayTabs(
   startsAtList: (Date | string | number)[],
   now: Date | string | number,
-  minDays: number = DAY_STRIP_MIN_DAYS,
+  locale: Locale = DEFAULT_LOCALE,
+  days: number = DAY_STRIP_DAYS,
 ): DayTab[] {
   const counts = new Map<string, number>();
   for (const startsAt of startsAtList) {
@@ -91,25 +105,49 @@ export function buildDayTabs(
   }
 
   const today = pragueDayKey(now);
-  const lastGame = [...counts.keys()].sort().at(-1);
 
-  const tabs: DayTab[] = [];
-  for (let i = 0; i < 400; i += 1) {
+  return Array.from({ length: days }, (_, i) => {
     const key = addDays(today, i);
-    tabs.push({
+    return {
       key,
-      weekday: weekdayLabel(key),
+      weekday: weekdayLabel(key, locale),
       dayOfMonth: dayOfMonthLabel(key),
       count: counts.get(key) ?? 0,
       isToday: i === 0,
-    });
-    // Stop once BOTH conditions are met: the floor is covered and every game
-    // has a day to be filtered by. The 400 is a runaway guard, not a policy —
-    // a game a year out would still get its tab.
-    if (i + 1 >= minDays && (!lastGame || key >= lastGame)) break;
-  }
+    };
+  });
+}
 
-  return tabs;
+/**
+ * The BCP-47 tag each of the product's three languages formats DATES with.
+ *
+ * `en` maps to `en-GB`, not to bare `en`. Bare `en` resolves to US
+ * conventions, which puts the month first — `Mon, Aug 3` — and the games are
+ * in Prague, where every reader of the English UI is reading European dates
+ * everywhere else on their phone. This is a display convention, not a
+ * language: `cs` and `ru` need no region because neither has a second one that
+ * disagrees about date order.
+ */
+const DATE_LOCALE: Record<Locale, string> = {
+  en: "en-GB",
+  cs: "cs",
+  ru: "ru",
+};
+
+/**
+ * First letter upper-cased, the rest left alone.
+ *
+ * `Intl` yields lower-case weekday and month names for Czech and Russian
+ * (`st`, `ср`) because that is how they are written inside a sentence. In a
+ * calendar box they are not inside a sentence — they are a label — and a box
+ * reading `st` looks like a truncation rather than a Wednesday. Ruling B's
+ * sentence case is exactly this: not lower, not tracked capitals.
+ *
+ * `toLocaleUpperCase` rather than `toUpperCase`, because the two disagree for
+ * some scripts and there is no reason to be wrong for free.
+ */
+function capitalise(value: string, locale: Locale): string {
+  return value.charAt(0).toLocaleUpperCase(locale) + value.slice(1);
 }
 
 /**
@@ -125,22 +163,39 @@ function addDays(key: string, n: number): string {
   return pragueDayKey(new Date(Date.parse(`${key}T12:00:00Z`) + n * 86_400_000));
 }
 
-/** "THU". Upper-cased at the token rather than in CSS so the width is known. */
-function weekdayLabel(key: string): string {
-  return new Intl.DateTimeFormat("en-GB", {
-    timeZone: DISPLAY_TIME_ZONE,
-    weekday: "short",
-  })
-    .format(new Date(`${key}T12:00:00Z`))
-    .toUpperCase();
+/**
+ * "Thu" / "Čt" / "Чт" — the weekday IN THE READER'S LANGUAGE.
+ *
+ * It was hardcoded `en-GB`, so the Czech games list read `Mon 10 · Tue 11`
+ * under a Czech heading: the most prominent control on the screen, in the
+ * wrong language, on the one surface whose whole job is choosing a day.
+ *
+ * SENTENCE CASE (ruling B) — `eyebrow` is the only uppercase style in the
+ * product and a day label is not one. Cased at the token rather than in CSS so
+ * the rendered width is known here, which is what an eight-box strip that must
+ * fit without scrolling above `md` is laid out against.
+ */
+function weekdayLabel(key: string, locale: Locale): string {
+  return capitalise(
+    new Intl.DateTimeFormat(DATE_LOCALE[locale], {
+      timeZone: DISPLAY_TIME_ZONE,
+      weekday: "short",
+    }).format(new Date(`${key}T12:00:00Z`)),
+    locale,
+  );
 }
 
-/** "22" — no leading zero, because a calendar does not print one. */
+/**
+ * "22" — no leading zero, because a calendar does not print one.
+ *
+ * READ OFF THE DAY KEY RATHER THAN FORMATTED. `Intl` with `day: "numeric"`
+ * yields `22.` in Czech — correct as an ordinal inside a sentence, wrong
+ * inside a calendar box, where every calendar the reader has ever used prints
+ * a bare numeral. The key is already the Prague date, so slicing it is both
+ * simpler and immune to a locale changing this under us.
+ */
 function dayOfMonthLabel(key: string): string {
-  return new Intl.DateTimeFormat("en-GB", {
-    timeZone: DISPLAY_TIME_ZONE,
-    day: "numeric",
-  }).format(new Date(`${key}T12:00:00Z`));
+  return String(Number(key.slice(8, 10)));
 }
 
 /**
@@ -186,6 +241,7 @@ export function groupByDay<T>(
   startsAt: (item: T) => string,
   now: Date | string | number,
   t: Strings = strings,
+  locale: Locale = DEFAULT_LOCALE,
 ): { key: string; label: string; items: T[] }[] {
   const groups = new Map<string, T[]>();
   for (const item of items) {
@@ -205,20 +261,37 @@ export function groupByDay<T>(
       // The heading carries the DATE as well as the relative word — "Today" on
       // its own tells you nothing about which Saturday you are looking at once
       // you have scrolled past it.
-      label: dayHeading(key, today, tomorrow, t),
+      label: dayHeading(key, today, tomorrow, t, locale),
       items: group,
     }));
 }
 
-/** "Today · 3 Aug" / "Sat 8 Aug". */
-function dayHeading(key: string, today: string, tomorrow: string, t: Strings): string {
+/**
+ * "Today · Sat 8 Aug" / "Dnes · so 8. 8." — in the reader's language.
+ *
+ * Same defect as the weekday on the strip and fixed with it: `Today` and
+ * `Tomorrow` came through the string table and were translated, while the date
+ * beside them was formatted `en-GB`, so a Czech heading read `Dnes · Sat 8
+ * Aug`. Half-translated is worse than untranslated — it reads as a bug in the
+ * page rather than as a language the product does not speak.
+ */
+function dayHeading(
+  key: string,
+  today: string,
+  tomorrow: string,
+  t: Strings,
+  locale: Locale,
+): string {
   const date = new Date(`${key}T12:00:00Z`);
-  const full = new Intl.DateTimeFormat("en-GB", {
-    timeZone: DISPLAY_TIME_ZONE,
-    weekday: "short",
-    day: "numeric",
-    month: "short",
-  }).format(date);
+  const full = capitalise(
+    new Intl.DateTimeFormat(DATE_LOCALE[locale], {
+      timeZone: DISPLAY_TIME_ZONE,
+      weekday: "short",
+      day: "numeric",
+      month: "short",
+    }).format(date),
+    locale,
+  );
 
   if (key === today) return `${t.games.dayToday} · ${full}`;
   if (key === tomorrow) return `${t.games.dayTomorrow} · ${full}`;

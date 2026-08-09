@@ -167,19 +167,37 @@ test("a game with no duration falls back to the standard length on every surface
 });
 
 /*
- * The list card carries the span too — REQ-GAME-007 names cards AND detail,
- * and a list that shows only the kick-off is the surface a player actually
- * plans their evening from.
+ * THE CARD CARRIES KICK-OFF PLUS DURATION, NOT A SPAN — v1.3 §2.1, which
+ * supersedes the span this list carried since Phase 14. The two say the same
+ * thing; v1.3 picks the one where the kick-off is the largest element on the
+ * card, and §2.13 then names "time, duration, format and spots" as the four
+ * things that never truncate, which is what the two-element form buys.
+ *
+ * REQ-GAME-007's range is NOT lost — it is on the detail page (`InfoCard`),
+ * asserted below, which is where someone planning an evening around one
+ * particular game is reading. The half of the requirement that named cards is
+ * what v1.3 rules on.
  */
-test("the games list shows a span, not only a kick-off", async ({ page }) => {
+test("the card shows kick-off and duration; the detail shows the span", async ({
+  page,
+}) => {
   const game = await createScratchGame({ durationMinutes: 90, hoursFromNow: 24 * 20 });
 
   try {
     await page.goto(listUrlFor(game));
     const row = page.locator(`[data-testid="game-row"][href="/game/${game.id}"]`);
     await expect(row).toHaveCount(1);
-    // Two clock times with an en dash between them.
-    await expect(row).toContainText(/\d{2}:\d{2}–\d{2}:\d{2}/);
+
+    // One clock time, and the duration beside it — not a range.
+    await expect(row.getByTestId("card-time")).toHaveText(/^\d{2}:\d{2}$/);
+    await expect(row.getByTestId("card-duration")).toHaveText("90 min");
+    await expect(row).not.toContainText(/\d{2}:\d{2}–\d{2}:\d{2}/);
+
+    // And the range is on the detail, so this is a move rather than a loss.
+    await page.goto(`/game/${game.id}`);
+    await expect(page.getByTestId("game-time-span")).toContainText(
+      /\d{2}:\d{2}–\d{2}:\d{2}/,
+    );
   } finally {
     await destroyScratchGame(game.id);
   }
@@ -205,14 +223,22 @@ test("no skill badge on an all-levels game, badges on a restricted one", async (
     await page.goto(`/game/${restricted.id}`);
     await expect(page.getByTestId("skill-badge-advanced")).toBeVisible();
 
-    // And on the row, which is where a player decides whether to open it.
-    // Both games are created with the same default offset, so one day tab
-    // holds both — asserted rather than assumed by locating each in turn.
+    /*
+     * AND ON NEITHER CARD — v1.3 ruling I takes the level badge off the
+     * canonical card entirely. Restriction is a detail-page fact: a badge that
+     * appears on some cards and not others reads as a property of the card
+     * rather than of the game, and it was competing with the spots figure,
+     * which §2.1 makes the only coloured text on the card.
+     *
+     * The RESTRICTED game is the one worth asserting on, because that is the
+     * card that used to carry it.
+     */
     await page.goto(listUrlFor(restricted));
     const restrictedRow = page.locator(
       `[data-testid="game-row"][href="/game/${restricted.id}"]`,
     );
-    await expect(restrictedRow.getByTestId("skill-badge-advanced")).toBeVisible();
+    await expect(restrictedRow).toHaveCount(1);
+    await expect(restrictedRow.getByTestId("skill-badges")).toHaveCount(0);
 
     await page.goto(listUrlFor(open));
     const openRow = page.locator(`[data-testid="game-row"][href="/game/${open.id}"]`);
@@ -442,17 +468,38 @@ test("the roster renders photos where they exist and initials where they do not"
  * Pixel 7 is the project's only viewport (`playwright.config.ts`), so "phone
  * width" needs no setup here.
  */
-test("well more than three games are visible at phone width, without scrolling", async ({
+test("three whole cards and a fourth started, at phone width, without scrolling", async ({
   page,
 }) => {
-  // Six on the SAME Prague day, because the day picker filters the list — a
-  // spec that spread them across days would be measuring the picker, not the
-  // density.
-  //
-  // Pinned to mid-afternoon UTC on a day two weeks out: Prague is UTC+1 or
-  // UTC+2 depending on the season, and both put these six firmly inside one
-  // local day rather than near a boundary the run could straddle.
-  const day = pragueDayKey(new Date(Date.now() + 14 * 24 * 3600_000));
+  /*
+   * THE NUMBER CAME DOWN FROM FIVE, AND IT IS ARITHMETIC RATHER THAN A CHOICE.
+   *
+   * v1.1.4 §5.5 asked for "well more than three games visible at Pixel-7
+   * width" and the compact row delivered five. v1.3 §2.1 then fixes the card's
+   * geometry exactly — 16px padding, a 28px kick-off, a 28px avatar stack, a
+   * `body-lg` venue, 12px between cards — which measures 133px, against the
+   * old row's ~90px. With 306px of chrome above the first card (header
+   * clearance, the title, the eight-box strip, the §4.2 pass panel and a day
+   * heading) and 839px of viewport, five cards need 1019px. There is no
+   * arrangement of §2.1's own numbers that fits them.
+   *
+   * So this asserts what the canonical card actually affords: three whole
+   * cards and a fourth visibly begun. The fourth matters more than it looks —
+   * a cut-off card is what tells a reader the list continues, and a fold that
+   * lands cleanly between cards reads as the end of the list. That was the
+   * real content of "well more than three", and it survives.
+   *
+   * If five is ever wanted back it is a RULING, not a tweak: it means
+   * reopening §2.1 on the avatar stack or the 28px kick-off, and both were
+   * decided against the complaint this round exists to answer.
+   *
+   * Six on the SAME Prague day, because the day picker filters the list — a
+   * spec that spread them across days would be measuring the picker, not the
+   * density. Pinned to mid-afternoon UTC four days out: inside the eight-box
+   * window, and Prague's UTC+1/UTC+2 both put these six firmly inside one
+   * local day rather than near a boundary the run could straddle.
+   */
+  const day = pragueDayKey(new Date(Date.now() + 4 * 24 * 3600_000));
   const games = await Promise.all(
     ["14:00", "14:30", "15:00", "15:30", "16:00", "16:30"].map((time) =>
       createScratchGame({ startsAt: `${day}T${time}:00.000Z`, capacity: 12 }),
@@ -469,14 +516,18 @@ test("well more than three games are visible at phone width, without scrolling",
     await expect(rows.first()).toBeVisible();
 
     let fullyVisible = 0;
+    let started = 0;
     for (const row of await rows.all()) {
       const box = await row.boundingBox();
-      if (box && box.y >= 0 && box.y + box.height <= viewport!.height) fullyVisible += 1;
+      if (!box || box.y < 0) continue;
+      if (box.y + box.height <= viewport!.height) fullyVisible += 1;
+      // Its top edge is on screen even if its bottom is not — the cue that
+      // there is more list below the fold.
+      if (box.y < viewport!.height) started += 1;
     }
 
-    // "Well more than three." Four would technically clear the old bar and
-    // would not clear this one.
-    expect(fullyVisible).toBeGreaterThanOrEqual(5);
+    expect(fullyVisible).toBeGreaterThanOrEqual(3);
+    expect(started).toBeGreaterThanOrEqual(4);
   } finally {
     await Promise.all(games.map((game) => destroyScratchGame(game.id)));
   }
@@ -488,10 +539,17 @@ test("well more than three games are visible at phone width, without scrolling",
  * every reader took for a date.
  */
 test("the day strip filters the list, by the date on the chip", async ({ page }) => {
-  // Two days apart, so the chips are unambiguous whatever hour the suite runs.
-  const dayOne = await createScratchGame({ hoursFromNow: 24 * 10 });
-  const dayTwoA = await createScratchGame({ hoursFromNow: 24 * 12 });
-  const dayTwoB = await createScratchGame({ hoursFromNow: 24 * 12 + 1 });
+  /*
+   * Two days apart, so the chips are unambiguous whatever hour the suite runs
+   * — and BOTH INSIDE THE EIGHT-DAY WINDOW, which is what ruling H made a
+   * requirement of this fixture. At ten and twelve days out these games had no
+   * chip at all, and the spec failed looking for one. That is the strip
+   * behaving correctly: a game outside the window is still on the default
+   * list, which the last assertion here checks.
+   */
+  const dayOne = await createScratchGame({ hoursFromNow: 24 * 3 });
+  const dayTwoA = await createScratchGame({ hoursFromNow: 24 * 5 });
+  const dayTwoB = await createScratchGame({ hoursFromNow: 24 * 5 + 1 });
 
   try {
     await page.goto("/games");
@@ -533,11 +591,18 @@ test("the day strip filters the list, by the date on the chip", async ({ page })
 });
 
 /*
- * v1.2 §5.5 — the strip is a CONTINUOUS calendar, so it can answer "how far
- * away is this". Closing up the empty days made two adjacent chips mean either
- * consecutive days or three weeks apart.
+ * v1.3 §2.2 / ruling H — EXACTLY EIGHT BOXES, today first, continuous.
+ *
+ * Continuous because the strip has to answer "how far away is this": closing
+ * up the empty days made two adjacent boxes mean either consecutive days or
+ * three weeks apart. Exactly eight because the width used to be a function of
+ * the schedule — a floor of fourteen days extended to reach the furthest game,
+ * so eight boxes one week and twenty-three the next — and a control whose size
+ * varies with the data cannot be laid out to fit above `md` without scrolling.
  */
-test("the day strip runs continuously from today, marking rest days", async ({ page }) => {
+test("the day strip is exactly eight boxes, running continuously from today", async ({
+  page,
+}) => {
   await page.goto("/games");
 
   const chips = page.getByTestId("day-tab");
@@ -547,7 +612,7 @@ test("the day strip runs continuously from today, marking rest days", async ({ p
   const days = await chips.evaluateAll((nodes) =>
     nodes.map((n) => (n as HTMLElement).dataset.day!),
   );
-  expect(days.length).toBeGreaterThanOrEqual(14);
+  expect(days).toHaveLength(8);
   expect(days[0]).toBe(
     new Intl.DateTimeFormat("en-CA", {
       timeZone: "Europe/Prague",
@@ -572,18 +637,30 @@ test("the day strip runs continuously from today, marking rest days", async ({ p
 
 /*
  * REQ-GAME-022 — one claim button in the product, and it is not on the list.
+ *
+ * v1.3 ruling E removed the `View game →` label with it: the WHOLE CARD is the
+ * tap target, so a link inside a link was redundant, and it was the reason the
+ * card could not simply be an anchor. What has to stay true is that the card
+ * is still a real `<a href>` — keyboard-reachable and openable in a new tab
+ * (§2.0) — which is what makes losing the visible affordance safe.
  */
-test("rows say View game and never claim", async ({ page }) => {
+test("the whole card is the link, with no View game label and no claim", async ({
+  page,
+}) => {
   const game = await createScratchGame({ hoursFromNow: 24 * 16 });
 
   try {
     await page.goto(listUrlFor(game));
     const row = page.locator(`[data-testid="game-row"][href="/game/${game.id}"]`);
     await expect(row).toBeVisible();
-    await expect(row).toContainText("View game");
+    await expect(row).not.toContainText("View game");
     await expect(row).not.toContainText("Claim");
 
-    // The row is a link to the detail, and the detail is where the claim is.
+    // A real anchor, not a div with a click handler — this is the assertion
+    // that ruling E's removal rests on.
+    expect(await row.evaluate((node) => node.tagName)).toBe("A");
+
+    // And it leads to the detail, which is where the claim is.
     await row.click();
     await page.waitForURL(`**/game/${game.id}`);
     await expect(page.getByTestId("book-cta")).toBeVisible();
@@ -596,7 +673,7 @@ test("rows say View game and never claim", async ({ page }) => {
  * REQ-GAME-020 — what each row actually carries, and what it deliberately does
  * NOT (v1.2 §5.5).
  */
-test("a row carries the span, venue, format, badge and spots — and no price", async ({
+test("a card carries kick-off, duration, venue, format and spots — and no price", async ({
   page,
 }) => {
   const game = await createScratchGame({
@@ -614,11 +691,19 @@ test("a row carries the span, venue, format, badge and spots — and no price", 
     const row = page.locator(`[data-testid="game-row"][href="/game/${game.id}"]`);
     await expect(row).toBeVisible();
 
-    await expect(row.getByTestId("row-time-span")).toContainText(/\d{2}:\d{2}–\d{2}:\d{2}/);
+    await expect(row.getByTestId("card-time")).toHaveText(/^\d{2}:\d{2}$/);
+    await expect(row.getByTestId("card-duration")).toHaveText("90 min");
     await expect(row).toContainText("E2E Scratch Pitch");
     await expect(row.getByTestId("game-format")).toHaveText("5v5");
-    await expect(row.getByTestId("skill-badge-advanced")).toBeVisible();
     await expect(row.getByTestId("row-spots")).toContainText("12 spots left");
+
+    // Ruling I: the level badge is a detail-page fact, and this game is
+    // restricted precisely so an absent badge means suppressed, not unset.
+    await expect(row.getByTestId("skill-badges")).toHaveCount(0);
+
+    // Ruling D: no capacity bar. A row of grey segments inside a populated
+    // card is indistinguishable from a skeleton (§2.10).
+    await expect(row.getByTestId("capacity-segments")).toHaveCount(0);
 
     /*
      * PRICE AND SUBSTITUTES ARE DETAIL-PAGE FACTS, and this game is built to
@@ -630,8 +715,15 @@ test("a row carries the span, venue, format, badge and spots — and no price", 
     await expect(row).not.toContainText("CZK");
     await expect(row.getByTestId("game-subs")).toHaveCount(0);
 
-    // No venue photo on the list (§5.5) — the photo belongs to the detail.
-    await expect(row.locator("img")).toHaveCount(0);
+    /*
+     * No venue photo on the card (§2.1) — the photo belongs to the detail.
+     *
+     * Scoped to non-avatar images rather than to `img` outright: ruling D puts
+     * an avatar stack on this card, and those are `<img>` too when a player has
+     * uploaded a photo. `img:not([data-testid="avatar-photo"])` keeps the
+     * assertion about the venue photo, which is what it was ever about.
+     */
+    await expect(row.locator('img:not([data-testid="avatar-photo"])')).toHaveCount(0);
 
     // Both of them ARE on the detail, so this is a move rather than a loss.
     await row.click();
@@ -692,21 +784,20 @@ test("spots left is coloured by absolute count: volt, amber, then red", async ({
     await expect(toneOf(full.id)).toContainText("Full");
 
     /*
-     * THE BAR TAKES THE SAME TONE AS THE NUMBER. This is the assertion that
-     * matters most: the two are rendered by different components from one
-     * table, and a bar that disagreed with the count beside it would be worse
-     * than no colour at all.
+     * THE BAR TAKES THE SAME TONE AS THE NUMBER — asserted on the DETAIL page
+     * now, because ruling D takes the capacity bar off the card. The property
+     * is unchanged and still worth holding: the bar and the count are rendered
+     * by different components from one shared table, and a bar that disagreed
+     * with the count beside it would be worse than no colour at all.
      */
-    const filledSegment = (id: string) =>
-      page
-        .locator(`[data-testid="game-row"][href="/game/${id}"]`)
-        .getByTestId("capacity-segments")
-        .locator("i")
-        .first();
+    const filledSegment = async (id: string) => {
+      await page.goto(`/game/${id}`);
+      return page.getByTestId("capacity-segments").locator("i").first();
+    };
 
     // Capacity 3, one booked: two left, still red — and the one filled notch
     // is red with it.
-    await expect(filledSegment(critical.id)).toHaveClass(/bg-danger/);
+    await expect(await filledSegment(critical.id)).toHaveClass(/bg-danger/);
 
     // A full game's notches must not use the UNFILLED grey, or a complete bar
     // and an empty one render identically and the reader concludes nobody
@@ -717,8 +808,9 @@ test("spots left is coloured by absolute count: volt, amber, then red", async ({
     // second one — that the filled notch differs from the unfilled track —
     // and it survives any renaming. The first names a token and therefore
     // fails whenever the palette moves, which is what happened here.
-    await expect(filledSegment(full.id)).toHaveClass(/bg-muted/);
-    await expect(filledSegment(full.id)).not.toHaveClass(/bg-surface-seg/);
+    const fullSegment = await filledSegment(full.id);
+    await expect(fullSegment).toHaveClass(/bg-muted/);
+    await expect(fullSegment).not.toHaveClass(/bg-surface-seg/);
   } finally {
     await destroyScratchGame(plenty.id);
     await destroyScratchGame(few.id);

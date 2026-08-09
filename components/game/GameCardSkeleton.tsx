@@ -1,7 +1,7 @@
 import { getStrings } from "@/lib/i18n/server";
 
 /**
- * The shape of a `GameRow` while the list is loading.
+ * The shape of a `GameCard` while the list is loading.
  *
  * `/games` is `force-dynamic` and does several round trips before it can
  * render, which on a phone on mobile data is long enough to look broken. A
@@ -26,27 +26,29 @@ function Bar({ className }: { className: string }) {
 }
 
 export function GameCardSkeleton() {
+  /*
+   * THE GEOMETRY IS THE WHOLE JOB (§2.10) and every block below is the height
+   * of the thing it stands in for in `GameCard`: `time` is 28px on a 1.0 line,
+   * `body-lg` is 17px, the avatar stack is 28px. Same `p-4`, same `mt-2` /
+   * `mt-3` rhythm. A skeleton that does not match is worse than none — it
+   * moves the thing the reader is about to tap.
+   */
   return (
-    <div
-      aria-hidden="true"
-      className="animate-pulse rounded-card bg-surface px-4 py-[10px]"
-    >
-      {/* Time span, and the spots-left count opposite it. */}
-      <div className="flex items-center justify-between gap-3">
-        <Bar className="h-[13px] w-[92px]" />
-        <Bar className="h-4 w-[84px]" />
+    <div aria-hidden="true" className="animate-pulse rounded-card bg-surface p-4">
+      {/* Kick-off, duration, and the format pill opposite them. */}
+      <div className="flex items-center gap-2">
+        <Bar className="h-7 w-[76px]" />
+        <Bar className="h-[13px] w-[46px]" />
+        <Bar className="ml-auto h-7 w-[54px]" />
       </div>
 
       {/* Venue. */}
-      <Bar className="mt-[6px] h-[17px] w-2/3" />
+      <Bar className="mt-2 h-[17px] w-2/3" />
 
-      {/* The segmented capacity bar's footprint, at row scale. */}
-      <Bar className="mt-[8px] h-[7px] w-full" />
-
-      {/* The chip line. */}
-      <div className="mt-[8px] flex items-center gap-2">
-        <Bar className="h-[18px] w-[42px]" />
-        <Bar className="h-[18px] w-[56px]" />
+      {/* The avatar stack, and the spots figure opposite it. */}
+      <div className="mt-3 flex h-7 items-center justify-between gap-3">
+        <Bar className="h-7 w-[76px]" />
+        <Bar className="h-[17px] w-[86px]" />
       </div>
     </div>
   );
@@ -71,7 +73,7 @@ export async function GamesListSkeleton() {
         {t.common.loading}
       </p>
 
-      <div className="mt-6 flex flex-col gap-2">
+      <div className="mt-6 flex flex-col gap-3">
         {Array.from({ length: 5 }, (_, i) => (
           <GameCardSkeleton key={i} />
         ))}

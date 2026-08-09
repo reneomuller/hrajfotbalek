@@ -276,13 +276,28 @@ export const strings = {
      * there is no room for the full block.
      */
     empty: "No games on the board right now.",
-    emptyTitle: "Nothing on the board",
-    emptyBody:
-      "The next match usually goes up a few days ahead. Join the WhatsApp group and you will hear about it first.",
-    emptyCta: "Join the WhatsApp group →",
+    // v1.3 §4. Shorter than what it replaces, and the arrow is gone from the
+    // CTA because the CTA is a button now (§2.9) — an arrow on a button is an
+    // affordance drawn twice.
+    emptyTitle: "No games scheduled",
+    emptyBody: "New games go up every week.",
+    emptyCta: "Join the WhatsApp group",
     spotsLeft: "spots left",
     spotLeft: "spot left",
     full: "Full",
+    /*
+     * The canonical card's duration (v1.3 §2.1) — `60 min` beside the
+     * kick-off, at `small`/muted.
+     *
+     * ABBREVIATED IN EVERY LANGUAGE, deliberately. §2.13 lists the duration
+     * among the four things on the card that never truncate, so it has to fit
+     * beside a 28px kick-off and a format pill at 390px in Czech — and "minut"
+     * spelled out does not. The abbreviation is the same one a Czech or
+     * Russian sports app uses, so nothing is lost by it.
+     */
+    durationMin: "{n} min",
+    /** The `past` state on My Games' finished games (v1.3 §2.1 states table). */
+    past: "Finished",
     joinWaitlist: "Join the waitlist",
     // Shown instead of a CTA on a full game. It deliberately promises nothing:
     // the waitlist RPC does not exist until Phase 17, so any "you are on the

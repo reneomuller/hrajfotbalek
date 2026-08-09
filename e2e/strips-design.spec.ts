@@ -64,9 +64,11 @@ test("02-games-list", async ({ page }) => {
     await expect(page.getByTestId("day-heading").first()).toBeVisible();
     await strip(page, "02-games-list-all");
 
-    // The badge is on the row now, because the row is on screen.
+    // The badge is NOT on the card — v1.3 ruling I makes restriction a
+    // detail-page fact. The strip is kept because the card is still worth
+    // looking at at this width; what it now shows is the absence.
     const row = page.locator(`[data-testid="game-row"][href="/game/${day2.id}"]`);
-    await expect(row.getByTestId("skill-badge-beginner")).toBeVisible();
+    await expect(row.getByTestId("skill-badges")).toHaveCount(0);
     await row.scrollIntoViewIfNeeded();
     await strip(page, "03-games-list-skill-badges");
 

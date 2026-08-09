@@ -2,14 +2,14 @@ import type { Metadata } from "next";
 import { ToastFromQuery } from "@/components/ToastFromQuery";
 import { EmptyState } from "@/components/EmptyState";
 import { DayPicker } from "@/components/game/DayPicker";
-import { GameRow } from "@/components/game/GameRow";
+import { GameCard } from "@/components/game/GameCard";
 import { NextGameStrip } from "@/components/game/NextGameStrip";
 import { PassPanel } from "@/components/pass/PassPanel";
 import { getOwnNextBooking } from "@/lib/booking/queries";
 import { getSessionUser } from "@/lib/auth/session";
 import { buildDayTabs, groupByDay, pragueDayKey, resolveSelectedDay } from "@/lib/games/days";
-import { listOwnWaitlistGameIds, listUpcomingGames } from "@/lib/games/queries";
-import { getStrings } from "@/lib/i18n/server";
+import { listRostersByGame, listUpcomingGames } from "@/lib/games/queries";
+import { getLocale, getStrings } from "@/lib/i18n/server";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getStrings();
@@ -54,17 +54,31 @@ export default async function GamesPage({
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const t = await getStrings();
+  // The strip and the day headings format DATES, which the string table cannot
+  // carry — they need the language itself, not a translated key.
+  const locale = await getLocale();
   const query = searchParams ? await searchParams : {};
   const { games, now } = await listUpcomingGames();
 
   const signedIn = (await getSessionUser()) !== null;
-  const [waitlisted, nextOwn] = await Promise.all([
-    // Own-row RLS makes both of these empty for a signed-out visitor, which is
-    // the right answer — but skipping them entirely saves two round trips on
-    // the anonymous path, which is the common one from a shared link.
-    signedIn ? listOwnWaitlistGameIds() : Promise.resolve(new Set<string>()),
+  const [rosters, nextOwn] = await Promise.all([
+    /*
+     * THE ROSTERS ARE BACK, and this is ruling D's cost rather than a
+     * regression of the v1.1.4 removal. They were dropped because eight
+     * overlapping circles per row were three lines of vertical space; §2.1
+     * spends 28px on three of them and a `+N`, on the same line as the spots
+     * figure, which costs nothing. One round trip for the whole page.
+     */
+    listRostersByGame(games.map(({ game }) => game.id)),
+    // Own-row RLS makes this empty for a signed-out visitor, which is the
+    // right answer — but skipping it saves a round trip on the anonymous
+    // path, which is the common one from a shared link.
     signedIn ? getOwnNextBooking() : Promise.resolve(null),
   ]);
+
+  // Storage origin for the avatar photos; absent, the stack falls back to
+  // initials, which is the ordinary case rather than a failure.
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
 
   /*
    * "Your next game" needs the live count, which the strip shows; the booking
@@ -82,6 +96,7 @@ export default async function GamesPage({
   const dayTabs = buildDayTabs(
     games.map(({ game }) => game.starts_at),
     now,
+    locale,
   );
   const requested = typeof query.day === "string" ? query.day : undefined;
   const selectedDay = resolveSelectedDay(requested, dayTabs);
@@ -99,7 +114,7 @@ export default async function GamesPage({
     ? games.filter(({ game }) => pragueDayKey(game.starts_at) === selectedDay)
     : games;
 
-  const grouped = groupByDay(visible, ({ game }) => game.starts_at, now, t);
+  const grouped = groupByDay(visible, ({ game }) => game.starts_at, now, t, locale);
 
   return (
     <main className="relative z-10 mx-auto w-full max-w-shell px-gutter pb-16 pt-24">
@@ -135,19 +150,22 @@ export default async function GamesPage({
               {/* The heading carries the date as well as the relative word:
                   "Today" alone stops meaning anything once you have scrolled
                   past it. */}
+              {/* The one uppercase style the product has (ruling B): a small
+                  grey eyebrow, on the token rather than a loose 10px. */}
               <h2
                 data-testid="day-heading"
-                className="m-0 mb-[6px] text-[10px] uppercase tracking-eyebrow text-volt-dim"
+                className="m-0 mb-2 text-eyebrow font-semibold uppercase text-faint"
               >
                 {day.label}
               </h2>
-              <div className="flex flex-col gap-2">
+              <div className="flex flex-col gap-3">
                 {day.items.map(({ game, bookedCount }) => (
-                  <GameRow
+                  <GameCard
                     key={game.id}
                     game={game}
                     bookedCount={bookedCount}
-                    onWaitlist={waitlisted.has(game.id)}
+                    roster={rosters.get(game.id) ?? []}
+                    supabaseUrl={supabaseUrl}
                   />
                 ))}
               </div>

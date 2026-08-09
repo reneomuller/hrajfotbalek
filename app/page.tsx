@@ -4,9 +4,9 @@ import { CommunityPanel } from "@/components/home/CommunityPanel";
 import { FaqPanel } from "@/components/home/FaqPanel";
 import { PlayerOfMonthPanel } from "@/components/home/PlayerOfMonthPanel";
 import { StatsPanel } from "@/components/home/StatsPanel";
-import { GameRow } from "@/components/game/GameRow";
+import { GameCard } from "@/components/game/GameCard";
 import { getHomeContent } from "@/lib/home/queries";
-import { listUpcomingGames } from "@/lib/games/queries";
+import { listRostersByGame, listUpcomingGames } from "@/lib/games/queries";
 import { siteUrl } from "@/lib/site";
 import { getStrings } from "@/lib/i18n/server";
 
@@ -53,6 +53,10 @@ export default async function LandingPage() {
    * surfaces. Three of them fit in less height than the one card did.
    */
   const { games } = await listUpcomingGames(3);
+  // The canonical card carries an avatar stack (§2.1, ruling D), so the home
+  // preview needs the same roster read the list does — one round trip for all
+  // three games rather than one apiece.
+  const rosters = await listRostersByGame(games.map(({ game }) => game.id));
   // Storage origin for the Player-of-the-Month photo (§4a). Absent, the panel
   // falls back to initials, which is the ordinary case rather than a failure.
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
@@ -166,9 +170,15 @@ export default async function LandingPage() {
             </div>
 
             {games.length > 0 ? (
-              <div data-testid="next-matches" className="flex flex-col gap-2">
+              <div data-testid="next-matches" className="flex flex-col gap-3">
                 {games.map(({ game, bookedCount }) => (
-                  <GameRow key={game.id} game={game} bookedCount={bookedCount} />
+                  <GameCard
+                    key={game.id}
+                    game={game}
+                    bookedCount={bookedCount}
+                    roster={rosters.get(game.id) ?? []}
+                    supabaseUrl={supabaseUrl}
+                  />
                 ))}
               </div>
             ) : (

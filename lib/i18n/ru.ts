@@ -172,13 +172,14 @@ export const ru: StringsOverlay = {
   games: {
     listTitle: "Ближайшие матчи",
     empty: "Пока нет ни одного матча.",
-    emptyTitle: "Пока ничего не назначено",
-    emptyBody:
-      "Следующий матч обычно появляется за несколько дней. Вступай в группу WhatsApp — узнаешь первым.",
-    emptyCta: "Вступить в группу WhatsApp →",
+    emptyTitle: "Игр пока нет",
+    emptyBody: "Новые игры появляются каждую неделю.",
+    emptyCta: "Вступай в группу WhatsApp",
     spotsLeft: "мест свободно",
     spotLeft: "место свободно",
     full: "Мест нет",
+    durationMin: "{n} мин",
+    past: "Завершено",
     joinWaitlist: "Встать в очередь",
     fullNotice: "Матч заполнен — все места заняты.",
     seeOtherGames: "Другие матчи →",

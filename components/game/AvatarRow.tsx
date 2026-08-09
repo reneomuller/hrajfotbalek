@@ -47,7 +47,13 @@ export async function AvatarRow({
   highlight?: string | null;
   /** Beyond this, a "+N" chip stands in for the tail. */
   max?: number;
-  size?: "default" | "slim";
+  /**
+   * `card` is the canonical game card's stack (§2.1): 28px, three faces then
+   * `+N`. It is its own size rather than a reuse of `slim` because §2.1 fixes
+   * the number, and a stack whose diameter drifts with the caller is a card
+   * whose height drifts with it.
+   */
+  size?: "default" | "slim" | "card";
   /**
    * Storage origin, for building the public object URL. Passed in rather than
    * read from `process.env` here, so this component stays renderable in
@@ -59,8 +65,11 @@ export async function AvatarRow({
   const t = await getStrings();
   const shown = players.slice(0, max);
   const overflow = players.length - shown.length;
-  const dim =
-    size === "slim" ? "h-[26px] w-[26px] text-[11px]" : "h-[34px] w-[34px] text-[13px]";
+  const dim = {
+    slim: "h-[26px] w-[26px] text-[11px]",
+    card: "h-7 w-7 text-[11px]",
+    default: "h-[34px] w-[34px] text-[13px]",
+  }[size];
 
   return (
     <div className="flex flex-wrap items-center gap-y-[6px]">

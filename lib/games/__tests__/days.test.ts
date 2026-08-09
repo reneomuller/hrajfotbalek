@@ -59,16 +59,48 @@ describe("buildDayTabs", () => {
   it("carries a real date on every chip — weekday over day of month", () => {
     const tabs = buildDayTabs(["2026-08-03T17:00:00Z"], now);
 
-    // The 3rd of August 2026 is a Monday. The chip reads MON over 3, which is
+    // The 3rd of August 2026 is a Monday. The chip reads Mon over 3, which is
     // a date; the old strip read "Today 1", where the 1 was a game count that
     // every reader took for a date.
+    //
+    // SENTENCE CASE, not `MON` (v1.3 ruling B): `eyebrow` is the only
+    // uppercase style in the product, and a day label is not one. The case is
+    // fixed at the token rather than in CSS so the rendered width is known
+    // here, which is what the 8-box strip is laid out against.
     expect(tabs[0]).toMatchObject({
       key: "2026-08-03",
-      weekday: "MON",
+      weekday: "Mon",
       dayOfMonth: "3",
       isToday: true,
     });
-    expect(tabs[1]).toMatchObject({ weekday: "TUE", dayOfMonth: "4", isToday: false });
+    expect(tabs[1]).toMatchObject({ weekday: "Tue", dayOfMonth: "4", isToday: false });
+  });
+
+  it("names the weekday in the READER'S language, capitalised", () => {
+    /*
+     * The strip used to hardcode `en-GB`, so the Czech games list read
+     * `Mon 10 · Tue 11` under a Czech heading — the most prominent control on
+     * the screen, in the wrong language, on a surface whose whole job is
+     * choosing a day. Ruling H making the strip eight fixed boxes is what put
+     * it under the nose; the defect predates it.
+     *
+     * CAPITALISED because `Intl` yields `st` for Czech and `ср` for Russian,
+     * and ruling B wants sentence case rather than lower — a box reading `st`
+     * looks like a truncation.
+     */
+    expect(buildDayTabs([], now, "cs")[0].weekday).toBe("Po");
+    expect(buildDayTabs([], now, "ru")[0].weekday).toBe("Пн");
+    expect(buildDayTabs([], now, "en")[0].weekday).toBe("Mon");
+  });
+
+  it("prints a bare day-of-month numeral in every language", () => {
+    // Czech `day: "numeric"` yields `3.` — correct as an ordinal inside a
+    // sentence, wrong inside a calendar box, where every other calendar the
+    // reader has ever used prints a bare numeral. Taken from the day key
+    // rather than from `Intl`, so it cannot drift by locale at all.
+    for (const locale of ["en", "cs", "ru"] as const) {
+      expect(buildDayTabs([], now, locale)[0].dayOfMonth).toBe("3");
+    }
   });
 
   it("starts at today, never before it", () => {
@@ -79,26 +111,30 @@ describe("buildDayTabs", () => {
     expect(tabs.every((t) => t.key >= "2026-08-03")).toBe(true);
   });
 
-  it("covers a fortnight even when the board is empty", () => {
-    // The strip is a calendar. An empty board is a fortnight of rest days,
-    // which the picker declines to render at all — but that is the picker's
-    // decision to make, not this function's.
+  it("is EXACTLY EIGHT BOXES, today first (ruling H)", () => {
+    // v1.3 §2.2 fixes the width of this control. The previous window was a
+    // floor of fourteen days that EXTENDED to reach the furthest game, which
+    // made the strip a different width on every load — a control whose size is
+    // a function of the schedule cannot be laid out, and above `md` it has to
+    // be fully visible without scrolling.
     const tabs = buildDayTabs([], now);
-    expect(tabs).toHaveLength(14);
+    expect(tabs).toHaveLength(8);
+    expect(tabs[0].key).toBe("2026-08-03");
+    expect(tabs.at(-1)!.key).toBe("2026-08-10");
+  });
+
+  it("stays eight boxes when a game falls outside the window", () => {
+    // The strip no longer stretches to the furthest game, and it does not need
+    // to: ruling H says the strip FILTERS and the list is never truncated by
+    // it, so a game three weeks out is still on the default list. What it loses
+    // is a chip of its own, which is a filter it never had a reason to be.
+    const tabs = buildDayTabs(["2026-08-25T17:00:00Z"], now);
+    expect(tabs).toHaveLength(8);
     expect(tabs.every((t) => t.count === 0)).toBe(true);
   });
 
-  it("EXTENDS past the fortnight to reach the furthest game", () => {
-    // The window is a floor, not a cap. A strip that stopped at day fourteen
-    // would make a game on day twenty unreachable by filter — the same class
-    // of defect as the mode-not-filter bug this control already had once.
-    const tabs = buildDayTabs(["2026-08-25T17:00:00Z"], now);
-    expect(tabs.at(-1)!.key).toBe("2026-08-25");
-    expect(tabs.length).toBeGreaterThan(14);
-  });
-
   it("crosses a month boundary without repeating or skipping a date", () => {
-    const tabs = buildDayTabs([], "2026-08-25T09:00:00Z");
+    const tabs = buildDayTabs([], "2026-08-28T09:00:00Z");
     const keys = tabs.map((t) => t.key);
     expect(new Set(keys).size).toBe(keys.length);
     expect(keys).toContain("2026-08-31");
@@ -109,7 +145,7 @@ describe("buildDayTabs", () => {
     // Prague falls back on 2026-10-25, making that a 25-hour day. A window
     // built by adding 86,400,000ms to a local midnight lands twice on the
     // 25th; this one is built from midday, which no offset shift can move.
-    const tabs = buildDayTabs([], "2026-10-20T09:00:00Z");
+    const tabs = buildDayTabs([], "2026-10-22T09:00:00Z");
     const keys = tabs.map((t) => t.key);
     expect(new Set(keys).size).toBe(keys.length);
     expect(keys).toContain("2026-10-24");

@@ -74,6 +74,19 @@ const INTENTIONALLY_UNTRANSLATED = new Set([
   // WhatsApp group where three languages are spoken and everyone recognises
   // the same two words on the panel.
   "pass.panelTitle",
+  /*
+   * "60 min" — the game card's duration (v1.3 §2.1).
+   *
+   * `min` is the standard abbreviation for `minuta` in Czech as well as for
+   * `minute` in English, so the CS overlay repeats the English string because
+   * the Czech word for it IS that string. Russian differs (`мин`) and is
+   * translated, which is why only the Czech pair reaches this list.
+   *
+   * Abbreviated in all three deliberately: §2.13 lists the duration among the
+   * four things on the card that never truncate, so it must fit beside a 28px
+   * kick-off and a format pill at 390px, and "minut" spelled out does not.
+   */
+  "games.durationMin",
 ]);
 
 function flatten(value: unknown, prefix = ""): Map<string, string> {

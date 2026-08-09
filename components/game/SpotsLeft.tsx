@@ -21,12 +21,24 @@ import { getStrings } from "@/lib/i18n/server";
  * whole point of this element is that it works at a glance.
  */
 
-/** Text colour per rung. Full is deliberately grey — it is not an alarm. */
+/**
+ * Text colour per rung.
+ *
+ * `full` WAS grey, on the reasoning that a full game is not an alarm. v1.3
+ * §2.1 rules it `danger`, and the ruling is the better read of what the reader
+ * is doing: they are scanning a list for a game to join, and "you cannot have
+ * this one" is the single most actionable thing a card can tell them. Grey
+ * said it in the colour the product uses for asides.
+ *
+ * The BAR keeps its grey (`TONE_FILL` below) — a full bar painted `danger`
+ * would be a solid red block the width of the card, which is a different claim
+ * from a red two-word label.
+ */
 const TONE_TEXT: Record<SpotsTone, string> = {
   plenty: "text-volt",
   few: "text-warn",
   critical: "text-danger",
-  full: "text-faint",
+  full: "text-danger",
 };
 
 /**
@@ -65,8 +77,13 @@ export async function SpotsLeft({
     <span
       data-testid="spots-left"
       data-tone={tone}
+      /*
+        `row` is §2.1's spots figure: `body-lg` at weight 700 — the documented
+        700 VARIANT of one scale step, not a step of its own (§1.4). It was a
+        loose 16px, which is a step the scale does not have.
+      */
       className={` font-bold leading-none tracking-tight ${
-        size === "hero" ? "text-[30px]" : "text-[16px]"
+        size === "hero" ? "text-[30px]" : "text-body-lg"
       } ${TONE_TEXT[tone]}`}
     >
       {tone === "full" ? t.games.full : spotsLeftLabel(bookedCount, capacity, t)}
