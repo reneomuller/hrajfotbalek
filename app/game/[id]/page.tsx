@@ -6,11 +6,12 @@ import { GameHero } from "@/components/game/GameHero";
 import { InfoCard } from "@/components/game/InfoCard";
 import { OrganizerCard } from "@/components/game/OrganizerCard";
 import { PlayersList } from "@/components/game/PlayersList";
-import { StickyCta } from "@/components/game/StickyCta";
+import { ClaimBar } from "@/components/game/ClaimBar";
+import { ShareButton } from "@/components/game/ShareButton";
+import { bookingBadge } from "@/lib/booking/badges";
 import { ToastFromQuery } from "@/components/ToastFromQuery";
 import { WaitlistPanel } from "@/components/game/WaitlistPanel";
 import { YourBookingPanel } from "@/components/game/YourBookingPanel";
-import { WaitlistButton } from "@/components/WaitlistButton";
 import { isOnWaitlist, waitlistPosition } from "@/lib/booking/waitlistConvert";
 import { readResumeIntent } from "@/lib/booking/resume";
 import { runJoinWaitlist } from "./waitlist/actions";
@@ -143,7 +144,16 @@ export default async function GameDetailPage({ params, searchParams }: GamePageP
   // A full game now offers the waitlist rather than a dead end: `join_waitlist`
   // exists as of Phase 17, so the CTA leads somewhere real. Read under own-row
   // RLS, so a signed-out visitor simply gets false.
-  let alreadyOnList = isFull && signedIn ? await isOnWaitlist(game.id) : false;
+  /*
+   * READ WHENEVER THE VIEWER COULD BE ON IT, not only while the game is full.
+   *
+   * §2.4's waitlisted row does not require `isFull`, and it is right not to: a
+   * spot opens, the notify-all mail goes out, and until somebody claims it the
+   * game is no longer full while the reader is still in the queue. Gating this
+   * on `isFull` showed that reader `Join waitlist` for a list they were
+   * already on — which is the exact confusion the row exists to end.
+   */
+  let alreadyOnList = signedIn && !holdsSpot ? await isOnWaitlist(game.id) : false;
 
   // Post-auth resume for a Join-waitlist tap made while signed out. The
   // callback sends the player back here with ?resume=join_waitlist, and the
@@ -216,13 +226,7 @@ export default async function GameDetailPage({ params, searchParams }: GamePageP
       */}
       <GameHero venue={game.venue} venueRow={venueRow} supabaseUrl={supabaseUrl} />
 
-      <InfoCard
-        game={game}
-        venueRow={venueRow}
-        endsAt={endsAt}
-        shareUrl={shareUrl}
-        shareWhen={formatGameDateTime(game.starts_at)}
-      />
+      <InfoCard game={game} venueRow={venueRow} endsAt={endsAt} />
 
       {/* Organizer logistics. Free text; JSX escapes it, and
           `whitespace-pre-line` keeps the admin's line breaks without
@@ -281,26 +285,27 @@ export default async function GameDetailPage({ params, searchParams }: GamePageP
         still exactly one claim button in the product (§5.6a).
       */}
       {ownBooking && (
-        <YourBookingPanel
-          booking={ownBooking.booking}
-          canCancel={ownBooking.canCancel}
-        />
+        <YourBookingPanel booking={ownBooking.booking} />
       )}
 
+      {/*
+        THE QUEUE'S CONTROL MOVED TO THE BAR (§2.4); WHAT STAYS HERE IS THE
+        HONESTY.
+
+        `waitlistHint` says everyone waiting is told at the same moment a spot
+        opens and the race is settled by `create_booking`'s capacity check. It
+        cannot go in the bar — there is no room for a sentence beside a button
+        — and it must not be dropped: without it a position number reads as a
+        serving order, which notify-all FCFS is not.
+      */}
       {canAct && !holdsSpot && isFull && (
-        <>
-          <p
-            data-testid="full-notice"
-            className="mt-4 rounded-control border border-hairline-strong px-4 py-3 text-[11px] tracking-[1px] text-faint"
-          >
-            {t.games.fullNotice}
-          </p>
-          <WaitlistButton
-            gameId={game.id}
-            alreadyOnList={alreadyOnList}
-            position={position}
-          />
-        </>
+        <p
+          data-testid="full-notice"
+          className="mt-4 rounded-card bg-surface p-5 text-body leading-relaxed text-muted"
+        >
+          <span className="block font-semibold text-bone">{t.games.fullNotice}</span>
+          <span className="mt-2 block">{t.games.waitlistHint}</span>
+        </p>
       )}
 
       {/* What the venue provides (§5.7). Nothing renders when nothing is
@@ -338,7 +343,8 @@ export default async function GameDetailPage({ params, searchParams }: GamePageP
         data-testid="practical-info"
         className="mt-4 rounded-card bg-surface p-5"
       >
-        <h2 className="m-0 text-[17px] font-bold uppercase tracking-wide text-white">
+        {/* Sentence case (ruling B) — a card title is not an eyebrow. */}
+        <h2 className="m-0 text-body-lg font-semibold text-bone">
           {t.games.practicalTitle}
         </h2>
         <ul className="mt-3 flex list-none flex-col gap-2 p-0 text-[14px] leading-relaxed text-bone">
@@ -353,18 +359,63 @@ export default async function GameDetailPage({ params, searchParams }: GamePageP
         </ul>
       </section>
 
+      {/*
+        SHARE, LAST BEFORE THE BAR (§3's order: … `Good to know` → share on
+        WhatsApp → claim bar).
+
+        It was inside the info card, which put an action about telling someone
+        else in the middle of the facts about when and where. It belongs at the
+        end, where a reader who has decided the game is worth passing on has
+        finished reading.
+      */}
+      <div className="mt-4">
+        <ShareButton
+          venue={game.venue}
+          when={formatGameDateTime(game.starts_at)}
+          url={shareUrl}
+        />
+      </div>
+
       {/* Booking created, cancelled, or signed in — whichever the redirect
           that landed here carried. */}
       <ToastFromQuery query={query} />
 
       {/*
-        THE ONE CLAIM BUTTON, bound by exactly the condition the inline block
-        it replaced used. A holder never sees it; a full game offers the
-        waitlist above instead; a cancelled or started game offers nothing.
+        THE CLAIM BAR, IN EVERY STATE AND ON EVERY RENDER (§2.4, ruling G).
+        Unconditional, deliberately: the bar it replaces was bound by
+        `canAct && !holdsSpot && !isFull`, which made five of its seven states
+        the absence of the control. Which state shows is decided by
+        `claimBarState`, which has the precedence and the tests.
       */}
-      {canAct && !holdsSpot && !isFull && (
-        <StickyCta gameId={game.id} priceCzk={game.price_czk} signedIn={signedIn} />
-      )}
+      <ClaimBar
+        gameId={game.id}
+        bookingId={ownBooking?.booking.id ?? null}
+        priceCzk={game.price_czk}
+        startsAt={game.starts_at}
+        facts={{
+          isCancelled,
+          hasStarted,
+          holdsSpot,
+          // "Paid" means NOTHING IS OWED, which credit, seed and a confirmed
+          // payment all satisfy. Read through the same badge table the account
+          // page uses, so the bar and the booking list cannot disagree about
+          // whether a player has settled.
+          bookingPaid: ownBooking
+            ? bookingBadge(
+                ownBooking.booking.status,
+                ownBooking.booking.payment_method,
+              ).tone === "paid"
+            : false,
+          amountDueCzk: ownBooking
+            ? ownBooking.booking.price_czk - ownBooking.booking.credit_applied_czk
+            : 0,
+          canCancel: ownBooking?.canCancel ?? false,
+          onWaitlist: alreadyOnList,
+          waitlistPosition: position,
+          isFull,
+          signedIn,
+        }}
+      />
     </main>
   );
 }

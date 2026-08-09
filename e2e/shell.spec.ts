@@ -84,17 +84,37 @@ test("the claim button sits above the tab bar, and the page clears both", async 
   try {
     await page.goto(`/game/${game.id}`);
 
-    const cta = (await page.getByTestId("sticky-cta").boundingBox())!;
+    /*
+     * WAIT FOR THE REAL BAR. The detail has a `loading.tsx` as of v1.3 §2.10,
+     * so the route streams: the skeleton paints first and the bar arrives with
+     * the data. Measuring without waiting caught the skeleton's frame and read
+     * a null box — which is the skeleton doing its job, not a defect.
+     *
+     * The height it reserves is the point, and it is asserted below: the two
+     * share one shell, so the bar landing must not move anything.
+     */
+    const barLocator = page.getByTestId("claim-bar");
+    await expect(barLocator).toBeVisible();
+
+    const cta = (await barLocator.boundingBox())!;
     const bar = (await page.getByTestId("nav-pill").boundingBox())!;
 
     // The button's bottom edge meets the bar's top edge — it is not underneath
     // it and there is no gap showing the page through.
     expect(Math.abs(cta.y + cta.height - bar.y)).toBeLessThanOrEqual(1);
 
-    // And the last section of the page can be scrolled clear of both.
-    await page.getByTestId("practical-info").scrollIntoViewIfNeeded();
-    const practical = (await page.getByTestId("practical-info").boundingBox())!;
-    expect(practical.y + practical.height).toBeLessThanOrEqual(cta.y + 1);
+    /*
+     * And the LAST element on the page can be scrolled clear of both.
+     *
+     * That is the share control as of v1.3 §3, which puts share after `Good to
+     * know` and before the bar; it used to be `practical-info`. The assertion
+     * has to track whatever is genuinely last, because the bug it guards
+     * against — content permanently pinned behind an opaque bar — can only
+     * happen to the bottom of the document.
+     */
+    await page.getByTestId("share-whatsapp").scrollIntoViewIfNeeded();
+    const last = (await page.getByTestId("share-whatsapp").boundingBox())!;
+    expect(last.y + last.height).toBeLessThanOrEqual(cta.y + 1);
   } finally {
     await destroyScratchGame(game.id);
   }
@@ -221,5 +241,56 @@ test("the exports refuse a caller who is not an admin", async ({ page, context }
     expect(response.status(), path).not.toBe(200);
     // Whatever it is, it is not a spreadsheet.
     expect(response.headers()["content-type"] ?? "", path).not.toContain("text/csv");
+  }
+});
+
+/*
+ * v1.3 §2.10 — the detail's skeleton RESERVES THE CLAIM BAR'S HEIGHT.
+ *
+ * This is the one property §2.10 is specific about for this screen, and it is
+ * the one a skeleton most often gets wrong: leave the bar out and the whole
+ * page shifts upward the moment the data lands, which is exactly the layout
+ * shift a skeleton exists to prevent — arriving from the one element that is
+ * present in every state.
+ *
+ * Asserted by catching the streamed loading frame with the network throttled to
+ * offline AFTER navigation starts, which is the only way to hold a frame that
+ * otherwise resolves in milliseconds against a local stack.
+ */
+test("the detail skeleton reserves the claim bar's exact footprint", async ({
+  page,
+}) => {
+  const game = await createScratchGame({ hoursFromNow: 24 * 12, capacity: 12 });
+
+  try {
+    // The settled bar first, so there is a number to compare against.
+    await page.goto(`/game/${game.id}`);
+    await expect(page.getByTestId("claim-bar")).toBeVisible();
+    const settled = (await page.getByTestId("claim-bar").boundingBox())!;
+
+    /*
+     * Now the skeleton. `route.fulfill` is not usable here — the frame we want
+     * is Next's own streamed shell — so the document request is delayed
+     * instead, which holds the loading frame open long enough to measure.
+     */
+    await page.route("**/game/**", async (route) => {
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+      await route.continue();
+    });
+
+    const navigation = page.goto(`/game/${game.id}?cachebust=1`);
+    const skeleton = page.getByTestId("claim-bar-skeleton");
+    await expect(skeleton).toBeVisible({ timeout: 10_000 });
+    const reserved = (await skeleton.boundingBox())!;
+
+    // Same shell, so the same bottom edge and the same height. A tolerance of
+    // one pixel, because the two are laid out independently.
+    expect(Math.abs(reserved.height - settled.height)).toBeLessThanOrEqual(1);
+    expect(Math.abs(reserved.y - settled.y)).toBeLessThanOrEqual(1);
+
+    await page.unroute("**/game/**");
+    await navigation.catch(() => {});
+  } finally {
+    await destroyScratchGame(game.id);
   }
 });

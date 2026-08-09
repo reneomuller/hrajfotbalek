@@ -9,15 +9,30 @@ import { useStrings } from "@/components/LocaleProvider";
 
 const INITIAL: WaitlistActionState = { status: "idle" };
 
-function SubmitButton() {
+/**
+ * §2.5's SECONDARY variant in the bar, primary in the panel.
+ *
+ * Secondary in the bar because joining a queue is not the commitment taking a
+ * spot is, and one primary per screen region — the bar is the region, and on a
+ * full game the queue is the only thing in it.
+ *
+ * Sentence case in both (ruling B). It was `uppercase tracking-wide`, which is
+ * the eyebrow style applied to a button.
+ */
+function SubmitButton({ variant }: { variant: "panel" | "bar" }) {
   const t = useStrings();
   const { pending } = useFormStatus();
   return (
     <button
       type="submit"
       disabled={pending}
+      aria-busy={pending}
       data-testid="join-waitlist"
-      className="w-full rounded-control bg-volt px-6 py-4 text-cta font-extrabold uppercase tracking-wide text-surface disabled:opacity-60"
+      className={
+        variant === "bar"
+          ? "flex min-h-[52px] shrink-0 items-center justify-center rounded-control border border-hairline-strong px-5 text-body-lg font-semibold text-bone transition-colors hover:border-hairline-volt disabled:opacity-60"
+          : "w-full rounded-control bg-volt px-6 py-4 text-body-lg font-bold text-ink disabled:opacity-60"
+      }
     >
       {pending ? t.common.loading : t.games.joinWaitlist}
     </button>
@@ -35,6 +50,7 @@ export function WaitlistButton({
   gameId,
   alreadyOnList,
   position,
+  variant = "panel",
 }: {
   gameId: string;
   alreadyOnList: boolean;
@@ -45,6 +61,8 @@ export function WaitlistButton({
    * than being guessed at here.
    */
   position: number | null;
+  /** `bar` is the §2.4 claim bar's full state — the control alone. */
+  variant?: "panel" | "bar";
 }) {
   const t = useStrings();
   const [state, formAction] = useActionState(joinWaitlistAction, INITIAL);
@@ -52,13 +70,39 @@ export function WaitlistButton({
   const joined = state.status === "joined" || state.status === "already" || alreadyOnList;
   const positionLabel = waitlistPositionLabel(position, t);
 
+  /*
+   * IN THE BAR, THE JOINED STATE IS THE SERVER'S TO RENDER.
+   *
+   * `joinWaitlistAction` revalidates, and the next server render resolves the
+   * bar to its `waitlisted` state with a position read under RLS. So this only
+   * has to cover the gap between the submit landing and that render arriving —
+   * a quiet line, not a panel. Anything more would be a client-state success
+   * marker on a surface `revalidatePath` is about to unmount (CLAUDE.md), and
+   * the panel below is where the full treatment belongs.
+   */
+  if (variant === "bar") {
+    if (joined) {
+      return (
+        <span data-testid="claim-bar-waitlisted" className="text-small text-muted">
+          {positionLabel ?? t.booking.barOnWaitlistNoPosition}
+        </span>
+      );
+    }
+    return (
+      <form action={formAction}>
+        <input type="hidden" name="gameId" value={gameId} />
+        <SubmitButton variant="bar" />
+      </form>
+    );
+  }
+
   if (joined) {
     return (
       <div
         data-testid="waitlist-joined"
         className="mt-6 rounded-card bg-surface p-5"
       >
-        <p className="m-0 text-[17px] font-bold uppercase tracking-wide text-volt">
+        <p className="m-0 text-body-lg font-bold text-volt">
           {state.status === "already" || alreadyOnList
             ? t.games.waitlistAlready
             : t.games.waitlistJoined}
@@ -85,7 +129,7 @@ export function WaitlistButton({
   return (
     <form action={formAction} className="mt-6">
       <input type="hidden" name="gameId" value={gameId} />
-      <SubmitButton />
+      <SubmitButton variant="panel" />
       <p className="mt-3 text-center text-[12px] leading-snug text-muted">
         {t.games.waitlistHint}
       </p>

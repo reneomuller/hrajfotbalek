@@ -1,8 +1,7 @@
 import { Icon } from "@/components/Icon";
 import { FormatChips } from "@/components/game/FormatChips";
-import { SharePair } from "@/components/game/SharePair";
 import { SkillBadges } from "@/components/game/SkillBadges";
-import { formatCzk, formatGameDate, formatTimeSpan } from "@/lib/format";
+import { formatGameDate, formatTimeSpan } from "@/lib/format";
 import { getStrings } from "@/lib/i18n/server";
 import type { Database } from "@/lib/types/database";
 
@@ -32,8 +31,6 @@ export async function InfoCard({
   game,
   venueRow,
   endsAt,
-  shareUrl,
-  shareWhen,
 }: {
   game: Pick<
     GameRow,
@@ -47,8 +44,6 @@ export async function InfoCard({
   >;
   venueRow: Pick<VenueRow, "map_query"> | null;
   endsAt: Date;
-  shareUrl: string;
-  shareWhen: string;
 }) {
   const t = await getStrings();
 
@@ -78,20 +73,21 @@ export async function InfoCard({
           {formatTimeSpan(game.starts_at, endsAt)}
         </span>
         {/*
-          THE PRICE, and this is where it went when it came off the list rows.
+          NO PRICE HERE ANY MORE (v1.3 §3: "No price in the info card").
 
-          It is here as well as on the sticky button, and the two are not a
-          duplication: this states a FACT about the game, the button states a
-          COMMITMENT. The distinction is load-bearing rather than stylistic —
-          the button is absent for a full game, a cancelled game, a game that
-          has kicked off and a player who already holds a spot, and without
-          this line a signed-out visitor arriving at a full game from a shared
-          link would find no price anywhere in the product. The reference does
-          the same thing for the same reason.
+          The line that stood here was justified by a real gap: the price was
+          on the claim button, and the button was ABSENT for a full game, a
+          cancelled game, a started game and a holder — so without this a
+          signed-out visitor arriving at a full game from a shared link found
+          no price anywhere in the product.
+
+          RULING G DISSOLVED THAT ARGUMENT RATHER THAN OVERRULING IT. The claim
+          bar is now present in all seven states and carries the figure in five
+          of them; the two it does not are the two where the player's own money
+          has replaced it (`Paid`, `200 CZK due`), which is a better answer than
+          the price. So the fact is never missing, and stating it twice on one
+          screen is what it always would have been without the gap.
         */}
-        <span data-testid="game-price" className="text-[15px] text-muted">
-          {formatCzk(game.price_czk)}
-        </span>
       </div>
 
       {/* What kind. Format, substitutes, surface, and the skill badge only when
@@ -127,10 +123,18 @@ export async function InfoCard({
           {t.games.openMapFull}
         </a>
 
-        {/* Copy link primary, WhatsApp secondary (§5.4, REQ-GAME-014). */}
-        <div className="mt-1">
-          <SharePair venue={game.venue} when={shareWhen} url={shareUrl} />
-        </div>
+        {/*
+          WHATSAPP ONLY, AND IT MOVED (v1.3 §3: "No `Copy link`", and share sits
+          below `Good to know`, not in the info card).
+
+          Copy link was the PRIMARY share on the reasoning that a copied link
+          goes wherever the sender is already talking. True, and beside the
+          point at 390px: two share controls in a card whose job is to state
+          when and where the game is made the card about sharing. The one
+          destination that actually carries these links is the WhatsApp group
+          the product exists to replace, and the browser's own share sheet is
+          behind it for everywhere else.
+        */}
       </div>
     </section>
   );

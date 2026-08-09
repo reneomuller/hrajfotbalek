@@ -318,7 +318,7 @@ export const strings = {
     waitlistConvertHint: "Pick how you want to pay and the spot is yours.",
     waitlistNotOnList: "You are not on the waitlist for this game.",
     rosterTitle: "Lineup",
-    rosterEmpty: "Nobody in the lineup yet — be the first name on it.",
+    rosterEmpty: "Nobody has claimed a spot yet",
     cancelled: "This game was cancelled.",
     notFound: "That game does not exist, or is not published yet.",
     backToGames: "← All games",
@@ -439,7 +439,7 @@ export const strings = {
       first_aid: "First aid",
     },
 
-    practicalTitle: "Before you come",
+    practicalTitle: "Good to know",
     practicalArrival: "Come 10 minutes before kick-off.",
     practicalDuration: "Duration",
     practicalDurationValue: "{minutes} minutes",
@@ -489,6 +489,26 @@ export const strings = {
   booking: {
     claimSpot: "Claim your spot",
     logInToClaim: "Log in to claim",
+    /*
+     * The claim bar's seven states (v1.3 §2.4). Every one of these is a LABEL
+     * ON A BAR THAT IS ALWAYS PRESENT — the states that carry no button carry
+     * a sentence instead, because an empty bar is the bug ruling G is fixing.
+     */
+    signInToClaim: "Sign in to claim",
+    barPaid: "Paid",
+    // {amount} is a formatted CZK figure — `formatCzk`, never interpolated by
+    // hand, because it is the one number here a player checks against a bank.
+    barAmountDue: "{amount} due",
+    barKickedOffAt: "Kicked off {time}",
+    barCancelled: "Cancelled",
+    barOnWaitlist: "You are #{n} on the waitlist",
+    // When `waitlist_position` comes back null. Saying nothing about the
+    // number beats falling back to `Join waitlist`, which invites a second
+    // join for a place the player already holds.
+    barOnWaitlistNoPosition: "You are on the waitlist",
+    barCancel: "Cancel",
+    /** The bar is a landmark region and needs a name of its own (§2.4). */
+    barLabel: "Your spot on this game",
     nicknameLabel: "Nickname",
     nicknameHint: "Letters, numbers, spaces, _ and - · up to 20 characters",
     payByQr: "Pay by QR",

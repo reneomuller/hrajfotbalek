@@ -248,7 +248,7 @@ test("C8-C14-game-detail", async ({ page }) => {
     // Item 14 — the CTA is still there after scrolling to the bottom, which is
     // the entire reason it is fixed rather than sticky.
     await page.getByTestId("practical-info").scrollIntoViewIfNeeded();
-    await expect(page.getByTestId("sticky-cta")).toBeInViewport();
+    await expect(page.getByTestId("claim-bar")).toBeInViewport();
     await strip(page, "C14-sticky-cta-at-the-bottom");
 
     // --- signed in: the organizer's number and the priced button -----------

@@ -65,14 +65,31 @@ test("a full game offers the waitlist, and joining shows your place in it", asyn
 
   await page.goto(`/game/${game.id}`);
 
-  // The full game is a queue with a way in, not a dead end.
+  /*
+   * The full game is a queue with a way in, not a dead end — and as of v1.3
+   * §2.4 the way in is the CLAIM BAR's full state rather than a panel in the
+   * body. One control, in the one place every state of this page puts its
+   * control.
+   */
+  const bar = page.getByTestId("claim-bar");
+  await expect(bar).toHaveAttribute("data-state", "full");
   await expect(page.getByTestId("join-waitlist")).toBeVisible();
   await page.getByTestId("join-waitlist").click();
 
-  await expect(page.getByTestId("waitlist-joined")).toBeVisible();
-  // Position is shown next to the "everyone is told at once" hint — the number
-  // says how many joined ahead, not who gets served first.
-  await expect(page.getByTestId("waitlist-position")).toContainText("1");
+  /*
+   * ASSERTED ON THE SERVER'S NEXT RENDER, not on the action's returned state.
+   * `joinWaitlistAction` revalidates, and a client-state success marker can be
+   * unmounted by that re-render before a spec can observe it (CLAUDE.md). The
+   * bar resolving to `waitlisted` is the durable fact, and it is also the
+   * behaviour §2.4's fourth row exists to deliver: a waiting player must never
+   * see `Join waitlist` again.
+   */
+  await expect(bar).toHaveAttribute("data-state", "waitlisted");
+  // The number says how many joined ahead, not who gets served first — the
+  // hint that keeps it honest is in the body, beside the full notice.
+  await expect(bar).toContainText("1");
+  await expect(page.getByTestId("join-waitlist")).toHaveCount(0);
+  await expect(page.getByTestId("full-notice")).toContainText("at the same moment");
 
   // The queue is public, by decision: a queue nobody can see is a queue nobody
   // trusts. It must expose the nickname and no more.

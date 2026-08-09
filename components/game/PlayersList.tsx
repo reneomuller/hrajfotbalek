@@ -53,7 +53,15 @@ export async function PlayersList({ rows, supabaseUrl }: PlayersListProps) {
       </h2>
 
       {rows.length === 0 ? (
-        <p className="mt-3 text-[14px] text-muted">{t.games.rosterEmpty}</p>
+        /*
+          §3: `Lineup (0)` renders the §2.9 empty state INLINE — one line, no
+          action — "since the claim bar already carries the action". The copy
+          changed with it: `be the first name on it` invited a tap this element
+          has nothing to offer, and the bar two inches below it does.
+        */
+        <p data-testid="lineup-empty" className="mt-3 text-body text-muted">
+          {t.games.rosterEmpty}
+        </p>
       ) : (
         <ul className="mt-3 flex list-none flex-col p-0" data-testid="roster">
           {rows.map((row, i) => (

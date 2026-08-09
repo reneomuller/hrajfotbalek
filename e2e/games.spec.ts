@@ -852,35 +852,30 @@ test("a venue with no photo renders name and Open map, with no empty frame", asy
 });
 
 /*
- * REQ-GAME-014 / REQ-UX-002 — copy link is the primary share, and it toasts.
+ * REQ-GAME-014 — sharing, which is now WhatsApp ALONE.
  *
- * Clipboard permission is granted explicitly: headless Chromium refuses
- * `navigator.clipboard.writeText` without it, and the component's fallback
- * would then be what is under test instead of the path a real phone takes.
+ * v1.3 §3 removes `Copy link` from the detail ("No `Copy link`") and moves the
+ * remaining share below `Good to know`. The spec that stood here asserted the
+ * copy button, its clipboard write and its toast; all three are gone with the
+ * control, so what is left to hold is that the share still exists, still
+ * carries this game's URL, and is the last thing on the page before the bar.
+ *
+ * The copy path is not a loss worth a spec of its own: the browser's own share
+ * sheet behind this button offers copy on every platform that has one.
  */
-test("copy link puts the URL on the clipboard and raises a toast", async ({
-  page,
-  context,
-}) => {
-  await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+test("the detail shares to WhatsApp, and copy link is gone", async ({ page }) => {
   const game = await createScratchGame();
 
   try {
     await page.goto(`/game/${game.id}`);
 
-    const copy = page.getByTestId("share-copy-link");
-    await expect(copy).toBeVisible();
-    // Primary means first: WhatsApp is beside it, not before it.
+    await expect(page.getByTestId("share-copy-link")).toHaveCount(0);
+
     const whatsapp = page.getByTestId("share-whatsapp");
     await expect(whatsapp).toBeVisible();
-
-    await copy.click();
-
-    await expect(page.getByTestId("toast")).toBeVisible();
-    await expect(page.getByTestId("toast")).toContainText("Link copied");
-
-    const clipboard = await page.evaluate(() => navigator.clipboard.readText());
-    expect(clipboard).toContain(`/game/${game.id}`);
+    // The link carries this game, not the list — a share that lands on /games
+    // is a share nobody can act on.
+    await expect(whatsapp).toHaveAttribute("href", new RegExp(game.id));
   } finally {
     await destroyScratchGame(game.id);
   }
