@@ -390,3 +390,45 @@ test.describe("the desktop header", () => {
     await expect(page.getByTestId("nav-admin")).toHaveCount(0);
   });
 });
+
+/*
+ * THE FIRST-SCROLL BACKGROUND GLITCH.
+ *
+ * On a phone the first scroll collapses the URL bar, which changes
+ * `window.innerHeight` by 60-100px and fires `resize`. `PitchBackground`
+ * reassigned `canvas.height` on every one of those — and assigning it RESETS
+ * THE BACKING STORE, clearing every pixel and forcing a full re-render. One
+ * visible blink, once per session, on the first scroll.
+ *
+ * The three cases below are the whole rule: chrome collapsing is ignored, and
+ * anything that genuinely changes the field's proportions still redraws. The
+ * third is the one that stops the fix from becoming a different bug — a
+ * threshold that swallowed real resizes would leave the canvas stretched for
+ * the rest of the session.
+ */
+test.describe("the pitch background", () => {
+  test.use({ viewport: { width: 390, height: 780 } });
+
+  test("survives a URL-bar collapse but redraws on a real resize", async ({ page }) => {
+    await page.goto("/");
+    await page.evaluate(() => document.fonts.ready);
+
+    const backingHeight = () =>
+      page.evaluate(() => (document.querySelector("canvas") as HTMLCanvasElement).height);
+
+    await expect.poll(backingHeight).toBe(780);
+
+    // A URL-bar collapse: same width, +60px. The canvas must not be touched.
+    await page.setViewportSize({ width: 390, height: 840 });
+    await page.waitForTimeout(200);
+    expect(await backingHeight(), "URL-bar collapse must not re-init").toBe(780);
+
+    // A rotation changes the width, so the pitch's proportions change with it.
+    await page.setViewportSize({ width: 840, height: 390 });
+    await expect.poll(backingHeight, { message: "rotation must re-init" }).toBe(390);
+
+    // And a deliberate window drag is a real resize, threshold or not.
+    await page.setViewportSize({ width: 840, height: 900 });
+    await expect.poll(backingHeight, { message: "large resize must re-init" }).toBe(900);
+  });
+});

@@ -68,6 +68,17 @@ const TAU = 6.28318;
 /** Height of the fixed header, excluded from the pitch's top margin. */
 const NAV = 61;
 
+/**
+ * How much a height-only viewport change may move before it counts as real.
+ *
+ * Above any mobile URL bar (roughly 45-100px) and below any deliberate window
+ * resize. Getting this wrong in one direction reintroduces the blink; in the
+ * other it leaves the canvas stretched after a genuine resize, which is the
+ * cheaper mistake and the reason the threshold sits nearer the top of the
+ * toolbar range than the bottom.
+ */
+const URL_BAR_SLACK = 150;
+
 export function PitchBackground({
   intensity = "full",
 }: {
@@ -200,9 +211,44 @@ export function PitchBackground({
       g.stroke();
     };
 
+    /*
+     * THE FIRST-SCROLL GLITCH LIVED HERE.
+     *
+     * On a phone, the first scroll collapses the browser's URL bar. That
+     * changes `window.innerHeight` by 60-100px and fires `resize` — and
+     * assigning `canvas.height` RESETS THE BACKING STORE, clearing every pixel
+     * and forcing a full `drawPitch()` re-render. So the background visibly
+     * blinked and re-laid-out exactly once, on the first scroll of a session,
+     * which is precisely the symptom reported. Reproduced before this change
+     * as a height-only viewport change: 780 -> 840, canvas cleared.
+     *
+     * WIDTH CHANGES STILL RE-RENDER, ALWAYS: a rotation or a desktop drag
+     * changes the pitch's proportions and the field genuinely has to be
+     * redrawn. A height-only change is ignored unless it is large enough to be
+     * something other than browser chrome — `URL_BAR_SLACK` is set above any
+     * mobile toolbar and below any deliberate window resize.
+     *
+     * The cost of ignoring it is that the backing store is up to ~100px
+     * shorter than the CSS box for the rest of the session, so the canvas
+     * stretches by a few percent. On a field of drifting particles and a
+     * traced pitch that is invisible — and it is a far smaller artefact than
+     * the blink it replaces.
+     */
+    let lastW = 0;
+    let lastH = 0;
+
     const resize = () => {
-      W = canvas.width = window.innerWidth;
-      H = canvas.height = window.innerHeight;
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+
+      const widthChanged = w !== lastW;
+      const heightMovedALot = Math.abs(h - lastH) > URL_BAR_SLACK;
+      if (lastW !== 0 && !widthChanged && !heightMovedALot) return;
+
+      lastW = w;
+      lastH = h;
+      W = canvas.width = w;
+      H = canvas.height = h;
       drawPitch();
     };
     resize();
