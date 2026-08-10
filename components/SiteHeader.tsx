@@ -114,9 +114,10 @@ export async function SiteHeader({
             <span className="tracking-[-1px] text-white">{brand.monogramLead}</span>
             <span className="text-volt">{brand.monogramAccent}</span>
           </span>
-          <span className=" text-[16px] font-bold leading-none tracking-wide text-bone">
-            {brand.wordmarkLead}{" "}
-            <span className="text-volt">{brand.wordmarkAccent}</span>
+          {/* Echoes the home hero, scaled — see the note in chrome/Header.tsx. */}
+          <span className="font-display text-[20px] uppercase leading-none tracking-wide text-white">
+            {brand.wordmarkLead} {brand.wordmarkAccent}
+            <span className="text-volt">.</span>
           </span>
         </Link>
 

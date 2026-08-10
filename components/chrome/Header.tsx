@@ -122,11 +122,28 @@ export async function Header({
             <span className="tracking-[-1px] text-white">{brand.monogramLead}</span>
             <span className="text-volt">{brand.monogramAccent}</span>
           </span>
-          {/* HRAJ FOTBAL — unchanged inside the football namespace. The
-              rebrand renames the site, not the brand within it. */}
-          <span className="text-[16px] font-bold leading-none tracking-wide text-bone">
-            {brand.wordmarkLead}{" "}
-            <span className="text-volt">{brand.wordmarkAccent}</span>
+          {/*
+            THE WORDMARK ECHOES THE HERO, scaled for the header.
+
+            The hero sets `HRAJ FOTBAL.` in the display face, uppercase, both
+            words in white with the FULL STOP carrying the volt. The header set
+            it in the body face at 16px with `FOTBAL` itself in volt — a
+            different logotype for the same brand, on two surfaces a reader
+            sees within one scroll of each other.
+
+            So: `font-display`, uppercase, one line, and the accent moves off
+            the second word and onto the period, which is what makes the hero
+            version read as a mark rather than as two-tone text.
+
+            `leading-none` because Anton carries a tall default line box that
+            would otherwise push the 38px monogram out of alignment beside it.
+
+            The brand is unchanged inside the football namespace — the rebrand
+            renames the site, not the brand within it.
+          */}
+          <span className="font-display text-[20px] uppercase leading-none tracking-wide text-white">
+            {brand.wordmarkLead} {brand.wordmarkAccent}
+            <span className="text-volt">.</span>
           </span>
         </Link>
 
