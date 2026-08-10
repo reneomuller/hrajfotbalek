@@ -117,6 +117,12 @@ export default async function LandingPage() {
         */}
         <section className="flex flex-col pb-10 pt-20 text-center">
           <div className="flex flex-col items-center justify-center">
+            {/*
+              THE WORDMARK KEEPS ITS CAPITALS, and it is the one exception
+              ruling B itself writes down: §1.4 marks the `hero` step "Upper
+              (wordmark)". A brand set in caps is a logotype, not a heading
+              shouting. Everything else on this page is sentence case now.
+            */}
             <h1 className="m-0 font-display text-hero uppercase text-white">
               {landing.headlineLead}
               <br />
@@ -124,7 +130,7 @@ export default async function LandingPage() {
               <span className="text-volt">.</span>
             </h1>
 
-            <div className="mt-4 text-hero-sub font-bold uppercase italic tracking-wide text-volt">
+            <div className="mt-4 text-hero-sub font-bold italic tracking-wide text-volt">
               {landing.heroSub}
             </div>
 
@@ -163,7 +169,7 @@ export default async function LandingPage() {
             {/* Primary CTA — the games list, not an in-page anchor. */}
             <Link
               href="/games"
-              className="mt-6 inline-flex items-center gap-[9px] rounded-control bg-volt px-[26px] py-[15px] text-cta font-extrabold uppercase tracking-wide text-surface no-underline"
+              className="mt-6 inline-flex items-center gap-[9px] rounded-control bg-volt px-[26px] py-[15px] text-cta font-extrabold tracking-wide text-surface no-underline"
             >
               {landing.heroCta}
             </Link>
@@ -192,7 +198,7 @@ export default async function LandingPage() {
                     {step.index}
                   </div>
                   <div>
-                    <div className=" text-[18px] font-bold tracking-[.3px]">
+                    <div className="text-[18px] font-bold tracking-[.3px]">
                       {step.title}
                     </div>
                     <div className="mt-[3px] text-[13px] leading-[1.45] text-muted">
@@ -229,7 +235,7 @@ export default async function LandingPage() {
               <div className="text-[10px] tracking-eyebrow text-volt-dim">
                 {landing.nextMatchEyebrow}
               </div>
-              <h2 className="m-0 font-display text-section-title uppercase tracking-wide text-white">
+              <h2 className="m-0 font-display text-section-title tracking-wide text-white">
                 {landing.nextMatchesLabel}
               </h2>
             </div>

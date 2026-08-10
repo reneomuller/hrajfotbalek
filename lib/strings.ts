@@ -92,17 +92,17 @@ export const strings = {
     steps: [
       {
         index: "01",
-        title: "FIND A GAME",
+        title: "Find a game",
         body: "Matches near you, every week.",
       },
       {
         index: "02",
-        title: "CLAIM YOUR SPOT",
+        title: "Claim your spot",
         body: "Enter a nickname and you are in the lineup.",
       },
       {
         index: "03",
-        title: "SHOW UP AND PLAY",
+        title: "Show up and play",
         body: "Pay ahead from your phone. Done.",
       },
     ],
@@ -123,7 +123,7 @@ export const strings = {
     // Was "NEXT MATCH", one card. Three rows now — see the section comment in
     // app/page.tsx: one card could only ever answer "is there a game", and the
     // question a visitor arrives with is "is there a game I can make".
-    nextMatchesLabel: "NEXT MATCHES",
+    nextMatchesLabel: "Next matches",
     nextMatchesAll: "All games →",
     potmTitle: "Player of the month",
     potmEmpty: "Nobody picked yet — could be you.",
@@ -136,9 +136,9 @@ export const strings = {
 
 
     community: {
-      title: "JOIN OUR COMMUNITY",
+      title: "Join our community",
       body: "New games every week. Follow along and play.",
-      whatsapp: "WHATSAPP GROUP",
+      whatsapp: "WhatsApp group",
       whatsappUrl: "https://chat.whatsapp.com/LjPjGf3rf32CNifizwzsW9?mode=gi_t",
       instagram: "@HRAJFOTBAL",
       instagramUrl: "https://instagram.com/hrajfotbal",

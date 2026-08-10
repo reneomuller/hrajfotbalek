@@ -34,7 +34,7 @@ export async function PlayerOfMonthPanel({
       data-testid="potm-panel"
       className="flex min-w-[270px] flex-1 flex-col items-center justify-center rounded-[20px] border border-hairline-volt bg-surface p-[22px] text-center"
     >
-      <h3 className="m-0 mb-4 font-display text-community-title uppercase text-white">
+      <h3 className="m-0 mb-4 font-display text-community-title text-white">
         {t.landing.potmTitle}
       </h3>
 

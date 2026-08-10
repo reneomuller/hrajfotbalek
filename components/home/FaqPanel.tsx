@@ -54,7 +54,7 @@ export async function FaqPanel() {
       data-testid="faq-panel"
       className="flex min-w-[270px] flex-1 flex-col rounded-[20px] border border-hairline-volt bg-surface p-[22px]"
     >
-      <h3 className="m-0 mb-3 font-display text-community-title uppercase text-white">
+      <h3 className="m-0 mb-3 font-display text-community-title text-white">
         {t.faq.title}
       </h3>
 

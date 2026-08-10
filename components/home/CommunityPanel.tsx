@@ -28,7 +28,7 @@ export async function CommunityPanel() {
     >
       <h3
         data-testid="community-heading"
-        className="m-0 mb-[6px] font-display text-community-title uppercase text-white"
+        className="m-0 mb-[6px] font-display text-community-title text-white"
       >
         {community.title}
       </h3>
