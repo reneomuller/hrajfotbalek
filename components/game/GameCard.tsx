@@ -119,38 +119,26 @@ export async function GameCard({
           somebody books, which is a layout shift on a surface the reader is
           mid-scroll through. */}
       {/*
-        THE DOTTED LINE IS THE SINGLE OCCUPANCY STATEMENT, with the lineup
-        beneath it (density ruling, 2026-08-10).
+        THE DOTTED LINE, THE ACCENT, THE LINEUP (layout law, final form).
 
-        The card said it twice: a `10 spots left` row of its own above the
-        rule, and `2 / 12 players` below it. Two sentences about the same fact
-        cost a row the fold could not spare — the card had reached 171px and
-        two whole cards above the fold, from five in v1.1.4.
+        A rule, the spots-left figure beneath it, then the faces. The raw
+        `2 / 12 players` caption is gone: the line and the stack already say
+        how full the game is — the reader can SEE three faces against twelve
+        places — and a number spelling that out again was the third statement
+        of one fact on a card that had already been trimmed twice for height.
 
-        MERGED RATHER THAN DROPPED. The spots figure keeps its colour ladder
-        and stays the card's ONE accent (ruling D); the raw count joins it
-        after a middot as the smaller, uncoloured half. Someone deciding reads
-        the first; someone judging whether a game will actually fill reads the
-        second.
+        The spots figure keeps its colour ladder and remains the card's ONE
+        accent (ruling D). It is the half that answers "do I have to decide
+        now", which is the question a count cannot.
 
-        THE FRACTION IS NOT COPY. `2/12` is two numbers and a solidus, so it is
-        built here rather than added to the string table — a "{booked}/{capacity}"
-        entry would demand a Czech and a Russian translation of punctuation,
-        and the i18n walk would flag all three as identical.
-
-        The AVATARS still disappear at zero (§2.1) while the line does not: a
-        count of nobody is a fact and an invitation, a ring around nobody is a
-        question.
+        The AVATARS disappear at zero (§2.1) and the rule does not: a card
+        with nobody on it still needs its seam, and a ring drawn around
+        nobody is a question.
       */}
       <div className="mt-3 border-t border-dotted border-hairline-strong pt-3">
-        <div className="flex flex-wrap items-baseline gap-x-2">
-          <span data-testid="row-spots">
-            <SpotsLeft bookedCount={bookedCount} capacity={game.capacity} />
-          </span>
-          <span data-testid="card-players-count" className="text-small text-muted">
-            {`· ${Math.min(bookedCount, game.capacity)}/${game.capacity}`}
-          </span>
-        </div>
+        <span data-testid="row-spots">
+          <SpotsLeft bookedCount={bookedCount} capacity={game.capacity} />
+        </span>
 
         {roster.length > 0 && (
           <div className="mt-2">

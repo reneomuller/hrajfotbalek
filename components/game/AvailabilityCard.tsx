@@ -67,30 +67,24 @@ export async function AvailabilityCard({
       </div>
 
       {/*
-        THE DOTTED PLAYER-COUNT LINE, WITH THE LINEUP BENEATH IT.
+        THE DOTTED LINE AND THE LINEUP (layout law, final form).
 
-        Identical to the list card's arrangement (layout law, 2026-08-10) —
-        that is the whole requirement: a reader who scanned the list on faces
-        meets the same shape one tap later, rather than re-learning it. The
-        avatars were beside the count here; they sit under it now, and the
-        rule is dotted so it reads as a seam inside one card.
+        No caption at all here: the spots figure and the capacity bar are
+        directly above at hero scale, so `2 / 12 players` under the rule was
+        the same fact for the third time on one card.
 
-        The full lineup is still further down with names and games-played
-        counts. This is the glance.
+        Identical in arrangement to the list cards — rule, then faces — which
+        is the law's point: a reader who scanned the list on faces meets the
+        shape unchanged one tap later rather than re-learning it.
+
+        The full lineup, with names and games-played counts, is still further
+        down the page. This is the glance.
       */}
-      <div className="mt-4 border-t border-dotted border-hairline-strong pt-4">
-        <p data-testid="players-count" className="m-0 text-[14px] text-muted">
-          {t.games.playersOfCapacity
-            .replace("{booked}", String(Math.min(bookedCount, capacity)))
-            .replace("{capacity}", String(capacity))}
-        </p>
-
-        {roster.length > 0 && (
-          <div className="mt-2">
-            <AvatarRow players={roster} max={3} size="card" supabaseUrl={supabaseUrl} />
-          </div>
-        )}
-      </div>
+      {roster.length > 0 && (
+        <div className="mt-4 border-t border-dotted border-hairline-strong pt-4">
+          <AvatarRow players={roster} max={3} size="card" supabaseUrl={supabaseUrl} />
+        </div>
+      )}
     </section>
   );
 }

@@ -176,6 +176,40 @@ update public.games  set venue = replace(venue, ' — ', ' • ') where venue li
 When a UI failure looks inexplicable and the code reads correctly, check this
 list before debugging the component.
 
+## A modal must be portalled, or the nav pill eats it
+
+`z-50` is not an absolute rank. It is a rank WITHIN a stacking context, and
+most page shells here are `<main className="relative z-10">` — which caps
+everything inside them below the chrome that lives at the document root. The
+nav pill is `fixed z-40` there, the claim bar `z-30`.
+
+So the cancel dialog rendered at `z-50`, looked correct in a screenshot, and
+was **unreachable**: `elementFromPoint` at the confirm button's centre returned
+a nav-pill list item, and Playwright waited out its timeout on an element that
+was visible, enabled and permanently covered.
+
+**Any modal, dialog, sheet or popover renders through `createPortal` into
+`document.body`.** Not for tidiness — it is the only thing that lets its
+z-index compete with the chrome on equal terms. `components/CancelBookingForm.tsx`
+is the worked example.
+
+Diagnose this class with `document.elementFromPoint(x, y)` at the control's
+centre rather than by reading the CSS: the answer names the element actually
+on top.
+
+## The seed drifts, and the admin spec is the canary
+
+`admin.spec.ts` "the player detail page shows history and marks a no-show"
+fails after a long run of suites, times out with **no page actions in its
+trace**, and passes again immediately after `npm run seed`. It has done this
+twice.
+
+It is not the harness and not the product: the specs create and destroy their
+own data but the seed tableau accumulates state across many runs, and that spec
+reads it. **When it fails, re-seed before investigating anything else.** A
+trace with no page actions at all is the tell — the hang is in the scaffold's
+direct-postgres helper, before the browser is ever asked to do anything.
+
 ## Testing
 
 Four suites, and they answer different questions:

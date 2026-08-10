@@ -61,7 +61,7 @@ test.describe("Layout law strips", () => {
       await page.goto("/games", { waitUntil: "networkidle" });
       await settle();
       const card = page.locator(`[data-testid="game-row"][href="/game/${game.id}"]`);
-      await expect(card.getByTestId("card-players-count")).toBeVisible();
+      await expect(card.getByTestId("row-spots")).toBeVisible();
       await expect(card.getByTestId("card-price")).toHaveCount(0);
       await card.scrollIntoViewIfNeeded();
       await card.screenshot({ path: path.join(OUT, "01-games-card.png") });

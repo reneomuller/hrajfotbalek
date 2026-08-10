@@ -107,7 +107,10 @@ test("the home page shows the next three games as list rows", async ({ page }) =
    */
   await expect(rows.first().getByTestId("spots-left")).toHaveAttribute("data-tone", /.+/);
   await expect(rows.first().getByTestId("card-price")).toHaveCount(0);
-  await expect(rows.first().getByTestId("card-players-count")).toBeVisible();
+  // The dotted line carries the spots figure and the faces; the raw count
+  // caption is gone (layout law, final form).
+  await expect(rows.first().getByTestId("row-spots")).toBeVisible();
+  await expect(rows.first().getByTestId("card-players-count")).toHaveCount(0);
 
   // A section showing three of something says that three is not all of it.
   await page.getByTestId("next-matches-all").click();

@@ -672,7 +672,7 @@ test("the whole card is the link, with no View game label and no claim", async (
  * REQ-GAME-020 — what each row actually carries, and what it deliberately does
  * NOT (v1.2 §5.5).
  */
-test("a card carries kick-off, duration, venue, format, count and spots — no price", async ({
+test("a card carries kick-off, duration, venue, format and spots — no price, no count", async ({
   page,
 }) => {
   const game = await createScratchGame({
@@ -721,7 +721,8 @@ test("a card carries kick-off, duration, venue, format, count and spots — no p
     await expect(row.getByTestId("card-price")).toHaveCount(0);
     await expect(row).not.toContainText("250");
     // What the card carries instead: the dotted count line.
-    await expect(row.getByTestId("card-players-count")).toBeVisible();
+    await expect(row.getByTestId("row-spots")).toBeVisible();
+    await expect(row.getByTestId("card-players-count")).toHaveCount(0);
 
     // Substitutes remain a detail-page fact — `subsPerTeam` is set rather
     // than null here, so an absent chip means suppressed and not unset.
@@ -1161,7 +1162,9 @@ test("a booked game shows its avatar stack on the card AND on the detail", async
     // The detail answers it the same way, under the capacity line.
     await page.goto(`/game/${booked.id}`);
     const availability = page.getByTestId("availability-card");
-    await expect(availability.getByTestId("players-count")).toBeVisible();
+    // No caption under the rule on the detail either — the hero spots figure
+    // and the capacity bar sit directly above it.
+    await expect(availability.getByTestId("players-count")).toHaveCount(0);
     await expect(availability.getByTestId("avatar")).toHaveCount(1);
 
     await page.goto(`/game/${empty.id}`);
