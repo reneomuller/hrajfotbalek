@@ -215,8 +215,9 @@ test("a game's roster export carries its bookings, VS first", async ({ page, con
 
     const lines = (await response.text()).slice(1).trimEnd().split("\r\n");
     expect(lines[0]).toBe(
-      "payment_code,nickname,status,payment_method,price_czk,credit_applied_czk," +
-        "amount_due_czk,attendance,booked_by_admin,is_seed,booking_id",
+      "payment_code,nickname,skill_level,status,payment_method,price_czk," +
+        "credit_applied_czk,amount_due_czk,attendance,booked_by_admin,is_seed," +
+        "booking_id",
     );
     expect(lines).toHaveLength(2);
     expect(lines[1]).toContain("RealRunner");

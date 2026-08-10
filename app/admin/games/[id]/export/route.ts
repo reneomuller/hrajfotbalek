@@ -24,6 +24,9 @@ export const dynamic = "force-dynamic";
 const COLUMNS: CsvColumn<AdminBookingRow>[] = [
   { header: "payment_code", value: (b) => b.paymentCode },
   { header: "nickname", value: (b) => b.nickname },
+  // The roster export is what an organizer balances teams from, so the level
+  // belongs beside the name. Empty for a player who has not declared one.
+  { header: "skill_level", value: (b) => b.skillLevel ?? "" },
   { header: "status", value: (b) => b.status },
   { header: "payment_method", value: (b) => b.paymentMethod },
   { header: "price_czk", value: (b) => b.priceCzk },

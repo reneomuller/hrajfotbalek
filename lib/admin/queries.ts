@@ -123,6 +123,14 @@ export interface AdminBookingRow {
   id: string;
   playerId: string;
   nickname: string;
+  /**
+   * The player's self-declared level, for the roster export.
+   *
+   * Null when they have not set one — which is a real state and is written as
+   * an empty cell rather than as "unknown", because an organizer sorting a
+   * spreadsheet on this column should see a blank and not a value.
+   */
+  skillLevel: Database["public"]["Tables"]["players"]["Row"]["skill_level"] | null;
   status: Database["public"]["Tables"]["bookings"]["Row"]["status"];
   paymentMethod: Database["public"]["Tables"]["bookings"]["Row"]["payment_method"];
   /** The variable symbol. Null for anything that is not a QR booking. */
@@ -160,15 +168,19 @@ export async function listGameBookings(gameId: string): Promise<AdminBookingRow[
   const playerIds = [...new Set(bookings.map((b) => b.player_id))];
   const { data: players } = await service
     .from("players")
-    .select("id, nickname")
+    .select("id, nickname, skill_level")
     .in("id", playerIds);
 
   const nicknames = new Map((players ?? []).map((p) => [p.id, p.nickname]));
+  // Same single round trip the nicknames already cost — the column rides along
+  // rather than adding a query.
+  const skills = new Map((players ?? []).map((p) => [p.id, p.skill_level]));
 
   return bookings.map((booking) => ({
     id: booking.id,
     playerId: booking.player_id,
     nickname: nicknames.get(booking.player_id) ?? "",
+    skillLevel: skills.get(booking.player_id) ?? null,
     status: booking.status,
     paymentMethod: booking.payment_method,
     paymentCode: booking.payment_code,
