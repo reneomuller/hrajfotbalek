@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Anton, Barlow_Condensed, JetBrains_Mono, Manrope } from "next/font/google";
+import { Anton, Archivo, Barlow_Condensed, JetBrains_Mono } from "next/font/google";
 import { NavPill } from "@/components/chrome/NavPill";
 import { LocaleProvider } from "@/components/LocaleProvider";
 import { SessionProvider } from "@/components/SessionProvider";
@@ -31,9 +31,21 @@ const barlowCondensed = Barlow_Condensed({
   display: "swap",
 });
 
-/** Body copy. */
-const manrope = Manrope({
-  variable: "--font-manrope",
+/**
+ * Body copy — Archivo, restored from the design-pass-2 mockups.
+ *
+ * A TOKEN-LEVEL SWAP AND NOTHING ELSE. v1.3's `sans` step pointed at Manrope;
+ * the mockups this product is being built against use Archivo under the same
+ * Anton display face, and the pairing is the thing that was reverted, not the
+ * scale. Every other v1.3 token — surfaces, spacing, colour, radii — is
+ * untouched, and so is ruling B: the faces changed, the sentence case did not.
+ *
+ * The weight range is loaded rather than a fixed list because §1.4 uses four
+ * of them (400 body, 500 small, 600 body-lg default, 700 the spots-figure
+ * variant), and a variable font serves all four from one file.
+ */
+const archivo = Archivo({
+  variable: "--font-archivo",
   subsets: ["latin", "latin-ext"],
   display: "swap",
 });
@@ -119,7 +131,7 @@ export default async function RootLayout({
   return (
     <html
       lang={locale}
-      className={`${anton.variable} ${barlowCondensed.variable} ${manrope.variable} ${jetbrainsMono.variable} h-full`}
+      className={`${anton.variable} ${barlowCondensed.variable} ${archivo.variable} ${jetbrainsMono.variable} h-full`}
     >
       <body className="min-h-full flex flex-col">
         <LocaleProvider locale={locale} t={t}>

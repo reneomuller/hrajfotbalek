@@ -190,7 +190,7 @@ describe("families — two player-facing, plus the reserved mono", () => {
 
   it("no longer defines condensed", () => {
     // Deleted, not aliased. An ungenerated `font-condensed` inherits the body
-    // font, which is Manrope — exactly where its 117 call sites were headed.
+    // font, which is Archivo — exactly where its 117 call sites were headed.
     expect(families).not.toHaveProperty("condensed");
   });
 
