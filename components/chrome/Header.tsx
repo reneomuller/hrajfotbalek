@@ -95,8 +95,31 @@ export async function Header({
           aria-label={nav.home}
           className="flex shrink-0 items-center gap-[10px] no-underline"
         >
-          <span className="flex h-[38px] w-[38px] items-center justify-center rounded-pill border-[1.5px] border-volt bg-surface text-[19px] font-extrabold italic tracking-[-1px]">
-            <span className="text-white">{brand.monogramLead}</span>
+          {/*
+            THE MONOGRAM, OPTICALLY CENTRED RATHER THAN GEOMETRICALLY.
+
+            Measured in the browser, the glyph boxes were already dead centre
+            in the circle — offset 0.0 on both axes. The mark still read as
+            sitting right of centre, and both causes are things a bounding box
+            cannot see:
+
+              - THE ITALIC LEANS. The ink at the cap line sits right of the ink
+                at the baseline, so a slanted pair of letters centred by its
+                box reads as pushed right.
+              - `tracking-[-1px]` APPLIES AFTER THE LAST GLYPH TOO. Letter
+                spacing is an advance, not a gap, so the `F` carries a
+                phantom -1px on its right and the ink is not where the box
+                says it is.
+
+            `pr-[2px]` shifts the inline content left by half its value inside
+            a centred flex box, which cancels the lean; scoping the tracking to
+            the first letter removes the trailing advance rather than
+            compensating for it twice. Both are optical corrections and are
+            commented as such, so nobody "fixes" them back to symmetric values
+            and reintroduces a lean the numbers will keep calling centred.
+          */}
+          <span className="flex h-[38px] w-[38px] items-center justify-center rounded-pill border-[1.5px] border-volt bg-surface pr-[2px] text-[19px] font-extrabold italic leading-none">
+            <span className="tracking-[-1px] text-white">{brand.monogramLead}</span>
             <span className="text-volt">{brand.monogramAccent}</span>
           </span>
           {/* HRAJ FOTBAL — unchanged inside the football namespace. The
