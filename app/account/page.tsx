@@ -179,7 +179,14 @@ export default async function AccountPage({
         <Link
           href="/admin/games"
           data-testid="account-admin-link"
-          className="mt-3 flex min-h-11 items-center justify-between gap-3 rounded-control border border-hairline-strong px-4 text-body-lg font-semibold text-bone no-underline transition-colors hover:border-hairline-volt"
+          /*
+            `mt-8`, matching the gap above "See all my games" rather than the
+            `mt-3` that made these two read as one stacked pair. They are not a
+            pair: one is where a player goes for their own fixtures, the other
+            is a door into a different application. A shared rhythm implied a
+            grouping that does not exist.
+          */
+          className="mt-8 flex min-h-11 items-center justify-between gap-3 rounded-control border border-hairline-strong px-4 text-body-lg font-semibold text-bone no-underline transition-colors hover:border-hairline-volt"
         >
           {t.nav.admin}
           <span aria-hidden className="text-volt">→</span>
