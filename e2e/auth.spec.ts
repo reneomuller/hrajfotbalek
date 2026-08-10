@@ -219,3 +219,51 @@ test("the profile columns are written by signup, not by the client", async () =>
     .maybeSingle();
   expect(data).not.toBeNull();
 });
+
+/*
+ * A REJECTED SIGNUP KEEPS EVERYTHING THE PLAYER TYPED.
+ *
+ * The reported bug, and it was every error path rather than one: the actions
+ * returned `{status, field, message}` and nothing else, so React re-rendered
+ * the form with empty inputs. Missing a consent box — the most likely mistake
+ * on this form, since both are unticked by default and both are required —
+ * cost the player their email, nickname, country and skill.
+ *
+ * The password is deliberately NOT preserved: echoing it puts a plaintext
+ * password in the RSC payload and in a DOM attribute. That is asserted here as
+ * an intended property rather than left as an omission somebody later "fixes".
+ */
+test("a signup rejected for a missing consent keeps every other field", async ({
+  page,
+}) => {
+  const email = `wipe-${Date.now()}@example.com`;
+
+  await page.goto("/signup");
+
+  await page.fill('input[name="email"]', email);
+  await page.fill('input[name="password"]', "correct-horse-battery");
+  await page.fill('input[name="nickname"]', "WipeCheck");
+  await page.selectOption('select[name="country"]', "CZ");
+  await page.check('input[name="skill"][value="intermediate"]');
+  // One consent ticked, the other missed — so the error must not blame both.
+  await page.check('input[name="tos"]');
+
+  const submit = page.getByTestId("signup-submit");
+  await submit.scrollIntoViewIfNeeded();
+  await submit.click();
+
+  // The error arrives...
+  await expect(page.locator("body")).toContainText(/privacy|consent|policy/i);
+
+  // ...and the work survives it.
+  await expect(page.locator('input[name="email"]')).toHaveValue(email);
+  await expect(page.locator('input[name="nickname"]')).toHaveValue("WipeCheck");
+  await expect(page.locator('select[name="country"]')).toHaveValue("CZ");
+  await expect(page.locator('input[name="skill"][value="intermediate"]')).toBeChecked();
+  // The box that WAS ticked stays ticked; the missing one stays clear.
+  await expect(page.locator('input[name="tos"]')).toBeChecked();
+  await expect(page.locator('input[name="gdpr"]')).not.toBeChecked();
+
+  // And the password is not echoed back into the DOM.
+  await expect(page.locator('input[name="password"]')).toHaveValue("");
+});

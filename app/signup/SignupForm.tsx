@@ -51,6 +51,35 @@ export function SignupForm({
     initialState,
   );
 
+  /*
+    WHAT THE PLAYER ALREADY TYPED, on every error path.
+
+    `defaultValue` rather than `value`: these stay uncontrolled, so the
+    browser owns the field between renders and a password manager, an
+    autofill or an IME composition is not fought with. The key on the form
+    is what makes a rejected submission actually repaint them — without it
+    React reuses the existing DOM nodes and the defaults are ignored.
+  */
+  const v = state.values;
+
+  /*
+    WHY THE NON-TEXT CONTROLS ARE KEYED.
+
+    React RESETS uncontrolled form fields once a form action completes. For a
+    text input that is harmless here — reset restores the `defaultValue`
+    attribute, which now holds what the player typed. For a `<select>` and for
+    radios and checkboxes it is not: `defaultValue` / `defaultChecked` are
+    applied at MOUNT ONLY, so the reset restored the mount-time default and
+    the country dropped back to "Choose your country" while the text fields
+    looked fine. That asymmetry is exactly why this bug reads as random.
+
+    Keying them on the returned values remounts precisely those controls when
+    a submission comes back, and only then — the key is stable across
+    re-renders that carry the same values, so typing does not remount
+    anything mid-edit.
+  */
+  const valuesKey = JSON.stringify(v ?? null);
+
   // The waiting room between `signUp()` and a verified email. Production
   // reaches this; the local stack, with confirmations off, never does.
   if (state.status === "verify") {
@@ -78,6 +107,7 @@ export function SignupForm({
             <input
               type="email"
               name="email"
+              defaultValue={v?.email ?? ""}
               required
               autoComplete="email"
               placeholder={t.auth.emailPlaceholder}
@@ -107,6 +137,7 @@ export function SignupForm({
         <input
           type="text"
           name="nickname"
+          defaultValue={v?.nickname ?? ""}
           required
           maxLength={NICKNAME_MAX_LENGTH}
           autoComplete="nickname"
@@ -126,7 +157,13 @@ export function SignupForm({
       */}
       <label className="flex flex-col gap-2">
         <span className={LABEL_CLASS}>{t.auth.countryLabel}</span>
-        <select name="country" required defaultValue="" className={FIELD_CLASS}>
+        <select
+          key={`country-${valuesKey}`}
+          name="country"
+          required
+          defaultValue={v?.country ?? ""}
+          className={FIELD_CLASS}
+        >
           <option value="" disabled>
             {t.auth.countryPlaceholder}
           </option>
@@ -147,7 +184,15 @@ export function SignupForm({
               key={level}
               className="flex cursor-pointer items-center gap-2 rounded-control border border-hairline-strong px-3 py-2 text-sm has-[:checked]:border-volt has-[:checked]:text-volt"
             >
-              <input type="radio" name="skill" value={level} required className="accent-volt" />
+              <input
+                key={`skill-${level}-${valuesKey}`}
+                type="radio"
+                name="skill"
+                value={level}
+                required
+                defaultChecked={v?.skill === level}
+                className="accent-volt"
+              />
               {level === "beginner"
                 ? t.auth.skillBeginner
                 : level === "intermediate"
@@ -162,7 +207,13 @@ export function SignupForm({
 
       <label className="flex flex-col gap-2">
         <span className={LABEL_CLASS}>{t.auth.phoneLabel}</span>
-        <input type="tel" name="phone" autoComplete="tel" className={FIELD_CLASS} />
+        <input
+          type="tel"
+          name="phone"
+          autoComplete="tel"
+          defaultValue={v?.phone ?? ""}
+          className={FIELD_CLASS}
+        />
         <span className="text-xs opacity-50">{t.auth.phoneHint}</span>
       </label>
 
@@ -178,7 +229,13 @@ export function SignupForm({
         <legend className={`px-2 ${LABEL_CLASS}`}>{t.auth.legalGroupLabel}</legend>
 
         <label className="flex items-start gap-3 text-sm">
-          <input type="checkbox" name="tos" className="mt-1 accent-volt" />
+          <input
+            key={`tos-${valuesKey}`}
+            type="checkbox"
+            name="tos"
+            defaultChecked={v?.tos ?? false}
+            className="mt-1 accent-volt"
+          />
           <span>
             {t.auth.tosLabel}{" "}
             <Link href="/terms" className="underline opacity-70">
@@ -189,7 +246,13 @@ export function SignupForm({
         <FieldError show={state.field === "tos"} message={state.message} />
 
         <label className="flex items-start gap-3 text-sm">
-          <input type="checkbox" name="gdpr" className="mt-1 accent-volt" />
+          <input
+            key={`gdpr-${valuesKey}`}
+            type="checkbox"
+            name="gdpr"
+            defaultChecked={v?.gdpr ?? false}
+            className="mt-1 accent-volt"
+          />
           <span>
             {t.auth.gdprLabel}{" "}
             <Link href="/privacy" className="underline opacity-70">
@@ -203,7 +266,13 @@ export function SignupForm({
       <div className="flex flex-col gap-2">
         <span className={LABEL_CLASS}>{t.auth.preferencesGroupLabel}</span>
         <label className="flex items-start gap-3 text-sm">
-          <input type="checkbox" name="marketing" className="mt-1 accent-volt" />
+          <input
+            key={`marketing-${valuesKey}`}
+            type="checkbox"
+            name="marketing"
+            defaultChecked={v?.marketing ?? false}
+            className="mt-1 accent-volt"
+          />
           <span>{t.auth.marketingLabel}</span>
         </label>
       </div>
@@ -211,6 +280,7 @@ export function SignupForm({
       <button
         type="submit"
         disabled={pending}
+        data-testid="signup-submit"
         className="rounded-control bg-volt px-4 py-[15px] text-cta font-extrabold uppercase tracking-wide text-surface transition disabled:opacity-50"
       >
         {pending ? t.common.loading : t.auth.createAccount}

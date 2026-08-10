@@ -33,12 +33,20 @@ import {
  * one that is never exercised locally is the one that runs in production.
  */
 
+import { submittedValues, type SubmittedValues } from "./submittedValues";
+
 export interface SignupFormState {
   status: "idle" | "error" | "verify";
   message?: string;
   field?: SignupField;
   /** Echoed back so the verify screen can name the address. */
   email?: string;
+  /**
+   * Everything the player typed, returned on EVERY error path so the form
+   * re-renders with their work intact. Absent on success and on the initial
+   * render. The password is deliberately not in it — see `submittedValues`.
+   */
+  values?: SubmittedValues;
 }
 
 /** Maps a parse failure onto the copy for that field. */
@@ -79,7 +87,12 @@ export async function startSignup(
 
   const parsed = parseSignupForm(formData);
   if (!parsed.ok) {
-    return { status: "error", field: parsed.field, message: await messageFor(parsed.code) };
+    return {
+      status: "error",
+      field: parsed.field,
+      message: await messageFor(parsed.code),
+      values: submittedValues(formData),
+    };
   }
 
   const submission = parsed.value;
@@ -108,13 +121,27 @@ export async function startSignup(
     // an exact string.
     const detail = error.message.toLowerCase();
     if (detail.includes("already registered") || detail.includes("already exists")) {
-      return { status: "error", field: "email", message: t.auth.emailTaken };
+      return {
+        status: "error",
+        field: "email",
+        message: t.auth.emailTaken,
+        values: submittedValues(formData),
+      };
     }
     if (detail.includes("password")) {
-      return { status: "error", field: "password", message: t.auth.passwordTooShort };
+      return {
+        status: "error",
+        field: "password",
+        message: t.auth.passwordTooShort,
+        values: submittedValues(formData),
+      };
     }
     console.error("signUp failed", error.message);
-    return { status: "error", message: t.auth.signupFailed };
+    return {
+      status: "error",
+      message: t.auth.signupFailed,
+      values: submittedValues(formData),
+    };
   }
 
   // Confirmation OFF (the local stack): a session already exists, so the
@@ -122,7 +149,12 @@ export async function startSignup(
   if (data.session) {
     const written = await writeProfileFromMetadata();
     if (written.ok) redirect(next.startsWith("/") ? next : "/games");
-    return { status: "error", field: written.field, message: written.message };
+    return {
+      status: "error",
+      field: written.field,
+      message: written.message,
+      values: submittedValues(formData),
+    };
   }
 
   // Confirmation ON (production): nothing exists in `players` yet, and will not
@@ -218,7 +250,12 @@ export async function finishSignup(
 
   const parsed = parseSignupForm(proxy);
   if (!parsed.ok) {
-    return { status: "error", field: parsed.field, message: await messageFor(parsed.code) };
+    return {
+      status: "error",
+      field: parsed.field,
+      message: await messageFor(parsed.code),
+      values: submittedValues(formData),
+    };
   }
 
   const { error } = await supabase.rpc("complete_signup_v2", {
@@ -234,13 +271,27 @@ export async function finishSignup(
 
   if (error) {
     if (error.message.includes("NICKNAME_TAKEN")) {
-      return { status: "error", field: "nickname", message: t.auth.nicknameTaken };
+      return {
+        status: "error",
+        field: "nickname",
+        message: t.auth.nicknameTaken,
+        values: submittedValues(formData),
+      };
     }
     if (error.message.includes("NICKNAME_INVALID")) {
-      return { status: "error", field: "nickname", message: t.auth.nicknameInvalid };
+      return {
+        status: "error",
+        field: "nickname",
+        message: t.auth.nicknameInvalid,
+        values: submittedValues(formData),
+      };
     }
     console.error("complete_signup_v2 failed", error.message);
-    return { status: "error", message: t.errors.generic };
+    return {
+      status: "error",
+      message: t.errors.generic,
+      values: submittedValues(formData),
+    };
   }
 
   const next = String(formData.get("next") ?? "/games");
