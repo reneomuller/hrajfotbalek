@@ -316,6 +316,12 @@ export const ru: StringsOverlay = {
     confirmed: "Платёж подтверждён",
     creditApplied: "Кредит применён",
     amountDue: "К оплате",
+    // DRAFTS — flagged for native review with the slogan pair.
+    notEnoughCreditsTitle: "Кредитов не хватает",
+    notEnoughCreditsBody:
+      "Игра стоит 1 кредит. Возьми абонемент и сэкономь до {percent} %, или оплати эту игру по QR.",
+    getCredits: "Получить кредиты",
+    payByQrThisGame: "Оплатить эту игру по QR",
     cancelBooking: "Отменить бронь",
     cancelTitle: "Отменить бронь?",
     cancelKeep: "Оставить место",

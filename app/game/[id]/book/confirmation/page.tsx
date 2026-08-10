@@ -7,6 +7,7 @@ import { getOwnBookingWithGame } from "@/lib/booking/queries";
 import { formatCzk, formatGameDateTime } from "@/lib/format";
 import { amountDueCzk, paymentIban, shouldRenderQr } from "@/lib/payments/spd";
 import { getStrings } from "@/lib/i18n/server";
+import { bestDiscountPercent, listPassTiers } from "@/lib/pass/queries";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getStrings();
@@ -63,6 +64,12 @@ export default async function ConfirmationPage({
   const { booking, game } = found;
 
   // Branch on the DERIVED method the RPC returned, never on what was sent.
+  /*
+   * The tiers, for the "save up to N %" claim in the insufficient-credits
+   * offer. Read here rather than hardcoded so the number cannot drift away
+   * from what the pass page actually sells.
+   */
+  const tiers = await listPassTiers();
   const isCredit = booking.payment_method === "credit";
   const isSeed = booking.payment_method === "seed_free";
   const amountDue = amountDueCzk(booking.price_czk, booking.credit_applied_czk);
@@ -122,6 +129,51 @@ export default async function ConfirmationPage({
               </span>
             </div>
 
+            {/*
+              THE INSUFFICIENT-CREDITS OFFER (§3 screen 4).
+
+              Rendered whenever money is still owed, which is exactly the
+              case where the wallet did not cover the game. It is an OFFER
+              BESIDE THE QR, never a gate in front of it: the spot is already
+              reserved by the time this renders, and the secondary route is
+              the payment that was always going to happen.
+
+              A condition, not a figure — no crown shortfall, because a
+              shortfall in crowns re-introduces the unit the credits ruling
+              removed on the one screen whose job is to teach that a game is
+              one credit.
+            */}
+            <div data-testid="not-enough-credits" className="mt-5 rounded-card bg-surface p-5">
+              <p className="m-0 text-body-lg font-semibold text-bone">
+                {t.booking.notEnoughCreditsTitle}
+              </p>
+              <p className="mt-2 mb-0 text-body leading-relaxed text-muted">
+                {t.booking.notEnoughCreditsBody.replace(
+                  "{percent}",
+                  String(bestDiscountPercent(tiers)),
+                )}
+              </p>
+
+              <div className="mt-4 flex flex-wrap items-center gap-3">
+                <Link
+                  href="/pass"
+                  data-testid="get-credits"
+                  className="inline-flex min-h-11 items-center justify-center rounded-control bg-volt px-5 text-body-lg font-bold text-ink no-underline transition-colors hover:bg-volt-dim"
+                >
+                  {t.booking.getCredits}
+                </Link>
+                {showQr && (
+                  <a
+                    href="#qr"
+                    data-testid="pay-by-qr-this-game"
+                    className="min-h-11 px-2 text-body font-semibold text-muted no-underline transition-colors hover:text-bone"
+                  >
+                    {t.booking.payByQrThisGame}
+                  </a>
+                )}
+              </div>
+            </div>
+
             {booking.payment_method === "cash" && (
               <p className="mt-4 rounded-card bg-surface p-4 text-[14px] leading-relaxed text-muted">
                 {t.booking.payByCashHint}
@@ -134,7 +186,9 @@ export default async function ConfirmationPage({
               suppression rules live next to the string builder they guard.
             */}
             {showQr && (
-              <div className="mt-4">
+              // `id` so the offer's secondary route lands here rather than
+              // being a link with nowhere to go.
+              <div id="qr" className="mt-4 scroll-mt-24">
                 <QrPayment
                   iban={paymentIban()}
                   amountCzk={amountDue}

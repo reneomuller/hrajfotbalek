@@ -190,3 +190,49 @@ test("a cancelled booking returns its value as wallet credit", async ({ page, co
   // Left as we found it, or the next spec inherits a wallet.
   await setWalletTo(players.runner.id, 0);
 });
+
+/*
+ * §3 screen 4 — the INSUFFICIENT-CREDITS state, and the two rules that govern
+ * it (money-copy ruling, 2026-08-10).
+ *
+ * IT NEVER BLOCKS THE BOOKING. The spot is reserved by the time this renders:
+ * `create_booking` applies whatever credit exists and falls back rather than
+ * failing, so the offer sits BESIDE the payment and never in front of it. A
+ * spec that only checked the upsell appeared would pass on a screen that had
+ * trapped the player.
+ *
+ * A CONDITION, NOT A FIGURE. No crown shortfall — that would re-introduce the
+ * unit the credits ruling removed, on the screen whose job is to teach that a
+ * game costs one credit.
+ */
+test("a booking the wallet cannot cover offers credits AND still takes payment", async ({
+  page,
+  context,
+}) => {
+  const game = await createScratchGame({ hoursFromNow: 24 * 8, capacity: 12 });
+
+  try {
+    await setWalletTo(players.runner.id, 0);
+    await signInAs(context, players.runner);
+
+    await page.goto(`/game/${game.id}/book`);
+    await page.getByTestId("confirm-booking").click();
+    await page.waitForURL(/\/book\/confirmation/);
+
+    const offer = page.getByTestId("not-enough-credits");
+    await expect(offer).toBeVisible();
+
+    // Both routes, per the ruling: credits primary, paying for this one
+    // secondary — and the booking already exists either way.
+    await expect(page.getByTestId("get-credits")).toHaveAttribute("href", "/pass");
+    await expect(page.getByTestId("amount-due")).toBeVisible();
+    await expect(page.getByTestId("confirmation")).toBeVisible();
+
+    // No crown shortfall anywhere in the offer.
+    await expect(offer).not.toContainText(/\d+\s*CZK/);
+    await expect(offer).toContainText("1 credit");
+  } finally {
+    await setWalletTo(players.runner.id, 0);
+    await destroyScratchGame(game.id);
+  }
+});

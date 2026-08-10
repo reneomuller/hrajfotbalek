@@ -98,6 +98,27 @@ export const PASS_REFERENCE_PRICE_CZK = 150;
 export const MOST_POPULAR_GAMES = 12;
 
 /**
+ * The best discount any tier offers, as a whole percent, floored.
+ *
+ * COMPUTED FROM THE TIERS, never written down. The insufficient-credits state
+ * claims "save up to N %", and a hardcoded number drifts the first time a tier
+ * price moves — a stale discount claim is a promise the pass page does not
+ * keep, on the one screen that is asking someone to spend money.
+ *
+ * FLOORED, not rounded: claiming 23 % when the true figure is 23.3 % is
+ * conservative, and claiming 24 % when it is 23.6 % would not be. The anchor
+ * is `games x 150`, the same reference the tier cards strike through.
+ */
+export function bestDiscountPercent(tiers: PassTier[]): number {
+  const best = tiers.reduce((max, tier) => {
+    const anchor = tier.games * PASS_REFERENCE_PRICE_CZK;
+    if (anchor <= 0) return max;
+    return Math.max(max, ((anchor - tier.priceCzk) / anchor) * 100);
+  }, 0);
+  return Math.floor(best);
+}
+
+/**
  * "≈ 5 games" for an amount of credit.
  *
  * THE GAMES-EQUIVALENT IS THE WHOLE REASON CZK WORKS AS THE UNIT (§4.2).

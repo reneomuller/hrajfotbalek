@@ -545,6 +545,30 @@ export const strings = {
     confirmed: "Payment confirmed",
     creditApplied: "Credit applied",
     amountDue: "Amount due",
+    /*
+     * THE INSUFFICIENT-CREDITS STATE (§3 screen 4), and the ruling behind its
+     * wording is worth keeping next to it.
+     *
+     * A CONDITION, NEVER A FIGURE. It says the wallet is short, not by how
+     * much — no "you are 50 CZK short". A shortfall in crowns re-introduces
+     * the unit the credits ruling removed, on the one screen whose job is to
+     * teach that a game is one credit.
+     *
+     * AND IT NEVER BLOCKS THE BOOKING. The spot is already reserved by the
+     * time this renders; `create_booking` applies what credit there is and
+     * falls back rather than failing. So this is an offer beside the QR, not
+     * a gate in front of it — the secondary route is the existing payment,
+     * and it is always present.
+     *
+     * `{percent}` is COMPUTED from the tier table at render time, floored.
+     * Hardcoding "23" would drift the first time a tier price moved, and a
+     * stale discount claim is a promise the pass page does not keep.
+     */
+    notEnoughCreditsTitle: "Not enough credits",
+    notEnoughCreditsBody:
+      "A game costs 1 credit. Get a pass and save up to {percent} %, or pay this one by QR.",
+    getCredits: "Get credits",
+    payByQrThisGame: "Pay by QR for this game",
     cancelBooking: "Cancel my booking",
     /*
      * §3 screen 5's confirm dialog. `window.confirm` used to carry this — a

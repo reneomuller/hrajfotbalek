@@ -317,6 +317,12 @@ export const cs: StringsOverlay = {
     confirmed: "Platba potvrzená",
     creditApplied: "Kredit uplatněný",
     amountDue: "K úhradě",
+    // DRAFTS — flagged for native review with the slogan pair.
+    notEnoughCreditsTitle: "Nemáš dost kreditů",
+    notEnoughCreditsBody:
+      "Zápas stojí 1 kredit. Pořiď si permanentku a ušetři až {percent} %, nebo zaplať tenhle přes QR.",
+    getCredits: "Získat kredity",
+    payByQrThisGame: "Zaplatit tenhle zápas přes QR",
     cancelBooking: "Zrušit rezervaci",
     cancelTitle: "Zrušit rezervaci?",
     cancelKeep: "Nechat si místo",
