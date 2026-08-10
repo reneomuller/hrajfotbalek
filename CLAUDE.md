@@ -117,6 +117,35 @@ extend a CHECK in place: drop and re-add, restating the list in full. That
 drop/re-add is **pre-approved** (2026-08-01) as long as the new list is a strict
 superset.
 
+## Migrations applied to production
+
+The repo has held migrations that production did not, three times, and each
+time the symptom looked like a broken feature rather than a missing schema:
+`SETTING_KEY_UNKNOWN` read as "that setting does not exist", a stale
+`pass_tiers` row read as a phantom 1-credit tier, and an absent
+`set_venue_amenities` read as "we could not save that" because PostgREST
+answers a missing function with a 404.
+
+**Reconciled 2026-08-10** — all three are applied and verified on production:
+
+| Migration | Status |
+|---|---|
+| `20260802200000_setting_games_per_week` | Applied, verified |
+| `20260802190000_pass_tiers_from_five` | Applied, verified |
+| `20260802210000_venue_amenities` | Applied 2026-08-10 |
+
+**Outstanding, and it is DATA rather than DDL** — the venue separator moved
+from an em-dash to a bullet in the fixtures, and production rows still carry
+the old one. Owner runs this; it needs no migration file:
+
+```
+update public.venues set name = replace(name, ' — ', ' • ') where name like '% — %';
+update public.games  set venue = replace(venue, ' — ', ' • ') where venue like '% — %';
+```
+
+When a UI failure looks inexplicable and the code reads correctly, check this
+list before debugging the component.
+
 ## Testing
 
 Four suites, and they answer different questions:

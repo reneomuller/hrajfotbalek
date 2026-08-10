@@ -656,10 +656,30 @@ booking.
 > VS series are untouched and a pass purchase mints one, which is what screen 13
 > renders. See `LETCO_ANALYZE.md` §1a.
 
-**Home order (ruling J):** hero (≥25% shorter) → three steps → Upcoming Games
-(3 canonical cards + `All games →` primary button at the section's **bottom**) →
-active-players banner → community card → FAQ → footer. No Player of the Month.
-No equipment line. **At zero upcoming games the section renders the §2.9 empty
+> ### RULING J, AMENDED 2026-08-10 — a documented PARTIAL REVERSAL
+>
+> Two of ruling J's deletions are reversed by the owner's call. The rest of
+> the ruling stands and is built as written.
+>
+> - **Player of the Month STAYS**, and keeps the hours-on-pitch stat added
+>   alongside it. Ruling J removed it as a panel that earned no space; the
+>   stat is what changed — a name alone said somebody had been chosen, and
+>   hours on the pitch says why.
+> - **The equipment line STAYS.** It answers "what do I bring", which is the
+>   second question anyone asks, and removing it removed the answer without
+>   moving it anywhere.
+>
+> Recorded here rather than in a commit message because the paragraph below
+> is what a later session reads and rebuilds from, and an un-amended ruling
+> is how a reversal gets quietly re-applied. Everything else in ruling J —
+> the reorder, the hero, the FAQ window, the bottom button, the panel order
+> — is unchanged.
+
+**Home order (ruling J, as amended):** hero (≥25% shorter) → three steps →
+Upcoming Games (3 canonical cards + `All games →` primary button at the
+section's **bottom**) → active-players banner → community card → FAQ →
+**Player of the Month** → footer. The **equipment line stays** with the three
+steps. **At zero upcoming games the section renders the §2.9 empty
 state with the WhatsApp action**, and at one or two it renders what it has — the
 `All games` button stays in both cases.
 
