@@ -1,4 +1,9 @@
-import { createServerSupabaseClient } from "@/lib/supabase/clients";
+import {
+  createServerSupabaseClient,
+  createServiceRoleSupabaseClient,
+} from "@/lib/supabase/clients";
+import { pragueDayKey } from "@/lib/games/days";
+import { pitchHours } from "@/lib/home/pitchHours";
 
 /**
  * The home page's content reads (§6).
@@ -37,7 +42,12 @@ export interface HomeContent {
    */
   gamesPerWeek: number | null;
   /** The admin's pick, or null. */
-  playerOfMonth: { nickname: string; photoPath: string | null } | null;
+  playerOfMonth: {
+    nickname: string;
+    photoPath: string | null;
+    /** Hours on the pitch this calendar month, from attended games. */
+    pitchHours: number;
+  } | null;
 }
 
 interface SettingsShape {
@@ -96,8 +106,7 @@ function wholeNumber(value: unknown): number | null {
  */
 async function getPlayerCard(
   playerId: string,
-): Promise<{ nickname: string; photoPath: string | null } | null> {
-  const { createServiceRoleSupabaseClient } = await import("@/lib/supabase/clients");
+): Promise<{ nickname: string; photoPath: string | null; pitchHours: number } | null> {
   const service = createServiceRoleSupabaseClient();
 
   const { data, error } = await service
@@ -107,5 +116,68 @@ async function getPlayerCard(
     .maybeSingle();
 
   if (error || !data) return null;
-  return { nickname: data.nickname, photoPath: data.photo_path };
+
+  return {
+    nickname: data.nickname,
+    photoPath: data.photo_path,
+    pitchHours: await getPitchHours(service, playerId),
+  };
 }
+
+/**
+ * Hours the Player of the Month spent on a pitch THIS CALENDAR MONTH.
+ *
+ * NO SCHEMA CHANGE, and that is worth stating because the obvious reading of
+ * "add a stat" is a new column. Everything needed is already recorded:
+ * `bookings.attendance` is written by `mark_attendance`, and
+ * `games.duration_minutes` is the same value every other surface resolves.
+ *
+ * `present` ONLY. A `no_show` is a booking, not an hour, and counting it would
+ * make the stat a measure of intent — the same error the games-played counter
+ * on the roster deliberately avoids by counting played rather than booked.
+ *
+ * THE MONTH IS PRAGUE'S, matching every other date in this product: a game at
+ * 00:30 on the 1st belongs to the month the players would name it in. The
+ * boundary is computed from the Prague day key rather than from the host
+ * clock, for the reason `lib/games/days.ts` gives at length — a boundary in
+ * the server's zone looks right locally and renders wrong on Vercel.
+ *
+ * Read through the service role, like the card above it: `players` and
+ * `bookings` grant `anon` nothing, and this renders on the page a signed-out
+ * visitor reaches from a shared link.
+ */
+async function getPitchHours(
+  service: ReturnType<typeof createServiceRoleSupabaseClient>,
+  playerId: string,
+): Promise<number> {
+  const monthStart = `${pragueDayKey(new Date()).slice(0, 7)}-01T00:00:00Z`;
+
+  /*
+   * TWO QUERIES, NOT AN EMBED. The generated types carry no declared relation
+   * between `bookings` and `games`, so a PostgREST embed does not type-check
+   * and would be a cast over a shape the client cannot verify. Two plain reads
+   * are honest, and the first is narrow enough that the second is a short
+   * `in` list.
+   */
+  const { data: attended, error: bookingsError } = await service
+    .from("bookings")
+    .select("game_id")
+    .eq("player_id", playerId)
+    .eq("attendance", "present");
+
+  if (bookingsError || !attended || attended.length === 0) return 0;
+
+  const { data: games, error: gamesError } = await service
+    .from("games")
+    .select("duration_minutes")
+    .in(
+      "id",
+      attended.map((booking) => booking.game_id),
+    )
+    .gte("starts_at", monthStart);
+
+  if (gamesError || !games) return 0;
+
+  return pitchHours(games.map((game) => game.duration_minutes));
+}
+

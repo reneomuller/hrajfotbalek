@@ -23,7 +23,7 @@ export async function PlayerOfMonthPanel({
   player,
   supabaseUrl,
 }: {
-  player: { nickname: string; photoPath: string | null } | null;
+  player: { nickname: string; photoPath: string | null; pitchHours: number } | null;
   supabaseUrl?: string;
 }) {
   const t = await getStrings();
@@ -62,6 +62,22 @@ export async function PlayerOfMonthPanel({
           >
             {player.nickname}
           </div>
+
+          {/*
+            THE STAT THAT TURNS A PICK INTO A REASON. A name alone says
+            somebody chose them; hours on the pitch says why, and it is the
+            one number this panel can state that nobody has to take on trust.
+
+            Rendered only above zero: "0 h on the pitch this month" under a
+            Player of the Month is a worse sentence than no sentence, and it
+            is reachable — a pick made early in a month, or before anyone has
+            marked attendance.
+          */}
+          {player.pitchHours > 0 && (
+            <div data-testid="potm-hours" className="mt-1 text-small text-muted">
+              {t.landing.potmHours.replace("{hours}", String(player.pitchHours))}
+            </div>
+          )}
         </>
       ) : (
         <p className="m-0 max-w-[240px] text-[13px] text-muted">

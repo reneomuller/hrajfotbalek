@@ -127,6 +127,12 @@ export const strings = {
     nextMatchesAll: "All games →",
     potmTitle: "Player of the month",
     potmEmpty: "Nobody picked yet — could be you.",
+    /*
+     * Hours on the pitch this month, from ATTENDED games — the stat that
+     * turns a pick into a reason. `{hours}` is already rounded to one decimal
+     * by `pitchHours`; the string does no arithmetic.
+     */
+    potmHours: "{hours} h on the pitch this month",
 
 
     community: {

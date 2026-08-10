@@ -71,6 +71,7 @@ export const ru: StringsOverlay = {
     nextMatchesAll: "Все матчи →",
     potmTitle: "Игрок месяца",
     potmEmpty: "Пока никого — может, это будешь ты.",
+    potmHours: "{hours} ч на поле в этом месяце",
     community: {
       title: "ПРИСОЕДИНЯЙСЯ К НАМ",
       body: "Новые матчи каждую неделю. Следи и играй.",

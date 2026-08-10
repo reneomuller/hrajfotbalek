@@ -72,6 +72,7 @@ export const cs: StringsOverlay = {
     nextMatchesAll: "Všechny zápasy →",
     potmTitle: "Hráč měsíce",
     potmEmpty: "Zatím nikdo — může to být klidně ty.",
+    potmHours: "{hours} h na hřišti tenhle měsíc",
     community: {
       title: "PŘIDEJ SE K NÁM",
       body: "Nové zápasy každý týden. Sleduj a hraj.",
