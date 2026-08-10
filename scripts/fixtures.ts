@@ -127,7 +127,7 @@ export const players = {
 export const games = {
   draft: {
     id: "5eed0000-0000-0000-0000-00000000b001",
-    venue: "Praha 3 — Pražačka (draft)",
+    venue: "Praha 3 • Pražačka (draft)",
     startsInHours: 24 * 10,
     capacity: 12,
     priceCzk: 200,
@@ -137,7 +137,7 @@ export const games = {
   },
   published: {
     id: "5eed0000-0000-0000-0000-00000000b002",
-    venue: "Praha 3 — Pražačka",
+    venue: "Praha 3 • Pražačka",
     startsInHours: 24 * 5,
     capacity: 12,
     priceCzk: 200,
@@ -147,7 +147,7 @@ export const games = {
   },
   full: {
     id: "5eed0000-0000-0000-0000-00000000b003",
-    venue: "Praha 7 — Letná",
+    venue: "Praha 7 • Letná",
     startsInHours: 24 * 6,
     capacity: 2,
     priceCzk: 200,
@@ -157,7 +157,7 @@ export const games = {
   },
   played: {
     id: "5eed0000-0000-0000-0000-00000000b004",
-    venue: "Praha 4 — Podolí",
+    venue: "Praha 4 • Podolí",
     startsInHours: 24 * 3,
     capacity: 12,
     priceCzk: 200,
@@ -167,7 +167,7 @@ export const games = {
   },
   settled: {
     id: "5eed0000-0000-0000-0000-00000000b005",
-    venue: "Praha 8 — Libeň",
+    venue: "Praha 8 • Libeň",
     startsInHours: 24 * 4,
     capacity: 12,
     priceCzk: 200,
@@ -177,7 +177,7 @@ export const games = {
   },
   cancelled: {
     id: "5eed0000-0000-0000-0000-00000000b006",
-    venue: "Praha 10 — Strašnice",
+    venue: "Praha 10 • Strašnice",
     startsInHours: 24 * 7,
     capacity: 12,
     priceCzk: 200,
@@ -188,7 +188,7 @@ export const games = {
   /** Where wallet credit is minted, via real overpayment confirmations. */
   creditSource: {
     id: "5eed0000-0000-0000-0000-00000000b007",
-    venue: "Praha 5 — Smíchov",
+    venue: "Praha 5 • Smíchov",
     startsInHours: 24 * 8,
     capacity: 12,
     priceCzk: 200,
@@ -199,7 +199,7 @@ export const games = {
   /** Holds the expired-booking fixture. */
   expiry: {
     id: "5eed0000-0000-0000-0000-00000000b008",
-    venue: "Praha 6 — Dejvice",
+    venue: "Praha 6 • Dejvice",
     startsInHours: 24 * 9,
     capacity: 12,
     priceCzk: 200,
