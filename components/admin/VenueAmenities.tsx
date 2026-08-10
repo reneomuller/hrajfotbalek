@@ -38,6 +38,7 @@ export function VenueAmenities({
   const [selected, setSelected] = useState<Set<string>>(new Set(current));
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const [errorCode, setErrorCode] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
 
   function toggle(key: Amenity) {
@@ -52,6 +53,7 @@ export function VenueAmenities({
 
   function save() {
     setError(null);
+    setErrorCode(null);
     startTransition(async () => {
       const supabase = createBrowserSupabaseClient();
       const { error: rpcError } = await supabase.rpc("set_venue_amenities", {
@@ -60,6 +62,25 @@ export function VenueAmenities({
       });
 
       if (rpcError) {
+        /*
+         * NAME THE FAILURE, don't just report one.
+         *
+         * This swallowed `rpcError` entirely and showed one sentence for
+         * every cause, which is how a missing migration spent a round
+         * looking like a broken form: the function did not exist, PostgREST
+         * answered 404, and the screen said "We could not save that."
+         * Indistinguishable from a rejected amenity key, a lost session or a
+         * venue that had been deleted underneath the page.
+         *
+         * The code goes onto the element as a data attribute so a spec and a
+         * bug report can both quote it, and to the console so whoever is
+         * looking at the screen has the message without opening the network
+         * tab. The player-facing sentence is unchanged — this is an admin
+         * surface, and the person reading it is the person who can act on a
+         * code.
+         */
+        console.error("set_venue_amenities failed", rpcError);
+        setErrorCode(rpcError.code ?? rpcError.message ?? "unknown");
         setError(strings.admin.venueAmenitiesFailed);
         return;
       }
@@ -106,8 +127,16 @@ export function VenueAmenities({
       </div>
 
       {error && (
-        <p role="alert" className="text-[12px] text-volt">
+        <p
+          role="alert"
+          data-testid="amenities-error"
+          data-error-code={errorCode ?? undefined}
+          className="text-[12px] text-volt"
+        >
           {error}
+          {errorCode && (
+            <span className="ml-2 font-mono text-[11px] text-muted">{errorCode}</span>
+          )}
         </p>
       )}
     </div>
