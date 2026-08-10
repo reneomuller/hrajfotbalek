@@ -294,3 +294,42 @@ test("the detail skeleton reserves the claim bar's exact footprint", async ({
     await destroyScratchGame(game.id);
   }
 });
+
+/*
+ * The admin panel's door ON A PHONE.
+ *
+ * It had one entrance, in the header's link row, which is `md:` and up — so on
+ * the viewport the whole product is used at, an organizer reached the panel by
+ * typing `/admin/games` from memory. The nav pill has no room for a fifth tab
+ * (ruling K settled its four), so the Profile screen carries it: two taps.
+ *
+ * Asserted at the suite's phone viewport, which is what makes it meaningful —
+ * a desktop project would find the header link and pass without the phone
+ * having a door at all.
+ */
+test("an admin reaches the panel in two taps from the nav pill", async ({
+  page,
+  context,
+}) => {
+  await signInAs(context, players.organizer);
+  await page.goto("/games");
+
+  // Tap one: the Profile tab.
+  await page.getByTestId("tab-account").click();
+  await page.waitForURL("**/account");
+
+  // Tap two: the admin entry, and it lands somewhere real rather than
+  // bouncing off `requireAdmin()`.
+  const adminLink = page.getByTestId("account-admin-link");
+  await expect(adminLink).toBeVisible();
+  await adminLink.click();
+  await page.waitForURL("**/admin/games");
+  await expect(page.getByTestId("admin-game-row").first()).toBeVisible();
+});
+
+/* And a non-admin is not shown a door that would bounce them. */
+test("a non-admin sees no admin entry on their profile", async ({ page, context }) => {
+  await signInAs(context, players.runner);
+  await page.goto("/account");
+  await expect(page.getByTestId("account-admin-link")).toHaveCount(0);
+});

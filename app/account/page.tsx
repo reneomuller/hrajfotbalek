@@ -41,6 +41,9 @@ export default async function AccountPage({
   const t = await getStrings();
   const query = searchParams ? await searchParams : {};
   const player = await requireCurrentPlayer("/account");
+  // Read off the row already loaded rather than through `isAdminSession()`,
+  // which would be a second round trip for a boolean this page is holding.
+  const isAdmin = player.is_admin === true;
 
   const [balanceCzk, batches] = await Promise.all([
     getOwnCreditBalance(),
@@ -155,6 +158,34 @@ export default async function AccountPage({
       >
         {t.account.myGamesLink}
       </Link>
+
+      {/*
+        THE ADMIN PANEL'S DOOR ON A PHONE.
+
+        The panel was reachable only from the header's link row, which is
+        `md:` and up — so on a phone, where the whole product is used, an
+        organizer had to type `/admin/games` from memory. The nav pill has no
+        room for a fifth tab (ruling K settled its four), and the Profile tab
+        is where a person already goes for things that are about them rather
+        than about a game. Two taps: Profile, then this.
+
+        DISPLAY ONLY, on the same footing as the header entry: rendering this
+        grants nothing and hiding it protects nothing, because anyone can type
+        the URL. `requireAdmin()` in `app/admin/layout.tsx` runs before any
+        nested page reads a row, and every admin RPC checks again inside
+        itself. It is conditional for the ordinary reason any nav is — a link
+        that bounces whoever taps it is a broken link.
+      */}
+      {isAdmin && (
+        <Link
+          href="/admin/games"
+          data-testid="account-admin-link"
+          className="mt-3 flex min-h-11 items-center justify-between gap-3 rounded-control border border-hairline-strong px-4 text-body-lg font-semibold text-bone no-underline transition-colors hover:border-hairline-volt"
+        >
+          {t.nav.admin}
+          <span aria-hidden className="text-volt">→</span>
+        </Link>
+      )}
 
       {/*
         Deletion is by email request only — there is deliberately no self-serve
