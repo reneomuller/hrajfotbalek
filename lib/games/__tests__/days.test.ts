@@ -47,16 +47,18 @@ describe("buildDayTabs", () => {
    * has games. The data-driven version was faithful to `ed9997c` and wrong in
    * practice — on a quiet board it collapsed to three tabs and read as broken.
    */
-  it("is always seven days, starting today", () => {
+  it("is always eight cells — today through today + 7 inclusive", () => {
+    // Inclusive of the same-weekday bookend, so someone thinking "next
+    // Monday" finds it in the row rather than having to leave it.
     const tabs = buildDayTabs([], now);
-    expect(tabs).toHaveLength(7);
+    expect(tabs).toHaveLength(8);
     expect(tabs[0].key).toBe("2026-08-03");
-    expect(tabs.at(-1)!.key).toBe("2026-08-09");
+    expect(tabs.at(-1)!.key).toBe("2026-08-10");
   });
 
   it("keeps its width on a board with almost nothing on it", () => {
-    // One game, still seven cells. This is the whole point of the amendment.
-    expect(buildDayTabs(["2026-08-05T17:00:00Z"], now)).toHaveLength(7);
+    // One game, still eight cells. This is the whole point of the amendment.
+    expect(buildDayTabs(["2026-08-05T17:00:00Z"], now)).toHaveLength(8);
   });
 
   it("counts games per day, and zero is normal", () => {
@@ -64,7 +66,7 @@ describe("buildDayTabs", () => {
       ["2026-08-03T17:00:00Z", "2026-08-03T19:00:00Z", "2026-08-05T17:00:00Z"],
       now,
     );
-    expect(tabs.map((tab) => tab.count)).toEqual([2, 0, 1, 0, 0, 0, 0]);
+    expect(tabs.map((tab) => tab.count)).toEqual([2, 0, 1, 0, 0, 0, 0, 0]);
   });
 
   it("carries a weekday and a day of month for the calendar cell", () => {
@@ -111,7 +113,7 @@ describe("buildDayTabs", () => {
    */
   it("does not pretend to reach a game beyond the week", () => {
     const tabs = buildDayTabs(["2026-09-20T17:00:00Z"], now);
-    expect(tabs).toHaveLength(7);
+    expect(tabs).toHaveLength(8);
     expect(tabs.every((tab) => tab.count === 0)).toBe(true);
   });
 });

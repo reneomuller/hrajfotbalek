@@ -299,8 +299,8 @@ test("a capacity-12 game entered as 5v5 never renders 6v6", async ({ page }) => 
     // The list row.
     await page.goto(listUrlFor(game));
     const row = page.locator(`[data-testid="game-row"][href="/game/${game.id}"]`);
-    // Format and surface share one line now (card anatomy, 2026-08-10).
-    await expect(row.getByTestId("card-format")).toContainText("5v5");
+    // Format and surface are BADGES now (ruling 6, 2026-08-10).
+    await expect(row.getByTestId("game-format")).toHaveText("5v5");
     await expect(row).not.toContainText("6v6");
   } finally {
     await destroyScratchGame(game.id);
@@ -669,13 +669,15 @@ test("a game months out appears under All, though the week has no cell for it", 
  * This reverses the data-driven version, which collapsed to three cells on a
  * quiet board and read as broken.
  */
-test("the day row is always seven cells, today first, empty days included", async ({
+test("the day row is always eight cells, today first, empty days included", async ({
   page,
 }) => {
   await page.goto("/games");
 
   const cells = page.getByTestId("day-tab");
-  await expect(cells).toHaveCount(7);
+  // EIGHT: today through today + 7 inclusive (ruling 5) — the same-weekday
+  // bookend, so "next Tuesday" is in the row rather than beyond it.
+  await expect(cells).toHaveCount(8);
 
   const days = await cells.evaluateAll((nodes) =>
     nodes.map((node) => (node as HTMLElement).dataset.day!),
@@ -758,8 +760,8 @@ test("a card carries venue, day, time, format, surface, bar and spots — no pri
 
     await expect(row.getByTestId("card-when")).toHaveText(/\d{1,2} \w+ • \d{2}:\d{2}/);
     await expect(row.getByTestId("card-venue")).toContainText("E2E Scratch Pitch");
-    // Format AND surface, which the card was missing entirely.
-    await expect(row.getByTestId("card-format")).toContainText("5v5");
+    // Format AND surface, as badges top-right.
+    await expect(row.getByTestId("game-format")).toHaveText("5v5");
     // The segmented bar is back (recovered from 1a42888) and unconditional.
     await expect(row.getByTestId("capacity-segments")).toBeVisible();
     await expect(row.getByTestId("row-spots")).toContainText("12 spots left");

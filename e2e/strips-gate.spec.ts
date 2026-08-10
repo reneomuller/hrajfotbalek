@@ -72,7 +72,7 @@ test.describe("Gate strips", () => {
         // --- the row at rest: All selected, seven days ---------------------
         await page.goto("/games", { waitUntil: "networkidle" });
         await settle();
-        await expect(page.getByTestId("day-tab")).toHaveCount(7);
+        await expect(page.getByTestId("day-tab")).toHaveCount(8);
         await expect(page.getByTestId("day-tab-all")).toHaveAttribute(
           "data-selected",
           "true",
@@ -85,12 +85,30 @@ test.describe("Gate strips", () => {
         const card = page.locator(`[data-testid="game-row"][href="/game/${game.id}"]`);
         await expect(card.getByTestId("card-venue")).toBeVisible();
         await expect(card.getByTestId("card-when")).toBeVisible();
-        await expect(card.getByTestId("card-format")).toBeVisible();
+        await expect(card.getByTestId("game-format")).toBeVisible();
+        await expect(card.getByTestId("game-surface")).toBeVisible();
         await expect(card.getByTestId("capacity-segments")).toBeVisible();
         await expect(card.getByTestId("row-spots")).toBeVisible();
         await expect(card.getByTestId("avatar").first()).toBeVisible();
         await card.scrollIntoViewIfNeeded();
         await card.screenshot({ path: path.join(OUT, `card-${locale}.png`) });
+
+        // --- the HOME list card, which must be the same object -------------
+        await page.goto("/", { waitUntil: "networkidle" });
+        await settle();
+        const homeCard = page.getByTestId("next-matches").getByTestId("game-row").first();
+        await expect(homeCard.getByTestId("card-when")).toBeVisible();
+        await homeCard.scrollIntoViewIfNeeded();
+        await homeCard.screenshot({ path: path.join(OUT, `home-card-${locale}.png`) });
+
+        // --- the GAME CARD's time span, which is a span and not a start ----
+        await page.goto(`/game/${game.id}`, { waitUntil: "networkidle" });
+        await settle();
+        const span = page.getByTestId("game-time-span");
+        await expect(span).toContainText(/\d{2}:\d{2}.\d{2}:\d{2}/);
+        await page.getByTestId("game-info-card").screenshot({
+          path: path.join(OUT, `game-card-span-${locale}.png`),
+        });
 
         // --- the row with a day selected -----------------------------------
         await page.goto(`/games?day=${day}`, { waitUntil: "networkidle" });

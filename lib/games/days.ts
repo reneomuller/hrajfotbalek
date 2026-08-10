@@ -50,12 +50,18 @@ export interface DayTab {
   count: number;
 }
 
-/** The row is today plus the next six — one week, always. */
-export const DAY_TAB_DAYS = 7;
+/**
+ * The row is TODAY PLUS THE NEXT SEVEN — eight cells, always, rolling.
+ *
+ * Inclusive of today + 7 so the row spans a full week AND its same-weekday
+ * bookend: opening on a Tuesday shows through the following Tuesday, which is
+ * how someone thinking "next Tuesday" finds it without leaving the row.
+ */
+export const DAY_TAB_DAYS = 8;
 
 /**
- * A FIXED WEEK OF TABS: today through today + 6, whether or not a day has
- * games.
+ * A FIXED WEEK OF TABS: today through today + 7 inclusive, whether or not a
+ * day has games.
  *
  * AMENDMENT A, 2026-08-10. The restored control emitted one tab per day that
  * HAD games, which was faithful to `ed9997c` and wrong in practice: on a quiet

@@ -1,9 +1,9 @@
 import Link from "next/link";
 import { AvatarRow } from "@/components/game/AvatarRow";
 import { CapacityBar } from "@/components/game/CapacityBar";
+import { CardBadges } from "@/components/game/CardBadges";
 import { SpotsLeft } from "@/components/game/SpotsLeft";
 import { formatGameDate, formatTime } from "@/lib/format";
-import { getStrings } from "@/lib/i18n/server";
 import type { RosterAvatar } from "@/lib/games/queries";
 import type { Database } from "@/lib/types/database";
 
@@ -76,70 +76,57 @@ export async function GameCard({
   /** The `past` state — 45% opacity, not tappable, not focusable. */
   past?: boolean;
 }) {
-  const t = await getStrings();
 
   const body = (
     <>
       {/*
-        THE ANATOMY, in the owner's order (2026-08-10, final):
-        venue, day + time, format + surface, capacity bar, spots, faces.
+        THE ANATOMY, compressed (rulings 6–8, 2026-08-10):
+        venue · [day-time pill | badges] · capacity bar · spots · faces.
 
-        THE BAR IS RECOVERED FROM `1a42888` ("Phase 15a: the list stops being
-        a stack of posters"), where `GameRow` carried
-        `<CapacityBar size="slim">`. Ruling D took it off the canonical card on
-        the reasoning that a row of grey segments inside a populated card is
-        indistinguishable from a skeleton (§2.10); the owner reverses that. It
-        is the same component the detail's availability card has used
-        throughout, so the two cannot disagree about how full a game is.
-
-        ONE SEGMENT PER SPOT — `capacitySegments` returns an array the length
-        of `capacity`, so a 12-spot game draws twelve. Unconditional: an empty
-        game draws twelve unfilled.
+        THIN IS THE REQUIREMENT. The card had grown a line per fact — day and
+        time on one row, format and surface on another — and each cost the fold
+        a card. The pill and the badges share ONE row, which is what buys the
+        height back without dropping anything.
       */}
-      <span data-testid="card-venue" className="block truncate text-body-lg font-semibold text-bone">
+      <span data-testid="card-venue" className="block truncate text-body-lg font-semibold leading-tight text-bone">
         {game.venue}
       </span>
 
-      {/*
-        DAY AND TIME. The day was missing — a card that says only `12:30`
-        makes a reader carry the day heading in their head while they scroll,
-        and on home there is no heading at all.
-      */}
-      <p data-testid="card-when" className="mt-1 mb-0 text-small text-muted">
-        {`${formatGameDate(game.starts_at)} • ${formatTime(game.starts_at)}`}
-      </p>
+      <div className="mt-[6px] flex items-center justify-between gap-2">
+        {/*
+          THE DAY-TIME PILL. Semi-transparent with a solid outline, the same
+          treatment as the badges opposite it — a glanceable object rather than
+          a line of prose. START TIME ONLY on a list card; the game card
+          carries the full span.
+        */}
+        <span
+          data-testid="card-when"
+          className="min-w-0 truncate rounded-pill border border-hairline-strong bg-bone/[.06] px-2 py-[2px] text-[10px] font-semibold text-bone"
+        >
+          {`${formatGameDate(game.starts_at)} • ${formatTime(game.starts_at)}`}
+        </span>
 
-      {/*
-        FORMAT AND SURFACE. The surface was missing from the card entirely and
-        is a real decision input — turf and indoor are different games. Both
-        are omitted when the organizer recorded neither, rather than printing
-        a bare separator.
-      */}
-      {(game.format || game.surface) && (
-        <p data-testid="card-format" className="mt-1 mb-0 text-small text-muted">
-          {[game.format, game.surface ? t.games.surface[game.surface] : null]
-            .filter(Boolean)
-            .join(" • ")}
-        </p>
-      )}
+        <CardBadges format={game.format} surface={game.surface} size="slim" />
+      </div>
 
-      <div className="mt-3">
+      <div className="mt-[10px]">
         <CapacityBar bookedCount={bookedCount} capacity={game.capacity} size="slim" />
       </div>
 
-      <div className="mt-2">
+      <div className="mt-[6px] flex items-center justify-between gap-3">
         <span data-testid="row-spots">
           <SpotsLeft bookedCount={bookedCount} capacity={game.capacity} />
         </span>
-      </div>
 
-      {/* The faces still disappear at zero (§2.1) — a ring drawn around
-          nobody is a question. The bar above already says the game is empty. */}
-      {roster.length > 0 && (
-        <div className="mt-3">
+        {/*
+          The faces sit on the spots row rather than under it — the last line
+          the compression could remove, and the two read as one statement
+          about who is in and how much room is left. Absent at zero (§2.1).
+        */}
+        {roster.length > 0 && (
           <AvatarRow players={roster} max={3} size="card" supabaseUrl={supabaseUrl} />
-        </div>
-      )}
+        )}
+      </div>
     </>
   );
 
@@ -155,7 +142,7 @@ export async function GameCard({
       <div
         data-testid="game-row"
         data-past="true"
-        className="block rounded-card bg-surface p-4 opacity-45"
+        className="block rounded-card bg-surface px-4 py-3 opacity-45"
       >
         {body}
       </div>
@@ -167,7 +154,7 @@ export async function GameCard({
       href={`/game/${game.id}`}
       data-testid="game-row"
       data-past="false"
-      className="block rounded-card bg-surface p-4 no-underline transition-colors hover:bg-surface-raised"
+      className="block rounded-card bg-surface px-4 py-3 no-underline transition-colors hover:bg-surface-raised"
     >
       {body}
     </Link>

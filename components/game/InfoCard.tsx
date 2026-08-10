@@ -1,5 +1,5 @@
 import { Icon } from "@/components/Icon";
-import { FormatChips } from "@/components/game/FormatChips";
+import { CardBadges } from "@/components/game/CardBadges";
 import { SkillBadges } from "@/components/game/SkillBadges";
 import { formatGameDate, formatTimeSpan } from "@/lib/format";
 import { getStrings } from "@/lib/i18n/server";
@@ -93,12 +93,22 @@ export async function InfoCard({
       {/* What kind. Format, substitutes, surface, and the skill badge only when
           the game is actually restricted (§5.3, REQ-GAME-009). Derived from
           capacity nowhere. */}
+      {/*
+        THE SAME BADGE TREATMENT AS THE LIST CARD (ruling 6, 2026-08-10) —
+        semi-transparent fill, solid coloured outline. `FormatChips` drew the
+        format as a SOLID volt chip here and the surface as a bare outline,
+        which is a third styling of the same two facts.
+
+        Substitutes stay as `FormatChips` handled them — plain text beside the
+        badges, and only when the organizer set a number (§5.3a).
+      */}
       <div className="mt-4 flex flex-wrap items-center gap-2">
-        <FormatChips
-          format={game.format}
-          surface={game.surface}
-          subsPerTeam={game.subs_per_team}
-        />
+        <CardBadges format={game.format} surface={game.surface} />
+        {game.subs_per_team !== null && (
+          <span data-testid="game-subs" className="text-small text-muted">
+            {t.games.subsPerTeam.replace("{count}", String(game.subs_per_team))}
+          </span>
+        )}
         <SkillBadges levels={game.allowed_skill_levels} />
       </div>
 
