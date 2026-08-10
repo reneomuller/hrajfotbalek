@@ -119,40 +119,38 @@ export async function GameCard({
           somebody books, which is a layout shift on a surface the reader is
           mid-scroll through. */}
       {/*
-        Line three — how much room is left.
+        THE DOTTED LINE IS THE SINGLE OCCUPANCY STATEMENT, with the lineup
+        beneath it (density ruling, 2026-08-10).
 
-        NO PRICE ON A LIST CARD (layout law, 2026-08-10). It was added a round
-        earlier so `150 CZK / 1 credit` could teach the wallet's unit on the
-        surface where a pass is being considered. The law moves that sentence
-        to the CLAIM BAR, where the reader is deciding about one game rather
-        than scanning eight — and takes it off the card entirely rather than
-        leaving a quieter version, because two places stating a price is how
-        they come to disagree.
-      */}
-      <div className="mt-3 flex items-center justify-end">
-        <span data-testid="row-spots" className="shrink-0">
-          <SpotsLeft bookedCount={bookedCount} capacity={game.capacity} />
-        </span>
-      </div>
+        The card said it twice: a `10 spots left` row of its own above the
+        rule, and `2 / 12 players` below it. Two sentences about the same fact
+        cost a row the fold could not spare — the card had reached 171px and
+        two whole cards above the fold, from five in v1.1.4.
 
-      {/*
-        THE DOTTED PLAYER-COUNT LINE, WITH THE LINEUP BENEATH IT.
+        MERGED RATHER THAN DROPPED. The spots figure keeps its colour ladder
+        and stays the card's ONE accent (ruling D); the raw count joins it
+        after a middot as the smaller, uncoloured half. Someone deciding reads
+        the first; someone judging whether a game will actually fill reads the
+        second.
 
-        The same arrangement as the game detail's availability card, which is
-        the point of the law: a reader who learns the shape here meets it
-        unchanged one tap later. Dotted rather than solid so it reads as a
-        seam inside one card rather than as the edge between two.
+        THE FRACTION IS NOT COPY. `2/12` is two numbers and a solidus, so it is
+        built here rather than added to the string table — a "{booked}/{capacity}"
+        entry would demand a Czech and a Russian translation of punctuation,
+        and the i18n walk would flag all three as identical.
 
-        The count renders whether or not anyone has claimed a spot — "0 / 12
-        players" is a fact and an invitation. The AVATARS are what disappear at
-        zero (§2.1), because a ring drawn around nobody is a question.
+        The AVATARS still disappear at zero (§2.1) while the line does not: a
+        count of nobody is a fact and an invitation, a ring around nobody is a
+        question.
       */}
       <div className="mt-3 border-t border-dotted border-hairline-strong pt-3">
-        <p data-testid="card-players-count" className="m-0 text-small text-muted">
-          {t.games.playersOfCapacity
-            .replace("{booked}", String(Math.min(bookedCount, game.capacity)))
-            .replace("{capacity}", String(game.capacity))}
-        </p>
+        <div className="flex flex-wrap items-baseline gap-x-2">
+          <span data-testid="row-spots">
+            <SpotsLeft bookedCount={bookedCount} capacity={game.capacity} />
+          </span>
+          <span data-testid="card-players-count" className="text-small text-muted">
+            {`· ${Math.min(bookedCount, game.capacity)}/${game.capacity}`}
+          </span>
+        </div>
 
         {roster.length > 0 && (
           <div className="mt-2">

@@ -468,31 +468,27 @@ test("the roster renders photos where they exist and initials where they do not"
  * Pixel 7 is the project's only viewport (`playwright.config.ts`), so "phone
  * width" needs no setup here.
  */
-test("two whole cards and a third started, at phone width, without scrolling", async ({
+test("three whole cards and a fourth started, at phone width, without scrolling", async ({
   page,
 }) => {
   /*
-   * THE NUMBER HAS COME DOWN TWICE, AND THIS IS THE SECOND TIME. It is
-   * arithmetic, not a preference, and it is worth stating plainly because the
-   * criterion it replaces was a real one.
+   * THE HISTORY OF THIS NUMBER, because it has moved three times and each
+   * move was arithmetic rather than preference.
    *
-   * v1.1.4 §5.5 asked for "well more than three games visible at Pixel-7
-   * width" and the compact row delivered FIVE. v1.3 §2.1's canonical card
-   * measured 133px against that row's ~90, which bought three whole cards and
-   * a fourth begun. The layout law of 2026-08-10 adds a dotted rule, a
-   * player-count line and an avatar row beneath it: 171px, which buys TWO.
+   *   v1.1.4 §5.5   compact row, ~90px    five whole cards
+   *   v1.3 §2.1     canonical card, 133   three whole, a fourth begun
+   *   layout law    + dotted count, 171   TWO whole
+   *   density ruling  merged occupancy, 141   three whole, a fourth begun
    *
-   *   viewport 839 · chrome above the first card 332 · card 171 + 12 gap
-   *   cards land at 332, 516, 699 — the third ends at 870, past the fold
+   * The last step is the one worth explaining: the card was stating occupancy
+   * TWICE — a `10 spots left` row above the dotted rule and `2 / 12 players`
+   * below it. Merging them onto the rule returned 30px and a whole card,
+   * without touching §2.1's geometry, ruling D's avatars or the layout law's
+   * arrangement. Measured: viewport 839, chrome above the first card 332,
+   * card 141 + 12 gap.
    *
-   * The fourth card is no longer even started. What survives of the original
-   * criterion is that the list still visibly continues past the fold, which is
-   * what stops a reader thinking they have seen everything.
-   *
-   * IF THE COUNT MATTERS MORE THAN THE ARRANGEMENT, that is a ruling to
-   * reopen, not a number to tune here — the card's height is now the sum of
-   * three separate rulings (§2.1's geometry, ruling D's avatars, the layout
-   * law's count line), and no one of them can give the space back alone.
+   * If three is still not enough, that is §2.1 to reopen — a separate ruling,
+   * and the card has no duplication left to give back.
    *
    * Six on the SAME Prague day, because the day picker filters the list — a
    * spec that spread them across days would be measuring the picker. Four days
@@ -526,11 +522,11 @@ test("two whole cards and a third started, at phone width, without scrolling", a
       if (box.y < viewport!.height) started += 1;
     }
 
-    expect(fullyVisible).toBeGreaterThanOrEqual(2);
+    expect(fullyVisible).toBeGreaterThanOrEqual(3);
     // The list must still visibly continue past the fold — a cut-off card is
     // what tells a reader there is more, and a fold landing cleanly between
     // cards reads as the end of the list.
-    expect(started).toBeGreaterThanOrEqual(3);
+    expect(started).toBeGreaterThanOrEqual(4);
   } finally {
     await Promise.all(games.map((game) => destroyScratchGame(game.id)));
   }
