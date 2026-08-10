@@ -86,8 +86,12 @@ test("A1-A3-games-list", async ({ page }) => {
       .scrollIntoViewIfNeeded();
     await strip(page, "A3-spots-critical-and-full");
 
-    // Item 1 again — the strip as a filter, narrowed and cleared.
-    const targetDay = page.locator('[data-testid="day-tab"][data-empty="false"]').nth(1);
+    /*
+      Item 1 again — the filter, narrowed and cleared. `data-empty` went with
+      the rest days: the restored control (ruling, 2026-08-10) only draws days
+      that HAVE games, so every tab is non-empty by construction.
+    */
+    const targetDay = page.getByTestId("day-tab").nth(1);
     await targetDay.click();
     await page.waitForLoadState("networkidle");
     await strip(page, "A1-day-strip-filtered");

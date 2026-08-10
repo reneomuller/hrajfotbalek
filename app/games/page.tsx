@@ -58,7 +58,14 @@ export default async function GamesPage({
   // carry — they need the language itself, not a translated key.
   const locale = await getLocale();
   const query = searchParams ? await searchParams : {};
-  const { games, now } = await listUpcomingGames();
+  /*
+   * UNBOUNDED, and this is half of the invisible-truncation guarantee.
+   *
+   * `listUpcomingGames` defaults to 20, which is a second window on top of
+   * the day filter's — a board with more than twenty upcoming games would
+   * have dropped the furthest ones out of `All` silently. `All` means all.
+   */
+  const { games, now } = await listUpcomingGames(null);
 
   const signedIn = (await getSessionUser()) !== null;
   const [rosters, nextOwn] = await Promise.all([
@@ -96,6 +103,7 @@ export default async function GamesPage({
   const dayTabs = buildDayTabs(
     games.map(({ game }) => game.starts_at),
     now,
+    t,
     locale,
   );
   const requested = typeof query.day === "string" ? query.day : undefined;

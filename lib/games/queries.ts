@@ -113,17 +113,28 @@ export interface UpcomingGames {
  * from anon and authenticated alike. Stating it here as well means a future
  * policy change cannot silently widen this surface.
  */
-export async function listUpcomingGames(limit = 20): Promise<UpcomingGames> {
+export async function listUpcomingGames(
+  limit: number | null = 20,
+): Promise<UpcomingGames> {
   const supabase = await createServerSupabaseClient();
   const now = Date.now();
 
-  const { data: games, error } = await supabase
+  /*
+   * `null` MEANS NO LIMIT, for the games page's `All` view: the owner's ruling
+   * of 2026-08-10 makes "every upcoming game, any distance out" a guarantee,
+   * and a default cap is a truncation nobody sees. Callers that genuinely want
+   * a few — home's three, the next-game strip's one — still pass a number.
+   */
+  let query = supabase
     .from("games")
     .select("*")
     .in("status", ["published", "full"])
     .gte("starts_at", new Date(now).toISOString())
-    .order("starts_at", { ascending: true })
-    .limit(limit);
+    .order("starts_at", { ascending: true });
+
+  if (limit !== null) query = query.limit(limit);
+
+  const { data: games, error } = await query;
 
   if (error || !games) return { games: [], now };
 

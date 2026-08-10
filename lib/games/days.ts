@@ -42,61 +42,39 @@ export function pragueDayKey(value: Date | string | number): string {
 export interface DayTab {
   /** `2026-08-03` — the value carried in the URL. */
   key: string;
-  /** "Thu" — the weekday, three letters, sentence case (ruling B). */
-  weekday: string;
-  /** "22" — the day of the month, as printed. */
-  dayOfMonth: string;
-  /** How many games fall on this day. Zero is normal and renders as a rest day. */
+  /** "Today", "Tomorrow", or a short weekday, in the reader's language. */
+  label: string;
+  /** How many games fall on this day. Never zero — see `buildDayTabs`. */
   count: number;
-  /** True for the day the reader is standing in. */
-  isToday: boolean;
 }
 
 /**
- * How many boxes the strip has. Exactly this many, always (v1.3 §2.2, ruling H).
+ * ONE TAB PER DAY THAT HAS GAMES, in date order, with its count.
  *
- * NOT A FLOOR ANY MORE. It was fourteen days extended to reach the furthest
- * scheduled game, which meant the control's width was a function of the
- * schedule: eight boxes one week and twenty-three the next, from the same
- * code. A control that cannot be laid out cannot be made to fit above `md`
- * without scrolling, which is what §2.2 asks for.
- */
-export const DAY_STRIP_DAYS = 8;
-
-/**
- * A ROLLING CALENDAR STRIP: every day from today forward, with its real date.
+ * RESTORED FROM `ed9997c` (Design Stage 1) by the owner's ruling of
+ * 2026-08-10, which reverses the eight-box calendar strip. The reason is the
+ * strip's own law turned against it: a fixed eight-day window silently hid a
+ * game published for late August, which is exactly the invisible truncation
+ * ruling H forbade. A window cannot both be a fixed width and cover an
+ * unbounded schedule.
  *
- * WHAT CHANGED AND WHY (v1.2 §5.5). The first version emitted one tab per day
- * that had a game, labelled `Today 1 · Sat 2 · Sun 3` — a weekday and a game
- * count. Two problems, and they compound:
+ * So the control is a FILTER OVER WHAT EXISTS rather than a calendar: every
+ * day with football on it gets a tab, however far out, and `All` — the default
+ * — lists all of them. Nothing is reachable only by scrolling a strip.
  *
- *   - A BARE COUNT BESIDE A WEEKDAY READS AS A DATE. "Sat 2" is a Saturday the
- *     2nd to almost everyone who glances at it, and it is in fact a Saturday
- *     with two games on some other date entirely. The one number on the control
- *     meant the one thing it could not be read as.
- *   - SKIPPING EMPTY DAYS DESTROYS THE CALENDAR. With gaps closed up, "Sat" and
- *     "Sun" sat adjacent whether they were consecutive or three weeks apart, so
- *     the strip could not answer "how far out is this" at all.
+ * EMPTY DAYS GET NO TAB, which is what makes the count meaningful: it is never
+ * zero, so a tab is never a tap that leads to an empty list.
  *
- * So: every day is present, in order, carrying its weekday and its day of the
- * month. The count is printed too, as of v1.3 §2.2 — the ambiguity that took it
- * off the chip ("Sat 2" reading as the 2nd) was a ONE-LINE layout problem, and
- * the box now has three lines: weekday, then date, then count. A number under a
- * date cannot be mistaken for the date above it.
- *
- * EXACTLY EIGHT BOXES, AND THE WINDOW IS NOW A CAP (ruling H). It used to be a
- * floor of fourteen that extended to the last scheduled game, so that every
- * game had a day to be filtered by. That reasoning does not survive ruling H's
- * other half — **the strip filters and the list is never truncated by it** — so
- * a game outside the window is still on the default list, in its day group,
- * reachable by scrolling. What it loses is a chip, and a chip is a filter, not
- * a route.
+ * The rolling-calendar version drew every day including rest days so the strip
+ * could answer "how far away is this". That question is answered by the day
+ * HEADINGS in the list itself, which carry the date, and it was never worth an
+ * unreachable game.
  */
 export function buildDayTabs(
   startsAtList: (Date | string | number)[],
   now: Date | string | number,
+  t: Strings = strings,
   locale: Locale = DEFAULT_LOCALE,
-  days: number = DAY_STRIP_DAYS,
 ): DayTab[] {
   const counts = new Map<string, number>();
   for (const startsAt of startsAtList) {
@@ -105,17 +83,47 @@ export function buildDayTabs(
   }
 
   const today = pragueDayKey(now);
+  const tomorrow = pragueDayKey(
+    new Date((now instanceof Date ? now : new Date(now)).getTime() + 24 * 3600_000),
+  );
 
-  return Array.from({ length: days }, (_, i) => {
-    const key = addDays(today, i);
-    return {
-      key,
-      weekday: weekdayLabel(key, locale),
-      dayOfMonth: dayOfMonthLabel(key),
-      count: counts.get(key) ?? 0,
-      isToday: i === 0,
-    };
-  });
+  return [...counts.entries()]
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([key, count]) => ({ key, label: dayLabel(key, today, tomorrow, t, locale), count }));
+}
+
+/**
+ * "Today", "Tomorrow", or a short weekday.
+ *
+ * The two relative labels earn their special case: they are the days anyone
+ * opening this page is deciding between, and "Sun" on a Sunday makes a reader
+ * do arithmetic to work out it means now.
+ *
+ * THE WEEKDAY IS LOCALISED, which is the one thing NOT ported verbatim from
+ * `ed9997c`. That version hardcoded `en-GB`, so a Czech games page read
+ * `All · Dnes · Sat · Sun`. Restoring it exactly would restore a defect fixed
+ * since; the shape is the ruling, the language bug is not. Flagged rather than
+ * adapted silently.
+ *
+ * Derived from midday UTC rather than midnight, so no offset can push the
+ * label onto the neighbouring day — midnight is exactly where that goes wrong.
+ */
+function dayLabel(
+  key: string,
+  today: string,
+  tomorrow: string,
+  t: Strings,
+  locale: Locale,
+): string {
+  if (key === today) return t.games.dayToday;
+  if (key === tomorrow) return t.games.dayTomorrow;
+  return capitalise(
+    new Intl.DateTimeFormat(DATE_LOCALE[locale], {
+      timeZone: DISPLAY_TIME_ZONE,
+      weekday: "short",
+    }).format(new Date(`${key}T12:00:00Z`)),
+    locale,
+  );
 }
 
 /**
@@ -150,53 +158,8 @@ function capitalise(value: string, locale: Locale): string {
   return value.charAt(0).toLocaleUpperCase(locale) + value.slice(1);
 }
 
-/**
- * `key` plus `n` calendar days, as another Prague day key.
- *
- * VIA MIDDAY UTC, never by adding 86,400,000 milliseconds to a midnight. Prague
- * has a 23-hour day and a 25-hour day every year, and a strip built by adding
- * fixed days across the March transition either repeats a date or skips one.
- * Midday is the furthest any instant can be from a Prague midnight, so no
- * offset shift can move it onto a neighbouring date.
- */
-function addDays(key: string, n: number): string {
-  return pragueDayKey(new Date(Date.parse(`${key}T12:00:00Z`) + n * 86_400_000));
-}
 
-/**
- * "Thu" / "Čt" / "Чт" — the weekday IN THE READER'S LANGUAGE.
- *
- * It was hardcoded `en-GB`, so the Czech games list read `Mon 10 · Tue 11`
- * under a Czech heading: the most prominent control on the screen, in the
- * wrong language, on the one surface whose whole job is choosing a day.
- *
- * SENTENCE CASE (ruling B) — `eyebrow` is the only uppercase style in the
- * product and a day label is not one. Cased at the token rather than in CSS so
- * the rendered width is known here, which is what an eight-box strip that must
- * fit without scrolling above `md` is laid out against.
- */
-function weekdayLabel(key: string, locale: Locale): string {
-  return capitalise(
-    new Intl.DateTimeFormat(DATE_LOCALE[locale], {
-      timeZone: DISPLAY_TIME_ZONE,
-      weekday: "short",
-    }).format(new Date(`${key}T12:00:00Z`)),
-    locale,
-  );
-}
 
-/**
- * "22" — no leading zero, because a calendar does not print one.
- *
- * READ OFF THE DAY KEY RATHER THAN FORMATTED. `Intl` with `day: "numeric"`
- * yields `22.` in Czech — correct as an ordinal inside a sentence, wrong
- * inside a calendar box, where every calendar the reader has ever used prints
- * a bare numeral. The key is already the Prague date, so slicing it is both
- * simpler and immune to a locale changing this under us.
- */
-function dayOfMonthLabel(key: string): string {
-  return String(Number(key.slice(8, 10)));
-}
 
 /**
  * The day the URL asked for, or NULL meaning "all of them".

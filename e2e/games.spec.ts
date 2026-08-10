@@ -566,8 +566,9 @@ test("the day strip filters the list, by the date on the chip", async ({ page })
      */
     const targetDay = pragueDayKey(dayTwoA.startsAt);
     const chip = page.locator(`[data-testid="day-tab"][data-day="${targetDay}"]`);
-    await expect(chip).toHaveAttribute("data-empty", "false");
-    await expect(chip).toContainText(String(Number(targetDay.slice(8, 10))));
+    // Tabs carry a relative label or a weekday plus a count now, not a date —
+    // `data-day` is what a spec addresses them by, which is why it exists.
+    await expect(chip).toHaveCount(1);
 
     await chip.click();
     await page.waitForURL(`**/games?day=${targetDay}`);
@@ -590,48 +591,70 @@ test("the day strip filters the list, by the date on the chip", async ({ page })
 });
 
 /*
- * v1.3 §2.2 / ruling H — EXACTLY EIGHT BOXES, today first, continuous.
+ * THE DAY FILTER REACHES EVERY GAME, however far out.
  *
- * Continuous because the strip has to answer "how far away is this": closing
- * up the empty days made two adjacent boxes mean either consecutive days or
- * three weeks apart. Exactly eight because the width used to be a function of
- * the schedule — a floor of fourteen days extended to reach the furthest game,
- * so eight boxes one week and twenty-three the next — and a control whose size
- * varies with the data cannot be laid out to fit above `md` without scrolling.
+ * This replaces the eight-box calendar spec. The ruling of 2026-08-10 reversed
+ * that control because a fixed window cannot cover an unbounded schedule: a
+ * game published for late August fell outside the eight days and became
+ * unreachable from `/games` — the invisible truncation ruling H forbade in its
+ * own text.
+ *
+ * So the assertions are the guarantee rather than the geometry: `All` is the
+ * default and lists a far-future game, and that game has a tab of its own.
  */
-test("the day strip is exactly eight boxes, running continuously from today", async ({
-  page,
-}) => {
+test("a game months out appears under All, and gets its own tab", async ({ page }) => {
+  const soon = await createScratchGame({ hoursFromNow: 24 * 2 });
+  // Far outside any fixed window the old strip could have drawn.
+  const distant = await createScratchGame({ hoursFromNow: 24 * 96 });
+
+  try {
+    await page.goto("/games");
+
+    // THE DEFAULT VIEW IS EVERYTHING — no tab tapped, no scrolling a strip.
+    await expect(
+      page.locator(`[data-testid="game-row"][href="/game/${soon.id}"]`),
+    ).toBeVisible();
+    await expect(
+      page.locator(`[data-testid="game-row"][href="/game/${distant.id}"]`),
+    ).toBeVisible();
+
+    // And the distant day is reachable as a filter in its own right.
+    const distantDay = pragueDayKey(distant.startsAt);
+    const chip = page.locator(`[data-testid="day-tab"][data-day="${distantDay}"]`);
+    await expect(chip).toHaveCount(1);
+
+    await chip.click();
+    await page.waitForURL(`**/games?day=${distantDay}`);
+    await expect(
+      page.locator(`[data-testid="game-row"][href="/game/${distant.id}"]`),
+    ).toBeVisible();
+    await expect(
+      page.locator(`[data-testid="game-row"][href="/game/${soon.id}"]`),
+    ).toHaveCount(0);
+
+    // `All` returns to everything.
+    await page.getByTestId("day-tab-all").click();
+    await page.waitForURL("**/games");
+    await expect(
+      page.locator(`[data-testid="game-row"][href="/game/${soon.id}"]`),
+    ).toBeVisible();
+  } finally {
+    await destroyScratchGame(soon.id);
+    await destroyScratchGame(distant.id);
+  }
+});
+
+/* Every tab counts at least one game — an empty day gets no tab at all. */
+test("no day tab leads to an empty list", async ({ page }) => {
   await page.goto("/games");
-
-  const chips = page.getByTestId("day-tab");
-  await expect(chips.first()).toBeVisible();
-
-  // Consecutive dates, no gaps, starting today.
-  const days = await chips.evaluateAll((nodes) =>
-    nodes.map((n) => (n as HTMLElement).dataset.day!),
-  );
-  expect(days).toHaveLength(8);
-  expect(days[0]).toBe(
-    new Intl.DateTimeFormat("en-CA", {
-      timeZone: "Europe/Prague",
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-    }).format(new Date()),
-  );
-  for (let i = 1; i < days.length; i += 1) {
-    const previous = new Date(`${days[i - 1]}T12:00:00Z`);
-    const current = new Date(`${days[i]}T12:00:00Z`);
-    expect(current.getTime() - previous.getTime()).toBe(86_400_000);
-  }
-
-  // A rest day is drawn but is not a link: a chip whose only outcome is an
-  // empty list is a tap spent to learn nothing.
-  const rest = page.locator('[data-testid="day-tab"][data-empty="true"]').first();
-  if ((await rest.count()) > 0) {
-    expect(await rest.evaluate((node) => node.tagName)).not.toBe("A");
-  }
+  // Read off the count element rather than parsing the tab's text: the label
+  // and the count are adjacent spans with no whitespace between them, so
+  // splitting the string yields "Today3".
+  const counts = await page
+    .getByTestId("day-tab-count")
+    .evaluateAll((nodes) => nodes.map((node) => Number(node.textContent?.trim())));
+  expect(counts.length).toBeGreaterThan(0);
+  for (const count of counts) expect(count).toBeGreaterThan(0);
 });
 
 /*
