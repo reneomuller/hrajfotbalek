@@ -19,13 +19,19 @@ describe("primaryNavLinks", () => {
    * SAME FOUR AS THE PILL, IN THE PILL'S ORDER, so the product does not
    * reorder itself at 768px.
    */
-  it("carries the pill's four destinations, in the pill's order", () => {
+  it("carries the pill's three destinations, in the pill's order", () => {
     expect(primaryNavLinks()).toEqual([
       { href: "/", label: strings.nav.homeShort },
       { href: "/games", label: strings.nav.games },
-      { href: "/pass", label: strings.nav.pass },
       { href: "/account", label: strings.nav.profileShort },
     ]);
+  });
+
+  it("does NOT link the pass — the games-list panel is the only way in", () => {
+    // The pass ruling takes it off both navs. `/pass` survives as a route;
+    // what was removed is the entry point, and a nav entry beside the panel
+    // would be a second door to one room.
+    expect(primaryNavLinks({ isAdmin: true }).map((l) => l.href)).not.toContain("/pass");
   });
 
   it("shows the admin door only to an admin session, and last", () => {
@@ -36,7 +42,7 @@ describe("primaryNavLinks", () => {
       href: "/admin/games",
       label: strings.nav.admin,
     });
-    expect(primaryNavLinks({ isAdmin: true })).toHaveLength(5);
+    expect(primaryNavLinks({ isAdmin: true })).toHaveLength(4);
   });
 
   it("hides the admin link from a non-admin and from a signed-out visitor", () => {

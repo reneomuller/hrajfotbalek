@@ -28,18 +28,31 @@ export async function PassPanel() {
     <Link
       href="/pass"
       data-testid="pass-panel"
-      className="mt-2 flex items-center justify-between gap-3 rounded-card bg-volt/[.06] px-4 py-2 no-underline transition-colors hover:border-hairline-volt"
+      /*
+        LARGER, BECAUSE IT IS NOW THE ONLY WAY IN. The pass ruling takes the
+        tab off the pill and the link out of the desktop header, so this panel
+        is the sole entry point to `/pass` — and it was sized as a quiet aside
+        beside a nav entry that no longer exists. Padding and type step up, and
+        the volt wash gets a hairline so it reads as a surface rather than as a
+        tinted row.
+
+        It stays a ROW rather than becoming a card: it sits between the day
+        strip and the list, and anything taller pushes the first game card
+        below the fold — which is the density criterion §2.1's geometry already
+        spends most of.
+      */
+      className="mt-3 flex items-center justify-between gap-3 rounded-card border border-hairline-volt bg-volt/[.10] px-5 py-4 no-underline transition-colors hover:bg-volt/[.16]"
     >
       <span className="min-w-0">
         <span
           data-testid="pass-panel-title"
-          className="block truncate text-[15px] font-bold uppercase tracking-wide text-white"
+          className="block truncate text-body-lg font-bold text-white"
         >
           {t.pass.panelTitle}
         </span>
         <span
           data-testid="pass-panel-body"
-          className="mt-[1px] block truncate text-[11px] text-muted"
+          className="mt-[2px] block truncate text-small text-muted"
         >
           {t.pass.panelBody}
         </span>
@@ -50,7 +63,7 @@ export async function PassPanel() {
         the line past the viewport. `aria-hidden` because the accessible name
         comes from the title, which already says where this goes.
       */}
-      <span aria-hidden className="shrink-0 text-[16px] leading-none text-volt">
+      <span aria-hidden className="shrink-0 text-[22px] leading-none text-volt">
         →
       </span>
     </Link>

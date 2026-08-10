@@ -24,9 +24,12 @@ test("the floating nav pill carries the navigation at phone width", async ({ pag
   const tabs = page.getByTestId("nav-pill");
   await expect(tabs).toBeVisible();
 
-  for (const id of ["tab-home", "tab-games", "tab-pass", "tab-account"]) {
+  // THREE, not four: the pass ruling takes `Pass` off the pill and the
+  // games-list panel becomes the only entry point to `/pass`.
+  for (const id of ["tab-home", "tab-games", "tab-account"]) {
     await expect(page.getByTestId(id)).toBeVisible();
   }
+  await expect(page.getByTestId("tab-pass")).toHaveCount(0);
 
   // The header's LINKS are gone at this width; the header itself is not — it
   // still carries the wordmark, the language switcher and the auth control.
@@ -38,7 +41,7 @@ test("the floating nav pill carries the navigation at phone width", async ({ pag
    * target a thumb hits reliably, and a bar of four cells across a 412px
    * viewport has no excuse for missing it.
    */
-  for (const id of ["tab-home", "tab-games", "tab-pass", "tab-account"]) {
+  for (const id of ["tab-home", "tab-games", "tab-account"]) {
     const box = (await page.getByTestId(id).boundingBox())!;
     expect(box.height, `${id} height`).toBeGreaterThanOrEqual(44);
     expect(box.width, `${id} width`).toBeGreaterThanOrEqual(44);
@@ -55,15 +58,21 @@ test("the active tab survives navigating into a detail page", async ({ page }) =
   try {
     await page.goto("/games");
     await expect(page.getByTestId("tab-games")).toHaveAttribute("data-active", "true");
-    await expect(page.getByTestId("tab-pass")).toHaveAttribute("data-active", "false");
+    await expect(page.getByTestId("tab-home")).toHaveAttribute("data-active", "false");
 
     await page.goto(`/game/${game.id}`);
     // `/game/<id>` is not `/games`, and the old equality check would have gone
     // dark here.
     await expect(page.getByTestId("tab-games")).toHaveAttribute("data-active", "true");
 
+    /*
+     * `/pass` STILL RESOLVES — the pass ruling removed the TAB, not the route,
+     * exactly as ruling K did for `/my-games`. Nothing in the pill lights up
+     * there any more, and that is correct rather than a gap: the destination
+     * is reached from the games-list panel, which is not a tab.
+     */
     await page.goto("/pass");
-    await expect(page.getByTestId("tab-pass")).toHaveAttribute("data-active", "true");
+    await expect(page.getByTestId("pass-tiers")).toBeVisible();
     await expect(page.getByTestId("tab-games")).toHaveAttribute("data-active", "false");
   } finally {
     await destroyScratchGame(game.id);
@@ -357,9 +366,12 @@ test.describe("the desktop header", () => {
     // Mutually exclusive: the pill does not render at this width.
     await expect(page.getByTestId("nav-pill")).toBeHidden();
 
-    for (const id of ["nav-home", "nav-games", "nav-pass", "nav-profile"]) {
+    for (const id of ["nav-home", "nav-games", "nav-profile"]) {
       await expect(page.getByTestId(id), id).toBeVisible();
     }
+
+    // …and not the pass, which the games-list panel now owns outright.
+    await expect(page.getByTestId("nav-pass")).toHaveCount(0);
 
     // An admin session also gets the door, last.
     await expect(page.getByTestId("nav-admin")).toBeVisible();

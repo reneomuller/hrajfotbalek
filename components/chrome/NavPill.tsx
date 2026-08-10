@@ -15,6 +15,13 @@ import { useStrings } from "@/components/LocaleProvider";
  * points UPWARD (`shadow-lift`): content scrolling under the pill should read
  * as under.
  *
+ * THREE DESTINATIONS AS OF THE PASS RULING: Home, Games, Profile. `Pass` came
+ * out because the panel on the games list is now the sole entry point to it —
+ * a tab and a panel competing for the same destination is one of them being
+ * ignored, and the panel sits where somebody is already deciding about a game,
+ * which is the only moment pre-buying is worth anything. `/pass` survives as a
+ * ROUTE, exactly as `/my-games` did before it.
+ *
  * RULING K CHANGED THE CONTENTS: Home is in, My games is out. `/my-games`
  * SURVIVES AS A ROUTE — what was reversed is the tab, not the extraction — and
  * it is reached from Profile. The reasoning: My games is a place you go
@@ -62,7 +69,6 @@ export function NavPill() {
     { href: "/", label: t.nav.homeShort, icon: "home", exact: true },
     // `/game/<id>` is the detail page — singular, and not a prefix of /games.
     { href: "/games", label: t.nav.games, icon: "balls", match: ["/games", "/game/"] },
-    { href: "/pass", label: t.nav.pass, icon: "ticket" },
     { href: "/account", label: t.nav.profileShort, icon: "user" },
   ];
 

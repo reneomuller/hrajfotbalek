@@ -32,7 +32,7 @@ export function primaryNavLinks(
   t: Strings = strings,
 ): NavLink[] {
   /*
-   * THE PILL'S FOUR, IN THE PILL'S ORDER (§3, screen 0: "Header links replace
+   * THE PILL'S THREE, IN THE PILL'S ORDER (§3, screen 0: "Header links replace
    * the nav pill").
    *
    * The two controls are mutually exclusive at every width — the pill is
@@ -45,11 +45,15 @@ export function primaryNavLinks(
    * Same order as `NavPill`, so the product does not reorder itself at the
    * breakpoint. `homeShort` and `profileShort` are the same labels the pill
    * uses, for the same reason — one name per destination.
+   *
+   * `Pass` is deliberately absent from BOTH, per the pass ruling: the panel on
+   * the games list is the sole entry point, and it sits where somebody is
+   * already deciding about a game. A nav entry beside it would be a second
+   * door to one room.
    */
   const links: NavLink[] = [
     { href: "/", label: t.nav.homeShort },
     { href: "/games", label: t.nav.games },
-    { href: "/pass", label: t.nav.pass },
     { href: "/account", label: t.nav.profileShort },
   ];
 
