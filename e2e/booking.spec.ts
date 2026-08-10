@@ -155,7 +155,11 @@ test("a cancelled booking returns its value as wallet credit", async ({ page, co
   // wallet credit rather than money, so it is not fully reversible from the
   // player's side. Playwright dismisses native dialogs by default, which would
   // silently make this spec assert that nothing happened.
-  page.once("dialog", (dialog) => dialog.accept());
+  /*
+   * A REAL DIALOG NOW, not `window.confirm` — §3 screen 5. Two taps: open it,
+   * then confirm inside it. The browser box could not state the refund and had
+   * nowhere to put a failure.
+   */
 
   // Scoped to THIS game's row, never `.first()`: the seeded player holds other
   // bookings, and cancelling one of those would quietly rewrite the fixture
@@ -164,6 +168,7 @@ test("a cancelled booking returns its value as wallet credit", async ({ page, co
     .getByTestId("booking-row")
     .filter({ has: page.locator(`a[href="/game/${game.id}"]`) });
   await row.getByTestId("cancel-booking").click();
+  await page.getByTestId("cancel-dialog-confirm").click();
 
   // Re-read the ACCOUNT page rather than asserting on the in-place success
   // message: the cancel revalidates the list this was clicked from, so the row

@@ -546,6 +546,22 @@ export const strings = {
     creditApplied: "Credit applied",
     amountDue: "Amount due",
     cancelBooking: "Cancel my booking",
+    /*
+     * §3 screen 5's confirm dialog. `window.confirm` used to carry this — a
+     * browser chrome box that cannot be styled, cannot say what the refund is,
+     * and reads on a phone as the page having been hijacked. It also had
+     * nowhere to put a FAILURE, which §3 requires to appear inside the dialog.
+     */
+    cancelTitle: "Cancel your spot?",
+    cancelKeep: "Keep my spot",
+    cancelFailed: "We couldn't cancel that. Your spot is unchanged.",
+    /*
+     * RULING O, CREDIT HALF ONLY. What a player gets back is wallet credit,
+     * never money — `policy.cancellation.refundAs` is "credit" and there is no
+     * cash-refund path anywhere in the system. Saying "refund" here would
+     * promise the half that is quarantined.
+     */
+    refundToWallet: "What you paid goes back as wallet credit.",
     cancelConfirm: "Cancel this booking? Your credit is returned to your wallet.",
     cancelled: "Booking cancelled",
     addToCalendar: "Add to calendar",

@@ -116,12 +116,13 @@ test("cancel → credit → release → convert, with nothing pressed in between
   await signInAs(context, players.organizer);
   await page.goto("/my-games");
 
-  page.once("dialog", (dialog) => dialog.accept());
+  // The confirm is a real dialog now (§3 screen 5): open, then confirm inside.
   await page
     .getByTestId("booking-row")
     .filter({ has: page.locator(`a[href="/game/${game.id}"]`) })
     .getByTestId("cancel-booking")
     .click();
+  await page.getByTestId("cancel-dialog-confirm").click();
 
   // ...and from here nobody touches anything.
   await expect(async () => {

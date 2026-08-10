@@ -917,9 +917,12 @@ test("booking and cancelling each raise their toast on the page that follows", a
     await expect(page.getByTestId("toast")).toContainText("You're in");
 
     // --- cancelled ---------------------------------------------------------
-    page.on("dialog", (dialog) => void dialog.accept());
     await page.goto(`/game/${game.id}`);
+    // Two taps now: the claim bar's Cancel opens the dialog, and the dialog
+    // carries the confirm — §3 screen 5, replacing `window.confirm`.
     await page.getByTestId("cancel-booking").click();
+    await expect(page.getByTestId("cancel-dialog")).toBeVisible();
+    await page.getByTestId("cancel-dialog-confirm").click();
 
     /*
      * WAIT FOR THE REDIRECT BEFORE ASSERTING ON WHAT IT RENDERED. `click()`
