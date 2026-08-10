@@ -444,7 +444,10 @@ export const ru: StringsOverlay = {
     // The product name stays English in every locale — see lib/strings.ts.
     panelTitle: "Game Pass",
     panelBody: "Купи матчи заранее со скидкой",
-    tierGames: "{count} матчей",
+    creditsOne: "{n} кредит",
+    creditsFew: "{n} кредита",
+    creditsMany: "{n} кредитов",
+    creditEqualsGame: "1 кредит = 1 игра",
     tierPerGame: "{amount} за матч",
     tierCredited: "Получишь кредит {amount}",
     tierSaving: "Экономия {amount}",

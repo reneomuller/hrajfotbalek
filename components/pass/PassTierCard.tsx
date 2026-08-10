@@ -1,7 +1,8 @@
 import { BuyPassButton } from "@/components/pass/BuyPassButton";
 import { formatCzk } from "@/lib/format";
 import type { PassTier } from "@/lib/pass/queries";
-import { getStrings } from "@/lib/i18n/server";
+import { getLocale, getStrings } from "@/lib/i18n/server";
+import { creditsLabel } from "@/lib/pass/credits";
 
 /**
  * One tier, with its per-game price, its saving, and ITS EXPIRY STATED LOUDLY.
@@ -33,7 +34,10 @@ export async function PassTierCard({
 }) {
   const t = await getStrings();
 
-  const heading = t.pass.tierGames.replace("{count}", String(tier.games));
+  // The credits ruling: the tier is counted in credits, and one credit is one
+  // game. Same quantity as the games count it replaces, under the noun the
+  // wallet and the ledger also use.
+  const heading = creditsLabel(tier.games, await getLocale(), t);
 
   const expiry =
     tier.expiresMonths === null

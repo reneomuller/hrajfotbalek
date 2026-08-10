@@ -1256,7 +1256,32 @@ export const strings = {
      * hidden — a tier the page will not sell but `create_pass_topup` will still
      * accept is a price list with a second, invisible entry.
      */
-    tierGames: "{count} games",
+    /*
+     * THE CREDITS RULING: the unit is a credit, and one credit is one game.
+     * These replace `tierGames`, which counted in games — the same quantity
+     * under a different noun, and the ruling picks the noun the wallet, the
+     * ledger and the tiers can all share.
+     *
+     * THREE FORMS BECAUSE CZECH AND RUSSIAN HAVE THREE. English uses `few`
+     * and `many` identically and loses nothing by it; the alternative is a
+     * two-form table that silently renders "5 kredity" in Czech. Which form
+     * is chosen is `Intl.PluralRules`' decision — see lib/pass/credits.ts.
+     */
+    // `{n}`, not a literal 1: Russian routes 21, 31 and 101 through the
+    // SINGULAR, so a hardcoded "1" here renders a 21-credit wallet as
+    // "1 кредит". English and Czech only ever reach this form at one, so the
+    // placeholder costs them nothing and removes the trap.
+    creditsOne: "{n} credit",
+    creditsFew: "{n} credits",
+    creditsMany: "{n} credits",
+    /*
+     * The equivalence, stated where the credits are counted rather than
+     * buried in the how-it-works copy. It is the sentence that makes every
+     * other number on these two screens legible: without it "5 credits" is a
+     * unit the reader has to convert, and conversion is exactly what counting
+     * in credits was supposed to remove.
+     */
+    creditEqualsGame: "1 credit = 1 game",
     tierPerGame: "{amount} a game",
     tierCredited: "You get {amount} of credit",
     tierSaving: "Save {amount}",

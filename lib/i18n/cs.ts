@@ -444,7 +444,10 @@ export const cs: StringsOverlay = {
     // The product name stays English in every locale — see lib/strings.ts.
     panelTitle: "Game Pass",
     panelBody: "Předplať si zápasy se slevou",
-    tierGames: "{count} zápasů",
+    creditsOne: "{n} kredit",
+    creditsFew: "{n} kredity",
+    creditsMany: "{n} kreditů",
+    creditEqualsGame: "1 kredit = 1 zápas",
     tierPerGame: "{amount} za zápas",
     tierCredited: "Dostaneš kredit {amount}",
     tierSaving: "Ušetříš {amount}",

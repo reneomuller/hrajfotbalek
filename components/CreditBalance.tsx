@@ -32,6 +32,26 @@ export async function CreditBalance({ balanceCzk }: CreditBalanceProps) {
         {formatCzk(balanceCzk)}
       </div>
 
+      {/*
+        THE EQUIVALENCE, on the wallet as well as on the pass page — the two
+        surfaces where a credit is counted, so the two surfaces that have to
+        say what one is.
+
+        THE FIGURE ABOVE IS STILL CZK, deliberately. Ruling F wants credits as
+        the headline with crowns beneath, and turning this into a credit count
+        means dividing the ledger balance by the reference price — arithmetic
+        on money, which is the pass-page ruling's territory and is parked. The
+        line below is the copy half of that ruling and is safe to land now; the
+        conversion is not, and inventing it here is exactly the pro-rating the
+        ruling says to stop and ask about.
+      */}
+      <p
+        data-testid="credit-equivalence"
+        className="mt-2 text-body font-semibold text-bone"
+      >
+        {t.pass.creditEqualsGame}
+      </p>
+
       <p className="mt-3 text-[13px] leading-snug text-muted">
         {hasCredit ? t.account.creditHint : t.account.creditEmpty}
       </p>

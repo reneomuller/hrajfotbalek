@@ -43,7 +43,22 @@ export default async function PassPage() {
         {t.pass.lede}
       </p>
 
-      <div className="mt-8 flex flex-col gap-3" data-testid="pass-tiers">
+      {/*
+        THE EQUIVALENCE, DIRECTLY ABOVE THE TIERS.
+
+        Every figure below counts in credits, and this is the one line that
+        makes them legible — without it "5 credits" is a unit the reader has
+        to convert, and removing that conversion is the whole reason the
+        product counts in credits rather than crowns.
+      */}
+      <p
+        data-testid="credit-equivalence"
+        className="mt-6 inline-flex rounded-control border border-hairline-volt px-4 py-2 text-body-lg font-semibold text-volt"
+      >
+        {t.pass.creditEqualsGame}
+      </p>
+
+      <div className="mt-4 flex flex-col gap-3" data-testid="pass-tiers">
         {tiers.map((tier) => (
           <PassTierCard key={tier.games} tier={tier} signedIn={user !== null} />
         ))}
