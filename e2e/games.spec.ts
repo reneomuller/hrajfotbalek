@@ -1106,3 +1106,59 @@ test("a 150 CZK game shows the credit equivalence; a differently priced one does
     await destroyScratchGame(other.id);
   }
 });
+
+/*
+ * AVATARS ON BOTH SURFACES, and a regression guard for a scare rather than a
+ * bug.
+ *
+ * The stacks were reported missing from the games list after a round of card
+ * refactoring. They were not: every card whose game has bookings renders them,
+ * and every card whose game has NONE renders nothing — which is §2.1's rule
+ * ("at zero bookings the stack is absent, not an empty ring") doing exactly
+ * what it says. An empty board of scratch games looks identical to a
+ * regression, which is precisely why this now has a spec instead of a probe.
+ *
+ * One game, two surfaces, asserted together — because the point of the
+ * canonical card is that the list and the detail answer "who is coming" the
+ * same way, and a spec that checked one could pass while they diverged.
+ */
+test("a booked game shows its avatar stack on the card AND on the detail", async ({
+  page,
+}) => {
+  const empty = await createScratchGame({ hoursFromNow: 24 * 7, capacity: 12 });
+  const booked = await createScratchGame({ hoursFromNow: 24 * 7 + 1, capacity: 12 });
+
+  try {
+    const organizer = await apiClientFor(players.organizer);
+    const { error } = await organizer.rpc("admin_create_booking", {
+      p_game_id: booked.id,
+      p_player_id: players.runner.id,
+      p_payment_method: "cash",
+    });
+    expect(error).toBeNull();
+
+    await page.goto(listUrlFor(booked));
+
+    // The list card carries the stack…
+    const bookedRow = page.locator(`[data-testid="game-row"][href="/game/${booked.id}"]`);
+    await expect(bookedRow.getByTestId("avatar")).toHaveCount(1);
+
+    // …and a game nobody has claimed carries none, which is the rule and not
+    // a failure.
+    const emptyRow = page.locator(`[data-testid="game-row"][href="/game/${empty.id}"]`);
+    await expect(emptyRow).toHaveCount(1);
+    await expect(emptyRow.getByTestId("avatar")).toHaveCount(0);
+
+    // The detail answers it the same way, under the capacity line.
+    await page.goto(`/game/${booked.id}`);
+    const availability = page.getByTestId("availability-card");
+    await expect(availability.getByTestId("players-count")).toBeVisible();
+    await expect(availability.getByTestId("avatar")).toHaveCount(1);
+
+    await page.goto(`/game/${empty.id}`);
+    await expect(page.getByTestId("availability-card").getByTestId("avatar")).toHaveCount(0);
+  } finally {
+    await destroyScratchGame(empty.id);
+    await destroyScratchGame(booked.id);
+  }
+});
