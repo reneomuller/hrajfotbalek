@@ -271,3 +271,75 @@ test("the hero line renders one sentence per line", async ({ page }) => {
     }
   }
 });
+
+/*
+ * STAGE 5 — ruling J's home order, as amended 2026-08-10.
+ *
+ * The amendment keeps Player of the Month (with its hours-on-pitch stat) and
+ * the equipment line; everything else in the ruling is built as written. Both
+ * survivors are asserted here BY NAME, because the thing most likely to go
+ * wrong is a later session reading the original ruling and deleting them again.
+ */
+test.describe("the home page under ruling J", () => {
+  test.use({ viewport: { width: 390, height: 844 } });
+
+  test("orders its sections as the amended ruling specifies", async ({ page }) => {
+    await page.goto("/");
+    await page.evaluate(() => document.fonts.ready);
+
+    const order = await page.evaluate(() =>
+      [...document.querySelectorAll("[data-testid]")]
+        .map((n) => (n as HTMLElement).dataset.testid!)
+        .filter((t) =>
+          [
+            "how-it-works",
+            "next-matches",
+            "next-matches-all",
+            "stats-panel",
+            "community-panel",
+            "faq-panel",
+            "potm-panel",
+          ].includes(t),
+        ),
+    );
+
+    expect(order).toEqual([
+      "how-it-works",
+      "next-matches",
+      "next-matches-all",
+      "stats-panel",
+      "community-panel",
+      "faq-panel",
+      "potm-panel",
+    ]);
+
+    // The two survivors of the amendment.
+    await expect(page.getByTestId("potm-panel")).toBeVisible();
+    await expect(page.getByTestId("equipment-line")).toBeVisible();
+  });
+
+  test("clears the three steps above the fold", async ({ page }) => {
+    /*
+     * THE POINT OF THE HERO SHORTENING, and the reason it is asserted as a
+     * fold clearance rather than as a percentage: ruling J asks for ">=25%"
+     * in order that the steps be visible without scrolling. The percentage is
+     * the means. Measured against the previous hero it is 26.7% on this
+     * viewport and 32.1% on desktop, but that ratio is font- and
+     * copy-dependent, and what must stay true is this.
+     */
+    await page.goto("/");
+    await page.evaluate(() => document.fonts.ready);
+
+    const steps = (await page.getByTestId("how-it-works").boundingBox())!;
+    const viewport = page.viewportSize()!;
+    expect(steps.y + steps.height).toBeLessThanOrEqual(viewport.height);
+
+    // And the hero no longer forces a full screen of its own.
+    const heroFillsScreen = await page.evaluate(
+      () =>
+        (document.querySelector("section") as HTMLElement).getBoundingClientRect()
+          .height >= window.innerHeight,
+    );
+    expect(heroFillsScreen).toBe(false);
+  });
+});

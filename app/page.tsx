@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { EmptyState } from "@/components/EmptyState";
 import { CommunityPanel } from "@/components/home/CommunityPanel";
 import { FaqPanel } from "@/components/home/FaqPanel";
 import { PlayerOfMonthPanel } from "@/components/home/PlayerOfMonthPanel";
@@ -100,9 +101,22 @@ export default async function LandingPage() {
       {/* NAV is the shared SiteHeader, rendered once from the root layout. */}
 
       <div className="relative z-10 mx-auto w-full max-w-shell px-gutter">
-        {/* HERO */}
-        <section className="flex min-h-[100svh] flex-col pb-6 pt-20 text-center">
-          <div className="flex flex-1 flex-col items-center justify-center">
+        {/*
+          HERO — SIZED TO ITS CONTENT (ruling J: at least 25% shorter).
+
+          It was `min-h-[100svh]` with the content centred inside, so the hero
+          was a full screen whatever it contained and the three step cards
+          could never clear the fold — which is the whole thing ruling J is
+          about. Type carried part of the reduction in Stage 0 (`hero` dropped
+          from clamp(58,12.5vw,124) to clamp(44,10vw,88)); this is the rest of
+          it, and it is the larger half.
+
+          The scroll hint goes with it. It existed to tell a reader there was
+          something below a screen-filling hero; once the steps are visible it
+          is an arrow pointing at what is already on screen.
+        */}
+        <section className="flex flex-col pb-10 pt-20 text-center">
+          <div className="flex flex-col items-center justify-center">
             <h1 className="m-0 font-display text-hero uppercase text-white">
               {landing.headlineLead}
               <br />
@@ -110,7 +124,7 @@ export default async function LandingPage() {
               <span className="text-volt">.</span>
             </h1>
 
-            <div className="mt-[22px] text-hero-sub font-bold uppercase italic tracking-wide text-volt">
+            <div className="mt-4 text-hero-sub font-bold uppercase italic tracking-wide text-volt">
               {landing.heroSub}
             </div>
 
@@ -149,14 +163,11 @@ export default async function LandingPage() {
             {/* Primary CTA — the games list, not an in-page anchor. */}
             <Link
               href="/games"
-              className="mt-[30px] inline-flex items-center gap-[9px] rounded-control bg-volt px-[26px] py-[15px] text-cta font-extrabold uppercase tracking-wide text-surface no-underline"
+              className="mt-6 inline-flex items-center gap-[9px] rounded-control bg-volt px-[26px] py-[15px] text-cta font-extrabold uppercase tracking-wide text-surface no-underline"
             >
               {landing.heroCta}
             </Link>
 
-            <div className="mt-[30px] animate-floatY text-[9px] tracking-eyebrow text-faint">
-              {landing.scrollHint}
-            </div>
           </div>
 
           {/*
@@ -201,10 +212,18 @@ export default async function LandingPage() {
           </div>
         </section>
 
-        {/* SCREEN 2 — next match, community, footer */}
-        <div id="next-match" className="flex min-h-[100svh] flex-col pt-nav">
-          <div className="flex-1" />
+        {/*
+          BELOW THE HERO — ruling J's order, as amended 2026-08-10:
+          upcoming games, active-players banner, community, FAQ, Player of the
+          Month, footer.
 
+          NO `min-h-[100svh]` AND NO FLEX SPACERS. This was a second full
+          screen with `flex-1` gaps pushing its contents to the vertical
+          middle, which is what made the page read as two slides rather than
+          as a page. With the hero sized to its content there is nothing left
+          to pad against — the sections simply follow one another.
+        */}
+        <div id="next-match" className="flex flex-col pt-nav">
           <section className="pb-3 pt-[10px]">
             <div className="mb-[14px] flex items-baseline gap-3">
               <div className="text-[10px] tracking-eyebrow text-volt-dim">
@@ -213,15 +232,6 @@ export default async function LandingPage() {
               <h2 className="m-0 font-display text-section-title uppercase tracking-wide text-white">
                 {landing.nextMatchesLabel}
               </h2>
-              {/* The way to the rest of them. A section showing three of
-                  something needs to say that three is not all of it. */}
-              <Link
-                href="/games"
-                data-testid="next-matches-all"
-                className="ml-auto shrink-0 text-[10px] uppercase tracking-eyebrow text-volt no-underline"
-              >
-                {landing.nextMatchesAll}
-              </Link>
             </div>
 
             {games.length > 0 ? (
@@ -237,56 +247,80 @@ export default async function LandingPage() {
                 ))}
               </div>
             ) : (
-              <div
-                data-testid="next-game"
-                className="flex min-h-[120px] items-center justify-center overflow-hidden rounded-card bg-surface p-6"
-              >
-                <p className="text-[11px] tracking-[1px] text-faint">
-                  {t.games.empty}
-                </p>
-              </div>
+              /*
+                ZERO UPCOMING GAMES — the §2.9 empty state with the WhatsApp
+                action, which ruling J names specifically. It replaced a
+                centred grey sentence in a box: "No games on the board right
+                now" is a dead end on the first screen a visitor sees, and the
+                WhatsApp group is the one thing they can actually do about it.
+              */
+              <EmptyState
+                title={t.games.emptyTitle}
+                body={t.games.emptyBody}
+                ctaLabel={t.games.emptyCta}
+                ctaHref={t.landing.community.whatsappUrl}
+              />
             )}
+
+            {/*
+              `All games` AS A PRIMARY BUTTON AT THE SECTION'S BOTTOM (ruling
+              J), not an eyebrow link in the heading row.
+
+              It was a 10px tracked-caps link sitting to the right of the
+              section title — read before the cards rather than after them,
+              and styled as a label rather than as the action it is. At the
+              bottom it is the natural next step for someone who has just read
+              three cards and wants the rest.
+
+              IT RENDERS AT ZERO TOO, and that is deliberate: ruling J says
+              the button stays whether the section shows three games, one, or
+              none. A visitor who arrives on an empty week should still be
+              able to reach the board.
+            */}
+            <div className="mt-5 flex justify-center">
+              <Link
+                href="/games"
+                data-testid="next-matches-all"
+                className="inline-flex min-h-11 items-center justify-center rounded-control bg-volt px-6 text-body-lg font-bold text-ink no-underline transition-colors hover:bg-volt-dim"
+              >
+                {landing.nextMatchesAll}
+              </Link>
+            </div>
           </section>
 
           {/*
-            COMMUNITY — full width. The pay-ahead panel that used to share this
-            row is gone: payment choice belongs to the booking flow, and a
-            landing tile advertising a price is one more thing to keep in sync
-            with `games.price_czk`.
+            THE ACTIVE-PLAYERS BANNER, full width and ahead of the panels —
+            ruling J's order. It was a column in a four-panel row, where a pair
+            of numbers competed with a FAQ list for the same width and won
+            neither the space nor the attention.
+          */}
+          <section className="pt-8">
+            <StatsPanel
+              gamesPerWeek={home.gamesPerWeek}
+              activePlayers={home.activePlayers}
+            />
+          </section>
+
+          {/*
+            THEN COMMUNITY, FAQ AND PLAYER OF THE MONTH, in that order.
+
+            PLAYER OF THE MONTH SURVIVES RULING J by the amendment of
+            2026-08-10 — recorded in DESIGN_SYSTEM_V1.3.md next to the order
+            it changes, because an un-amended ruling is how a reversal gets
+            quietly re-applied by a later session reading the document
+            faithfully. It keeps the hours-on-pitch stat, which is what earns
+            it the space the original ruling said it had not.
           */}
           <section className="pt-4">
-            {/*
-              FOUR PANELS (§6, REQ-HOME-005 as amended v1.2): Join · Numbers ·
-              FAQ · Player of the Month. `flex-1` with a shared min-width, so
-              they sit as columns on a wide screen and stack in that order on a
-              phone.
-
-              The first two were ONE panel, whose heading was itself a statistic
-              — "JOIN A COMMUNITY OF 500+ ACTIVE PLAYERS ACROSS PRAGUE" — with
-              the WhatsApp and Instagram links beneath it. That heading did two
-              jobs and did neither: as a call to action it buried the verb in
-              the middle of a claim, and as a statistic it could carry exactly
-              one number, so the second one had nowhere to live. Splitting them
-              gives the invitation a verb and the numbers a home.
-            */}
             <div className="flex flex-wrap items-stretch gap-4">
               <CommunityPanel />
-
-              <StatsPanel
-                gamesPerWeek={home.gamesPerWeek}
-                activePlayers={home.activePlayers}
-              />
-
               <FaqPanel />
-
               <PlayerOfMonthPanel
                 player={home.playerOfMonth}
                 supabaseUrl={supabaseUrl}
               />
             </div>
           </section>
-
-          <div className="flex-1" />
 
           {/* FOOTER */}
           <footer className="flex flex-wrap items-center justify-between gap-2 border-t border-hairline pb-6 pt-5">
