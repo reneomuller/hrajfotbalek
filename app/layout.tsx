@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Anton, Archivo, Barlow_Condensed, JetBrains_Mono } from "next/font/google";
+import { Anton, Barlow_Condensed, JetBrains_Mono, Onest } from "next/font/google";
 import { NavPill } from "@/components/chrome/NavPill";
 import { LocaleProvider } from "@/components/LocaleProvider";
 import { SessionProvider } from "@/components/SessionProvider";
@@ -32,21 +32,34 @@ const barlowCondensed = Barlow_Condensed({
 });
 
 /**
- * Body copy — Archivo, restored from the design-pass-2 mockups.
+ * Body copy — Onest.
  *
- * A TOKEN-LEVEL SWAP AND NOTHING ELSE. v1.3's `sans` step pointed at Manrope;
- * the mockups this product is being built against use Archivo under the same
- * Anton display face, and the pairing is the thing that was reverted, not the
- * scale. Every other v1.3 token — surfaces, spacing, colour, radii — is
- * untouched, and so is ruling B: the faces changed, the sentence case did not.
+ * A TOKEN-LEVEL SWAP, the same two lines as every face change before it: the
+ * font loaded here and the `sans` family in the config. Nothing else moves.
  *
- * The weight range is loaded rather than a fixed list because §1.4 uses four
- * of them (400 body, 500 small, 600 body-lg default, 700 the spots-figure
- * variant), and a variable font serves all four from one file.
+ * CHOSEN FOR COVERAGE AS MUCH AS FOR CHARACTER, and that constraint removed
+ * most of the shortlist. Space Grotesk, Sora, Outfit, Plus Jakarta Sans,
+ * Figtree, Chivo, Familjen Grotesk and Schibsted Grotesk are all Latin-only —
+ * every modern grotesque with the character being asked for turns out not to
+ * ship Cyrillic, so none of them can be the body face of a product that
+ * renders Russian.
+ *
+ * AND IT FIXES A LIVE DEFECT RATHER THAN ONLY CHANGING A LOOK. Archivo carries
+ * `latin-ext`, so Czech diacritics were fine and nothing looked wrong — but it
+ * has no Cyrillic at all, so every Russian string in the product was rendering
+ * in a system fallback: a different face with different metrics, mid-sentence.
+ * It stayed invisible because the committed strips were EN and CS only.
+ *
+ * `cyrillic-ext` is loaded alongside `cyrillic`: the base range covers Russian,
+ * and the extended one costs little and covers the Cyrillic a pasted venue name
+ * or a player's nickname can carry.
+ *
+ * Variable, so §1.4's four weights — 400 body, 500 small, 600 `body-lg`
+ * default, 700 the spots figure — come from one file rather than four.
  */
-const archivo = Archivo({
-  variable: "--font-archivo",
-  subsets: ["latin", "latin-ext"],
+const onest = Onest({
+  variable: "--font-onest",
+  subsets: ["latin", "latin-ext", "cyrillic", "cyrillic-ext"],
   display: "swap",
 });
 
@@ -131,7 +144,7 @@ export default async function RootLayout({
   return (
     <html
       lang={locale}
-      className={`${anton.variable} ${barlowCondensed.variable} ${archivo.variable} ${jetbrainsMono.variable} h-full`}
+      className={`${anton.variable} ${barlowCondensed.variable} ${onest.variable} ${jetbrainsMono.variable} h-full`}
     >
       <body className="min-h-full flex flex-col">
         <LocaleProvider locale={locale} t={t}>
