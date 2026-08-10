@@ -48,15 +48,27 @@ export function DayPicker({
   selected: string | null;
   allLabel: string;
 }) {
-  // One day of football is not a filter — the list already shows it.
-  if (tabs.length < 2) return null;
-
-  const chip = (isSelected: boolean) =>
-    `flex min-h-11 shrink-0 items-center gap-2 rounded-pill px-4 text-body no-underline transition-colors ${
-      isSelected
-        ? "bg-volt font-semibold text-ink"
-        : "bg-surface-raised text-muted hover:text-bone"
-    }`;
+  /*
+   * THE CELL, from `d488826`'s markup with the skin adapted and nothing else.
+   *
+   * `h-12 w-12`, a boxed square, weekday over date — recognisable as the old
+   * calendar at a glance, which is the requirement. What the v1.3 tokens
+   * changed: `rounded-card` is the surviving card radius (ruling A), the mono
+   * and condensed faces are gone from player-facing UI (§1.4) so both lines
+   * are `sans`, and the retired greys resolve to `muted` / `faint`.
+   *
+   * The BORDER is kept rather than collapsed to a fill. Ruling C takes strokes
+   * off cards and chips; these are calendar cells, and the box is the thing
+   * being recognised.
+   */
+  const cell =
+    "flex h-12 w-12 shrink-0 flex-col items-center justify-center gap-[1px] rounded-card border no-underline transition-colors";
+  const skin = (isSelected: boolean, hasGames: boolean) =>
+    isSelected
+      ? "border-hairline-volt bg-volt text-ink"
+      : hasGames
+        ? "border-hairline-strong text-bone hover:border-hairline-volt"
+        : "border-hairline text-faint hover:border-hairline-strong";
 
   return (
     <nav
@@ -65,23 +77,29 @@ export function DayPicker({
       className="-mx-gutter mt-4 flex gap-2 overflow-x-auto px-gutter pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
     >
       {/* Progressive enhancement only — see the component. Without it the
-          filter still works; the selected tab is just where it lands. */}
+          filter still works; the selected cell is just where it lands. */}
       <DayPickerScroll selected={selected} />
 
-      {/* The way back to everything, and the resting state. */}
+      {/* The way back to everything, and the resting state. The same square as
+          the day cells, so the row has one baseline. */}
       <Link
         href="/games"
         scroll={false}
         data-testid="day-tab-all"
         data-selected={selected === null ? "true" : "false"}
         aria-current={selected === null ? "page" : undefined}
-        className={chip(selected === null)}
+        className={`${cell} text-small font-semibold ${
+          selected === null
+            ? "border-hairline-volt bg-volt text-ink"
+            : "border-hairline-strong text-muted hover:border-hairline-volt"
+        }`}
       >
         {allLabel}
       </Link>
 
       {tabs.map((tab) => {
         const isSelected = tab.key === selected;
+        const hasGames = tab.count > 0;
 
         return (
           <Link
@@ -92,16 +110,39 @@ export function DayPicker({
             data-testid="day-tab"
             data-day={tab.key}
             data-selected={isSelected ? "true" : "false"}
+            data-empty={hasGames ? "false" : "true"}
             aria-current={isSelected ? "page" : undefined}
-            className={chip(isSelected)}
+            className={`${cell} ${skin(isSelected, hasGames)}`}
           >
-            {tab.label}
+            {/*
+              UPPER, and ruling B does not reach in here (owner's amendment):
+              a calendar cell is data display rather than a heading, and the
+              abbreviation style is the original's.
+            */}
             <span
-              data-testid="day-tab-count"
-              className={isSelected ? "text-ink/70" : "text-faint"}
+              className={`text-[9px] uppercase tracking-[1px] ${
+                isSelected ? "text-ink/70" : hasGames ? "text-muted" : "text-faint"
+              }`}
             >
-              {tab.count}
+              {tab.weekday}
             </span>
+            <span className="text-[17px] font-bold leading-none">{tab.dayOfMonth}</span>
+            {/*
+              The dot marks a day with football on it — a fixed-height slot
+              rather than a conditional element, so every cell is the same size
+              and the row of numerals stays on one baseline.
+
+              EVERY DAY IS A LINK NOW, including an empty one (amendment A):
+              tapping it shows the list's empty state, which is a real answer
+              rather than a dead control.
+            */}
+            <span
+              aria-hidden
+              data-testid="day-tab-dot"
+              className={`h-[3px] w-[3px] rounded-full ${
+                hasGames ? (isSelected ? "bg-ink" : "bg-volt") : "bg-transparent"
+              }`}
+            />
           </Link>
         );
       })}

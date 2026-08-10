@@ -119,6 +119,7 @@ export async function createScratchGame({
   allowedSkillLevels = null,
   subsPerTeam = null,
   format = null,
+  surface = null,
   publish = true,
   withVenuePhoto = false,
   amenities,
@@ -140,6 +141,12 @@ export async function createScratchGame({
   allowedSkillLevels?: ("beginner" | "intermediate" | "advanced")[] | null;
   subsPerTeam?: number | null;
   format?: string | null;
+  /**
+   * The pitch surface. Was hardcoded `null` in the RPC call below while the
+   * option did not exist at all — so a spec asking for turf silently got a
+   * game with no surface, and the card's surface line could not be tested.
+   */
+  surface?: "turf" | "grass" | "indoor" | "sand" | null;
   /** A draft game, for the specs that need one. Published by default. */
   publish?: boolean;
   /** Put the game at the scratch venue that HAS a photo (REQ-GAME-012). */
@@ -181,7 +188,7 @@ export async function createScratchGame({
     p_price_czk: priceCzk,
     p_organizer_name: organizerName,
     p_format: format,
-    p_surface: null,
+    p_surface: surface,
     p_notes: null,
     p_organizer_phone: organizerPhone,
     p_duration_minutes: durationMinutes,

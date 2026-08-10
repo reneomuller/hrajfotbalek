@@ -42,39 +42,42 @@ export function pragueDayKey(value: Date | string | number): string {
 export interface DayTab {
   /** `2026-08-03` — the value carried in the URL. */
   key: string;
-  /** "Today", "Tomorrow", or a short weekday, in the reader's language. */
-  label: string;
-  /** How many games fall on this day. Never zero — see `buildDayTabs`. */
+  /** "SAT" — the weekday, abbreviated, for the calendar cell's top line. */
+  weekday: string;
+  /** "15" — the day of the month, for the cell's second line. */
+  dayOfMonth: string;
+  /** How many games fall on this day. ZERO IS NORMAL — every day gets a tab. */
   count: number;
 }
 
+/** The row is today plus the next six — one week, always. */
+export const DAY_TAB_DAYS = 7;
+
 /**
- * ONE TAB PER DAY THAT HAS GAMES, in date order, with its count.
+ * A FIXED WEEK OF TABS: today through today + 6, whether or not a day has
+ * games.
  *
- * RESTORED FROM `ed9997c` (Design Stage 1) by the owner's ruling of
- * 2026-08-10, which reverses the eight-box calendar strip. The reason is the
- * strip's own law turned against it: a fixed eight-day window silently hid a
- * game published for late August, which is exactly the invisible truncation
- * ruling H forbade. A window cannot both be a fixed width and cover an
- * unbounded schedule.
+ * AMENDMENT A, 2026-08-10. The restored control emitted one tab per day that
+ * HAD games, which was faithful to `ed9997c` and wrong in practice: on a quiet
+ * board it collapsed to three tabs and read as broken — a row that changes
+ * width with the schedule looks like a rendering fault rather than a filter.
  *
- * So the control is a FILTER OVER WHAT EXISTS rather than a calendar: every
- * day with football on it gets a tab, however far out, and `All` — the default
- * — lists all of them. Nothing is reachable only by scrolling a strip.
+ * A fixed week is not the eight-box strip returning. That control was the ONLY
+ * way to reach a day, so its window truncated the product; this one sits above
+ * an `All` view that is unbounded, so a game months out is still on the first
+ * load. The week is a convenience for the days people are actually choosing
+ * between, and nothing is reachable only through it.
  *
- * EMPTY DAYS GET NO TAB, which is what makes the count meaningful: it is never
- * zero, so a tab is never a tap that leads to an empty list.
- *
- * The rolling-calendar version drew every day including rest days so the strip
- * could answer "how far away is this". That question is answered by the day
- * HEADINGS in the list itself, which carry the date, and it was never worth an
- * unreachable game.
+ * AN EMPTY DAY IS STILL A TAB and still a link — tapping it shows the list's
+ * empty state, which is a real answer ("nothing on Thursday") rather than a
+ * dead control. That reverses the rest-day treatment of `d488826`, where an
+ * empty day was drawn but not focusable.
  */
 export function buildDayTabs(
   startsAtList: (Date | string | number)[],
   now: Date | string | number,
-  t: Strings = strings,
   locale: Locale = DEFAULT_LOCALE,
+  days: number = DAY_TAB_DAYS,
 ): DayTab[] {
   const counts = new Map<string, number>();
   for (const startsAt of startsAtList) {
@@ -83,47 +86,48 @@ export function buildDayTabs(
   }
 
   const today = pragueDayKey(now);
-  const tomorrow = pragueDayKey(
-    new Date((now instanceof Date ? now : new Date(now)).getTime() + 24 * 3600_000),
-  );
 
-  return [...counts.entries()]
-    .sort(([a], [b]) => a.localeCompare(b))
-    .map(([key, count]) => ({ key, label: dayLabel(key, today, tomorrow, t, locale), count }));
+  return Array.from({ length: days }, (_, offset) => {
+    const key = addDays(today, offset);
+    return {
+      key,
+      weekday: weekdayLabel(key, locale),
+      dayOfMonth: String(Number(key.slice(8, 10))),
+      count: counts.get(key) ?? 0,
+    };
+  });
 }
 
 /**
- * "Today", "Tomorrow", or a short weekday.
+ * `key` plus `n` calendar days, as another Prague day key.
  *
- * The two relative labels earn their special case: they are the days anyone
- * opening this page is deciding between, and "Sun" on a Sunday makes a reader
- * do arithmetic to work out it means now.
- *
- * THE WEEKDAY IS LOCALISED, which is the one thing NOT ported verbatim from
- * `ed9997c`. That version hardcoded `en-GB`, so a Czech games page read
- * `All · Dnes · Sat · Sun`. Restoring it exactly would restore a defect fixed
- * since; the shape is the ruling, the language bug is not. Flagged rather than
- * adapted silently.
- *
- * Derived from midday UTC rather than midnight, so no offset can push the
- * label onto the neighbouring day — midnight is exactly where that goes wrong.
+ * VIA MIDDAY UTC, never by adding 86,400,000 milliseconds to a midnight.
+ * Prague has a 23-hour day and a 25-hour day every year, and a row built by
+ * adding fixed days across the March transition either repeats a date or skips
+ * one. Midday is the furthest any instant can be from a Prague midnight.
  */
-function dayLabel(
-  key: string,
-  today: string,
-  tomorrow: string,
-  t: Strings,
-  locale: Locale,
-): string {
-  if (key === today) return t.games.dayToday;
-  if (key === tomorrow) return t.games.dayTomorrow;
-  return capitalise(
-    new Intl.DateTimeFormat(DATE_LOCALE[locale], {
-      timeZone: DISPLAY_TIME_ZONE,
-      weekday: "short",
-    }).format(new Date(`${key}T12:00:00Z`)),
-    locale,
-  );
+function addDays(key: string, n: number): string {
+  return pragueDayKey(new Date(Date.parse(`${key}T12:00:00Z`) + n * 86_400_000));
+}
+
+/**
+ * "SAT" — abbreviated and UPPER, in the reader's language.
+ *
+ * RULING B DOES NOT REACH INSIDE THE CELL, by the owner's amendment: a
+ * calendar cell is data display, not a heading, and the abbreviation style is
+ * the original's. `eyebrow` remains the only uppercase style in prose.
+ *
+ * Localised, which the `ed9997c` original was not — that hardcoded `en-GB` and
+ * printed `Sat` on a Czech page. The look is the ruling; the language bug is
+ * not.
+ */
+function weekdayLabel(key: string, locale: Locale): string {
+  return new Intl.DateTimeFormat(DATE_LOCALE[locale], {
+    timeZone: DISPLAY_TIME_ZONE,
+    weekday: "short",
+  })
+    .format(new Date(`${key}T12:00:00Z`))
+    .toLocaleUpperCase(locale);
 }
 
 /**

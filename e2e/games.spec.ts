@@ -178,7 +178,7 @@ test("a game with no duration falls back to the standard length on every surface
  * particular game is reading. The half of the requirement that named cards is
  * what v1.3 rules on.
  */
-test("the card shows kick-off and duration; the detail shows the span", async ({
+test("the card shows day and time; the detail shows the span", async ({
   page,
 }) => {
   const game = await createScratchGame({ durationMinutes: 90, hoursFromNow: 24 * 20 });
@@ -188,9 +188,14 @@ test("the card shows kick-off and duration; the detail shows the span", async ({
     const row = page.locator(`[data-testid="game-row"][href="/game/${game.id}"]`);
     await expect(row).toHaveCount(1);
 
-    // One clock time, and the duration beside it — not a range.
-    await expect(row.getByTestId("card-time")).toHaveText(/^\d{2}:\d{2}$/);
-    await expect(row.getByTestId("card-duration")).toHaveText("90 min");
+    /*
+     * DAY AND TIME, not a range and no longer a duration — the card anatomy
+     * ruling of 2026-08-10 sets this line as `Sat 15 Aug • 12:30`. The day was
+     * added because a card reading only `12:30` makes a reader carry the day
+     * heading in their head, and on home there is no heading at all. The
+     * duration came off the card with it; the detail still carries the span.
+     */
+    await expect(row.getByTestId("card-when")).toHaveText(/\d{1,2} \w+ • \d{2}:\d{2}/);
     await expect(row).not.toContainText(/\d{2}:\d{2}–\d{2}:\d{2}/);
 
     // And the range is on the detail, so this is a move rather than a loss.
@@ -294,7 +299,8 @@ test("a capacity-12 game entered as 5v5 never renders 6v6", async ({ page }) => 
     // The list row.
     await page.goto(listUrlFor(game));
     const row = page.locator(`[data-testid="game-row"][href="/game/${game.id}"]`);
-    await expect(row.getByTestId("game-format")).toHaveText("5v5");
+    // Format and surface share one line now (card anatomy, 2026-08-10).
+    await expect(row.getByTestId("card-format")).toContainText("5v5");
     await expect(row).not.toContainText("6v6");
   } finally {
     await destroyScratchGame(game.id);
@@ -602,15 +608,21 @@ test("the day strip filters the list, by the date on the chip", async ({ page })
  * So the assertions are the guarantee rather than the geometry: `All` is the
  * default and lists a far-future game, and that game has a tab of its own.
  */
-test("a game months out appears under All, and gets its own tab", async ({ page }) => {
+test("a game months out appears under All, though the week has no cell for it", async ({
+  page,
+}) => {
   const soon = await createScratchGame({ hoursFromNow: 24 * 2 });
-  // Far outside any fixed window the old strip could have drawn.
+  // Far beyond the seven-day row — reachable only because `All` is unbounded.
   const distant = await createScratchGame({ hoursFromNow: 24 * 96 });
 
   try {
     await page.goto("/games");
 
-    // THE DEFAULT VIEW IS EVERYTHING — no tab tapped, no scrolling a strip.
+    /*
+     * THE GUARANTEE. `All` is the default view and lists every upcoming game
+     * whatever its distance — this is what the eight-box strip broke, and it
+     * is what keeps a fixed week from being that strip under another name.
+     */
     await expect(
       page.locator(`[data-testid="game-row"][href="/game/${soon.id}"]`),
     ).toBeVisible();
@@ -618,25 +630,30 @@ test("a game months out appears under All, and gets its own tab", async ({ page 
       page.locator(`[data-testid="game-row"][href="/game/${distant.id}"]`),
     ).toBeVisible();
 
-    // And the distant day is reachable as a filter in its own right.
+    /*
+     * AND THE WEEK DOES NOT PRETEND OTHERWISE. There is no cell for a day 96
+     * days out, which is honest: the row is a convenience for the days people
+     * are choosing between, not the only route to a game.
+     */
     const distantDay = pragueDayKey(distant.startsAt);
-    const chip = page.locator(`[data-testid="day-tab"][data-day="${distantDay}"]`);
-    await expect(chip).toHaveCount(1);
-
-    await chip.click();
-    await page.waitForURL(`**/games?day=${distantDay}`);
     await expect(
-      page.locator(`[data-testid="game-row"][href="/game/${distant.id}"]`),
-    ).toBeVisible();
-    await expect(
-      page.locator(`[data-testid="game-row"][href="/game/${soon.id}"]`),
+      page.locator(`[data-testid="day-tab"][data-day="${distantDay}"]`),
     ).toHaveCount(0);
 
-    // `All` returns to everything.
+    // A day inside the week still filters, and `All` still returns.
+    const soonDay = pragueDayKey(soon.startsAt);
+    const cell = page.locator(`[data-testid="day-tab"][data-day="${soonDay}"]`);
+    await expect(cell).toHaveCount(1);
+    await cell.click();
+    await page.waitForURL(`**/games?day=${soonDay}`);
+    await expect(
+      page.locator(`[data-testid="game-row"][href="/game/${distant.id}"]`),
+    ).toHaveCount(0);
+
     await page.getByTestId("day-tab-all").click();
     await page.waitForURL("**/games");
     await expect(
-      page.locator(`[data-testid="game-row"][href="/game/${soon.id}"]`),
+      page.locator(`[data-testid="game-row"][href="/game/${distant.id}"]`),
     ).toBeVisible();
   } finally {
     await destroyScratchGame(soon.id);
@@ -644,17 +661,43 @@ test("a game months out appears under All, and gets its own tab", async ({ page 
   }
 });
 
-/* Every tab counts at least one game — an empty day gets no tab at all. */
-test("no day tab leads to an empty list", async ({ page }) => {
+/*
+ * AMENDMENT A — a FIXED WEEK: seven cells, today first, whether or not a day
+ * has games. An empty day is still a tab and still a link; tapping it shows
+ * the list's empty state, which is a real answer rather than a dead control.
+ *
+ * This reverses the data-driven version, which collapsed to three cells on a
+ * quiet board and read as broken.
+ */
+test("the day row is always seven cells, today first, empty days included", async ({
+  page,
+}) => {
   await page.goto("/games");
-  // Read off the count element rather than parsing the tab's text: the label
-  // and the count are adjacent spans with no whitespace between them, so
-  // splitting the string yields "Today3".
-  const counts = await page
-    .getByTestId("day-tab-count")
-    .evaluateAll((nodes) => nodes.map((node) => Number(node.textContent?.trim())));
-  expect(counts.length).toBeGreaterThan(0);
-  for (const count of counts) expect(count).toBeGreaterThan(0);
+
+  const cells = page.getByTestId("day-tab");
+  await expect(cells).toHaveCount(7);
+
+  const days = await cells.evaluateAll((nodes) =>
+    nodes.map((node) => (node as HTMLElement).dataset.day!),
+  );
+  expect(days[0]).toBe(
+    new Intl.DateTimeFormat("en-CA", {
+      timeZone: "Europe/Prague",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }).format(new Date()),
+  );
+  for (let i = 1; i < days.length; i += 1) {
+    const previous = new Date(`${days[i - 1]}T12:00:00Z`);
+    const current = new Date(`${days[i]}T12:00:00Z`);
+    expect(current.getTime() - previous.getTime()).toBe(86_400_000);
+  }
+
+  // Every cell is a link, including an empty one.
+  for (const cell of await cells.all()) {
+    expect(await cell.evaluate((node) => node.tagName)).toBe("A");
+  }
 });
 
 /*
@@ -695,7 +738,7 @@ test("the whole card is the link, with no View game label and no claim", async (
  * REQ-GAME-020 — what each row actually carries, and what it deliberately does
  * NOT (v1.2 §5.5).
  */
-test("a card carries kick-off, duration, venue, format and spots — no price, no count", async ({
+test("a card carries venue, day, time, format, surface, bar and spots — no price", async ({
   page,
 }) => {
   const game = await createScratchGame({
@@ -713,19 +756,18 @@ test("a card carries kick-off, duration, venue, format and spots — no price, n
     const row = page.locator(`[data-testid="game-row"][href="/game/${game.id}"]`);
     await expect(row).toBeVisible();
 
-    await expect(row.getByTestId("card-time")).toHaveText(/^\d{2}:\d{2}$/);
-    await expect(row.getByTestId("card-duration")).toHaveText("90 min");
-    await expect(row).toContainText("E2E Scratch Pitch");
-    await expect(row.getByTestId("game-format")).toHaveText("5v5");
+    await expect(row.getByTestId("card-when")).toHaveText(/\d{1,2} \w+ • \d{2}:\d{2}/);
+    await expect(row.getByTestId("card-venue")).toContainText("E2E Scratch Pitch");
+    // Format AND surface, which the card was missing entirely.
+    await expect(row.getByTestId("card-format")).toContainText("5v5");
+    // The segmented bar is back (recovered from 1a42888) and unconditional.
+    await expect(row.getByTestId("capacity-segments")).toBeVisible();
     await expect(row.getByTestId("row-spots")).toContainText("12 spots left");
 
     // Ruling I: the level badge is a detail-page fact, and this game is
     // restricted precisely so an absent badge means suppressed, not unset.
     await expect(row.getByTestId("skill-badges")).toHaveCount(0);
 
-    // Ruling D: no capacity bar. A row of grey segments inside a populated
-    // card is indistinguishable from a skeleton (§2.10).
-    await expect(row.getByTestId("capacity-segments")).toHaveCount(0);
 
     /*
      * THE PRICE IS ON THE CARD AGAIN, reversing v1.2 §5.5 — it came off for
@@ -1218,7 +1260,7 @@ test("a booked game shows its avatar stack on the card AND on the detail", async
  * in a prop or a conditional rather than in the data, and this fails the
  * moment they disagree.
  */
-test("every game renders the same dotted rule and lineup on list and detail", async ({
+test("every game renders the same capacity bar and lineup on list and detail", async ({
   page,
 }) => {
   await page.goto("/games");
@@ -1228,17 +1270,15 @@ test("every game renders the same dotted rule and lineup on list and detail", as
     [...document.querySelectorAll('[data-testid="game-row"]')].slice(0, 6).map((card) => ({
       href: card.getAttribute("href")!,
       avatars: card.querySelectorAll('[data-testid="avatar"]').length,
-      dotted: [...card.querySelectorAll("*")].filter(
-        (node) => getComputedStyle(node as HTMLElement).borderTopStyle === "dotted",
-      ).length,
+      bars: card.querySelectorAll('[data-testid="capacity-segments"]').length,
     })),
   );
 
   expect(cards.length).toBeGreaterThan(0);
 
   for (const card of cards) {
-    // The rule is on the list card whether or not anyone has booked.
-    expect(card.dotted, `list rule ${card.href}`).toBeGreaterThan(0);
+    // The bar is on the list card whether or not anyone has booked.
+    expect(card.bars, `list bar ${card.href}`).toBe(1);
 
     await page.goto(card.href);
     const detail = await page.evaluate(() => {
@@ -1246,14 +1286,12 @@ test("every game renders the same dotted rule and lineup on list and detail", as
       if (!availability) return null;
       return {
         avatars: availability.querySelectorAll('[data-testid="avatar"]').length,
-        dotted: [...availability.querySelectorAll("*")].filter(
-          (node) => getComputedStyle(node as HTMLElement).borderTopStyle === "dotted",
-        ).length,
+        bars: availability.querySelectorAll('[data-testid="capacity-segments"]').length,
       };
     });
 
     expect(detail, `detail card ${card.href}`).not.toBeNull();
-    expect(detail!.dotted, `detail rule ${card.href}`).toBeGreaterThan(0);
+    expect(detail!.bars, `detail bar ${card.href}`).toBe(1);
     expect(detail!.avatars, `avatar parity ${card.href}`).toBe(card.avatars);
   }
 });

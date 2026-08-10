@@ -103,7 +103,6 @@ export default async function GamesPage({
   const dayTabs = buildDayTabs(
     games.map(({ game }) => game.starts_at),
     now,
-    t,
     locale,
   );
   const requested = typeof query.day === "string" ? query.day : undefined;

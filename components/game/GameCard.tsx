@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { AvatarRow } from "@/components/game/AvatarRow";
+import { CapacityBar } from "@/components/game/CapacityBar";
 import { SpotsLeft } from "@/components/game/SpotsLeft";
-import { formatTime } from "@/lib/format";
-import { resolveDurationMinutes } from "@/lib/games/duration";
+import { formatGameDate, formatTime } from "@/lib/format";
 import { getStrings } from "@/lib/i18n/server";
 import type { RosterAvatar } from "@/lib/games/queries";
 import type { Database } from "@/lib/types/database";
@@ -11,7 +11,7 @@ type GameRowData = Database["public"]["Tables"]["games"]["Row"];
 
 export type GameCardGame = Pick<
   GameRowData,
-  "id" | "venue" | "starts_at" | "capacity" | "format" | "duration_minutes"
+  "id" | "venue" | "starts_at" | "capacity" | "format" | "surface" | "duration_minutes"
 >;
 
 /**
@@ -80,72 +80,66 @@ export async function GameCard({
 
   const body = (
     <>
-      {/* Line one — when, how long, and what kind. None of the three ever
-          truncates (§2.13); the venue below yields first. */}
-      <div className="flex items-baseline gap-2">
-        <span data-testid="card-time" className="text-time font-bold text-bone">
-          {formatTime(game.starts_at)}
-        </span>
-        <span data-testid="card-duration" className="text-small text-muted">
-          {t.games.durationMin.replace(
-            "{n}",
-            String(resolveDurationMinutes(game.duration_minutes)),
-          )}
-        </span>
+      {/*
+        THE ANATOMY, in the owner's order (2026-08-10, final):
+        venue, day + time, format + surface, capacity bar, spots, faces.
 
-        {game.format && (
-          <span
-            data-testid="game-format"
-            className="ml-auto shrink-0 rounded-pill bg-surface-raised px-3 py-1 text-small text-muted"
-          >
-            {game.format}
-          </span>
-        )}
-      </div>
+        THE BAR IS RECOVERED FROM `1a42888` ("Phase 15a: the list stops being
+        a stack of posters"), where `GameRow` carried
+        `<CapacityBar size="slim">`. Ruling D took it off the canonical card on
+        the reasoning that a row of grey segments inside a populated card is
+        indistinguishable from a skeleton (§2.10); the owner reverses that. It
+        is the same component the detail's availability card has used
+        throughout, so the two cannot disagree about how full a game is.
 
-      {/* Line two — where. The one thing on the card allowed to truncate. */}
-      <span
-        data-testid="card-venue"
-        className="mt-2 block truncate text-body-lg font-semibold text-bone"
-      >
+        ONE SEGMENT PER SPOT — `capacitySegments` returns an array the length
+        of `capacity`, so a 12-spot game draws twelve. Unconditional: an empty
+        game draws twelve unfilled.
+      */}
+      <span data-testid="card-venue" className="block truncate text-body-lg font-semibold text-bone">
         {game.venue}
       </span>
 
-      {/* Line three — who is coming, and how much room is left.
-
-          `min-h-7` holds the row's height at the avatar's, so a game nobody
-          has claimed yet and a game with nine players are the same card
-          height. Without it the first card in a list jumps by 28px the moment
-          somebody books, which is a layout shift on a surface the reader is
-          mid-scroll through. */}
       {/*
-        THE DOTTED LINE, THE ACCENT, THE LINEUP (layout law, final form).
-
-        A rule, the spots-left figure beneath it, then the faces. The raw
-        `2 / 12 players` caption is gone: the line and the stack already say
-        how full the game is — the reader can SEE three faces against twelve
-        places — and a number spelling that out again was the third statement
-        of one fact on a card that had already been trimmed twice for height.
-
-        The spots figure keeps its colour ladder and remains the card's ONE
-        accent (ruling D). It is the half that answers "do I have to decide
-        now", which is the question a count cannot.
-
-        The AVATARS disappear at zero (§2.1) and the rule does not: a card
-        with nobody on it still needs its seam, and a ring drawn around
-        nobody is a question.
+        DAY AND TIME. The day was missing — a card that says only `12:30`
+        makes a reader carry the day heading in their head while they scroll,
+        and on home there is no heading at all.
       */}
-      <div className="mt-3 border-t border-dotted border-hairline-strong pt-3">
+      <p data-testid="card-when" className="mt-1 mb-0 text-small text-muted">
+        {`${formatGameDate(game.starts_at)} • ${formatTime(game.starts_at)}`}
+      </p>
+
+      {/*
+        FORMAT AND SURFACE. The surface was missing from the card entirely and
+        is a real decision input — turf and indoor are different games. Both
+        are omitted when the organizer recorded neither, rather than printing
+        a bare separator.
+      */}
+      {(game.format || game.surface) && (
+        <p data-testid="card-format" className="mt-1 mb-0 text-small text-muted">
+          {[game.format, game.surface ? t.games.surface[game.surface] : null]
+            .filter(Boolean)
+            .join(" • ")}
+        </p>
+      )}
+
+      <div className="mt-3">
+        <CapacityBar bookedCount={bookedCount} capacity={game.capacity} size="slim" />
+      </div>
+
+      <div className="mt-2">
         <span data-testid="row-spots">
           <SpotsLeft bookedCount={bookedCount} capacity={game.capacity} />
         </span>
-
-        {roster.length > 0 && (
-          <div className="mt-2">
-            <AvatarRow players={roster} max={3} size="card" supabaseUrl={supabaseUrl} />
-          </div>
-        )}
       </div>
+
+      {/* The faces still disappear at zero (§2.1) — a ring drawn around
+          nobody is a question. The bar above already says the game is empty. */}
+      {roster.length > 0 && (
+        <div className="mt-3">
+          <AvatarRow players={roster} max={3} size="card" supabaseUrl={supabaseUrl} />
+        </div>
+      )}
     </>
   );
 

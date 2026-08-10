@@ -6,7 +6,6 @@ import {
   resolveSelectedDay,
 } from "@/lib/games/days";
 import { strings } from "@/lib/strings";
-import { resolveStrings } from "@/lib/i18n/resolve";
 
 /**
  * Phase 2 §5.5 / REQ-GAME-021.
@@ -43,81 +42,77 @@ describe("pragueDayKey", () => {
 describe("buildDayTabs", () => {
   const now = "2026-08-03T09:00:00Z"; // Monday, 11:00 in Prague
 
-  it("emits one tab per day that HAS games, in date order", () => {
-    const tabs = buildDayTabs(
-      ["2026-08-05T17:00:00Z", "2026-08-03T17:00:00Z", "2026-08-03T19:00:00Z"],
-      now,
-      strings,
-    );
-
-    expect(tabs.map((tab) => [tab.key, tab.count])).toEqual([
-      ["2026-08-03", 2],
-      ["2026-08-05", 1],
-    ]);
-  });
-
-  it("gives an empty day NO tab, so a count is never zero", () => {
-    // A tab that leads to an empty list is a tap spent to learn nothing.
-    const tabs = buildDayTabs(["2026-08-03T17:00:00Z"], now, strings);
-    expect(tabs.map((tab) => tab.key)).toEqual(["2026-08-03"]);
-    expect(tabs.every((tab) => tab.count > 0)).toBe(true);
-  });
-
   /*
-   * THE RULING THAT BROUGHT THIS BACK. The eight-box calendar drew a fixed
-   * window whether or not those days had games — and a fixed window cannot
-   * cover an unbounded schedule, so a game published for late August fell
-   * outside it and became unreachable from `/games`. That is the invisible
-   * truncation ruling H forbade in its own text.
+   * AMENDMENT A: a FIXED WEEK, today through today + 6, whether or not a day
+   * has games. The data-driven version was faithful to `ed9997c` and wrong in
+   * practice — on a quiet board it collapsed to three tabs and read as broken.
    */
-  it("reaches a game ANY distance out — the truncation guarantee", () => {
-    const lateAugust = "2026-08-28T17:00:00Z";
-    const tabs = buildDayTabs(["2026-08-03T17:00:00Z", lateAugust], now, strings);
-
-    expect(tabs.map((tab) => tab.key)).toContain("2026-08-28");
-    // And nothing between them is invented to pad a window.
-    expect(tabs).toHaveLength(2);
+  it("is always seven days, starting today", () => {
+    const tabs = buildDayTabs([], now);
+    expect(tabs).toHaveLength(7);
+    expect(tabs[0].key).toBe("2026-08-03");
+    expect(tabs.at(-1)!.key).toBe("2026-08-09");
   });
 
-  it("reaches a game months out", () => {
-    const tabs = buildDayTabs(["2026-11-14T17:00:00Z"], now, strings);
-    expect(tabs.map((tab) => tab.key)).toEqual(["2026-11-14"]);
+  it("keeps its width on a board with almost nothing on it", () => {
+    // One game, still seven cells. This is the whole point of the amendment.
+    expect(buildDayTabs(["2026-08-05T17:00:00Z"], now)).toHaveLength(7);
   });
 
-  it("labels today and tomorrow relatively, and the rest by weekday", () => {
+  it("counts games per day, and zero is normal", () => {
     const tabs = buildDayTabs(
-      ["2026-08-03T17:00:00Z", "2026-08-04T17:00:00Z", "2026-08-08T17:00:00Z"],
+      ["2026-08-03T17:00:00Z", "2026-08-03T19:00:00Z", "2026-08-05T17:00:00Z"],
       now,
-      strings,
     );
-
-    expect(tabs[0].label).toBe(strings.games.dayToday);
-    expect(tabs[1].label).toBe(strings.games.dayTomorrow);
-    // The 8th of August 2026 is a Saturday.
-    expect(tabs[2].label).toBe("Sat");
+    expect(tabs.map((tab) => tab.count)).toEqual([2, 0, 1, 0, 0, 0, 0]);
   });
 
-  it("localises the weekday, which is the one thing NOT ported verbatim", () => {
-    /*
-     * `ed9997c` hardcoded `en-GB`, so a Czech games page read
-     * `Vše · Dnes · Sat`. Restoring the shape exactly would have restored a
-     * defect fixed since — the arrangement is the ruling, the language bug is
-     * not.
-     */
-    const cs = resolveStrings("cs");
-    const tabs = buildDayTabs(["2026-08-08T17:00:00Z"], now, cs, "cs");
-    expect(tabs[0].label).toBe("So");
-    expect(tabs[0].label).not.toBe("Sat");
+  it("carries a weekday and a day of month for the calendar cell", () => {
+    const tabs = buildDayTabs([], now);
+    // The 3rd of August 2026 is a Monday.
+    expect(tabs[0]).toMatchObject({ weekday: "MON", dayOfMonth: "3" });
+    expect(tabs[1]).toMatchObject({ weekday: "TUE", dayOfMonth: "4" });
   });
 
-  it("returns nothing for an empty board", () => {
-    expect(buildDayTabs([], now, strings)).toEqual([]);
+  it("localises the weekday, which the original did not", () => {
+    // `ed9997c` hardcoded `en-GB`, so a Czech page read `SAT`. The look is the
+    // ruling; the language bug is not.
+    expect(buildDayTabs([], now, "cs")[0].weekday).toBe("PO");
+    expect(buildDayTabs([], now, "ru")[0].weekday).toBe("ПН");
+  });
+
+  it("crosses a month boundary without repeating or skipping a date", () => {
+    const keys = buildDayTabs([], "2026-08-28T09:00:00Z").map((tab) => tab.key);
+    expect(new Set(keys).size).toBe(keys.length);
+    expect(keys).toContain("2026-08-31");
+    expect(keys).toContain("2026-09-01");
+  });
+
+  it("crosses the autumn DST change without repeating or skipping a date", () => {
+    // Prague falls back on 2026-10-25, a 25-hour day. A row built by adding
+    // 86,400,000ms to a local midnight lands twice on the 25th.
+    const keys = buildDayTabs([], "2026-10-22T09:00:00Z").map((tab) => tab.key);
+    expect(new Set(keys).size).toBe(keys.length);
+    expect(keys).toContain("2026-10-24");
+    expect(keys).toContain("2026-10-25");
+    expect(keys).toContain("2026-10-26");
   });
 
   it("puts a late-evening game on the day the players would name it", () => {
-    // 22:30Z Monday is 00:30 Tuesday in Prague, and belongs to Tuesday.
-    const tabs = buildDayTabs(["2026-08-03T22:30:00Z"], now, strings);
-    expect(tabs[0].key).toBe("2026-08-04");
+    // 22:30Z Monday is 00:30 Tuesday in Prague.
+    const tabs = buildDayTabs(["2026-08-03T22:30:00Z"], now);
+    expect(tabs.find((tab) => tab.count > 0)!.key).toBe("2026-08-04");
+  });
+
+  /*
+   * THE WEEK IS A CONVENIENCE, NOT THE ONLY ROUTE. A game beyond it has no
+   * cell and is still reachable — `All` is unbounded, which is what stops this
+   * being the eight-box strip returning under another name.
+   */
+  it("does not pretend to reach a game beyond the week", () => {
+    const tabs = buildDayTabs(["2026-09-20T17:00:00Z"], now);
+    expect(tabs).toHaveLength(7);
+    expect(tabs.every((tab) => tab.count === 0)).toBe(true);
   });
 });
 
@@ -173,12 +168,12 @@ describe("groupByDay", () => {
 
 describe("resolveSelectedDay", () => {
   const tabs = [
-    { key: "2026-08-03", label: "Today", count: 1 },
+    { key: "2026-08-03", weekday: "MON", dayOfMonth: "3", count: 1 },
     // A zero-count tab is not something `buildDayTabs` produces any more, and
     // is kept here on purpose: `resolveSelectedDay` is the guard against a
     // hand-edited `?day=`, so it must still refuse one.
-    { key: "2026-08-04", label: "Tue", count: 0 },
-    { key: "2026-08-05", label: "Wed", count: 2 },
+    { key: "2026-08-04", weekday: "TUE", dayOfMonth: "4", count: 0 },
+    { key: "2026-08-05", weekday: "WED", dayOfMonth: "5", count: 2 },
   ];
 
   it("honours a requested day that has games", () => {

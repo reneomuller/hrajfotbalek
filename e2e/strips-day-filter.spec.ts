@@ -34,7 +34,6 @@ test.describe("Day filter strips", () => {
     const soon = await createScratchGame({ hoursFromNow: 24 * 2 });
 
     try {
-      const distantDay = pragueDayKey(distant.startsAt);
 
       for (const locale of ["en", "cs"] as const) {
         await context.addCookies([
@@ -70,14 +69,23 @@ test.describe("Day filter strips", () => {
           fullPage: true,
         });
 
-        // --- one day selected ----------------------------------------------
-        await page.goto(`/games?day=${distantDay}`, { waitUntil: "networkidle" });
+        /*
+          --- one day selected ---------------------------------------------
+
+          A day INSIDE the week, because amendment A fixed the row at seven
+          cells: the far-future game has no cell, and `resolveSelectedDay`
+          correctly refuses a `?day=` it cannot offer, falling back to `All`.
+          That is the design — the week is a convenience, `All` is the route —
+          so the selected-day strip uses the day the near game is on.
+        */
+        const soonDay = pragueDayKey(soon.startsAt);
+        await page.goto(`/games?day=${soonDay}`, { waitUntil: "networkidle" });
         await settle();
         await expect(
-          page.locator(`[data-testid="day-tab"][data-day="${distantDay}"]`),
+          page.locator(`[data-testid="day-tab"][data-day="${soonDay}"]`),
         ).toHaveAttribute("data-selected", "true");
         await expect(
-          page.locator(`[data-testid="game-row"][href="/game/${soon.id}"]`),
+          page.locator(`[data-testid="game-row"][href="/game/${distant.id}"]`),
         ).toHaveCount(0);
         await page.screenshot({
           path: path.join(OUT, `day-390-${locale}.png`),
