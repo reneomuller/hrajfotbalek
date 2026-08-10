@@ -96,10 +96,15 @@ test("the home page shows the next three games as list rows", async ({ page }) =
   await expect(rows.first()).toBeVisible();
   expect(await rows.count()).toBeLessThanOrEqual(3);
 
-  // THE SAME COMPONENT AS THE LIST, which is what keeps the two surfaces from
-  // drifting: no price, a spots-left count with a tone, and a link to the game.
+  /*
+   * THE SAME COMPONENT AS THE LIST, which is what keeps the two surfaces from
+   * drifting — and the assertion has to track what that component carries.
+   * It now carries the PRICE (reversing v1.2 §5.5), because `150 CZK / 1
+   * credit` is how a reader learns what a credit is worth. Asserting its
+   * absence here would be asserting that home and the list had diverged.
+   */
   await expect(rows.first().getByTestId("spots-left")).toHaveAttribute("data-tone", /.+/);
-  await expect(rows.first()).not.toContainText("CZK");
+  await expect(rows.first().getByTestId("card-price")).toBeVisible();
 
   // A section showing three of something says that three is not all of it.
   await page.getByTestId("next-matches-all").click();
@@ -234,5 +239,35 @@ test("player of the month renders, with initials when there is no photo", async 
     await expect(page.getByTestId("potm-panel")).toContainText("Nobody picked yet");
   } finally {
     await writeSetting("player_of_month", previous ?? null);
+  }
+});
+
+/*
+ * THE HERO LINE BREAKS AT ITS SENTENCE BOUNDARY, at both widths and in all
+ * three languages — no orphan, and no line that stops mid-clause.
+ *
+ * Asserted structurally (one element per sentence) rather than by measuring
+ * rendered line boxes: the measurement is what found the problem, but it is
+ * font-dependent, and item 11 is about to change the font. What must stay true
+ * is that a sentence cannot be split across lines, and that is a property of
+ * the markup.
+ */
+test("the hero line renders one sentence per line", async ({ page }) => {
+  for (const locale of ["en", "cs", "ru"] as const) {
+    await page.context().addCookies([
+      { name: "hf_locale", value: locale, domain: "localhost", path: "/" },
+    ]);
+    await page.goto("/");
+
+    const lines = page.getByTestId("hero-vision").locator("span");
+    await expect(lines, locale).toHaveCount(2);
+
+    // Each is a whole sentence: it ends with a full stop and contains no
+    // internal one.
+    for (const line of await lines.all()) {
+      const text = (await line.textContent())!.trim();
+      expect(text.endsWith("."), `${locale}: "${text}"`).toBe(true);
+      expect(text.slice(0, -1).includes("."), `${locale}: "${text}"`).toBe(false);
+    }
   }
 });

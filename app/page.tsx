@@ -35,6 +35,33 @@ export async function generateMetadata(): Promise<Metadata> {
 // request rather than being statically cached at build time.
 export const dynamic = "force-dynamic";
 
+/**
+ * A line of copy split at its SENTENCE boundaries, so each sentence gets its
+ * own line and cannot be broken across one.
+ *
+ * `text-wrap: balance` alone got the orphan out — it evened the two lines in
+ * every language — but in English it balanced to "…repeats itself. Find" /
+ * "a game, claim your spot, show up.", which has no orphan and still does not
+ * read as two phrases. Czech and Russian happened to land on the sentence
+ * boundary by length, which is luck rather than layout.
+ *
+ * So the boundary is made explicit and balance stays INSIDE each sentence, for
+ * the case where one is long enough to wrap on its own.
+ *
+ * A HARDCODED `<br>` was the alternative and is a decision about English: the
+ * three strings are different lengths, so it fixes one language and orphans
+ * another. This reads the boundary out of whatever string it is given.
+ *
+ * Falls back to the whole string when there is no boundary to find, so a copy
+ * edit that drops the full stop degrades to today's behaviour rather than to
+ * an empty paragraph.
+ */
+function sentences(text: string): string[] {
+  const parts = text.match(/[^.!?]+[.!?]*\s*/g);
+  if (!parts || parts.length < 2) return [text];
+  return parts.map((part) => part.trim()).filter(Boolean);
+}
+
 export default async function LandingPage() {
   const t = await getStrings();
   const { landing } = t;
@@ -87,8 +114,36 @@ export default async function LandingPage() {
               {landing.heroSub}
             </div>
 
-            <p className="mx-auto mt-[14px] max-w-[440px] text-lede text-muted">
-              {landing.vision}
+            {/*
+              `text-wrap: balance` rather than a manual break or an nbsp.
+
+              The line was orphaning a word or two onto a second row, which
+              reads as a rendering accident rather than as a phrase. The two
+              alternatives both fail on this string specifically: a hardcoded
+              `<br>` at the sentence boundary is a decision about ENGLISH, and
+              the Czech and Russian are different lengths, so it orphans in one
+              of them instead; an nbsp before the last word fixes one width and
+              moves the problem at another.
+
+              Balance is the property that actually describes the goal — even
+              line lengths, no short last line — and the browser applies it per
+              language and per width. Where it is unsupported the text wraps
+              exactly as it does today, so the floor is the current behaviour
+              rather than a broken one.
+
+              `max-w-[34ch]` replaces the 440px cap for the same reason: a
+              character-relative measure holds the line count steady when the
+              face changes, and item 11 is about to change the face.
+            */}
+            <p
+              data-testid="hero-vision"
+              className="mx-auto mt-[14px] max-w-[34ch] text-lede text-muted"
+            >
+              {sentences(landing.vision).map((sentence) => (
+                <span key={sentence} className="block text-balance">
+                  {sentence}
+                </span>
+              ))}
             </p>
 
             {/* Primary CTA — the games list, not an in-page anchor. */}
