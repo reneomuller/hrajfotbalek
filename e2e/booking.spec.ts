@@ -171,12 +171,13 @@ test("a cancelled booking returns its value as wallet credit", async ({ page, co
   // is exactly the thing the two-route revalidation exists to keep in step.
   await expect(async () => {
     await page.goto("/account");
-    // The CROWNS, which is the secondary figure now — the headline counts
-    // credits since the flat-150 ruling. The refund's correctness is a
-    // statement about the ledger, so it is the ledger figure that carries it.
-    await expect(page.getByTestId("credit-balance-czk")).toContainText(
-      String(game.priceCzk),
-    );
+    /*
+     * The wallet reads in CREDITS and no longer prints a crown figure at all,
+     * so the UI assertion is that the refund LANDED — one credit, from a 150
+     * game. The exact amount is asserted against the ledger immediately
+     * below, which is where a claim about money belongs anyway.
+     */
+    await expect(page.getByTestId("credit-balance")).toContainText("1");
   }).toPass({ timeout: 15_000 });
 
   expect(await walletBalance(players.runner.id)).toBe(game.priceCzk);

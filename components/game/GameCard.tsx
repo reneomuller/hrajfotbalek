@@ -118,20 +118,38 @@ export async function GameCard({
           height. Without it the first card in a list jumps by 28px the moment
           somebody books, which is a layout shift on a surface the reader is
           mid-scroll through. */}
-      <div className="mt-3 flex min-h-7 items-center justify-between gap-3">
-        {/* At zero bookings the stack is ABSENT (§2.1) — not an empty ring.
-            The spots figure opposite already says the game is open, and a
-            circle drawn around nobody is a question rather than a statement. */}
-        {roster.length > 0 ? (
-          <AvatarRow players={roster} max={3} size="card" supabaseUrl={supabaseUrl} />
-        ) : (
-          <span />
-        )}
-
+      {/* Line three — how much room is left. */}
+      <div className="mt-3 flex items-center justify-end">
         <span data-testid="row-spots" className="shrink-0">
           <SpotsLeft bookedCount={bookedCount} capacity={game.capacity} />
         </span>
       </div>
+
+      {/*
+        Line four — who is coming, UNDER the count rather than opposite it.
+
+        §2.1 draws the stack and the spots figure on one line, and this
+        supersedes that for one reason: the detail's availability card puts
+        the faces under its count, and a player who scanned the list on faces
+        should meet the same arrangement one tap later. Two surfaces answering
+        one question in two layouts is the thing the canonical card exists to
+        stop.
+
+        THE COST IS REAL AND IS THE POINT TO WATCH: the card grows by the
+        stack's height plus its gap, which comes off an above-the-fold count
+        that §2.1's geometry had already spent down to three whole cards. See
+        the density spec.
+
+        At zero bookings the row is ABSENT ENTIRELY — not an empty ring and
+        not a reserved gap. The spots figure above already says the game is
+        open, and a circle drawn around nobody is a question rather than a
+        statement.
+      */}
+      {roster.length > 0 && (
+        <div className="mt-2">
+          <AvatarRow players={roster} max={3} size="card" supabaseUrl={supabaseUrl} />
+        </div>
+      )}
     </>
   );
 

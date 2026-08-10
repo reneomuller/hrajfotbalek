@@ -1,4 +1,3 @@
-import { formatCzk } from "@/lib/format";
 import { getLocale, getStrings } from "@/lib/i18n/server";
 import { creditsLabel } from "@/lib/pass/credits";
 import { PASS_REFERENCE_PRICE_CZK } from "@/lib/pass/queries";
@@ -61,12 +60,20 @@ export async function CreditBalance({ balanceCzk }: CreditBalanceProps) {
         {t.pass.creditEqualsGame}
       </p>
 
-      {/* What the ledger holds, secondary — the figure a player checks a bank
-          transfer against. */}
-      <p data-testid="credit-balance-czk" className="mt-1 text-small text-muted">
-        {formatCzk(balanceCzk)}
-      </p>
+      {/*
+        NO CZK FIGURE HERE ANY MORE.
 
+        It was added as the number a player reconciles a bank transfer
+        against, and that argument does not survive the wallet being credits:
+        the count above and "1 credit = 1 game" carry the whole meaning, and a
+        crown figure underneath re-introduces the unit the ruling removed —
+        on the one screen whose job is to say what a credit is.
+
+        Reconciliation has a better home anyway: `/account/topup/[id]` shows
+        the exact amount and the variable symbol for the payment being
+        matched, which is the screen someone actually has open beside their
+        banking app.
+      */}
       <p className="mt-3 text-[13px] leading-snug text-muted">
         {hasCredit ? t.account.creditHint : t.account.creditEmpty}
       </p>

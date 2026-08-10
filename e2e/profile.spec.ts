@@ -119,9 +119,11 @@ test("topped-up credit spends on the next booking", async ({ page, context }) =>
   await page.goto("/account");
   // `formatCzk` groups thousands for the display locale — "2,000 CZK", not
   // "2000". Asserting the raw digits would be asserting a formatter bug.
-  await expect(page.getByTestId("credit-balance-czk")).toContainText("2,000");
-  // And the headline counts CREDITS: 2000 / 150 floors to 13.
+  // The wallet counts CREDITS and prints no crown figure: 2,000 / 150 floors
+  // to 13. The crowns are asserted against the ledger by `walletBalance`
+  // elsewhere; this screen's job is to say how many games that is.
   await expect(page.getByTestId("credit-balance")).toContainText("13");
+  await expect(page.getByTestId("credit-balance-czk")).toHaveCount(0);
 });
 
 test("the account page shows a photo slot and the security controls", async ({
