@@ -52,7 +52,7 @@ export const cs: StringsOverlay = {
   },
 
   landing: {
-    heroSub: "Přidej se a užij si to.",
+    heroSub: "Přijď si zahrát, zůstaň kvůli partě",
     vision: "Jeden zápas, který se opakuje. Najdi hru, zaber si místo, přijď.",
     heroCta: "Najít zápas →",
     scrollHint: "↓ SCROLLUJ",

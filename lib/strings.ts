@@ -73,7 +73,18 @@ export const strings = {
   landing: {
     headlineLead: "HRAJ",
     headlineAccent: "FOTBAL",
-    heroSub: "Join in and have fun.",
+    /*
+     * `home.heroTagline` from the v1.3 copy table (§4), not a fresh draft —
+     * the Czech and Russian there are the reviewed pair for this exact line,
+     * which is a better starting point than a literal translation of the
+     * English.
+     *
+     * NOTE THE DUPLICATION IT CREATES: `landing.footer.tagline` is the same
+     * sentence in tracked capitals at the bottom of the same page. Flagged
+     * rather than silently resolved — which of the two keeps it is a copy
+     * decision, not a code one.
+     */
+    heroSub: "Come for the game, stay for the crew",
     vision:
       "One match that repeats itself. Find a game, claim your spot, show up.",
     heroCta: "Find a game →",
