@@ -42,7 +42,17 @@ export async function CommunityPanel() {
         put one of them on its own line anyway — at ragged widths, which read
         as a layout accident rather than a choice.
       */}
-      <div className="mt-auto flex flex-col gap-[10px]">
+      {/*
+        `mt-4`, NOT `mt-auto` (verdict, Stage 5).
+
+        `mt-auto` pushed these to the bottom of a box whose height was set by
+        the FAQ panel beside it, leaving a visible gap under the body text —
+        the links looked detached from the sentence that introduces them. They
+        sit directly under it now, and this panel is simply shorter than its
+        neighbour, which is fine: `items-stretch` on the row was making a
+        height agree that never needed to.
+      */}
+      <div className="mt-4 flex flex-col gap-[10px]">
         <a
           href={community.whatsappUrl}
           target="_blank"

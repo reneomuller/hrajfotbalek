@@ -312,7 +312,12 @@ export default async function LandingPage() {
             it the space the original ruling said it had not.
           */}
           <section className="pt-4">
-            <div className="flex flex-wrap items-stretch gap-4">
+            {/*
+              `items-start`, so a panel is as tall as its own contents. The
+              row used to stretch every card to the tallest, which is what
+              detached the community links from their body copy.
+            */}
+            <div className="flex flex-wrap items-start gap-4">
               <CommunityPanel />
               <FaqPanel />
               <PlayerOfMonthPanel

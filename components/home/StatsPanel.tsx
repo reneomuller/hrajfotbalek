@@ -38,7 +38,19 @@ export async function StatsPanel({
   return (
     <div
       data-testid="stats-panel"
-      className="flex min-w-[270px] flex-1 flex-col justify-center gap-5 rounded-[20px] border border-hairline-volt bg-surface p-[22px]"
+      /*
+        CENTRED PAIR, SIDE BY SIDE ABOVE `md` (verdict, Stage 5).
+
+        Ruling J made this a full-width banner, which left two left-aligned
+        numbers against a very wide box — the dead space read as a void
+        waiting to be filled. Centring the pair turns the same space into
+        breathing room without inventing a third statistic to fill it.
+
+        Stacked below `md`, where the banner is only a phone's width and a row
+        would put two clamp-scaled numerals shoulder to shoulder with nothing
+        between them.
+      */
+      className="flex min-w-[270px] flex-1 flex-col items-center justify-center gap-8 rounded-[20px] border border-hairline-volt bg-surface p-[22px] py-10 text-center md:flex-row md:gap-24"
     >
       {shown.map((stat) => (
         <div key={stat.key} data-testid={`stat-${stat.key}`}>
@@ -49,7 +61,7 @@ export async function StatsPanel({
           */}
           <div
             data-testid={`stat-${stat.key}-value`}
-            className="font-display text-[clamp(38px,10vw,54px)] leading-none text-volt"
+            className="font-display text-[clamp(44px,10vw,72px)] leading-none text-volt"
           >
             {stat.value}
             <span className="text-volt-dim">+</span>
