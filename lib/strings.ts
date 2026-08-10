@@ -620,9 +620,16 @@ export const strings = {
     photoTitle: "Profile photo",
     photoUpload: "Upload a photo",
     photoReplace: "Replace photo",
-    photoBadType: "That file type is not supported. Use a JPEG, PNG or WebP.",
-    photoTooBig: "That image is over 2 MB. Try a smaller one.",
-    photoUploadFailed: "The upload did not work. Please try again.",
+    photoBadType: "Use a JPG, PNG or WebP image.",
+    photoTooBig: "That image is over 2 MB. Pick a smaller one.",
+    photoUploadFailed: "The photo didn't upload. Try again.",
+    /*
+     * The UPLOADING state (§3 screen 7, §4). It was `common.loading` — the
+     * generic word this product uses for every wait — on the one control where
+     * the wait is long enough to need saying what is happening: a photo is
+     * cropped in the browser and then pushed to storage.
+     */
+    photoUploading: "Uploading your photo…",
 
     securityTitle: "Sign-in and security",
 

@@ -381,9 +381,10 @@ export const ru: StringsOverlay = {
     photoTitle: "Фото профиля",
     photoUpload: "Загрузить фото",
     photoReplace: "Заменить фото",
-    photoBadType: "Такой тип файла не поддерживается. Используй JPEG, PNG или WebP.",
-    photoTooBig: "Изображение больше 2 МБ. Попробуй поменьше.",
-    photoUploadFailed: "Загрузить не удалось. Попробуй ещё раз.",
+    photoBadType: "Подойдёт JPG, PNG или WebP.",
+    photoTooBig: "Изображение больше 2 МБ. Выбери поменьше.",
+    photoUploadFailed: "Фото не загрузилось. Попробуй ещё раз.",
+    photoUploading: "Загружаем фото…",
 
     securityTitle: "Вход и безопасность",
 

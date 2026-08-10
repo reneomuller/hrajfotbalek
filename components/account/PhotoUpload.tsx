@@ -173,7 +173,7 @@ export function PhotoUpload({
     <div className="flex flex-col gap-2">
       <label className="inline-flex cursor-pointer items-center justify-center rounded-control border border-hairline-volt px-4 py-2 text-[13px] font-bold uppercase tracking-wide text-volt transition hover:bg-volt/10">
         {input}
-        {busy ? t.common.loading : hasPhoto ? t.account.photoReplace : t.account.photoUpload}
+        {busy ? t.account.photoUploading : hasPhoto ? t.account.photoReplace : t.account.photoUpload}
       </label>
 
       {error ? (

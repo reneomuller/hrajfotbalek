@@ -381,9 +381,10 @@ export const cs: StringsOverlay = {
     photoTitle: "Profilová fotka",
     photoUpload: "Nahrát fotku",
     photoReplace: "Vyměnit fotku",
-    photoBadType: "Tenhle typ souboru nepodporujeme. Použij JPEG, PNG nebo WebP.",
-    photoTooBig: "Obrázek má přes 2 MB. Zkus menší.",
-    photoUploadFailed: "Nahrání se nepovedlo. Zkus to prosím znovu.",
+    photoBadType: "Použij JPG, PNG nebo WebP.",
+    photoTooBig: "Obrázek má přes 2 MB. Vyber menší.",
+    photoUploadFailed: "Fotka se nenahrála. Zkus to znovu.",
+    photoUploading: "Nahrávám fotku…",
 
     securityTitle: "Přihlášení a zabezpečení",
 
