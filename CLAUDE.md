@@ -117,6 +117,36 @@ extend a CHECK in place: drop and re-add, restating the list in full. That
 drop/re-add is **pre-approved** (2026-08-01) as long as the new list is a strict
 superset.
 
+## `.env.local` is production, and six runners read it
+
+`SUPABASE_DB_URL` in `.env.local` points at the live database. Six things in
+this repo read that file, and every one of them is a way to touch production
+by accident:
+
+`playwright.config.ts` · `supabase/tests/run.mjs` · `scripts/seed.ts` ·
+`scripts/reset-platform.mjs` · the `scripts/*.check.ts` integration suite ·
+`scripts/apply-migration.mjs`
+
+The first five route through `lib/env/testDatabase.ts`, which refuses any
+non-local host. **The sixth did not, and on 2026-08-10 it applied a migration
+to production while being run as a local validation step.** It printed
+`APPLIED` and named no host, so nothing in the output contradicted the
+assumption that it was local. The migration was additive and reviewed and no
+row changed, which is luck rather than design.
+
+It now prints `TARGET <host>` before doing anything and refuses a non-local
+database unless the invocation says `--production`. A FLAG, not an environment
+variable: a variable exported once in a shell outlives the intention that set
+it, and implicitness is what failed. The host rule is restated in the script
+rather than imported — it is plain `.mjs` with no TypeScript loader — so
+`LOCAL_HOSTS` there and in `lib/env/testDatabase.ts` **must change together**.
+
+The guard has unit tests in `lib/env/__tests__/`, not under `scripts/`, because
+the unit config excludes `scripts/**`.
+
+**Before running anything that writes, check which database it resolves.** The
+rule is mechanical rather than remembered, and that is the point.
+
 ## Migrations applied to production
 
 The repo has held migrations that production did not, three times, and each
