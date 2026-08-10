@@ -20,10 +20,19 @@ const INITIAL: PassActionState = { status: "idle" };
 export function BuyPassButton({
   games,
   label,
+  variant = "primary",
   signedIn,
 }: {
   games: number;
   label: string;
+  /**
+   * `quiet` is the pass card's treatment: an outline, compact, not spanning
+   * the card. Five cards each carrying a full-width volt button made the
+   * control the loudest thing on a page whose job is comparing prices — and
+   * made all five look identical at a glance, which is the opposite of what a
+   * tier list is for.
+   */
+  variant?: "primary" | "quiet";
   signedIn: boolean;
 }) {
   const t = useStrings();
@@ -32,7 +41,11 @@ export function BuyPassButton({
   return (
     <form action={formAction}>
       <input type="hidden" name="games" value={games} />
-      <Submit label={signedIn ? label : t.booking.logInToClaim} games={games} />
+      <Submit
+        label={signedIn ? label : t.booking.logInToClaim}
+        games={games}
+        variant={variant}
+      />
 
       {state.status === "error" && state.code && (
         <p role="alert" className="mt-2 text-[12px] text-muted">
@@ -43,7 +56,15 @@ export function BuyPassButton({
   );
 }
 
-function Submit({ label, games }: { label: string; games: number }) {
+function Submit({
+  label,
+  games,
+  variant,
+}: {
+  label: string;
+  games: number;
+  variant: "primary" | "quiet";
+}) {
   const t = useStrings();
   const { pending } = useFormStatus();
   return (
@@ -51,7 +72,11 @@ function Submit({ label, games }: { label: string; games: number }) {
       type="submit"
       disabled={pending}
       data-testid={`buy-pass-${games}`}
-      className="w-full rounded-control bg-volt px-5 py-3 text-[15px] font-extrabold uppercase tracking-wide text-surface disabled:opacity-60"
+      className={
+        variant === "quiet"
+          ? "inline-flex min-h-11 items-center justify-center rounded-control border border-hairline-strong px-5 text-body font-semibold text-bone transition-colors hover:border-hairline-volt hover:text-volt disabled:opacity-60"
+          : "w-full rounded-control bg-volt px-5 py-3 text-body-lg font-bold text-ink disabled:opacity-60"
+      }
     >
       {pending ? t.common.loading : label}
     </button>

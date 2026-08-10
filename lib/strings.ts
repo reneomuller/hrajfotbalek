@@ -1291,7 +1291,6 @@ export const strings = {
      */
     creditEqualsGame: "1 credit = 1 game",
     tierPerGame: "{amount} a game",
-    tierCredited: "You get {amount} of credit",
     tierSaving: "Save {amount}",
     // Stated LOUDLY and before the button, per §4.2: an expiry discovered
     // after purchase is a complaint; an expiry read before it is a choice.
@@ -1299,6 +1298,16 @@ export const strings = {
     tierExpiresMany: "Expires {count} months after it lands",
     tierNeverExpires: "Never expires",
     tierBuy: "Buy this pass",
+    /*
+     * The SALE treatment (polish round). `tierBuy` was a full-width volt
+     * button on every card, which made five cards shout the same word and
+     * left nothing on them louder than the control. The purchase is the last
+     * step, not the pitch — so it goes quiet and the per-game price gets the
+     * volume.
+     */
+    tierPurchase: "Purchase",
+    /** On the 12-credit tier only. */
+    tierMostPopular: "Most popular",
     // The honest framing of what is actually stored.
     equivalence: "≈ {count} games",
     howItWorks: "How it works",

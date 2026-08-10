@@ -38,12 +38,32 @@ test("the pass page lists every tier with its saving and its expiry", async ({ p
   const tiers = page.getByTestId("pass-tier");
   await expect(tiers).toHaveCount(5);
 
-  // The 5-pass, as the contract prices it.
+  /*
+   * The 5-pass, as the contract prices it — and as the SALE treatment now
+   * presents it: the per-game figure loudest, the price beside a struck
+   * anchor of what five games cost bought one at a time, and the discount
+   * after both.
+   */
   const five = page.locator('[data-testid="pass-tier"][data-games="5"]');
+  await expect(five.getByTestId("pass-tier-per-game")).toContainText("140");
   await expect(five.getByTestId("pass-tier-price")).toContainText("700");
-  await expect(five.getByTestId("pass-tier-credited")).toContainText("750");
-  await expect(five.getByTestId("pass-tier-saving")).toContainText("50");
+  // 5 x 150. NOT `credited_czk` (750 here by coincidence of this tier) — the
+  // anchor is what the games would have cost, which is a different claim.
+  await expect(five.getByTestId("pass-tier-anchor")).toContainText("750");
+  await expect(five.getByTestId("pass-tier-discount")).toContainText("6.7");
   await expect(five.getByTestId("pass-tier-expiry")).toContainText("1 month");
+
+  // The 20-pass, where the anchor and the credited value genuinely diverge:
+  // 20 x 150 = 3,000 against a 2,300 price.
+  const twenty = page.locator('[data-testid="pass-tier"][data-games="20"]');
+  await expect(twenty.getByTestId("pass-tier-anchor")).toContainText("3,000");
+  await expect(twenty.getByTestId("pass-tier-discount")).toContainText("23.3");
+
+  // Exactly one tier is tagged, and it is the 12.
+  await expect(page.getByTestId("pass-tier-popular")).toHaveCount(1);
+  await expect(
+    page.locator('[data-testid="pass-tier"][data-games="12"]'),
+  ).toHaveAttribute("data-most-popular", "true");
 
   /*
    * THE 1-GAME TIER IS GONE (ruled 2026-08-02), and gone from the table rather
@@ -59,7 +79,10 @@ test("the pass page lists every tier with its saving and its expiry", async ({ p
   // it is a choice.
   for (const tier of await tiers.all()) {
     await expect(tier.getByTestId("pass-tier-expiry")).toBeVisible();
-    await expect(tier.getByTestId("pass-tier-saving")).toContainText("Save");
+    // Every tier shows a struck anchor above its own price, so every tier
+    // reads as a discount rather than as a price list.
+    await expect(tier.getByTestId("pass-tier-anchor")).toBeVisible();
+    await expect(tier.getByTestId("pass-tier-discount")).toContainText("%");
   }
 });
 

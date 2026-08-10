@@ -1,5 +1,6 @@
 import { BuyPassButton } from "@/components/pass/BuyPassButton";
 import { formatCzk } from "@/lib/format";
+import { MOST_POPULAR_GAMES, PASS_REFERENCE_PRICE_CZK } from "@/lib/pass/queries";
 import type { PassTier } from "@/lib/pass/queries";
 import { getLocale, getStrings } from "@/lib/i18n/server";
 import { creditsLabel } from "@/lib/pass/credits";
@@ -37,7 +38,31 @@ export async function PassTierCard({
   // The credits ruling: the tier is counted in credits, and one credit is one
   // game. Same quantity as the games count it replaces, under the noun the
   // wallet and the ledger also use.
-  const heading = creditsLabel(tier.games, await getLocale(), t);
+  const locale = await getLocale();
+  const heading = creditsLabel(tier.games, locale, t);
+
+  /*
+   * THE ANCHOR: what these games cost bought one at a time.
+   *
+   * `games x 150`, from the flat-150 fiat — not `creditedCzk`, which is the
+   * wallet value a tier lands and is a different number. Struck through in
+   * `danger` beside the price, because a discount nobody can see the original
+   * of is not a discount, it is just a price.
+   */
+  const anchorCzk = tier.games * PASS_REFERENCE_PRICE_CZK;
+
+  /*
+   * COMPUTED, NEVER TABULATED. A hardcoded percent list drifts the first time
+   * a tier price moves and nothing catches it, because a wrong percentage is
+   * still a plausible percentage. One decimal, and a trailing `.0` dropped by
+   * `maximumFractionDigits` so 10 % does not render as "10.0 %".
+   */
+  const discountPercent = new Intl.NumberFormat(locale, {
+    maximumFractionDigits: 1,
+  }).format(((anchorCzk - tier.priceCzk) / anchorCzk) * 100);
+
+  /** Ruled onto the 12-credit tier. */
+  const mostPopular = tier.games === MOST_POPULAR_GAMES;
 
   const expiry =
     tier.expiresMonths === null
@@ -50,41 +75,67 @@ export async function PassTierCard({
     <article
       data-testid="pass-tier"
       data-games={tier.games}
-      className="rounded-card bg-surface p-5"
+      data-most-popular={mostPopular ? "true" : "false"}
+      className="relative rounded-card bg-surface p-5"
     >
-      <div className="flex flex-wrap items-baseline justify-between gap-3">
-        <h2 className="m-0 text-[20px] font-bold uppercase tracking-wide text-white">
-          {heading}
-        </h2>
+      {/*
+        The tag, on the card's top corner. A volt OUTLINE rather than a fill:
+        a filled volt pill here would outrank the per-game price, and the
+        hierarchy this card exists to fix is exactly that — one loud thing.
+      */}
+      {mostPopular && (
         <span
-          data-testid="pass-tier-price"
-          className="font-display text-[26px] leading-none text-volt"
+          data-testid="pass-tier-popular"
+          className="absolute -top-2 right-4 rounded-pill border border-volt bg-surface px-3 py-1 text-small font-semibold text-volt"
         >
-          {formatCzk(tier.priceCzk)}
+          {t.pass.tierMostPopular}
         </span>
-      </div>
+      )}
 
-      <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-[12px] text-muted">
-        <span>{t.pass.tierPerGame.replace("{amount}", formatCzk(tier.perGameCzk))}</span>
-        <span data-testid="pass-tier-credited">
-          {t.pass.tierCredited.replace("{amount}", formatCzk(tier.creditedCzk))}
-        </span>
-      </div>
+      <h2 className="m-0 text-body-lg font-semibold text-bone">{heading}</h2>
 
-      <p data-testid="pass-tier-saving" className="mt-2 text-[12px] text-volt">
-        {t.pass.tierSaving.replace("{amount}", formatCzk(tier.savingCzk))}
+      {/* LOUDEST: what a game costs at this tier. It is the number that
+          differs between tiers and the one a reader is comparing. */}
+      <p
+        data-testid="pass-tier-per-game"
+        className="mt-2 mb-0 font-display text-[34px] leading-none text-volt"
+      >
+        {t.pass.tierPerGame.replace("{amount}", formatCzk(tier.perGameCzk))}
       </p>
 
-      {/* LOUD, and above the button. */}
-      <p
-        data-testid="pass-tier-expiry"
-        className="mt-3 rounded-control border border-hairline-strong px-3 py-2 text-[11px] uppercase tracking-[1px] text-bone"
-      >
+      {/* Then the pass price, with the anchor struck beside it at the same
+          size, and the discount quiet after both. */}
+      <p className="mt-3 mb-0 flex flex-wrap items-baseline gap-x-3 gap-y-1">
+        <span data-testid="pass-tier-price" className="text-body-lg font-bold text-bone">
+          {formatCzk(tier.priceCzk)}
+        </span>
+        <span
+          data-testid="pass-tier-anchor"
+          className="text-body-lg text-danger line-through"
+        >
+          {formatCzk(anchorCzk)}
+        </span>
+        <span data-testid="pass-tier-discount" className="text-small text-muted">
+          {`\u2212${discountPercent}\u202f%`}
+        </span>
+      </p>
+
+      {/* Then the expiry — still before the button, per §4.2: an expiry
+          discovered after purchase is a complaint, read before it is a
+          choice. Quieter than it was, because the price hierarchy above now
+          carries the card. */}
+      <p data-testid="pass-tier-expiry" className="mt-3 mb-0 text-small text-muted">
         {expiry}
       </p>
 
+      {/* Quietest: the control. */}
       <div className="mt-4">
-        <BuyPassButton games={tier.games} label={t.pass.tierBuy} signedIn={signedIn} />
+        <BuyPassButton
+          games={tier.games}
+          label={t.pass.tierPurchase}
+          signedIn={signedIn}
+          variant="quiet"
+        />
       </div>
     </article>
   );

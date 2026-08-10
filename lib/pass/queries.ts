@@ -88,6 +88,16 @@ export async function listMyBatches(): Promise<CreditBatch[]> {
 export const PASS_REFERENCE_PRICE_CZK = 150;
 
 /**
+ * The tier the pass page tags "Most popular".
+ *
+ * A RULING, not a measurement — nothing counts purchases per tier yet, and a
+ * tag that claims to be data while being a constant is worse than one that is
+ * openly a recommendation. Named here rather than compared inline so the day
+ * it becomes a real number, there is one place to change.
+ */
+export const MOST_POPULAR_GAMES = 12;
+
+/**
  * "≈ 5 games" for an amount of credit.
  *
  * THE GAMES-EQUIVALENT IS THE WHOLE REASON CZK WORKS AS THE UNIT (§4.2).
