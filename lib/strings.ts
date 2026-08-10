@@ -743,13 +743,22 @@ export const strings = {
     siteTitle: "Home page",
     siteLede:
       "What the landing page tells signed-out visitors. Every change is recorded against your account.",
+    /*
+     * WHAT THESE TWO NUMBERS MEAN — kept as a comment because the on-screen
+     * hints were removed (controls only), and the meaning is not recoverable
+     * from the labels.
+     *
+     * `siteGamesPerWeek` renders with a `+` after it, so it is the FLOOR the
+     * organizer is willing to promise, NOT last week's count. It was computed
+     * from the trailing seven days until v1.2, which advertised a quiet
+     * fortnight as if it were the normal rate.
+     *
+     * `siteActivePlayers` is the community INCLUDING the WhatsApp crowd, not
+     * the number of rows in `players`. Also rendered with a `+`.
+     */
     siteGamesPerWeekLabel: "Games every week",
-    siteGamesPerWeekHint:
-      "Rendered with a + after it, so this is the FLOOR you are willing to promise — not last week's count. It was computed from the trailing seven days until v1.2, which advertised a quiet fortnight as the normal rate.",
     siteGamesPerWeekSubmit: "Save number",
     siteActivePlayersLabel: "Active players",
-    siteActivePlayersHint:
-      "The community including the WhatsApp crowd — not the number of accounts. Rendered with a + after it, in the stats panel.",
     siteActivePlayersSubmit: "Save number",
     sitePotmLabel: "Player of the month",
     sitePotmHint: "Renders their photo, or their initials if they have none.",

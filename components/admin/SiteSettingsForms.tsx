@@ -51,7 +51,6 @@ export function SiteSettingsForms({
         name="gamesPerWeek"
         current={gamesPerWeek}
         label={strings.admin.siteGamesPerWeekLabel}
-        hint={strings.admin.siteGamesPerWeekHint}
         submitLabel={strings.admin.siteGamesPerWeekSubmit}
         testId="games-per-week"
       />
@@ -60,7 +59,6 @@ export function SiteSettingsForms({
         name="activePlayers"
         current={activePlayers}
         label={strings.admin.siteActivePlayersLabel}
-        hint={strings.admin.siteActivePlayersHint}
         submitLabel={strings.admin.siteActivePlayersSubmit}
         testId="active-players"
       />
@@ -79,7 +77,6 @@ function NumberForm({
   name,
   current,
   label,
-  hint,
   submitLabel,
   testId,
 }: {
@@ -87,7 +84,6 @@ function NumberForm({
   name: string;
   current: number | null;
   label: string;
-  hint: string;
   submitLabel: string;
   testId: string;
 }) {
@@ -109,7 +105,6 @@ function NumberForm({
         value={value}
         onChange={(event) => setValue(event.target.value)}
       />
-      <p className={HINT}>{hint}</p>
       <Submit label={submitLabel} testId={`${testId}-submit`} />
       <Result state={state} testId={`${testId}-saved`} />
     </form>
