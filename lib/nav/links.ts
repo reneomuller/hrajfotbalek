@@ -31,7 +31,30 @@ export function primaryNavLinks(
   session: { isAdmin?: boolean } = {},
   t: Strings = strings,
 ): NavLink[] {
-  const links: NavLink[] = [{ href: "/games", label: t.nav.games }];
+  /*
+   * THE PILL'S FOUR, IN THE PILL'S ORDER (§3, screen 0: "Header links replace
+   * the nav pill").
+   *
+   * The two controls are mutually exclusive at every width — the pill is
+   * `md:hidden` and this row is `md:` and up — so "replace" is the whole
+   * contract between them. Carrying only `Games` here meant that above 768px
+   * Home, Pass and Profile were reachable from nothing at all: the header had
+   * a quarter of the navigation and the thing holding the other three
+   * quarters was hidden.
+   *
+   * Same order as `NavPill`, so the product does not reorder itself at the
+   * breakpoint. `homeShort` and `profileShort` are the same labels the pill
+   * uses, for the same reason — one name per destination.
+   */
+  const links: NavLink[] = [
+    { href: "/", label: t.nav.homeShort },
+    { href: "/games", label: t.nav.games },
+    { href: "/pass", label: t.nav.pass },
+    { href: "/account", label: t.nav.profileShort },
+  ];
+
+  // Last, and outside the four: it is a door for one person, and placing it
+  // among them would imply players have a fifth destination.
   if (session.isAdmin) links.push({ href: "/admin/games", label: t.nav.admin });
   return links;
 }

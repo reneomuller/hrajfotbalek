@@ -37,6 +37,22 @@ import { getStrings } from "@/lib/i18n/server";
  * and used for DISPLAY only — see the note in `lib/nav/links.ts`. Showing the
  * Admin link grants nothing; `requireAdmin()` in the admin layout is the gate.
  */
+
+/**
+ * The `data-testid` for a header nav link.
+ *
+ * Was `nav-${href.split("/")[1]}`, which breaks in two ways now that the row
+ * carries the pill's four: `/` yields an empty slug (`nav-`), and `/account`
+ * collides with the avatar control beside it, which already owns
+ * `nav-account` — a collision Playwright reports as a strict-mode violation
+ * rather than as a missing element, so it reads like a broken test.
+ */
+function navTestId(href: string): string {
+  if (href === "/") return "nav-home";
+  if (href === "/account") return "nav-profile";
+  return `nav-${href.split("/")[1]}`;
+}
+
 export async function SiteHeader({
   nickname,
   isAdmin,
@@ -98,7 +114,7 @@ export async function SiteHeader({
               <Link
                 key={link.href}
                 href={link.href}
-                data-testid={`nav-${link.href.split("/")[1]}`}
+                data-testid={navTestId(link.href)}
                 className=" text-[13px] font-bold uppercase tracking-wide text-bone no-underline transition hover:text-volt"
               >
                 {link.label}

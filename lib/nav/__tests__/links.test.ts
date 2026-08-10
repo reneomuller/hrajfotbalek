@@ -8,17 +8,35 @@ import {
 import { strings } from "@/lib/strings";
 
 describe("primaryNavLinks", () => {
-  it("links the games list", () => {
+  /*
+   * THE HEADER CARRIES THE WHOLE NAVIGATION ABOVE `md`, and that is §3's
+   * desktop rule for the global chrome: "Header links replace the nav pill."
+   * The pill is `md:hidden`, so above the breakpoint a header carrying only
+   * `Games` left Home, Pass and Profile reachable by nothing at all — the two
+   * controls are mutually exclusive at every width, and one of them was a
+   * quarter of the other.
+   *
+   * SAME FOUR AS THE PILL, IN THE PILL'S ORDER, so the product does not
+   * reorder itself at 768px.
+   */
+  it("carries the pill's four destinations, in the pill's order", () => {
     expect(primaryNavLinks()).toEqual([
+      { href: "/", label: strings.nav.homeShort },
       { href: "/games", label: strings.nav.games },
+      { href: "/pass", label: strings.nav.pass },
+      { href: "/account", label: strings.nav.profileShort },
     ]);
   });
 
-  it("shows the admin door only to an admin session", () => {
-    expect(primaryNavLinks({ isAdmin: true })).toEqual([
-      { href: "/games", label: strings.nav.games },
-      { href: "/admin/games", label: strings.nav.admin },
-    ]);
+  it("shows the admin door only to an admin session, and last", () => {
+    // Last because it is not part of the product's shape — it is a door for
+    // one person, and putting it among the four would imply it is a fifth
+    // destination players have.
+    expect(primaryNavLinks({ isAdmin: true }).at(-1)).toEqual({
+      href: "/admin/games",
+      label: strings.nav.admin,
+    });
+    expect(primaryNavLinks({ isAdmin: true })).toHaveLength(5);
   });
 
   it("hides the admin link from a non-admin and from a signed-out visitor", () => {

@@ -333,3 +333,47 @@ test("a non-admin sees no admin entry on their profile", async ({ page, context 
   await page.goto("/account");
   await expect(page.getByTestId("account-admin-link")).toHaveCount(0);
 });
+
+/*
+ * ABOVE `md`, THE HEADER IS THE NAVIGATION (§3, screen 0: "Header links
+ * replace the nav pill").
+ *
+ * Needs its own viewport, and that is the whole reason this gap survived: the
+ * suite's only project is a Pixel 7, where the pill is present and the header
+ * row is hidden, so every existing spec passed while the desktop header
+ * carried a quarter of the navigation and the thing holding the other three
+ * quarters was `md:hidden`.
+ */
+test.describe("the desktop header", () => {
+  test.use({ viewport: { width: 1280, height: 900 } });
+
+  test("carries the whole navigation, and the pill is gone", async ({
+    page,
+    context,
+  }) => {
+    await signInAs(context, players.organizer);
+    await page.goto("/games");
+
+    // Mutually exclusive: the pill does not render at this width.
+    await expect(page.getByTestId("nav-pill")).toBeHidden();
+
+    for (const id of ["nav-home", "nav-games", "nav-pass", "nav-profile"]) {
+      await expect(page.getByTestId(id), id).toBeVisible();
+    }
+
+    // An admin session also gets the door, last.
+    await expect(page.getByTestId("nav-admin")).toBeVisible();
+
+    // And they go where they say — Home is the one that would silently fail,
+    // since an empty href still renders a link.
+    await page.getByTestId("nav-home").click();
+    await page.waitForURL((url) => url.pathname === "/");
+  });
+
+  test("shows a player no admin door", async ({ page, context }) => {
+    await signInAs(context, players.runner);
+    await page.goto("/games");
+    await expect(page.getByTestId("nav-games")).toBeVisible();
+    await expect(page.getByTestId("nav-admin")).toHaveCount(0);
+  });
+});
