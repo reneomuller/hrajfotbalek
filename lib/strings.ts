@@ -579,7 +579,17 @@ export const strings = {
 
     topupTitle: "Top up your wallet",
     topupLede: "Add credit now, and it applies to your next booking automatically.",
-    topupCta: "Top up credit",
+    /*
+     * THE WALLET IS CREDITS, AND PASSES ARE THE ONLY ADVERTISED WAY TO GET
+     * THEM. This pointed at `/account/topup`, an arbitrary-amount chooser
+     * that ruling N already removed from the player UI — and "top up credit"
+     * described a cash wallet the product's language no longer has.
+     *
+     * The RPC behind that page stays: it is the reconciliation path for a
+     * mispaid pass, and `/account/topup/[id]` still renders the QR every pass
+     * purchase lands on. What is gone is the entry point advertising it.
+     */
+    topupCta: "Get a game pass",
     topupAmountLabel: "Amount",
     topupCustomLabel: "Or another amount (CZK)",
     topupSubmit: "Get the payment QR",

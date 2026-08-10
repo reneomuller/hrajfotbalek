@@ -152,7 +152,16 @@ test("the account page shows a photo slot and the security controls", async ({
   await page.getByTestId("change-password-link").click();
   await expect(page.getByTestId("current-password")).toBeVisible();
 
-  await expect(page.getByTestId("topup-cta")).toBeVisible();
+  /*
+   * THE WALLET'S BUY ENTRY LEADS TO THE PASSES, not to an arbitrary-amount
+   * chooser. There is no cash wallet in the product's language: credits come
+   * from passes, and ruling N removed the standalone top-up chooser from the
+   * player UI. The RPC behind it survives as the reconciliation path for a
+   * mispaid pass — what is asserted here is that nothing advertises it.
+   */
+  const buy = page.getByTestId("topup-cta");
+  await expect(buy).toBeVisible();
+  await expect(buy).toHaveAttribute("href", "/pass");
 
   // Phase 10's two tenses and the played count are on `/my-games` now (v1.2
   // §7) — the account page keeps the way there.

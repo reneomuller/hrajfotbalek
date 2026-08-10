@@ -132,10 +132,16 @@ export default async function AccountPage({
       <div className="mt-8 flex flex-wrap items-center gap-4">
         <CreditBalance balanceCzk={balanceCzk} />
         <CreditBatches batches={batches} />
-        {/* The entry point sits ON the wallet, because "top up" is a thought
-            someone has while looking at a balance, not while reading a menu. */}
+        {/*
+          THE ENTRY POINT STILL SITS ON THE WALLET — buying credit is a
+          thought someone has while looking at a balance, not while reading a
+          menu — but it now leads to the PASSES rather than to an
+          arbitrary-amount chooser. There is no cash wallet in this product's
+          language: credits come from passes, and passes are the only thing
+          advertised.
+        */}
         <Link
-          href="/account/topup"
+          href="/pass"
           data-testid="topup-cta"
           className="rounded-control border border-hairline-volt px-4 py-2 text-[13px] font-bold uppercase tracking-wide text-volt no-underline transition hover:bg-volt/10"
         >

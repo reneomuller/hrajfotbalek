@@ -366,7 +366,7 @@ export const ru: StringsOverlay = {
 
     topupTitle: "Пополни кошелёк",
     topupLede: "Добавь кредит сейчас — он автоматически применится к следующей брони.",
-    topupCta: "Пополнить кошелёк",
+    topupCta: "Получить абонемент",
     topupAmountLabel: "Сумма",
     topupCustomLabel: "Или другая сумма (CZK)",
     topupSubmit: "Показать QR для оплаты",

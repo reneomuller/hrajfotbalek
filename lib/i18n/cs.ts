@@ -366,7 +366,7 @@ export const cs: StringsOverlay = {
 
     topupTitle: "Dobij si peněženku",
     topupLede: "Přidej si kredit teď a na další rezervaci se použije automaticky.",
-    topupCta: "Dobít kredit",
+    topupCta: "Získat permanentku",
     topupAmountLabel: "Částka",
     topupCustomLabel: "Nebo jiná částka (Kč)",
     topupSubmit: "Zobrazit platební QR",
