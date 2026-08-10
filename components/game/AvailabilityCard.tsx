@@ -67,18 +67,18 @@ export async function AvailabilityCard({
       </div>
 
       {/*
-        WHO IS COMING, under a divider — the same stack the games-tab card
-        carries (§2.1) at the same size and the same overflow rule, so the
-        two surfaces answer the question identically. A player who scanned the
-        list on faces should not have to re-learn the lineup's shape on the
-        detail.
+        THE DOTTED PLAYER-COUNT LINE, WITH THE LINEUP BENEATH IT.
+
+        Identical to the list card's arrangement (layout law, 2026-08-10) —
+        that is the whole requirement: a reader who scanned the list on faces
+        meets the same shape one tap later, rather than re-learning it. The
+        avatars were beside the count here; they sit under it now, and the
+        rule is dotted so it reads as a seam inside one card.
 
         The full lineup is still further down with names and games-played
-        counts; this is the glance. Absent at zero bookings, exactly as on the
-        card — a ring drawn around nobody is a question, and the spots figure
-        above already says the game is open.
+        counts. This is the glance.
       */}
-      <div className="mt-4 flex items-center justify-between gap-3 border-t border-hairline pt-4">
+      <div className="mt-4 border-t border-dotted border-hairline-strong pt-4">
         <p data-testid="players-count" className="m-0 text-[14px] text-muted">
           {t.games.playersOfCapacity
             .replace("{booked}", String(Math.min(bookedCount, capacity)))
@@ -86,7 +86,9 @@ export async function AvailabilityCard({
         </p>
 
         {roster.length > 0 && (
-          <AvatarRow players={roster} max={3} size="card" supabaseUrl={supabaseUrl} />
+          <div className="mt-2">
+            <AvatarRow players={roster} max={3} size="card" supabaseUrl={supabaseUrl} />
+          </div>
         )}
       </div>
     </section>

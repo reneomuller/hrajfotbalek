@@ -1,11 +1,9 @@
 import Link from "next/link";
 import { AvatarRow } from "@/components/game/AvatarRow";
 import { SpotsLeft } from "@/components/game/SpotsLeft";
-import { formatCzk, formatTime } from "@/lib/format";
+import { formatTime } from "@/lib/format";
 import { resolveDurationMinutes } from "@/lib/games/duration";
-import { getLocale, getStrings } from "@/lib/i18n/server";
-import { creditsLabel } from "@/lib/pass/credits";
-import { PASS_REFERENCE_PRICE_CZK } from "@/lib/pass/queries";
+import { getStrings } from "@/lib/i18n/server";
 import type { RosterAvatar } from "@/lib/games/queries";
 import type { Database } from "@/lib/types/database";
 
@@ -13,7 +11,7 @@ type GameRowData = Database["public"]["Tables"]["games"]["Row"];
 
 export type GameCardGame = Pick<
   GameRowData,
-  "id" | "venue" | "starts_at" | "capacity" | "format" | "duration_minutes" | "price_czk"
+  "id" | "venue" | "starts_at" | "capacity" | "format" | "duration_minutes"
 >;
 
 /**
@@ -79,7 +77,6 @@ export async function GameCard({
   past?: boolean;
 }) {
   const t = await getStrings();
-  const locale = await getLocale();
 
   const body = (
     <>
@@ -122,62 +119,47 @@ export async function GameCard({
           somebody books, which is a layout shift on a surface the reader is
           mid-scroll through. */}
       {/*
-        Line three — what it costs, and how much room is left.
+        Line three — how much room is left.
 
-        THE PRICE IS BACK ON THE CARD, reversing v1.2 §5.5. It came off on the
-        reasoning that it was identical on every game and therefore
-        distinguished nothing — true then, and the flat-150 ruling makes it
-        MORE true, not less. What changed is that the price is no longer only
-        a price: `150 CZK / 1 credit` is the sentence that tells a reader what
-        a credit is worth, on the surface where they are deciding whether a
-        pass is worth buying.
-
-        THE SUFFIX RENDERS ONLY AT 150. Any other price is shown bare rather
-        than converted — a game at 200 is not "1.3 credits", and inventing
-        that arithmetic is exactly the pro-rating the credits ruling says to
-        stop and ask about. A card that quietly rounded would be wrong in the
-        one place a player checks a number against their wallet.
+        NO PRICE ON A LIST CARD (layout law, 2026-08-10). It was added a round
+        earlier so `150 CZK / 1 credit` could teach the wallet's unit on the
+        surface where a pass is being considered. The law moves that sentence
+        to the CLAIM BAR, where the reader is deciding about one game rather
+        than scanning eight — and takes it off the card entirely rather than
+        leaving a quieter version, because two places stating a price is how
+        they come to disagree.
       */}
-      <div className="mt-3 flex items-baseline justify-between gap-3">
-        <span data-testid="card-price" className="shrink-0 text-body font-semibold text-bone">
-          {formatCzk(game.price_czk)}
-          {game.price_czk === PASS_REFERENCE_PRICE_CZK && (
-            <span data-testid="card-price-credit" className="ml-1 text-small text-muted">
-              {`/ ${creditsLabel(1, locale, t)}`}
-            </span>
-          )}
-        </span>
-
+      <div className="mt-3 flex items-center justify-end">
         <span data-testid="row-spots" className="shrink-0">
           <SpotsLeft bookedCount={bookedCount} capacity={game.capacity} />
         </span>
       </div>
 
       {/*
-        Line four — who is coming, UNDER the count rather than opposite it.
+        THE DOTTED PLAYER-COUNT LINE, WITH THE LINEUP BENEATH IT.
 
-        §2.1 draws the stack and the spots figure on one line, and this
-        supersedes that for one reason: the detail's availability card puts
-        the faces under its count, and a player who scanned the list on faces
-        should meet the same arrangement one tap later. Two surfaces answering
-        one question in two layouts is the thing the canonical card exists to
-        stop.
+        The same arrangement as the game detail's availability card, which is
+        the point of the law: a reader who learns the shape here meets it
+        unchanged one tap later. Dotted rather than solid so it reads as a
+        seam inside one card rather than as the edge between two.
 
-        THE COST IS REAL AND IS THE POINT TO WATCH: the card grows by the
-        stack's height plus its gap, which comes off an above-the-fold count
-        that §2.1's geometry had already spent down to three whole cards. See
-        the density spec.
-
-        At zero bookings the row is ABSENT ENTIRELY — not an empty ring and
-        not a reserved gap. The spots figure above already says the game is
-        open, and a circle drawn around nobody is a question rather than a
-        statement.
+        The count renders whether or not anyone has claimed a spot — "0 / 12
+        players" is a fact and an invitation. The AVATARS are what disappear at
+        zero (§2.1), because a ring drawn around nobody is a question.
       */}
-      {roster.length > 0 && (
-        <div className="mt-2">
-          <AvatarRow players={roster} max={3} size="card" supabaseUrl={supabaseUrl} />
-        </div>
-      )}
+      <div className="mt-3 border-t border-dotted border-hairline-strong pt-3">
+        <p data-testid="card-players-count" className="m-0 text-small text-muted">
+          {t.games.playersOfCapacity
+            .replace("{booked}", String(Math.min(bookedCount, game.capacity)))
+            .replace("{capacity}", String(game.capacity))}
+        </p>
+
+        {roster.length > 0 && (
+          <div className="mt-2">
+            <AvatarRow players={roster} max={3} size="card" supabaseUrl={supabaseUrl} />
+          </div>
+        )}
+      </div>
     </>
   );
 

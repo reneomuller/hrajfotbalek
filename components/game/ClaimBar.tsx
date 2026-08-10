@@ -3,7 +3,9 @@ import { CancelBookingForm } from "@/components/CancelBookingForm";
 import { WaitlistButton } from "@/components/WaitlistButton";
 import { formatCzk, formatTime } from "@/lib/format";
 import { claimBarState, type ClaimBarFacts } from "@/lib/games/claimBar";
-import { getStrings } from "@/lib/i18n/server";
+import { creditsLabel } from "@/lib/pass/credits";
+import { PASS_REFERENCE_PRICE_CZK } from "@/lib/pass/queries";
+import { getLocale, getStrings } from "@/lib/i18n/server";
 
 /**
  * The claim bar (v1.3 §2.4, ruling G).
@@ -72,15 +74,36 @@ export async function ClaimBar({
   facts: ClaimBarFacts;
 }) {
   const t = await getStrings();
+  const locale = await getLocale();
   const state = claimBarState(facts);
 
   /*
    * The left-hand side is the PRICE in five of the seven states, and the
    * player's own money in the other two. It never truncates (§2.13).
    */
+  /*
+   * `150 CZK / 1 credit` — the price, loud, with the credit equivalence a step
+   * smaller beside it (layout law, 2026-08-10).
+   *
+   * THIS SENTENCE MOVED HERE FROM THE LIST CARD, and the move is the law's
+   * point rather than a relocation of convenience. On a card it was read while
+   * scanning eight games, where the figure is identical on every one and
+   * teaches nothing; here it is the last thing read before a commitment, which
+   * is the one moment the unit is worth explaining.
+   *
+   * THE SUFFIX RENDERS ONLY AT 150. A game at any other price shows the figure
+   * bare — 200 CZK is not "1.3 credits", and inventing that is exactly the
+   * pro-rating the credits ruling says to stop and ask about. A strict
+   * equality against the reference constant, never a range.
+   */
   const price = (
     <span data-testid="claim-bar-price" className="shrink-0 text-body-lg font-bold text-bone">
       {formatCzk(priceCzk)}
+      {priceCzk === PASS_REFERENCE_PRICE_CZK && (
+        <span data-testid="claim-bar-price-credit" className="ml-1 text-small font-normal text-muted">
+          {`/ ${creditsLabel(1, locale, t)}`}
+        </span>
+      )}
     </span>
   );
 

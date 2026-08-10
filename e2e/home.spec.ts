@@ -98,13 +98,16 @@ test("the home page shows the next three games as list rows", async ({ page }) =
 
   /*
    * THE SAME COMPONENT AS THE LIST, which is what keeps the two surfaces from
-   * drifting — and the assertion has to track what that component carries.
-   * It now carries the PRICE (reversing v1.2 §5.5), because `150 CZK / 1
-   * credit` is how a reader learns what a credit is worth. Asserting its
-   * absence here would be asserting that home and the list had diverged.
+   * drifting — and the assertion tracks what that component carries.
+   *
+   * NO PRICE (layout law, 2026-08-10): the price and its credit equivalence
+   * live on the game detail's claim bar now, where a reader is deciding about
+   * one game rather than scanning eight. Both list surfaces are identical, so
+   * this asserts the absence here as well as on `/games`.
    */
   await expect(rows.first().getByTestId("spots-left")).toHaveAttribute("data-tone", /.+/);
-  await expect(rows.first().getByTestId("card-price")).toBeVisible();
+  await expect(rows.first().getByTestId("card-price")).toHaveCount(0);
+  await expect(rows.first().getByTestId("card-players-count")).toBeVisible();
 
   // A section showing three of something says that three is not all of it.
   await page.getByTestId("next-matches-all").click();

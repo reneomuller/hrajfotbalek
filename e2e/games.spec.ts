@@ -468,36 +468,36 @@ test("the roster renders photos where they exist and initials where they do not"
  * Pixel 7 is the project's only viewport (`playwright.config.ts`), so "phone
  * width" needs no setup here.
  */
-test("three whole cards and a fourth started, at phone width, without scrolling", async ({
+test("two whole cards and a third started, at phone width, without scrolling", async ({
   page,
 }) => {
   /*
-   * THE NUMBER CAME DOWN FROM FIVE, AND IT IS ARITHMETIC RATHER THAN A CHOICE.
+   * THE NUMBER HAS COME DOWN TWICE, AND THIS IS THE SECOND TIME. It is
+   * arithmetic, not a preference, and it is worth stating plainly because the
+   * criterion it replaces was a real one.
    *
    * v1.1.4 §5.5 asked for "well more than three games visible at Pixel-7
-   * width" and the compact row delivered five. v1.3 §2.1 then fixes the card's
-   * geometry exactly — 16px padding, a 28px kick-off, a 28px avatar stack, a
-   * `body-lg` venue, 12px between cards — which measures 133px, against the
-   * old row's ~90px. With 306px of chrome above the first card (header
-   * clearance, the title, the eight-box strip, the §4.2 pass panel and a day
-   * heading) and 839px of viewport, five cards need 1019px. There is no
-   * arrangement of §2.1's own numbers that fits them.
+   * width" and the compact row delivered FIVE. v1.3 §2.1's canonical card
+   * measured 133px against that row's ~90, which bought three whole cards and
+   * a fourth begun. The layout law of 2026-08-10 adds a dotted rule, a
+   * player-count line and an avatar row beneath it: 171px, which buys TWO.
    *
-   * So this asserts what the canonical card actually affords: three whole
-   * cards and a fourth visibly begun. The fourth matters more than it looks —
-   * a cut-off card is what tells a reader the list continues, and a fold that
-   * lands cleanly between cards reads as the end of the list. That was the
-   * real content of "well more than three", and it survives.
+   *   viewport 839 · chrome above the first card 332 · card 171 + 12 gap
+   *   cards land at 332, 516, 699 — the third ends at 870, past the fold
    *
-   * If five is ever wanted back it is a RULING, not a tweak: it means
-   * reopening §2.1 on the avatar stack or the 28px kick-off, and both were
-   * decided against the complaint this round exists to answer.
+   * The fourth card is no longer even started. What survives of the original
+   * criterion is that the list still visibly continues past the fold, which is
+   * what stops a reader thinking they have seen everything.
+   *
+   * IF THE COUNT MATTERS MORE THAN THE ARRANGEMENT, that is a ruling to
+   * reopen, not a number to tune here — the card's height is now the sum of
+   * three separate rulings (§2.1's geometry, ruling D's avatars, the layout
+   * law's count line), and no one of them can give the space back alone.
    *
    * Six on the SAME Prague day, because the day picker filters the list — a
-   * spec that spread them across days would be measuring the picker, not the
-   * density. Pinned to mid-afternoon UTC four days out: inside the eight-box
-   * window, and Prague's UTC+1/UTC+2 both put these six firmly inside one
-   * local day rather than near a boundary the run could straddle.
+   * spec that spread them across days would be measuring the picker. Four days
+   * out: inside the eight-box window, and Prague's UTC+1/UTC+2 both put these
+   * firmly inside one local day.
    */
   const day = pragueDayKey(new Date(Date.now() + 4 * 24 * 3600_000));
   const games = await Promise.all(
@@ -526,8 +526,11 @@ test("three whole cards and a fourth started, at phone width, without scrolling"
       if (box.y < viewport!.height) started += 1;
     }
 
-    expect(fullyVisible).toBeGreaterThanOrEqual(3);
-    expect(started).toBeGreaterThanOrEqual(4);
+    expect(fullyVisible).toBeGreaterThanOrEqual(2);
+    // The list must still visibly continue past the fold — a cut-off card is
+    // what tells a reader there is more, and a fold landing cleanly between
+    // cards reads as the end of the list.
+    expect(started).toBeGreaterThanOrEqual(3);
   } finally {
     await Promise.all(games.map((game) => destroyScratchGame(game.id)));
   }
@@ -673,7 +676,7 @@ test("the whole card is the link, with no View game label and no claim", async (
  * REQ-GAME-020 — what each row actually carries, and what it deliberately does
  * NOT (v1.2 §5.5).
  */
-test("a card carries kick-off, duration, venue, format, price and spots", async ({
+test("a card carries kick-off, duration, venue, format, count and spots — no price", async ({
   page,
 }) => {
   const game = await createScratchGame({
@@ -716,8 +719,13 @@ test("a card carries kick-off, duration, venue, format, price and spots", async 
      * one credit and converting it would be the pro-rating the credits ruling
      * says to stop on.
      */
-    await expect(row.getByTestId("card-price")).toContainText("250");
-    await expect(row.getByTestId("card-price-credit")).toHaveCount(0);
+    // NO PRICE ON A LIST CARD (layout law). This fixture is priced 250 so a
+    // leaked value could not hide behind another row's — which makes it the
+    // strongest case for asserting the absence.
+    await expect(row.getByTestId("card-price")).toHaveCount(0);
+    await expect(row).not.toContainText("250");
+    // What the card carries instead: the dotted count line.
+    await expect(row.getByTestId("card-players-count")).toBeVisible();
 
     // Substitutes remain a detail-page fact — `subsPerTeam` is set rather
     // than null here, so an absent chip means suppressed and not unset.
@@ -1080,27 +1088,29 @@ test("the list carries no venue photo even when the venue has one", async ({ pag
 });
 
 /*
- * The flat-150 case, which is every real game: the card states the price AND
- * what it is in credits, so the wallet's unit is legible on the surface where
- * somebody is deciding whether a pass is worth buying.
+ * THE FLAT-150 CASE, ON THE CLAIM BAR — where the layout law puts it.
+ *
+ * The card used to carry `150 CZK / 1 credit`; the law moves it to the bar,
+ * on the reasoning that a figure identical across eight rows teaches nothing
+ * while scanning and everything at the moment of commitment.
  */
-test("a 150 CZK game shows the credit equivalence; a differently priced one does not", async ({
+test("the claim bar shows the credit equivalence at 150, and not at any other price", async ({
   page,
 }) => {
   const flat = await createScratchGame({ hoursFromNow: 24 * 5, priceCzk: 150 });
   const other = await createScratchGame({ hoursFromNow: 24 * 5 + 1, priceCzk: 200 });
 
   try {
-    await page.goto(listUrlFor(flat));
+    await page.goto(`/game/${flat.id}`);
+    const bar = page.getByTestId("claim-bar");
+    await expect(bar.getByTestId("claim-bar-price")).toContainText("150");
+    await expect(bar.getByTestId("claim-bar-price-credit")).toContainText("1");
 
-    const flatRow = page.locator(`[data-testid="game-row"][href="/game/${flat.id}"]`);
-    await expect(flatRow.getByTestId("card-price")).toContainText("150");
-    await expect(flatRow.getByTestId("card-price-credit")).toContainText("1");
-
-    // 200 is not one credit, and the card declines to guess what it is.
-    const otherRow = page.locator(`[data-testid="game-row"][href="/game/${other.id}"]`);
-    await expect(otherRow.getByTestId("card-price")).toContainText("200");
-    await expect(otherRow.getByTestId("card-price-credit")).toHaveCount(0);
+    // 200 is not one credit, and the bar declines to guess what it is —
+    // inventing that ratio is the pro-rating the credits ruling stops on.
+    await page.goto(`/game/${other.id}`);
+    await expect(bar.getByTestId("claim-bar-price")).toContainText("200");
+    await expect(bar.getByTestId("claim-bar-price-credit")).toHaveCount(0);
   } finally {
     await destroyScratchGame(flat.id);
     await destroyScratchGame(other.id);
