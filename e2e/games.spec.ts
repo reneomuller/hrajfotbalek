@@ -673,7 +673,7 @@ test("the whole card is the link, with no View game label and no claim", async (
  * REQ-GAME-020 — what each row actually carries, and what it deliberately does
  * NOT (v1.2 §5.5).
  */
-test("a card carries kick-off, duration, venue, format and spots — and no price", async ({
+test("a card carries kick-off, duration, venue, format, price and spots", async ({
   page,
 }) => {
   const game = await createScratchGame({
@@ -706,13 +706,21 @@ test("a card carries kick-off, duration, venue, format and spots — and no pric
     await expect(row.getByTestId("capacity-segments")).toHaveCount(0);
 
     /*
-     * PRICE AND SUBSTITUTES ARE DETAIL-PAGE FACTS, and this game is built to
-     * prove it: the price is 250 rather than the usual 200 so a leaked value
-     * cannot hide behind another row's, and `subsPerTeam` is set rather than
-     * null so an absent chip means suppressed rather than unset.
+     * THE PRICE IS ON THE CARD AGAIN, reversing v1.2 §5.5 — it came off for
+     * distinguishing nothing, and it is back because `150 CZK / 1 credit` is
+     * how a reader learns what a credit is worth, on the surface where they
+     * decide whether a pass is worth buying.
+     *
+     * THIS GAME IS PRICED 250 ON PURPOSE, which makes it the case that
+     * matters: the `/ 1 credit` suffix must NOT render, because 250 is not
+     * one credit and converting it would be the pro-rating the credits ruling
+     * says to stop on.
      */
-    await expect(row).not.toContainText("250");
-    await expect(row).not.toContainText("CZK");
+    await expect(row.getByTestId("card-price")).toContainText("250");
+    await expect(row.getByTestId("card-price-credit")).toHaveCount(0);
+
+    // Substitutes remain a detail-page fact — `subsPerTeam` is set rather
+    // than null here, so an absent chip means suppressed and not unset.
     await expect(row.getByTestId("game-subs")).toHaveCount(0);
 
     /*
@@ -1068,5 +1076,33 @@ test("the list carries no venue photo even when the venue has one", async ({ pag
     await expect(row.locator("img")).toHaveCount(0);
   } finally {
     await destroyScratchGame(game.id);
+  }
+});
+
+/*
+ * The flat-150 case, which is every real game: the card states the price AND
+ * what it is in credits, so the wallet's unit is legible on the surface where
+ * somebody is deciding whether a pass is worth buying.
+ */
+test("a 150 CZK game shows the credit equivalence; a differently priced one does not", async ({
+  page,
+}) => {
+  const flat = await createScratchGame({ hoursFromNow: 24 * 5, priceCzk: 150 });
+  const other = await createScratchGame({ hoursFromNow: 24 * 5 + 1, priceCzk: 200 });
+
+  try {
+    await page.goto(listUrlFor(flat));
+
+    const flatRow = page.locator(`[data-testid="game-row"][href="/game/${flat.id}"]`);
+    await expect(flatRow.getByTestId("card-price")).toContainText("150");
+    await expect(flatRow.getByTestId("card-price-credit")).toContainText("1");
+
+    // 200 is not one credit, and the card declines to guess what it is.
+    const otherRow = page.locator(`[data-testid="game-row"][href="/game/${other.id}"]`);
+    await expect(otherRow.getByTestId("card-price")).toContainText("200");
+    await expect(otherRow.getByTestId("card-price-credit")).toHaveCount(0);
+  } finally {
+    await destroyScratchGame(flat.id);
+    await destroyScratchGame(other.id);
   }
 });

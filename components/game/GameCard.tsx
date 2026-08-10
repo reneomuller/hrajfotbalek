@@ -1,9 +1,11 @@
 import Link from "next/link";
 import { AvatarRow } from "@/components/game/AvatarRow";
 import { SpotsLeft } from "@/components/game/SpotsLeft";
-import { formatTime } from "@/lib/format";
+import { formatCzk, formatTime } from "@/lib/format";
 import { resolveDurationMinutes } from "@/lib/games/duration";
-import { getStrings } from "@/lib/i18n/server";
+import { getLocale, getStrings } from "@/lib/i18n/server";
+import { creditsLabel } from "@/lib/pass/credits";
+import { PASS_REFERENCE_PRICE_CZK } from "@/lib/pass/queries";
 import type { RosterAvatar } from "@/lib/games/queries";
 import type { Database } from "@/lib/types/database";
 
@@ -11,7 +13,7 @@ type GameRowData = Database["public"]["Tables"]["games"]["Row"];
 
 export type GameCardGame = Pick<
   GameRowData,
-  "id" | "venue" | "starts_at" | "capacity" | "format" | "duration_minutes"
+  "id" | "venue" | "starts_at" | "capacity" | "format" | "duration_minutes" | "price_czk"
 >;
 
 /**
@@ -77,6 +79,7 @@ export async function GameCard({
   past?: boolean;
 }) {
   const t = await getStrings();
+  const locale = await getLocale();
 
   const body = (
     <>
@@ -118,8 +121,33 @@ export async function GameCard({
           height. Without it the first card in a list jumps by 28px the moment
           somebody books, which is a layout shift on a surface the reader is
           mid-scroll through. */}
-      {/* Line three — how much room is left. */}
-      <div className="mt-3 flex items-center justify-end">
+      {/*
+        Line three — what it costs, and how much room is left.
+
+        THE PRICE IS BACK ON THE CARD, reversing v1.2 §5.5. It came off on the
+        reasoning that it was identical on every game and therefore
+        distinguished nothing — true then, and the flat-150 ruling makes it
+        MORE true, not less. What changed is that the price is no longer only
+        a price: `150 CZK / 1 credit` is the sentence that tells a reader what
+        a credit is worth, on the surface where they are deciding whether a
+        pass is worth buying.
+
+        THE SUFFIX RENDERS ONLY AT 150. Any other price is shown bare rather
+        than converted — a game at 200 is not "1.3 credits", and inventing
+        that arithmetic is exactly the pro-rating the credits ruling says to
+        stop and ask about. A card that quietly rounded would be wrong in the
+        one place a player checks a number against their wallet.
+      */}
+      <div className="mt-3 flex items-baseline justify-between gap-3">
+        <span data-testid="card-price" className="shrink-0 text-body font-semibold text-bone">
+          {formatCzk(game.price_czk)}
+          {game.price_czk === PASS_REFERENCE_PRICE_CZK && (
+            <span data-testid="card-price-credit" className="ml-1 text-small text-muted">
+              {`/ ${creditsLabel(1, locale, t)}`}
+            </span>
+          )}
+        </span>
+
         <span data-testid="row-spots" className="shrink-0">
           <SpotsLeft bookedCount={bookedCount} capacity={game.capacity} />
         </span>
