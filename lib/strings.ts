@@ -568,6 +568,38 @@ export const strings = {
     pendingConfirmation: "Waiting for the organizer to confirm your payment.",
   },
 
+  profile: {
+    /*
+     * Ruling L's six edit fields, plus the position chips' labels.
+     *
+     * The labels are TRANSLATED and the codes are not — `lib/players/positions.ts`
+     * holds the catalog, and `players_positions_catalog` enforces it. A column
+     * of translated words could not be grouped by, and the CHECK would have to
+     * list every translation.
+     */
+    editDetails: "Edit details",
+    saveProfile: "Save profile",
+    cancelEdit: "Cancel",
+    displayName: "Display name",
+    position: "Preferred position",
+    positionHint: "Pick as many as you play.",
+    skillLevel: "Skill level",
+    nationality: "Nationality",
+    phone: "Phone",
+    phoneHint: "Only the organizer of a game you have booked can see it.",
+    email: "Email",
+    emailChangeHint: "Change your email from the account controls below.",
+    notSet: "Not set",
+    saved: "Profile saved",
+    saveFailed: "We could not save that. Please try again.",
+    positions: {
+      gk: "Goalkeeper",
+      def: "Defender",
+      mid: "Midfielder",
+      att: "Attacker",
+    },
+  },
+
   account: {
     // --- /my-games (v1.2 §7) -------------------------------------------------
     myGamesTitle: "My games",

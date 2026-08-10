@@ -183,3 +183,84 @@ test("another player's top-up is not readable", async () => {
   // RLS, not a page check: the row simply is not there for anyone else.
   expect(data ?? []).toHaveLength(0);
 });
+
+/*
+ * STAGE 3 — the profile block, display and edit (ruling L §2.8, §3 screen 7).
+ *
+ * ASSERTED ON WHAT THE SERVER RENDERS NEXT, not on the action's returned
+ * state: `updateProfileAction` revalidates `/account`, and a marker rendered
+ * from a `useActionState` result can be unmounted by that re-render before a
+ * spec observes it (CLAUDE.md). The durable fact is the display block showing
+ * the new values.
+ *
+ * The runner's profile is restored at the end — this suite reads the seed
+ * tableau and must not leave it changed.
+ */
+test("the profile block edits all six fields, positions as multi-select chips", async ({
+  page,
+  context,
+}) => {
+  await signInAs(context, players.runner);
+  await page.goto("/account");
+
+  const block = page.getByTestId("profile-details");
+  await expect(block).toBeVisible();
+
+  // Display mode first: six rows, and an unset value says so rather than
+  // rendering a blank line.
+  for (const field of ["nickname", "positions", "skill", "country", "phone", "email"]) {
+    await expect(block.getByTestId(`profile-${field}`), field).toBeVisible();
+  }
+
+  await page.getByTestId("edit-details").click();
+
+  // §2.8: focus moves to the first field when the edit block opens.
+  await expect(page.locator("#nickname")).toBeFocused();
+
+  // MORE CHIPS SELECTED THAN FIT ONE ROW is the state §2.8 names, and it is
+  // only reachable because the control is multi-select.
+  for (const code of ["gk", "def", "mid", "att"]) {
+    await page.getByTestId(`position-chip-${code}`).click();
+  }
+
+  await page.locator("#phone").fill("+420777000111");
+  await page.selectOption("#skill", "advanced");
+  await page.selectOption("#country", "CZ");
+
+  await page.getByTestId("save-profile").click();
+
+  // Back in display mode, rendered by the server from the saved row.
+  await expect(page.getByTestId("edit-details")).toBeVisible();
+  await expect(block.getByTestId("profile-positions")).toContainText("Goalkeeper");
+  await expect(block.getByTestId("profile-positions")).toContainText("Attacker");
+  await expect(block.getByTestId("profile-phone")).toContainText("+420777000111");
+
+  // And it survives a fresh request, which is the difference between a saved
+  // row and a client-side illusion.
+  await page.reload();
+  await expect(block.getByTestId("profile-positions")).toContainText("Midfielder");
+
+  // Unticking must clear, not merge — the form knows the whole desired set.
+  await page.getByTestId("edit-details").click();
+  for (const code of ["gk", "def", "mid", "att"]) {
+    await page.getByTestId(`position-chip-${code}`).click();
+  }
+  await page.getByTestId("save-profile").click();
+  await expect(page.getByTestId("edit-details")).toBeVisible();
+  await expect(block.getByTestId("profile-positions")).toContainText(/not set/i);
+});
+
+/* A nickname the pattern refuses is reported on the field, not as a crash. */
+test("the profile form reports an invalid nickname inline", async ({ page, context }) => {
+  await signInAs(context, players.runner);
+  await page.goto("/account");
+  await page.getByTestId("edit-details").click();
+
+  await page.locator("#nickname").fill("no!");
+  await page.getByTestId("save-profile").click();
+
+  // Still in edit mode, with the message beside the field.
+  await expect(page.locator("#nickname")).toBeVisible();
+  await expect(page.locator("#nickname-error")).toBeVisible();
+  await expect(page.locator("#nickname")).toHaveAttribute("aria-invalid", "true");
+});

@@ -340,6 +340,30 @@ export const ru: StringsOverlay = {
     pendingConfirmation: "Ждём, пока организатор подтвердит платёж.",
   },
 
+  profile: {
+    editDetails: "Изменить данные",
+    saveProfile: "Сохранить профиль",
+    cancelEdit: "Отмена",
+    displayName: "Отображаемое имя",
+    position: "Предпочитаемая позиция",
+    positionHint: "Отметь все, на которых играешь.",
+    skillLevel: "Уровень",
+    nationality: "Гражданство",
+    phone: "Телефон",
+    phoneHint: "Его видит только организатор матча, который ты забронировал.",
+    email: "E-mail",
+    emailChangeHint: "E-mail меняется в настройках аккаунта ниже.",
+    notSet: "Не указано",
+    saved: "Профиль сохранён",
+    saveFailed: "Сохранить не удалось. Попробуй ещё раз.",
+    positions: {
+      gk: "Вратарь",
+      def: "Защитник",
+      mid: "Полузащитник",
+      att: "Нападающий",
+    },
+  },
+
   account: {
     myGamesTitle: "Мои матчи",
     myGamesLink: "Все мои матчи →",

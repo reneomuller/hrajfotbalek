@@ -11,7 +11,11 @@ import { getSessionUser } from "@/lib/auth/session";
 import { toBookingErrorCode, type BookingErrorCode } from "@/lib/booking/errors";
 import { getStrings } from "@/lib/i18n/server";
 import { siteOrigin } from "@/lib/auth/origin";
-import { PASSWORD_MIN_LENGTH } from "@/lib/auth/signupProfile";
+import { PASSWORD_MIN_LENGTH, SKILL_LEVELS, type SkillLevel } from "@/lib/auth/signupProfile";
+import { NICKNAME_PATTERN } from "@/lib/auth/nickname";
+import { normaliseCountry } from "@/lib/auth/countries";
+import { normalisePositions } from "@/lib/players/positions";
+import { getCurrentPlayer } from "@/lib/auth/session";
 
 /**
  * Sign out.
@@ -284,4 +288,86 @@ export async function changeEmailAction(
       .replace("{current}", current)
       .replace("{next}", nextEmail),
   };
+}
+
+/**
+ * The profile edit form (ruling L, §3 screen 7).
+ *
+ * A DIRECT COLUMN UPDATE, NOT AN RPC, and that is a deliberate exception to
+ * CLAUDE.md's rule that every state transition is a `SECURITY DEFINER`
+ * function. That rule exists because those transitions carry authorization
+ * decisions and money — a booking, a cancellation, a top-up. This carries
+ * neither. What confines it is the pair that already existed for `nickname`
+ * and `phone` since migration 1 and was widened for the other three on
+ * 2026-08-10:
+ *
+ *   - `players_update_own` RLS, which limits the write to the caller's row
+ *   - the per-column UPDATE grant, which limits WHICH columns a write may name
+ *
+ * Both are required and neither substitutes for the other. A caller who names
+ * `is_admin` is refused by the grant; a caller who names someone else's row is
+ * refused by the policy. Nothing here is the enforcement point, which is why a
+ * crafted request cannot widen it.
+ *
+ * VALUES ARE NORMALISED RATHER THAN TRUSTED. Both position CHECKs would refuse
+ * a bad array, but a constraint violation surfaces as a Postgres error naming a
+ * constraint, which no form can translate into something a player can act on —
+ * so the form never sends one.
+ */
+export interface ProfileActionState {
+  status: "idle" | "saved" | "error";
+  message?: string;
+  field?: "nickname" | "phone" | "country" | "skill" | "positions";
+}
+
+export async function updateProfileAction(
+  _prev: ProfileActionState,
+  formData: FormData,
+): Promise<ProfileActionState> {
+  const t = await getStrings();
+  const player = await getCurrentPlayer();
+  if (!player) return { status: "error", message: t.errors.generic };
+
+  const nickname = String(formData.get("nickname") ?? "").trim();
+  if (!NICKNAME_PATTERN.test(nickname)) {
+    return { status: "error", field: "nickname", message: t.auth.nicknameInvalid };
+  }
+
+  // Empty clears it. A phone is optional and always has been, so "" and null
+  // must mean the same thing rather than storing a zero-length string that
+  // every later `is not null` check would treat as a number.
+  const rawPhone = String(formData.get("phone") ?? "").trim();
+  const phone = rawPhone === "" ? null : rawPhone;
+
+  const country = normaliseCountry(String(formData.get("country") ?? ""));
+  if (formData.get("country") && !country) {
+    return { status: "error", field: "country", message: t.auth.countryInvalid };
+  }
+
+  const rawSkill = String(formData.get("skill") ?? "");
+  const skill = (SKILL_LEVELS as readonly string[]).includes(rawSkill)
+    ? (rawSkill as SkillLevel)
+    : null;
+  if (rawSkill && !skill) {
+    return { status: "error", field: "skill", message: t.auth.skillRequired };
+  }
+
+  const positions = normalisePositions(formData.getAll("positions").map(String));
+
+  const supabase = await createServerSupabaseClient();
+  const { error } = await supabase
+    .from("players")
+    .update({ nickname, phone, country, skill_level: skill, positions })
+    .eq("id", player.id);
+
+  if (error) {
+    // The one failure a player can act on: the nickname's unique index.
+    if (error.code === "23505") {
+      return { status: "error", field: "nickname", message: t.auth.nicknameTaken };
+    }
+    return { status: "error", message: t.profile.saveFailed };
+  }
+
+  revalidatePath("/account");
+  return { status: "saved" };
 }

@@ -339,6 +339,30 @@ export const cs: StringsOverlay = {
     pendingConfirmation: "Čekáme, až organizátor potvrdí tvoji platbu.",
   },
 
+  profile: {
+    editDetails: "Upravit údaje",
+    saveProfile: "Uložit profil",
+    cancelEdit: "Zrušit",
+    displayName: "Zobrazované jméno",
+    position: "Preferovaný post",
+    positionHint: "Vyber všechny, na kterých hraješ.",
+    skillLevel: "Úroveň",
+    nationality: "Národnost",
+    phone: "Telefon",
+    phoneHint: "Vidí ho jen organizátor zápasu, který máš zarezervovaný.",
+    email: "E-mail",
+    emailChangeHint: "E-mail změníš v nastavení účtu níže.",
+    notSet: "Nevyplněno",
+    saved: "Profil uložen",
+    saveFailed: "Uložení se nepovedlo. Zkus to prosím znovu.",
+    positions: {
+      gk: "Brankář",
+      def: "Obránce",
+      mid: "Záložník",
+      att: "Útočník",
+    },
+  },
+
   account: {
     myGamesTitle: "Moje zápasy",
     myGamesLink: "Zobrazit všechny moje zápasy →",

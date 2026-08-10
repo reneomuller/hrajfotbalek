@@ -4,10 +4,13 @@ import Link from "next/link";
 import { CreditBalance } from "@/components/CreditBalance";
 import { CreditBatches } from "@/components/account/CreditBatches";
 import { SecurityLinks } from "@/components/account/SecurityLinks";
+import { ProfileDetails } from "@/components/account/ProfileDetails";
+import { countryOptions } from "@/lib/auth/countries";
 import { PhotoUpload } from "@/components/account/PhotoUpload";
 import { avatarUrl } from "@/lib/storage/avatar";
 import { initials } from "@/lib/roster/initials";
 import { requireCurrentPlayer } from "@/lib/auth/session";
+import { getLocale } from "@/lib/i18n/server";
 import { getOwnCreditBalance } from "@/lib/booking/queries";
 import { listMyBatches } from "@/lib/pass/queries";
 import { getStrings } from "@/lib/i18n/server";
@@ -44,6 +47,8 @@ export default async function AccountPage({
   // Read off the row already loaded rather than through `isAdminSession()`,
   // which would be a second round trip for a boolean this page is holding.
   const isAdmin = player.is_admin === true;
+  // The country list is named and sorted in the reader's language.
+  const locale = await getLocale();
 
   const [balanceCzk, batches] = await Promise.all([
     getOwnCreditBalance(),
@@ -128,6 +133,24 @@ export default async function AccountPage({
           </span>
         </div>
       </section>
+
+      {/*
+        THE PROFILE BLOCK (ruling L, §3 screen 7) — display and edit, above the
+        wallet. It is what the page is named after, and it sat nowhere: the
+        page had a photo, a balance and a list of links, and no way to change
+        the six facts the product knows about you.
+      */}
+      <div className="mt-8">
+        <ProfileDetails
+          nickname={player.nickname}
+          phone={player.phone}
+          country={player.country}
+          skillLevel={player.skill_level}
+          positions={player.positions ?? []}
+          email={player.email}
+          countries={countryOptions(locale)}
+        />
+      </div>
 
       <div className="mt-8 flex flex-wrap items-center gap-4">
         <CreditBalance balanceCzk={balanceCzk} />

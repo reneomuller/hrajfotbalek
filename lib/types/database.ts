@@ -225,6 +225,12 @@ export interface Database {
           tos_accepted_at: string | null;
           tos_version: string | null;
           photo_path: string | null;
+          /**
+           * Preferred positions (ruling L). Closed catalog, never null — the
+           * column defaults to an empty array, which is the normal state for
+           * every player who predates it. See lib/players/positions.ts.
+           */
+          positions: string[];
         };
         Insert: {
           id?: string;
@@ -241,18 +247,37 @@ export interface Database {
           tos_accepted_at?: string | null;
           tos_version?: string | null;
           photo_path?: string | null;
+          positions?: string[];
         };
         /**
-         * Clients may only update nickname/phone/marketing_opt_in (column grants).
+         * The client-writable columns, and this list IS the column grant.
          *
-         * The Phase 2 profile columns are deliberately absent: consent evidence
-         * and the photo path are written by RPCs and the storage flow, and a
-         * player editing their own `tos_accepted_at` is not a feature.
+         * Migration `20260810120000_player_positions` widened the grant from
+         * three to six for ruling L's edit form: `country`, `skill_level` and
+         * `positions` joined `nickname`, `phone` and `marketing_opt_in`. The
+         * first two had been withheld since migration 21 because nothing but
+         * `complete_signup_v2` wrote them; ruling L gives them an edit surface,
+         * so the reason expired.
+         *
+         * STILL DELIBERATELY ABSENT: `is_admin`, `is_seed`, `email`,
+         * `auth_user_id`, `tos_accepted_at`, `tos_version` and `photo_path`.
+         * Consent evidence and the photo path are written by RPCs and the
+         * storage flow; a player editing their own `tos_accepted_at` is not a
+         * feature, and a client-writable `is_admin` is a privilege escalation
+         * with a form in front of it.
+         *
+         * This type and the GRANT must change together — the type is what
+         * stops a mistake at compile time, and the grant is what stops it at
+         * the database. Neither substitutes for the other, and `positions` also
+         * answers to `players_positions_catalog`.
          */
         Update: {
           nickname?: string;
           phone?: string | null;
           marketing_opt_in?: boolean;
+          country?: string | null;
+          skill_level?: SkillLevel | null;
+          positions?: string[];
         };
         Relationships: [];
       };
