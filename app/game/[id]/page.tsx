@@ -245,7 +245,12 @@ export default async function GameDetailPage({ params, searchParams }: GamePageP
         </div>
       )}
 
-      <AvailabilityCard bookedCount={bookedCount} capacity={game.capacity} />
+      <AvailabilityCard
+        bookedCount={bookedCount}
+        capacity={game.capacity}
+        roster={roster.map((r) => ({ nickname: r.nickname, photoPath: r.photo_path }))}
+        supabaseUrl={supabaseUrl}
+      />
 
       {isCancelled && (
         <p className="mt-4 rounded-control border border-hairline-strong px-4 py-3 text-small tracking-[1px] text-faint">

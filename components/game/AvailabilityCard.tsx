@@ -1,7 +1,9 @@
+import { AvatarRow } from "@/components/game/AvatarRow";
 import { CapacityBar } from "@/components/game/CapacityBar";
 import { SpotsLeft } from "@/components/game/SpotsLeft";
 import { gameUrgency, urgencyLabel } from "@/lib/games/urgency";
 import { getStrings } from "@/lib/i18n/server";
+import type { RosterAvatar } from "@/lib/games/queries";
 
 /**
  * How full the game is — the same FOMO element as the list row, at hero scale.
@@ -22,11 +24,17 @@ import { getStrings } from "@/lib/i18n/server";
  * rather than reconciled here.
  */
 export async function AvailabilityCard({
+  roster = [],
+  supabaseUrl,
   bookedCount,
   capacity,
 }: {
   bookedCount: number;
   capacity: number;
+  /** Roster avatars for the glance stack. Empty renders no stack (§2.1). */
+  roster?: RosterAvatar[];
+  /** Storage origin for the photos; absent falls back to initials. */
+  supabaseUrl?: string;
 }) {
   const t = await getStrings();
   const urgency = gameUrgency(bookedCount, capacity);
@@ -58,11 +66,29 @@ export async function AvailabilityCard({
         <CapacityBar bookedCount={bookedCount} capacity={capacity} />
       </div>
 
-      <p data-testid="players-count" className="mt-3 text-[14px] text-muted">
-        {t.games.playersOfCapacity
-          .replace("{booked}", String(Math.min(bookedCount, capacity)))
-          .replace("{capacity}", String(capacity))}
-      </p>
+      {/*
+        WHO IS COMING, under a divider — the same stack the games-tab card
+        carries (§2.1) at the same size and the same overflow rule, so the
+        two surfaces answer the question identically. A player who scanned the
+        list on faces should not have to re-learn the lineup's shape on the
+        detail.
+
+        The full lineup is still further down with names and games-played
+        counts; this is the glance. Absent at zero bookings, exactly as on the
+        card — a ring drawn around nobody is a question, and the spots figure
+        above already says the game is open.
+      */}
+      <div className="mt-4 flex items-center justify-between gap-3 border-t border-hairline pt-4">
+        <p data-testid="players-count" className="m-0 text-[14px] text-muted">
+          {t.games.playersOfCapacity
+            .replace("{booked}", String(Math.min(bookedCount, capacity)))
+            .replace("{capacity}", String(capacity))}
+        </p>
+
+        {roster.length > 0 && (
+          <AvatarRow players={roster} max={3} size="card" supabaseUrl={supabaseUrl} />
+        )}
+      </div>
     </section>
   );
 }
