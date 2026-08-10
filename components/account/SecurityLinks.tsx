@@ -26,7 +26,19 @@ export function SecurityLinks() {
   const [open, setOpen] = useState<"password" | "email" | null>(null);
 
   return (
-    <div className="flex flex-col items-start gap-2">
+    /*
+      NO `gap` HERE, DELIBERATELY. These two rows and the "Delete my account"
+      link below them are one stack of three, but only these two live inside
+      this component — the third is a sibling in the page. A gap here spaced
+      password-to-email by 8px more than email-to-delete, which is exactly the
+      unevenness that looked like a mistake.
+
+      Each row already carries `py-2`, so the rhythm comes from the rows
+      themselves and is identical whether or not the next one is rendered by
+      this component. Three small grey text links, evenly spaced, none of them
+      shouting.
+    */
+    <div className="flex flex-col items-start">
       <Row
         label={t.account.changePasswordLink}
         isOpen={open === "password"}
