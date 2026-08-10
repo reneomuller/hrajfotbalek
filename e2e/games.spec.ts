@@ -1174,3 +1174,63 @@ test("a booked game shows its avatar stack on the card AND on the detail", async
     await destroyScratchGame(booked.id);
   }
 });
+
+/*
+ * LIST-CARD / DETAIL PARITY, asserted across EVERY game on the board.
+ *
+ * The layout law says the two surfaces carry one arrangement, and until now
+ * that was checked by looking at strips of one card at a time — which is how a
+ * divergence survived: the detail wrapped its dotted rule in
+ * `roster.length > 0`, so a game nobody had claimed showed the seam on its
+ * list card and not on its detail. One sampled game would not have caught it,
+ * because the sampled game usually has bookings.
+ *
+ * TWO PROPERTIES, BOTH ACROSS ALL GAMES:
+ *
+ *   - the dotted rule renders on BOTH surfaces, booked or empty
+ *   - the avatar count on the detail equals the count on the list card
+ *
+ * The second is the durable answer to "avatars are missing on the detail":
+ * both surfaces read `game_roster_public`, so any drift between them is a bug
+ * in a prop or a conditional rather than in the data, and this fails the
+ * moment they disagree.
+ */
+test("every game renders the same dotted rule and lineup on list and detail", async ({
+  page,
+}) => {
+  await page.goto("/games");
+  await expect(page.getByTestId("game-row").first()).toBeVisible();
+
+  const cards = await page.evaluate(() =>
+    [...document.querySelectorAll('[data-testid="game-row"]')].slice(0, 6).map((card) => ({
+      href: card.getAttribute("href")!,
+      avatars: card.querySelectorAll('[data-testid="avatar"]').length,
+      dotted: [...card.querySelectorAll("*")].filter(
+        (node) => getComputedStyle(node as HTMLElement).borderTopStyle === "dotted",
+      ).length,
+    })),
+  );
+
+  expect(cards.length).toBeGreaterThan(0);
+
+  for (const card of cards) {
+    // The rule is on the list card whether or not anyone has booked.
+    expect(card.dotted, `list rule ${card.href}`).toBeGreaterThan(0);
+
+    await page.goto(card.href);
+    const detail = await page.evaluate(() => {
+      const availability = document.querySelector('[data-testid="availability-card"]');
+      if (!availability) return null;
+      return {
+        avatars: availability.querySelectorAll('[data-testid="avatar"]').length,
+        dotted: [...availability.querySelectorAll("*")].filter(
+          (node) => getComputedStyle(node as HTMLElement).borderTopStyle === "dotted",
+        ).length,
+      };
+    });
+
+    expect(detail, `detail card ${card.href}`).not.toBeNull();
+    expect(detail!.dotted, `detail rule ${card.href}`).toBeGreaterThan(0);
+    expect(detail!.avatars, `avatar parity ${card.href}`).toBe(card.avatars);
+  }
+});

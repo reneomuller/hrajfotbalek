@@ -67,24 +67,28 @@ export async function AvailabilityCard({
       </div>
 
       {/*
-        THE DOTTED LINE AND THE LINEUP (layout law, final form).
+        THE DOTTED LINE AND THE LINEUP.
 
-        No caption at all here: the spots figure and the capacity bar are
-        directly above at hero scale, so `2 / 12 players` under the rule was
-        the same fact for the third time on one card.
+        THE RULE RENDERS UNCONDITIONALLY, and that is the correction: it was
+        wrapped in `roster.length > 0`, so a game nobody had claimed showed the
+        seam on its LIST card and not on its detail. The two surfaces have to
+        be the same shape whether or not anyone has booked — "empty" is
+        precisely when the arrangement needs to be legible, and a card that
+        rearranges itself between zero and one player reads as two designs.
 
-        Identical in arrangement to the list cards — rule, then faces — which
-        is the law's point: a reader who scanned the list on faces meets the
-        shape unchanged one tap later rather than re-learning it.
+        The FACES still disappear at zero (§2.1): a ring drawn around nobody is
+        a question. So at zero the rule closes the card under the capacity bar,
+        which is exactly what the list card does.
 
-        The full lineup, with names and games-played counts, is still further
-        down the page. This is the glance.
+        No caption either way — the spots figure and the bar are directly above
+        at hero scale, and the full lineup with names is further down the page.
+        This is the glance.
       */}
-      {roster.length > 0 && (
-        <div className="mt-4 border-t border-dotted border-hairline-strong pt-4">
+      <div className="mt-4 border-t border-dotted border-hairline-strong pt-4">
+        {roster.length > 0 && (
           <AvatarRow players={roster} max={3} size="card" supabaseUrl={supabaseUrl} />
-        </div>
-      )}
+        )}
+      </div>
     </section>
   );
 }
