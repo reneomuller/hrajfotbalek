@@ -79,7 +79,6 @@ export const ru: StringsOverlay = {
     },
     footer: {
       city: "· ПРАГА",
-      tagline: "ПРИХОДИ ЗА ИГРОЙ · ОСТАВАЙСЯ ЗА КОМПАНИЮ",
     },
   },
 

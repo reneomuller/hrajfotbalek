@@ -333,17 +333,27 @@ export default async function LandingPage() {
             </div>
           </section>
 
-          {/* FOOTER */}
-          <footer className="flex flex-wrap items-center justify-between gap-2 border-t border-hairline pb-6 pt-5">
-            <div className=" text-[14px] font-bold tracking-wide text-muted">
+          {/*
+            FOOTER — MARK AND CITY ONLY.
+
+            The tagline is gone from here because the HERO owns the slogan
+            now: `heroSub` is "Come for the game, stay for the crew", and this
+            printed the same sentence in tracked capitals two screens below it.
+            One line said twice on one page is not emphasis, it is a page that
+            has forgotten it already said it — and the hero is where a first-
+            time visitor meets it.
+
+            The links and the copyright are the SHARED `SiteFooter` beneath
+            this one, so "minimal footer: mark, links, ©" is satisfied across
+            the two rather than by duplicating them here.
+          */}
+          <footer className="flex flex-wrap items-center gap-2 border-t border-hairline pb-6 pt-5">
+            <div className="text-[14px] font-bold tracking-wide text-muted">
               {landing.footer.wordmarkLead}{" "}
               <span className="text-volt-dim">
                 {landing.footer.wordmarkAccent}
               </span>{" "}
               {landing.footer.city}
-            </div>
-            <div className="text-[9px] tracking-[2px] text-faint">
-              {landing.footer.tagline}
             </div>
           </footer>
         </div>

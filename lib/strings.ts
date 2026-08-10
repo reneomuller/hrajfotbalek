@@ -148,7 +148,6 @@ export const strings = {
       wordmarkLead: "HRAJ",
       wordmarkAccent: "FOTBAL",
       city: "· PRAGUE",
-      tagline: "COME FOR THE GAME · STAY FOR THE CREW",
     },
   },
 

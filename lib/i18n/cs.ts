@@ -80,7 +80,6 @@ export const cs: StringsOverlay = {
     },
     footer: {
       city: "· PRAHA",
-      tagline: "PŘIJĎ KVŮLI HŘE · ZŮSTAŇ KVŮLI PARTĚ",
     },
   },
 
