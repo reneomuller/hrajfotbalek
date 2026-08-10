@@ -176,8 +176,6 @@ export function PhotoUpload({
         {busy ? t.common.loading : hasPhoto ? t.account.photoReplace : t.account.photoUpload}
       </label>
 
-      <span className="text-xs opacity-50">{t.account.photoHint}</span>
-
       {error ? (
         <span role="alert" data-testid="photo-error" className="text-sm text-red-400">
           {error}

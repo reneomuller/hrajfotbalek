@@ -126,7 +126,6 @@ export default async function AccountPage({
           >
             {player.nickname}
           </span>
-          <span className="text-[11px] text-muted">{t.account.photoHint}</span>
         </div>
       </section>
 
