@@ -32,7 +32,15 @@ export async function PlayerOfMonthPanel({
   return (
     <div
       data-testid="potm-panel"
-      className="flex min-w-[270px] flex-1 flex-col items-center justify-center rounded-[20px] border border-hairline-volt bg-surface p-[22px] text-center"
+      /*
+        `self-stretch` so the box matches the community panel beside it. The
+        row is `items-start`, which sizes each panel to its own contents — and
+        this one holds a name and a face against a panel holding two numbers,
+        a sentence and two buttons, so it sat short with a pool of air beneath
+        it. Its contents stay centred within whatever height it is given, the
+        same way the stats box handled it.
+      */
+      className="flex min-w-[270px] flex-1 flex-col items-center justify-center self-stretch rounded-[20px] border border-hairline-volt bg-surface p-[22px] text-center"
     >
       <h3 className="m-0 mb-4 font-display text-community-title text-white">
         {t.landing.potmTitle}

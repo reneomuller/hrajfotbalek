@@ -83,6 +83,7 @@ export function buildDayTabs(
   startsAtList: (Date | string | number)[],
   now: Date | string | number,
   locale: Locale = DEFAULT_LOCALE,
+  t: Strings = strings,
   days: number = DAY_TAB_DAYS,
 ): DayTab[] {
   const counts = new Map<string, number>();
@@ -97,7 +98,23 @@ export function buildDayTabs(
     const key = addDays(today, offset);
     return {
       key,
-      weekday: weekdayLabel(key, locale),
+      /*
+       * THE FIRST TWO CELLS SAY "TODAY" AND "TOMORROW" (Section 3, item 1).
+       *
+       * They are the two days anyone opening this page is deciding between,
+       * and a weekday abbreviation makes a reader do arithmetic to work out
+       * that `PO` means now. The rest keep their weekday, which is what makes
+       * the row a calendar rather than a list of relative words.
+       *
+       * The words come from the string table, so they translate; the same two
+       * keys the pills use through `relativeDayLabel`.
+       */
+      weekday:
+        offset === 0
+          ? t.games.dayToday
+          : offset === 1
+            ? t.games.dayTomorrow
+            : weekdayLabel(key, locale),
       dayOfMonth: String(Number(key.slice(8, 10))),
       count: counts.get(key) ?? 0,
     };

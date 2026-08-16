@@ -7,6 +7,8 @@ import { PlayerOfMonthPanel } from "@/components/home/PlayerOfMonthPanel";
 import { GameCard } from "@/components/game/GameCard";
 import { getHomeContent } from "@/lib/home/queries";
 import { listRostersByGame, listUpcomingGames } from "@/lib/games/queries";
+import { groupByDay } from "@/lib/games/days";
+import { getLocale } from "@/lib/i18n/server";
 import { siteUrl } from "@/lib/site";
 import { getStrings } from "@/lib/i18n/server";
 
@@ -39,6 +41,7 @@ export const dynamic = "force-dynamic";
 export default async function LandingPage() {
   const t = await getStrings();
   const { landing } = t;
+  const locale = await getLocale();
 
   /*
    * THREE GAMES, NOT ONE (v1.2 §6). This page showed a single "NEXT MATCH"
@@ -194,18 +197,41 @@ export default async function LandingPage() {
               </h2>
             </div>
 
+            {/*
+              DAY HEADINGS ABOVE THE PILLS, as on the games page (Section 3,
+              item 5). The pills no longer carry a date, so home needs the same
+              structure or its three cards would say only a time — `18:30` with
+              nothing to anchor it to a day.
+
+              `groupByDay` is the games page's own helper, so the two surfaces
+              label a day identically and cannot disagree about which evening a
+              game belongs to.
+            */}
             {games.length > 0 ? (
-              <div data-testid="next-matches" className="flex flex-col gap-3">
-                {games.map(({ game, bookedCount }) => (
-                  <GameCard
-                    key={game.id}
-                    game={game}
-                    bookedCount={bookedCount}
-                    roster={rosters.get(game.id) ?? []}
-                    supabaseUrl={supabaseUrl}
-                    now={now}
-                  />
-                ))}
+              <div data-testid="next-matches" className="flex flex-col gap-5">
+                {groupByDay(games, ({ game }) => game.starts_at, now, t, locale).map(
+                  (day) => (
+                    <section key={day.key} data-testid="day-group" data-day={day.key}>
+                      <h3
+                        data-testid="day-heading"
+                        className="m-0 mb-2 text-eyebrow font-semibold uppercase text-white"
+                      >
+                        {day.label}
+                      </h3>
+                      <div className="flex flex-col gap-3">
+                        {day.items.map(({ game, bookedCount }) => (
+                          <GameCard
+                            key={game.id}
+                            game={game}
+                            bookedCount={bookedCount}
+                            roster={rosters.get(game.id) ?? []}
+                            supabaseUrl={supabaseUrl}
+                          />
+                        ))}
+                      </div>
+                    </section>
+                  ),
+                )}
               </div>
             ) : (
               /*

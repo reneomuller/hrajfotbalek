@@ -2,8 +2,6 @@ import Link from "next/link";
 import { AvatarRow } from "@/components/game/AvatarRow";
 import { CapacityBar } from "@/components/game/CapacityBar";
 import { CardBadges } from "@/components/game/CardBadges";
-import { relativeDayLabel } from "@/lib/games/days";
-import { getLocale, getStrings } from "@/lib/i18n/server";
 import { SpotsLeft } from "@/components/game/SpotsLeft";
 import { formatTime } from "@/lib/format";
 import type { RosterAvatar } from "@/lib/games/queries";
@@ -68,7 +66,6 @@ export async function GameCard({
   roster = [],
   supabaseUrl,
   past = false,
-  now,
 }: {
   game: GameCardGame;
   bookedCount: number;
@@ -78,19 +75,14 @@ export async function GameCard({
   supabaseUrl?: string;
   /** The `past` state — 45% opacity, not tappable, not focusable. */
   past?: boolean;
-  /**
-   * The instant the list was decorated at, from the query layer.
-   *
-   * PASSED IN RATHER THAN READ HERE: reading the clock during render is
-   * impure, and a card that read it independently could disagree with the day
-   * heading above it about whether a game is "Today" — across a Prague
-   * midnight, which is exactly when it matters.
+  /*
+   * `now` IS NO LONGER A PROP. Section 3 item 5 took the date off the pill —
+   * the day-group heading above the card carries it — so the card no longer
+   * decides whether a game is "today" and no longer needs the clock. The
+   * relative label lives on in `relativeDayLabel`, used by the headings and by
+   * the calendar cells, which is where one implementation now serves both.
    */
-  now: number;
 }) {
-
-  const t = await getStrings();
-  const locale = await getLocale();
 
   const body = (
     <>
@@ -114,16 +106,23 @@ export async function GameCard({
           a line of prose. START TIME ONLY on a list card; the game card
           carries the full span.
         */}
+        {/*
+          THE TIME ALONE (Section 3, item 5). The date is gone from the pill —
+          the DAY-GROUP HEADING above carries it, and several games on one day
+          share one heading rather than repeating the date on every card.
+
+          LARGER (item 6): `body-lg` against the previous 10px. It is the one
+          number a reader scans a list for, and it was set smaller than the
+          badges opposite it.
+        */}
         <span
           data-testid="card-when"
-          className="min-w-0 truncate rounded-pill border border-hairline-strong bg-bone/[.06] px-2 py-[2px] text-[10px] font-semibold text-bone"
+          className="min-w-0 truncate rounded-pill border border-hairline-strong bg-bone/[.06] px-3 py-[3px] text-body-lg font-semibold text-bone"
         >
-          {`${relativeDayLabel(game.starts_at, now, t, locale)} • ${formatTime(
-            game.starts_at,
-          )}`}
+          {formatTime(game.starts_at)}
         </span>
 
-        <CardBadges format={game.format} surface={game.surface} size="slim" />
+        <CardBadges format={game.format} surface={game.surface} />
       </div>
 
       <div className="mt-[10px]">

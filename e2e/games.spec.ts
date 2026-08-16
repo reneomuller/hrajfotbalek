@@ -178,7 +178,7 @@ test("a game with no duration falls back to the standard length on every surface
  * particular game is reading. The half of the requirement that named cards is
  * what v1.3 rules on.
  */
-test("the card shows day and time; the detail shows the span", async ({
+test("the card shows the time; the heading carries the day; the detail shows the span", async ({
   page,
 }) => {
   const game = await createScratchGame({ durationMinutes: 90, hoursFromNow: 24 * 20 });
@@ -195,8 +195,15 @@ test("the card shows day and time; the detail shows the span", async ({
      * heading in their head, and on home there is no heading at all. The
      * duration came off the card with it; the detail still carries the span.
      */
-    await expect(row.getByTestId("card-when")).toHaveText(/\d{1,2} \w+ • \d{2}:\d{2}/);
+    /*
+     * THE PILL IS THE TIME ALONE (Section 3, item 5). The DATE moved to the
+     * day-group heading above, where several games on one day share it rather
+     * than repeating it on every card.
+     */
+    await expect(row.getByTestId("card-when")).toHaveText(/^\d{2}:\d{2}$/);
     await expect(row).not.toContainText(/\d{2}:\d{2}–\d{2}:\d{2}/);
+    // And the heading above carries the day.
+    await expect(page.getByTestId("day-heading").first()).toBeVisible();
 
     // And the range is on the detail, so this is a move rather than a loss.
     await page.goto(`/game/${game.id}`);
@@ -740,7 +747,7 @@ test("the whole card is the link, with no View game label and no claim", async (
  * REQ-GAME-020 — what each row actually carries, and what it deliberately does
  * NOT (v1.2 §5.5).
  */
-test("a card carries venue, day, time, format, surface, bar and spots — no price", async ({
+test("a card carries venue, time, format, surface, bar and spots — no price, no date", async ({
   page,
 }) => {
   const game = await createScratchGame({
@@ -758,7 +765,7 @@ test("a card carries venue, day, time, format, surface, bar and spots — no pri
     const row = page.locator(`[data-testid="game-row"][href="/game/${game.id}"]`);
     await expect(row).toBeVisible();
 
-    await expect(row.getByTestId("card-when")).toHaveText(/\d{1,2} \w+ • \d{2}:\d{2}/);
+    await expect(row.getByTestId("card-when")).toHaveText(/^\d{2}:\d{2}$/);
     await expect(row.getByTestId("card-venue")).toContainText("E2E Scratch Pitch");
     // Format AND surface, as badges top-right.
     await expect(row.getByTestId("game-format")).toHaveText("5v5");

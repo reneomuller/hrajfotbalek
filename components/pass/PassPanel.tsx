@@ -63,9 +63,30 @@ export async function PassPanel() {
         the line past the viewport. `aria-hidden` because the accessible name
         comes from the title, which already says where this goes.
       */}
-      <span aria-hidden className="shrink-0 text-[22px] leading-none text-volt">
-        →
-      </span>
+      {/*
+        A DRAWN ARROW, not the `→` glyph (Section 3, item 2): twice the length
+        and twice the stroke. A character cannot be given either — its weight
+        comes from the font and its length is whatever the glyph is — so the
+        only way to double both is to draw it. `stroke-[3]` against the
+        previous glyph's hairline, and a 44px span against roughly 22.
+
+        `aria-hidden` because the whole panel is the link and its title
+        already says where it goes; an arrow announcing itself would be the
+        destination read twice.
+      */}
+      <svg
+        aria-hidden
+        data-testid="pass-panel-arrow"
+        viewBox="0 0 44 16"
+        className="h-4 w-11 shrink-0 text-volt"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={3}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="M2 8h38M32 2l8 6-8 6" />
+      </svg>
     </Link>
   );
 }

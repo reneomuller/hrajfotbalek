@@ -61,8 +61,22 @@ export function DayPicker({
    * off cards and chips; these are calendar cells, and the box is the thing
    * being recognised.
    */
+  /*
+    `min-w-12` RATHER THAN `w-12`, and horizontal padding with it.
+
+    The cells were a fixed 48px square, which was right when every top line
+    was a three-letter weekday. Section 3 item 1 puts "Today" and "Tomorrow"
+    in the first two, and `TOMORROW` is eight characters — it overflowed its
+    box and collided with the cell beside it. The square is now a FLOOR: the
+    weekday cells keep it exactly, and the two word cells grow to fit their
+    label rather than clipping it.
+
+    Which is also why the label is not truncated instead: §2.8's chip rule —
+    "they never truncate a label" — is the same argument one control over, and
+    `Tomo…` in a calendar is worse than a wider cell.
+  */
   const cell =
-    "flex h-12 w-12 shrink-0 flex-col items-center justify-center gap-[1px] rounded-card border no-underline transition-colors";
+    "flex h-12 min-w-12 shrink-0 flex-col items-center justify-center gap-[1px] rounded-card border px-2 no-underline transition-colors";
   const skin = (isSelected: boolean, hasGames: boolean) =>
     isSelected
       ? "border-hairline-volt bg-volt text-ink"
@@ -120,7 +134,7 @@ export function DayPicker({
               abbreviation style is the original's.
             */}
             <span
-              className={`text-[9px] uppercase tracking-[1px] ${
+              className={`whitespace-nowrap text-[9px] uppercase tracking-[1px] ${
                 isSelected ? "text-ink/70" : hasGames ? "text-muted" : "text-faint"
               }`}
             >

@@ -104,6 +104,7 @@ export default async function GamesPage({
     games.map(({ game }) => game.starts_at),
     now,
     locale,
+    t,
   );
   const requested = typeof query.day === "string" ? query.day : undefined;
   const selectedDay = resolveSelectedDay(requested, dayTabs);
@@ -161,7 +162,14 @@ export default async function GamesPage({
                   grey eyebrow, on the token rather than a loose 10px. */}
               <h2
                 data-testid="day-heading"
-                className="m-0 mb-2 text-eyebrow font-semibold uppercase text-faint"
+                /*
+                  WHITE, not `faint` (Section 3, item 3). These headings are
+                  the only thing carrying the DATE now — item 5 takes it off
+                  the pills — so a colour chosen when they were a repeat of
+                  what the pill already said is the wrong weight for a line
+                  that is now the sole answer to "which day is this".
+                */
+                className="m-0 mb-2 text-eyebrow font-semibold uppercase text-white"
               >
                 {day.label}
               </h2>
@@ -173,7 +181,6 @@ export default async function GamesPage({
                     bookedCount={bookedCount}
                     roster={rosters.get(game.id) ?? []}
                     supabaseUrl={supabaseUrl}
-                    now={now}
                   />
                 ))}
               </div>

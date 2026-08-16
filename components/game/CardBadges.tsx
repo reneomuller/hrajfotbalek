@@ -37,8 +37,8 @@ export async function CardBadges({
   const t = await getStrings();
   if (!format && !surface) return null;
 
-  const text = size === "slim" ? "text-[10px]" : "text-small";
-  const pad = size === "slim" ? "px-2 py-[2px]" : "px-3 py-1";
+  const text = size === "slim" ? "text-small" : "text-body";
+  const pad = size === "slim" ? "px-3 py-[3px]" : "px-3 py-1";
 
   return (
     <div data-testid="card-badges" className="flex shrink-0 flex-wrap items-center gap-1">

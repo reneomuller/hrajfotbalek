@@ -6,6 +6,7 @@ import {
   resolveSelectedDay,
 } from "@/lib/games/days";
 import { strings } from "@/lib/strings";
+import { resolveStrings } from "@/lib/i18n/resolve";
 
 /**
  * Phase 2 §5.5 / REQ-GAME-021.
@@ -69,21 +70,33 @@ describe("buildDayTabs", () => {
     expect(tabs.map((tab) => tab.count)).toEqual([2, 0, 1, 0, 0, 0, 0, 0]);
   });
 
-  it("carries a weekday and a day of month for the calendar cell", () => {
-    // English STATED, not defaulted: `DEFAULT_LOCALE` is Czech now, so a bare
-    // call renders `PO`. Naming the locale is what makes this a test of the
-    // shape rather than of whichever default happens to be in force.
-    const tabs = buildDayTabs([], now, "en");
-    // The 3rd of August 2026 is a Monday.
-    expect(tabs[0]).toMatchObject({ weekday: "MON", dayOfMonth: "3" });
-    expect(tabs[1]).toMatchObject({ weekday: "TUE", dayOfMonth: "4" });
+  /*
+   * THE FIRST TWO CELLS SAY THE WORDS (Section 3, item 1) — they are the two
+   * days anyone opening this page is deciding between, and `PO` makes a
+   * reader do arithmetic to work out it means now. The rest keep the weekday,
+   * which is what makes the row a calendar rather than a list of relatives.
+   */
+  it("labels today and tomorrow in words, then falls back to weekdays", () => {
+    // English STATED, not defaulted: `DEFAULT_LOCALE` is Czech now.
+    const tabs = buildDayTabs([], now, "en", strings);
+    expect(tabs[0]).toMatchObject({ weekday: strings.games.dayToday, dayOfMonth: "3" });
+    expect(tabs[1]).toMatchObject({ weekday: strings.games.dayTomorrow, dayOfMonth: "4" });
+    // The 5th of August 2026 is a Wednesday.
+    expect(tabs[2]).toMatchObject({ weekday: "WED", dayOfMonth: "5" });
   });
 
   it("localises the weekday, which the original did not", () => {
     // `ed9997c` hardcoded `en-GB`, so a Czech page read `SAT`. The look is the
-    // ruling; the language bug is not.
-    expect(buildDayTabs([], now, "cs")[0].weekday).toBe("PO");
-    expect(buildDayTabs([], now, "ru")[0].weekday).toBe("ПН");
+    // ruling; the language bug is not. Read from index 2, since the first two
+    // cells are now words rather than weekdays.
+    expect(buildDayTabs([], now, "cs", resolveStrings("cs"))[2].weekday).toBe("ST");
+    expect(buildDayTabs([], now, "ru", resolveStrings("ru"))[2].weekday).toBe("СР");
+  });
+
+  it("translates the relative words too", () => {
+    const cs = resolveStrings("cs");
+    expect(buildDayTabs([], now, "cs", cs)[0].weekday).toBe(cs.games.dayToday);
+    expect(buildDayTabs([], now, "cs", cs)[1].weekday).toBe(cs.games.dayTomorrow);
   });
 
   it("crosses a month boundary without repeating or skipping a date", () => {
