@@ -333,6 +333,22 @@ export const strings = {
     waitlistConvertTitle: "Claim the open spot",
     waitlistConvertHint: "Pick how you want to pay and the spot is yours.",
     waitlistNotOnList: "You are not on the waitlist for this game.",
+    /*
+     * §3 SCREEN 8's THREE DRAWN STATES.
+     *
+     * The machinery for all three existed; what did not was a drawn state, so
+     * each rendered as a grey sentence in a box — the §2.9 failure ("never a
+     * bare centred sentence") on the one flow where a player is waiting for
+     * something and most needs to know where they stand.
+     */
+    waitlistJoinedTitle: "You're on the list",
+    waitlistSpotOpenTitle: "A spot just opened",
+    waitlistSpotOpenBody:
+      "Everyone waiting was told at the same moment. Claim it and it's yours.",
+    waitlistNotOnListTitle: "You're not on this waitlist",
+    waitlistNotOnListBody:
+      "Someone may have taken the spot already, or you joined a different game.",
+    waitlistSeeGame: "See the game",
     rosterTitle: "Lineup",
     rosterEmpty: "Nobody has claimed a spot yet",
     cancelled: "This game was cancelled.",

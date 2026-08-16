@@ -192,6 +192,14 @@ export const ru: StringsOverlay = {
     waitlistConvertTitle: "Занять освободившееся место",
     waitlistConvertHint: "Выбери, как платишь, и место твоё.",
     waitlistNotOnList: "Тебя нет в очереди на этот матч.",
+    waitlistJoinedTitle: "Ты в очереди",
+    waitlistSpotOpenTitle: "Место освободилось",
+    waitlistSpotOpenBody:
+      "Все в очереди узнали одновременно. Займи его — и оно твоё.",
+    waitlistNotOnListTitle: "Тебя нет в этой очереди",
+    waitlistNotOnListBody:
+      "Возможно, место уже заняли, или ты записался на другой матч.",
+    waitlistSeeGame: "Открыть матч",
     rosterTitle: "Состав",
     rosterEmpty: "Пока никто не занял место",
     cancelled: "Этот матч отменён.",

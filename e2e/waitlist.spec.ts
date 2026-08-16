@@ -144,7 +144,8 @@ test("cancel → credit → release → convert, with nothing pressed in between
   await context.clearCookies();
   await signInAs(context, players.runner);
   await page.goto(`/game/${game.id}/waitlist/convert`);
-  await expect(page.getByTestId("not-on-waitlist")).toHaveCount(0);
+  // The spot-opened state, not the not-on-the-list one (§3 screen 8).
+  await expect(page.getByTestId("waitlist-status")).toHaveAttribute("data-tone", "open");
   await page.getByTestId("convert-waitlist").click();
 
   await expect(page.getByTestId("confirmation")).toBeVisible();
@@ -267,4 +268,67 @@ test("a paid spot is never nudged and never expires", async ({ request }) => {
   // ignorable.
   expect(data?.status).toBe("confirmed");
   expect(data?.nudge_sent_at).toBeNull();
+});
+
+/*
+ * §3 SCREEN 8 — the three drawn states, and the rule that binds them.
+ *
+ * Each was a grey sentence in a box before Stage 6: the §2.9 failure ("never
+ * a bare centred sentence") on the one flow where a player is waiting for
+ * something and most needs to know where they stand.
+ *
+ * THE HINT IS THE ASSERTION THAT MATTERS. "Everyone waiting is told at the
+ * same moment" must accompany any position number — the number alone reads as
+ * a serving order, and notify-all FCFS is not one. Rendering one without the
+ * other is how the product would come to promise a queue it does not run.
+ */
+test("the waitlist states are drawn, and a position never appears without its hint", async ({
+  page,
+  context,
+}) => {
+  await signInAs(context, players.runner);
+  await page.goto(`/game/${game.id}`);
+
+  /*
+   * --- joined ------------------------------------------------------------
+   *
+   * ON THE DETAIL, THE CLAIM BAR CARRIES THIS, not a panel. Stage 2 moved the
+   * queue control into the bar (ruling G) and deliberately did not leave a
+   * second copy in the body — the position and the "you are waiting" state are
+   * the bar's `waitlisted` row. `WaitlistStatus`'s waiting tone is what the
+   * PANEL renders where a panel is still used, and the bar is asserted here
+   * because it is what this page actually shows.
+   */
+  await page.getByTestId("join-waitlist").click();
+  const bar = page.getByTestId("claim-bar");
+  await expect(bar).toHaveAttribute("data-state", "waitlisted");
+  await expect(bar).toContainText("1");
+
+  // The hint lives in the body beside the full notice, where there is room for
+  // a sentence — the bar has room for a position and nothing else.
+  await expect(page.getByTestId("full-notice")).toContainText("at the same moment");
+
+  // --- spot opened --------------------------------------------------------
+  // Reached from the notification email, so the page is entered directly.
+  await page.goto(`/game/${game.id}/waitlist/convert`);
+  const open = page.getByTestId("waitlist-status");
+  await expect(open).toHaveAttribute("data-tone", "open");
+  await expect(open).toContainText("at the same moment");
+  // The convert form stands beneath it rather than being replaced by it.
+  await expect(page.getByTestId("convert-waitlist")).toBeVisible();
+
+  // --- not on the list ----------------------------------------------------
+  // A player who never joined, landing on the same URL.
+  await context.clearCookies();
+  await signInAs(context, players.creditRich);
+  await page.goto(`/game/${game.id}/waitlist/convert`);
+  const absent = page.getByTestId("waitlist-status");
+  await expect(absent).toHaveAttribute("data-tone", "absent");
+  // A way out, rather than a dead end.
+  await expect(absent.getByTestId("waitlist-status-action")).toHaveAttribute(
+    "href",
+    `/game/${game.id}`,
+  );
+  // And no hint here — there is no position to keep honest.
+  await expect(absent).not.toContainText("at the same moment");
 });

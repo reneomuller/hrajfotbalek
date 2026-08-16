@@ -193,6 +193,14 @@ export const cs: StringsOverlay = {
     waitlistConvertTitle: "Zaber uvolněné místo",
     waitlistConvertHint: "Vyber, jak chceš zaplatit, a místo je tvoje.",
     waitlistNotOnList: "Ve frontě na tenhle zápas nejsi.",
+    waitlistJoinedTitle: "Jsi ve frontě",
+    waitlistSpotOpenTitle: "Uvolnilo se místo",
+    waitlistSpotOpenBody:
+      "Všichni ve frontě se to dozvěděli naráz. Zaber si ho a je tvoje.",
+    waitlistNotOnListTitle: "V téhle frontě nejsi",
+    waitlistNotOnListBody:
+      "Někdo si místo možná už vzal, nebo ses přihlásil k jinému zápasu.",
+    waitlistSeeGame: "Zobrazit zápas",
     rosterTitle: "Sestava",
     rosterEmpty: "Zatím si nikdo nezabral místo",
     cancelled: "Tenhle zápas byl zrušený.",

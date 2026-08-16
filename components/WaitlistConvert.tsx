@@ -1,30 +1,17 @@
 "use client";
 
 import { useActionState } from "react";
-import { useFormStatus } from "react-dom";
 import {
   convertWaitlistAction,
   type WaitlistActionState,
 } from "@/app/game/[id]/waitlist/actions";
 import { describeWaitlistError } from "@/lib/booking/errors";
+import { FormError } from "@/components/form/FormError";
+import { PendingButton } from "@/components/form/PendingButton";
 import { useStrings } from "@/components/LocaleProvider";
 
 const INITIAL: WaitlistActionState = { status: "idle" };
 
-function SubmitButton({ label }: { label: string }) {
-  const t = useStrings();
-  const { pending } = useFormStatus();
-  return (
-    <button
-      type="submit"
-      disabled={pending}
-      data-testid="convert-waitlist"
-      className="mt-6 w-full rounded-control bg-volt px-6 py-4 text-cta font-extrabold uppercase tracking-wide text-surface disabled:opacity-60"
-    >
-      {pending ? t.common.loading : label}
-    </button>
-  );
-}
 
 /**
  * Conversion entry point, reached from the waitlist spot-open email.
@@ -39,28 +26,29 @@ export function WaitlistConvert({ gameId }: { gameId: string }) {
   const t = useStrings();
   const [state, formAction] = useActionState(convertWaitlistAction, INITIAL);
 
-  if (state.status === "error" && state.code) {
-    const friendly = describeWaitlistError(state.code, t);
-    return (
-      <div
-        data-testid="waitlist-convert-error"
-        data-error-code={state.code}
-        className="rounded-card border border-hairline-strong bg-surface p-5"
-      >
-        <div className=" text-[19px] font-bold uppercase tracking-wide text-white">
-          {friendly.title}
-        </div>
-        <p className="mt-2 text-[14px] leading-relaxed text-muted">{friendly.message}</p>
-      </div>
-    );
-  }
+  /*
+   * THE ERROR NO LONGER REPLACES THE FORM (§2.11).
+   *
+   * It used to `return` an error card in place of everything, so a player who
+   * lost the race lost their payment choice with it — and losing this race is
+   * the ORDINARY outcome here, not a fault: everyone on the list is notified
+   * at once and one of them taps first. §2.11 puts a form-level block above
+   * the submit and leaves the form standing, so the way forward is one tap.
+   *
+   * `CAPACITY_FULL` still reads as the still-on-the-waitlist copy rather than
+   * as a failure, which is what `describeWaitlistError` already encodes.
+   */
+  const failure =
+    state.status === "error" && state.code
+      ? describeWaitlistError(state.code, t)
+      : null;
 
   return (
-    <form action={formAction}>
+    <form action={formAction} className="flex flex-col gap-6">
       <input type="hidden" name="gameId" value={gameId} />
 
       <fieldset className="m-0 border-0 p-0">
-        <legend className="mb-4 text-[17px] font-bold uppercase tracking-wide text-white">
+        <legend className="mb-4 text-body-lg font-semibold text-bone">
           {t.booking.choosePayment}
         </legend>
 
@@ -68,7 +56,7 @@ export function WaitlistConvert({ gameId }: { gameId: string }) {
           <label className="flex cursor-pointer items-start gap-3 rounded-card bg-surface p-4 has-[:checked]:border-hairline-volt">
             <input type="radio" name="method" value="qr" defaultChecked className="mt-1 accent-volt" />
             <span>
-              <span className="block text-[16px] font-bold uppercase tracking-wide text-bone">
+              <span className="block text-body-lg font-semibold text-bone">
                 {t.booking.payByQr}
               </span>
               <span className="mt-1 block text-[13px] leading-snug text-muted">
@@ -80,7 +68,7 @@ export function WaitlistConvert({ gameId }: { gameId: string }) {
           <label className="flex cursor-pointer items-start gap-3 rounded-card bg-surface p-4 has-[:checked]:border-hairline-volt">
             <input type="radio" name="method" value="cash" className="mt-1 accent-volt" />
             <span>
-              <span className="block text-[16px] font-bold uppercase tracking-wide text-bone">
+              <span className="block text-body-lg font-semibold text-bone">
                 {t.booking.payByCash}
               </span>
               <span className="mt-1 block text-[13px] leading-snug text-muted">
@@ -91,7 +79,15 @@ export function WaitlistConvert({ gameId }: { gameId: string }) {
         </div>
       </fieldset>
 
-      <SubmitButton label={t.games.waitlistConvertTitle} />
+      {failure && (
+        <FormError title={failure.title} message={failure.message} code={state.code} />
+      )}
+
+      <PendingButton
+        label={t.games.waitlistConvertTitle}
+        testId="convert-waitlist"
+        className="w-full"
+      />
     </form>
   );
 }

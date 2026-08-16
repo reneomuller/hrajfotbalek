@@ -67,28 +67,24 @@ export async function AvailabilityCard({
       </div>
 
       {/*
-        THE DOTTED LINE AND THE LINEUP.
+        THE FACES, ON THE ROW THE LIST CARD PUTS THEM ON (gate confirmed,
+        2026-08-16).
 
-        THE RULE RENDERS UNCONDITIONALLY, and that is the correction: it was
-        wrapped in `roster.length > 0`, so a game nobody had claimed showed the
-        seam on its LIST card and not on its detail. The two surfaces have to
-        be the same shape whether or not anyone has booked — "empty" is
-        precisely when the arrangement needs to be legible, and a card that
-        rearranges itself between zero and one player reads as two designs.
+        The dotted rule is gone with the list card's — the four-row anatomy
+        replaced it there, and leaving a seam here would make the two surfaces
+        different shapes again, which is the whole thing the canonical card
+        exists to stop.
 
-        The FACES still disappear at zero (§2.1): a ring drawn around nobody is
-        a question. So at zero the rule closes the card under the capacity bar,
-        which is exactly what the list card does.
-
-        No caption either way — the spots figure and the bar are directly above
-        at hero scale, and the full lineup with names is further down the page.
-        This is the glance.
+        Absent at zero (§2.1): the hero spots figure and the bar directly above
+        already say the game is empty, and a ring drawn around nobody is a
+        question. The full lineup, with names and games-played counts, is
+        further down the page — this is the glance.
       */}
-      <div className="mt-4 border-t border-dotted border-hairline-strong pt-4">
-        {roster.length > 0 && (
+      {roster.length > 0 && (
+        <div className="mt-4">
           <AvatarRow players={roster} max={3} size="card" supabaseUrl={supabaseUrl} />
-        )}
-      </div>
+        </div>
+      )}
     </section>
   );
 }

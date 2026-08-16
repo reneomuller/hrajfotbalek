@@ -6,6 +6,7 @@ import { joinWaitlistAction, type WaitlistActionState } from "@/app/game/[id]/wa
 import { describeWaitlistError } from "@/lib/booking/errors";
 import { waitlistPositionLabel } from "@/lib/booking/waitlistLabel";
 import { useStrings } from "@/components/LocaleProvider";
+import { WaitlistStatus } from "@/components/game/WaitlistStatus";
 
 const INITIAL: WaitlistActionState = { status: "idle" };
 
@@ -97,31 +98,28 @@ export function WaitlistButton({
   }
 
   if (joined) {
+    /*
+      THE JOINED STATE (§3 screen 8), drawn rather than described. It was a
+      panel of three stacked paragraphs — a heading, a position at 22px, and
+      the hint — which is the same three facts this says in the shape the
+      other two waitlist states use.
+
+      The position is passed through `waitlistPositionLabel`, which returns
+      null when the RPC could not answer; the block then shows the title and
+      the hint alone rather than an empty line where a number should be.
+    */
     return (
-      <div
-        data-testid="waitlist-joined"
-        className="mt-6 rounded-card bg-surface p-5"
-      >
-        <p className="m-0 text-body-lg font-bold text-volt">
-          {state.status === "already" || alreadyOnList
-            ? t.games.waitlistAlready
-            : t.games.waitlistJoined}
-        </p>
-        {positionLabel && (
-          <p
-            data-testid="waitlist-position"
-            className="mt-3 text-[22px] font-bold text-white"
-          >
-            {positionLabel}
-          </p>
-        )}
-        {/*
-          The hint stays directly under the position on purpose: the number
-          alone reads as a serving order, which notify-all FCFS is not.
-        */}
-        <p className="mt-2 text-[13px] leading-snug text-muted">
-          {t.games.waitlistHint}
-        </p>
+      <div data-testid="waitlist-joined" className="mt-6">
+        <WaitlistStatus
+          tone="waiting"
+          title={
+            state.status === "already" || alreadyOnList
+              ? t.games.waitlistAlready
+              : t.games.waitlistJoinedTitle
+          }
+          position={positionLabel}
+          hint={t.games.waitlistHint}
+        />
       </div>
     );
   }
