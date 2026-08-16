@@ -367,9 +367,19 @@ test.describe("the desktop header", () => {
     // Mutually exclusive: the pill does not render at this width.
     await expect(page.getByTestId("nav-pill")).toBeHidden();
 
-    for (const id of ["nav-home", "nav-games", "nav-profile"]) {
-      await expect(page.getByTestId(id), id).toBeVisible();
-    }
+    await expect(page.getByTestId("nav-games")).toBeVisible();
+
+    /*
+     * HOME AND PROFILE ARE NOT TEXT LINKS ANY MORE (owner iteration): the
+     * WORDMARK carries home and the AVATAR carries the profile. Asserted as
+     * destinations rather than as absences, because "the link is gone" is
+     * only safe if the route is still reachable — which is the whole
+     * justification for removing them.
+     */
+    await expect(page.getByTestId("nav-home")).toHaveCount(0);
+    await expect(page.getByTestId("nav-profile")).toHaveCount(0);
+    await expect(page.locator('header a[href="/"]').first()).toBeVisible();
+    await expect(page.getByTestId("nav-account")).toHaveAttribute("href", "/account");
 
     // …and not the pass, which the games-list panel now owns outright.
     await expect(page.getByTestId("nav-pass")).toHaveCount(0);
@@ -379,7 +389,8 @@ test.describe("the desktop header", () => {
 
     // And they go where they say — Home is the one that would silently fail,
     // since an empty href still renders a link.
-    await page.getByTestId("nav-home").click();
+    // Home via the wordmark, which is where it lives now.
+    await page.locator('header a[href="/"]').first().click();
     await page.waitForURL((url) => url.pathname === "/");
   });
 

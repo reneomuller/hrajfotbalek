@@ -2,7 +2,12 @@ import { describe, expect, it } from "vitest";
 import { cs } from "@/lib/i18n/cs";
 import { ru } from "@/lib/i18n/ru";
 import { resolveStrings } from "@/lib/i18n/resolve";
-import { LOCALES, isLocale, localeFromAcceptLanguage } from "@/lib/i18n/locales";
+import {
+  DEFAULT_LOCALE,
+  LOCALES,
+  isLocale,
+  localeFromAcceptLanguage,
+} from "@/lib/i18n/locales";
 import { strings } from "@/lib/strings";
 
 /**
@@ -22,6 +27,16 @@ const PLAYER_FACING = [
   "booking",
   "payment",
   "account",
+  /*
+   * Ruling L's profile block (Stage 3). It shipped translated in all three
+   * languages and was never added here, so the completeness walk skipped it
+   * entirely — six fields and four position labels that could have gone
+   * untranslated without a single test complaining. Caught by the
+   * "translates nothing outside the player-facing sections" half of this
+   * suite, which is the direction that fires when a section is genuinely
+   * translated and simply unlisted.
+   */
+  "profile",
   "errors",
   "common",
   // Contract §6, delivered 2026-08-01. Czech is Oliver's; Russian is a flagged
@@ -222,5 +237,47 @@ describe.each([
       (key) => !(PLAYER_FACING as readonly string[]).includes(key),
     );
     expect(stray).toEqual([]);
+  });
+});
+
+/**
+ * THE DEFAULT IS CZECH, AND IT IS THE LAST WORD RATHER THAN THE FIRST.
+ *
+ * The owner iteration made Czech the default for an anonymous visitor with no
+ * stored choice — the games are in Prague, and English led only because it is
+ * the language the string table is written in.
+ *
+ * What must stay true is the PRECEDENCE, which is where a "default" quietly
+ * becomes a forcing: an explicit choice outranks it, and a browser preference
+ * outranks it. This asserts the resolution ladder that
+ * `lib/i18n/server.ts` walks, at the level the pure functions can be tested.
+ */
+describe("the default locale", () => {
+  it("is Czech", () => {
+    expect(DEFAULT_LOCALE).toBe("cs");
+  });
+
+  it("does not displace a browser preference", () => {
+    // Step 2 of the ladder. A Russian speaker's browser still gets Russian.
+    expect(localeFromAcceptLanguage("ru-RU,ru;q=0.9,en;q=0.8")).toBe("ru");
+    expect(localeFromAcceptLanguage("en-GB,en;q=0.9")).toBe("en");
+  });
+
+  it("applies only when nothing else has an opinion", () => {
+    // Step 3. An unsupported language, or no header at all, lands here.
+    expect(localeFromAcceptLanguage("de-DE,de;q=0.9") ?? DEFAULT_LOCALE).toBe("cs");
+    expect(localeFromAcceptLanguage(null) ?? DEFAULT_LOCALE).toBe("cs");
+  });
+
+  it("leaves ENGLISH as the fallback for missing copy, which is a different job", () => {
+    /*
+     * `resolveStrings` merges the overlays onto the English table, so an
+     * untranslated key renders English rather than a blank. Changing the
+     * default locale must not touch that — the two are easily confused
+     * because both are called "the fallback".
+     */
+    const cs = resolveStrings("cs");
+    expect(cs.games.durationMin).toBe(strings.games.durationMin);
+    expect(cs.games.listTitle).not.toBe(strings.games.listTitle);
   });
 });

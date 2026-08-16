@@ -29,7 +29,32 @@ export const LOCALES = ["en", "cs", "ru"] as const;
 
 export type Locale = (typeof LOCALES)[number];
 
-export const DEFAULT_LOCALE: Locale = "en";
+/**
+ * What an anonymous visitor with no stored choice sees (owner iteration,
+ * Section 1).
+ *
+ * CZECH, NOT ENGLISH. The games are in Prague and most people arriving from a
+ * shared WhatsApp link are Czech speakers; English led because it is the
+ * language the string table is WRITTEN in, which is a fact about the codebase
+ * rather than about the audience.
+ *
+ * IT IS A DEFAULT AND NOT A FORCING. The resolution order in
+ * `lib/i18n/server.ts` is unchanged and this sits LAST in it:
+ *
+ *   1. the `hf_locale` cookie — an explicit choice, and it always wins
+ *   2. `Accept-Language` — the browser's own preference
+ *   3. this
+ *
+ * So a Russian speaker's browser still gets Russian, anyone who has touched
+ * the switcher keeps what they chose, and this only decides the case where
+ * nothing else has an opinion.
+ *
+ * ENGLISH REMAINS THE FALLBACK FOR MISSING COPY, which is a different job:
+ * `resolveStrings` merges the Czech and Russian overlays onto the English
+ * table, so an untranslated key renders English rather than a blank. Changing
+ * this constant does not touch that.
+ */
+export const DEFAULT_LOCALE: Locale = "cs";
 
 /**
  * The cookie carrying the choice.

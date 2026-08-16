@@ -89,7 +89,20 @@ export async function Header({
       data-testid="site-header"
       className="fixed inset-x-0 top-0 z-30 border-b border-hairline bg-ink/[.86] backdrop-blur-md"
     >
-      <div className="mx-auto flex max-w-shell items-center justify-between gap-2 px-gutter py-[11px]">
+      {/*
+        A THREE-PART GRID ABOVE `md`, so the link row is centred IN THE BAR
+        rather than in the space left over between the wordmark and the
+        controls (owner iteration, Section 1).
+
+        `justify-between` on a flex row centres nothing: the middle child sits
+        wherever the two outer children leave it, and the outer children here
+        are different widths — a wordmark on one side, an avatar and a
+        language menu on the other. `grid-cols-[1fr_auto_1fr]` gives the
+        middle a column of its own with equal gutters, which is what "centred"
+        means. Below `md` the row is hidden, so the grid collapses to the same
+        two-child flex it always was.
+      */}
+      <div className="mx-auto flex max-w-shell items-center justify-between gap-2 px-gutter py-[11px] md:grid md:grid-cols-[1fr_auto_1fr]">
         <Link
           href="/"
           aria-label={nav.home}
@@ -147,25 +160,45 @@ export async function Header({
           </span>
         </Link>
 
-        <nav className="flex shrink-0 items-center gap-2">
-          {/*
-            The link row, and ONLY the link row, is width-dependent. Sentence
-            case per ruling B — these were tracked capitals, which is now the
-            eyebrow style's exclusive job.
-          */}
-          <span className="hidden items-center gap-3 md:flex">
-            {primaryNavLinks({ isAdmin }, t).map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                data-testid={navTestId(link.href)}
-                className="text-body font-semibold text-bone no-underline transition hover:text-volt"
-              >
-                {link.label}
-              </Link>
-            ))}
-          </span>
+        {/*
+          THE MIDDLE COLUMN. Lifted out of the right-hand `<nav>` so it can
+          occupy a grid track of its own — nested inside that flex row it
+          could only ever be centred within the controls, which is not the
+          bar.
 
+          Its own `<nav>` with a name, because it is now a landmark separate
+          from the auth controls beside it rather than a span inside them.
+        */}
+        <nav
+          aria-label={nav.primary}
+          className="hidden items-center justify-center gap-8 md:flex"
+        >
+          {/*
+            LARGER AND WIDER (owner iteration): `body-lg` rather than 13px,
+            `tracking-wide`, and a real gap. These are the only text links in
+            the bar now, so they can afford the room — at one or two items a
+            tight setting reads as a leftover rather than a navigation.
+          */}
+          {primaryNavLinks({ isAdmin }, t).map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              data-testid={navTestId(link.href)}
+              className="text-body-lg font-semibold tracking-wide text-bone no-underline transition-colors hover:text-volt"
+            >
+              {link.label}
+            </Link>
+          ))}
+        </nav>
+
+        {/*
+          `justify-end` so the controls sit at the END of their track. In the
+          three-column grid this is a `1fr` column, not a shrink-wrapped flex
+          child — without it the controls sit at its START, which pulls them
+          leftward against the centred links and makes the middle column look
+          right-aligned even though it is not.
+        */}
+        <nav className="flex shrink-0 items-center justify-end gap-2">
           {signedIn ? (
             <Link
               href="/account"

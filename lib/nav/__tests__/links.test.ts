@@ -9,40 +9,37 @@ import { strings } from "@/lib/strings";
 
 describe("primaryNavLinks", () => {
   /*
-   * THE HEADER CARRIES THE WHOLE NAVIGATION ABOVE `md`, and that is §3's
-   * desktop rule for the global chrome: "Header links replace the nav pill."
-   * The pill is `md:hidden`, so above the breakpoint a header carrying only
-   * `Games` left Home, Pass and Profile reachable by nothing at all — the two
-   * controls are mutually exclusive at every width, and one of them was a
-   * quarter of the other.
+   * DESKTOP CARRIES GAMES ONLY — plus the admin door for an admin.
    *
-   * SAME FOUR AS THE PILL, IN THE PILL'S ORDER, so the product does not
-   * reorder itself at 768px.
+   * `Home` and `Profile` were removed by the owner iteration because the
+   * header already carries both in better controls: the WORDMARK links to `/`
+   * and the AVATAR to `/account`. A logotype that goes home is a web-wide
+   * convention, and a face beats the word "Profile" as a target.
+   *
+   * THE PILL IS DELIBERATELY DIFFERENT and still carries three. A phone has
+   * no wordmark row to lean on, so the two controls are not required to agree
+   * — which is why this file tests the header list rather than "the nav".
    */
-  it("carries the pill's three destinations, in the pill's order", () => {
-    expect(primaryNavLinks()).toEqual([
-      { href: "/", label: strings.nav.homeShort },
-      { href: "/games", label: strings.nav.games },
-      { href: "/account", label: strings.nav.profileShort },
-    ]);
+  it("carries the games list, and not Home or Profile", () => {
+    expect(primaryNavLinks()).toEqual([{ href: "/games", label: strings.nav.games }]);
+  });
+
+  it("leaves Home and Profile to the wordmark and the avatar", () => {
+    const hrefs = primaryNavLinks({ isAdmin: true }).map((link) => link.href);
+    expect(hrefs).not.toContain("/");
+    expect(hrefs).not.toContain("/account");
   });
 
   it("does NOT link the pass — the games-list panel is the only way in", () => {
-    // The pass ruling takes it off both navs. `/pass` survives as a route;
-    // what was removed is the entry point, and a nav entry beside the panel
-    // would be a second door to one room.
     expect(primaryNavLinks({ isAdmin: true }).map((l) => l.href)).not.toContain("/pass");
   });
 
   it("shows the admin door only to an admin session, and last", () => {
-    // Last because it is not part of the product's shape — it is a door for
-    // one person, and putting it among the four would imply it is a fifth
-    // destination players have.
     expect(primaryNavLinks({ isAdmin: true }).at(-1)).toEqual({
       href: "/admin/games",
       label: strings.nav.admin,
     });
-    expect(primaryNavLinks({ isAdmin: true })).toHaveLength(4);
+    expect(primaryNavLinks({ isAdmin: true })).toHaveLength(2);
   });
 
   it("hides the admin link from a non-admin and from a signed-out visitor", () => {

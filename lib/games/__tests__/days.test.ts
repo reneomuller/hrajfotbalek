@@ -70,7 +70,10 @@ describe("buildDayTabs", () => {
   });
 
   it("carries a weekday and a day of month for the calendar cell", () => {
-    const tabs = buildDayTabs([], now);
+    // English STATED, not defaulted: `DEFAULT_LOCALE` is Czech now, so a bare
+    // call renders `PO`. Naming the locale is what makes this a test of the
+    // shape rather than of whichever default happens to be in force.
+    const tabs = buildDayTabs([], now, "en");
     // The 3rd of August 2026 is a Monday.
     expect(tabs[0]).toMatchObject({ weekday: "MON", dayOfMonth: "3" });
     expect(tabs[1]).toMatchObject({ weekday: "TUE", dayOfMonth: "4" });
@@ -140,11 +143,13 @@ describe("groupByDay", () => {
 
   it("carries the date in the heading as well as the relative word", () => {
     // "Today" alone stops meaning anything once you have scrolled past it.
+    // English is stated for the same reason as above — the default is Czech.
     const groups = groupByDay(
       [{ at: "2026-08-03T17:00:00Z" }, { at: "2026-08-04T17:00:00Z" }],
       (item) => item.at,
       now,
       strings,
+      "en",
     );
 
     expect(groups[0].label).toContain(strings.games.dayToday);

@@ -32,33 +32,25 @@ export function primaryNavLinks(
   t: Strings = strings,
 ): NavLink[] {
   /*
-   * THE PILL'S THREE, IN THE PILL'S ORDER (§3, screen 0: "Header links replace
-   * the nav pill").
+   * DESKTOP CARRIES GAMES AND PASS ONLY (owner iteration, Section 1).
    *
-   * The two controls are mutually exclusive at every width — the pill is
-   * `md:hidden` and this row is `md:` and up — so "replace" is the whole
-   * contract between them. Carrying only `Games` here meant that above 768px
-   * Home, Pass and Profile were reachable from nothing at all: the header had
-   * a quarter of the navigation and the thing holding the other three
-   * quarters was hidden.
+   * `Home` and `Profile` come out because the header already has both, in
+   * controls that are more recognisable than a word: the WORDMARK links to
+   * `/` and the AVATAR links to `/account`. A logotype that goes home is a
+   * convention every site on the web shares, and a face is a better profile
+   * target than the word "Profile" — both were verified as real links before
+   * the text entries were removed, rather than assumed.
    *
-   * Same order as `NavPill`, so the product does not reorder itself at the
-   * breakpoint. `homeShort` and `profileShort` are the same labels the pill
-   * uses, for the same reason — one name per destination.
+   * THE PILL IS UNCHANGED and still carries Home, Games and Profile. That is
+   * not an inconsistency: a phone has no room for a wordmark row, and the
+   * pill's four-cell geometry is ruling K's. Above `md` the header is the
+   * navigation and it can lean on its own furniture.
    *
-   * `Pass` is deliberately absent from BOTH, per the pass ruling: the panel on
-   * the games list is the sole entry point, and it sits where somebody is
-   * already deciding about a game. A nav entry beside it would be a second
-   * door to one room.
+   * `Pass` IS STILL ABSENT, per the pass ruling — the games-list panel is its
+   * sole entry point.
    */
-  const links: NavLink[] = [
-    { href: "/", label: t.nav.homeShort },
-    { href: "/games", label: t.nav.games },
-    { href: "/account", label: t.nav.profileShort },
-  ];
+  const links: NavLink[] = [{ href: "/games", label: t.nav.games }];
 
-  // Last, and outside the four: it is a door for one person, and placing it
-  // among them would imply players have a fifth destination.
   if (session.isAdmin) links.push({ href: "/admin/games", label: t.nav.admin });
   return links;
 }
