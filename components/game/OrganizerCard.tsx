@@ -44,10 +44,26 @@ export async function OrganizerCard({
       data-testid="game-organizer"
       className="mt-4 rounded-card bg-surface p-5"
     >
-      <div className="text-[10px] uppercase tracking-eyebrow text-muted">
+      {/* WHITE (Section 4, item 6) — these section labels were grey. */}
+      <div className="text-[10px] uppercase tracking-eyebrow text-white">
         {t.games.organizerLabel}
       </div>
 
+      {/*
+        NAME · PHONE · WHATSAPP ON ONE LINE (Section 4, item 4).
+
+        The three were a name over a phone with the WhatsApp button floated
+        opposite; they are one row of contact facts and now read as one. The
+        separators are `aria-hidden` — a screen reader announcing "middot"
+        between a name and a number is noise, and the elements are already
+        distinct links.
+
+        THE UNLOCK RULE IS UNTOUCHED. `phone` arrives non-null only for a
+        caller holding a spot, decided inside `game_organizer_phone()` from the
+        session — there is no branch here that could be wrong about it, because
+        there is nothing here to branch on. A viewer without a booking sees the
+        name and the role line exactly as before.
+      */}
       <div className="mt-3 flex items-center gap-3">
         <span
           data-testid="organizer-avatar"
@@ -57,35 +73,51 @@ export async function OrganizerCard({
           {initials(name, t)}
         </span>
 
-        <div className="min-w-0 flex-1">
-          <p data-testid="organizer-name" className="m-0 truncate text-[16px] font-bold text-white">
+        <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-1">
+          {/*
+            LARGER — `body-lg`, the size of the "What's included" heading
+            (item 3). "Runs this game" is gone from beneath it: the section is
+            already labelled ORGANIZER, so the line restated the heading.
+          */}
+          <p
+            data-testid="organizer-name"
+            className="m-0 min-w-0 truncate text-body-lg font-semibold text-white"
+          >
             {name}
           </p>
-          {phone ? (
-            <a
-              href={`tel:${phone}`}
-              data-testid="organizer-phone"
-              className="text-[13px] text-volt no-underline"
-            >
-              {phone}
-            </a>
-          ) : (
-            <p className="m-0 text-[13px] text-muted">{t.games.organizerRole}</p>
+
+          {phone && (
+            <>
+              <span aria-hidden className="text-faint">
+                ·
+              </span>
+              <a
+                href={`tel:${phone}`}
+                data-testid="organizer-phone"
+                className="text-body text-volt no-underline"
+              >
+                {phone}
+              </a>
+              {waNumber && (
+                <>
+                  <span aria-hidden className="text-faint">
+                    ·
+                  </span>
+                  <a
+                    href={`https://wa.me/${waNumber}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    data-testid="organizer-whatsapp"
+                    className="inline-flex items-center gap-1 text-body text-bone no-underline transition-colors hover:text-whatsapp"
+                  >
+                    <WhatsAppIcon className="h-[18px] w-[18px]" />
+                    {t.games.organizerWhatsApp}
+                  </a>
+                </>
+              )}
+            </>
           )}
         </div>
-
-        {waNumber && (
-          <a
-            href={`https://wa.me/${waNumber}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            data-testid="organizer-whatsapp"
-            aria-label={t.games.organizerWhatsApp}
-            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-hairline-strong no-underline transition hover:border-whatsapp"
-          >
-            <WhatsAppIcon className="h-[22px] w-[22px]" />
-          </a>
-        )}
       </div>
 
       {phone && (

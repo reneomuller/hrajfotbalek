@@ -3,7 +3,11 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { createBrowserSupabaseClient } from "@/lib/supabase/browser";
-import { AMENITIES, type Amenity } from "@/lib/venues/amenities";
+import {
+  INCLUDED_AMENITIES,
+  PITCH_AMENITIES,
+  type Amenity,
+} from "@/lib/venues/amenities";
 import { strings } from "@/lib/strings";
 
 /**
@@ -91,23 +95,41 @@ export function VenueAmenities({
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="grid grid-cols-2 gap-x-4 gap-y-2">
-        {AMENITIES.map((key) => (
-          <label
-            key={key}
-            className="flex min-h-11 cursor-pointer items-center gap-2 text-[13px] text-bone"
-          >
-            <input
-              type="checkbox"
-              checked={selected.has(key)}
-              onChange={() => toggle(key)}
-              data-testid={`amenity-${key}`}
-              className="h-4 w-4 accent-volt"
-            />
-            {strings.games.amenities[key]}
-          </label>
-        ))}
-      </div>
+      {/*
+        TWO LABELLED GROUPS, matching the game page (Section 4, item 2). The
+        admin picks from one array and always has; what changed is that the
+        form now shows the same division the player sees, so an organizer is
+        not guessing which heading a tick will land under.
+      */}
+      {(
+        [
+          { title: strings.admin.venueAmenitiesIncluded, keys: INCLUDED_AMENITIES },
+          { title: strings.admin.venueAmenitiesPitch, keys: PITCH_AMENITIES },
+        ] as const
+      ).map((group) => (
+        <fieldset key={group.title} className="m-0 border-0 p-0">
+          <legend className="mb-2 p-0 text-[12px] font-semibold uppercase tracking-[1px] text-bone">
+            {group.title}
+          </legend>
+          <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+            {group.keys.map((key) => (
+              <label
+                key={key}
+                className="flex min-h-11 cursor-pointer items-center gap-2 text-[13px] text-bone"
+              >
+                <input
+                  type="checkbox"
+                  data-testid={`amenity-${key}`}
+                  checked={selected.has(key)}
+                  onChange={() => toggle(key)}
+                  className="accent-volt"
+                />
+                {strings.games.amenities[key]}
+              </label>
+            ))}
+          </div>
+        </fieldset>
+      ))}
 
       <div className="flex items-center gap-3">
         <button

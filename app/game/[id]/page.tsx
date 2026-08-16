@@ -8,6 +8,7 @@ import { OrganizerCard } from "@/components/game/OrganizerCard";
 import { PlayersList } from "@/components/game/PlayersList";
 import { ClaimBar } from "@/components/game/ClaimBar";
 import { ShareButton } from "@/components/game/ShareButton";
+import { venueDisplayName } from "@/lib/venues/displayName";
 import { bookingBadge } from "@/lib/booking/badges";
 import { ToastFromQuery } from "@/components/ToastFromQuery";
 import { WaitlistPanel } from "@/components/game/WaitlistPanel";
@@ -224,7 +225,17 @@ export default async function GameDetailPage({ params, searchParams }: GamePageP
         the bottom of the viewport, so it is reachable from wherever the reader
         happens to form the decision.
       */}
-      <GameHero venue={game.venue} venueRow={venueRow} supabaseUrl={supabaseUrl} />
+      {/*
+        THE PREFIX RULE reaches the detail header too (Section 4, item 1) — the
+        same helper the pills use, so one game reads identically on the list
+        and one tap later. `venueRow` is already fetched here, so the pitch
+        name costs nothing extra.
+      */}
+      <GameHero
+        venue={venueDisplayName(game.venue, venueRow?.pitch_name)}
+        venueRow={venueRow}
+        supabaseUrl={supabaseUrl}
+      />
 
       <InfoCard game={game} venueRow={venueRow} endsAt={endsAt} />
 
@@ -352,8 +363,17 @@ export default async function GameDetailPage({ params, searchParams }: GamePageP
         <h2 className="m-0 text-body-lg font-semibold text-bone">
           {t.games.practicalTitle}
         </h2>
+        {/*
+          FIVE LINES (Section 4, item 7): duration, arrival, the meeting point,
+          and the two rotations.
+
+          THE MEETING POINT'S LINE IS HIDDEN WHEN EMPTY rather than rendered
+          with a placeholder — most games will not carry one, and "Meeting
+          point: —" is a question rather than an answer. It is a per-GAME
+          field, not a venue one: a pitch has an entrance, but a fixture can
+          meet by the changing rooms this week and at the far goal next.
+        */}
         <ul className="mt-3 flex list-none flex-col gap-2 p-0 text-[14px] leading-relaxed text-bone">
-          <li>{t.games.practicalArrival}</li>
           <li>
             <span className="text-muted">{t.games.practicalDuration}: </span>
             {t.games.practicalDurationValue.replace(
@@ -361,6 +381,9 @@ export default async function GameDetailPage({ params, searchParams }: GamePageP
               String(resolveDurationMinutes(game.duration_minutes)),
             )}
           </li>
+          <li>{t.games.practicalArrival}</li>
+          <li>{t.games.practicalRotatingKeepers}</li>
+          <li>{t.games.practicalRotatingSubs}</li>
         </ul>
       </section>
 

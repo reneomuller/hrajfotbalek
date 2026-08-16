@@ -80,7 +80,12 @@ describe("buildDayTabs", () => {
     // English STATED, not defaulted: `DEFAULT_LOCALE` is Czech now.
     const tabs = buildDayTabs([], now, "en", strings);
     expect(tabs[0]).toMatchObject({ weekday: strings.games.dayToday, dayOfMonth: "3" });
-    expect(tabs[1]).toMatchObject({ weekday: strings.games.dayTomorrow, dayOfMonth: "4" });
+    // The CELL uses the short form — English "Tomorrow" is 48px in a 34px
+    // cell, and all eight cells staying visible at 390px wins over the word.
+    expect(tabs[1]).toMatchObject({
+      weekday: strings.games.dayTomorrowShort,
+      dayOfMonth: "4",
+    });
     // The 5th of August 2026 is a Wednesday.
     expect(tabs[2]).toMatchObject({ weekday: "WED", dayOfMonth: "5" });
   });

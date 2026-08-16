@@ -8,7 +8,11 @@ import { PassPanel } from "@/components/pass/PassPanel";
 import { getOwnNextBooking } from "@/lib/booking/queries";
 import { getSessionUser } from "@/lib/auth/session";
 import { buildDayTabs, groupByDay, pragueDayKey, resolveSelectedDay } from "@/lib/games/days";
-import { listRostersByGame, listUpcomingGames } from "@/lib/games/queries";
+import {
+  listPitchNamesByGame,
+  listRostersByGame,
+  listUpcomingGames,
+} from "@/lib/games/queries";
 import { getLocale, getStrings } from "@/lib/i18n/server";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -68,7 +72,7 @@ export default async function GamesPage({
   const { games, now } = await listUpcomingGames(null);
 
   const signedIn = (await getSessionUser()) !== null;
-  const [rosters, nextOwn] = await Promise.all([
+  const [rosters, pitchNames, nextOwn] = await Promise.all([
     /*
      * THE ROSTERS ARE BACK, and this is ruling D's cost rather than a
      * regression of the v1.1.4 removal. They were dropped because eight
@@ -77,6 +81,7 @@ export default async function GamesPage({
      * figure, which costs nothing. One round trip for the whole page.
      */
     listRostersByGame(games.map(({ game }) => game.id)),
+    listPitchNamesByGame(games.map(({ game }) => game)),
     // Own-row RLS makes this empty for a signed-out visitor, which is the
     // right answer — but skipping it saves a round trip on the anonymous
     // path, which is the common one from a shared link.
@@ -181,6 +186,7 @@ export default async function GamesPage({
                     bookedCount={bookedCount}
                     roster={rosters.get(game.id) ?? []}
                     supabaseUrl={supabaseUrl}
+                    pitchName={pitchNames.get(game.id)}
                   />
                 ))}
               </div>

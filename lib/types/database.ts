@@ -389,6 +389,12 @@ export interface Database {
            * recorded" and "we do not know" are the same thing here.
            */
           amenities: string[];
+          /**
+           * The pitch's own name, rendered before `name` on a game pill
+           * (migration 20260816120000). Null is normal — no row is blocked on
+           * a name nobody has written yet.
+           */
+          pitch_name: string | null;
           city: string;
           brand: string;
           created_at: string;

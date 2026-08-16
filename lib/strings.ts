@@ -464,6 +464,14 @@ export const strings = {
     // --- what's included (v1.2 §5.7) ----------------------------------------
     includedTitle: "What's included",
     /*
+     * THE SECOND HEADING (Section 4, item 2). The column is one flat `text[]`;
+     * the split between the two groups is the app-side catalog's, recovered
+     * from the grouping this repo already documented in
+     * `lib/venues/amenities.ts` and migration 20260802210000 rather than
+     * invented here.
+     */
+    pitchAmenitiesTitle: "Pitch amenities",
+    /*
      * The amenity catalog, in the same order `lib/venues/amenities.ts` renders
      * it. Every key here has a matching value in `venues_amenities_catalog`
      * (migration 38) and an icon in `components/Icon.tsx` — three places, one
@@ -483,7 +491,15 @@ export const strings = {
     },
 
     practicalTitle: "Good to know",
-    practicalArrival: "Come 10 minutes before kick-off.",
+    /*
+     * GOOD TO KNOW's five lines (Section 4, item 7). Duration and arrival
+     * existed; the rotations are new, and the meeting point is a per-game
+     * field whose line is hidden when empty.
+     */
+    practicalRotatingKeepers: "Rotating goalkeepers",
+    practicalRotatingSubs: "Rotating subs",
+    practicalMeetingPoint: "Meeting point",
+    practicalArrival: "Arrive 10 minutes before the game",
     practicalDuration: "Duration",
     practicalDurationValue: "{minutes} minutes",
 
@@ -936,6 +952,8 @@ export const strings = {
     venueImageHint:
       "A file already committed under public/venues/ — e.g. prazacka.jpg. Leave empty for no photo.",
     // --- venue photograph (§5.4, migration 34) --------------------------------
+    venueAmenitiesIncluded: "What's included",
+    venueAmenitiesPitch: "Pitch amenities",
     venueAmenitiesTitle: "What this pitch provides",
     venueAmenitiesHint:
       "Ticked items appear on the game page as \"What's included\". This is a property of the VENUE, so every game at this pitch shows the same set — and unticking one is how you stop the page promising it.",

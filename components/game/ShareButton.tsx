@@ -1,4 +1,5 @@
 import { whatsAppShareUrl } from "@/lib/games/share";
+import { WhatsAppIcon } from "@/components/BrandIcon";
 import { getStrings } from "@/lib/i18n/server";
 
 /**
@@ -38,11 +39,22 @@ export async function ShareButton({
       rel="noopener noreferrer"
       data-testid="share-whatsapp"
       aria-label={t.games.shareWhatsApp}
-      className={`inline-flex items-center gap-2 rounded-control border border-hairline-strong px-3 py-2 uppercase tracking-eyebrow text-bone no-underline transition hover:border-whatsapp ${
+      /*
+        BIGGER, WITH THE REAL LOGO (Section 4, item 8). It was a 10px green
+        DOT beside tracked capitals at eyebrow size — a placeholder standing in
+        for a mark the product already has, on the one control that sends a
+        game to the group this product exists to replace. `WhatsAppIcon` is the
+        same glyph the organizer row uses, so the two agree about what WhatsApp
+        looks like.
+
+        Sentence case with it (ruling B) — `eyebrow` is the only uppercase
+        style, and a button is not one.
+      */
+      className={`inline-flex min-h-[52px] items-center gap-3 rounded-control border border-hairline-strong px-5 text-body-lg font-semibold text-bone no-underline transition-colors hover:border-whatsapp ${
         size === "slim" ? "text-[9px]" : "text-[10px]"
       }`}
     >
-      <span aria-hidden className="inline-block h-[10px] w-[10px] rounded-full bg-whatsapp" />
+      <WhatsAppIcon className="h-6 w-6 shrink-0" />
       {t.games.shareWhatsApp}
     </a>
   );

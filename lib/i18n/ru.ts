@@ -256,6 +256,7 @@ export const ru: StringsOverlay = {
     gamePlayedOne: "1 матч",
     gamesPlayedNone: "Первый матч",
     includedTitle: "Что входит",
+    pitchAmenitiesTitle: "Инфраструктура площадки",
     amenities: {
       bibs: "Манишки",
       gloves: "Вратарские перчатки",
@@ -269,6 +270,9 @@ export const ru: StringsOverlay = {
       first_aid: "Аптечка",
     },
     practicalTitle: "Полезно знать",
+    practicalRotatingKeepers: "Вратари меняются",
+    practicalRotatingSubs: "Замены по очереди",
+    practicalMeetingPoint: "Место встречи",
     practicalArrival: "Приходи за 10 минут до начала.",
     practicalDuration: "Длительность",
     practicalDurationValue: "{minutes} минут",

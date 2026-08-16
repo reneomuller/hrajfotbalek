@@ -6,7 +6,11 @@ import { FaqPanel } from "@/components/home/FaqPanel";
 import { PlayerOfMonthPanel } from "@/components/home/PlayerOfMonthPanel";
 import { GameCard } from "@/components/game/GameCard";
 import { getHomeContent } from "@/lib/home/queries";
-import { listRostersByGame, listUpcomingGames } from "@/lib/games/queries";
+import {
+  listPitchNamesByGame,
+  listRostersByGame,
+  listUpcomingGames,
+} from "@/lib/games/queries";
 import { groupByDay } from "@/lib/games/days";
 import { getLocale } from "@/lib/i18n/server";
 import { siteUrl } from "@/lib/site";
@@ -64,6 +68,8 @@ export default async function LandingPage() {
   // preview needs the same roster read the list does — one round trip for all
   // three games rather than one apiece.
   const rosters = await listRostersByGame(games.map(({ game }) => game.id));
+  // Pitch names, live from `venues` — see `listPitchNamesByGame`.
+  const pitchNames = await listPitchNamesByGame(games.map(({ game }) => game));
   // Storage origin for the Player-of-the-Month photo (§4a). Absent, the panel
   // falls back to initials, which is the ordinary case rather than a failure.
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
@@ -226,6 +232,7 @@ export default async function LandingPage() {
                             bookedCount={bookedCount}
                             roster={rosters.get(game.id) ?? []}
                             supabaseUrl={supabaseUrl}
+                            pitchName={pitchNames.get(game.id)}
                           />
                         ))}
                       </div>

@@ -357,6 +357,42 @@ export async function getRoster(gameId: string): Promise<RosterRow[]> {
  * between requests looks broken, so a deterministic order matters more here
  * than the real one.
  */
+/**
+ * Pitch names for a set of games, keyed by game id, in one round trip.
+ *
+ * READ FROM `venues` THROUGH `venue_id`, never denormalised onto `games`.
+ * `games.venue` is a deliberate snapshot — a rename must not rewrite the name
+ * on a game already played (migration 20260722110000) — so the pitch name is
+ * looked up live and joined at render. One extra query for a whole page, the
+ * same shape as the roster lookup beside it.
+ *
+ * A game with a null `venue_id` simply has no entry, which renders the venue
+ * name alone. Those exist: every game created before the `venues` table
+ * carried one until migration 19 backfilled them.
+ */
+export async function listPitchNamesByGame(
+  games: { id: string; venue_id: string | null }[],
+): Promise<Map<string, string>> {
+  const pitchNames = new Map<string, string>();
+  const venueIds = [...new Set(games.map((g) => g.venue_id).filter((id): id is string => id !== null))];
+  if (venueIds.length === 0) return pitchNames;
+
+  const supabase = await createServerSupabaseClient();
+  const { data, error } = await supabase
+    .from("venues")
+    .select("id, pitch_name")
+    .in("id", venueIds);
+
+  if (error || !data) return pitchNames;
+
+  const byVenue = new Map(data.map((row) => [row.id, row.pitch_name]));
+  for (const game of games) {
+    const pitch = game.venue_id ? byVenue.get(game.venue_id) : null;
+    if (pitch) pitchNames.set(game.id, pitch);
+  }
+  return pitchNames;
+}
+
 export async function listRostersByGame(
   gameIds: string[],
 ): Promise<Map<string, RosterAvatar[]>> {

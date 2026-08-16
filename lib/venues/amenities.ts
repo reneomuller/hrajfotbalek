@@ -16,18 +16,27 @@ import { strings, type Strings } from "@/lib/strings";
  * will it be like when I get there" — and the first question is the one that
  * changes whether someone packs a bag.
  */
-export const AMENITIES = [
-  "bibs",
-  "gloves",
-  "balls",
-  "water",
-  "drinks",
-  "showers",
-  "lockers",
-  "parking",
-  "wifi",
-  "first_aid",
-] as const;
+/**
+ * WHAT THE ORGANIZER BRINGS — the answer to "what do I need to bring".
+ *
+ * THE GROUPING IS RECOVERED, NOT INVENTED (Section 4, item 2). The column is
+ * a flat `text[]` with no group field, but this file's own comment and
+ * migration 20260802210000 both describe exactly these two sets: what the
+ * organizer brings, then what the pitch happens to have. The render ORDER
+ * already encoded the split; this promotes it from a comment to a constant so
+ * two headings can read from it.
+ *
+ * A NEW AMENITY NOW NEEDS A DECISION about which list it joins — which is the
+ * cost migration 20260802210000 named when it argued for one list. That
+ * argument was about the COLUMN, and the column is unchanged: still one array,
+ * still one CHECK, still one grid's worth of data.
+ */
+export const INCLUDED_AMENITIES = ["bibs", "gloves", "balls", "water", "drinks"] as const;
+
+/** WHAT THE PITCH HAS — "what will it be like when I get there". */
+export const PITCH_AMENITIES = ["showers", "lockers", "parking", "wifi", "first_aid"] as const;
+
+export const AMENITIES = [...INCLUDED_AMENITIES, ...PITCH_AMENITIES] as const;
 
 export type Amenity = (typeof AMENITIES)[number];
 

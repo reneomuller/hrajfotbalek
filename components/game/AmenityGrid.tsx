@@ -1,4 +1,5 @@
-import { Icon } from "@/components/Icon";
+import { Icon, type IconName } from "@/components/Icon";
+import { INCLUDED_AMENITIES, PITCH_AMENITIES } from "@/lib/venues/amenities";
 import { amenityItems } from "@/lib/venues/amenities";
 import { getStrings } from "@/lib/i18n/server";
 
@@ -25,18 +26,58 @@ import { getStrings } from "@/lib/i18n/server";
  */
 export async function AmenityGrid({ amenities }: { amenities: string[] | null }) {
   const t = await getStrings();
-  const items = amenityItems(amenities, t);
 
-  if (items.length === 0) return null;
+  /*
+   * TWO SECTIONS OVER ONE COLUMN (Section 4, item 2).
+   *
+   * The data is unchanged: `venues.amenities` is still one `text[]` under one
+   * CHECK. What splits is the RENDERING, along the grouping this repo already
+   * documented — what the organizer brings, then what the pitch has. Each
+   * section disappears when it has nothing, so a venue that only lends bibs
+   * shows one heading rather than one heading and an empty box.
+   */
+  const included = amenityItems(amenities, t).filter((item) =>
+    (INCLUDED_AMENITIES as readonly string[]).includes(item.key),
+  );
+  const pitch = amenityItems(amenities, t).filter((item) =>
+    (PITCH_AMENITIES as readonly string[]).includes(item.key),
+  );
+
+  if (included.length === 0 && pitch.length === 0) return null;
 
   return (
-    <section
-      data-testid="amenity-grid"
-      className="mt-4 rounded-card bg-surface p-5"
-    >
-      <h2 className="m-0 text-[17px] font-bold uppercase tracking-wide text-white">
-        {t.games.includedTitle}
-      </h2>
+    <>
+      {included.length > 0 && (
+        <AmenitySection
+          testId="amenity-grid"
+          title={t.games.includedTitle}
+          items={included}
+        />
+      )}
+      {pitch.length > 0 && (
+        <AmenitySection
+          testId="pitch-amenity-grid"
+          title={t.games.pitchAmenitiesTitle}
+          items={pitch}
+        />
+      )}
+    </>
+  );
+}
+
+function AmenitySection({
+  testId,
+  title,
+  items,
+}: {
+  testId: string;
+  title: string;
+  items: { key: string; icon: IconName; label: string }[];
+}) {
+  return (
+    <section data-testid={testId} className="mt-4 rounded-card bg-surface p-5">
+      {/* WHITE (Section 4, item 6) — these were grey section labels. */}
+      <h2 className="m-0 text-body-lg font-semibold text-white">{title}</h2>
 
       <ul className="mt-4 grid list-none grid-cols-2 gap-x-4 gap-y-4 p-0">
         {items.map((item) => (
@@ -47,8 +88,7 @@ export async function AmenityGrid({ amenities }: { amenities: string[] | null })
             className="flex items-center gap-3"
           >
             {/* The tinted tile is what makes ten glyphs read as one set rather
-                than as ten drawings — the reference's facilities grid does the
-                same thing, and it is most of why it looks deliberate. */}
+                than as ten drawings. */}
             <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-control bg-volt/[.10] text-volt">
               <Icon name={item.icon} className="h-[18px] w-[18px]" />
             </span>

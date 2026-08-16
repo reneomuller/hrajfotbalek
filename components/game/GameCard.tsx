@@ -2,6 +2,7 @@ import Link from "next/link";
 import { AvatarRow } from "@/components/game/AvatarRow";
 import { CapacityBar } from "@/components/game/CapacityBar";
 import { CardBadges } from "@/components/game/CardBadges";
+import { venueDisplayName } from "@/lib/venues/displayName";
 import { SpotsLeft } from "@/components/game/SpotsLeft";
 import { formatTime } from "@/lib/format";
 import type { RosterAvatar } from "@/lib/games/queries";
@@ -65,6 +66,7 @@ export async function GameCard({
   bookedCount,
   roster = [],
   supabaseUrl,
+  pitchName,
   past = false,
 }: {
   game: GameCardGame;
@@ -73,6 +75,12 @@ export async function GameCard({
   roster?: RosterAvatar[];
   /** Storage origin for avatar photos; absent falls back to initials. */
   supabaseUrl?: string;
+  /**
+   * The pitch's own name, read live from `venues` (Section 3 item 4). Absent
+   * for most games and for any with a null `venue_id`, which renders the venue
+   * name alone.
+   */
+  pitchName?: string | null;
   /** The `past` state — 45% opacity, not tappable, not focusable. */
   past?: boolean;
   /*
@@ -96,7 +104,7 @@ export async function GameCard({
         height back without dropping anything.
       */}
       <span data-testid="card-venue" className="block truncate text-body-lg font-semibold leading-tight text-bone">
-        {game.venue}
+        {venueDisplayName(game.venue, pitchName)}
       </span>
 
       <div className="mt-[6px] flex items-center justify-between gap-2">

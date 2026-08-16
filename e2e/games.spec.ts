@@ -1058,6 +1058,9 @@ test("the detail carries arrival and duration, with equipment in the venue grid"
     const block = page.getByTestId("practical-info");
     await expect(block).toBeVisible();
     await expect(block).toContainText("10 minutes before");
+    // The two rotations joined it (Section 4, item 7).
+    await expect(block).toContainText("Rotating goalkeepers");
+    await expect(block).toContainText("Rotating subs");
     // The duration agrees with the span at the top of the page, because both
     // resolve through the same helper.
     await expect(block).toContainText("90 minutes");
@@ -1065,11 +1068,23 @@ test("the detail carries arrival and duration, with equipment in the venue grid"
     // Equipment is a venue claim now, and it is no longer in this block.
     await expect(block).not.toContainText("bibs");
 
-    const grid = page.getByTestId("amenity-grid");
-    await expect(grid).toBeVisible();
-    await expect(grid.getByTestId("amenity")).toHaveCount(3);
-    await expect(grid.locator('[data-amenity="bibs"]')).toBeVisible();
-    await expect(grid.locator('[data-amenity="showers"]')).toBeVisible();
+    /*
+     * TWO SECTIONS NOW (Section 4, item 2), splitting one column along the
+     * grouping this repo already documented: what the organizer brings, then
+     * what the pitch has. This fixture straddles both — bibs and gloves are
+     * brought, showers are the pitch's — which is why it is the one that
+     * proves the split rather than merely surviving it.
+     */
+    const included = page.getByTestId("amenity-grid");
+    await expect(included).toBeVisible();
+    await expect(included.getByTestId("amenity")).toHaveCount(2);
+    await expect(included.locator('[data-amenity="bibs"]')).toBeVisible();
+    await expect(included.locator('[data-amenity="gloves"]')).toBeVisible();
+
+    const pitch = page.getByTestId("pitch-amenity-grid");
+    await expect(pitch).toBeVisible();
+    await expect(pitch.getByTestId("amenity")).toHaveCount(1);
+    await expect(pitch.locator('[data-amenity="showers"]')).toBeVisible();
   } finally {
     await destroyScratchGame(game.id);
   }

@@ -253,6 +253,7 @@ export const cs: StringsOverlay = {
     gamePlayedOne: "1 zápas",
     gamesPlayedNone: "První zápas",
     includedTitle: "Co je v ceně",
+    pitchAmenitiesTitle: "Vybavení hřiště",
     amenities: {
       bibs: "Rozlišováky",
       gloves: "Brankářské rukavice",
@@ -266,6 +267,9 @@ export const cs: StringsOverlay = {
       first_aid: "Lékárnička",
     },
     practicalTitle: "Dobré vědět",
+    practicalRotatingKeepers: "Střídání brankářů",
+    practicalRotatingSubs: "Střídání náhradníků",
+    practicalMeetingPoint: "Kde se sejdeme",
     practicalArrival: "Přijď 10 minut před výkopem.",
     practicalDuration: "Délka",
     practicalDurationValue: "{minutes} minut",

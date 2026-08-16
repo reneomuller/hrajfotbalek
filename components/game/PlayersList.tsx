@@ -1,3 +1,4 @@
+import { AvatarRow } from "@/components/game/AvatarRow";
 import { initials } from "@/lib/roster/initials";
 import { avatarUrl } from "@/lib/storage/avatar";
 import { getStrings } from "@/lib/i18n/server";
@@ -48,7 +49,8 @@ export async function PlayersList({ rows, supabaseUrl }: PlayersListProps) {
       data-testid="players-list"
       className="mt-4 rounded-card bg-surface p-5"
     >
-      <h2 className="m-0 text-[10px] uppercase tracking-eyebrow text-muted">
+      {/* WHITE (Section 4, item 6) — this section label was grey. */}
+      <h2 className="m-0 text-[10px] uppercase tracking-eyebrow text-white">
         {t.games.playersTitle.replace("{count}", String(rows.length))}
       </h2>
 
@@ -63,7 +65,34 @@ export async function PlayersList({ rows, supabaseUrl }: PlayersListProps) {
           {t.games.rosterEmpty}
         </p>
       ) : (
-        <ul className="mt-3 flex list-none flex-col p-0" data-testid="roster">
+        <>
+          {/*
+            THE STACK, AS THE WAITING LIST DRAWS ITS ENTRIES (Section 4, item
+            5) — overlapping circles above the named list, the same
+            `AvatarRow` that panel uses.
+
+            WITH PHOTOS HERE, unlike the waitlist. That is not an
+            inconsistency: §4a admitted `photo_path` to the ROSTER view and
+            deliberately not to `game_waitlist_public`, so the waitlist passes
+            null because it has nothing else to pass. This section has the
+            column and uses it.
+
+            The named list stays beneath, because it carries the games-played
+            count — the thing that answers whether these are people who keep
+            coming back, which a row of faces cannot.
+          */}
+          <div className="mt-3">
+            <AvatarRow
+              players={rows.map((row) => ({
+                nickname: row.nickname,
+                photoPath: row.photo_path,
+              }))}
+              supabaseUrl={supabaseUrl}
+              max={14}
+            />
+          </div>
+
+          <ul className="mt-4 flex list-none flex-col p-0" data-testid="roster">
           {rows.map((row, i) => (
             <li
               key={`${row.nickname}-${i}`}
@@ -93,7 +122,8 @@ export async function PlayersList({ rows, supabaseUrl }: PlayersListProps) {
               )}
             </li>
           ))}
-        </ul>
+          </ul>
+        </>
       )}
     </section>
   );
