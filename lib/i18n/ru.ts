@@ -214,6 +214,7 @@ export const ru: StringsOverlay = {
     dayFilterAll: "Все",
     dayToday: "Сегодня",
     dayTomorrow: "Завтра",
+    dayTomorrowShort: "Завтра",
     rosterReserved: "держит место",
     rosterConfirmed: "в составе",
     filledLabel: "ЗАНЯТО",

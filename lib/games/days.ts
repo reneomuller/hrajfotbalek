@@ -106,14 +106,17 @@ export function buildDayTabs(
        * that `PO` means now. The rest keep their weekday, which is what makes
        * the row a calendar rather than a list of relative words.
        *
-       * The words come from the string table, so they translate; the same two
-       * keys the pills use through `relativeDayLabel`.
+       * THE CELL USES THE SHORT FORM, the pills and headings the full word.
+       * All eight cells must stay visible at 390px, which puts them at 34px —
+       * and English "Tomorrow" measures 48px there, so it spilled into its
+       * neighbour. Czech `Zítra` and Russian `Завтра` are 22px and keep their
+       * whole word; `dayTomorrowShort` is overridden only where it must be.
        */
       weekday:
         offset === 0
           ? t.games.dayToday
           : offset === 1
-            ? t.games.dayTomorrow
+            ? t.games.dayTomorrowShort
             : weekdayLabel(key, locale),
       dayOfMonth: String(Number(key.slice(8, 10))),
       count: counts.get(key) ?? 0,

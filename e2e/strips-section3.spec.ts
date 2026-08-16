@@ -41,7 +41,9 @@ test.describe("Section 3 strips", () => {
     const cells = page.getByTestId("day-tab");
     await expect(cells).toHaveCount(8);
     await expect(cells.nth(0)).toContainText("Today");
-    await expect(cells.nth(1)).toContainText("Tomorrow");
+    // "Tmrw" in the CELL — the full word does not fit 34px, and all eight
+    // cells staying visible at 390px wins over the whole word (owner ruling).
+    await expect(cells.nth(1)).toContainText("Tmrw");
     await expect(page.getByTestId("card-when").first()).toHaveText(/^\d{2}:\d{2}$/);
 
     // The calendar row and the pass panel, close up — items 1 and 2.

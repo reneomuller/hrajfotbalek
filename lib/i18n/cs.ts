@@ -211,6 +211,7 @@ export const cs: StringsOverlay = {
     dayFilterAll: "Vše",
     dayToday: "Dnes",
     dayTomorrow: "Zítra",
+    dayTomorrowShort: "Zítra",
     rosterReserved: "drží místo",
     rosterConfirmed: "v sestavě",
     filledLabel: "OBSAZENO",

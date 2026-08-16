@@ -363,6 +363,20 @@ export const strings = {
     dayFilterAll: "All",
     dayToday: "Today",
     dayTomorrow: "Tomorrow",
+    /*
+     * THE CALENDAR CELL'S ABBREVIATION, English only.
+     *
+     * All eight cells must stay visible at 390px (owner ruling) — a calendar
+     * that scrolls hides days, which is the failure the eight-box strip was
+     * reversed for. `Tomorrow` is the one label that cannot fit a cell narrow
+     * enough for eight; Czech `Zítra` and Russian `Завтра` fit, so they keep
+     * their whole word and this key is only overridden where it is needed.
+     *
+     * The PILLS and the day-group HEADINGS keep the full word — they have a
+     * line to themselves, and an abbreviation there would be a cost with no
+     * benefit.
+     */
+    dayTomorrowShort: "Tmrw",
     // Roster badges. The view projects booking status only — `reserved` means
     // a spot is held but unpaid, `confirmed` means paid or covered by credit.
     rosterReserved: "holding",
