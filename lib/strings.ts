@@ -98,12 +98,12 @@ export const strings = {
       {
         index: "02",
         title: "Claim your spot",
-        body: "Enter a nickname and you are in the lineup.",
+        body: "Secure your spot by paying a fee. We do the rest.",
       },
       {
         index: "03",
-        title: "Show up and play",
-        body: "Pay ahead from your phone. Done.",
+        title: "Come and play",
+        body: "Show up at the pitch and enjoy the game",
       },
     ],
     nextMatchEyebrow: "//",
@@ -117,13 +117,10 @@ export const strings = {
     // sentence. "7+ / games every week" reads as one line on the card.
     statsGamesLabel: "Games every week",
     statsPlayersLabel: "Active players",
-    // Beneath the how-it-works strip, because "what do I bring" is the second
-    // question anyone asks and the answer removes a reason not to come.
-    equipmentLine: "Training bibs, goalie gloves and balls provided.",
     // Was "NEXT MATCH", one card. Three rows now — see the section comment in
     // app/page.tsx: one card could only ever answer "is there a game", and the
     // question a visitor arrives with is "is there a game I can make".
-    nextMatchesLabel: "Next matches",
+    nextMatchesLabel: "Upcoming matches",
     nextMatchesAll: "All games →",
     potmTitle: "Player of the month",
     potmEmpty: "Nobody picked yet — could be you.",
@@ -137,7 +134,7 @@ export const strings = {
 
     community: {
       title: "Join our community",
-      body: "New games every week. Follow along and play.",
+      body: "Follow our socials to keep up to date with the latest community news",
       whatsapp: "WhatsApp group",
       whatsappUrl: "https://chat.whatsapp.com/LjPjGf3rf32CNifizwzsW9?mode=gi_t",
       instagram: "@HRAJFOTBAL",

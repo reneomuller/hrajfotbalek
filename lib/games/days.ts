@@ -270,3 +270,44 @@ function dayHeading(
   if (key === tomorrow) return `${t.games.dayTomorrow} · ${full}`;
   return full;
 }
+
+/**
+ * "Today", "Tomorrow", or the date — the label a game pill carries.
+ *
+ * ONE IMPLEMENTATION, TWO SURFACES (Section 2 item 7, and Section 3 reuses
+ * it). Two surfaces deciding independently what "today" means is how one of
+ * them ends up a day out at a Prague midnight, and this product's notion of
+ * which evening a game belongs to is the pitch's rather than the reader's.
+ *
+ * THE COMPARISON IS BETWEEN PRAGUE DAY KEYS, never between instants. A 22:30Z
+ * kick-off on Monday is 00:30 Tuesday in Prague and must read "Tomorrow";
+ * subtracting timestamps and dividing by 86,400,000 would call it Today, and
+ * would be wrong for precisely the late-evening games this product runs.
+ *
+ * `now` IS PASSED IN, because reading the clock during render is impure and
+ * the query layer already reads it once per request — the same discipline
+ * `hasStarted` and the day tabs follow, and the reason a game and the label
+ * above it cannot disagree about what day it is.
+ */
+export function relativeDayLabel(
+  startsAt: Date | string | number,
+  now: Date | string | number,
+  t: Strings = strings,
+  locale: Locale = DEFAULT_LOCALE,
+): string {
+  const day = pragueDayKey(startsAt);
+  const today = pragueDayKey(now);
+
+  if (day === today) return t.games.dayToday;
+  if (day === addDays(today, 1)) return t.games.dayTomorrow;
+
+  return capitalise(
+    new Intl.DateTimeFormat(DATE_LOCALE[locale], {
+      timeZone: DISPLAY_TIME_ZONE,
+      weekday: "short",
+      day: "numeric",
+      month: "short",
+    }).format(new Date(startsAt)),
+    locale,
+  );
+}

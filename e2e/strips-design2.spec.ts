@@ -173,8 +173,10 @@ test("B5-B7-home", async ({ page }) => {
   await page.getByTestId("community-panel").scrollIntoViewIfNeeded();
   await strip(page, "B5-community-and-stats");
 
-  await page.getByTestId("stats-panel").scrollIntoViewIfNeeded();
-  await strip(page, "B5-stats-panel");
+  // The standalone stats panel is gone (Section 2, item 8) — the two numbers
+  // live in the community panel, which is what this strip now captures.
+  await page.getByTestId("community-stats").scrollIntoViewIfNeeded();
+  await strip(page, "B5-community-stats");
 
   // Item 6 — the heading reads FAQ.
   await page.getByTestId("faq-panel").scrollIntoViewIfNeeded();

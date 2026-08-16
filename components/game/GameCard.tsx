@@ -2,8 +2,10 @@ import Link from "next/link";
 import { AvatarRow } from "@/components/game/AvatarRow";
 import { CapacityBar } from "@/components/game/CapacityBar";
 import { CardBadges } from "@/components/game/CardBadges";
+import { relativeDayLabel } from "@/lib/games/days";
+import { getLocale, getStrings } from "@/lib/i18n/server";
 import { SpotsLeft } from "@/components/game/SpotsLeft";
-import { formatGameDate, formatTime } from "@/lib/format";
+import { formatTime } from "@/lib/format";
 import type { RosterAvatar } from "@/lib/games/queries";
 import type { Database } from "@/lib/types/database";
 
@@ -66,6 +68,7 @@ export async function GameCard({
   roster = [],
   supabaseUrl,
   past = false,
+  now,
 }: {
   game: GameCardGame;
   bookedCount: number;
@@ -75,7 +78,19 @@ export async function GameCard({
   supabaseUrl?: string;
   /** The `past` state — 45% opacity, not tappable, not focusable. */
   past?: boolean;
+  /**
+   * The instant the list was decorated at, from the query layer.
+   *
+   * PASSED IN RATHER THAN READ HERE: reading the clock during render is
+   * impure, and a card that read it independently could disagree with the day
+   * heading above it about whether a game is "Today" — across a Prague
+   * midnight, which is exactly when it matters.
+   */
+  now: number;
 }) {
+
+  const t = await getStrings();
+  const locale = await getLocale();
 
   const body = (
     <>
@@ -103,7 +118,9 @@ export async function GameCard({
           data-testid="card-when"
           className="min-w-0 truncate rounded-pill border border-hairline-strong bg-bone/[.06] px-2 py-[2px] text-[10px] font-semibold text-bone"
         >
-          {`${formatGameDate(game.starts_at)} • ${formatTime(game.starts_at)}`}
+          {`${relativeDayLabel(game.starts_at, now, t, locale)} • ${formatTime(
+            game.starts_at,
+          )}`}
         </span>
 
         <CardBadges format={game.format} surface={game.surface} size="slim" />

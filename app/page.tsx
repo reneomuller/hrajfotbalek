@@ -4,7 +4,6 @@ import { EmptyState } from "@/components/EmptyState";
 import { CommunityPanel } from "@/components/home/CommunityPanel";
 import { FaqPanel } from "@/components/home/FaqPanel";
 import { PlayerOfMonthPanel } from "@/components/home/PlayerOfMonthPanel";
-import { StatsPanel } from "@/components/home/StatsPanel";
 import { GameCard } from "@/components/game/GameCard";
 import { getHomeContent } from "@/lib/home/queries";
 import { listRostersByGame, listUpcomingGames } from "@/lib/games/queries";
@@ -36,32 +35,6 @@ export async function generateMetadata(): Promise<Metadata> {
 // request rather than being statically cached at build time.
 export const dynamic = "force-dynamic";
 
-/**
- * A line of copy split at its SENTENCE boundaries, so each sentence gets its
- * own line and cannot be broken across one.
- *
- * `text-wrap: balance` alone got the orphan out — it evened the two lines in
- * every language — but in English it balanced to "…repeats itself. Find" /
- * "a game, claim your spot, show up.", which has no orphan and still does not
- * read as two phrases. Czech and Russian happened to land on the sentence
- * boundary by length, which is luck rather than layout.
- *
- * So the boundary is made explicit and balance stays INSIDE each sentence, for
- * the case where one is long enough to wrap on its own.
- *
- * A HARDCODED `<br>` was the alternative and is a decision about English: the
- * three strings are different lengths, so it fixes one language and orphans
- * another. This reads the boundary out of whatever string it is given.
- *
- * Falls back to the whole string when there is no boundary to find, so a copy
- * edit that drops the full stop degrades to today's behaviour rather than to
- * an empty paragraph.
- */
-function sentences(text: string): string[] {
-  const parts = text.match(/[^.!?]+[.!?]*\s*/g);
-  if (!parts || parts.length < 2) return [text];
-  return parts.map((part) => part.trim()).filter(Boolean);
-}
 
 export default async function LandingPage() {
   const t = await getStrings();
@@ -80,7 +53,10 @@ export default async function LandingPage() {
    * stays on it and the spots-left ladder cannot drift between the two
    * surfaces. Three of them fit in less height than the one card did.
    */
-  const { games } = await listUpcomingGames(3);
+  // `now` comes back FROM the query layer, which is where the clock is read —
+  // so the pills and the list agree about what "Today" means even across a
+  // Prague midnight.
+  const { games, now } = await listUpcomingGames(3);
   // The canonical card carries an avatar stack (§2.1, ruling D), so the home
   // preview needs the same roster read the list does — one round trip for all
   // three games rather than one apiece.
@@ -121,12 +97,17 @@ export default async function LandingPage() {
               THE WORDMARK KEEPS ITS CAPITALS, and it is the one exception
               ruling B itself writes down: §1.4 marks the `hero` step "Upper
               (wordmark)". A brand set in caps is a logotype, not a heading
-              shouting. Everything else on this page is sentence case now.
+              shouting.
+
+              ONE ROW AT EVERY WIDTH (Section 2, item 1). It was two, broken by
+              a hard `<br>`; the line wins over the size, so the clamp's floor
+              drops and `whitespace-nowrap` forbids a wrap the clamp cannot
+              prevent on its own. `text-[clamp(30px,9vw,88px)]` still reaches
+              the same 88px ceiling on a desktop — only the small end moves,
+              which is exactly where the second row was coming from.
             */}
-            <h1 className="m-0 font-display text-hero uppercase text-white">
-              {landing.headlineLead}
-              <br />
-              {landing.headlineAccent}
+            <h1 className="m-0 whitespace-nowrap font-display text-[clamp(30px,9vw,88px)] uppercase leading-[0.92] tracking-[-1.5px] text-white">
+              {landing.headlineLead} {landing.headlineAccent}
               <span className="text-volt">.</span>
             </h1>
 
@@ -135,36 +116,15 @@ export default async function LandingPage() {
             </div>
 
             {/*
-              `text-wrap: balance` rather than a manual break or an nbsp.
+              THE GREY SUB-LINE IS GONE (Section 2, item 2).
 
-              The line was orphaning a word or two onto a second row, which
-              reads as a rendering accident rather than as a phrase. The two
-              alternatives both fail on this string specifically: a hardcoded
-              `<br>` at the sentence boundary is a decision about ENGLISH, and
-              the Czech and Russian are different lengths, so it orphans in one
-              of them instead; an nbsp before the last word fixes one width and
-              moves the problem at another.
-
-              Balance is the property that actually describes the goal — even
-              line lengths, no short last line — and the browser applies it per
-              language and per width. Where it is unsupported the text wraps
-              exactly as it does today, so the floor is the current behaviour
-              rather than a broken one.
-
-              `max-w-[34ch]` replaces the 440px cap for the same reason: a
-              character-relative measure holds the line count steady when the
-              face changes, and item 11 is about to change the face.
+              `landing.vision` — "One match that repeats itself. Find a game,
+              claim your spot, show up." — sat under the tagline and said what
+              the three step cards below it say in more detail. The sentence
+              splitting that solved its orphan problem goes with it; the helper
+              is removed rather than left unused, because a dead helper is a
+              render site nobody knows about.
             */}
-            <p
-              data-testid="hero-vision"
-              className="mx-auto mt-[14px] max-w-[34ch] text-lede text-muted"
-            >
-              {sentences(landing.vision).map((sentence) => (
-                <span key={sentence} className="block text-balance">
-                  {sentence}
-                </span>
-              ))}
-            </p>
 
             {/* Primary CTA — the games list, not an in-page anchor. */}
             <Link
@@ -209,12 +169,6 @@ export default async function LandingPage() {
               ))}
             </div>
 
-            <p
-              data-testid="equipment-line"
-              className="mt-3 text-center text-[11px] tracking-[1px] text-volt-dim"
-            >
-              {landing.equipmentLine}
-            </p>
           </div>
         </section>
 
@@ -249,6 +203,7 @@ export default async function LandingPage() {
                     bookedCount={bookedCount}
                     roster={rosters.get(game.id) ?? []}
                     supabaseUrl={supabaseUrl}
+                    now={now}
                   />
                 ))}
               </div>
@@ -295,41 +250,37 @@ export default async function LandingPage() {
           </section>
 
           {/*
-            THE ACTIVE-PLAYERS BANNER, full width and ahead of the panels —
-            ruling J's order. It was a column in a four-panel row, where a pair
-            of numbers competed with a FAQ list for the same width and won
-            neither the space nor the attention.
-          */}
-          <section className="pt-8">
-            <StatsPanel
-              gamesPerWeek={home.gamesPerWeek}
-              activePlayers={home.activePlayers}
-            />
-          </section>
+            COMMUNITY (now carrying the numbers) beside PLAYER OF THE MONTH,
+            then the FAQ full width beneath — which is the SWAP of item 10.
 
-          {/*
-            THEN COMMUNITY, FAQ AND PLAYER OF THE MONTH, in that order.
+            THE FAQ IS THE WIDE ONE. It holds six entries and was competing for
+            a third of a row with a panel holding a name and a face; they have
+            exchanged places, and the FAQ's six dropdowns sit 3 + 3 in two
+            columns above `md`.
+
+            THE STANDALONE STATS BOX IS GONE (item 8) — its two numbers moved
+            into the community panel, which is where the invitation they
+            support already lived.
 
             PLAYER OF THE MONTH SURVIVES RULING J by the amendment of
-            2026-08-10 — recorded in DESIGN_SYSTEM_V1.3.md next to the order
-            it changes, because an un-amended ruling is how a reversal gets
-            quietly re-applied by a later session reading the document
-            faithfully. It keeps the hours-on-pitch stat, which is what earns
-            it the space the original ruling said it had not.
+            2026-08-10, and keeps the hours-on-pitch stat that earns it the
+            space the original ruling said it had not.
           */}
           <section className="pt-4">
-            {/*
-              `items-start`, so a panel is as tall as its own contents. The
-              row used to stretch every card to the tallest, which is what
-              detached the community links from their body copy.
-            */}
+            {/* `items-start`, so a panel is as tall as its own contents. */}
             <div className="flex flex-wrap items-start gap-4">
-              <CommunityPanel />
-              <FaqPanel />
+              <CommunityPanel
+                gamesPerWeek={home.gamesPerWeek}
+                activePlayers={home.activePlayers}
+              />
               <PlayerOfMonthPanel
                 player={home.playerOfMonth}
                 supabaseUrl={supabaseUrl}
               />
+            </div>
+
+            <div className="mt-4">
+              <FaqPanel />
             </div>
           </section>
 
@@ -348,7 +299,12 @@ export default async function LandingPage() {
             the two rather than by duplicating them here.
           */}
           <footer className="flex flex-wrap items-center gap-2 border-t border-hairline pb-6 pt-5">
-            <div className="text-[14px] font-bold tracking-wide text-muted">
+            {/*
+              WHITE, NOT GREY (item 11) — the volt accent on `FOTBAL` stays.
+              The mark reading `muted` made the brand the quietest thing in
+              its own footer.
+            */}
+            <div className="text-[14px] font-bold tracking-wide text-white">
               {landing.footer.wordmarkLead}{" "}
               <span className="text-volt-dim">
                 {landing.footer.wordmarkAccent}

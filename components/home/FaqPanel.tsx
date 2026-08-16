@@ -52,15 +52,25 @@ export async function FaqPanel() {
   return (
     <div
       data-testid="faq-panel"
-      className="flex min-w-[270px] flex-1 flex-col rounded-[20px] border border-hairline-volt bg-surface p-[22px]"
+      className="w-full rounded-[20px] border border-hairline-volt bg-surface p-[22px]"
     >
       <h3 className="m-0 mb-3 font-display text-community-title text-white">
         {t.faq.title}
       </h3>
 
-      <ul className="m-0 flex list-none flex-col gap-px p-0">
+      {/*
+        THREE AND THREE, above `md` (Section 2, item 10). `columns-2` rather
+        than a grid: a CSS column flow keeps the six in READING ORDER down the
+        first column and then the second, which a two-track grid would break
+        into 1-2 / 3-4 / 5-6 across the rows. `break-inside-avoid` stops an
+        open dropdown being split across the fold between columns.
+      */}
+      <ul className="m-0 list-none p-0 md:columns-2 md:gap-8">
         {items.map((item) => (
-          <li key={item.q} className="border-b border-hairline last:border-b-0">
+          <li
+            key={item.q}
+            className="break-inside-avoid border-b border-hairline last:border-b-0"
+          >
             <details className="group">
               <summary className="cursor-pointer list-none py-[10px] text-[13px] font-bold text-bone marker:content-none">
                 <span className="mr-2 text-volt group-open:hidden">+</span>

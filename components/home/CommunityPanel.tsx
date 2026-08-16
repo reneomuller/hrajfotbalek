@@ -17,9 +17,24 @@ import { getStrings } from "@/lib/i18n/server";
  * entire reason to put a mark on a button; a green circle is recognised as a
  * green circle.
  */
-export async function CommunityPanel() {
+export async function CommunityPanel({
+  gamesPerWeek = null,
+  activePlayers = null,
+}: {
+  /** The two claims that used to be a panel of their own (Section 2, item 8). */
+  gamesPerWeek?: number | null;
+  activePlayers?: number | null;
+} = {}) {
   const t = await getStrings();
   const { community } = t.landing;
+
+  const declared: { key: string; value: number | null; label: string }[] = [
+    { key: "games", value: gamesPerWeek, label: t.landing.statsGamesLabel },
+    { key: "players", value: activePlayers, label: t.landing.statsPlayersLabel },
+  ];
+  const stats = declared.filter(
+    (stat): stat is { key: string; value: number; label: string } => stat.value !== null,
+  );
 
   return (
     <div
@@ -35,6 +50,40 @@ export async function CommunityPanel() {
       <p className="mb-4 max-w-[320px] text-[13px] leading-relaxed text-muted">
         {community.body}
       </p>
+
+      {/*
+        THE NUMBERS MOVED IN HERE (Section 2, item 8), and the standalone stats
+        box is gone.
+
+        They were split off in v1.2 §6 because one panel's heading was doing
+        two jobs — "JOIN A COMMUNITY OF 500+ ACTIVE PLAYERS" buried the verb in
+        a claim and could carry only one number. That reasoning is intact: the
+        heading is still an invitation, and the numbers sit UNDER it as their
+        own row rather than inside it. What the split cost was a full-width
+        panel holding two figures and a lot of air.
+
+        A NUMBER THAT IS NOT SET RENDERS NOTHING — "0+ games every week" on a
+        landing page is worse than silence, and the row disappears entirely if
+        neither is set.
+      */}
+      {stats.length > 0 && (
+        <div data-testid="community-stats" className="mb-5 flex flex-wrap gap-x-8 gap-y-3">
+          {stats.map((stat) => (
+            <div key={stat.key} data-testid={`stat-${stat.key}`}>
+              <div
+                data-testid={`stat-${stat.key}-value`}
+                className="font-display text-[34px] leading-none text-volt"
+              >
+                {stat.value}
+                <span className="text-volt-dim">+</span>
+              </div>
+              <div className="mt-1 text-[10px] uppercase tracking-eyebrow text-muted">
+                {stat.label}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/*
         Stacked and full width rather than side by side. These are the two

@@ -665,9 +665,14 @@ booking.
 >   alongside it. Ruling J removed it as a panel that earned no space; the
 >   stat is what changed — a name alone said somebody had been chosen, and
 >   hours on the pitch says why.
-> - **The equipment line STAYS.** It answers "what do I bring", which is the
->   second question anyone asks, and removing it removed the answer without
->   moving it anywhere.
+> - ~~**The equipment line STAYS.**~~ **REVERSED AGAIN 2026-08-16** (Section 2,
+>   item 5): the line is removed. It has now been deleted by ruling J,
+>   restored by this amendment, and deleted by the owner's order — recorded in
+>   full rather than tidied, because the argument for keeping it ("what do I
+>   bring" is the second question anyone asks) is sound and someone will make
+>   it a third time. If it returns, it returns as a venue amenity, where it is
+>   a per-pitch fact an organizer can turn off rather than a promise the string
+>   table makes about every pitch forever.
 >
 > Recorded here rather than in a commit message because the paragraph below
 > is what a later session reads and rebuilds from, and an un-amended ruling
@@ -675,11 +680,12 @@ booking.
 > the reorder, the hero, the FAQ window, the bottom button, the panel order
 > — is unchanged.
 
-**Home order (ruling J, as amended):** hero (≥25% shorter) → three steps →
+**Home order (ruling J, as amended):** hero (≥25% shorter) → three steps
+(**without** the equipment line, per the 2026-08-16 reversal) →
 Upcoming Games (3 canonical cards + `All games →` primary button at the
 section's **bottom**) → active-players banner → community card → FAQ →
 **Player of the Month** → footer. The **equipment line stays** with the three
-steps. **At zero upcoming games the section renders the §2.9 empty
+steps — **the equipment line is gone**. **At zero upcoming games the section renders the §2.9 empty
 state with the WhatsApp action**, and at one or two it renders what it has — the
 `All games` button stays in both cases.
 

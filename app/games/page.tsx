@@ -173,6 +173,7 @@ export default async function GamesPage({
                     bookedCount={bookedCount}
                     roster={rosters.get(game.id) ?? []}
                     supabaseUrl={supabaseUrl}
+                    now={now}
                   />
                 ))}
               </div>

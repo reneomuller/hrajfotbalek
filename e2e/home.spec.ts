@@ -65,7 +65,10 @@ test("a signed-out visitor sees both numbers and the four panels", async ({ page
 
     // REQ-HOME-005 as amended — four panels.
     await expect(page.getByTestId("community-panel")).toBeVisible();
-    await expect(page.getByTestId("stats-panel")).toBeVisible();
+    // The standalone stats box is gone (Section 2, item 8) — its two numbers
+    // live in the community panel now.
+    await expect(page.getByTestId("stats-panel")).toHaveCount(0);
+    await expect(page.getByTestId("community-stats")).toBeVisible();
     await expect(page.getByTestId("faq-panel")).toBeVisible();
     await expect(page.getByTestId("potm-panel")).toBeVisible();
 
@@ -75,7 +78,9 @@ test("a signed-out visitor sees both numbers and the four panels", async ({ page
 
     // REQ-HOME-001 — how-it-works, with the equipment line beneath it.
     await expect(page.getByTestId("how-it-works")).toBeVisible();
-    await expect(page.getByTestId("equipment-line")).toContainText("bibs");
+    // The equipment line is gone (Section 2, item 5) — a documented reversal
+    // of ruling J's amendment, by the owner's order.
+    await expect(page.getByTestId("equipment-line")).toHaveCount(0);
   } finally {
     await writeSetting("active_players", previousPlayers ?? 0);
     await writeSetting("games_per_week", previousGames ?? 7);
@@ -249,33 +254,41 @@ test("player of the month renders, with initials when there is no photo", async 
 });
 
 /*
- * THE HERO LINE BREAKS AT ITS SENTENCE BOUNDARY, at both widths and in all
- * three languages — no orphan, and no line that stops mid-clause.
+ * THE WORDMARK IS ONE ROW AT EVERY WIDTH (Section 2, item 1).
  *
- * Asserted structurally (one element per sentence) rather than by measuring
- * rendered line boxes: the measurement is what found the problem, but it is
- * font-dependent, and item 11 is about to change the font. What must stay true
- * is that a sentence cannot be split across lines, and that is a property of
- * the markup.
+ * This replaces the sentence-boundary spec: `landing.vision`, the grey line
+ * that spec governed, is gone (item 2). What matters now is the hero itself —
+ * it was broken across two rows by a hard `<br>`, and the ruling is that one
+ * line wins over size.
+ *
+ * MEASURED AS A LINE COUNT, not as a font size: the clamp's floor is an
+ * implementation detail and the requirement is the row.
  */
-test("the hero line renders one sentence per line", async ({ page }) => {
-  for (const locale of ["en", "cs", "ru"] as const) {
-    await page.context().addCookies([
-      { name: "hf_locale", value: locale, domain: "localhost", path: "/" },
-    ]);
+test("the wordmark renders on one row at phone and desktop width", async ({
+  browser,
+}) => {
+  for (const width of [390, 1280]) {
+    const context = await browser.newContext({ viewport: { width, height: 900 } });
+    const page = await context.newPage();
     await page.goto("/");
+    await page.evaluate(() => document.fonts.ready);
 
-    const lines = page.getByTestId("hero-vision").locator("span");
-    await expect(lines, locale).toHaveCount(2);
+    const rows = await page.evaluate(() => {
+      const h1 = document.querySelector("h1")!;
+      const style = getComputedStyle(h1);
+      const lineHeight = parseFloat(style.lineHeight) || parseFloat(style.fontSize) * 0.92;
+      return Math.round(h1.getBoundingClientRect().height / lineHeight);
+    });
 
-    // Each is a whole sentence: it ends with a full stop and contains no
-    // internal one.
-    for (const line of await lines.all()) {
-      const text = (await line.textContent())!.trim();
-      expect(text.endsWith("."), `${locale}: "${text}"`).toBe(true);
-      expect(text.slice(0, -1).includes("."), `${locale}: "${text}"`).toBe(false);
-    }
+    expect(rows, `wordmark rows at ${width}px`).toBe(1);
+    await context.close();
   }
+});
+
+/* And the grey sub-line under it is gone. */
+test("the hero carries no vision sub-line", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.getByTestId("hero-vision")).toHaveCount(0);
 });
 
 /*
@@ -301,10 +314,9 @@ test.describe("the home page under ruling J", () => {
             "how-it-works",
             "next-matches",
             "next-matches-all",
-            "stats-panel",
             "community-panel",
-            "faq-panel",
             "potm-panel",
+            "faq-panel",
           ].includes(t),
         ),
     );
@@ -313,15 +325,19 @@ test.describe("the home page under ruling J", () => {
       "how-it-works",
       "next-matches",
       "next-matches-all",
-      "stats-panel",
       "community-panel",
-      "faq-panel",
       "potm-panel",
+      "faq-panel",
     ]);
 
-    // The two survivors of the amendment.
+    /*
+     * PLAYER OF THE MONTH SURVIVES; THE EQUIPMENT LINE NO LONGER DOES.
+     * Ruling J deleted both, the 2026-08-10 amendment restored both, and
+     * Section 2 item 5 reverses the equipment half again. Asserted in both
+     * directions so neither drifts back.
+     */
     await expect(page.getByTestId("potm-panel")).toBeVisible();
-    await expect(page.getByTestId("equipment-line")).toBeVisible();
+    await expect(page.getByTestId("equipment-line")).toHaveCount(0);
   });
 
   test("clears the three steps above the fold", async ({ page }) => {
