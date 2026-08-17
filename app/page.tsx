@@ -161,7 +161,7 @@ export default async function LandingPage() {
               {landing.steps.map((step) => (
                 <div
                   key={step.index}
-                  className="flex min-w-[200px] flex-1 items-start gap-3 rounded-card bg-surface px-[18px] py-[15px] text-left"
+                  className="lifted flex min-w-[200px] flex-1 items-start gap-3 rounded-card px-[18px] py-[15px] text-left"
                 >
                   <div className="text-[14px] font-bold text-volt">
                     {step.index}

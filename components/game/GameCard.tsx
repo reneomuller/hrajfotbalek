@@ -125,7 +125,7 @@ export async function GameCard({
         */}
         <span
           data-testid="card-when"
-          className="min-w-0 truncate rounded-pill border border-hairline-strong bg-bone/[.06] px-3 py-[3px] text-body-lg font-semibold text-bone"
+          className="lifted min-w-0 truncate rounded-pill px-3 py-[3px] text-body-lg font-semibold text-bone"
         >
           {formatTime(game.starts_at)}
         </span>

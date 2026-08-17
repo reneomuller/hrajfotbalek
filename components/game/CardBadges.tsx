@@ -23,6 +23,17 @@ import type { GameSurface } from "@/lib/types/database";
  *
  * The surface label is the TRANSLATED token (`games.surface.*`), never an
  * English string invented at the render site.
+ *
+ * THE BONE PILL NOW READS ITS FILL AND STROKE FROM `.lifted` (visibility
+ * round, item 2) — the same treatment as home's step cards and the pass tier
+ * cards, so the neutral pill on a card and the neutral card on a page are one
+ * object rather than two near-misses.
+ *
+ * THE VOLT PILL DOES NOT, and deliberately. `.lifted` is the NEUTRAL surface
+ * treatment; the format badge is the card's accent and its colour is the whole
+ * of what it says. Folding it in would make the two badges identical and lose
+ * the hierarchy the two-colour split above exists to draw. Same geometry, same
+ * padding, same radius — different ink.
  */
 export async function CardBadges({
   format,
@@ -53,7 +64,7 @@ export async function CardBadges({
       {surface && (
         <span
           data-testid="game-surface"
-          className={`rounded-pill border border-hairline-strong bg-bone/[.06] ${pad} ${text} font-semibold text-bone`}
+          className={`lifted rounded-pill ${pad} ${text} font-semibold text-bone`}
         >
           {t.games.surface[surface]}
         </span>

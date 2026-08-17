@@ -103,3 +103,43 @@
     @apply font-sans;
   }
 }
+
+@layer components {
+  /**
+   * `.lifted` — A HAIRLINE OUTLINE ON A LIFTED SURFACE, WRITTEN ONCE.
+   *
+   * THE PROBLEM IT SOLVES. Three controls that are meant to read as objects —
+   * the list card's time and surface pills, home's three step cards, and the
+   * pass tier cards — sat on `surface` (#0F0F0F) against `ink` (#0A0A0A) with
+   * no edge. Five points of luminance is a difference a colour picker can find
+   * and a phone in daylight cannot, so all three read as text floating on the
+   * page rather than as things. Lifting the fill to `surface-raised` (#161616)
+   * and drawing `hairline-strong` around it gives each one a boundary that
+   * survives a bright screen.
+   *
+   * ONE CLASS RATHER THAN THREE SPELLINGS. This is the whole point of the
+   * owner's "one tokenized treatment": the three surfaces had drifted into
+   * three different recipes — the pills carried `bg-bone/[.06]` with a border,
+   * the step cards and tier cards carried a bare `bg-surface` — and a
+   * treatment written three times is a treatment that gets changed twice.
+   * Adjusting the fill or the stroke now moves all three, and a fourth surface
+   * that wants to look like these asks for it by name.
+   *
+   * NO GLOW, AND THAT IS A RULING RATHER THAN AN OMISSION. No `shadow-lift`,
+   * no volt haze, no ring. The lift is the fill and the stroke; a shadow on a
+   * near-black surface renders as a smudge on an OLED phone and as nothing at
+   * all on a bright one, so it costs paint and buys no legibility.
+   *
+   * `hairline-strong` (.14) rather than `hairline` (.08). This is a visibility
+   * round: .08 over #161616 computes to roughly #232323, which is the same
+   * invisible edge one step along rather than a fix for it.
+   *
+   * A COMPONENT-LAYER CLASS, so a utility in the markup still wins — a call
+   * site that needs a volt edge writes `lifted border-volt` and gets it,
+   * because @layer utilities outranks @layer components regardless of source
+   * order. The class is the default, not a cage.
+   */
+  .lifted {
+    @apply border border-hairline-strong bg-surface-raised;
+  }
+}

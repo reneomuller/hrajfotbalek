@@ -76,17 +76,24 @@ export async function PassTierCard({
       data-testid="pass-tier"
       data-games={tier.games}
       data-most-popular={mostPopular ? "true" : "false"}
-      className="relative rounded-card bg-surface p-5"
+      className="lifted relative rounded-card p-5"
     >
       {/*
         The tag, on the card's top corner. A volt OUTLINE rather than a fill:
         a filled volt pill here would outrank the per-game price, and the
         hierarchy this card exists to fix is exactly that — one loud thing.
+
+        `lifted` FOR THE FILL, `border-volt` OVER IT. The tag straddles the
+        card's top edge, so its fill has to be the card's fill or the half
+        sitting on the card reads as a darker notch cut out of it — which is
+        what `bg-surface` became the moment item 2 lifted the card to
+        `surface-raised`. The utility border wins over the component layer, so
+        this keeps its volt edge while taking the shared fill.
       */}
       {mostPopular && (
         <span
           data-testid="pass-tier-popular"
-          className="absolute -top-2 right-4 rounded-pill border border-volt bg-surface px-3 py-1 text-small font-semibold text-volt"
+          className="lifted absolute -top-2 right-4 rounded-pill border-volt px-3 py-1 text-small font-semibold text-volt"
         >
           {t.pass.tierMostPopular}
         </span>
