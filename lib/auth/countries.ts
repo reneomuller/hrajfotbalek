@@ -111,3 +111,30 @@ export function countryOptions(locale = "en"): CountryOption[] {
   const collator = new Intl.Collator(locale);
   return options.sort((a, b) => collator.compare(a.name, b.name));
 }
+
+/**
+ * ONE country's name in `locale`, for the profile's meta line.
+ *
+ * Not `countryOptions(locale).find(...)`. That builds 249 options, does 249
+ * `Intl.DisplayNames` lookups and then sorts them with a collator, all to read
+ * one string — on a page that renders per request because it is
+ * `force-dynamic`.
+ *
+ * Returns null rather than the raw code for an unknown or unset value: the meta
+ * line drops a missing part, and "XX · since Aug 2026" under someone's name is
+ * worse than "since Aug 2026". A KNOWN code whose name the runtime cannot
+ * resolve still falls back to the code, matching `countryOptions` — there the
+ * option must remain selectable, and here it is at least a real country.
+ */
+export function countryName(
+  code: string | null | undefined,
+  locale = "en",
+): string | null {
+  if (!isKnownCountry(code)) return null;
+
+  try {
+    return new Intl.DisplayNames([locale], { type: "region" }).of(code!) ?? code!;
+  } catch {
+    return code!;
+  }
+}

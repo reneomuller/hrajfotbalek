@@ -44,7 +44,8 @@ test.describe("Stage 3 strips — profile", () => {
         await signInAs(context, players.runner);
 
         const page = await context.newPage();
-        await page.goto("/account", { waitUntil: "networkidle" });
+        // The edit block is the Settings tab (visibility round, item 3).
+        await page.goto("/account?tab=settings", { waitUntil: "networkidle" });
         await page.evaluate(() => document.fonts.ready);
         await page.addStyleTag({
           content:

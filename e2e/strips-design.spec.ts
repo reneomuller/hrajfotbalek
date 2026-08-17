@@ -100,6 +100,9 @@ test("04-account", async ({ page, context }) => {
   await expect(page.getByTestId("photo-avatar-control")).toBeVisible();
   await strip(page, "04-account-photo-and-links");
 
+  // The account controls are the Settings tab since the profile rebuild
+  // (visibility round, item 3).
+  await page.goto("/account?tab=settings", { waitUntil: "networkidle" });
   await page.getByTestId("account-security").scrollIntoViewIfNeeded();
   await strip(page, "06-account-security-links");
 

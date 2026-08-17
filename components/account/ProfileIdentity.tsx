@@ -1,0 +1,144 @@
+import { PhotoUpload } from "@/components/account/PhotoUpload";
+import { initials } from "@/lib/roster/initials";
+import { avatarUrl } from "@/lib/storage/avatar";
+import { DATE_LOCALE } from "@/lib/games/days";
+import type { Locale } from "@/lib/i18n/locales";
+import type { Strings } from "@/lib/strings";
+
+/**
+ * Cover, face, name, meta — the top of a profile.
+ *
+ * BUILT AGAINST THE REFERENCE the owner supplied, with two adaptations, both
+ * forced by what this schema holds rather than chosen:
+ *
+ *   1. THE COVER IS A GRADIENT, NOT A PHOTOGRAPH. The reference puts a shot of
+ *      a game behind the name. There is no cover-photo column and this is a
+ *      front-end round, so the options were a token gradient, a borrowed venue
+ *      photo, or nothing. A venue photo would be a picture of a pitch this
+ *      player may never have played on, presented as if it were theirs — an
+ *      invented fact under someone's face. The gradient reads as a deliberate
+ *      band; a wrong photograph reads as a lie.
+ *
+ *   2. THE META LINE IS COUNTRY, NOT CITY. The reference says "Bangkok". The
+ *      schema holds `players.country` as an ISO 3166 code and nothing finer.
+ *
+ * A player with neither country nor a formattable join date shows the meta line
+ * with whatever half exists, and no line at all if neither does — a lone
+ * separator under a name is worse than a missing sentence.
+ *
+ * THE AVATAR OVERLAPS THE COVER'S LOWER EDGE, which is the reference's
+ * composition and is doing real work: it ties the two bands into one object, so
+ * the identity reads as a header rather than as a picture with a caption under
+ * it. `PhotoUpload` still wraps it — the avatar has been the edit affordance
+ * since the photo upload was buried as a caption and nobody found it.
+ */
+export function ProfileIdentity({
+  nickname,
+  photoPath,
+  photoVersion,
+  countryName,
+  createdAt,
+  locale,
+  t,
+}: {
+  nickname: string;
+  photoPath: string | null;
+  /** Changes when the photo does, so a re-upload is not served from cache. */
+  photoVersion: string | null;
+  /** Already resolved to the reader's language, or null when unset. */
+  countryName: string | null;
+  createdAt: string;
+  locale: Locale;
+  t: Strings;
+}) {
+  const photoUrl = avatarUrl(
+    process.env.NEXT_PUBLIC_SUPABASE_URL ?? "",
+    photoPath,
+    photoVersion,
+  );
+
+  /*
+   * "Aug 2026", IN THE READER'S LANGUAGE, from `Intl` rather than from a
+   * translated month table. Czech and Russian both decline month names and
+   * both abbreviate differently from English; a hand-written list would be
+   * three lists to maintain and one of them would be wrong.
+   *
+   * `DATE_LOCALE` maps `en` to `en-GB`, which is the same mapping the day
+   * headings and the calendar cells use — so a profile and a fixture list
+   * never disagree about what a month is called.
+   *
+   * An unparseable date yields null rather than "Invalid Date", which is a
+   * string this product should never render.
+   */
+  const joined = Number.isNaN(Date.parse(createdAt))
+    ? null
+    : new Intl.DateTimeFormat(DATE_LOCALE[locale], {
+        month: "short",
+        year: "numeric",
+      }).format(new Date(createdAt));
+
+  const meta = [
+    countryName,
+    joined ? t.profile.memberSince.replace("{date}", joined) : null,
+  ].filter((part): part is string => part !== null);
+
+  return (
+    <section data-testid="profile-identity" className="-mt-8">
+      {/*
+        FULL BLEED. The band runs edge to edge while everything under it keeps
+        the page gutter, which is what makes it read as a cover rather than as
+        a wide card. `-mx-gutter` rather than a viewport-width trick: the page
+        is `max-w-shell` centred, so a `100vw` band would break out of the shell
+        on a desktop and sit under the header's own margins.
+
+        IT CARRIES A VOLT WASH, and the first version did not — which the strip
+        caught. `surface-raised` into `ink` is six points of luminance across
+        132px, and a gradient that shallow over that distance is invisible: the
+        strip showed a name floating on a black page with no cover at all.
+
+        The wash is the brand's own accent at a tenth of its strength, fading to
+        the page. It is the same trick the pitch canvas behind this page already
+        plays, which is why it reads as belonging rather than as a coloured bar
+        — and it is a TINT of an existing token rather than a new one, so the
+        no-inline-hex rule holds and a theme change moves it.
+      */}
+      <div className="-mx-gutter h-[132px] bg-gradient-to-b from-volt/[.10] via-surface-raised to-ink" />
+
+      <div className="-mt-10 flex items-end gap-4">
+        <PhotoUpload hasPhoto={Boolean(photoPath)}>
+          <span
+            data-testid="account-avatar"
+            className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-volt bg-surface text-2xl font-extrabold text-volt"
+          >
+            {photoUrl ? (
+              /* A public-bucket URL at 80px. `next/image` would proxy it
+                 through the optimizer for no benefit and bill a transform per
+                 avatar. */
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={photoUrl} alt="" className="h-full w-full object-cover" />
+            ) : (
+              initials(nickname, t)
+            )}
+          </span>
+        </PhotoUpload>
+
+        {/* `pb-1` lifts the text off the avatar's baseline: an 80px circle and
+            a 22px line share a bottom edge geometrically and look misaligned
+            optically, because the circle's ink stops before its box does. */}
+        <div className="flex min-w-0 flex-col gap-[2px] pb-1">
+          <h1
+            data-testid="account-nickname"
+            className="m-0 truncate text-[26px] font-bold leading-tight text-white"
+          >
+            {nickname}
+          </h1>
+          {meta.length > 0 && (
+            <p data-testid="profile-meta" className="m-0 truncate text-small text-muted">
+              {meta.join(" · ")}
+            </p>
+          )}
+        </div>
+      </div>
+    </section>
+  );
+}

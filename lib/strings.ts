@@ -680,6 +680,75 @@ export const strings = {
       mid: "Midfielder",
       att: "Attacker",
     },
+
+    /*
+     * THE REBUILT PROFILE (visibility round, item 3).
+     *
+     * The meta line is COUNTRY, NOT CITY. The reference screen reads
+     * "Bangkok · since Aug 2026" and there is no city anywhere in this schema —
+     * `players` holds `country` as an ISO 3166 code and nothing finer. A city
+     * would be a new column, which this front-end round does not get to add,
+     * and inferring one from a country is a guess printed under someone's face.
+     *
+     * `{date}` is a month and a year in the reader's language, formatted by
+     * `Intl` at the render site rather than assembled from a translated month
+     * list — see `memberSince`'s use in `ProfileIdentity`.
+     */
+    memberSince: "since {date}",
+
+    tabOverview: "Overview",
+    tabGames: "My games",
+    tabSettings: "Settings",
+
+    /*
+     * LOWER CASE, and it is not an oversight. These sit UNDER their numbers as
+     * captions, which is the one place ruling B's sentence case would look
+     * wrong — "Games played" under a 34px numeral reads as a heading for the
+     * thing below it rather than as a label for the thing above.
+     *
+     * THREE FORMS EACH, selected by `Intl.PluralRules` in
+     * `lib/profile/statLabel.ts`. No `{n}`: the number is the element above, so
+     * only the noun agrees. English never reaches the `Few` form — CLDR gives
+     * it `one` and `other` only — and it is written anyway so the three tables
+     * have the same shape and a translator is never guessing which keys exist.
+     */
+    statGamesOne: "game played",
+    statGamesFew: "games played",
+    statGamesMany: "games played",
+    statHoursOne: "hour on pitch",
+    statHoursFew: "hours on pitch",
+    statHoursMany: "hours on pitch",
+    statVenuesOne: "pitch played",
+    statVenuesFew: "pitches played",
+    statVenuesMany: "pitches played",
+
+    badgesTitle: "Badges",
+    /** `{earned} of {total}` — the counter beside the heading. */
+    badgesCount: "{earned} of {total}",
+
+    /*
+     * THE FIVE BADGES. Name and requirement are separate keys because the
+     * requirement is shown on the LOCKED state as the thing to aim at, and a
+     * name with the number folded into it ("Play 5 games") reads as an
+     * instruction rather than as something you own once you have it.
+     *
+     * The hints state the threshold in words. They are the one place in this
+     * feature where a number is written down twice — the other is
+     * `BADGE_THRESHOLDS` — and the pairing is asserted by a unit test, because
+     * a hint that says 5 beside a threshold of 6 is worse than no hint.
+     */
+    badges: {
+      firstGame: "First game",
+      firstGameHint: "Play one game",
+      regular: "Regular",
+      regularHint: "Play 5 games",
+      veteran: "Veteran",
+      veteranHint: "Play 20 games",
+      explorer: "Explorer",
+      explorerHint: "Play at 3 different pitches",
+      ironLegs: "Iron legs",
+      ironLegsHint: "Spend 10 hours on the pitch",
+    },
   },
 
   account: {

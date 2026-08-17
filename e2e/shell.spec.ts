@@ -140,13 +140,24 @@ test("my games is its own route, and account links to it", async ({ page, contex
   await page.goto("/my-games");
   await expect(page.getByRole("heading", { level: 1 })).toContainText(/my games/i);
 
-  // The fixture list is here and NOT on the account page any more.
+  /*
+   * THE ROUTE SURVIVES AND THE LINK TO IT DOES NOT (visibility round, item 3).
+   *
+   * `/my-games` was reached from one place, a "See all my games →" link on the
+   * account page — the nav pill has never carried it. Item 3 makes the fixture
+   * list a TAB on the profile, rendering the same `PlayerHistory`, so the link
+   * is gone and this route stays only for links already shared and bookmarked.
+   *
+   * What is asserted is therefore both halves: the profile's default tab is
+   * still not the fixture list, and the tab that is leads to it.
+   */
   await page.goto("/account");
-  await expect(page.getByTestId("my-games-link")).toBeVisible();
   await expect(page.getByTestId("history-counts")).toHaveCount(0);
+  await expect(page.getByTestId("my-games-link")).toHaveCount(0);
 
-  await page.getByTestId("my-games-link").click();
-  await page.waitForURL("**/my-games");
+  await page.getByTestId("profile-tab").filter({ hasText: /my games/i }).click();
+  await page.waitForURL("**/account?tab=games");
+  await expect(page.getByTestId("history-counts")).toBeVisible();
 });
 
 /* Signed out, the tab leads to the login page and comes back afterwards. */

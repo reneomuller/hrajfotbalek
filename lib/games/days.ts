@@ -165,8 +165,13 @@ function weekdayLabel(key: string, locale: Locale): string {
  * everywhere else on their phone. This is a display convention, not a
  * language: `cs` and `ru` need no region because neither has a second one that
  * disagrees about date order.
+ *
+ * EXPORTED, because it stopped being only this file's business. The profile's
+ * "since Aug 2026" and its localised stat figures format through the same map,
+ * so a month named on a profile and a month named on a fixture list cannot
+ * disagree — which they would the first time someone reached for bare `en`.
  */
-const DATE_LOCALE: Record<Locale, string> = {
+export const DATE_LOCALE: Record<Locale, string> = {
   en: "en-GB",
   cs: "cs",
   ru: "ru",

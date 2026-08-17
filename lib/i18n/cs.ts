@@ -382,6 +382,39 @@ export const cs: StringsOverlay = {
       mid: "Záložník",
       att: "Útočník",
     },
+
+    // DRAFT — flagged for the standing native-review batch.
+    memberSince: "od {date}",
+
+    tabOverview: "Přehled",
+    tabGames: "Moje zápasy",
+    tabSettings: "Nastavení",
+
+    statGamesOne: "odehraný zápas",
+    statGamesFew: "odehrané zápasy",
+    statGamesMany: "odehraných zápasů",
+    statHoursOne: "hodina na hřišti",
+    statHoursFew: "hodiny na hřišti",
+    statHoursMany: "hodin na hřišti",
+    statVenuesOne: "hřiště",
+    statVenuesFew: "hřiště",
+    statVenuesMany: "hřišť",
+
+    badgesTitle: "Odznaky",
+    badgesCount: "{earned} z {total}",
+
+    badges: {
+      firstGame: "První zápas",
+      firstGameHint: "Odehraj jeden zápas",
+      regular: "Stálice",
+      regularHint: "Odehraj 5 zápasů",
+      veteran: "Veterán",
+      veteranHint: "Odehraj 20 zápasů",
+      explorer: "Průzkumník",
+      explorerHint: "Zahraj si na 3 různých hřištích",
+      ironLegs: "Železné nohy",
+      ironLegsHint: "Stráv na hřišti 10 hodin",
+    },
   },
 
   account: {

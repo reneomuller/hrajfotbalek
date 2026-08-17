@@ -139,6 +139,41 @@ test("the account page shows a photo slot and the security controls", async ({
   await expect(page.getByTestId("photo-input")).toBeAttached();
 
   /*
+   * THE WALLET'S BUY ENTRY LEADS TO THE PASSES, not to an arbitrary-amount
+   * chooser. There is no cash wallet in the product's language: credits come
+   * from passes, and ruling N removed the standalone top-up chooser from the
+   * player UI. The RPC behind it survives as the reconciliation path for a
+   * mispaid pass — what is asserted here is that nothing advertises it.
+   *
+   * On the OVERVIEW tab, which is where the wallet lives now.
+   */
+  const buy = page.getByTestId("topup-cta");
+  await expect(buy).toBeVisible();
+  await expect(buy).toHaveAttribute("href", "/pass");
+
+  /*
+   * THE FIXTURE LIST IS A TAB (visibility round, item 3), not a link out.
+   *
+   * It was "See all my games →" pointing at `/my-games`, which was the only
+   * door to that route — the nav pill has never carried it. The tab renders
+   * the same `PlayerHistory`, so `/my-games` survives for links already shared
+   * and stops being somewhere the product sends anyone.
+   */
+  await expect(page.getByTestId("games-played")).toHaveCount(0);
+  await page.getByTestId("profile-tab").filter({ hasText: /my games/i }).click();
+  await page.waitForURL("**/account?tab=games");
+  await expect(page.getByTestId("games-played")).toBeVisible();
+
+  /*
+   * THE SECURITY CONTROLS MOVED BEHIND THE SETTINGS TAB. The identity block
+   * and the stat row render on every tab; the account controls are one tab in,
+   * which is where "Settings" means what it says. Everything below this line
+   * is the same set of assertions the flat page carried.
+   */
+  await page.getByTestId("profile-tab").filter({ hasText: /settings/i }).click();
+  await page.waitForURL("**/account?tab=settings");
+
+  /*
    * REQ-AUTH-020 — both controls are COMPACT TEXT LINKS now, stacked directly
    * above the deletion link and styled exactly like it. The two-column panel
    * they replace is a recorded defect: these are used roughly once each and
@@ -153,24 +188,6 @@ test("the account page shows a photo slot and the security controls", async ({
 
   await page.getByTestId("change-password-link").click();
   await expect(page.getByTestId("current-password")).toBeVisible();
-
-  /*
-   * THE WALLET'S BUY ENTRY LEADS TO THE PASSES, not to an arbitrary-amount
-   * chooser. There is no cash wallet in the product's language: credits come
-   * from passes, and ruling N removed the standalone top-up chooser from the
-   * player UI. The RPC behind it survives as the reconciliation path for a
-   * mispaid pass — what is asserted here is that nothing advertises it.
-   */
-  const buy = page.getByTestId("topup-cta");
-  await expect(buy).toBeVisible();
-  await expect(buy).toHaveAttribute("href", "/pass");
-
-  // Phase 10's two tenses and the played count are on `/my-games` now (v1.2
-  // §7) — the account page keeps the way there.
-  await expect(page.getByTestId("games-played")).toHaveCount(0);
-  await page.getByTestId("my-games-link").click();
-  await page.waitForURL("**/my-games");
-  await expect(page.getByTestId("games-played")).toBeVisible();
 });
 
 test("another player's top-up is not readable", async () => {
@@ -201,7 +218,10 @@ test("the profile block edits all six fields, positions as multi-select chips", 
   context,
 }) => {
   await signInAs(context, players.runner);
-  await page.goto("/account");
+  // The edit fields are the Settings tab (visibility round, item 3). Entered by
+  // URL rather than by tapping through, because what this spec is about is the
+  // form's behaviour — the tab bar itself is asserted where it is the subject.
+  await page.goto("/account?tab=settings");
 
   const block = page.getByTestId("profile-details");
   await expect(block).toBeVisible();
@@ -253,7 +273,7 @@ test("the profile block edits all six fields, positions as multi-select chips", 
 /* A nickname the pattern refuses is reported on the field, not as a crash. */
 test("the profile form reports an invalid nickname inline", async ({ page, context }) => {
   await signInAs(context, players.runner);
-  await page.goto("/account");
+  await page.goto("/account?tab=settings");
   await page.getByTestId("edit-details").click();
 
   await page.locator("#nickname").fill("no!");

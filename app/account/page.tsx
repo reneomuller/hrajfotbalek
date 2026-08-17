@@ -1,19 +1,23 @@
 import type { Metadata } from "next";
-import { ToastFromQuery } from "@/components/ToastFromQuery";
 import Link from "next/link";
+import { ToastFromQuery } from "@/components/ToastFromQuery";
+import { BadgeGrid } from "@/components/account/BadgeGrid";
 import { CreditBalance } from "@/components/CreditBalance";
 import { CreditBatches } from "@/components/account/CreditBatches";
-import { SecurityLinks } from "@/components/account/SecurityLinks";
+import { PlayerHistory } from "@/components/account/PlayerHistory";
 import { ProfileDetails } from "@/components/account/ProfileDetails";
-import { countryOptions } from "@/lib/auth/countries";
-import { PhotoUpload } from "@/components/account/PhotoUpload";
-import { avatarUrl } from "@/lib/storage/avatar";
-import { initials } from "@/lib/roster/initials";
+import { ProfileIdentity } from "@/components/account/ProfileIdentity";
+import { ProfileStats } from "@/components/account/ProfileStats";
+import { ProfileTabs, parseProfileTab } from "@/components/account/ProfileTabs";
+import { SecurityLinks } from "@/components/account/SecurityLinks";
+import { countryName, countryOptions } from "@/lib/auth/countries";
 import { requireCurrentPlayer } from "@/lib/auth/session";
-import { getLocale } from "@/lib/i18n/server";
-import { getOwnCreditBalance } from "@/lib/booking/queries";
+import { splitHistory } from "@/lib/booking/history";
+import { getOwnCreditBalance, listOwnBookings } from "@/lib/booking/queries";
+import { getLocale, getStrings } from "@/lib/i18n/server";
 import { listMyBatches } from "@/lib/pass/queries";
-import { getStrings } from "@/lib/i18n/server";
+import { playerBadges } from "@/lib/profile/badges";
+import { profileStats } from "@/lib/profile/stats";
 import { signOutAction } from "./actions";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -28,9 +32,37 @@ export async function generateMetadata(): Promise<Metadata> {
 export const dynamic = "force-dynamic";
 
 /**
- * Account page — who you are, your wallet, and the three account controls.
+ * The profile — rebuilt against the reference screen (visibility round, item 3).
  *
- * NO LONGER THE FIXTURE LIST (v1.2 §7): that is `/my-games`, with its own tab.
+ * WHAT IT WAS: a heading, a sign-out button, an avatar, an edit block, a
+ * wallet, two links and a security stack, in one column, in that order. Every
+ * fact the product knows about a player was present and none of it was
+ * arranged — the page read as a settings screen that happened to have a face
+ * at the top.
+ *
+ * WHAT IT IS: identity, then the three numbers, then three tabs.
+ *
+ *   cover + avatar + name + meta       always
+ *   games played · hours · pitches     always
+ *   ─────────────────────────────────
+ *   Overview    wallet, then badges
+ *   My games    the fixture list, the same component `/my-games` renders
+ *   Settings    the edit fields, then the account controls
+ *
+ * THE IDENTITY AND THE STATS SIT ABOVE THE TABS, which is the reference's
+ * composition and is the reason it works: who you are does not change when you
+ * switch tabs, so putting it inside one of them would make it disappear on the
+ * other two.
+ *
+ * HOW THE OWNER'S MAPPING LANDED, since it admits two readings and this is the
+ * one taken. "Settings = the edit fields + account actions" puts
+ * `ProfileDetails` — which IS the edit fields, display half and all — under
+ * Settings rather than Overview, and leaves Overview holding the wallet and the
+ * badges. The "display info" half of "Overview = display info + stats" is the
+ * identity block and the stat row, which render above every tab.
+ *
+ * WHAT WAS SKIPPED, per the ruling: the reference's "Next milestone" progress
+ * bar. Not this round.
  *
  * Gated server-side by `requireCurrentPlayer`, and gated a second time by RLS:
  * every read below is own-row only, so even a bug in this gate could not
@@ -43,6 +75,7 @@ export default async function AccountPage({
 }) {
   const t = await getStrings();
   const query = searchParams ? await searchParams : {};
+  const tab = parseProfileTab(query.tab);
   const player = await requireCurrentPlayer("/account");
   // Read off the row already loaded rather than through `isAdminSession()`,
   // which would be a second round trip for a boolean this page is holding.
@@ -50,19 +83,27 @@ export default async function AccountPage({
   // The country list is named and sorted in the reader's language.
   const locale = await getLocale();
 
-  const [balanceCzk, batches] = await Promise.all([
+  /*
+   * `listOwnBookings` IS FETCHED ON EVERY TAB, and that is not waste: the stat
+   * row and the badge grid are both folds over it, and both render above or
+   * inside the overview. The My games tab reuses the same rows rather than
+   * asking again.
+   *
+   * The wallet reads are the two that are genuinely tab-specific, and they are
+   * cheap enough not to be worth branching a `Promise.all` around.
+   */
+  const [balanceCzk, batches, bookings] = await Promise.all([
     getOwnCreditBalance(),
     // The wallet broken into batches (§4.2). A single number cannot say that
     // 750 of a 900 balance runs out on the 3rd, which is the one thing a pass
     // holder needs in order to use it.
     listMyBatches(),
+    listOwnBookings(),
   ]);
 
-  const photoUrl = avatarUrl(
-    process.env.NEXT_PUBLIC_SUPABASE_URL ?? "",
-    player.photo_path,
-    player.created_at,
-  );
+  const stats = profileStats(bookings);
+  const badges = playerBadges(stats, t);
+  const history = splitHistory(bookings);
 
   const deletionHref =
     `mailto:${t.account.deleteMailto}` +
@@ -71,195 +112,176 @@ export default async function AccountPage({
 
   return (
     <main className="relative z-10 mx-auto w-full max-w-shell px-gutter pb-16 pt-24">
-      <h1 className="m-0 font-display text-section-title uppercase tracking-wide text-white">
-        {t.account.title}
-      </h1>
-      <div className="mt-2 flex flex-wrap items-center justify-end gap-3">
-        {/* The nickname used to sit here too. It now leads the avatar block
-            below, at a size that reads as an identity rather than as a caption
-            — and saying it twice on one screen was the page telling the reader
-            nothing twice. */}
+      <ProfileIdentity
+        nickname={player.nickname}
+        photoPath={player.photo_path}
+        photoVersion={player.created_at}
+        countryName={countryName(player.country, locale)}
+        createdAt={player.created_at}
+        locale={locale}
+        t={t}
+      />
 
-        {/* Sign out — a server action, so the session cookies are cleared
-            server-side rather than merely navigated away from. */}
-        <form action={signOutAction}>
-          <button
-            type="submit"
-            data-testid="sign-out"
-            className="rounded-control border border-hairline-strong px-[14px] py-2 text-[13px] font-bold uppercase tracking-wide text-bone transition hover:border-volt hover:text-volt"
-          >
-            {t.auth.signOut}
-          </button>
-        </form>
-      </div>
+      <ProfileStats stats={stats} locale={locale} t={t} />
 
-      {/*
-        Profile photo — AT THE TOP, WITH THE EDIT AFFORDANCE ON THE AVATAR.
+      <ProfileTabs selected={tab} t={t} />
 
-        The upload was mounted here before but read as a caption under a
-        heading: a reviewer looking for "where do I change my picture" did not
-        find it. The avatar itself is now the control, with a visible edit
-        badge on it, which is the shape every product this competes with uses.
+      {tab === "overview" && (
+        <>
+          {/*
+            THE ADMIN PANEL'S DOOR ON A PHONE — AND IT IS ON OVERVIEW, NOT
+            SETTINGS, WHICH LOOKS LIKE THE WRONG SHELF UNTIL YOU COUNT TAPS.
 
-        The initials avatar stays the fallback and is what most players will
-        keep — Phase 2 added an option, not an expectation, so the absent case
-        is the ordinary one and is rendered as a first-class state rather than
-        an empty frame.
-      */}
-      <section className="mt-8 flex items-center gap-5">
-        <PhotoUpload hasPhoto={Boolean(player.photo_path)}>
-        <span
-          data-testid="account-avatar"
-          className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-volt bg-surface text-2xl font-extrabold text-volt"
-        >
-          {photoUrl ? (
-            /* A Supabase storage URL on a public bucket, rendered at 80px.
-               next/image would proxy it through the optimizer for no benefit
-               and add a billable transform per avatar. */
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={photoUrl} alt="" className="h-full w-full object-cover" />
-          ) : (
-            initials(player.nickname)
+            The panel is reachable from the header's link row, which is `md:`
+            and up, so on a phone an organizer would otherwise type
+            `/admin/games` from memory. The nav pill has no room for a fifth
+            tab (ruling K settled its four), and the property that was written
+            down and tested is TWO TAPS: the Profile tab, then this. Filing it
+            under Settings would make it three, quietly, while every comment
+            and the spec still said two.
+
+            It is also not a setting. A setting changes how this account
+            behaves; this is a door into a different application.
+
+            DISPLAY ONLY, on the same footing as the header entry: rendering
+            this grants nothing and hiding it protects nothing, because anyone
+            can type the URL. `requireAdmin()` in `app/admin/layout.tsx` runs
+            before any nested page reads a row, and every admin RPC checks
+            again inside itself.
+          */}
+          {isAdmin && (
+            <Link
+              href="/admin/games"
+              data-testid="account-admin-link"
+              className="mt-8 flex min-h-11 items-center justify-between gap-3 rounded-control border border-hairline-strong px-4 text-body-lg font-semibold text-bone no-underline transition-colors hover:border-hairline-volt"
+            >
+              {t.nav.admin}
+              <span aria-hidden className="text-volt">→</span>
+            </Link>
           )}
-        </span>
-        </PhotoUpload>
 
-        <div className="flex flex-col gap-1">
-          <span
-            data-testid="account-nickname"
-            className=" text-[22px] font-bold leading-tight text-white"
-          >
-            {player.nickname}
-          </span>
-        </div>
-      </section>
+          {/*
+            THE WALLET, with the passes as its only entry point. Buying credit
+            is a thought someone has while looking at a balance, not while
+            reading a menu — but it leads to the PASSES rather than to an
+            arbitrary-amount chooser, because there is no cash wallet in this
+            product's language.
+          */}
+          <div className="mt-8 flex flex-wrap items-center gap-4">
+            <CreditBalance balanceCzk={balanceCzk} />
+            <CreditBatches batches={batches} />
+            <Link
+              href="/pass"
+              data-testid="topup-cta"
+              className="rounded-control border border-hairline-volt px-4 py-2 text-[13px] font-bold uppercase tracking-wide text-volt no-underline transition hover:bg-volt/10"
+            >
+              {t.account.topupCta}
+            </Link>
+          </div>
 
-      {/*
-        THE PROFILE BLOCK (ruling L, §3 screen 7) — display and edit, above the
-        wallet. It is what the page is named after, and it sat nowhere: the
-        page had a photo, a balance and a list of links, and no way to change
-        the six facts the product knows about you.
-      */}
-      <div className="mt-8">
-        <ProfileDetails
-          nickname={player.nickname}
-          phone={player.phone}
-          country={player.country}
-          skillLevel={player.skill_level}
-          positions={player.positions ?? []}
-          email={player.email}
-          countries={countryOptions(locale)}
-        />
-      </div>
-
-      <div className="mt-8 flex flex-wrap items-center gap-4">
-        <CreditBalance balanceCzk={balanceCzk} />
-        <CreditBatches batches={batches} />
-        {/*
-          THE ENTRY POINT STILL SITS ON THE WALLET — buying credit is a
-          thought someone has while looking at a balance, not while reading a
-          menu — but it now leads to the PASSES rather than to an
-          arbitrary-amount chooser. There is no cash wallet in this product's
-          language: credits come from passes, and passes are the only thing
-          advertised.
-        */}
-        <Link
-          href="/pass"
-          data-testid="topup-cta"
-          className="rounded-control border border-hairline-volt px-4 py-2 text-[13px] font-bold uppercase tracking-wide text-volt no-underline transition hover:bg-volt/10"
-        >
-          {t.account.topupCta}
-        </Link>
-      </div>
-
-      {/*
-        THE FIXTURE LIST MOVED TO `/my-games` (v1.2 §7). It was the single
-        most-visited thing on this page and it sat three-quarters of the way
-        down, behind a photo upload and a wallet, on a page named after
-        administration. It has its own route and its own tab now; this is the
-        way there for anyone who still comes looking here.
-      */}
-      <Link
-        href="/my-games"
-        data-testid="my-games-link"
-        className="mt-8 block text-[15px] font-bold uppercase tracking-wide text-volt no-underline"
-      >
-        {t.account.myGamesLink}
-      </Link>
-
-      {/*
-        THE ADMIN PANEL'S DOOR ON A PHONE.
-
-        The panel was reachable only from the header's link row, which is
-        `md:` and up — so on a phone, where the whole product is used, an
-        organizer had to type `/admin/games` from memory. The nav pill has no
-        room for a fifth tab (ruling K settled its four), and the Profile tab
-        is where a person already goes for things that are about them rather
-        than about a game. Two taps: Profile, then this.
-
-        DISPLAY ONLY, on the same footing as the header entry: rendering this
-        grants nothing and hiding it protects nothing, because anyone can type
-        the URL. `requireAdmin()` in `app/admin/layout.tsx` runs before any
-        nested page reads a row, and every admin RPC checks again inside
-        itself. It is conditional for the ordinary reason any nav is — a link
-        that bounces whoever taps it is a broken link.
-      */}
-      {isAdmin && (
-        <Link
-          href="/admin/games"
-          data-testid="account-admin-link"
-          /*
-            `mt-8`, matching the gap above "See all my games" rather than the
-            `mt-3` that made these two read as one stacked pair. They are not a
-            pair: one is where a player goes for their own fixtures, the other
-            is a door into a different application. A shared rhythm implied a
-            grouping that does not exist.
-          */
-          className="mt-8 flex min-h-11 items-center justify-between gap-3 rounded-control border border-hairline-strong px-4 text-body-lg font-semibold text-bone no-underline transition-colors hover:border-hairline-volt"
-        >
-          {t.nav.admin}
-          <span aria-hidden className="text-volt">→</span>
-        </Link>
+          <BadgeGrid badges={badges} t={t} />
+        </>
       )}
 
-      {/*
-        Deletion is by email request only — there is deliberately no self-serve
-        deletion UI. Deletion is implemented as ANONYMIZATION: the nickname
-        becomes `deleted-<8 hex>` (the 20-character nickname CHECK rejects
-        anything longer), email and phone are nulled, and the row
-        is retained so `events` and `credit_ledger` stay keyed to it. A hard
-        delete would orphan the ledger, which is exactly what the wallet's
-        integrity rests on. Phase 2 adds one thing to that list: the profile
-        photo object is deleted from storage, since nulling text columns leaves
-        a public image of someone who asked to be forgotten.
-      */}
-      {/*
-        THREE LINKS, ONE STACK, ALL THE SAME WEIGHT (§3.3, REQ-AUTH-020).
+      {tab === "games" && (
+        <div className="mt-8">
+          {history.upcoming.length === 0 && history.past.length === 0 ? (
+            /*
+             * THE SAME EMPTY STATE `/my-games` RENDERS, and for the same
+             * reason: it sends a new player to the board rather than reporting
+             * an absence. A page that says "you have no games" and stops is a
+             * dead end for exactly the person most likely to be looking for
+             * one.
+             */
+            <div data-testid="my-games-empty" className="rounded-card bg-surface p-6">
+              <p className="m-0 text-[15px] leading-relaxed text-bone">
+                {t.account.myGamesEmpty}
+              </p>
+              <Link
+                href="/games"
+                data-testid="my-games-empty-cta"
+                className="mt-4 inline-block rounded-control bg-volt px-5 py-3 text-[15px] font-extrabold uppercase tracking-wide text-surface no-underline"
+              >
+                {t.account.myGamesEmptyCta}
+              </Link>
+            </div>
+          ) : (
+            <PlayerHistory history={history} />
+          )}
+        </div>
+      )}
 
-        Change password, change email, delete account — in that order, because
-        the two things a person can fix themselves come before the one that
-        needs an email to a human. Someone arriving here wanting out of a
-        compromised account should meet "change your password" before "ask us
-        to delete everything".
+      {tab === "settings" && (
+        <>
+          {/*
+            THE PROFILE BLOCK (ruling L, §3 screen 7) — display and edit. It is
+            what the page is named after, and before ruling L it sat nowhere:
+            the page had a photo, a balance and a list of links, and no way to
+            change the six facts the product knows about you.
+          */}
+          <div className="mt-8">
+            <ProfileDetails
+              nickname={player.nickname}
+              phone={player.phone}
+              country={player.country}
+              skillLevel={player.skill_level}
+              positions={player.positions ?? []}
+              email={player.email}
+              countries={countryOptions(locale)}
+            />
+          </div>
 
-        No heading, no card, no columns. The two-column panel this replaces is
-        a recorded defect: these are controls used roughly once each, and they
-        were given more vertical space than the wallet and the fixture list.
-        Small, grey, and identical to each other is the entire design.
-      */}
-      <section
-        data-testid="account-security"
-        className="mt-12 border-t border-hairline pt-6"
-      >
-        <SecurityLinks />
-        <a
-          href={deletionHref}
-          data-testid="deletion-mailto"
-          className="block py-2 text-[12px] text-muted no-underline transition hover:text-bone"
-        >
-          {t.account.deleteAccount}
-        </a>
-      </section>
+          {/*
+            THREE LINKS, ONE STACK, ALL THE SAME WEIGHT (§3.3, REQ-AUTH-020).
+
+            Change password, change email, delete account — in that order,
+            because the two things a person can fix themselves come before the
+            one that needs an email to a human. Someone arriving here wanting
+            out of a compromised account should meet "change your password"
+            before "ask us to delete everything".
+
+            Deletion is by email request only — there is deliberately no
+            self-serve deletion UI. It is implemented as ANONYMIZATION: the
+            nickname becomes `deleted-<8 hex>`, email and phone are nulled, and
+            the row is retained so `events` and `credit_ledger` stay keyed to
+            it. A hard delete would orphan the ledger, which is what the
+            wallet's integrity rests on. The profile photo object is deleted
+            from storage too, since nulling text columns leaves a public image
+            of someone who asked to be forgotten.
+
+            SIGN OUT JOINS THEM, having previously sat at the top of the page
+            beside the heading. It is an account action and it belongs with the
+            account actions; at the top it was the most prominent control on a
+            page about a player, which had it competing with the player's own
+            name.
+          */}
+          <section
+            data-testid="account-security"
+            className="mt-12 border-t border-hairline pt-6"
+          >
+            <SecurityLinks />
+            <a
+              href={deletionHref}
+              data-testid="deletion-mailto"
+              className="block py-2 text-[12px] text-muted no-underline transition hover:text-bone"
+            >
+              {t.account.deleteAccount}
+            </a>
+
+            {/* A server action, so the session cookies are cleared server-side
+                rather than merely navigated away from. */}
+            <form action={signOutAction} className="mt-6">
+              <button
+                type="submit"
+                data-testid="sign-out"
+                className="rounded-control border border-hairline-strong px-[14px] py-2 text-[13px] font-bold uppercase tracking-wide text-bone transition hover:border-volt hover:text-volt"
+              >
+                {t.auth.signOut}
+              </button>
+            </form>
+          </section>
+        </>
+      )}
 
       {/* Signed in, or a cancellation made from this page. */}
       <ToastFromQuery query={query} />

@@ -123,9 +123,17 @@ test("a returning player signs in with a password", async ({ page }) => {
 
   // Landed as themselves: the account page is player-gated, so reaching it at
   // all is the assertion.
+  //
+  // ON THE IDENTITY BLOCK, not on `sign-out`. Sign out moved behind the
+  // Settings tab with the rest of the account controls (visibility round, item
+  // 3), and it was never the right marker anyway — it is a control that exists
+  // on every signed-in page in some form. The nickname is the thing that says
+  // WHOSE account this is, which is what "landed as themselves" means.
   await page.waitForURL(/\/(games|account)/);
   await page.goto("/account");
-  await expect(page.getByTestId("sign-out")).toBeVisible();
+  await expect(page.getByTestId("account-nickname")).toHaveText(
+    players.runner.nickname,
+  );
 });
 
 test("a wrong password is refused without saying which half was wrong", async ({ page }) => {

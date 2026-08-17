@@ -387,6 +387,39 @@ export const ru: StringsOverlay = {
       mid: "Полузащитник",
       att: "Нападающий",
     },
+
+    // DRAFT — flagged for the standing native-review batch.
+    memberSince: "с {date}",
+
+    tabOverview: "Обзор",
+    tabGames: "Мои игры",
+    tabSettings: "Настройки",
+
+    statGamesOne: "сыгранная игра",
+    statGamesFew: "сыгранные игры",
+    statGamesMany: "сыгранных игр",
+    statHoursOne: "час на поле",
+    statHoursFew: "часа на поле",
+    statHoursMany: "часов на поле",
+    statVenuesOne: "площадка",
+    statVenuesFew: "площадки",
+    statVenuesMany: "площадок",
+
+    badgesTitle: "Значки",
+    badgesCount: "{earned} из {total}",
+
+    badges: {
+      firstGame: "Первая игра",
+      firstGameHint: "Сыграй одну игру",
+      regular: "Завсегдатай",
+      regularHint: "Сыграй 5 игр",
+      veteran: "Ветеран",
+      veteranHint: "Сыграй 20 игр",
+      explorer: "Исследователь",
+      explorerHint: "Сыграй на 3 разных площадках",
+      ironLegs: "Железные ноги",
+      ironLegsHint: "Проведи на поле 10 часов",
+    },
   },
 
   account: {
