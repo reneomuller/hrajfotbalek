@@ -1,4 +1,5 @@
 import { ImageResponse } from "next/og";
+import { OG_MARK_DATA_URI } from "@/lib/og/mark";
 import tailwindConfig from "@/tailwind.config";
 import { formatCzk, formatGameDateTime } from "@/lib/format";
 import { strings } from "@/lib/strings";
@@ -67,22 +68,26 @@ export function renderShareImage({
       >
         {/* Wordmark */}
         <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              width: 56,
-              height: 56,
-              borderRadius: 12,
-              border: `3px solid ${COLORS.volt}`,
-              color: COLORS.volt,
-              fontSize: 30,
-              fontWeight: 800,
-            }}
-          >
-            HF
-          </div>
+          {/*
+            THE MARK, not a `HF` in a volt-bordered box.
+
+            The box was a stand-in from before there was artwork, and it was
+            the wrong stand-in in the one place it matters most: this card is
+            what WhatsApp draws when somebody shares a game, which for most
+            arrivals is the first time they see the brand at all. A mark that
+            does not match the header they land on is two brands.
+
+            `OG_MARK_DATA_URI` is the bytes, generated from the same 512px
+            master as the favicon and the home-screen icon — see `lib/og/mark.ts`
+            for why Satori is handed a string here rather than a path.
+
+            `borderRadius: 28` is half of 56 — the master carries a baked-in
+            black square behind the roundel, and on an ink card the corners are
+            invisible right up until a viewer's client composites the preview
+            onto white.
+          */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={OG_MARK_DATA_URI} width={56} height={56} style={{ borderRadius: 28 }} alt="" />
           {/*
             Satori requires an explicit `display` on any element with more
             than one child — it does not apply the browser's default block

@@ -92,8 +92,25 @@ export function DayPicker({
     than its container and restore the overflow at exactly the widths where the
     labels are longest — which is to say, in Czech and Russian.
   */
+  /*
+    `rounded-control`, NOT `rounded-card`, AND THE STRIP IS WHAT CAUGHT IT.
+
+    A cell is 34.9px wide. `card` is 18px, which is more than half of that, so
+    CSS clamps both corner radii proportionally and the "boxed square" this
+    component's comment describes renders as a full OVAL — nine touching
+    ellipses rather than a calendar. It has looked like this since the cells
+    went from 48px to 34px; the width was measured, the radius was not, and
+    nothing in the anatomy was written down as depending on the two together.
+
+    `control` is 14px, still inside ruling A's radius table, and leaves ~7px of
+    straight edge on each side of every corner. The box comes back.
+
+    THE GENERAL RULE, since this will happen again: a radius token is only a
+    rounded rectangle while it is under half the SHORT side. Below that it is
+    a pill, whatever it is named.
+  */
   const cell =
-    "flex h-12 min-w-0 flex-1 flex-col items-center justify-center gap-[1px] rounded-card border no-underline transition-colors";
+    "flex h-12 min-w-0 flex-1 flex-col items-center justify-center gap-[1px] rounded-control border no-underline transition-colors";
   const skin = (isSelected: boolean, hasGames: boolean) =>
     isSelected
       ? "border-hairline-volt bg-volt text-ink"
