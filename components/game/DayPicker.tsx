@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { DayPickerScroll } from "@/components/game/DayPickerScroll";
 import type { DayTab } from "@/lib/games/days";
 
 /**
@@ -27,11 +26,25 @@ import type { DayTab } from "@/lib/games/days";
  *
  * LINKS, NOT CLIENT STATE. Each tab is a `?day=` link the server renders the
  * list from: shareable, back-button-correct, and no JavaScript on a page most
- * visitors reach from a WhatsApp link on a phone. `DayPickerScroll` only
- * scrolls the selected tab into view, which is enhancement on top.
+ * visitors reach from a WhatsApp link on a phone.
  *
- * THE COUNT IS PART OF THE CONTROL. Days with no games get no tab, so it is
- * never zero and a tab is never a tap that leads nowhere.
+ * NOTHING SCROLLS, AND NOTHING MAY (owner's calendar-width ruling): "scrolling
+ * calendars hide days — visibility wins". The row is `All` plus the eight cells
+ * `buildDayTabs` returns, and all nine sit inside the page gutter at 390px with
+ * one shared gap. Which is why the cells are `flex-1` rather than a measured
+ * width: a fixed cell either leaves a ragged tail at one width or overflows at
+ * another, and an overflow here is a day nobody can see.
+ *
+ * WHAT WENT WITH THE SCROLL. `-mx-gutter`/`px-gutter` — the full-bleed trick
+ * that let the strip run under the page edge — and `DayPickerScroll`, a client
+ * component whose only job was to scroll the selected tab back into view after
+ * a tap navigated. Both existed to make a scrolling strip usable; there is no
+ * scrolling strip. The row's margins are now the ordinary page gutter, which is
+ * what puts its edges on the same line as the cards beneath it.
+ *
+ * A DAY WITH NO GAMES STILL GETS ITS CELL, greyed and dotless (amendment A).
+ * The window is a calendar rather than a list of what exists, and a calendar
+ * that omits its empty days is one a reader cannot count along.
  *
  * WHAT THE v1.3 SKIN CHANGED, and nothing else did: `rounded-chip` is gone
  * with the six-radius table (ruling A) and these are `pill`; the mono face is
@@ -62,21 +75,25 @@ export function DayPicker({
    * being recognised.
    */
   /*
-    `min-w-12` RATHER THAN `w-12`, and horizontal padding with it.
+    `flex-1 min-w-0` RATHER THAN ANY MEASURED WIDTH.
 
-    The cells were a fixed 48px square, which was right when every top line
-    was a three-letter weekday. Section 3 item 1 puts "Today" and "Tomorrow"
-    in the first two, and `TOMORROW` is eight characters — it overflowed its
-    box and collided with the cell beside it. The square is now a FLOOR: the
-    weekday cells keep it exactly, and the two word cells grow to fit their
-    label rather than clipping it.
+    The cells have been a fixed 48px, then a fixed 34px measured to fit nine of
+    them at 390px. Both are the same mistake at different sizes: a width chosen
+    for one viewport is wrong at every other one, and wrong here means either a
+    ragged gap after the last cell or a ninth cell over the edge.
 
-    Which is also why the label is not truncated instead: §2.8's chip rule —
-    "they never truncate a label" — is the same argument one control over, and
-    `Tomo…` in a calendar is worse than a wider cell.
+    Flexing divides whatever the gutter leaves. At 390px that is
+    (390 - 2x22 - 8x4) / 9 = 34.9px per cell, a shade wider than the measured
+    value it replaces, and it grows from there — so the two word cells get
+    MORE room than the width they were already proven to fit, not less.
+
+    `min-w-0` is load-bearing: a flex item's default `min-width: auto` refuses
+    to shrink below its content, so without it "Today" would push the row wider
+    than its container and restore the overflow at exactly the widths where the
+    labels are longest — which is to say, in Czech and Russian.
   */
   const cell =
-    "flex h-12 w-[34px] shrink-0 flex-col items-center justify-center gap-[1px] rounded-card border no-underline transition-colors";
+    "flex h-12 min-w-0 flex-1 flex-col items-center justify-center gap-[1px] rounded-card border no-underline transition-colors";
   const skin = (isSelected: boolean, hasGames: boolean) =>
     isSelected
       ? "border-hairline-volt bg-volt text-ink"
@@ -88,14 +105,11 @@ export function DayPicker({
     <nav
       data-testid="day-picker"
       aria-label={allLabel}
-      className="-mx-gutter mt-4 flex gap-1 overflow-x-auto px-gutter pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      className="mt-4 flex gap-1"
     >
-      {/* Progressive enhancement only — see the component. Without it the
-          filter still works; the selected cell is just where it lands. */}
-      <DayPickerScroll selected={selected} />
-
-      {/* The way back to everything, and the resting state. The same square as
-          the day cells, so the row has one baseline. */}
+      {/* The way back to everything, and the resting state. It flexes with the
+          day cells rather than sizing to its label, so the nine are one row of
+          equal boxes rather than eight and a wider one. */}
       <Link
         href="/games"
         scroll={false}
