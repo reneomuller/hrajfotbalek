@@ -50,14 +50,19 @@ test("the pass page lists every tier with its saving and its expiry", async ({ p
   // 5 x 150. NOT `credited_czk` (750 here by coincidence of this tier) — the
   // anchor is what the games would have cost, which is a different claim.
   await expect(five.getByTestId("pass-tier-anchor")).toContainText("750");
-  await expect(five.getByTestId("pass-tier-discount")).toContainText("6.7");
-  await expect(five.getByTestId("pass-tier-expiry")).toContainText("1 month");
+  // Whole percent, rounded to nearest (owner's call): 6.66… renders as 7.
+  await expect(five.getByTestId("pass-tier-discount")).toContainText("7");
+  // The window is stated in DAYS now, derived from the tier's `expires_months`
+  // — so the 1-month tiers say 30 and the 2-month tiers say 60, rather than
+  // every card claiming 30.
+  await expect(five.getByTestId("pass-tier-expiry")).toContainText("30 days");
 
   // The 20-pass, where the anchor and the credited value genuinely diverge:
   // 20 x 150 = 3,000 against a 2,300 price.
   const twenty = page.locator('[data-testid="pass-tier"][data-games="20"]');
   await expect(twenty.getByTestId("pass-tier-anchor")).toContainText("3,000");
-  await expect(twenty.getByTestId("pass-tier-discount")).toContainText("23.3");
+  // Whole percent, rounded to nearest: 23.33… renders as 23.
+  await expect(twenty.getByTestId("pass-tier-discount")).toContainText("23");
 
   // Exactly one tier is tagged, and it is the 12.
   await expect(page.getByTestId("pass-tier-popular")).toHaveCount(1);

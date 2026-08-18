@@ -54,22 +54,55 @@ export async function PassTierCard({
   /*
    * COMPUTED, NEVER TABULATED. A hardcoded percent list drifts the first time
    * a tier price moves and nothing catches it, because a wrong percentage is
-   * still a plausible percentage. One decimal, and a trailing `.0` dropped by
-   * `maximumFractionDigits` so 10 % does not render as "10.0 %".
+   * still a plausible percentage.
+   *
+   * WHOLE PERCENT, ROUNDED TO NEAREST (owner's call). It was one decimal, so
+   * the 5-credit tier advertised "−6.7 %" — a precision nobody needs on a
+   * price comparison and one that reads as a calculation rather than as an
+   * offer. `maximumFractionDigits: 0` rounds half away from zero, which is
+   * what "nearest" means: 6.66… becomes 7.
+   *
+   * IT ROUNDS THE DISPLAY AND NOTHING ELSE. The price, the anchor and the
+   * credited value are all exact integers from `pass_tiers`, and the buyer
+   * pays `tier.priceCzk`. A rounded percentage beside two exact figures is a
+   * summary, not a term — and it can only ever round in the range where the
+   * two crowns figures above it already say precisely what the deal is.
    */
   const discountPercent = new Intl.NumberFormat(locale, {
-    maximumFractionDigits: 1,
+    maximumFractionDigits: 0,
   }).format(((anchorCzk - tier.priceCzk) / anchorCzk) * 100);
 
   /** Ruled onto the 12-credit tier. */
   const mostPopular = tier.games === MOST_POPULAR_GAMES;
 
+  /*
+   * THE WINDOW IN DAYS, DERIVED — never the literal "30" on every card.
+   *
+   * `pass_tiers.expires_months` is 1 for the 5- and 8-credit tiers and 2 for
+   * the 12, 15 and 20. A flat "Expires 30 days" would therefore be wrong on
+   * three of the five, and wrong in the direction that costs the buyer: it
+   * would tell someone who bought 20 credits that they die in a month when
+   * they in fact last two.
+   *
+   * THE DATABASE STILL ADDS CALENDAR MONTHS — `now() + make_interval(months
+   * => n)` in `confirm_topup` — so "30 days" is that month rounded. A January
+   * purchase actually gets 31 days and a February one 28, which makes this
+   * copy optimistic by up to two days in February and pessimistic by one in
+   * the long months.
+   *
+   * NO MIGRATION HAS BEEN WRITTEN for this. Making the two agree exactly means
+   * `create or replace`-ing `confirm_topup` to add days instead of months —
+   * a behaviour change to the money path, which is the owner's call and not a
+   * side effect of a copy edit. Flagged rather than done.
+   */
+  const DAYS_PER_MONTH = 30;
   const expiry =
     tier.expiresMonths === null
       ? t.pass.tierNeverExpires
-      : tier.expiresMonths === 1
-        ? t.pass.tierExpiresOne
-        : t.pass.tierExpiresMany.replace("{count}", String(tier.expiresMonths));
+      : t.pass.tierExpiresDays.replace(
+          "{days}",
+          String(tier.expiresMonths * DAYS_PER_MONTH),
+        );
 
   return (
     <article

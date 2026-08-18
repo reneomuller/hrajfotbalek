@@ -1,11 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { ChangeEmailForm, ChangePasswordForm } from "@/components/account/SecurityForms";
+import { ChangePasswordForm } from "@/components/account/SecurityForms";
 import { useStrings } from "@/components/LocaleProvider";
 
 /**
- * Change password and change email, as COMPACT TEXT LINKS (§3.3, REQ-AUTH-020).
+ * Change password, as a COMPACT TEXT LINK (§3.3, REQ-AUTH-020).
+ *
+ * WAS TWO CONTROLS. Change email moved into the profile block beside the
+ * address it changes; see the note in the body.
  *
  * THE TWO-COLUMN PANEL THIS REPLACES IS A RECORDED DEFECT, and the contract
  * says why: these are controls someone uses roughly once, and giving them more
@@ -39,6 +42,18 @@ export function SecurityLinks() {
       shouting.
     */
     <div className="flex flex-col items-start">
+      {/*
+        CHANGE EMAIL IS NO LONGER HERE. It moved beside the email address in
+        the profile block, where the fact it changes actually is — and, more to
+        the point, out from under the nav pill. Measured with
+        `document.elementFromPoint` at this link's centre, the element on top
+        was the pill: `fixed z-40` at the document root, floating over the last
+        band of every page. It was visible, enabled, and unclickable.
+
+        Change password stays. It is not a fact displayed anywhere, so it has
+        nowhere else to be, and it sits above the deletion link rather than at
+        the very bottom of the stack — which is the band the pill covers.
+      */}
       <Row
         label={t.account.changePasswordLink}
         isOpen={open === "password"}
@@ -46,15 +61,6 @@ export function SecurityLinks() {
         testId="change-password-link"
       >
         <ChangePasswordForm />
-      </Row>
-
-      <Row
-        label={t.account.changeEmailLink}
-        isOpen={open === "email"}
-        onToggle={() => setOpen(open === "email" ? null : "email")}
-        testId="change-email-link"
-      >
-        <ChangeEmailForm />
       </Row>
     </div>
   );

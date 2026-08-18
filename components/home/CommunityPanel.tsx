@@ -1,4 +1,3 @@
-import { InstagramIcon, WhatsAppIcon } from "@/components/BrandIcon";
 import { getStrings } from "@/lib/i18n/server";
 
 /**
@@ -12,10 +11,15 @@ import { getStrings } from "@/lib/i18n/server";
  * nowhere to go. Now the invitation is an invitation and the numbers are a
  * panel of numbers.
  *
- * REAL BRAND MARKS, not coloured dots — see `components/BrandIcon.tsx`. A
- * WhatsApp glyph is recognised before the label beside it is read, which is the
- * entire reason to put a mark on a button; a green circle is recognised as a
- * green circle.
+ * THE OFFICIAL MARKS, from `public/brand/`, at 44px and side by side. A
+ * WhatsApp glyph is recognised before the label under it is read, which is the
+ * entire reason to put a mark on a button.
+ *
+ * `components/BrandIcon.tsx` KEEPS ITS INLINE SVGS and is still used — by the
+ * share button and the organizer card, at 18–24px inline with text, where a
+ * vector that takes `currentColor`'s neighbours is the right thing and a raster
+ * would be soft. The split is by SIZE, not by preference: these two are the
+ * marks as marks, those are glyphs in a sentence.
  */
 export async function CommunityPanel({
   gamesPerWeek = null,
@@ -101,15 +105,41 @@ export async function CommunityPanel({
         neighbour, which is fine: `items-stretch` on the row was making a
         height agree that never needed to.
       */}
-      <div className="mt-4 flex flex-col gap-[10px]">
+      {/*
+        SIDE BY SIDE, AND THE MARKS CARRY THE ROW.
+
+        They were stacked full-width with a 20px glyph in front of a label,
+        which is a menu of two rows. The owner's call is one row of two — so
+        each is a `flex-1` tile with a 44px mark above its label, and the pair
+        divides the panel's width evenly at every size.
+
+        `basis-0` WITH `flex-1`, not `flex-1` alone: without it the two tiles
+        size from their content first, so the longer label ("WhatsApp group"
+        against "Instagram") makes one tile permanently wider than the other.
+        Equal halves is the whole point of putting them on one row.
+
+        THE REAL MARKS, from `public/brand/`, replacing the hand-drawn inline
+        SVGs in `components/BrandIcon.tsx`. That file argued for a stroked
+        single-colour Instagram glyph because "the gradient is a specific asset
+        with its own usage rules" — a sound argument made when there was no
+        asset. There is one now: the owner supplied both official marks, which
+        is what the reasoning was standing in for.
+
+        `<img>` rather than `next/image`: a 44px mark from our own `public/`
+        needs no optimizer round trip, and 96px of source is 2.2x for a phone.
+        `alt=""` throughout — the label sits directly beneath each one, and
+        announcing "WhatsApp" twice is noise on a screen reader.
+      */}
+      <div className="mt-4 flex gap-3">
         <a
           href={community.whatsappUrl}
           target="_blank"
           rel="noopener noreferrer"
           data-testid="community-whatsapp"
-          className="flex min-h-11 items-center gap-3 rounded-control border border-hairline-strong px-4 py-3 text-[15px] font-bold tracking-wide text-bone no-underline transition hover:border-whatsapp"
+          className="flex flex-1 basis-0 flex-col items-center gap-2 rounded-control border border-hairline-strong px-3 py-4 text-center text-[15px] font-bold tracking-wide text-bone no-underline transition hover:border-whatsapp"
         >
-          <WhatsAppIcon />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/brand/whatsapp-96.png" alt="" width={44} height={44} className="h-11 w-11" />
           {community.whatsapp}
         </a>
         <a
@@ -117,9 +147,10 @@ export async function CommunityPanel({
           target="_blank"
           rel="noopener noreferrer"
           data-testid="community-instagram"
-          className="flex min-h-11 items-center gap-3 rounded-control border border-hairline-strong px-4 py-3 text-[15px] font-bold tracking-wide text-bone no-underline transition hover:border-instagram"
+          className="flex flex-1 basis-0 flex-col items-center gap-2 rounded-control border border-hairline-strong px-3 py-4 text-center text-[15px] font-bold tracking-wide text-bone no-underline transition hover:border-instagram"
         >
-          <InstagramIcon />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/brand/instagram-96.png" alt="" width={44} height={44} className="h-11 w-11 rounded-[10px]" />
           {community.instagram}
         </a>
       </div>

@@ -31,7 +31,26 @@ export async function SkillBadges({
 
   if (!levels || levels.length === 0) return null;
 
-  const text = size === "slim" ? "text-[9px]" : "text-[10px]";
+  /*
+    SIZED TO `CardBadges`, WHICH IT SITS BESIDE.
+
+    These were `text-[10px]`, uppercase, `tracking-[1px]`, `px-2` — while the
+    format and surface badges on the same row of the same card are `text-body`
+    at `px-3 py-1` in sentence case. Three facts about one game, rendered as
+    two classes of object, with the restriction — the one that decides whether
+    you may play at all — set smallest.
+
+    So: the same padding, the same text size, the same weight, and the tracked
+    capitals dropped. Ruling B left `eyebrow` as the product's only uppercase
+    style and this was never an eyebrow.
+
+    WHAT STAYS DIFFERENT is the fill. `hairline-volt` on `volt/[.08]` against
+    the format badge's `border-volt` on `volt/[.12]`: same geometry, quieter
+    ink. Making them identical would erase the difference between "this is a
+    6v6" and "this game is restricted", which is the one distinction on the row
+    that changes what a reader can do.
+  */
+  const text = size === "slim" ? "text-small" : "text-body";
 
   return (
     <div className="flex flex-wrap items-center gap-2" data-testid="skill-badges">
@@ -39,7 +58,7 @@ export async function SkillBadges({
         <span
           key={level}
           data-testid={`skill-badge-${level}`}
-          className={`rounded-pill border border-hairline-volt bg-volt/[.08] px-2 py-1 ${text} font-bold uppercase tracking-[1px] text-volt`}
+          className={`rounded-pill border border-hairline-volt bg-volt/[.08] px-3 py-1 ${text} font-semibold text-volt`}
         >
           {t.games.skillLevel[level]}
         </span>
