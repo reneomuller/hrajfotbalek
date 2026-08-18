@@ -83,7 +83,7 @@ export default async function LandingPage() {
           from the root layout. This route is what puts it at full strength —
           see components/SiteBackground.tsx. */}
 
-      {/* NAV is the shared SiteHeader, rendered once from the root layout. */}
+      {/* NAV is the shared `chrome/Header`, rendered once from the root layout. */}
 
       <div className="relative z-10 mx-auto w-full max-w-shell px-gutter">
         {/*
@@ -327,7 +327,7 @@ export default async function LandingPage() {
             has forgotten it already said it — and the hero is where a first-
             time visitor meets it.
 
-            The links and the copyright are the SHARED `SiteFooter` beneath
+            The links and the copyright are the SHARED `chrome/Footer` beneath
             this one, so "minimal footer: mark, links, ©" is satisfied across
             the two rather than by duplicating them here.
           */}

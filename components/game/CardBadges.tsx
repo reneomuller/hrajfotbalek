@@ -59,7 +59,7 @@ export async function CardBadges({
       {format && (
         <span
           data-testid="game-format"
-          className={`rounded-pill border border-volt bg-volt/[.12] ${pad} ${text} font-semibold text-volt`}
+          className={`rounded-pill border-[1.5px] border-volt bg-volt/[.12] ${pad} ${text} font-semibold text-volt`}
         >
           {format}
         </span>
@@ -67,7 +67,7 @@ export async function CardBadges({
       {surface && (
         <span
           data-testid="game-surface"
-          className={`lifted rounded-pill ${pad} ${text} font-semibold text-bone`}
+          className={`lifted rounded-pill border-[1.5px] ${pad} ${text} font-semibold text-bone`}
         >
           {t.games.surface[surface]}
         </span>

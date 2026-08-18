@@ -15,11 +15,11 @@ import { getStrings } from "@/lib/i18n/server";
  * WhatsApp glyph is recognised before the label under it is read, which is the
  * entire reason to put a mark on a button.
  *
- * `components/BrandIcon.tsx` KEEPS ITS INLINE SVGS and is still used — by the
- * share button and the organizer card, at 18–24px inline with text, where a
- * vector that takes `currentColor`'s neighbours is the right thing and a raster
- * would be soft. The split is by SIZE, not by preference: these two are the
- * marks as marks, those are glyphs in a sentence.
+ * `components/BrandIcon.tsx` IS GONE. It carried hand-drawn WhatsApp and
+ * Instagram SVGs — a stand-in from before there was artwork — and every
+ * surface now reads the official marks from `public/brand/` instead. The
+ * share button and the organizer card render the same 96px file at 24 and
+ * 18px, which is a 4-5x downscale and crisp by construction.
  */
 export async function CommunityPanel({
   gamesPerWeek = null,
@@ -119,11 +119,12 @@ export async function CommunityPanel({
         Equal halves is the whole point of putting them on one row.
 
         THE REAL MARKS, from `public/brand/`, replacing the hand-drawn inline
-        SVGs in `components/BrandIcon.tsx`. That file argued for a stroked
-        single-colour Instagram glyph because "the gradient is a specific asset
-        with its own usage rules" — a sound argument made when there was no
-        asset. There is one now: the owner supplied both official marks, which
-        is what the reasoning was standing in for.
+        SVGs that `components/BrandIcon.tsx` used to hold. That file argued
+        for a stroked single-colour Instagram glyph because "the gradient is a
+        specific asset with its own usage rules" — a sound argument made when
+        there was no asset. There is one now: the owner supplied both official
+        marks, which is what the reasoning was standing in for. The file has
+        been retired.
 
         `<img>` rather than `next/image`: a 44px mark from our own `public/`
         needs no optimizer round trip, and 96px of source is 2.2x for a phone.

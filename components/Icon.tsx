@@ -8,8 +8,8 @@
  * mostly that its icons agree with each other, and icons collected one at a
  * time from wherever never do.
  *
- * `currentColor`, unlike the brand marks in `components/BrandIcon.tsx`. Those
- * are somebody else's colour and carry it; these are ours and take it.
+ * `currentColor`, unlike the brand marks in `public/brand/`. Those are
+ * somebody else's colour and carry it; these are ours and take it.
  *
  * INLINE, NOT AN ICON FONT OR A PACKAGE. A dependency for a dozen paths is a
  * dependency, a bundle and a licence; a font is a download for glyphs that are

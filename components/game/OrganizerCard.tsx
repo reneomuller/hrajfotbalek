@@ -1,4 +1,3 @@
-import { WhatsAppIcon } from "@/components/BrandIcon";
 import { initials } from "@/lib/roster/initials";
 import { getStrings } from "@/lib/i18n/server";
 
@@ -110,7 +109,14 @@ export async function OrganizerCard({
                     data-testid="organizer-whatsapp"
                     className="inline-flex items-center gap-1 text-body text-bone no-underline transition-colors hover:text-whatsapp"
                   >
-                    <WhatsAppIcon className="h-[18px] w-[18px]" />
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src="/brand/whatsapp-96.png"
+                      alt=""
+                      width={18}
+                      height={18}
+                      className="h-[18px] w-[18px] shrink-0"
+                    />
                     {t.games.organizerWhatsApp}
                   </a>
                 </>

@@ -1,5 +1,4 @@
 import { whatsAppShareUrl } from "@/lib/games/share";
-import { WhatsAppIcon } from "@/components/BrandIcon";
 import { getStrings } from "@/lib/i18n/server";
 
 /**
@@ -43,7 +42,7 @@ export async function ShareButton({
         BIGGER, WITH THE REAL LOGO (Section 4, item 8). It was a 10px green
         DOT beside tracked capitals at eyebrow size — a placeholder standing in
         for a mark the product already has, on the one control that sends a
-        game to the group this product exists to replace. `WhatsAppIcon` is the
+        game to the group this product exists to replace. the official mark is the
         same glyph the organizer row uses, so the two agree about what WhatsApp
         looks like.
 
@@ -54,7 +53,10 @@ export async function ShareButton({
         size === "slim" ? "text-[9px]" : "text-[10px]"
       }`}
     >
-      <WhatsAppIcon className="h-6 w-6 shrink-0" />
+      {/* The official mark from `public/brand/`, 96px of source at a 24px
+          render. `alt=""` — the button says WHATSAPP beside it. */}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src="/brand/whatsapp-96.png" alt="" width={24} height={24} className="h-6 w-6 shrink-0" />
       {t.games.shareWhatsApp}
     </a>
   );

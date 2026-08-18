@@ -119,6 +119,14 @@ export async function GameCard({
           card's four rows are already measured, and a bigger number here would
           push the badges opposite it onto a second line.
 
+          `border-[1.5px]`, NOT 1px, AND THE REPORT THAT PROMPTED IT WAS "the
+          outline is missing live". It was not missing: production computed
+          `rgb(200, 255, 0)` at 1px on both surfaces, and the class and the
+          stylesheet were both correct. A single volt pixel around a #161616
+          pill simply does not survive a phone screen in daylight, so "present"
+          and "visible" were two different things. 1.5px is the same weight the
+          header monogram uses and the smallest that actually reads.
+
           THIS IS THE SECOND VOLT ELEMENT ON THE CARD, which softens ruling D's
           "the spots figure is the only coloured text". The figure is still the
           only coloured TEXT; this is a coloured EDGE around bone text, and the
@@ -136,7 +144,7 @@ export async function GameCard({
         */}
         <span
           data-testid="card-when"
-          className="lifted min-w-0 truncate rounded-pill border-volt px-3 py-[6px] text-body-lg font-bold text-bone"
+          className="lifted min-w-0 truncate rounded-pill border-[1.5px] border-volt px-3 py-[6px] text-body-lg font-bold text-bone"
         >
           {formatTime(game.starts_at)}
         </span>
