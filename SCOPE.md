@@ -68,9 +68,17 @@ round. Each gets its own contract when it is taken up.
 | Admin bulk credit issuance on cancellation | May already exist inside the cancellation loop; needs reading before it is specified |
 | Admin user search, ban, delete | Search is cheap; **ban is a new account state** with consequences for bookings already held |
 | In-app notifications surface | There is no notification store; email is the channel |
+| **"Unless your spot is filled"** — refunding a late cancellation once somebody else takes the spot | A way to attribute a later booking to the spot a particular cancellation freed. Nothing records that: `spot_released` and the next `booking_created` are two independent events, and on a game with several cancellations there is no fact saying which one the new booking answers. It also needs a decision about WHEN the refund fires (at the replacement booking, or at kickoff once the seat is confirmed filled) and what happens if the replacement then cancels too. Deferred by the owner, 2026-08-19, alongside the 10-hour cutoff that ships without it |
 
 **Cash-to-cash refunds** are the eighth, carried in §1 above because they are
 half of a ruling rather than a standalone request.
+
+**THE COPY MUST NOT PROMISE THE FILLED-SPOT REFUND.** The 10-hour cutoff ships
+as a flat rule — inside the window, the spot is released and no credit is
+issued. The owner's original wording was "non-refundable after 10hrs unless you
+fill spot"; the clause was struck on 2026-08-19 precisely because the string
+table would have carried a promise no code could keep, and the person who
+discovers that is a player who cancelled expecting their money back.
 
 **Not quarantined:** ruling F's repricing. The two 200 CZK games are edited
 through the existing admin form — data, not schema.
