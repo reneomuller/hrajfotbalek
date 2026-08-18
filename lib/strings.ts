@@ -84,7 +84,7 @@ export const strings = {
      * rather than silently resolved — which of the two keeps it is a copy
      * decision, not a code one.
      */
-    heroSub: "Come for the game, stay for the crew",
+    heroSub: "Play football. Anytime. Anywhere.",
     vision:
       "One match that repeats itself. Find a game, claim your spot, show up.",
     heroCta: "Find a game →",
@@ -135,7 +135,7 @@ export const strings = {
     community: {
       title: "Join our community",
       body: "Follow our socials to keep up to date with the latest community news",
-      whatsapp: "WhatsApp group",
+      whatsapp: "WhatsApp",
       whatsappUrl: "https://chat.whatsapp.com/LjPjGf3rf32CNifizwzsW9?mode=gi_t",
       instagram: "@HRAJFOTBAL",
       instagramUrl: "https://instagram.com/hrajfotbal",

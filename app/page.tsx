@@ -321,8 +321,8 @@ export default async function LandingPage() {
             FOOTER — MARK AND CITY ONLY.
 
             The tagline is gone from here because the HERO owns the slogan
-            now: `heroSub` is "Come for the game, stay for the crew", and this
-            printed the same sentence in tracked capitals two screens below it.
+            now: `heroSub` is the product's one slogan, and this printed the
+            same sentence in tracked capitals two screens below it.
             One line said twice on one page is not emphasis, it is a page that
             has forgotten it already said it — and the hero is where a first-
             time visitor meets it.

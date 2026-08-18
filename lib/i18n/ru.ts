@@ -51,7 +51,8 @@ export const ru: StringsOverlay = {
   },
 
   landing: {
-    heroSub: "Приходи за игрой, оставайся ради компании",
+    // DRAFT — flagged for the standing native-review batch.
+    heroSub: "Играй в футбол. Когда угодно. Где угодно.",
     vision: "Один матч, который повторяется. Найди игру, займи место, приходи.",
     heroCta: "Найти матч →",
     scrollHint: "↓ ЛИСТАЙ",
@@ -78,7 +79,7 @@ export const ru: StringsOverlay = {
     community: {
       title: "Присоединяйся к нам",
       body: "Подписывайся на наши соцсети, чтобы быть в курсе новостей сообщества",
-      whatsapp: "Группа в WhatsApp",
+      whatsapp: "WhatsApp",
     },
     footer: {
       city: "· ПРАГА",

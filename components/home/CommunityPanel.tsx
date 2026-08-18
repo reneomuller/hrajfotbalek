@@ -114,9 +114,15 @@ export async function CommunityPanel({
         divides the panel's width evenly at every size.
 
         `basis-0` WITH `flex-1`, not `flex-1` alone: without it the two tiles
-        size from their content first, so the longer label ("WhatsApp group"
-        against "Instagram") makes one tile permanently wider than the other.
-        Equal halves is the whole point of putting them on one row.
+        size from their content first, so the longer label makes one tile
+        permanently wider than the other. Equal halves is the whole point of
+        putting them on one row.
+
+        CENTRED ON BOTH AXES. `items-center` was already doing the horizontal;
+        `justify-center` adds the vertical, which matters because the two tiles
+        stretch to a shared height — a label that wraps in one language would
+        otherwise leave the other tile's contents sitting at the top of a taller
+        box, which reads as a misalignment rather than as a longer word.
 
         THE REAL MARKS, from `public/brand/`, replacing the hand-drawn inline
         SVGs that `components/BrandIcon.tsx` used to hold. That file argued
@@ -137,7 +143,7 @@ export async function CommunityPanel({
           target="_blank"
           rel="noopener noreferrer"
           data-testid="community-whatsapp"
-          className="flex flex-1 basis-0 flex-col items-center gap-2 rounded-control border border-hairline-strong px-3 py-4 text-center text-[15px] font-bold tracking-wide text-bone no-underline transition hover:border-whatsapp"
+          className="flex flex-1 basis-0 flex-col items-center justify-center gap-2 rounded-control border border-hairline-strong px-3 py-4 text-center text-[15px] font-bold tracking-wide text-bone no-underline transition hover:border-whatsapp"
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/brand/whatsapp-96.png" alt="" width={44} height={44} className="h-11 w-11" />
@@ -148,7 +154,7 @@ export async function CommunityPanel({
           target="_blank"
           rel="noopener noreferrer"
           data-testid="community-instagram"
-          className="flex flex-1 basis-0 flex-col items-center gap-2 rounded-control border border-hairline-strong px-3 py-4 text-center text-[15px] font-bold tracking-wide text-bone no-underline transition hover:border-instagram"
+          className="flex flex-1 basis-0 flex-col items-center justify-center gap-2 rounded-control border border-hairline-strong px-3 py-4 text-center text-[15px] font-bold tracking-wide text-bone no-underline transition hover:border-instagram"
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/brand/instagram-96.png" alt="" width={44} height={44} className="h-11 w-11 rounded-[10px]" />

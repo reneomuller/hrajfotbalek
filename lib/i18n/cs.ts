@@ -52,7 +52,8 @@ export const cs: StringsOverlay = {
   },
 
   landing: {
-    heroSub: "Přijď si zahrát, zůstaň kvůli partě",
+    // DRAFT — flagged for the standing native-review batch.
+    heroSub: "Hraj fotbal. Kdykoli. Kdekoli.",
     vision: "Jeden zápas, který se opakuje. Najdi hru, zaber si místo, přijď.",
     heroCta: "Najít zápas →",
     scrollHint: "↓ SCROLLUJ",
@@ -75,7 +76,7 @@ export const cs: StringsOverlay = {
     community: {
       title: "Přidej se k nám",
       body: "Sleduj naše sítě a neuteče ti nic z dění v komunitě",
-      whatsapp: "WhatsApp skupina",
+      whatsapp: "WhatsApp",
     },
     footer: {
       city: "· PRAHA",
