@@ -71,3 +71,26 @@ export function canOfferCancel(
     new Date(startsAt).getTime() - cutoffHoursBeforeStart * 60 * 60 * 1000;
   return now < cutoff;
 }
+
+/**
+ * Whether a cancellation made NOW would still be credited (policy v2).
+ *
+ * A DIFFERENT QUESTION FROM `canOfferCancel`, and v2 is where the two part
+ * company: cancelling stays open until kickoff, crediting stops ten hours
+ * before it. Both mirror `cancel_booking` and neither enforces anything — the
+ * RPC decides, and it decides from the DATABASE's clock, which is why every
+ * caller of this passes a server-side `now` rather than letting a client
+ * component read one.
+ *
+ * Used only to choose which sentence the cancel dialog shows. A wrong answer
+ * here shows the wrong warning; it cannot move money.
+ */
+export function isCancellationRefundable(
+  startsAt: string,
+  now: number,
+  refundCutoffHoursBeforeStart: number,
+): boolean {
+  const cutoff =
+    new Date(startsAt).getTime() - refundCutoffHoursBeforeStart * 60 * 60 * 1000;
+  return now < cutoff;
+}

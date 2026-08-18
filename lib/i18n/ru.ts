@@ -343,6 +343,9 @@ export const ru: StringsOverlay = {
     cancelKeep: "Оставить место",
     cancelFailed: "Отменить не вышло. Бронь осталась.",
     refundToWallet: "То, что ты заплатил, вернётся кредитом в кошелёк.",
+    // DRAFT — flagged for the standing native-review batch.
+    refundLostLate:
+      "До начала меньше {hours} часов, поэтому кредит за эту игру не вернётся. Но отмена освободит твоё место для другого игрока.",
     cancelConfirm: "Отменить эту бронь? Кредит вернётся в кошелёк.",
     cancelled: "Бронь отменена",
     addToCalendar: "Добавить в календарь",

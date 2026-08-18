@@ -131,7 +131,7 @@ export default async function BookPage({ params, searchParams }: BookPageProps) 
         data-testid="cancellation-reassurance"
         className="mt-4 text-center text-[12px] leading-snug text-muted"
       >
-        {cancellationReassurance(policy.cancellation.cutoffHoursBeforeStart, t)}
+        {cancellationReassurance(policy.cancellation.refundCutoffHoursBeforeStart, t)}
       </p>
     </main>
   );

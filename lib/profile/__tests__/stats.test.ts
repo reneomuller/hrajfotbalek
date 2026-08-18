@@ -32,6 +32,7 @@ function row({
       duration_minutes: durationMinutes,
     } as never,
     canCancel: false,
+    refundable: true,
   };
 }
 

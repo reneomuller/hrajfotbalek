@@ -418,6 +418,9 @@ export default async function GameDetailPage({ params, searchParams }: GamePageP
       <ClaimBar
         gameId={game.id}
         bookingId={ownBooking?.booking.id ?? null}
+        /* Policy v2, decided in the query layer off the same `now` as
+           `canCancel` — see lib/booking/queries.ts. */
+        refundable={ownBooking?.refundable ?? true}
         priceCzk={game.price_czk}
         startsAt={game.starts_at}
         facts={{

@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { bookingBadge, canOfferCancel } from "@/lib/booking/badges";
+import {
+  bookingBadge,
+  canOfferCancel,
+  isCancellationRefundable,
+} from "@/lib/booking/badges";
 import { policy } from "@/lib/policy";
 import { strings } from "@/lib/strings";
 
@@ -92,5 +96,62 @@ describe("cancel affordance", () => {
     expect(
       canOfferCancel("confirmed", new Date(start).toISOString(), start - 1 * 3600_000, twoHours),
     ).toBe(false);
+  });
+});
+
+/*
+ * POLICY v2 — the refund cutoff, which is a DIFFERENT question from whether
+ * cancelling is offered at all. The pair below is the whole point of the
+ * version bump: inside the window the button is still there and the money is
+ * not.
+ */
+describe("isCancellationRefundable", () => {
+  const start = new Date("2026-09-01T18:00:00Z").getTime();
+  const startsAt = new Date(start).toISOString();
+  const cutoff = policy.cancellation.refundCutoffHoursBeforeStart;
+  const HOUR = 60 * 60 * 1000;
+
+  it("refunds well outside the window", () => {
+    // Arrange / Act / Assert
+    expect(isCancellationRefundable(startsAt, start - 48 * HOUR, cutoff)).toBe(true);
+  });
+
+  it("refunds at the boundary and not a minute inside it", () => {
+    // The boundary is the assertion that matters: the SQL gate is
+    // `lead >= 10`, so exactly ten hours out must still pay.
+
+    // Arrange / Act / Assert
+    expect(isCancellationRefundable(startsAt, start - cutoff * HOUR, cutoff)).toBe(false);
+    expect(
+      isCancellationRefundable(startsAt, start - cutoff * HOUR - 60_000, cutoff),
+    ).toBe(true);
+    expect(
+      isCancellationRefundable(startsAt, start - cutoff * HOUR + 60_000, cutoff),
+    ).toBe(false);
+  });
+
+  it("does not refund inside the window or after kickoff", () => {
+    // Arrange / Act / Assert
+    expect(isCancellationRefundable(startsAt, start - 2 * HOUR, cutoff)).toBe(false);
+    expect(isCancellationRefundable(startsAt, start + HOUR, cutoff)).toBe(false);
+  });
+
+  it("still OFFERS cancellation inside the refund window", () => {
+    // The two rules must disagree here, and that disagreement is the ruling:
+    // a player who cannot come should always be able to free the spot.
+
+    // Arrange
+    const twoHoursOut = start - 2 * HOUR;
+
+    // Act / Assert
+    expect(
+      canOfferCancel(
+        "confirmed",
+        startsAt,
+        twoHoursOut,
+        policy.cancellation.cutoffHoursBeforeStart,
+      ),
+    ).toBe(true);
+    expect(isCancellationRefundable(startsAt, twoHoursOut, cutoff)).toBe(false);
   });
 });

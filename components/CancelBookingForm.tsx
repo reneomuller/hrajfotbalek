@@ -21,8 +21,26 @@ export function CancelBookingForm({
   bookingId,
   toastTo,
   variant = "default",
+  refundable = true,
+  refundCutoffHours,
 }: {
   bookingId: string;
+  /**
+   * Whether this cancellation would still be credited (policy v2).
+   *
+   * COMPUTED BY THE CALLER, not here, and from the SERVER's clock. A client
+   * component deciding this from `Date.now()` would be reading a clock the
+   * player can set, and — more mundanely — one that drifts from the database's
+   * by however long the tab has been open. `cancel_booking` is the authority
+   * either way; this only decides which sentence the dialog shows.
+   *
+   * Defaults to `true` so the dialog's existing behaviour is the fallback:
+   * a caller that has not been taught about the cutoff shows the reassurance
+   * it always did, rather than accusing every cancellation of forfeiting.
+   */
+  refundable?: boolean;
+  /** The window, for the warning's `{hours}`. Only read when not refundable. */
+  refundCutoffHours?: number;
   /**
    * Where to land afterwards, so the cancellation toast is rendered by the
    * SERVER on the next request rather than from this component's action state
@@ -138,9 +156,25 @@ export function CancelBookingForm({
               RULING O, CREDIT HALF ONLY. What comes back is wallet credit and
               never money — there is no cash-refund path in this system, and
               "refund" would promise the quarantined half.
+
+              POLICY v2 SPLITS THIS SENTENCE IN TWO. Inside the refund cutoff
+              there is no credit, and the dialog says so in `warn` rather than
+              repeating a promise it cannot keep. The spot is released either
+              way, which the warning states plainly — the point is to keep late
+              cancellations happening, not to discourage them.
             */}
-            <p className="mt-2 mb-0 text-body leading-relaxed text-muted">
-              {t.booking.refundToWallet}
+            <p
+              data-testid={refundable ? "cancel-refund-note" : "cancel-forfeit-note"}
+              className={`mt-2 mb-0 text-body leading-relaxed ${
+                refundable ? "text-muted" : "text-warn"
+              }`}
+            >
+              {refundable
+                ? t.booking.refundToWallet
+                : t.booking.refundLostLate.replace(
+                    "{hours}",
+                    String(refundCutoffHours ?? ""),
+                  )}
             </p>
 
             {failed && (

@@ -340,6 +340,9 @@ export const cs: StringsOverlay = {
     cancelKeep: "Nechat si místo",
     cancelFailed: "Zrušení se nepovedlo. Rezervaci máš pořád.",
     refundToWallet: "Co jsi zaplatil, se ti vrátí jako kredit do peněženky.",
+    // DRAFT — flagged for the standing native-review batch.
+    refundLostLate:
+      "Do výkopu zbývá méně než {hours} hodin, takže se ti tenhle zápas nevrátí do kreditu. Zrušením ale uvolníš místo pro někoho dalšího.",
     cancelConfirm: "Zrušit tuhle rezervaci? Kredit se ti vrátí do peněženky.",
     cancelled: "Rezervace zrušená",
     addToCalendar: "Přidat do kalendáře",

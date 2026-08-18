@@ -523,8 +523,18 @@ test("the stats page reports a hand-computed window", async ({ page, context }) 
   await page.goto("/admin/stats?window=month");
   const baseline = await readStats(page);
 
-  const first = await createScratchGame({ capacity: 4, hoursFromNow: 1 });
-  const second = await createScratchGame({ capacity: 4, hoursFromNow: 2 });
+  /*
+   * BEYOND THE REFUND CUTOFF (policy v2, migration 40). These were 1 and 2
+   * hours out, which is now INSIDE the ten-hour window — the cancellation
+   * below still succeeds and still frees the spot, but issues no credit, so
+   * `cancelledWithCredit` never moves and the assertion at the foot of this
+   * test fails for a reason that has nothing to do with the stats page.
+   *
+   * 24 and 25 hours keeps them comfortably inside the month window this test
+   * deliberately uses, so the midnight-boundary reasoning above is untouched.
+   */
+  const first = await createScratchGame({ capacity: 4, hoursFromNow: 24 });
+  const second = await createScratchGame({ capacity: 4, hoursFromNow: 25 });
 
   try {
     const runner = await apiClientFor(players.runner);

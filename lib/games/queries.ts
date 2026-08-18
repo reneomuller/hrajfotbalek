@@ -1,4 +1,4 @@
-import { canOfferCancel } from "@/lib/booking/badges";
+import { canOfferCancel, isCancellationRefundable } from "@/lib/booking/badges";
 import { isInProgress } from "@/lib/games/duration";
 import { policy } from "@/lib/policy";
 import { createServerSupabaseClient } from "@/lib/supabase/clients";
@@ -240,6 +240,15 @@ export interface OwnBookingOnGame {
    * hydration must not disagree about what time it is.
    */
   canCancel: boolean;
+  /**
+   * Whether cancelling now would still be CREDITED (policy v2).
+   *
+   * Separate from `canCancel` because v2 separated the two questions:
+   * cancelling stays open to kickoff, crediting stops ten hours before it.
+   * Decided off the SAME `now` as `canCancel` below, so the pair can never
+   * describe two different instants.
+   */
+  refundable: boolean;
 }
 
 /**
@@ -276,6 +285,8 @@ export async function getOwnActiveBooking(
     .eq("id", gameId)
     .maybeSingle();
 
+  const now = Date.now();
+
   return {
     booking,
     canCancel:
@@ -283,8 +294,15 @@ export async function getOwnActiveBooking(
       canOfferCancel(
         booking.status,
         game.starts_at,
-        Date.now(),
+        now,
         policy.cancellation.cutoffHoursBeforeStart,
+      ),
+    refundable:
+      game != null &&
+      isCancellationRefundable(
+        game.starts_at,
+        now,
+        policy.cancellation.refundCutoffHoursBeforeStart,
       ),
   };
 }

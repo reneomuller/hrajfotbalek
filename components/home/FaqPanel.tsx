@@ -45,7 +45,7 @@ export async function FaqPanel() {
    */
   const items = t.faq.items.map((item, index) =>
     index === CANCELLATION_ITEM
-      ? { q: item.q, a: cancellationReassurance(policy.cancellation.cutoffHoursBeforeStart, t) }
+      ? { q: item.q, a: cancellationReassurance(policy.cancellation.refundCutoffHoursBeforeStart, t) }
       : item,
   );
 

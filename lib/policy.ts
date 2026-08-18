@@ -8,20 +8,56 @@
  *
  * The stamp written onto `events.policy_version` must match `POLICY_VERSION`.
  */
-export const POLICY_VERSION = "v1" as const;
+export const POLICY_VERSION = "v2" as const;
 
 export const policy = {
   version: POLICY_VERSION,
 
   /**
-   * Cancellation is permitted while the game is `published` or `full` and
-   * `now() < starts_at` — i.e. right up to kickoff, with no lead-time cutoff.
-   * After kickoff the outcome is determined solely by attendance marking.
-   * `cancel_booking` is the enforcement authority; the UI only mirrors this.
+   * POLICY v2 (migration 40, applied 2026-08-19) SPLITS ONE WINDOW INTO TWO,
+   * and the split is the whole point of the version bump.
+   *
+   * Under v1 these were the same question: cancelling was permitted until
+   * kickoff and always credited, so one number answered both. v2 keeps
+   * cancellation open to kickoff but stops the refund ten hours before it — so
+   * "may I cancel?" and "do I get my money back?" now have different answers,
+   * and a single constant cannot express that.
+   *
+   * `cancel_booking` is the enforcement authority for both. The UI mirrors it.
    */
   cancellation: {
-    /** Hours before `starts_at` after which cancelling is refused. 0 = until kickoff. */
+    /**
+     * Hours before `starts_at` after which CANCELLING ITSELF is refused.
+     *
+     * STILL ZERO, and deliberately so. A player who cannot come should always
+     * be able to free the spot; a rule that punishes them for saying so
+     * produces no-shows instead of cancellations, which is worse for everyone
+     * still hoping to play. The RPC's window gate is unchanged: `published` or
+     * `full`, and `now() < starts_at`.
+     *
+     * Read by `canOfferCancel`, which decides whether the affordance is shown.
+     * SETTING THIS TO 10 WOULD HIDE THE CANCEL BUTTON inside the last ten
+     * hours — the opposite of the ruling, and the reason the refund cutoff
+     * below is a second value rather than a new meaning for this one.
+     */
     cutoffHoursBeforeStart: 0,
+    /**
+     * Hours before `starts_at` after which a cancellation earns NO credit.
+     *
+     * At or beyond this lead the refund is exactly what v1 gave: full value for
+     * money actually applied, pass credit returning to its own batch with that
+     * batch's expiry. Inside it, the spot is released and nothing is credited;
+     * `cancel_booking` records `forfeited_czk` on the `booking_cancelled`
+     * event so a later complaint can be answered from the log.
+     *
+     * This is the number the player-facing copy describes — see
+     * `cancellationReassurance`, which reads THIS rather than the window above.
+     *
+     * RESTATED IN SQL as `v_cutoff_hours` inside `cancel_booking`, because SQL
+     * cannot read this file. The two MUST change together; the database is the
+     * authority and this is the mirror.
+     */
+    refundCutoffHoursBeforeStart: 10,
     /** Cancelling returns value as wallet credit — money never leaves the system. */
     refundAs: "credit",
   },

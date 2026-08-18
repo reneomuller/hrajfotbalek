@@ -14,6 +14,7 @@ function row(
     booking: { id: `b${hoursFromNow}`, status, attendance } as never,
     game: { id: `g${hoursFromNow}`, starts_at: startsAt } as never,
     canCancel: false,
+    refundable: true,
   };
 }
 

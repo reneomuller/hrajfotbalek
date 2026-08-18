@@ -1,4 +1,4 @@
-import { canOfferCancel } from "@/lib/booking/badges";
+import { canOfferCancel, isCancellationRefundable } from "@/lib/booking/badges";
 import { policy } from "@/lib/policy";
 import { createServerSupabaseClient } from "@/lib/supabase/clients";
 import type { Database } from "@/lib/types/database";
@@ -16,6 +16,15 @@ export interface BookingWithGame {
    * impure — same reason `hasStarted` lives in lib/games/queries.ts.
    */
   canCancel: boolean;
+  /**
+   * Whether cancelling right now would still be CREDITED (policy v2).
+   *
+   * A different question from `canCancel`, and v2 is where they part company:
+   * cancelling stays open until kickoff, crediting stops ten hours before it.
+   * Decided here for the same reason `canCancel` is — reading the clock during
+   * render is impure, and `react-hooks/purity` rejects it.
+   */
+  refundable: boolean;
 }
 
 /**
@@ -48,7 +57,21 @@ export async function getOwnBookingWithGame(
 
   if (gameError || !game) return null;
 
-  return { booking, game, canCancel: decideCanCancel(booking, game, Date.now()) };
+  const now = Date.now();
+  return {
+    booking,
+    game,
+    canCancel: decideCanCancel(booking, game, now),
+    refundable: decideRefundable(game, now),
+  };
+}
+
+function decideRefundable(game: GameRow, now: number): boolean {
+  return isCancellationRefundable(
+    game.starts_at,
+    now,
+    policy.cancellation.refundCutoffHoursBeforeStart,
+  );
 }
 
 function decideCanCancel(booking: BookingRow, game: GameRow, now: number): boolean {
@@ -81,7 +104,12 @@ export async function listOwnBookings(): Promise<BookingWithGame[]> {
     .map((booking) => {
       const game = byId.get(booking.game_id);
       return game
-        ? { booking, game, canCancel: decideCanCancel(booking, game, now) }
+        ? {
+            booking,
+            game,
+            canCancel: decideCanCancel(booking, game, now),
+            refundable: decideRefundable(game, now),
+          }
         : null;
     })
     .filter((row): row is BookingWithGame => row !== null)

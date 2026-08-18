@@ -3,6 +3,7 @@ import { CancelBookingForm } from "@/components/CancelBookingForm";
 import { EmptyState } from "@/components/EmptyState";
 import { bookingBadge, type BadgeTone } from "@/lib/booking/badges";
 import type { BookingWithGame } from "@/lib/booking/queries";
+import { policy } from "@/lib/policy";
 import { formatCzk, formatGameDateTime } from "@/lib/format";
 import { shouldRenderQr } from "@/lib/payments/spd";
 import { getStrings } from "@/lib/i18n/server";
@@ -32,7 +33,7 @@ export async function BookingList({ rows }: BookingListProps) {
 
   return (
     <ul className="flex list-none flex-col gap-3 p-0" data-testid="booking-list">
-      {rows.map(({ booking, game, canCancel: showCancel }) => {
+      {rows.map(({ booking, game, canCancel: showCancel, refundable }) => {
         const badge = bookingBadge(booking.status, booking.payment_method, t);
         const amountDue = booking.price_czk - booking.credit_applied_czk;
         // Same predicate the confirmation screen uses, so the link never leads
@@ -87,7 +88,16 @@ export async function BookingList({ rows }: BookingListProps) {
                 ) : (
                   <span />
                 )}
-                {showCancel && <CancelBookingForm bookingId={booking.id} toastTo="/account" />}
+                {showCancel && (
+                  /* Policy v2 — see the note in ClaimBar: the refundable
+                     decision is the server's, not the dialog's. */
+                  <CancelBookingForm
+                    bookingId={booking.id}
+                    toastTo="/account"
+                    refundable={refundable}
+                    refundCutoffHours={policy.cancellation.refundCutoffHoursBeforeStart}
+                  />
+                )}
               </div>
             )}
 

@@ -629,6 +629,21 @@ export const strings = {
      * promise the half that is quarantined.
      */
     refundToWallet: "What you paid goes back as wallet credit.",
+    /*
+     * POLICY v2's OTHER HALF, and the dialog must say it.
+     *
+     * Inside the refund cutoff the spot is still released — cancelling stays
+     * open to kickoff — but nothing is credited. A confirmation dialog that
+     * went on saying "what you paid goes back as wallet credit" while taking
+     * 200 CZK would be the product lying at the exact moment a player is
+     * deciding, which is worse than having no dialog at all.
+     *
+     * IT STILL ENCOURAGES THE CANCELLATION. Freeing the spot is worth more to
+     * everyone else than the player's silence, so the sentence states the cost
+     * and then says the useful thing rather than warning them off.
+     */
+    refundLostLate:
+      "It is less than {hours} hours to kickoff, so this one is not credited back. Cancelling still frees your spot for someone else.",
     cancelConfirm: "Cancel this booking? Your credit is returned to your wallet.",
     cancelled: "Booking cancelled",
     addToCalendar: "Add to calendar",

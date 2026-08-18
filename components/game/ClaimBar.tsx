@@ -3,6 +3,7 @@ import { CancelBookingForm } from "@/components/CancelBookingForm";
 import { WaitlistButton } from "@/components/WaitlistButton";
 import { formatCzk, formatTime } from "@/lib/format";
 import { claimBarState, type ClaimBarFacts } from "@/lib/games/claimBar";
+import { policy } from "@/lib/policy";
 import { creditsLabel } from "@/lib/pass/credits";
 import { PASS_REFERENCE_PRICE_CZK } from "@/lib/pass/queries";
 import { getLocale, getStrings } from "@/lib/i18n/server";
@@ -64,6 +65,7 @@ export async function ClaimBar({
   bookingId,
   priceCzk,
   startsAt,
+  refundable = true,
   facts,
 }: {
   gameId: string;
@@ -71,9 +73,20 @@ export async function ClaimBar({
   bookingId: string | null;
   priceCzk: number;
   startsAt: string;
+  /**
+   * Whether cancelling now would still be credited (policy v2).
+   *
+   * A PROP, not computed here. Reading the clock during render is impure and
+   * `react-hooks/purity` rejects it — the decision is made in
+   * `lib/booking/queries.ts` alongside `canCancel`, off the same `now`, which
+   * also guarantees the two answers come from one instant rather than two.
+   * Defaults true so a caller with no booking shows the ordinary reassurance.
+   */
+  refundable?: boolean;
   facts: ClaimBarFacts;
 }) {
   const t = await getStrings();
+
   const locale = await getLocale();
   const state = claimBarState(facts);
 
@@ -143,6 +156,8 @@ export async function ClaimBar({
           bookingId={bookingId ?? ""}
           variant="bar"
           toastTo={`/game/${gameId}`}
+          refundable={refundable}
+          refundCutoffHours={policy.cancellation.refundCutoffHoursBeforeStart}
         />
       ) : undefined;
       break;
@@ -158,6 +173,8 @@ export async function ClaimBar({
           bookingId={bookingId ?? ""}
           variant="bar"
           toastTo={`/game/${gameId}`}
+          refundable={refundable}
+          refundCutoffHours={policy.cancellation.refundCutoffHoursBeforeStart}
         />
       ) : undefined;
       break;
