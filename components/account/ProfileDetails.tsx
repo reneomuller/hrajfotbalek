@@ -3,6 +3,7 @@
 import { useActionState, useEffect, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { updateProfileAction, type ProfileActionState } from "@/app/account/actions";
+import { ChangeEmailForm } from "@/components/account/SecurityForms";
 import { useStrings } from "@/components/LocaleProvider";
 import { POSITIONS, type Position } from "@/lib/players/positions";
 import type { CountryOption } from "@/lib/auth/countries";
@@ -45,6 +46,8 @@ export function ProfileDetails(props: ProfileDetailsProps) {
   const t = useStrings();
   const [state, formAction] = useActionState(updateProfileAction, INITIAL);
   const [editing, setEditing] = useState(false);
+  /** The email disclosure, which is deliberately not part of the edit form. */
+  const [changingEmail, setChangingEmail] = useState(false);
 
   const editButton = useRef<HTMLButtonElement>(null);
   const firstField = useRef<HTMLInputElement>(null);
@@ -105,7 +108,49 @@ export function ProfileDetails(props: ProfileDetailsProps) {
             testId="country"
           />
           <Row label={t.profile.phone} value={props.phone} testId="phone" />
-          <Row label={t.profile.email} value={props.email} testId="email" />
+
+          {/*
+            EMAIL, WITH ITS OWN CONTROL RIGHT HERE.
+
+            It used to be a read-only row whose hint said "Change your email
+            from the account controls below", pointing at a text link at the
+            very bottom of the page. That link was not clickable: measured with
+            `document.elementFromPoint` at its centre, the element on top was
+            the nav pill — `fixed z-40` at the document root, floating over the
+            last band of every page. Visible, enabled, and permanently covered,
+            which is CLAUDE.md's modal lesson one control over.
+
+            So it moves to the fact it changes. Email is still not part of the
+            edit FORM — changing it is a re-verification flow with its own
+            confirmation step, not a field you save with five others — but the
+            way to start that flow now sits beside the address itself, in the
+            middle of the page where nothing floats over it.
+          */}
+          <div className="flex flex-col gap-[2px]">
+            <dt className="m-0 text-small text-muted">{t.profile.email}</dt>
+            <dd
+              data-testid="profile-email"
+              className={`m-0 text-body ${props.email ? "text-bone" : "text-faint"}`}
+            >
+              {props.email || t.profile.notSet}
+            </dd>
+            <dd className="m-0">
+              <button
+                type="button"
+                data-testid="change-email-link"
+                aria-expanded={changingEmail}
+                onClick={() => setChangingEmail((open) => !open)}
+                className="min-h-11 bg-transparent py-1 text-small font-semibold text-volt transition hover:text-bone"
+              >
+                {t.account.changeEmailLink}
+              </button>
+              {changingEmail && (
+                <div className="mb-1 mt-1 max-w-[420px]">
+                  <ChangeEmailForm />
+                </div>
+              )}
+            </dd>
+          </div>
         </dl>
 
         {state.status === "saved" && (
@@ -292,7 +337,24 @@ function Row({
 }) {
   const t = useStrings();
   return (
-    <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+    /*
+      LABEL ABOVE VALUE, not label-left/value-right.
+
+      The row was `justify-between`, which put "Display name" hard against the
+      left edge and the name itself hard against the right — with a gap between
+      them that changed width on every row, because it was whatever the two
+      strings did not use. Six rows of that reads as six unrelated pairs, and
+      the eye has to travel the full card width to connect each label to its
+      value. Worse in Czech and Russian, where the labels are longer and the
+      gap collapses to nothing on the widest row while staying huge on the
+      narrowest.
+
+      Stacked, every value starts at the same left edge and sits directly under
+      the word that names it. It also matches the EDIT view, which has always
+      been label-above-field — so the two halves of this block stop being two
+      different layouts of the same six facts.
+    */
+    <div className="flex flex-col gap-[2px]">
       <dt className="m-0 text-small text-muted">{label}</dt>
       <dd
         data-testid={`profile-${testId}`}

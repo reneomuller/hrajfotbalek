@@ -36,7 +36,30 @@ export async function Footer() {
   return (
     <footer
       data-testid="site-footer"
-      className="relative z-10 mx-auto flex w-full max-w-shell flex-wrap items-center justify-between gap-2 border-t border-hairline px-gutter py-5"
+      /*
+        `z-[2]`, NOT `z-10`, AND IT IS A BUG FIX RATHER THAN A TIDY-UP.
+
+        The footer and every page's `<main>` are SIBLINGS, and both carried
+        `relative z-10`. Equal rank means DOM order decides, and the footer
+        comes second — so the footer painted above main's entire subtree,
+        including anything `fixed` inside it. The game page's claim bar is
+        `fixed z-30`, which ranks only WITHIN main's `z-10` context and
+        therefore lost: scrolled to the bottom of a game page,
+        `elementFromPoint` at the claim bar's centre returned this element, and
+        the copyright line sat on top of "Claim your spot".
+
+        This is CLAUDE.md's portal law one control over — "z-30 is not an
+        absolute rank, it is a rank within a stacking context" — and it is
+        fixed here rather than at the claim bar because the footer is the one
+        that never needed the height. Nothing overlaps a footer except
+        page-level fixed chrome, which should win every time. Fixing it here
+        fixes it for every page and every future fixed element, rather than
+        for the one bar somebody noticed.
+
+        `z-[2]` and not `z-0`: `SiteBackground` occupies `z-0` and `z-[1]`, so
+        the footer still has to clear the canvas and the vignette.
+      */
+      className="relative z-[2] mx-auto flex w-full max-w-shell flex-wrap items-center justify-between gap-2 border-t border-hairline px-gutter py-5"
     >
       <div className="flex items-center gap-4">
         <Link href="/privacy" className={linkClass}>

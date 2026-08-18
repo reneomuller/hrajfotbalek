@@ -49,7 +49,10 @@ export async function CardBadges({
   if (!format && !surface) return null;
 
   const text = size === "slim" ? "text-small" : "text-body";
-  const pad = size === "slim" ? "px-3 py-[3px]" : "px-3 py-1";
+  // `slim` matches the time pill's new height exactly (visibility round 2): the
+  // two sit on one row, and a 3px pill beside a 6px one reads as a mistake
+  // rather than as a hierarchy.
+  const pad = size === "slim" ? "px-3 py-[6px]" : "px-3 py-1";
 
   return (
     <div data-testid="card-badges" className="flex shrink-0 flex-wrap items-center gap-1">

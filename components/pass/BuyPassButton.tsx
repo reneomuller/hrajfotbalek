@@ -74,7 +74,22 @@ function Submit({
       data-testid={`buy-pass-${games}`}
       className={
         variant === "quiet"
-          ? "inline-flex min-h-11 items-center justify-center rounded-control border border-hairline-strong px-5 text-body font-semibold text-bone transition-colors hover:border-hairline-volt hover:text-volt disabled:opacity-60"
+          ? /*
+               VOLT TEXT AND A VOLT OUTLINE, at rest rather than on hover.
+
+               It was bone text inside a `hairline-strong` box that only turned
+               volt when a pointer was over it — which on a phone is never. The
+               one control on a price card read as the quietest thing on it,
+               and "quiet" was meant to keep it from outshouting the per-game
+               price, not to make it disappear.
+
+               `border-volt` at full strength rather than `hairline-volt` (.30):
+               this is the control, and .30 on `surface-raised` computes to
+               roughly 2.4:1, under the 3:1 WCAG 1.4.11 asks of a non-text
+               boundary. The hover state deepens the fill instead of changing
+               the colour, so nothing about the button moves on hover.
+            */
+            "inline-flex min-h-11 items-center justify-center rounded-control border border-volt bg-volt/[.08] px-5 text-body font-semibold text-volt transition-colors hover:bg-volt/[.16] disabled:opacity-60"
           : "w-full rounded-control bg-volt px-5 py-3 text-body-lg font-bold text-ink disabled:opacity-60"
       }
     >

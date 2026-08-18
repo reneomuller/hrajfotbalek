@@ -72,9 +72,22 @@ test("a signed-out visitor sees both numbers and the four panels", async ({ page
     await expect(page.getByTestId("faq-panel")).toBeVisible();
     await expect(page.getByTestId("potm-panel")).toBeVisible();
 
-    // Real brand marks, not coloured dots — an SVG inside each link.
-    await expect(page.getByTestId("community-whatsapp").locator("svg")).toBeVisible();
-    await expect(page.getByTestId("community-instagram").locator("svg")).toBeVisible();
+    /*
+       THE OFFICIAL MARKS, and asserted as LOADED rather than as present.
+       They were inline SVGs; they are now the supplied artwork from
+       `public/brand/` at 44px, side by side. A missing file renders as an
+       empty box of exactly the right size, which is invisible in a dark panel
+       and photographs as design — so `naturalWidth` is the assertion, not
+       `toBeVisible`.
+    */
+    for (const id of ["community-whatsapp", "community-instagram"]) {
+      const mark = page.getByTestId(id).locator("img");
+      await expect(mark).toBeVisible();
+      expect(
+        await mark.evaluate((el) => (el as HTMLImageElement).naturalWidth),
+        `${id} mark did not load`,
+      ).toBeGreaterThan(0);
+    }
 
     // REQ-HOME-001 — how-it-works, with the equipment line beneath it.
     await expect(page.getByTestId("how-it-works")).toBeVisible();

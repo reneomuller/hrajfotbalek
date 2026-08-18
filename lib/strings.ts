@@ -490,7 +490,7 @@ export const strings = {
       first_aid: "First aid",
     },
 
-    practicalTitle: "Good to know",
+    practicalTitle: "Game information",
     /*
      * GOOD TO KNOW's five lines (Section 4, item 7). Duration and arrival
      * existed; the rotations are new, and the meeting point is a per-game
@@ -503,7 +503,7 @@ export const strings = {
     practicalDuration: "Duration",
     practicalDurationValue: "{minutes} minutes",
 
-    notesLabel: "Good to know",
+    notesLabel: "Game information",
     capacityLabel: "Capacity",
     startsLabel: "Kick-off",
     venueLabel: "Where",
@@ -670,7 +670,13 @@ export const strings = {
     phone: "Phone",
     phoneHint: "Only the organizer of a game you have booked can see it.",
     email: "Email",
-    emailChangeHint: "Change your email from the account controls below.",
+    /*
+     * POINTS AT THE DISPLAY BLOCK, not "the account controls below". The
+     * control it used to point at was a text link at the foot of the page,
+     * which the nav pill covered — visible, enabled and unclickable. It now
+     * sits beside the address in the display view, one tap from here.
+     */
+    emailChangeHint: "Close this form to change your email address.",
     notSet: "Not set",
     saved: "Profile saved",
     saveFailed: "We could not save that. Please try again.",
@@ -1513,8 +1519,20 @@ export const strings = {
     tierSaving: "Save {amount}",
     // Stated LOUDLY and before the button, per §4.2: an expiry discovered
     // after purchase is a complaint; an expiry read before it is a choice.
-    tierExpiresOne: "Expires 1 month after it lands",
-    tierExpiresMany: "Expires {count} months after it lands",
+    /*
+     * DAYS, NOT MONTHS (owner's call), and "payment clears" rather than
+     * "purchase".
+     *
+     * The clock starts when `confirm_topup` runs — `now() + interval` at
+     * CONFIRMATION, not when the pass was requested. A player who asks for a
+     * pass on Monday and pays on Wednesday keeps the full window; telling them
+     * it runs "after purchase" would understate what they bought by two days,
+     * which is a statement about money and therefore one to get right.
+     *
+     * `{days}` is derived from the tier's `expires_months`, so the 2-month
+     * tiers say 60 rather than all five claiming 30. See PassTierCard.
+     */
+    tierExpiresDays: "Expires {days} days after payment clears",
     tierNeverExpires: "Never expires",
     tierBuy: "Buy this pass",
     /*

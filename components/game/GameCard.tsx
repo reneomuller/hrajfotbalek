@@ -109,10 +109,21 @@ export async function GameCard({
 
       <div className="mt-[6px] flex items-center justify-between gap-2">
         {/*
-          THE DAY-TIME PILL. Semi-transparent with a solid outline, the same
-          treatment as the badges opposite it — a glanceable object rather than
-          a line of prose. START TIME ONLY on a list card; the game card
-          carries the full span.
+          THE DAY-TIME PILL, WITH A VOLT OUTLINE AND MORE ROOM.
+
+          `.lifted` gives it the shared fill; `border-volt` overrides only the
+          stroke, which the utilities layer is allowed to do over a component
+          class. The vertical padding goes 3px -> 6px and the weight
+          semibold -> bold, because "larger visibility" on a pill that must not
+          grow wider is bought in height and weight rather than type size — the
+          card's four rows are already measured, and a bigger number here would
+          push the badges opposite it onto a second line.
+
+          THIS IS THE SECOND VOLT ELEMENT ON THE CARD, which softens ruling D's
+          "the spots figure is the only coloured text". The figure is still the
+          only coloured TEXT; this is a coloured EDGE around bone text, and the
+          kick-off time is the other thing a reader scans a list for. Recorded
+          rather than quietly done, because the one-accent rule was deliberate.
         */}
         {/*
           THE TIME ALONE (Section 3, item 5). The date is gone from the pill —
@@ -125,7 +136,7 @@ export async function GameCard({
         */}
         <span
           data-testid="card-when"
-          className="lifted min-w-0 truncate rounded-pill px-3 py-[3px] text-body-lg font-semibold text-bone"
+          className="lifted min-w-0 truncate rounded-pill border-volt px-3 py-[6px] text-body-lg font-bold text-bone"
         >
           {formatTime(game.starts_at)}
         </span>

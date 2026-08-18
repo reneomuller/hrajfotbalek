@@ -96,7 +96,13 @@ test.describe("visibility round strips", () => {
       };
     });
     expect(pillStyle.background).toBe("rgb(22, 22, 22)"); // surface-raised
-    expect(pillStyle.borderColor).toBe("rgba(255, 255, 255, 0.14)"); // hairline-strong
+    /*
+      A VOLT STROKE OVER `.lifted`'s FILL (second visibility round). The
+      utilities layer outranks the component layer, which is the property the
+      class was written to allow — so this assertion is also the proof that the
+      override mechanism still works, not just that a colour was set.
+    */
+    expect(pillStyle.borderColor).toBe("rgb(200, 255, 0)"); // volt
     expect(pillStyle.borderWidth).toBe("1px");
     // NO GLOW is half the ruling and the half most likely to creep back.
     expect(pillStyle.shadow).toBe("none");
