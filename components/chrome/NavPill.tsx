@@ -8,12 +8,11 @@ import { useStrings } from "@/components/LocaleProvider";
 /**
  * The floating navigation pill (v1.3, ruling K).
  *
- * FOUR DESTINATIONS, FLOATING RATHER THAN PINNED. The previous bar was flush to
- * the bottom edge and full width; this one is inset 16px and rounded, so the
- * page visibly continues underneath it rather than being cut off by it. That is
- * the whole difference, and it is why the one surviving shadow in the product
- * points UPWARD (`shadow-lift`): content scrolling under the pill should read
- * as under.
+ * FLUSH TO THE BOTTOM EDGE, full width — see the note on the element itself.
+ * Ruling K made it float 16px clear on every side; the owner reversed that in
+ * the night round of 2026-08-19. The one surviving shadow in the product still
+ * points UPWARD (`shadow-lift`), which is now the only cue that content passes
+ * beneath it rather than stopping at it.
  *
  * THREE DESTINATIONS AS OF THE PASS RULING: Home, Games, Profile. `Pass` came
  * out because the panel on the games list is now the sole entry point to it —
@@ -82,10 +81,33 @@ export function NavPill() {
        * the page's bottom padding reads is what keeps the last line of content
        * from ending up behind the pill.
        */
-      className="fixed inset-x-4 z-40 md:hidden"
-      style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 16px)" }}
+      /*
+        FLUSH TO THE VIEWPORT EDGE (owner's ruling, night round item 4), which
+        REVERSES the floating inset ruling K gave this component.
+
+        It was `inset-x-4` with `bottom: safe-area + 16px`, so the page visibly
+        continued underneath it on all four sides — the whole point of calling
+        it a pill. The owner has ruled for flush: `inset-x-0`, `bottom-0`, no
+        gap on any edge. Recorded as a reversal rather than quietly edited,
+        because the floating version had a stated reason and someone will
+        propose it again.
+
+        THE SAFE-AREA INSET MOVES INSIDE. It used to be part of the `bottom`
+        offset, holding the whole pill above the iPhone home indicator. Sitting
+        flush, the BAR must reach the physical bottom edge while its CONTENT
+        stays clear of the indicator — so the inset becomes bottom padding on
+        the list. Dropping it instead would put the labels under the indicator,
+        which is the bug the offset existed to prevent.
+
+        `shadow-lift` STAYS. The one upward shadow in the product still says
+        "content passes under this", which is now the only cue that it does.
+      */
+      className="fixed inset-x-0 bottom-0 z-40 md:hidden"
     >
-      <ul className="m-0 flex list-none items-stretch gap-1 rounded-pill bg-surface-raised p-1 shadow-lift">
+      <ul
+        className="m-0 flex list-none items-stretch gap-1 rounded-t-card bg-surface-raised px-1 pt-1 shadow-lift"
+        style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 4px)" }}
+      >
         {tabs.map((tab) => {
           const active = tab.exact
             ? pathname === tab.href
