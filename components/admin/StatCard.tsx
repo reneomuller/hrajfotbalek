@@ -22,7 +22,17 @@ export function StatCard({
   return (
     <div
       data-testid={testId}
-      className="min-w-[220px] flex-1 rounded-card bg-surface p-5"
+      /*
+        `lifted` AND NO `min-w-[220px]` (admin restyle).
+
+        The floor was 220px, so at 390px minus the gutter only ONE card fitted
+        per row and four metrics became four full-width bands the length of the
+        screen. The reference lays them out two-up, which is what the numbers
+        want: they are read against each other. The width is now the grid's
+        business — see the stats page — and this component only says what a
+        card looks like.
+      */
+      className="lifted rounded-card p-5"
     >
       <div className="text-[10px] uppercase tracking-eyebrow text-volt-dim">
         {label}
@@ -36,7 +46,9 @@ export function StatCard({
       */}
       <div
         data-testid="stat-value"
-        className="mt-2 font-display text-[38px] leading-none text-white"
+        /* VOLT, matching the reference. The figure is the whole point of the
+           tile, and white made four of them read as four paragraphs. */
+        className="mt-2 font-display text-[34px] leading-none text-volt"
       >
         {value}
       </div>

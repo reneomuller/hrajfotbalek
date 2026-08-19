@@ -79,7 +79,6 @@ export const ru: StringsOverlay = {
     community: {
       title: "Присоединяйся к нам",
       body: "Подписывайся на наши соцсети, чтобы быть в курсе новостей сообщества",
-      whatsapp: "WhatsApp",
     },
     footer: {
       city: "· ПРАГА",

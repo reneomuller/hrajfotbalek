@@ -44,25 +44,42 @@ export default async function AdminLayout({
 
   return (
     <div className="relative z-10 mx-auto w-full max-w-shell px-gutter pb-16 pt-24">
-      <header className="flex flex-wrap items-baseline justify-between gap-3 border-b border-hairline pb-4">
-        <div className="flex items-baseline gap-4">
+      {/*
+        THE SHELL, STACKED (admin restyle).
+
+        It was one `flex-wrap` row holding a display-size title, the section
+        switcher, the acting nickname and a back link. At 390px those four
+        wrapped into an unpredictable block whose height changed with the
+        section name, and the title — the thing that says where you are — could
+        end up beside the nav rather than above it.
+
+        Title row first, switcher beneath, and the two right-hand items ride
+        with the title. The reference puts an `ADMIN` badge next to the mark;
+        here the whole page is the admin panel, so the badge is the title.
+      */}
+      <header className="border-b border-hairline pb-4">
+        {/* Column at phone width: `ADMIN` plus a nickname plus a back link is
+            wider than 390px, and wrapping mid-row put the back link half off
+            the screen. Row again from `sm`, where it fits. */}
+        <div className="flex flex-col gap-1 sm:flex-row sm:flex-wrap sm:items-baseline sm:justify-between sm:gap-x-4">
           <h1 className="m-0 font-display text-section-title uppercase tracking-wide text-white">
             {strings.admin.title}
           </h1>
-          <AdminNav />
+
+          <div className="flex items-baseline gap-4">
+            {/* Whose session is acting. Free text, escaped by JSX. */}
+            <span className="text-small text-faint">{admin.nickname}</span>
+            <Link
+              href="/"
+              className="text-small text-muted no-underline transition-colors hover:text-volt"
+            >
+              {strings.admin.backToSite}
+            </Link>
+          </div>
         </div>
 
-        <div className="flex items-baseline gap-4">
-          {/* Whose session is acting. Free text, escaped by JSX. */}
-          <span className="text-[11px] tracking-[1px] text-faint">
-            {admin.nickname}
-          </span>
-          <Link
-            href="/"
-            className="text-[11px] uppercase tracking-eyebrow text-muted no-underline"
-          >
-            {strings.admin.backToSite}
-          </Link>
+        <div className="mt-3">
+          <AdminNav />
         </div>
       </header>
 

@@ -213,6 +213,14 @@ export interface AdminPlayerRow {
   id: string;
   nickname: string;
   email: string | null;
+  /**
+   * Carried for the SEARCH, not for display — no row renders it.
+   *
+   * The list already selects `*`, so this costs nothing; without it the search
+   * box would offer to match a phone number it never received, which is a
+   * placeholder promising something the code cannot do.
+   */
+  phone: string | null;
   /** Null `auth_user_id` is what makes a row a shadow. */
   isShadow: boolean;
   isSeed: boolean;
@@ -252,6 +260,7 @@ export async function listPlayers(): Promise<AdminPlayerRow[]> {
     id: player.id,
     nickname: player.nickname,
     email: player.email,
+    phone: player.phone,
     isShadow: player.auth_user_id === null,
     isSeed: player.is_seed,
     isAdmin: player.is_admin,

@@ -1211,6 +1211,13 @@ export const strings = {
     seedTag: "Seed",
     adminTag: "Admin",
     noEmail: "no email",
+    /* The player search (admin restyle). Admin copy is English only — one
+       person uses it — so these carry no CS/RU overlay by design. */
+    playerSearchLabel: "Search players",
+    playerSearchPlaceholder: "Name, email or phone…",
+    playerSearchClear: "Clear",
+    playerSearchEmpty: "No player matches \u201c{q}\u201d.",
+    playerSearchCount: "{shown} of {total}",
     grantCredit: "Grant credit",
     grantAmountLabel: "Amount (CZK)",
     grantAmountHint: "Negative to correct a mistake. A wallet can never go below zero.",

@@ -26,7 +26,7 @@ export function GrantCreditForm({ playerId }: { playerId: string }) {
         type="button"
         onClick={() => setOpen(true)}
         data-testid="grant-credit-open"
-        className="bg-transparent text-[10px] uppercase tracking-eyebrow text-volt"
+        className="inline-flex min-h-11 items-center rounded-pill border border-hairline-strong px-3 text-small font-semibold transition-colors hover:border-volt text-volt"
       >
         {strings.admin.grantCredit}
       </button>

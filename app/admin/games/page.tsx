@@ -49,25 +49,44 @@ export default async function AdminGamesPage() {
                 key={game.id}
                 data-testid="admin-game-row"
                 data-status={game.status}
-                className="flex flex-wrap items-center justify-between gap-4 rounded-card bg-surface px-5 py-4"
+                /*
+                  VENUE AND COUNT ON ONE ROW, everything else beneath (admin
+                  restyle). The reference draws a fixture as a bold venue with
+                  the occupancy hard right and a quiet detail line under both —
+                  which is exactly what an organizer scans a list of games for:
+                  where, and how full.
+                */
+                className="lifted flex flex-col gap-3 rounded-card px-4 py-4"
               >
-                <div className="min-w-[220px] flex-1">
+                <div className="flex items-start justify-between gap-3">
                   {/* `venue` is admin-supplied free text; JSX escapes it. */}
-                  <div className="text-[18px] font-bold text-white">
-                    {game.venue}
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate text-body-lg font-bold text-white">
+                      {game.venue}
+                    </div>
+                    <div className="mt-[2px] text-small text-muted">
+                      {formatGameDateTime(game.starts_at)} · {formatCzk(game.price_czk)}
+                    </div>
                   </div>
-                  <div className="mt-1 text-[11px] tracking-[1px] text-muted">
-                    {formatGameDateTime(game.starts_at)} · {formatCzk(game.price_czk)}
+
+                  <div className="shrink-0 text-right">
+                    <div className="text-body-lg font-bold text-volt">
+                      {game.activeCount}/{game.capacity}
+                    </div>
+                    <div
+                      data-testid="admin-game-status"
+                      className="mt-[2px] text-small text-volt-dim"
+                    >
+                      {strings.admin.status[game.status]}
+                    </div>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-5 text-[11px] tracking-[1px]">
-                  <span data-testid="admin-game-status" className="text-volt-dim">
-                    {strings.admin.status[game.status]}
-                  </span>
-                  <span className="text-muted">
-                    {strings.admin.bookedLabel} {game.activeCount}/{game.capacity}
-                  </span>
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-small">
+                  {/* `Booked x/y` USED TO SIT HERE TOO. The occupancy moved to
+                      the top-right of the row above, so printing it again three
+                      lines down was the same fact twice — which reads as two
+                      different numbers that happen to agree. */}
                   {/* Waitlist depth — the expansion-trigger sensor (REQ-UI-018). */}
                   <span
                     data-testid="admin-waitlist-depth"

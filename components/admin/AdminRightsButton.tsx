@@ -66,7 +66,9 @@ function SubmitButton({ isAdmin }: { isAdmin: boolean }) {
       type="submit"
       disabled={pending}
       data-testid={isAdmin ? "revoke-admin" : "make-admin"}
-      className={`bg-transparent text-[10px] uppercase tracking-eyebrow disabled:opacity-50 ${
+      /* A chip, not 10px tracked capitals (admin restyle). These sit on a
+         player row beside another control; both are real targets now. */
+      className={`inline-flex min-h-11 items-center rounded-pill border border-hairline-strong px-3 text-small font-semibold transition-colors hover:border-volt disabled:opacity-50 ${
         isAdmin ? "text-muted hover:text-white" : "text-volt"
       }`}
     >

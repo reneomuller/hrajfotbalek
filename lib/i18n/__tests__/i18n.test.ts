@@ -71,6 +71,10 @@ const INTENTIONALLY_UNTRANSLATED = new Set([
   "landing.headlineAccent",
   "landing.nextMatchEyebrow",
   "landing.community.whatsappUrl",
+  // "WhatsApp" is the product's name, not a word — it was "WhatsApp group" and
+  // the label lost its translatable half when the tile gained a 44px mark
+  // above it. Same reason `instagram` below has always been here.
+  "landing.community.whatsapp",
   "landing.community.instagram",
   "landing.community.instagramUrl",
   "landing.footer.wordmarkLead",

@@ -116,7 +116,8 @@ export default async function AdminStatsPage({
         </p>
       ) : (
         <section className="mt-8">
-          <div className="flex flex-wrap gap-4">
+          {/* Two-up on a phone, per the reference. */}
+          <div className="grid grid-cols-2 gap-3">
             <StatCard
               testId="stat-fill-rate"
               label={strings.admin.statFillRate}
