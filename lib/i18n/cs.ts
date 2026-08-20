@@ -138,7 +138,10 @@ export const cs: StringsOverlay = {
     skillAdvanced: "Zkušený",
     skillRequired: "Vyber prosím úroveň.",
 
-    phoneLabel: "Telefon (nepovinné)",
+    // DRAFT — flagged for the standing native-review batch.
+    phoneLabel: "Telefon",
+    phoneRequired: "Potřebujeme telefon, aby se ti organizátor mohl ozvat kvůli zápasu.",
+    phoneInvalid: "Telefonní číslo má 3 až 32 znaků.",
     phoneHint: "Vidí ho jen organizátor, a jen u zápasů, které máš zarezervované.",
 
     legalGroupLabel: "Než začneš",

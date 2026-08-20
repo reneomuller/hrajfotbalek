@@ -50,6 +50,10 @@ export interface SignupSubmission extends SignupProfile {
   password: string;
 }
 
+/** Mirrors the organizer phone bounds the admin form has used since Phase 13. */
+export const PHONE_MIN_LENGTH = 3;
+export const PHONE_MAX_LENGTH = 32;
+
 export type SignupField =
   | "email"
   | "password"
@@ -70,6 +74,8 @@ export type SignupErrorCode =
   | "NICKNAME_INVALID"
   | "COUNTRY_INVALID"
   | "SKILL_REQUIRED"
+  | "PHONE_REQUIRED"
+  | "PHONE_INVALID"
   | "TOS_REQUIRED"
   | "CONSENT_REQUIRED";
 
@@ -128,9 +134,34 @@ export function parseSignupForm(form: {
   const skill = str(form.get("skill"));
   if (!isSkillLevel(skill)) return { ok: false, field: "skill", code: "SKILL_REQUIRED" };
 
-  // Optional, and empty is a legitimate answer rather than a missing one.
+  /*
+   * REQUIRED SINCE ROUND 7, item 7.
+   *
+   * ~~Optional, and empty is a legitimate answer rather than a missing one.~~
+   * The organizer needs a way to reach a player about the game they are
+   * standing on a pitch waiting for, and an empty column is not one. It is
+   * still visible only to the organizer of a game the player has booked —
+   * `game_organizer_phone()` decides that, and this changes nothing about who
+   * can read it.
+   *
+   * NO DATABASE CONSTRAINT, deliberately and per the instruction. `players`
+   * has thousands of rows that predate this and a `not null` would either
+   * fail to apply or lock every one of them out of their own profile. The rule
+   * lives at the two write paths — this parser and the finish-profile path —
+   * so existing players are unaffected until they next edit.
+   *
+   * THE LENGTH BOUNDS MIRROR THE ORGANIZER FIELD's, which the admin form has
+   * enforced since Phase 13: 3 to 32 characters. Not a format check — phone
+   * numbers are written a dozen ways across three countries here and a regex
+   * would reject more real numbers than fake ones. This catches a stray
+   * keystroke and a paste of a paragraph.
+   */
   const phoneRaw = str(form.get("phone"));
-  const phone = phoneRaw === "" ? null : phoneRaw;
+  if (phoneRaw === "") return { ok: false, field: "phone", code: "PHONE_REQUIRED" };
+  if (phoneRaw.length < PHONE_MIN_LENGTH || phoneRaw.length > PHONE_MAX_LENGTH) {
+    return { ok: false, field: "phone", code: "PHONE_INVALID" };
+  }
+  const phone = phoneRaw;
 
   // The two required legal acts, separately (contract §3.1, ruled 2026-07-31).
   // Distinct codes so the form can point at the box that was not ticked.

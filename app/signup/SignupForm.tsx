@@ -4,7 +4,12 @@ import { useActionState } from "react";
 import Link from "next/link";
 import { startSignup, finishSignup, type SignupFormState } from "./actions";
 import { NICKNAME_MAX_LENGTH } from "@/lib/auth/nickname";
-import { PASSWORD_MIN_LENGTH, SKILL_LEVELS } from "@/lib/auth/signupProfile";
+import {
+  PASSWORD_MIN_LENGTH,
+  PHONE_MAX_LENGTH,
+  PHONE_MIN_LENGTH,
+  SKILL_LEVELS,
+} from "@/lib/auth/signupProfile";
 import type { CountryOption } from "@/lib/auth/countries";
 import { useStrings } from "@/components/LocaleProvider";
 
@@ -208,14 +213,24 @@ export function SignupForm({
 
       <label className="flex flex-col gap-2">
         <span className={LABEL_CLASS}>{t.auth.phoneLabel}</span>
+        {/*
+          `required` AND `minLength` MIRROR THE SERVER (round 7, item 7). The
+          browser check is a courtesy that saves a round trip; the rule that
+          counts is in `parseSignupForm`, which is what a curl request meets.
+          Both are stated so the two cannot silently disagree.
+        */}
         <input
           type="tel"
           name="phone"
+          required
+          minLength={PHONE_MIN_LENGTH}
+          maxLength={PHONE_MAX_LENGTH}
           autoComplete="tel"
           defaultValue={v?.phone ?? ""}
           className={FIELD_CLASS}
         />
         <span className="text-xs opacity-50">{t.auth.phoneHint}</span>
+        <FieldError show={state.field === "phone"} message={state.message} />
       </label>
 
       {/*

@@ -141,7 +141,10 @@ export const ru: StringsOverlay = {
     skillAdvanced: "Опытный",
     skillRequired: "Выбери, пожалуйста, уровень.",
 
-    phoneLabel: "Телефон (необязательно)",
+    // DRAFT — flagged for the standing native-review batch.
+    phoneLabel: "Телефон",
+    phoneRequired: "Нужен телефон, чтобы организатор мог связаться с тобой по игре.",
+    phoneInvalid: "Номер телефона — от 3 до 32 символов.",
     phoneHint: "Его видит только организатор и только по играм, которые ты забронировал.",
 
     legalGroupLabel: "Перед началом",

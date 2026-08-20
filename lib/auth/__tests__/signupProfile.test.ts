@@ -15,7 +15,10 @@ function form(overrides: Record<string, string> = {}) {
     password: "longenough",
     country: "cz",
     skill: "intermediate",
-    phone: "",
+    // REQUIRED SINCE ROUND 7, item 7. This fixture is "every field valid", so
+    // an empty phone here would make six unrelated cases fail for a reason
+    // none of them is about.
+    phone: "+420600123456",
     tos: "on",
     gdpr: "on",
     ...overrides,
@@ -32,7 +35,7 @@ describe("parseSignupForm", () => {
     if (!result.ok) return;
     expect(result.value.email).toBe("player@example.com");
     expect(result.value.country).toBe("CZ");
-    expect(result.value.phone).toBeNull();
+    expect(result.value.phone).toBe("+420600123456");
     expect(result.value.marketingOptIn).toBe(false);
     expect(result.value.tosVersion).toBe(TERMS_VERSION);
   });
@@ -40,6 +43,63 @@ describe("parseSignupForm", () => {
   it("keeps a phone number when one is given, trimmed", () => {
     const result = parseSignupForm(form({ phone: "  +420600123456 " }));
     expect(result.ok && result.value.phone).toBe("+420600123456");
+  });
+
+  /*
+   * PHONE IS REQUIRED (round 7, item 7).
+   *
+   * The organizer needs a way to reach a player about the game they are
+   * standing on a pitch waiting for. Asserted on the PARSER rather than on the
+   * form, because the parser is what a curl request meets — the `required`
+   * attribute is a courtesy that saves a round trip.
+   */
+  describe("the phone number", () => {
+    it("is required", () => {
+      const result = parseSignupForm(form({ phone: "" }));
+      expect(result.ok).toBe(false);
+      if (result.ok) return;
+      expect(result.field).toBe("phone");
+      expect(result.code).toBe("PHONE_REQUIRED");
+    });
+
+    it("treats whitespace as absent rather than as three characters", () => {
+      const result = parseSignupForm(form({ phone: "   " }));
+      expect(result.ok).toBe(false);
+      if (result.ok) return;
+      expect(result.code).toBe("PHONE_REQUIRED");
+    });
+
+    it("refuses something too short to be a number", () => {
+      const result = parseSignupForm(form({ phone: "12" }));
+      expect(result.ok).toBe(false);
+      if (result.ok) return;
+      expect(result.field).toBe("phone");
+      expect(result.code).toBe("PHONE_INVALID");
+    });
+
+    it("refuses a pasted paragraph", () => {
+      const result = parseSignupForm(form({ phone: "x".repeat(33) }));
+      expect(result.ok).toBe(false);
+      if (result.ok) return;
+      expect(result.code).toBe("PHONE_INVALID");
+    });
+
+    /*
+     * NO FORMAT CHECK, and this is the decision rather than an omission.
+     * Numbers are written a dozen ways across the three countries here and a
+     * regex would reject more real numbers than fake ones.
+     */
+    it("accepts the shapes real people type", () => {
+      for (const value of [
+        "+420 600 123 456",
+        "00420600123456",
+        "600123456",
+        "+41 79 123 45 67",
+      ]) {
+        const result = parseSignupForm(form({ phone: value }));
+        expect(result.ok, `rejected ${value}`).toBe(true);
+      }
+    });
   });
 
   it("records the reminders preference when ticked", () => {

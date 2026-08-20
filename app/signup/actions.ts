@@ -63,6 +63,10 @@ async function messageFor(code: SignupErrorCode): Promise<string> {
       return t.auth.countryInvalid;
     case "SKILL_REQUIRED":
       return t.auth.skillRequired;
+    case "PHONE_REQUIRED":
+      return t.auth.phoneRequired;
+    case "PHONE_INVALID":
+      return t.auth.phoneInvalid;
     case "TOS_REQUIRED":
       return t.auth.tosRequired;
     case "CONSENT_REQUIRED":

@@ -244,8 +244,15 @@ export const strings = {
     skillAdvanced: "Advanced",
     skillRequired: "Please pick a level.",
 
-    phoneLabel: "Phone (optional)",
+    /*
+     * REQUIRED SINCE ROUND 7, item 7. The label loses "(optional)" — a field
+     * whose label says optional and whose validator says otherwise is the
+     * worst of both, and it is the label people read, not the asterisk.
+     */
+    phoneLabel: "Phone",
     phoneHint: "Only the organizer sees it, and only for games you have booked.",
+    phoneRequired: "We need a phone number so the organizer can reach you about a game.",
+    phoneInvalid: "A phone number is between 3 and 32 characters.",
 
     /*
      * THREE BOXES, TWO OF THEM LEGAL ACTS.
