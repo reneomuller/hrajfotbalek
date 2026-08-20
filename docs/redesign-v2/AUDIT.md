@@ -161,16 +161,27 @@ Affordances that clearly lead somewhere, whose destination has **no image**.
 | 13 | **Waitlist screens** | — | `p13` says "a spot opened… Claim now", so the flow is implied, but the **waitlist join / position / convert** screens are undesigned. `/game/[id]/waitlist/convert` is live |
 | 14 | **Desktop / `md:` layouts** | all | No frame above 784px. Every breakpoint is undefined |
 
-### 3b. NEW PAGES — no existing route
+### 3b. ~~NEW PAGES — no existing route~~ CORRECTED 2026-08-20 (round 7, item 0)
 
-| Design | Proposed route | Notes |
+> **THIS SECTION WAS WRONG, AND IT WAS WRONG IN THE EXPENSIVE DIRECTION.** The
+> owner's reading is that every frame in the export recreates an EXISTING page.
+> Checked frame by frame against the route table, that is true of 18 of the 19.
+> Four entries below were filed as new pages and are not; two more were
+> overstated. A "new page" entry schedules a route, a nav decision and a
+> backend conversation that the actual work does not need — this section was
+> generating scope rather than describing it.
+>
+> The original claims are struck through and the correction is stated beside
+> each one.
+
+| Design | ~~Proposed route~~ | **What it actually is** |
 |---|---|---|
-| `p12` Community | `/community` | Also adds a **4th nav tab** |
-| `p13` Notifications | `/notifications` | Needs a notification store — SCOPE.md quarantines this ("there is no notification store; email is the channel") |
-| `p14` Admin dashboard | `/admin` | Route exists but only redirects |
-| `p15` Add players to game | `/admin/games/[id]/players` | Overlaps `/admin/games/[id]/add-player` |
-| `p16` Add new pitch | `/admin/pitches/new` | Depends on migration 41 (`games.pitch_name`, written, unapplied) — and on a **pitch entity**, which is quarantined |
-| `p19` Financials | `/admin/financials` | New |
+| `p12` Community | ~~`/community`, plus a 4th nav tab~~ | **`/` — the home page's community section.** `CommunityPanel` and `PlayerOfMonthPanel` already render the 500+ figure, the socials and the Player of the Month. What is genuinely absent is DATA, not a page: a ranked monthly games-played leaderboard and an activity feed. Ruling R2 (no 4th tab) is unaffected and still stands |
+| `p13` Notifications | `/notifications` | **Correct — the one genuinely new surface in the export.** No notification store exists. Built in round 7 item 5 as an in-app bell, which lifts the SCOPE.md quarantine for the in-app half only; email remains the channel for everything else |
+| `p14` Admin dashboard | ~~`/admin` (route exists but only redirects)~~ | **Half right.** Every ELEMENT exists and is live: the stat tiles are `/admin/stats`, the upcoming-game rows are `/admin/games`, the quick actions all have working destinations. What is missing is only the landing page that composes them, which is currently a redirect |
+| `p15` Add players to game | ~~`/admin/games/[id]/players` — "a different surface"~~ | **`/admin/games/[id]/add-player`, the same surface.** Game header pill, a search field, result rows to add. The "different surface" claim rested on the second search box ("add to subscribed list"), which is one control, not another page |
+| `p16` Add new pitch | ~~`/admin/pitches/new`, depends on a quarantined pitch entity~~ | **The new-venue block inside `/admin/games/new`.** It already calls `admin_create_venue`, and folding it into the game form was a deliberate decision recorded in `app/admin/games/actions.ts`: the organizer's task is "add next Sunday's game at the new pitch", and splitting it leaves a half-created venue with no game. Genuinely missing from the frame: `surface` and `opening time` fields |
+| `p19` Financials | ~~`/admin/financials` — New~~ | **`/admin/stats`.** This audit's own §4 item 9 suspected it — "two surfaces answering one question". They are one surface: revenue, games settled, average per game. Round 7 item 8 redesigns the live page rather than adding a route |
 
 ### 3c. UNDESIGNED EXISTING ROUTES
 
@@ -270,7 +281,8 @@ Ink/surface ladder reads the same. Deltas:
    scrolling row** — the export does not show whether it scrolls.
 9. **`Financials` may supersede `/admin/stats`** (`p19`) — revenue, settled
    games, avg per game, and a week chart overlap the stats page. Two surfaces
-   answering one question.
+   answering one question. **→ SETTLED 2026-08-20: they are ONE surface.** `p19`
+   is the redesign of `/admin/stats`, not a second page. See §3b.
 10. **Notifications + Community both need backend that does not exist** —
     SCOPE.md quarantines the notification store; a leaderboard and activity feed
     need aggregate queries the product has no shape for.
