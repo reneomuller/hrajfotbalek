@@ -100,29 +100,44 @@ export default async function LandingPage() {
           something below a screen-filling hero; once the steps are visible it
           is an arrow pointing at what is already on screen.
         */}
-        <section className="flex flex-col pb-10 pt-20 text-center">
+        {/* `pt-24` matches `/games` and the frames: p01 leaves ~40px between
+            the header's hairline and the headline's cap line, and `pt-20`
+            left 21. */}
+        <section className="flex flex-col pb-10 pt-24 text-center">
           <div className="flex flex-col items-center justify-center">
             {/*
-              THE WORDMARK KEEPS ITS CAPITALS, and it is the one exception
-              ruling B itself writes down: §1.4 marks the `hero` step "Upper
-              (wordmark)". A brand set in caps is a logotype, not a heading
-              shouting.
+              THE SLOGAN IS THE HERO NOW (redesign v2, round 3, p01).
 
-              ONE ROW AT EVERY WIDTH (Section 2, item 1). It was two, broken by
-              a hard `<br>`; the line wins over the size, so the clamp's floor
-              drops and `whitespace-nowrap` forbids a wrap the clamp cannot
-              prevent on its own. `text-[clamp(30px,9vw,88px)]` still reaches
-              the same 88px ceiling on a desktop — only the small end moves,
-              which is exactly where the second row was coming from.
+              It was the WORDMARK at hero scale — "HRAJ FOTBAL." on one
+              enforced row — with the slogan beneath it as an italic volt
+              sub-line. The frame draws no wordmark in the hero at all: the
+              header carries the mark eighty pixels above this, so the page's
+              largest type was saying the brand name a second time while the
+              one sentence a first-time visitor needs sat at a third the size.
+
+              TWO ROWS, AND THEY ARE THE COPY'S OWN SENTENCES. Line one is the
+              verb phrase, line two the two adverbs, which is where all three
+              languages break — so the rows come from two string keys rather
+              than from a `<br>` or from a width. That also means neither row
+              can wrap into a third: `text-balance` is not used, because a
+              balanced wrap would move the break away from the sentence.
+
+              THE PERIOD AFTER LINE ONE IS DRAWN HERE, IN VOLT, exactly as the
+              frame draws it — the same construction the wordmark used. It is
+              not in the string, or it would render in ink as well.
+
+              `uppercase` IS THE FRAME AND IT IS WITHIN RULING B: §1.4 marks
+              the `hero` step "Upper", which is the step this is set in.
             */}
-            <h1 className="m-0 whitespace-nowrap font-display text-[clamp(30px,9vw,88px)] uppercase leading-[0.92] tracking-[-1.5px] text-white">
-              {landing.headlineLead} {landing.headlineAccent}
+            <h1
+              data-testid="hero-headline"
+              className="m-0 font-display text-hero uppercase text-white"
+            >
+              {landing.heroLine1}
               <span className="text-volt">.</span>
+              <br />
+              <span className="text-volt">{landing.heroLine2}</span>
             </h1>
-
-            <div className="mt-4 text-hero-sub font-bold italic tracking-wide text-volt">
-              {landing.heroSub}
-            </div>
 
             {/*
               THE GREY SUB-LINE IS GONE (Section 2, item 2).
@@ -135,10 +150,18 @@ export default async function LandingPage() {
               render site nobody knows about.
             */}
 
-            {/* Primary CTA — the games list, not an in-page anchor. */}
+            {/*
+              Primary CTA — the games list, not an in-page anchor.
+
+              `rounded-pill`, NOT `rounded-control` (p01). The frame draws this
+              as a full capsule sized to its label, and ruling A's radius table
+              already carries `pill` for exactly that. It was a 14px rounded
+              rectangle, which reads as a form button rather than as the page's
+              one action.
+            */}
             <Link
               href="/games"
-              className="mt-6 inline-flex items-center gap-[9px] rounded-control bg-volt px-[26px] py-[15px] text-cta font-extrabold tracking-wide text-surface no-underline"
+              className="mt-6 inline-flex min-h-11 items-center gap-[9px] rounded-pill bg-volt px-[26px] py-[15px] text-cta font-extrabold tracking-wide text-surface no-underline"
             >
               {landing.heroCta}
             </Link>
@@ -156,29 +179,54 @@ export default async function LandingPage() {
             it, which is the part of §6 that was actually load-bearing —
             "what do I bring" is the second question anyone asks.
           */}
-          <div data-testid="how-it-works" className="mt-[26px]">
-            <div className="flex flex-wrap justify-center gap-3">
-              {landing.steps.map((step) => (
+          {/*
+            ONE PANEL, THREE DIVIDED ROWS (redesign v2, round 3, p01).
+
+            It was three separate `lifted` cards in a wrapping flex row. The
+            frame draws one panel with hairline rules between the steps, and
+            the difference is not decoration: three cards are three objects
+            that happen to be adjacent, and 01 → 02 → 03 is a SEQUENCE. A
+            divided list says so; three boxes say the reader may start
+            anywhere.
+
+            It is also what makes the numbers work. In the frame they are
+            Anton in volt at the size of a heading — a display numeral, which
+            is R5's narrow widening exactly ("large counters, never body-size
+            figures"). At 14px bold on a card of its own, `01` read as a
+            label.
+
+            AN ORDERED LIST, because it is one. `<ol>` was `<div>`s, and the
+            steps are numbered in the copy — a screen reader should not have
+            to infer the order from three strings that happen to start with a
+            digit. The visible numerals are `aria-hidden`; the list marker is
+            suppressed because they are drawn.
+          */}
+          <ol
+            data-testid="how-it-works"
+            className="lifted m-0 mt-[26px] list-none rounded-card p-0"
+          >
+            {landing.steps.map((step) => (
+              <li
+                key={step.index}
+                className="flex items-start gap-4 border-b border-hairline px-[18px] py-[15px] text-left last:border-b-0"
+              >
                 <div
-                  key={step.index}
-                  className="lifted flex min-w-[200px] flex-1 items-start gap-3 rounded-card px-[18px] py-[15px] text-left"
+                  aria-hidden
+                  className="font-display text-[26px] leading-none text-volt"
                 >
-                  <div className="text-[14px] font-bold text-volt">
-                    {step.index}
+                  {step.index}
+                </div>
+                <div>
+                  <div className="text-[18px] font-bold tracking-[.3px]">
+                    {step.title}
                   </div>
-                  <div>
-                    <div className="text-[18px] font-bold tracking-[.3px]">
-                      {step.title}
-                    </div>
-                    <div className="mt-[3px] text-[13px] leading-[1.45] text-muted">
-                      {step.body}
-                    </div>
+                  <div className="mt-[3px] text-[13px] leading-[1.45] text-muted">
+                    {step.body}
                   </div>
                 </div>
-              ))}
-            </div>
-
-          </div>
+              </li>
+            ))}
+          </ol>
         </section>
 
         {/*
@@ -198,7 +246,14 @@ export default async function LandingPage() {
               <div className="text-[10px] tracking-eyebrow text-volt-dim">
                 {landing.nextMatchEyebrow}
               </div>
-              <h2 className="m-0 font-display text-section-title tracking-wide text-white">
+              {/*
+                UPPERCASE AND `page-title` (p01), which makes this heading the
+                twin of `/games`'s `UPCOMING GAMES` rather than a smaller
+                sentence-case cousin. Both frames draw the same 32px Anton
+                caps, and the two headings name the same content on two
+                surfaces.
+              */}
+              <h2 className="m-0 font-display text-page-title uppercase tracking-wide text-white">
                 {landing.nextMatchesLabel}
               </h2>
             </div>

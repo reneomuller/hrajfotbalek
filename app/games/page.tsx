@@ -131,7 +131,9 @@ export default async function GamesPage({
 
   return (
     <main className="relative z-10 mx-auto w-full max-w-shell px-gutter pb-16 pt-24">
-      <h1 className="m-0 font-display text-section-title uppercase tracking-wide text-white">
+      {/* `page-title`, the step p02 actually draws — see the token's own note.
+          `section-title` clamps to 24px at phone width and the frame is 32. */}
+      <h1 className="m-0 font-display text-page-title uppercase tracking-wide text-white">
         {t.games.listTitle}
       </h1>
 

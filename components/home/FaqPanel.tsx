@@ -52,9 +52,12 @@ export async function FaqPanel() {
   return (
     <div
       data-testid="faq-panel"
-      className="w-full rounded-[20px] border border-hairline-volt bg-surface p-[22px]"
+      // `lifted rounded-card` — the neutral panel edge p01 draws, and the same
+      // token the community panel beside it now uses. See CommunityPanel for
+      // the sampled values.
+      className="lifted w-full rounded-card p-[22px]"
     >
-      <h3 className="m-0 mb-3 font-display text-community-title text-white">
+      <h3 className="m-0 mb-3 font-display text-community-title uppercase text-white">
         {t.faq.title}
       </h3>
 

@@ -43,11 +43,27 @@ export async function CommunityPanel({
   return (
     <div
       data-testid="community-panel"
-      className="flex min-w-[270px] flex-1 flex-col rounded-[20px] border border-hairline-volt bg-surface p-[22px]"
+      /*
+        `lifted rounded-card`, replacing `rounded-[20px] border-hairline-volt
+        bg-surface` (redesign v2, round 3).
+
+        THE FRAME'S PANEL EDGE IS NEUTRAL, not volt. Sampled off p01 it is
+        rgb(39,40,32) on a rgb(21,22,13) fill against a rgb(11,12,8) ground —
+        which is `hairline-strong` on `surface-raised` against `ink`, i.e.
+        `.lifted`, the tokenized treatment globals.css already writes once for
+        exactly this job. Three panels on this page each spelled it their own
+        way with a volt edge, and a volt edge on a panel that is not selected,
+        not focused and not a call to action spends the accent on furniture.
+
+        `rounded-[20px]` was also an arbitrary radius two pixels off ruling A's
+        `card`.
+      */
+      className="lifted flex min-w-[270px] flex-1 flex-col rounded-card p-[22px]"
     >
+      {/* Uppercase, as p01 draws it — §1.4 marks the display steps "Upper". */}
       <h3
         data-testid="community-heading"
-        className="m-0 mb-[6px] font-display text-community-title text-white"
+        className="m-0 mb-[6px] font-display text-community-title uppercase text-white"
       >
         {community.title}
       </h3>
@@ -71,7 +87,26 @@ export async function CommunityPanel({
         neither is set.
       */}
       {stats.length > 0 && (
-        <div data-testid="community-stats" className="mb-5 flex flex-wrap gap-x-8 gap-y-3">
+        /*
+          TWO EQUAL COLUMNS, NOT A WRAPPING ROW (p01).
+
+          `flex flex-wrap gap-x-8` put the pair side by side at most widths and
+          stacked them at 390px — the two figures plus a 32px gap overrun the
+          panel's inner width by about eight pixels in English, and by more in
+          Czech. So the layout the frame draws was the layout this produced
+          everywhere EXCEPT the viewport the frames are drawn at, which is the
+          worst way round.
+
+          A two-column grid is unconditional and the columns are equal, which
+          is also what makes the two captions start on the same x as each
+          other rather than at whatever the figure above them happened to be
+          wide. One column when only one number is set, so a lone figure does
+          not sit in a half-empty grid.
+        */
+        <div
+          data-testid="community-stats"
+          className={`mb-5 grid gap-x-4 gap-y-3 ${stats.length > 1 ? "grid-cols-2" : "grid-cols-1"}`}
+        >
           {stats.map((stat) => (
             <div key={stat.key} data-testid={`stat-${stat.key}`}>
               <div

@@ -40,17 +40,73 @@ export async function PlayerOfMonthPanel({
         it. Its contents stay centred within whatever height it is given, the
         same way the stats box handled it.
       */
-      className="flex min-w-[270px] flex-1 flex-col items-center justify-center self-stretch rounded-[20px] border border-hairline-volt bg-surface p-[22px] text-center"
-    >
-      <h3 className="m-0 mb-4 font-display text-community-title text-white">
-        {t.landing.potmTitle}
-      </h3>
+      /*
+        HORIZONTAL, WITH THE TITLE DEMOTED TO AN EYEBROW (redesign v2, round
+        3, p01).
 
+        It was a centred column: a display-sized "Player of the month", then
+        the face, then the name at 19px. The frame inverts that hierarchy —
+        the label is a small volt eyebrow at the top left, the NAME is the
+        display element, and the face sits at the right. Which is the correct
+        reading: "Player of the month" is the same three words every month and
+        the name is the only thing on the panel that changes.
+
+        `lifted rounded-card` for the edge, as on the two panels beside it.
+      */
+      className="lifted flex min-w-[270px] flex-1 items-center justify-between gap-4 self-stretch rounded-card p-[22px]"
+    >
       {player ? (
         <>
+          <div className="min-w-0">
+            {/* `eyebrow` — the one uppercase style in the product (ruling B),
+                and the frame draws this one in volt rather than grey. */}
+            <h3 className="m-0 text-eyebrow font-semibold uppercase text-volt">
+              {t.landing.potmTitle}
+            </h3>
+            {/*
+              THE NAME CARRIES THE DISPLAY FACE NOW. `page-title` is the step
+              p01 sets it at, and it truncates rather than wraps: a nickname
+              long enough to wrap would push the face out of the row, and a
+              single line with an ellipsis is the §2.13 answer.
+            */}
+            <div
+              data-testid="potm-nickname"
+              className="mt-1 truncate font-display text-page-title uppercase text-white"
+            >
+              {player.nickname}
+            </div>
+
+            {/*
+              THE STAT THAT TURNS A PICK INTO A REASON. A name alone says
+              somebody chose them; hours on the pitch says why, and it is the
+              one number this panel can state that nobody has to take on trust.
+
+              Rendered only above zero: "0 h on the pitch this month" under a
+              Player of the Month is a worse sentence than no sentence, and it
+              is reachable — a pick made early in a month, or before anyone has
+              marked attendance.
+
+              It survives the reshuffle by the same 2026-08-10 amendment to
+              ruling J that kept the panel; the frame does not draw it.
+            */}
+            {player.pitchHours > 0 && (
+              <div data-testid="potm-hours" className="mt-1 text-small text-muted">
+                {t.landing.potmHours.replace("{hours}", String(player.pitchHours))}
+              </div>
+            )}
+          </div>
+
+          {/*
+            `shrink-0`, so the face keeps its diameter when the name is long —
+            a flex item with an image in it will otherwise give up width
+            before the text does.
+
+            NON-CLICKABLE (R8). The public player profile is quarantined, so
+            this is a portrait and not a door.
+          */}
           <span
             data-testid="potm-avatar"
-            className="flex h-[72px] w-[72px] items-center justify-center overflow-hidden rounded-full border-2 border-volt bg-surface-avatar text-[26px] font-bold text-volt"
+            className="flex h-[72px] w-[72px] shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-volt bg-surface-avatar text-[26px] font-bold text-volt"
           >
             {photo ? (
               // eslint-disable-next-line @next/next/no-img-element
@@ -64,33 +120,21 @@ export async function PlayerOfMonthPanel({
               initials(player.nickname, t)
             )}
           </span>
-          <div
-            data-testid="potm-nickname"
-            className="mt-3 text-[19px] font-bold text-bone"
-          >
-            {player.nickname}
-          </div>
-
-          {/*
-            THE STAT THAT TURNS A PICK INTO A REASON. A name alone says
-            somebody chose them; hours on the pitch says why, and it is the
-            one number this panel can state that nobody has to take on trust.
-
-            Rendered only above zero: "0 h on the pitch this month" under a
-            Player of the Month is a worse sentence than no sentence, and it
-            is reachable — a pick made early in a month, or before anyone has
-            marked attendance.
-          */}
-          {player.pitchHours > 0 && (
-            <div data-testid="potm-hours" className="mt-1 text-small text-muted">
-              {t.landing.potmHours.replace("{hours}", String(player.pitchHours))}
-            </div>
-          )}
         </>
       ) : (
-        <p className="m-0 max-w-[240px] text-[13px] text-muted">
-          {t.landing.potmEmpty}
-        </p>
+        /*
+          NO PICK KEEPS THE TITLE, because with no name there is nothing else
+          to say what the panel is. The eyebrow-plus-name arrangement collapses
+          to a heading and a sentence.
+        */
+        <div>
+          <h3 className="m-0 text-eyebrow font-semibold uppercase text-volt">
+            {t.landing.potmTitle}
+          </h3>
+          <p className="m-0 mt-2 max-w-[240px] text-[13px] text-muted">
+            {t.landing.potmEmpty}
+          </p>
+        </div>
       )}
     </div>
   );

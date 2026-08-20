@@ -67,8 +67,11 @@ const INTENTIONALLY_UNTRANSLATED = new Set([
   "siteFooter.copyright",
   "siteFooter.contactEmail",
   "notFound.code",
-  "landing.headlineLead",
-  "landing.headlineAccent",
+  // `landing.headlineLead` / `headlineAccent` were here — the hero's wordmark,
+  // identical in all three languages. Round 3 of the redesign put the slogan in
+  // the hero instead (p01 draws no wordmark there), so both keys are gone and
+  // their exemptions with them: an exemption for a key that no longer exists
+  // reads as a decision about live copy.
   "landing.nextMatchEyebrow",
   "landing.community.whatsappUrl",
   // "WhatsApp" is the product's name, not a word — it was "WhatsApp group" and

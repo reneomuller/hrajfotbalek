@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { players, serviceClient, signInAs } from "./helpers/session.ts";
+import { LOCALE_COOKIE } from "../lib/i18n/locales";
 
 /**
  * G2 home-page specs (§6).
@@ -267,35 +268,102 @@ test("player of the month renders, with initials when there is no photo", async 
 });
 
 /*
- * THE WORDMARK IS ONE ROW AT EVERY WIDTH (Section 2, item 1).
+ * THE HERO HEADLINE BREAKS ONLY AT SENTENCE BOUNDARIES (redesign v2, round 3,
+ * p01).
  *
- * This replaces the sentence-boundary spec: `landing.vision`, the grey line
- * that spec governed, is gone (item 2). What matters now is the hero itself —
- * it was broken across two rows by a hard `<br>`, and the ruling is that one
- * line wins over size.
+ * WHAT THIS REPLACES, and why the subject changed rather than the assertion
+ * being deleted: the previous spec was "the wordmark renders on one row" —
+ * Section 2 item 1, about a hero that set "HRAJ FOTBAL." at display scale with
+ * a hard `<br>` in it. Round 3 takes the wordmark out of the hero entirely
+ * (the header already carries it), so there is no wordmark here to be one row.
+ * The requirement it protected survives and is what is asserted here: the
+ * headline never wraps in a place nobody chose.
  *
- * MEASURED AS A LINE COUNT, not as a font size: the clamp's floor is an
- * implementation detail and the requirement is the row.
+ * IT IS NOT A ROW COUNT, AND THAT IS THE FINDING. English and Czech set two
+ * rows, which is the frame. RUSSIAN SETS THREE, and cannot do otherwise:
+ * **Anton ships no Cyrillic subset** (`app/layout.tsx` loads `latin` and
+ * `latin-ext`, which is all Google publishes for it), so every display heading
+ * in Russian falls back to the body face. "КОГДА УГОДНО. ГДЕ УГОДНО." measures
+ * 536px in that fallback against 358px of available width at 390 — fitting it
+ * on one row needs a 29px hero, and the frame's is 44. This is a
+ * product-wide property of the type system, not something this round
+ * introduced; the hero is simply where it first has consequences.
+ *
+ * SO THE RULE IS THE BREAK, NOT THE COUNT. Three rows reading "ИГРАЙ В
+ * ФУТБОЛ." / "КОГДА УГОДНО." / "ГДЕ УГОДНО." is the copy's own punctuation and
+ * is correct. Three rows reading "…КОГДА УГОДНО. ГДЕ" / "УГОДНО." is the
+ * defect, and it is one font-metric change away at any time.
+ *
+ * MEASURED AS "EVERY SENTENCE FITS ON A ROW", which is equivalent and is
+ * deterministic. A greedy line-breaker can only split inside a sentence if
+ * that sentence does not fit on a row of its own — so if each one fits, no row
+ * can end mid-sentence, whatever the row count turns out to be.
  */
-test("the wordmark renders on one row at phone and desktop width", async ({
+test("the hero headline breaks only at sentence boundaries, in every language", async ({
   browser,
 }) => {
-  for (const width of [390, 1280]) {
-    const context = await browser.newContext({ viewport: { width, height: 900 } });
-    const page = await context.newPage();
-    await page.goto("/");
-    await page.evaluate(() => document.fonts.ready);
+  for (const locale of ["en", "cs", "ru"] as const) {
+    for (const width of [390, 1280]) {
+      const context = await browser.newContext({ viewport: { width, height: 900 } });
+      await context.addCookies([
+        { name: LOCALE_COOKIE, value: locale, domain: "localhost", path: "/" },
+      ]);
+      const page = await context.newPage();
+      await page.goto("/");
+      await page.evaluate(() => document.fonts.ready);
 
-    const rows = await page.evaluate(() => {
-      const h1 = document.querySelector("h1")!;
-      const style = getComputedStyle(h1);
-      const lineHeight = parseFloat(style.lineHeight) || parseFloat(style.fontSize) * 0.92;
-      return Math.round(h1.getBoundingClientRect().height / lineHeight);
-    });
+      const measured = await page.evaluate(() => {
+        const h1 = document.querySelector('[data-testid="hero-headline"]') as HTMLElement;
+        const style = getComputedStyle(h1);
 
-    expect(rows, `wordmark rows at ${width}px`).toBe(1);
-    await context.close();
+        // A nowrap probe wearing the headline's own resolved font, so the
+        // measurement survives a face swap, a clamp change and the Cyrillic
+        // fallback alike.
+        const probe = document.createElement("span");
+        probe.style.cssText =
+          `position:absolute;visibility:hidden;white-space:nowrap;` +
+          `font:${style.font};letter-spacing:${style.letterSpacing};` +
+          `text-transform:${style.textTransform}`;
+        document.body.appendChild(probe);
+
+        // Sentences, not words: the volt period is its own element, so the
+        // text content is re-split on "." rather than trusting the markup.
+        const sentences = (h1.textContent ?? "")
+          .split(/(?<=\.)\s*/)
+          .map((s) => s.trim())
+          .filter(Boolean);
+
+        const widths = sentences.map((s) => {
+          probe.textContent = s;
+          return Math.ceil(probe.getBoundingClientRect().width);
+        });
+        probe.remove();
+
+        return { available: h1.getBoundingClientRect().width, sentences, widths };
+      });
+
+      for (const [i, sentence] of measured.sentences.entries()) {
+        expect(
+          measured.widths[i],
+          `${locale} at ${width}px: "${sentence}" wraps mid-sentence ` +
+            `(${measured.widths[i]}px in ${measured.available}px)`,
+        ).toBeLessThanOrEqual(Math.ceil(measured.available));
+      }
+      await context.close();
+    }
   }
+});
+
+/*
+ * AND THE HERO DOES NOT REPEAT THE HEADER'S WORDMARK.
+ *
+ * Separate from the row count because it is a separate mistake: restoring the
+ * brand line above the slogan would still leave the slogan at two rows.
+ */
+test("the hero does not repeat the wordmark", async ({ page }) => {
+  await page.goto("/");
+  const headline = await page.getByTestId("hero-headline").innerText();
+  expect(headline.toUpperCase()).not.toContain("HRAJ FOTBAL");
 });
 
 /* And the grey sub-line under it is gone. */

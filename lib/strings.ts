@@ -71,20 +71,31 @@ export const strings = {
   },
 
   landing: {
-    headlineLead: "HRAJ",
-    headlineAccent: "FOTBAL",
     /*
-     * `home.heroTagline` from the v1.3 copy table (§4), not a fresh draft —
-     * the Czech and Russian there are the reviewed pair for this exact line,
-     * which is a better starting point than a literal translation of the
-     * English.
+     * THE HERO HEADLINE IS THE SLOGAN, IN TWO LINES (redesign v2, round 3).
      *
-     * NOTE THE DUPLICATION IT CREATES: `landing.footer.tagline` is the same
-     * sentence in tracked capitals at the bottom of the same page. Flagged
-     * rather than silently resolved — which of the two keeps it is a copy
-     * decision, not a code one.
+     * It was the WORDMARK — `headlineLead` + `headlineAccent`, "HRAJ FOTBAL."
+     * set at hero scale — with the slogan under it as an italic sub-line.
+     * `p01` draws the slogan itself as the hero, in two Anton rows, and no
+     * wordmark: the header already carries the mark eighty pixels above, so
+     * the old hero spent its largest type saying the brand name twice and its
+     * second-largest saying the only thing a first-time visitor needs.
+     *
+     * Both keys are removed rather than left unused, along with their
+     * `INTENTIONALLY_UNTRANSLATED` exemptions — a dead string is a render
+     * site nobody knows about.
+     *
+     * `heroSub` SPLITS AT THE FIRST SENTENCE, which is where all three
+     * languages break: the verb phrase, then the two adverbs. The period
+     * after line one is drawn by the component in volt, so it is not in the
+     * string — a trailing "." here would render twice.
+     *
+     * The source is `home.heroTagline` from the v1.3 copy table (§4), not a
+     * fresh draft: the Czech and Russian there are the reviewed pair for this
+     * exact line.
      */
-    heroSub: "Play football. Anytime. Anywhere.",
+    heroLine1: "Play football",
+    heroLine2: "Anytime. Anywhere.",
     vision:
       "One match that repeats itself. Find a game, claim your spot, show up.",
     heroCta: "Find a game →",

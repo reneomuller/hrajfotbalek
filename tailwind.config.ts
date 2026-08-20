@@ -244,6 +244,27 @@ const config: Config = {
        */
       fontSize: {
         hero: ["clamp(44px,10vw,88px)", { lineHeight: "0.92", letterSpacing: "-1.5px" }],
+        /*
+         * `page-title` — ADDED in redesign v2, round 3, and it is a step the
+         * scale did not have.
+         *
+         * The frames set a page's display heading at 32px on a 390 viewport:
+         * `UPCOMING GAMES` on p02 and `UPCOMING MATCHES` on p01 both measure a
+         * 23.5px Anton cap height, which is a 32px em. `title` clamps to its
+         * 24px floor at that width, so every page heading in the product was
+         * rendering a third smaller than the design.
+         *
+         * A NEW STEP RATHER THAN A WIDER `title`. `title` is aliased by
+         * `section-title`, `match-title`, `hero-sub` and `community-title` —
+         * 19 headings across admin, pass, profile and the game detail — and
+         * three of those rounds are not in scope. Raising the shared floor
+         * would move all of them on the authority of two frames.
+         *
+         * The clamp keeps `title`'s 6vw slope so the two steps track each
+         * other above the fold-width, and the 42px ceiling is 32 scaled by the
+         * same 1.24 that separates the floors.
+         */
+        "page-title": ["clamp(32px,8vw,42px)", { lineHeight: "1.05" }],
         title: ["clamp(24px,6vw,34px)", { lineHeight: "1.05" }],
         time: ["28px", { lineHeight: "1" }],
         "body-lg": ["17px", { lineHeight: "1.4" }],
