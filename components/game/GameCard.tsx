@@ -130,11 +130,43 @@ export async function GameCard({
           src="/pitch-default.jpg"
           alt=""
           data-testid="card-photo"
-          className="h-full w-full object-cover"
+          className="h-full w-full object-cover object-center"
         />
+        {/*
+          THE GRADIENT IS A RAMP, NOT A DIMMER — rebalanced from p02.
+
+          The first version was a uniform-ish wash (.68 -> .82 -> .92) and it
+          crushed the photograph to near-invisible: the card read as a dark
+          slab that happened to have texture. p02 draws the opposite — the
+          pitch is CLEARLY there behind the venue title, and the image darkens
+          as it falls toward the avatars and the join cue, which is where the
+          small text lives.
+
+          So the stops now start almost clear and end heavy. The dark end is
+          what the bar, the faces and the cue sit on; the clear end is the
+          picture doing the job it was added for.
+        */}
         <span
           data-testid="card-scrim"
-          className="absolute inset-0 bg-gradient-to-b from-ink/[.68] via-ink/[.82] to-ink/[.92]"
+          className="absolute inset-0 bg-gradient-to-b from-ink/[.12] via-ink/[.52] to-ink/[.90]"
+        />
+        {/*
+          TEXT PROTECTION, LOCAL TO THE TITLE LINE.
+
+          The venue title sits at the top, which is now the brightest part of
+          the photograph — and the sky in this particular image is pale. Rather
+          than dimming the WHOLE card back down to rescue one line (which is
+          what the first version effectively did), this is a short gradient
+          behind the title band only: opaque enough at the very top to hold
+          white text, gone within ~72px.
+
+          A separate element rather than another stop on the ramp above,
+          because the two do different jobs and one of them is allowed to
+          change when the type does.
+        */}
+        <span
+          data-testid="card-title-scrim"
+          className="absolute inset-x-0 top-0 h-[72px] bg-gradient-to-b from-ink/[.72] to-transparent"
         />
       </span>
 

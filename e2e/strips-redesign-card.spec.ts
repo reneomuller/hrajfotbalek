@@ -69,6 +69,15 @@ test("the card over the photo — scrim, outline and inert cue", async ({
   expect(cover.dw).toBeLessThanOrEqual(1);
   expect(cover.dh).toBeLessThanOrEqual(1);
 
+  // The photo is centre-weighted so it does not stretch oddly at wide
+  // viewports — the card is full-bleed and the image is not the card's ratio.
+  const fit = await photo.evaluate((el) => {
+    const s = getComputedStyle(el);
+    return { fit: s.objectFit, pos: s.objectPosition };
+  });
+  expect(fit.fit).toBe("cover");
+  expect(fit.pos).toBe("50% 50%");
+
   // --- R6's named requirement: the volt outline survives the photo --------
   const pill = card.getByTestId("card-when");
   const stroke = await pill.evaluate((el) => {
