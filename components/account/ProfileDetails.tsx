@@ -80,7 +80,7 @@ export function ProfileDetails(props: ProfileDetailsProps) {
 
   if (!editing) {
     return (
-      <section data-testid="profile-details" className="rounded-card bg-surface p-5">
+      <section data-testid="profile-details" className="lifted rounded-card p-5">
         <dl className="m-0 flex flex-col gap-3">
           <Row label={t.profile.displayName} value={props.nickname} testId="nickname" />
           <Row
@@ -126,11 +126,13 @@ export function ProfileDetails(props: ProfileDetailsProps) {
             way to start that flow now sits beside the address itself, in the
             middle of the page where nothing floats over it.
           */}
+          {/* Hand-rolled rather than a `Row`, because of the control beneath
+              it — so it repeats `Row`'s treatment deliberately. Change both. */}
           <div className="flex flex-col gap-[2px]">
-            <dt className="m-0 text-small text-muted">{t.profile.email}</dt>
+            <dt className="field-label m-0">{t.profile.email}</dt>
             <dd
               data-testid="profile-email"
-              className={`m-0 text-body ${props.email ? "text-bone" : "text-faint"}`}
+              className={`m-0 text-body-lg font-semibold ${props.email ? "text-white" : "text-faint"}`}
             >
               {props.email || t.profile.notSet}
             </dd>
@@ -173,7 +175,7 @@ export function ProfileDetails(props: ProfileDetailsProps) {
   }
 
   return (
-    <section data-testid="profile-details" className="rounded-card bg-surface p-5">
+    <section data-testid="profile-details" className="lifted rounded-card p-5">
       <form action={formAction} className="flex flex-col gap-5">
         <Field label={t.profile.displayName} htmlFor="nickname" error={fieldError(state, "nickname", t)}>
           <input
@@ -354,11 +356,25 @@ function Row({
       been label-above-field — so the two halves of this block stop being two
       different layouts of the same six facts.
     */
-    <div className="flex flex-col gap-[2px]">
-      <dt className="m-0 text-small text-muted">{label}</dt>
+    /*
+      p11's ROW: a tracked-caps grey label over a larger white value, with a
+      hairline rule between rows.
+
+      The label takes `eyebrow` — ruling B's one uppercase style, and the same
+      treatment the game detail's card labels and the profile's stat captions
+      now use. The value rises from `body` to `body-lg`: p11 draws the fact
+      larger than the word naming it, which is the hierarchy the stacked
+      layout was already implying and the two matched sizes were flattening.
+
+      THE RULE IS THE ROW'S, not the list's. `border-b` here with `last:` off
+      means a row added anywhere in the list gets its rule for free, and the
+      card never ends on a line across nothing.
+    */
+    <div className="flex flex-col gap-[2px] border-b border-hairline pb-3 last:border-b-0 last:pb-0">
+      <dt className="field-label m-0">{label}</dt>
       <dd
         data-testid={`profile-${testId}`}
-        className={`m-0 text-body ${value ? "text-bone" : "text-faint"}`}
+        className={`m-0 text-body-lg font-semibold ${value ? "text-white" : "text-faint"}`}
       >
         {value || t.profile.notSet}
       </dd>

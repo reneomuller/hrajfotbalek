@@ -67,7 +67,11 @@ export function ProfileStats({
             rule against truncating the things a reader scans for applies to a
             stat's own name as much as to a game's.
           */}
-          <div className="mt-[6px] text-small leading-tight text-muted">
+          {/* TRACKED CAPS (p10), which is the same `eyebrow` treatment the
+              home page's two community figures already use — these are the
+              same object on a different surface, and they were reading as two
+              different components. */}
+          <div className="mt-[6px] text-eyebrow font-semibold uppercase leading-tight text-muted">
             {statLabel(cell.key, cell.value, locale, t)}
           </div>
         </div>

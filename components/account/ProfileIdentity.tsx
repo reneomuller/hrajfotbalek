@@ -11,13 +11,26 @@ import type { Strings } from "@/lib/strings";
  * BUILT AGAINST THE REFERENCE the owner supplied, with two adaptations, both
  * forced by what this schema holds rather than chosen:
  *
- *   1. THE COVER IS A GRADIENT, NOT A PHOTOGRAPH. The reference puts a shot of
- *      a game behind the name. There is no cover-photo column and this is a
+ *   1. ~~THE COVER IS A GRADIENT, NOT A PHOTOGRAPH. The reference puts a shot
+ *      of a game behind the name. There is no cover-photo column and this is a
  *      front-end round, so the options were a token gradient, a borrowed venue
  *      photo, or nothing. A venue photo would be a picture of a pitch this
  *      player may never have played on, presented as if it were theirs — an
  *      invented fact under someone's face. The gradient reads as a deliberate
- *      band; a wrong photograph reads as a lie.
+ *      band; a wrong photograph reads as a lie.~~
+ *
+ *      **REVERSED 2026-08-20 (redesign v2, round 6).** The reasoning was
+ *      sound and its PREMISE changed: it assumed the only photograph available
+ *      was some particular venue's. R6 introduced `pitch-default.jpg` as the
+ *      product's one generic pitch, used identically behind every list card
+ *      and every game header — so it is furniture, like the pitch canvas
+ *      already behind this page, and not a claim about where this player has
+ *      played. The objection stands in full against a VENUE photo here, and
+ *      that is still not built: there is no cover-photo column and none is
+ *      added.
+ *
+ *      p10 and p11 both draw the photographic cover, and the audit lists it as
+ *      a delta from v1.3 rather than as a request.
  *
  *   2. THE META LINE IS COUNTRY, NOT CITY. The reference says "Bangkok". The
  *      schema holds `players.country` as an ISO 3166 code and nothing finer.
@@ -91,20 +104,41 @@ export function ProfileIdentity({
         is `max-w-shell` centred, so a `100vw` band would break out of the shell
         on a desktop and sit under the header's own margins.
 
-        IT CARRIES A VOLT WASH, and the first version did not — which the strip
-        caught. `surface-raised` into `ink` is six points of luminance across
-        132px, and a gradient that shallow over that distance is invisible: the
-        strip showed a name floating on a black page with no cover at all.
+        THE PHOTOGRAPH, AND THE SAME FADE THE GAME HEADER USES. R6's single
+        default pitch backs the band and the scrim ramps to `ink` at full
+        opacity by the bottom — the page's own ground, so the cover ends
+        without a seam and the avatar overlapping it has flat surface to sit
+        against. It replaces `from-volt/[.10] via-surface-raised to-ink`; see
+        the reversal note in this file's header for why the gradient existed
+        and why it no longer needs to.
 
-        The wash is the brand's own accent at a tenth of its strength, fading to
-        the page. It is the same trick the pitch canvas behind this page already
-        plays, which is why it reads as belonging rather than as a coloured bar
-        — and it is a TINT of an existing token rather than a new one, so the
-        no-inline-hex rule holds and a theme change moves it.
+        `aria-hidden`, and `alt=""` on the image: this is scenery. Announcing
+        a stock pitch above someone's own name and stats is noise on the one
+        page where a screen-reader user is reading about themselves.
       */}
-      <div className="-mx-gutter h-[132px] bg-gradient-to-b from-volt/[.10] via-surface-raised to-ink" />
+      <div aria-hidden className="relative -mx-gutter h-[132px] overflow-hidden">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/pitch-default.jpg"
+          alt=""
+          data-testid="profile-cover-photo"
+          className="h-full w-full object-cover object-center"
+        />
+        <span
+          data-testid="profile-cover-scrim"
+          className="absolute inset-0 bg-gradient-to-b from-ink/[.45] via-ink/[.70] via-50% to-ink to-92%"
+        />
+      </div>
 
-      <div className="-mt-10 flex items-end gap-4">
+      {/*
+        `relative`, AND IT IS LOad-BEARING. The cover above became a positioned
+        element when it gained the scrim, and a positioned element paints above
+        its non-positioned siblings whatever the source order says — so the
+        cover painted OVER this row and sliced the nickname in half along the
+        band's bottom edge. Two positioned siblings fall back to source order,
+        which puts the identity on top where it belongs.
+      */}
+      <div className="relative -mt-10 flex items-end gap-4">
         <PhotoUpload hasPhoto={Boolean(photoPath)}>
           <span
             data-testid="account-avatar"
