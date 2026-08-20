@@ -1267,3 +1267,63 @@ carrying a format, a surface and a skill restriction.
 **If a size difference is ever wanted back**, it is a second class next to
 `.badge-pill` with its own name and its own reason — never a prop that lets
 each call site decide.
+
+---
+
+# 11. Redesign v2 — Round 10 rulings (2026-08-20)
+
+## R22 — The admin panel is English, and the pitch-name label is not an exception
+
+**The pitch-name field's admin form label stays English.** So does every other
+label in `/admin`.
+
+This is the standing rule stated once rather than re-argued per field, because
+the question arrives one field at a time and each instance looks small. The
+panel is a surface only the owner and the organizers see. `lib/strings.ts`
+keeps admin copy outside the player-facing sections deliberately, and
+`lib/i18n/__tests__/i18n.test.ts` **actively fails** a translation added there
+— the test walks every player-facing key for completeness *and* asserts that
+nothing outside those sections is overlaid.
+
+**Carving admin into the overlays is declined as disproportionate.** It is
+roughly two hundred keys in two languages, a permanent tax on every admin
+string thereafter, and a change to the one test that currently keeps the
+boundary honest — for readers who are already reading English in the same
+screen's error messages, CSV headers and enum values.
+
+**WHAT THIS DOES NOT TOUCH.** Player-facing rendering of the pitch name — the
+data join that puts the typed name on the game detail — is not admin copy. It
+is a value, not a label, and it renders in every language exactly as built in
+round 9. The distinction is the general one: **a label is translated, a datum
+is displayed.**
+
+## R23 — Admin page titles are `title`, and `page-title` is under suspicion
+
+**Every page title inside `/admin` is `font-display text-title uppercase
+tracking-wide text-white`.** The panel held four different treatments before
+round 10: `page-title` on `/admin` and `/admin/stats` and `/admin/site`,
+`section-title` on `/admin/topups`, and a 22px bold **body** face in `bone` on
+`/admin/games` and `/admin/players` that predates the redesign entirely.
+
+The step is measured, not chosen. `p14`, `p15`, `p17` and `p19` all draw their
+title at a cap height between 17.9 and 23.4 pixels; `title` renders 21.3 at
+390px and `page-title` renders 28.2.
+
+### The measurement that is bigger than this ruling, and is NOT acted on
+
+**The player frames draw a 23.4px title cap too.** `p02`, `p05`, `p10`, `p11`
+and `p18` all measure it, and `page-title` — added in R17 on the reading that
+our titles were rendering "a third smaller than the design" — renders 28.2.
+
+R17 is very likely wrong, and correcting it moves **nineteen headings across
+home, games, auth, pass and profile**. Nobody asked for that this round, none
+of those surfaces was in scope, and a type change nobody requested is exactly
+the class of work `SCOPE.md` exists to stop. It is recorded as an OPEN finding
+in `docs/REQUESTS.md` and is the owner's call.
+
+**The method is the durable part.** Cap heights were read at a fixed luminance
+threshold on both the frame and our own screenshot, and converted using Anton's
+**rendered** cap ratio — 0.86, derived from our render at a known font size —
+rather than the face's published metric of 0.72. The published ratio produced a
+40px tile numeral in this very round before the rendered one corrected it to
+32. **Measure the ratio on the thing you are measuring with.**

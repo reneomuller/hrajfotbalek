@@ -29,6 +29,21 @@ is `"credit"` and there is no cash-refund path anywhere in the system. Reading
 "in kind" as a specification produces a cash-out feature that the quarantine
 explicitly defers.
 
+## Every request the owner has made is in `docs/REQUESTS.md`
+
+One numbered row each, with a status: shipped, built-but-dormant, partial, open
+or declined-with-the-reason. **Every round updates it, and every end report
+closes by quoting its OPEN and BUILT-DORMANT rows verbatim.**
+
+It exists because five separate things the owner asked for are *shipped and
+invisible* — Google sign-in, the Stripe booking link, the pass-tier links and
+the profile-cover storage migration all wait on a step only he can take, and a
+feature that is finished and dormant looks exactly like a feature that was
+never built. The `BUILT-DORMANT-ON-<step>` status names the step.
+
+The other thing it prevents is a request being asked a fifth time. `/admin`
+against `p14` was, which is what produced the file.
+
 ## The rules that are not negotiable
 
 **Every state transition is a `SECURITY DEFINER` plpgsql RPC** with
