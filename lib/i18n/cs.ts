@@ -574,6 +574,13 @@ export const cs: StringsOverlay = {
     failed: "Neprošlo to. Zkus to znovu.",
   },
 
+  notifications: {
+    // DRAFT — flagged for the standing native-review batch.
+    bellLabel: "Oznámení",
+    title: "Oznámení",
+    empty: "Zatím nic.",
+  },
+
   common: {
     back: "Zpět",
     close: "Zavřít",

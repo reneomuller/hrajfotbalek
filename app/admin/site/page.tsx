@@ -3,6 +3,7 @@ import { SiteSettingsForms } from "@/components/admin/SiteSettingsForms";
 import { requireAdmin } from "@/lib/auth/requireAdmin";
 import { getHomeContent } from "@/lib/home/queries";
 import { createServiceRoleSupabaseClient } from "@/lib/supabase/clients";
+import { NotifyForm } from "@/components/admin/NotifyForm";
 import { strings } from "@/lib/strings";
 
 export const metadata: Metadata = {
@@ -48,6 +49,18 @@ export default async function AdminSitePage() {
         players={players ?? []}
         currentPlayerOfMonth={home.playerOfMonth?.nickname ?? null}
       />
+      {/*
+        NOTIFY PLAYERS (round 7, item 5).
+
+        On the home-page settings screen because that is where the owner
+        already goes to say something to everybody — the active-player number
+        and the Player of the Month live here, and a broadcast is the same
+        kind of act.
+      */}
+      <div className="mt-10">
+        <NotifyForm />
+      </div>
+
     </>
   );
 }

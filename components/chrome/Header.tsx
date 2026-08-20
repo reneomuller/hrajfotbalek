@@ -2,6 +2,8 @@ import Link from "next/link";
 import { LanguageSwitcher } from "@/components/chrome/LanguageSwitcher";
 import { primaryNavLinks } from "@/lib/nav/links";
 import { initials } from "@/lib/roster/initials";
+import { NotificationBell } from "@/components/notifications/NotificationBell";
+import type { BellState } from "@/lib/notifications/queries";
 import { avatarUrl } from "@/lib/storage/avatar";
 import { getStrings } from "@/lib/i18n/server";
 
@@ -59,6 +61,7 @@ function navTestId(href: string): string {
 }
 
 export async function Header({
+  bell,
   nickname,
   isAdmin,
   photoPath = null,
@@ -66,6 +69,8 @@ export async function Header({
 }: {
   nickname: string | null;
   isAdmin: boolean;
+  /** The bell's rows and unread count — see lib/notifications/queries.ts. */
+  bell: BellState;
   /** `players.photo_path` for the signed-in player, when they have one. */
   photoPath?: string | null;
   /**
@@ -239,6 +244,19 @@ export async function Header({
           right-aligned even though it is not.
         */}
         <nav className="flex shrink-0 items-center justify-end gap-2">
+          {/*
+            THE BELL, LEFT OF THE AVATAR (p10, p12, p14, p16 — every signed-in
+            frame draws it there). Rendered only for a signed-in player, and
+            the component itself renders nothing when the store is unreachable,
+            so an unmigrated deployment shows the header it always had.
+          */}
+          {signedIn && (
+            <NotificationBell
+              items={bell.items}
+              unread={bell.unread}
+              available={bell.available}
+            />
+          )}
           {signedIn ? (
             <Link
               href="/account"

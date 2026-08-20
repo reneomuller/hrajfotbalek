@@ -6,6 +6,7 @@ import { SessionProvider } from "@/components/SessionProvider";
 import { SiteBackground } from "@/components/SiteBackground";
 import { Footer } from "@/components/chrome/Footer";
 import { Header } from "@/components/chrome/Header";
+import { EMPTY_BELL, getBellState } from "@/lib/notifications/queries";
 import { getCurrentPlayer } from "@/lib/auth/session";
 import { getLocale, getStrings } from "@/lib/i18n/server";
 import { strings } from "@/lib/strings";
@@ -158,6 +159,13 @@ export default async function RootLayout({
             {/* Mounted once, here, so navigating never restarts the field. */}
             <SiteBackground />
             <Header
+              /*
+                THE BELL'S ROWS (round 7, item 5). Fetched only for a signed-in
+                player: `my_notifications` resolves the caller from
+                `auth.uid()`, so calling it anonymously is a round trip that
+                can only return an empty list.
+              */
+              bell={player ? await getBellState() : EMPTY_BELL}
               nickname={player?.nickname ?? null}
               isAdmin={player?.is_admin ?? false}
               photoPath={player?.photo_path ?? null}

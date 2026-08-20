@@ -54,6 +54,15 @@ export type ClientPaymentMethod = Extract<PaymentMethod, "qr" | "cash">;
 
 export type AttendanceStatus = "present" | "no_show";
 
+/** One row of `my_notifications` (round 7, item 5). */
+export interface NotificationRow {
+  id: string;
+  title: string;
+  body: string;
+  created_at: string;
+  is_read: boolean;
+}
+
 /**
  * Closed set, matching the `games_surface_known` CHECK.
  *
@@ -1009,6 +1018,25 @@ export interface Database {
           p_phone?: string | null;
         };
         Returns: string;
+      };
+
+      /* --- notifications, v1 (round 7, item 5, migration 20260820120000) --- */
+
+      /** Admin-only. Publishes to every signed-in player. */
+      admin_create_notification: {
+        Args: { p_title: string; p_body: string };
+        Returns: string;
+      };
+      /** Marks everything the caller can see as read. Idempotent. */
+      mark_notifications_read: {
+        Args: Record<string, never>;
+        Returns: number;
+      };
+      /** The bell's payload: the newest notifications plus this caller's
+       *  read flag, in one round trip. */
+      my_notifications: {
+        Args: { p_limit?: number };
+        Returns: NotificationRow[];
       };
     };
 

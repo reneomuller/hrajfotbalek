@@ -26,6 +26,8 @@ export type IconName =
   | "link"
   | "arrowLeft"
   | "users"
+  // The notification bell (round 7, item 5).
+  | "bell"
   // The bottom tab bar (v1.2 §7).
   | "home"
   | "ticket"
@@ -46,6 +48,12 @@ export type IconName =
   | "drinks";
 
 const PATHS: Record<IconName, React.ReactNode> = {
+  bell: (
+    <>
+      <path d="M18 8a6 6 0 1 0-12 0c0 5-2 6-2 6h16s-2-1-2-6" />
+      <path d="M13.7 20a2 2 0 0 1-3.4 0" />
+    </>
+  ),
   calendar: (
     <>
       <rect x="3" y="5" width="18" height="16" rx="2.5" />

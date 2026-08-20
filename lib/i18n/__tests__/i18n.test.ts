@@ -51,6 +51,11 @@ const PLAYER_FACING = [
   // and the expiry is the part they must read before the button. A pass page
   // in a language they cannot read is a complaint waiting to happen.
   "pass",
+  // Round 7, item 5. The bell is in the header on every page of the product
+  // for a signed-in player, so it is as player-facing as the nav labels beside
+  // it. The MESSAGES inside it are admin free text and are not translated —
+  // that is a copy decision the owner makes per message, not a table.
+  "notifications",
 ] as const;
 
 /**

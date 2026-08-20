@@ -578,6 +578,13 @@ export const ru: StringsOverlay = {
     failed: "Не прошло. Попробуй ещё раз.",
   },
 
+  notifications: {
+    // DRAFT — flagged for the standing native-review batch.
+    bellLabel: "Уведомления",
+    title: "Уведомления",
+    empty: "Пока ничего.",
+  },
+
   common: {
     back: "Назад",
     close: "Закрыть",

@@ -22,6 +22,9 @@ import {
 import { formatCzk, formatGameTimeSpan } from "@/lib/format";
 import { gameEndsAt } from "@/lib/games/duration";
 import { strings } from "@/lib/strings";
+import { NotifyForm } from "@/components/admin/NotifyForm";
+import { formatGameDateTime } from "@/lib/format";
+import { venueDisplayName } from "@/lib/venues/displayName";
 import { publishGameAction, updateGameAction } from "../actions";
 import { markPlayedAction } from "./attendance/actions";
 
@@ -123,6 +126,32 @@ export default async function AdminGamePage({
           {game.waitlistCount}
         </dd>
       </dl>
+
+      {/*
+        THE DRAFT NOTIFICATION OFFER (round 7, item 5).
+
+        Shown on a PUBLISHED game, prefilled from the row that was just
+        written. It is an offer and nothing more: editable, dismissible, and
+        it sends only when the owner presses the button. Publishing a game
+        does not queue a message — there is no code path anywhere that calls
+        `publishNotificationAction` without a click.
+
+        WHY HERE RATHER THAN A TOAST. Creating a game redirects to this page,
+        so this is where the owner lands with the game fresh in mind. A toast
+        would vanish, and a message worth sending is worth more than three
+        seconds to decide about.
+      */}
+      {game.status !== "draft" && game.status !== "cancelled" && (
+        <div className="mt-6">
+          <NotifyForm
+            asOffer
+            defaultTitle={strings.admin.notifyDraftGameTitle}
+            defaultBody={strings.admin.notifyDraftGameBody
+              .replace("{name}", venueDisplayName(game.venue, venueRow?.pitch_name))
+              .replace("{when}", formatGameDateTime(game.starts_at))}
+          />
+        </div>
+      )}
 
       {game.status === "draft" && (
         <p className="mt-6 rounded-control border border-hairline-strong px-4 py-3 text-[11px] tracking-[1px] text-faint">

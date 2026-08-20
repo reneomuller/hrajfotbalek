@@ -1076,6 +1076,24 @@ export const strings = {
     operationsTitle: "Operations",
     /* --- admin player detail (round 7, item 9) --- */
     adminActionsTitle: "Admin actions",
+    /* --- notifications (round 7, item 5). Admin copy is English only. --- */
+    notifyTitle: "Notify players",
+    notifyLede: "Everyone signed in sees this in their bell. Nothing is emailed.",
+    notifyOfferTitle: "Tell the players?",
+    notifyOfferLede: "A draft — edit it, send it, or dismiss it. Nothing goes out until you press send.",
+    notifyTitleLabel: "Headline",
+    notifyBodyLabel: "Message",
+    notifySend: "Send notification",
+    notifyDismiss: "Not now",
+    notifySent: "Sent.",
+    notifyTitleRequired: "A headline is required.",
+    notifyBodyRequired: "A message is required.",
+    /* Drafts offered after an admin action. `{name}` and `{when}` are filled
+       from the row that was just written. */
+    notifyDraftGameTitle: "New game published",
+    notifyDraftGameBody: "{name} — {when}. Claim your spot.",
+    notifyDraftVenueTitle: "A new pitch has been added",
+    notifyDraftVenueBody: "{name} is now on the board.",
     grantNoteRequired: "A note is required — say why this credit was granted.",
     contactTitle: "Contact",
     contactEmail: "Email",
@@ -1471,7 +1489,7 @@ export const strings = {
       cta: "Find a game",
     },
 
-    common: {
+  common: {
       when: "When",
       where: "Where",
       amountDue: "Amount due",
@@ -1700,6 +1718,13 @@ export const strings = {
     linkCopied: "Link copied.",
     /** The error variant. Deliberately blames nothing and offers the retry. */
     failed: "That didn't go through. Try again.",
+  },
+
+  notifications: {
+    /* Round 7, item 5 — the in-app bell. Player-facing, so all three. */
+    bellLabel: "Notifications",
+    title: "Notifications",
+    empty: "Nothing yet.",
   },
 
   common: {
