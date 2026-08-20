@@ -88,6 +88,12 @@ const INTENTIONALLY_UNTRANSLATED = new Set([
   "landing.footer.wordmarkLead",
   "landing.footer.wordmarkAccent",
   "games.rosterUnknown",
+  // `+1`, `+2`, `+3` — the party control's buttons. A quantity with a plus in
+  // front of it is the same mark in Czech and Russian. It lands here rather
+  // than being skipped by the punctuation rule above because the `n` inside
+  // its `{n}` placeholder counts as a letter to that regex, which is the
+  // regex being conservative rather than wrong.
+  "booking.partyPlus",
   // The admin panel is English; this is the label of its door.
   "nav.admin",
   "nav.cta",

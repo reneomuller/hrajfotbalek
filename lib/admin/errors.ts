@@ -33,10 +33,14 @@ const CODES: Array<[string, string]> = [
   ["INVALID_CREDIT_DELTA", strings.admin.grantInvalid],
   ["INVALID_CREDIT_REASON", strings.admin.grantInvalid],
   ["CANNOT_CHANGE_OWN_ADMIN", strings.admin.adminCannotChangeOwn],
-  ["MERGE_SELF", strings.admin.mergeSelf],
-  ["NOT_A_SHADOW", strings.admin.mergeNotShadow],
-  ["MERGE_CONFLICT", strings.admin.mergeConflict],
-  ["PLAYER_NOT_FOUND", strings.admin.mergePickBoth],
+  /*
+   * ~~MERGE_SELF / NOT_A_SHADOW / MERGE_CONFLICT.~~ REMOVED IN ROUND 11 with
+   * the merge tool. `merge_players` still exists as an RPC and still raises
+   * them; nothing in the product calls it, so a message for an admin who
+   * cannot reach the surface was copy pretending to be a code path.
+   */
+  ["PLAYER_NOT_FOUND", strings.admin.playerNotFound],
+  ["INVALID_GUEST_COUNT", strings.admin.guestsInvalid],
   // CHECK-constraint violations reach here as the constraint name.
   ["venues_image_path_format", strings.admin.venueImageInvalid],
   ["games_format_format", strings.admin.formatInvalid],

@@ -13,6 +13,7 @@ const game: GameRow = {
   capacity: 12,
   price_czk: 200,
   status: "published",
+  guest_count: 0,
   format: "6v6",
   surface: "turf",
   notes: null,

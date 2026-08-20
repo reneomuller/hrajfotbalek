@@ -120,6 +120,28 @@ export const policy = {
   game: {
     durationMinutes: 60,
   },
+
+  /**
+   * BRINGING PEOPLE (round 11, part B).
+   *
+   * `maxPartyGuests` is the number of EXTRA seats one booking may hold, so a
+   * party is at most `1 + maxPartyGuests` people. Three is the owner's figure:
+   * `+1/+2/+3`.
+   *
+   * DISPLAY ONLY, AND THIS IS THE SECOND WINDOW THAT SAYS SO. Like
+   * `cancellation`, the authority is in SQL — `create_booking_internal` holds
+   * its own `v_max_guests` and raises `PARTY_TOO_LARGE` — because a route
+   * guard is skipped by anyone using curl. If the two disagree, the database
+   * is right and the UI is lying. Moving the ceiling means editing both, in
+   * one commit, and the SQL comment says so too.
+   *
+   * NOT A `POLICY_VERSION` BUMP. Nothing transitions on it and no event is
+   * stamped with it: it bounds a control's options, and a booking made at a
+   * party of three does not become invalid if the ceiling later moves to four.
+   */
+  booking: {
+    maxPartyGuests: 3,
+  },
 } as const;
 
 export type Policy = typeof policy;

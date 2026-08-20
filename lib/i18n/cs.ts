@@ -269,6 +269,14 @@ export const cs: StringsOverlay = {
     availabilityLabel: "Volná místa",
     playersOfCapacity: "{booked} / {capacity} hráčů",
     playersTitle: "Hráči ({count})",
+    /*
+     * Czech has no possessive apostrophe. "{name} — host {n}" reads as
+     * "Karel — guest 2", which is the same fact without inventing a genitive
+     * from a free-text nickname the language cannot decline reliably.
+     */
+    guestOfPlayer: "{name} — host {n}",
+    guestNumbered: "Host {n}",
+    guestAvatarLabel: "Host",
     gamesPlayed: "{count} zápasů",
     gamePlayedOne: "1 zápas",
     gamesPlayedNone: "První zápas",
@@ -340,7 +348,7 @@ export const cs: StringsOverlay = {
     // DRAFT — flagged for the standing native-review batch.
     // DRAFT — flagged for the standing native-review batch.
     payWithCredit: "Použít kredit",
-    payWithCreditHint: "Použije 1 kredit z tvé peněženky. Nic neplatíš.",
+    payWithCreditHint: "Použije {seats} kredit(ů) z tvé peněženky. Nic neplatíš.",
     payWithCreditNone: "Zatím nemáš žádné kredity.",
     addCredits: "Dobít kredity →",
     payOnline: "Platba online",
@@ -349,6 +357,12 @@ export const cs: StringsOverlay = {
     payByCash: "Zaplatit hotově na place",
     payByCashHint: "Vezmi hotovost. Organizátor tě potvrdí na místě.",
     choosePayment: "Jak chceš zaplatit?",
+    partyTitle: "Bereš někoho s sebou?",
+    partyHint: "Hrají jako tvoji hosté. Jedna rezervace, jedna platba, jedno zrušení.",
+    partyJustMe: "Jen já",
+    partySummary: "{seats} míst · {total}",
+    partyLimited: "Na tomhle hřišti se vejde už jen {n}.",
+    partyOnlineQuantity: "Na platební stránce nastav počet na {seats}.",
     cancelReassuranceKickoff:
       "Zrušit můžeš kdykoli před výkopem — všechno se ti vrátí jako kredit.",
     cancelReassuranceCutoff:
@@ -535,6 +549,7 @@ export const cs: StringsOverlay = {
 
   errors: {
     generic: "Něco se pokazilo. Zkus to prosím znovu.",
+    partyTooLarge: "Tolik hostů se na jednu rezervaci nevejde.",
     capacityFull: "Tohle místo ti někdo vyfoukl, než ses rozhodl.",
     capacityFullTitle: "Místo je pryč",
     duplicateActiveBooking: "V tomhle zápase už místo máš.",

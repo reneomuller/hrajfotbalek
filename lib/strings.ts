@@ -504,6 +504,22 @@ export const strings = {
     playersOfCapacity: "{booked} / {capacity} players",
     playersTitle: "Players ({count})",
     /*
+     * GUESTS (round 11). Two patterns, because two kinds of guest exist and
+     * they know different amounts about themselves.
+     *
+     * `guestOfPlayer` takes the owner's FIRST name and a 1-based index. The
+     * possessive is inside the pattern rather than built from it: English
+     * forms one with an apostrophe, Czech and Russian do not form one this way
+     * at all, and a template that concatenated "'s" would be untranslatable.
+     *
+     * `guestNumbered` is a house guest — a seat an admin is holding for
+     * somebody with no account. It has an index and nothing else.
+     */
+    guestOfPlayer: "{name}'s Guest {n}",
+    guestNumbered: "Guest {n}",
+    /** Screen-reader wording for the silhouette an anonymous guest carries. */
+    guestAvatarLabel: "Guest",
+    /*
      * How many games this player has actually PLAYED — settled or played
      * games, never bookings. A counter that rose when you booked would be
      * measuring intent.
@@ -638,7 +654,12 @@ export const strings = {
     payByQrHint: "Scan a code in your banking app. Your spot is held until you pay.",
     /* --- Redeem credit (round 8, item 11) --- */
     payWithCredit: "Redeem credit",
-    payWithCreditHint: "Uses 1 credit from your wallet. Nothing to pay.",
+    /*
+     * `{seats}` IS THE WHOLE PARTY (round 11). One credit is one game for one
+     * person, so a party of three spends three — and the option is offered
+     * only when the wallet holds all of them.
+     */
+    payWithCreditHint: "Uses {seats} credit(s) from your wallet. Nothing to pay.",
     payWithCreditNone: "You have no credits yet.",
     addCredits: "Add credits →",
     payOnline: "Online payment",
@@ -647,6 +668,28 @@ export const strings = {
     payByCash: "Pay cash on the pitch",
     payByCashHint: "Bring cash. The organizer confirms you on the day.",
     choosePayment: "How do you want to pay?",
+    /* --- bringing people (round 11, part B) --- */
+    partyTitle: "Bringing anyone?",
+    partyHint: "They play as your guests. One booking, one payment, one cancellation.",
+    /** The "just me" choice. Always available; always the default. */
+    partyJustMe: "Just me",
+    /** `+1`, `+2`, `+3`. The plus is part of the label, as the control reads. */
+    partyPlus: "+{n}",
+    /** Under the group, once a party is chosen. */
+    partySummary: "{seats} spots · {total}",
+    /**
+     * Shown when the pitch has less room than the ceiling allows, so the
+     * missing buttons are explained rather than simply absent.
+     */
+    partyLimited: "Only {n} more can fit on this pitch.",
+    /**
+     * THE ONE THING A STATIC PAYMENT LINK CANNOT DO. A Stripe Payment Link
+     * carries a fixed quantity of one and there is no parameter that presets
+     * it, so the player has to change it on Stripe's own page. Saying so
+     * plainly beats an underpaid booking nobody notices until the pitch is
+     * short of money on the day.
+     */
+    partyOnlineQuantity: "Set quantity to {seats} on the payment page.",
     // Cancellation reassurance, shown before the player commits. The window is
     // never written as a literal: `cancellationReassurance()` picks the kickoff
     // wording under policy v1 (`cutoffHoursBeforeStart: 0`) and interpolates
@@ -1312,25 +1355,36 @@ export const strings = {
       "Remove this player's photo? The image is deleted from storage and cannot be recovered.",
     siteSettingUnknownKey: "That setting does not exist.",
 
-    // --- add shadow player ---------------------------------------------------
-    addPlayer: "Add a player",
-    addPlayerTitle: "Add a player to this game",
-    addPlayerLede:
-      "For someone who books over WhatsApp and has never logged in. They get a real identity that can be claimed or merged later.",
-    addPlayerNickname: "Nickname",
-    addPlayerEmail: "Email (optional)",
-    addPlayerEmailHint:
-      "With an email, they claim this identity automatically the first time they sign in. Without one, only a merge can link it.",
-    addPlayerMethod: "How are they paying?",
-    addPlayerSubmit: "Add and book",
-    addPlayerDone: "Added and booked",
-    // The duplicate-identity guard. A second row for the same person splits
-    // their booking history and their wallet, and costs far more to fix later.
-    addPlayerDuplicate:
-      "A player with that email already exists. Merge instead of creating a second identity.",
-    addPlayerGoToMerge: "Open the merge tool →",
-    addPlayerNicknameTaken: "That nickname is taken. Try another.",
-    addPlayerFull: "This game is full — there is no spot to give.",
+    /* --- guests (round 11, part A) -------------------------------------------
+     *
+     * ~~The shadow-player flow: "Add a player" created a real `players` row for
+     * someone who booked over WhatsApp, to be claimed or merged later.~~
+     *
+     * REPLACED BY GUESTS. The shadow flow made an identity in order to hold a
+     * seat, and almost none of those identities were ever claimed — so the
+     * players table filled with people who had no account, no email and no way
+     * to get one, each of which had to be merged by hand if they ever did sign
+     * up. A guest is the seat without the identity.
+     *
+     * Existing shadow players are untouched and still render, under their own
+     * names, as guests. The merge tool's copy is gone with the tool.
+     */
+    guestsTitle: "Guests",
+    guestsLede:
+      "Seats for people with no account — someone's friend, a regular who books over WhatsApp. They take up space on the pitch and show as Guest 1, Guest 2 in every lineup.",
+    guestsCount: "Guests on this game",
+    guestsAdd: "Add a guest",
+    guestsRemove: "Remove a guest",
+    guestsSaved: "Guests updated",
+    guestsNone: "No guests on this game.",
+    guestsNoRoom: "The pitch is full — there is no seat for another guest.",
+    guestsInvalid: "That is not a number of guests.",
+    // Beside a name on the admin roster: "+2 guests". The booking is one row
+    // with one attendance mark, because it is one decision.
+    rosterParty: "+{n} guests",
+    // Generic, and generic on purpose: every RPC that takes a player id can
+    // raise this, and the merge tool that used to own the message is gone.
+    playerNotFound: "No such player.",
 
     // --- stats ---------------------------------------------------------------
     statsTitle: "Stats",
@@ -1407,21 +1461,13 @@ export const strings = {
     adminChanged: "Admin rights updated",
     adminCannotChangeOwn: "You cannot change your own admin rights.",
 
-    mergeTitle: "Merge a shadow player",
-    mergeLink: "Merge identities",
-    mergeLede:
-      "Moves every booking, waitlist row, credit and event from a shadow onto a real account, then removes the shadow. This cannot be undone.",
-    mergeShadowLabel: "Shadow to merge away",
-    mergeSurvivingLabel: "Account to keep",
-    mergeSubmit: "Merge them",
-    mergeDone: "Merged",
-    mergeRowsMoved: "Rows moved",
-    mergeSelf: "Pick two different players.",
-    mergeNotShadow:
-      "That player has signed in before, so it cannot be the one merged away. Swap them round.",
-    mergeConflict:
-      "Both of them hold a spot on the same game. Cancel one of those bookings first.",
-    mergePickBoth: "Pick a shadow and an account to keep.",
+    /*
+     * ~~The merge tool's copy.~~ REMOVED IN ROUND 11 with the tool itself.
+     * `merge_players` survives as an RPC with no UI — it is the only way to
+     * repair a split identity if one is ever discovered, and deleting a
+     * repair because its button went away is how a database gets stuck.
+     */
+
 
     // --- attendance + settle -------------------------------------------------
     attendanceTitle: "Attendance",
@@ -1486,6 +1532,12 @@ export const strings = {
     generic: "Something went wrong. Please try again.",
     // Losing a capacity race is a normal outcome here, not an exception — the
     // copy says what happened and what is still true, rather than apologising.
+    /*
+     * Only reachable by a client that ignored the control — it offers at most
+     * the policy ceiling. Says the rule rather than the number, because the
+     * number lives in two places and this string would be the third.
+     */
+    partyTooLarge: "That is more guests than one booking can hold.",
     capacityFull: "That spot was taken while you were deciding.",
     capacityFullTitle: "Spot already taken",
     duplicateActiveBooking: "You already have a spot in this game.",

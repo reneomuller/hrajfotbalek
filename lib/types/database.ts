@@ -339,6 +339,13 @@ export interface Database {
           capacity: number;
           price_czk: number;
           status: GameStatus;
+          /**
+           * House guests (round 11): anonymous seats an admin holds on this
+           * game. They consume capacity and render as "Guest N". Removal is a
+           * decrement — there is nothing about Guest 2 that differs from
+           * Guest 3, which is what makes them "simple".
+           */
+          guest_count: number;
           /** "6v6" — CHECK-constrained to `<n>v<n>`. */
           format: string | null;
           surface: GameSurface | null;
@@ -526,6 +533,13 @@ export interface Database {
           credit_applied_czk: number;
           is_seed: boolean;
           booked_by_admin: boolean;
+          /**
+           * Party guests riding on this booking (round 11). Total seats are
+           * `1 + guest_count`; `price_czk` is the WHOLE party's, which is what
+           * lets the variable symbol, the credit application, the confirmation
+           * email and `cancel_booking` all work untouched.
+           */
+          guest_count: number;
           attendance: AttendanceStatus | null;
           nudge_sent_at: string | null;
           reminder_sent_at: string | null;
@@ -611,6 +625,22 @@ export interface Database {
            * as zero.
            */
           games_played: number | null;
+          /**
+           * ONE ROW PER SEAT (round 11). A row is a guest when it is a party
+           * seat, a house seat, or a pre-round-11 shadow player — the last of
+           * which is exactly `players.auth_user_id is null` and needed no
+           * backfill to start rendering this way.
+           */
+          is_guest: boolean;
+          /**
+           * The nickname of the player who brought this guest, for a PARTY
+           * seat. Null on a house guest and on any non-guest row. The label
+           * ("Karel's Guest 2") is built from this in `lib/strings.ts`, in
+           * three languages — a view must not return English.
+           */
+          guest_of: string | null;
+          /** 1-based position among that owner's guests, or among the house guests. */
+          guest_index: number | null;
         };
         Relationships: [];
       };
@@ -645,6 +675,13 @@ export interface Database {
           p_game_id: string;
           p_payment_method: ClientPaymentMethod;
           p_from_waitlist_id?: string | null;
+          /**
+           * Party size minus one (round 11). One booking holds `1 + n` seats,
+           * priced and refunded together; the RPC refuses the whole party
+           * rather than seating part of it. Optional, and omitting it is the
+           * ordinary single booking.
+           */
+          p_guest_count?: number;
         };
         Returns: BookingResult;
       };
@@ -789,6 +826,24 @@ export interface Database {
        * the surviving player and deletes the shadow, in one transaction.
        * Returns the number of rows moved.
        */
+      /**
+       * Sets the number of anonymous house guests on a game (round 11). Admin
+       * or service role; capacity-checked against every other seat.
+       */
+      set_game_guests: {
+        Args: { p_game_id: string; p_count: number };
+        Returns: number;
+      };
+      /**
+       * Seats consumed on a game: house guests, plus one per active booking,
+       * plus that booking's party. The single definition of how full a game
+       * is — `sync_game_fullness`, `create_booking_internal` and
+       * `set_game_capacity` all call it.
+       */
+      game_seats_taken: {
+        Args: { p_game_id: string };
+        Returns: number;
+      };
       merge_players: {
         Args: { p_shadow_id: string; p_surviving_id: string };
         Returns: number;

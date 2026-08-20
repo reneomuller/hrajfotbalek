@@ -13,6 +13,7 @@ import { requireAdmin } from "@/lib/auth/requireAdmin";
 import {
   activeBookings,
   availableTransitions,
+  seatsTaken,
   getAdminGame,
   getGameOrganizer,
   listGameBookings,
@@ -23,7 +24,7 @@ import {
 import { formatCzk, formatGameTimeSpan } from "@/lib/format";
 import { gameEndsAt } from "@/lib/games/duration";
 import { strings } from "@/lib/strings";
-import { AddPlayerForm } from "@/components/admin/AddPlayerForm";
+import { GuestControl } from "@/components/admin/GuestControl";
 import { NotifyForm } from "@/components/admin/NotifyForm";
 import { formatGameDateTime } from "@/lib/format";
 import { venueDisplayName } from "@/lib/venues/displayName";
@@ -77,6 +78,7 @@ export default async function AdminGamePage({
   const venuePhoto = venueRow?.image_path ?? null;
 
   const roster = activeBookings(bookings);
+  const seatsTakenNow = seatsTaken(bookings, game.guest_count);
   // Already VS-sorted by the query — the order the organizer's banking app
   // lists incoming payments in.
   const pending = unpaidBookings(bookings);
@@ -195,25 +197,18 @@ export default async function AdminGamePage({
         came to read; this opens under it when they need it.
       */}
       {canEdit && (
-        <section className="mt-12">
-          {/* Open on arrival from the old `/add-player` route — see its
-              redirect. Server-rendered `open`, so it needs no JavaScript. */}
-          <details
-            data-testid="add-player-section"
-            open={query.add === "1"}
-            className="group"
-          >
-            <summary
-              data-testid="add-player"
-              className="inline-flex min-h-11 cursor-pointer list-none items-center rounded-pill border-2 border-hairline-strong px-5 text-[15px] font-extrabold uppercase tracking-wide text-bone marker:content-none"
-            >
-              {strings.admin.addPlayer}
-            </summary>
-            <p className="mt-3 max-w-[480px] text-[13px] leading-relaxed text-muted">
-              {strings.admin.addPlayerLede}
-            </p>
-            <AddPlayerForm gameId={game.id} />
-          </details>
+        <section className="mt-12" data-testid="guests-section">
+          <h3 className="m-0 text-[18px] font-bold uppercase tracking-wide text-bone">
+            {strings.admin.guestsTitle}
+          </h3>
+          <p className="mt-2 max-w-[480px] text-[13px] leading-relaxed text-muted">
+            {strings.admin.guestsLede}
+          </p>
+          <GuestControl
+            gameId={game.id}
+            count={game.guest_count}
+            seatsLeft={Math.max(0, game.capacity - seatsTakenNow)}
+          />
         </section>
       )}
 

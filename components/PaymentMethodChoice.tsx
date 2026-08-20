@@ -7,13 +7,26 @@ import { PendingButton } from "@/components/form/PendingButton";
 import { describeBookingError } from "@/lib/booking/errors";
 import { useStrings } from "@/components/LocaleProvider";
 import Link from "next/link";
+import { formatCzk } from "@/lib/format";
+import { policy } from "@/lib/policy";
 
 export interface PaymentMethodChoiceProps {
   gameId: string;
-  /** This game's price, for deciding whether the wallet covers it. */
+  /** This game's price PER SEAT, for deciding whether the wallet covers it. */
   priceCzk: number;
   /** The player's wallet balance, read server-side from the ledger. */
   creditCzk: number;
+  /**
+   * Seats still free on this pitch, INCLUDING the one this player is about to
+   * take. Caps the party control: `+3` is offered only when four seats remain.
+   *
+   * Read on the server from the same roster count the page already renders. It
+   * is a snapshot and can be stale by the time Confirm is pressed — which is
+   * why it only bounds the CONTROL. `create_booking` counts seats under the
+   * game's advisory lock and refuses the whole party with CAPACITY_FULL, and
+   * that refusal is the one that is correct.
+   */
+  spotsLeft: number;
 }
 
 const INITIAL: BookingActionState = { status: "idle" };
@@ -51,9 +64,25 @@ export function PaymentMethodChoice({
   gameId,
   priceCzk,
   creditCzk,
+  spotsLeft,
 }: PaymentMethodChoiceProps) {
   const t = useStrings();
   const [state, formAction] = useActionState(createBookingAction, INITIAL);
+
+  /*
+   * THE PARTY (round 11, part B).
+   *
+   * `guests` is EXTRA seats, so the party is `guests + 1` people and the whole
+   * of it rides on one booking: one price, one payment, one cancellation.
+   *
+   * The ceiling is the smaller of the policy window and what is left on the
+   * pitch — `spotsLeft` counts the player's own seat, so a game with three
+   * free spots offers `+1` and `+2` and stops.
+   */
+  const [guests, setGuests] = useState(0);
+  const maxGuests = Math.max(0, Math.min(policy.booking.maxPartyGuests, spotsLeft - 1));
+  const seats = guests + 1;
+  const partyPrice = priceCzk * seats;
 
   /*
    * Build-time inline, like every `NEXT_PUBLIC_*`. Read here rather than
@@ -73,13 +102,41 @@ export function PaymentMethodChoice({
    * would promise a settled booking and deliver an amount owing. Partial
    * credit still happens; it just is not what this option says.
    */
-  const creditCovers = creditCzk >= priceCzk;
+  /*
+   * THE WALLET COVERS THE WHOLE PARTY, or the option is not offered.
+   *
+   * `priceCzk` became `partyPrice` in round 11 and that is the entire change
+   * to this rule — but it is the rule the owner named: credits are selectable
+   * only when the balance covers all `N+1` seats. Partial credit still
+   * happens inside `create_booking`, exactly as it did for a single booking;
+   * what this boolean decides is whether the product OFFERS "Redeem credit"
+   * and promises a settled booking, which it must not do for a party it can
+   * only half pay for.
+   */
+  const creditCovers = creditCzk >= partyPrice;
 
   const [choice, setChoice] = useState<"credit" | "online" | "cash" | null>(
     // DEFAULT TO CREDIT WHEN IT COVERS THE GAME (item 11). A player who has
     // already paid for this game should not have to say so.
     creditCovers ? "credit" : null,
   );
+
+  /*
+   * ADDING A GUEST CAN UN-CHOOSE "REDEEM CREDIT", and it must.
+   *
+   * `creditCovers` is a function of the party size, so a wallet that covered
+   * one seat may not cover three — and the option was already selected when
+   * that happened. Left alone, the disabled radio would keep `choice` at
+   * "credit", Confirm would stay live, and the booking would go through as
+   * the `cash` that "credit" maps to: an unpaid party with partial credit
+   * applied, which is precisely what "selectable only when the balance covers
+   * the full party" forbids.
+   *
+   * DERIVED, NOT AN EFFECT. `useEffect` would fix it one render late — the
+   * frame in between is the one where Confirm is pressable — and this is a
+   * pure function of two values the render already has.
+   */
+  const activeChoice = choice === "credit" && !creditCovers ? null : choice;
 
   /*
    * THE ERROR NO LONGER REPLACES THE FORM (§2.11).
@@ -101,12 +158,77 @@ export function PaymentMethodChoice({
       disabled
         ? "cursor-not-allowed border-hairline bg-surface/60 opacity-60"
         : "cursor-pointer bg-surface " +
-          (choice === value ? "border-volt" : "border-hairline-strong hover:border-hairline-volt"),
+          (activeChoice === value ? "border-volt" : "border-hairline-strong hover:border-hairline-volt"),
     ].join(" ");
 
   return (
     <form action={formAction} className="flex flex-col gap-6">
       <input type="hidden" name="gameId" value={gameId} />
+
+      <input type="hidden" name="guests" value={guests} />
+
+      {/* ---- the party ------------------------------------------------- */}
+      {maxGuests > 0 && (
+        <fieldset className="m-0 border-0 p-0" data-testid="party-picker">
+          <legend className="mb-1 text-body-lg font-semibold text-bone">
+            {t.booking.partyTitle}
+          </legend>
+          <p className="mb-4 mt-0 text-[13px] leading-snug text-muted">
+            {t.booking.partyHint}
+          </p>
+
+          {/*
+            RADIOS, NOT A STEPPER. Four options at most, and every one of them
+            is one tap from every other — a stepper makes "+3" three taps and
+            gives a player who overshoots no way back that is not another tap.
+
+            `name` is absent: the party rides on the hidden input above, so
+            these controls never post a second value that could disagree with
+            it.
+          */}
+          <div className="flex flex-wrap gap-2">
+            {Array.from({ length: maxGuests + 1 }, (_, n) => (
+              <label
+                key={n}
+                data-testid={`party-${n}`}
+                className={[
+                  "flex min-h-11 cursor-pointer items-center rounded-pill border-2 px-4 text-small font-bold transition-colors",
+                  guests === n
+                    ? "border-volt text-volt"
+                    : "border-hairline-strong text-muted hover:border-hairline-volt",
+                ].join(" ")}
+              >
+                <input
+                  type="radio"
+                  checked={guests === n}
+                  onChange={() => setGuests(n)}
+                  data-testid={`party-${n}-input`}
+                  className="sr-only"
+                />
+                {n === 0 ? t.booking.partyJustMe : t.booking.partyPlus.replace("{n}", String(n))}
+              </label>
+            ))}
+          </div>
+
+          {guests > 0 && (
+            <p data-testid="party-summary" className="mt-3 text-[13px] text-bone">
+              {t.booking.partySummary
+                .replace("{seats}", String(seats))
+                .replace("{total}", formatCzk(partyPrice))}
+            </p>
+          )}
+
+          {/*
+            Said only when the pitch is the binding constraint, not the policy.
+            "Only 2 more can fit" beside a full set of buttons would be noise.
+          */}
+          {maxGuests < policy.booking.maxPartyGuests && (
+            <p data-testid="party-limited" className="mt-2 text-[13px] text-muted">
+              {t.booking.partyLimited.replace("{n}", String(maxGuests))}
+            </p>
+          )}
+        </fieldset>
+      )}
 
       <fieldset className="m-0 border-0 p-0">
         <legend className="mb-4 text-body-lg font-semibold text-bone">
@@ -121,7 +243,7 @@ export function PaymentMethodChoice({
               name="option"
               value="credit"
               disabled={!creditCovers}
-              checked={choice === "credit"}
+              checked={activeChoice === "credit"}
               onChange={() => setChoice("credit")}
               data-testid="pay-credit-input"
               className="mt-1 accent-volt"
@@ -132,7 +254,7 @@ export function PaymentMethodChoice({
               </span>
               <span className="mt-1 block text-[13px] leading-snug text-muted">
                 {creditCovers
-                  ? t.booking.payWithCreditHint
+                  ? t.booking.payWithCreditHint.replace("{seats}", String(seats))
                   : t.booking.payWithCreditNone}
               </span>
 
@@ -168,7 +290,7 @@ export function PaymentMethodChoice({
               name="option"
               value="online"
               disabled={!onlineReady}
-              checked={choice === "online"}
+              checked={activeChoice === "online"}
               onChange={() => setChoice("online")}
               data-testid="pay-online-input"
               className="mt-1 accent-volt"
@@ -196,6 +318,28 @@ export function PaymentMethodChoice({
               <span className="mt-1 block text-[13px] leading-snug text-muted">
                 {t.booking.payOnlineHint}
               </span>
+              {/*
+                THE ONE THING A PAYMENT LINK CANNOT DO FOR US.
+                
+                A Stripe Payment Link has a fixed quantity of one and no
+                parameter presets it — `client_reference_id` and
+                `prefilled_email` are the two we can stamp (round 7, item 16),
+                and quantity is not among them. So the player is told, on the
+                option itself and before they commit, that the number has to
+                be changed on Stripe's page.
+
+                Shown for a party only. On a single booking the quantity is
+                already right and the sentence would be an instruction to do
+                nothing.
+              */}
+              {seats > 1 && (
+                <span
+                  data-testid="party-online-quantity"
+                  className="mt-2 block text-[13px] font-semibold leading-snug text-volt"
+                >
+                  {t.booking.partyOnlineQuantity.replace("{seats}", String(seats))}
+                </span>
+              )}
             </span>
           </label>
 
@@ -205,7 +349,7 @@ export function PaymentMethodChoice({
               type="radio"
               name="option"
               value="cash"
-              checked={choice === "cash"}
+              checked={activeChoice === "cash"}
               onChange={() => setChoice("cash")}
               data-testid="pay-cash-input"
               className="mt-1 accent-volt"
@@ -243,7 +387,7 @@ export function PaymentMethodChoice({
         label={t.booking.confirmBooking}
         testId="confirm-booking"
         className="w-full"
-        disabled={choice === null}
+        disabled={activeChoice === null}
       />
     </form>
   );

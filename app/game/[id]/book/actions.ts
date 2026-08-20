@@ -9,6 +9,7 @@ import { createServerSupabaseClient, createServiceRoleSupabaseClient } from "@/l
 import { getSessionUser } from "@/lib/auth/session";
 import { toBookingErrorCode, type BookingErrorCode } from "@/lib/booking/errors";
 import { buildResumeUrl } from "@/lib/booking/resume";
+import { policy } from "@/lib/policy";
 import { stripeBookingUrl, withStripeParams } from "@/lib/payments/stripeLinks";
 import type { BookingResult, ClientPaymentMethod } from "@/lib/types/database";
 
@@ -80,6 +81,23 @@ export async function createBookingAction(
   const rawOption = formData.get("option");
 
   if (!gameId) return { status: "error", code: "GAME_NOT_FOUND" };
+
+  /*
+   * THE PARTY, CLAMPED RATHER THAN TRUSTED.
+   *
+   * The control only ever posts 0..3, and this is the other case: a hand-made
+   * POST, or a stale tab from before the pitch filled up. Clamping to the
+   * policy ceiling here is a convenience for the UI, NOT the enforcement —
+   * `create_booking` holds its own ceiling and raises PARTY_TOO_LARGE, and it
+   * is the one that counts seats under the game's advisory lock. A garbled
+   * value becomes zero, which books the player alone rather than refusing
+   * them outright.
+   */
+  const rawGuests = Number(formData.get("guests"));
+  const guests =
+    Number.isInteger(rawGuests) && rawGuests > 0
+      ? Math.min(rawGuests, policy.booking.maxPartyGuests)
+      : 0;
   if (!isBookingOption(rawOption)) {
     // Reaching here means the form was tampered with — the UI only ever offers
     // the two values. Refuse rather than defaulting to one.
@@ -113,7 +131,7 @@ export async function createBookingAction(
     redirect(`/login?next=${encodeURIComponent(resume)}`);
   }
 
-  const bookingId = await runCreateBooking(gameId, method);
+  const bookingId = await runCreateBooking(gameId, method, guests);
   if (typeof bookingId !== "string") return bookingId;
 
   /*
@@ -156,12 +174,22 @@ export async function createBookingAction(
 export async function runCreateBooking(
   gameId: string,
   method: ClientPaymentMethod,
+  /**
+   * Extra seats. Defaults to zero so the POST-AUTH RESUME PATH books a single
+   * spot: `buildResumeUrl` carries a game and a method through a login round
+   * trip and has never carried a party. Sending someone to sign in and
+   * bringing them back with two guests they chose before authenticating is a
+   * different feature — the resume URL would have to carry the size, and a
+   * URL that books three paid seats is a URL worth thinking about separately.
+   */
+  guests = 0,
 ): Promise<string | BookingActionState> {
   const supabase = await createServerSupabaseClient();
 
   const { data, error } = await supabase.rpc("create_booking", {
     p_game_id: gameId,
     p_payment_method: method,
+    p_guest_count: guests,
   });
 
   if (error) {

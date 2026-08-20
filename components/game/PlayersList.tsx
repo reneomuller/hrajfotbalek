@@ -1,4 +1,7 @@
 import { AvatarRow } from "@/components/game/AvatarRow";
+import { GuestIcon } from "@/components/game/GuestIcon";
+import { sortRoster, toRosterAvatar, type RosterAvatar } from "@/lib/games/queries";
+import { guestLabel, isAnonymousGuest } from "@/lib/roster/guests";
 import { initials } from "@/lib/roster/initials";
 import { avatarUrl } from "@/lib/storage/avatar";
 import { getStrings } from "@/lib/i18n/server";
@@ -8,7 +11,15 @@ import type { Database } from "@/lib/types/database";
 type RosterRow = Database["public"]["Views"]["game_roster_public"]["Row"];
 
 export interface PlayersListProps {
-  rows: Pick<RosterRow, "nickname" | "photo_path" | "games_played">[];
+  /**
+   * ONE ROW PER SEAT since round 11, so a party of three arrives as three
+   * entries and the heading's count is seats rather than bookings — which is
+   * the number a reader wants: how many people will be on the pitch.
+   */
+  rows: Pick<
+    RosterRow,
+    "nickname" | "photo_path" | "games_played" | "is_guest" | "guest_of" | "guest_index"
+  >[];
   /** Storage origin for the photos; absent means initials everywhere. */
   supabaseUrl?: string;
 }
@@ -43,6 +54,11 @@ export interface PlayersListProps {
  */
 export async function PlayersList({ rows, supabaseUrl }: PlayersListProps) {
   const t = await getStrings();
+
+  // Sorted HERE and passed down, so the stack and the named list beneath it
+  // agree about the order — and so the `+N` chip swallows the same tail in
+  // both. `sortRoster` puts guests last.
+  const seats = sortRoster(rows.map(toRosterAvatar));
 
   return (
     <section
@@ -82,42 +98,41 @@ export async function PlayersList({ rows, supabaseUrl }: PlayersListProps) {
             coming back, which a row of faces cannot.
           */}
           <div className="mt-3">
-            <AvatarRow
-              players={rows.map((row) => ({
-                nickname: row.nickname,
-                photoPath: row.photo_path,
-              }))}
-              supabaseUrl={supabaseUrl}
-              max={14}
-            />
+            <AvatarRow players={seats} supabaseUrl={supabaseUrl} max={14} />
           </div>
 
           <ul className="mt-4 flex list-none flex-col p-0" data-testid="roster">
-          {rows.map((row, i) => (
+          {seats.map((seat, i) => (
             <li
-              key={`${row.nickname}-${i}`}
+              key={`${seat.guestOf ?? seat.nickname ?? "guest"}-${seat.guestIndex ?? 0}-${i}`}
+              data-guest={seat.isGuest ? "true" : undefined}
               className="flex items-center gap-3 border-b border-hairline py-[10px] last:border-b-0"
             >
-              <Avatar
-                nickname={row.nickname}
-                photoPath={row.photo_path}
-                supabaseUrl={supabaseUrl}
-                index={i}
-              />
-              <span className="min-w-0 flex-1 truncate text-[15px] text-bone">
-                {row.nickname}
+              <Avatar seat={seat} supabaseUrl={supabaseUrl} index={i} />
+              <span
+                className={`min-w-0 flex-1 truncate text-[15px] ${
+                  seat.isGuest ? "text-muted" : "text-bone"
+                }`}
+              >
+                {guestLabel(seat, t)}
               </span>
               {/*
                 Rendered only when it is a real number — a null means the view
                 could not count, which is not the same as zero.
+
+                NEVER FOR A GUEST (round 11). "First game" beside a seat that
+                is not a person reads as a fact about a player who does not
+                exist, and the underlying count is structurally zero for every
+                guest, so printing it would put the same welcome on every one
+                of them.
               */}
-              {typeof row.games_played === "number" && (
+              {!seat.isGuest && typeof rows[i]?.games_played === "number" && (
                 <span
                   data-testid="player-games-played"
-                  data-count={row.games_played}
+                  data-count={rows[i]?.games_played ?? 0}
                   className="shrink-0 text-[12px] text-muted"
                 >
-                  {gamesPlayedLabel(row.games_played, t)}
+                  {gamesPlayedLabel(rows[i]?.games_played ?? 0, t)}
                 </span>
               )}
             </li>
@@ -150,24 +165,24 @@ function gamesPlayedLabel(count: number, t: Strings): string {
  * screen reader announcing both would read every player twice.
  */
 async function Avatar({
-  nickname,
-  photoPath,
+  seat,
   supabaseUrl,
   index,
 }: {
-  nickname: string;
-  photoPath: string | null;
+  seat: RosterAvatar;
   supabaseUrl?: string;
   index: number;
 }) {
   const t = await getStrings();
-  const photo = supabaseUrl ? avatarUrl(supabaseUrl, photoPath) : null;
+  // A guest has no account and therefore no photograph. Not a fallback: there
+  // is nothing to look up.
+  const photo = supabaseUrl && !seat.isGuest ? avatarUrl(supabaseUrl, seat.photoPath) : null;
 
   return (
     <span
       data-testid="roster-avatar"
       className={`flex h-[34px] w-[34px] shrink-0 items-center justify-center overflow-hidden rounded-full bg-surface-avatar text-[12px] font-bold ${
-        index % 3 === 0 ? "text-volt" : "text-bone"
+        !seat.isGuest && index % 3 === 0 ? "text-volt" : seat.isGuest ? "text-muted" : "text-bone"
       }`}
     >
       {photo ? (
@@ -179,8 +194,10 @@ async function Avatar({
           className="h-full w-full object-cover"
           loading="lazy"
         />
+      ) : isAnonymousGuest(seat) ? (
+        <GuestIcon />
       ) : (
-        initials(nickname, t)
+        initials(seat.nickname ?? "", t)
       )}
     </span>
   );

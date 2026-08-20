@@ -1,4 +1,5 @@
 import { AvatarRow } from "@/components/game/AvatarRow";
+import { plainAvatar } from "@/lib/games/queries";
 import { getStrings } from "@/lib/i18n/server";
 import type { Database } from "@/lib/types/database";
 
@@ -60,7 +61,7 @@ export async function WaitlistPanel({
               inventing a lookup would reach around a boundary a ruling drew.
             */}
             <AvatarRow
-              players={rows.map((row) => ({ nickname: row.nickname, photoPath: null }))}
+              players={rows.map((row) => plainAvatar(row.nickname))}
               highlight={viewerNickname}
               max={14}
             />

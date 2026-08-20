@@ -1,4 +1,6 @@
 import { initials } from "@/lib/roster/initials";
+import { guestLabel, isAnonymousGuest } from "@/lib/roster/guests";
+import { GuestIcon } from "@/components/game/GuestIcon";
 import { getStrings } from "@/lib/i18n/server";
 import { avatarUrl } from "@/lib/storage/avatar";
 import type { RosterAvatar } from "@/lib/games/queries";
@@ -28,6 +30,22 @@ import type { RosterAvatar } from "@/lib/games/queries";
  * directional: after replacing their photo a player may see the old one on a
  * roster until the cache expires; on their own account page it updates at
  * once; and nothing incorrect is ever shown about anybody else.
+ *
+ * GUESTS NEVER CARRY A PHOTOGRAPH, and they arrive last (round 11). A guest
+ * has no account, so there is nothing to show — an anonymous one gets the
+ * silhouette rather than initials taken from the word "Guest", which would put
+ * a row of identical `GU` badges on a card. A pre-round-11 shadow player has a
+ * real name and keeps its monogram; what it loses is nothing, because it never
+ * had a photo either.
+ *
+ * The ORDER is `sortRoster`'s and is applied by the loaders in
+ * `lib/games/queries.ts`, not here: this component renders what it is handed,
+ * and a component that re-sorted its input would make the list page and the
+ * detail page disagree about which faces the `+N` chip swallowed.
+ *
+ * A PARTY GUEST CARRIES NO NICKNAME AT ALL — the view returns null and names
+ * the owner in `guestOf` instead — so the `highlight` comparison below can
+ * never match one and hand somebody else's guest the viewer's own ring.
  *
  * `highlight` marks the viewer's own entry with a volt ring. It is a DISPLAY
  * decision made by the caller from its own session — the views project no
@@ -74,19 +92,30 @@ export async function AvatarRow({
   return (
     <div className="flex flex-wrap items-center gap-y-[6px]">
       {shown.map((player, i) => {
-        const isYou = highlight != null && player.nickname === highlight;
-        const photo = supabaseUrl ? avatarUrl(supabaseUrl, player.photoPath) : null;
+        const isYou =
+          highlight != null && player.nickname != null && player.nickname === highlight;
+        const label = guestLabel(player, t);
+        const photo =
+          supabaseUrl && !player.isGuest ? avatarUrl(supabaseUrl, player.photoPath) : null;
 
         return (
           <span
-            key={`${player.nickname}-${i}`}
-            title={isYou ? `${player.nickname} — ${t.games.waitlistYou}` : player.nickname}
+            key={`${player.guestOf ?? player.nickname ?? "guest"}-${player.guestIndex ?? 0}-${i}`}
+            title={isYou ? `${label} — ${t.games.waitlistYou}` : label}
+            data-guest={player.isGuest ? "true" : undefined}
             data-testid={isYou ? "avatar-you" : "avatar"}
             className={`-ml-2 flex items-center justify-center overflow-hidden rounded-full border-2 font-bold ${dim} ${
               isYou
                 ? "border-volt bg-surface-avatar text-volt"
                 : `border-surface-raised bg-surface-avatar ${
-                    i % 3 === 0 ? "text-volt" : "text-bone"
+                    /*
+                      THE VOLT ROTATION SKIPS GUESTS. "Every third initials
+                      avatar in volt" is there to break the monotony of a row
+                      of faces; spending the accent on a seat nobody can
+                      identify makes the anonymous half of the row the loud
+                      half.
+                    */
+                    !player.isGuest && i % 3 === 0 ? "text-volt" : "text-muted"
                   }`
             }`}
           >
@@ -110,8 +139,10 @@ export async function AvatarRow({
                 className="h-full w-full object-cover"
                 loading="lazy"
               />
+            ) : isAnonymousGuest(player) ? (
+              <GuestIcon />
             ) : (
-              initials(player.nickname, t)
+              initials(player.nickname ?? "", t)
             )}
           </span>
         );

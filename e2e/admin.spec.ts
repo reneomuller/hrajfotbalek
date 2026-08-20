@@ -130,46 +130,51 @@ test("the roster tells paid, holding, cash and free apart", async ({ page, conte
   );
 });
 
-test("a shadow player is created and booked in one action, in under 10 seconds", async ({
-  page,
-  context,
-}) => {
+/*
+ * ~~"a shadow player is created and booked in one action".~~ REPLACED IN
+ * ROUND 11. The shadow-player flow is gone: it minted a permanent `players`
+ * row in order to hold a seat, and almost none of those rows were ever
+ * claimed. Guests are the seat without the identity.
+ *
+ * WHAT THIS ASSERTS THAT THE OLD TEST COULD NOT: that adding a guest creates
+ * NO player row at all. That is the whole change, and it is invisible on the
+ * page — an admin sees a seat appear either way.
+ */
+test("an admin holds a guest seat, and it mints no identity", async ({ page, context }) => {
   await signInAs(context, players.organizer);
-  await page.goto(`/admin/games/${game.id}/add-player`);
-
-  // A nickname nobody else holds, and unique per run so a re-run does not trip
-  // the duplicate guard it is not testing.
-  const nickname = `WA_${Date.now().toString().slice(-8)}`;
-
-  const started = Date.now();
-  await page.getByTestId("add-player-nickname").fill(nickname);
-  await page.getByTestId("add-player-submit").click();
-  await expect(page.getByTestId("add-player-done")).toBeVisible();
-  expect((Date.now() - started) / 1000).toBeLessThan(10);
-
-  // One action, two rows: the identity and the booking. A shadow with no
-  // booking would be an admin remembering to do a second thing.
   const admin = serviceClient();
-  const { data: player } = await admin
+
+  const { count: playersBefore } = await admin
     .from("players")
-    .select("id,auth_user_id")
-    .eq("nickname", nickname)
-    .single();
-  expect(player?.auth_user_id).toBeNull();
+    .select("id", { count: "exact", head: true });
 
-  const { data: booking } = await admin
-    .from("bookings")
-    .select("status")
-    .eq("game_id", game.id)
-    .eq("player_id", player!.id)
-    .single();
-  expect(booking).not.toBeNull();
+  await page.goto(`/admin/games/${game.id}`);
+  await expect(page.getByTestId("guest-count")).toHaveText("0");
 
-  // The scratch game teardown removes the booking; the player is a real row
-  // that outlives it, so it goes here.
-  await admin.from("events").delete().eq("player_id", player!.id);
-  await admin.from("bookings").delete().eq("player_id", player!.id);
-  await admin.from("players").delete().eq("id", player!.id);
+  await page.getByTestId("guest-add").click();
+  await expect(page.getByTestId("guests-saved")).toBeVisible();
+  await expect(page.getByTestId("guest-count")).toHaveText("1");
+
+  // The seat is on the GAME, not on a new person.
+  const { data: gameRow } = await admin
+    .from("games")
+    .select("guest_count")
+    .eq("id", game.id)
+    .single();
+  expect(gameRow?.guest_count).toBe(1);
+
+  const { count: playersAfter } = await admin
+    .from("players")
+    .select("id", { count: "exact", head: true });
+  expect(playersAfter).toBe(playersBefore);
+
+  // And it consumes capacity, which is the reason it exists.
+  const { data: seats } = await admin.rpc("game_seats_taken", { p_game_id: game.id });
+  expect(seats).toBeGreaterThan(0);
+
+  // Removal is a decrement, and it puts the seat back.
+  await page.getByTestId("guest-remove").click();
+  await expect(page.getByTestId("guest-count")).toHaveText("0");
 });
 
 test("attendance drives the game to settled with no reserved booking left", async ({

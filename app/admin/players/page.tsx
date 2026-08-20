@@ -50,16 +50,14 @@ export default async function AdminPlayersPage({
         <h2 className="m-0 font-display text-title uppercase tracking-wide text-white">
           {strings.admin.playersTitle}
         </h2>
-        <div className="flex items-center gap-3">
-          <Link
-            href="/admin/players/merge"
-            data-testid="merge-link"
-            className="text-small text-volt no-underline"
-          >
-            {strings.admin.mergeLink}
-          </Link>
-          <ExportCsvLink href="/admin/players/export" testId="export-players" />
-        </div>
+        {/*
+          THE MERGE LINK IS GONE (round 11). Merging existed to repair the
+          shadow-player flow, and the flow is gone: guests hold seats without
+          creating identities, so there is nothing new to merge. `merge_players`
+          survives as an RPC with no UI, for the split identities that already
+          exist — a repair is not deleted because its button was.
+        */}
+        <ExportCsvLink href="/admin/players/export" testId="export-players" />
       </div>
 
       {/*

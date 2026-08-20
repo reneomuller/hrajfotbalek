@@ -26,6 +26,8 @@ import {
   getRoster,
   getVenue,
   getWaitlist,
+  sortRoster,
+  toRosterAvatar,
 } from "@/lib/games/queries";
 import { gameEventSchema } from "@/lib/games/schemaOrg";
 import { spotsLeftLabel } from "@/lib/games/urgency";
@@ -265,7 +267,7 @@ export default async function GameDetailPage({ params, searchParams }: GamePageP
       <AvailabilityCard
         bookedCount={bookedCount}
         capacity={game.capacity}
-        roster={roster.map((r) => ({ nickname: r.nickname, photoPath: r.photo_path }))}
+        roster={sortRoster(roster.map(toRosterAvatar))}
         supabaseUrl={supabaseUrl}
       />
 

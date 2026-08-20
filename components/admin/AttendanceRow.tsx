@@ -40,6 +40,22 @@ export function AttendanceRow({
     >
       <span className="min-w-[140px] flex-1 text-[16px] font-bold text-white">
         {booking.nickname}
+        {/*
+          THE PARTY IS PART OF THE NAME HERE (round 11), not a row of its own.
+          A party is ONE booking: one attendance mark, one payment, one
+          cancellation. Giving each guest its own row would put three
+          attendance toggles where the organizer can only make one decision,
+          and settle would have two of them permanently unanswered.
+        */}
+        {booking.guestCount > 0 && (
+          <span
+            data-testid="roster-party"
+            data-guests={booking.guestCount}
+            className="ml-2 align-middle text-[12px] font-semibold text-volt-dim"
+          >
+            {strings.admin.rosterParty.replace("{n}", String(booking.guestCount))}
+          </span>
+        )}
       </span>
 
       <PaymentBadge status={booking.status} method={booking.paymentMethod} />

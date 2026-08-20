@@ -183,6 +183,12 @@ export interface AdminBookingRow {
   creditAppliedCzk: number;
   /** What the player still owes — what ✓ Paid confirms at. */
   amountDueCzk: number;
+  /**
+   * Party guests on this booking (round 11). The admin roster shows them
+   * beside the name that brought them; `priceCzk` above is already the whole
+   * party's, so nothing else on this row needs to know.
+   */
+  guestCount: number;
   attendance: Database["public"]["Tables"]["bookings"]["Row"]["attendance"];
   isSeed: boolean;
   bookedByAdmin: boolean;
@@ -232,6 +238,7 @@ export async function listGameBookings(gameId: string): Promise<AdminBookingRow[
     creditAppliedCzk: booking.credit_applied_czk,
     amountDueCzk: Math.max(0, booking.price_czk - booking.credit_applied_czk),
     attendance: booking.attendance,
+    guestCount: booking.guest_count,
     isSeed: booking.is_seed,
     bookedByAdmin: booking.booked_by_admin,
   }));
@@ -240,6 +247,22 @@ export async function listGameBookings(gameId: string): Promise<AdminBookingRow[
 /** Bookings still holding a spot — the capacity-relevant set. */
 export function activeBookings(rows: AdminBookingRow[]): AdminBookingRow[] {
   return rows.filter((row) => row.status === "reserved" || row.status === "confirmed");
+}
+
+/**
+ * SEATS, not bookings — the number the pitch actually has to hold.
+ *
+ * Mirrors `game_seats_taken()` in the database, which is the authority. This
+ * exists so the admin page can DISABLE "add a guest" instead of letting the
+ * RPC refuse it, and it must never become the thing a decision is made on:
+ * the RPC counts under the game's advisory lock, and this counts a snapshot a
+ * concurrent booking can already have invalidated.
+ */
+export function seatsTaken(
+  rows: AdminBookingRow[],
+  houseGuests: number,
+): number {
+  return activeBookings(rows).reduce((total, row) => total + 1 + row.guestCount, houseGuests);
 }
 
 /**

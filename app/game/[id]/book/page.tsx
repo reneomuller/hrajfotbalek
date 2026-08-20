@@ -131,6 +131,14 @@ export default async function BookPage({ params, searchParams }: BookPageProps) 
           gameId={game.id}
           priceCzk={game.price_czk}
           creditCzk={await getOwnCreditBalance()}
+          /*
+            SEATS, INCLUDING THE ONE THIS PLAYER IS ABOUT TO TAKE.
+            `spotsLeft` is `capacity - bookedCount`, and since round 11
+            `bookedCount` counts the roster view's rows — one per seat — so a
+            party of three on this game already shows as three. The party
+            control offers `spotsLeft - 1` guests.
+          */
+          spotsLeft={spotsLeft}
         />
       </div>
 

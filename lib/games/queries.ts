@@ -185,8 +185,81 @@ export async function getGameById(id: string): Promise<GameWithCount | null> {
  * state: most players will never upload a photo.
  */
 export interface RosterAvatar {
-  nickname: string;
+  /**
+   * NULL FOR A GUEST WITH NO NAME OF ITS OWN — a party seat or a house seat.
+   * The label is built by `guestLabel()` from the two fields below, so that
+   * "Karel's Guest 2" can be Czech and Russian too.
+   *
+   * A pre-round-11 shadow player DOES carry a nickname and is still a guest;
+   * that is the whole of "existing shadow players keep rendering".
+   */
+  nickname: string | null;
   photoPath: string | null;
+  /** Draw a monogram and sort to the end of the row. */
+  isGuest: boolean;
+  /** The player who brought this one, on a party seat. */
+  guestOf: string | null;
+  /** 1-based, among that owner's guests or among the house guests. */
+  guestIndex: number | null;
+}
+
+/**
+ * A roster VIEW ROW as a seat.
+ *
+ * One mapper, used by every render site, so that "which columns become a
+ * seat" is answered once. Three call sites were each spelling out
+ * `{nickname, photoPath}` before round 11, and each would have had to learn
+ * about guests separately.
+ */
+export function toRosterAvatar(row: {
+  nickname: string | null;
+  photo_path: string | null;
+  is_guest: boolean;
+  guest_of: string | null;
+  guest_index: number | null;
+}): RosterAvatar {
+  return {
+    nickname: row.nickname,
+    photoPath: row.photo_path,
+    isGuest: row.is_guest,
+    guestOf: row.guest_of,
+    guestIndex: row.guest_index,
+  };
+}
+
+/**
+ * A seat that is a named person and nothing more — the waiting list's shape.
+ *
+ * `game_waitlist_public` projects no photo and has no notion of a guest: you
+ * cannot queue on somebody else's behalf. Passing the literal object at the
+ * call site would work and would also mean that the next field added to
+ * `RosterAvatar` has to be remembered there.
+ */
+export function plainAvatar(nickname: string): RosterAvatar {
+  return { nickname, photoPath: null, isGuest: false, guestOf: null, guestIndex: null };
+}
+
+/**
+ * SEATS IN RENDER ORDER: everybody with a name first, guests after them.
+ *
+ * The frames' game boxes are a row of overlapping faces, and a row that
+ * alternates between faces and monograms reads as a rendering fault rather
+ * than as a group. Guests last keeps the recognisable half of the row
+ * together, which is the whole reason the sort exists.
+ *
+ * Within each half the order is by name, then by owner, then by index —
+ * deterministic, because `game_roster_public` has no ordering guarantee of its
+ * own and a row whose avatars reshuffle between requests looks broken.
+ */
+export function sortRoster(seats: RosterAvatar[]): RosterAvatar[] {
+  return [...seats].sort((a, b) => {
+    if (a.isGuest !== b.isGuest) return a.isGuest ? 1 : -1;
+    const byName = (a.nickname ?? "").localeCompare(b.nickname ?? "");
+    if (byName !== 0) return byName;
+    const byOwner = (a.guestOf ?? "").localeCompare(b.guestOf ?? "");
+    if (byOwner !== 0) return byOwner;
+    return (a.guestIndex ?? 0) - (b.guestIndex ?? 0);
+  });
 }
 
 export interface GameOrganizer {
@@ -390,7 +463,7 @@ export async function getRoster(gameId: string): Promise<RosterRow[]> {
   // is a public interface whether or not any component reads from it.
   const { data, error } = await supabase
     .from("game_roster_public")
-    .select("game_id, nickname, photo_path, games_played")
+    .select("game_id, nickname, photo_path, games_played, is_guest, guest_of, guest_index")
     .eq("game_id", gameId);
 
   if (error || !data) return [];
@@ -479,18 +552,18 @@ export async function listRostersByGame(
   const supabase = await createServerSupabaseClient();
   const { data, error } = await supabase
     .from("game_roster_public")
-    .select("game_id, nickname, photo_path")
+    .select("game_id, nickname, photo_path, is_guest, guest_of, guest_index")
     .in("game_id", gameIds);
 
   if (error || !data) return rosters;
 
   for (const row of data) {
     const list = rosters.get(row.game_id) ?? [];
-    list.push({ nickname: row.nickname, photoPath: row.photo_path });
+    list.push(toRosterAvatar(row));
     rosters.set(row.game_id, list);
   }
-  for (const list of rosters.values()) {
-    list.sort((a, b) => a.nickname.localeCompare(b.nickname));
+  for (const [gameId, list] of rosters) {
+    rosters.set(gameId, sortRoster(list));
   }
 
   return rosters;

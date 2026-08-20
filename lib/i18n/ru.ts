@@ -272,6 +272,14 @@ export const ru: StringsOverlay = {
     availabilityLabel: "Свободные места",
     playersOfCapacity: "{booked} / {capacity} игроков",
     playersTitle: "Игроки ({count})",
+    /*
+     * Russian forms a possessive by declining the name, which cannot be done
+     * safely to a free-text nickname. The dash keeps the relationship without
+     * asserting a grammatical case the nickname may not have.
+     */
+    guestOfPlayer: "{name} — гость {n}",
+    guestNumbered: "Гость {n}",
+    guestAvatarLabel: "Гость",
     gamesPlayed: "матчей: {count}",
     gamePlayedOne: "1 матч",
     gamesPlayedNone: "Первый матч",
@@ -343,7 +351,7 @@ export const ru: StringsOverlay = {
     // DRAFT — flagged for the standing native-review batch.
     // DRAFT — flagged for the standing native-review batch.
     payWithCredit: "Списать кредит",
-    payWithCreditHint: "Спишется 1 кредит из кошелька. Платить ничего не нужно.",
+    payWithCreditHint: "Спишется {seats} кредит(ов) из кошелька. Платить ничего не нужно.",
     payWithCreditNone: "У тебя пока нет кредитов.",
     addCredits: "Пополнить кредиты →",
     payOnline: "Онлайн-оплата",
@@ -352,6 +360,12 @@ export const ru: StringsOverlay = {
     payByCash: "Наличными на поле",
     payByCashHint: "Возьми наличные. Организатор подтвердит тебя на месте.",
     choosePayment: "Как будешь платить?",
+    partyTitle: "Берёшь кого-то с собой?",
+    partyHint: "Они играют как твои гости. Одна бронь, одна оплата, одна отмена.",
+    partyJustMe: "Только я",
+    partySummary: "{seats} мест · {total}",
+    partyLimited: "На это поле поместится ещё только {n}.",
+    partyOnlineQuantity: "На странице оплаты укажи количество {seats}.",
     cancelReassuranceKickoff:
       "Отменить можно в любой момент до начала — всё вернётся кредитом в кошелёк.",
     cancelReassuranceCutoff:
@@ -539,6 +553,7 @@ export const ru: StringsOverlay = {
 
   errors: {
     generic: "Что-то пошло не так. Попробуй ещё раз.",
+    partyTooLarge: "Столько гостей на одну бронь не поместится.",
     capacityFull: "Пока ты думал, место занял кто-то другой.",
     capacityFullTitle: "Место уже занято",
     duplicateActiveBooking: "У тебя уже есть место в этом матче.",

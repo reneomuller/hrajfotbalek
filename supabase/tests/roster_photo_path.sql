@@ -117,16 +117,23 @@ select pg_temp.ok_call(
 
 -- The exhaustive form: every column, named, IN ORDER. A future widening has to
 -- edit this line, which is the point — it cannot happen quietly. `games_played`
--- (migration 39) is appended last because `create or replace view` can only
--- append, which is also what keeps the first four at their existing positions
--- for any `select *`.
+-- (migration 39) was appended for the same reason.
+--
+-- THIS LINE WAS EDITED IN ROUND 11, which is the mechanism working rather than
+-- failing. The guest columns arrived with the rendering that consumes them, in
+-- the same change, and each is a fact ABOUT A SEAT rather than about a person:
+-- `is_guest` says draw a monogram, `guest_of` names the player who brought
+-- this one — a nickname the holder's own row already publishes for the same
+-- game — and `guest_index` numbers it. No player_id, no email, no phone, no
+-- booking status, which the three assertions above still prove directly.
 select pg_temp.ok(
   (select array_agg(attname::text order by attnum)
      from pg_attribute
     where attrelid = 'public.game_roster_public'::regclass
       and attnum > 0 and not attisdropped)
-    = array['game_id', 'nickname', 'photo_path', 'games_played'],
-  'the view projects exactly these four columns and no fifth');
+    = array['game_id', 'nickname', 'photo_path', 'games_played',
+            'is_guest', 'guest_of', 'guest_index'],
+  'the view projects exactly these seven columns and no eighth');
 
 -- =============================================================================
 -- The status filter, which the widening must not have disturbed

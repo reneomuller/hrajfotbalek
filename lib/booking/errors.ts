@@ -26,6 +26,8 @@ export type BookingErrorCode =
   | "CANCEL_WINDOW_CLOSED"
   | "BOOKING_NOT_FOUND"
   | "INVALID_TRANSITION"
+  /* Round 11: the party is bigger than one booking may hold. */
+  | "PARTY_TOO_LARGE"
   | "UNKNOWN";
 
 const KNOWN_CODES: BookingErrorCode[] = [
@@ -41,6 +43,7 @@ const KNOWN_CODES: BookingErrorCode[] = [
   "CANCEL_WINDOW_CLOSED",
   "BOOKING_NOT_FOUND",
   "INVALID_TRANSITION",
+  "PARTY_TOO_LARGE",
 ];
 
 /** Extracts a known code from a PostgREST error message. */
@@ -82,6 +85,8 @@ export function describeBookingError(
       return { code, title: t.errors.tryAgain, message: t.errors.gameNotWaitlistable };
     case "CANCEL_WINDOW_CLOSED":
       return { code, title: t.errors.tryAgain, message: t.errors.cancelWindowClosed };
+    case "PARTY_TOO_LARGE":
+      return { code, title: t.errors.tryAgain, message: t.errors.partyTooLarge };
     case "INSUFFICIENT_PERMISSION":
       return {
         code,
