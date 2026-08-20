@@ -41,9 +41,21 @@ export async function getBellState(limit = 20): Promise<BellState> {
   const { data, error } = await supabase.rpc("my_notifications", { p_limit: limit });
 
   if (error) {
-    // A missing function is the pre-migration state; anything else is a fault.
-    // Both produce an empty bell, and both say so in the log.
-    console.error("my_notifications failed", error.message);
+    /*
+     * `PGRST202` IS "no such function", which is the KNOWN pre-migration
+     * state — expected, temporary, and already handled by returning an empty
+     * bell. Logging it was wrong twice over: it fires on every render of
+     * every page, and in dev Next surfaces a server `console.error` as an
+     * overlay, which covered the nav bar and failed `nav-pill.spec.ts` with
+     * "tab-home is covered by nextjs-portal". A known condition is not an
+     * error channel's business.
+     *
+     * Everything else still logs. Once the migration is applied the only way
+     * to reach this branch is a real fault, and that must be loud.
+     */
+    if (error.code !== "PGRST202") {
+      console.error("my_notifications failed", error.code, error.message);
+    }
     return EMPTY_BELL;
   }
 

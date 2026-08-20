@@ -162,6 +162,9 @@ test("the reworked header, the venue fallback, the share pair and a toast", asyn
     // Signed in: the avatar entry, and a toast landed by the redirect.
     await signInAs(context, players.runner);
     await page.goto(`/game/${game.id}/book`, { waitUntil: "networkidle" });
+    // Nothing is preselected since round 7 item 10 — Confirm stays disabled
+    // until an option is chosen.
+    await page.getByTestId("pay-cash-input").check();
     await page.getByTestId("confirm-booking").click();
     await page.waitForURL(/\/book\/confirmation/);
     await expect(page.getByTestId("toast")).toBeVisible();

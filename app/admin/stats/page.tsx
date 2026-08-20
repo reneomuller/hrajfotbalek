@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { ExportCsvLink } from "@/components/admin/ExportCsvLink";
 import { StatCard } from "@/components/admin/StatCard";
 import { requireAdmin } from "@/lib/auth/requireAdmin";
 import { formatCzk, formatDate } from "@/lib/format";
@@ -303,9 +304,27 @@ export default async function FinancialsPage({
           Everything the stats page has always answered, unchanged and under
           its own window. See the note where `window` is read. */}
       <section className="mt-10 border-t border-hairline pt-8">
-        <h3 className="m-0 font-display text-section-title uppercase tracking-wide text-white">
-          {strings.admin.operationsTitle}
-        </h3>
+        <div className="flex flex-wrap items-baseline justify-between gap-3">
+          <h3 className="m-0 font-display text-section-title uppercase tracking-wide text-white">
+            {strings.admin.operationsTitle}
+          </h3>
+          {/*
+            THE OPERATIONS EXPORT, restored. Rewriting this page's header
+            dropped it, and the suite caught it — a working route
+            (`/admin/stats/export`) with no way to reach it. It carries the
+            SELECTED window, so the file matches the screen it was taken from
+            rather than a default period.
+
+            It sits with OPERATIONS rather than at the top of the page because
+            that is the data it exports. The frame's `EXPORT CSV` on the
+            transactions list is a different file and is still omitted — see
+            the page header.
+          */}
+          <ExportCsvLink
+            href={`/admin/stats/export?window=${window}`}
+            testId="export-stats"
+          />
+        </div>
       <nav data-testid="stat-window-picker" className="mt-6 flex flex-wrap gap-2">
         {STAT_WINDOWS.map((option) => {
           const isSelected = option === window;

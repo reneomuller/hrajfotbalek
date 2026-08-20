@@ -51,6 +51,9 @@ test.describe("Stage 6 strips", () => {
         await page.screenshot({ path: path.join(OUT, `01-payment-choice-${locale}.png`) });
 
         // --- 2. claim confirmation, with the insufficient-credits offer ----
+        // The strip above captures the UNCHOSEN state, which is the one round 7
+        // item 10 introduced — so the selection happens after the screenshot.
+        await page.getByTestId("pay-cash-input").check();
         await page.getByTestId("confirm-booking").click();
         await page.waitForURL(/\/book\/confirmation/);
         await settle();

@@ -1040,6 +1040,9 @@ test("booking and cancelling each raise their toast on the page that follows", a
 
     // --- created -----------------------------------------------------------
     await page.goto(`/game/${game.id}/book`);
+    // NOTHING IS PRESELECTED since round 7 item 10 — Confirm is disabled until
+    // an option is chosen.
+    await page.getByTestId("pay-cash-input").check();
     await page.getByTestId("confirm-booking").click();
     await page.waitForURL(/\/book\/confirmation/);
     await expect(page.getByTestId("toast")).toBeVisible();
