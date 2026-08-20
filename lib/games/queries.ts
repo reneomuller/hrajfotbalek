@@ -73,7 +73,16 @@ function decorate(game: GameRow, bookedCount: number, now: number): GameWithCoun
   };
 }
 
-/** Counts active roster rows per game id, in one round trip. */
+/**
+ * Counts active roster rows per game id, in one round trip.
+ *
+ * A ROW IS A SEAT since round 11, so this counts people rather than bookings
+ * with no change to the query: a party of three arrives as three rows and a
+ * game holding two house guests as two more. Every `{booked} / {capacity}`,
+ * every `spotsLeft`, and the games list's own fullness follow from here — and
+ * they now agree with `game_seats_taken()` in the database, which is the
+ * authority `create_booking` refuses against.
+ */
 async function countRosterByGame(gameIds: string[]): Promise<Map<string, number>> {
   const counts = new Map<string, number>();
   if (gameIds.length === 0) return counts;

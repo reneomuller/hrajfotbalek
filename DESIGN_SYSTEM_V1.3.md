@@ -1327,3 +1327,104 @@ threshold on both the frame and our own screenshot, and converted using Anton's
 rather than the face's published metric of 0.72. The published ratio produced a
 40px tile numeral in this very round before the rendered one corrected it to
 32. **Measure the ratio on the thing you are measuring with.**
+
+---
+
+# 12. Round 11 rulings (2026-08-20)
+
+## R24 — A guest is a seat, not a person
+
+**Nothing in this product creates an identity in order to hold a spot.**
+
+Shadow players did. An admin typed a name, a `players` row appeared, and it sat
+in the table that answers "who plays here" — with no account, no email and no
+way to get one — until somebody merged it by hand. Round 11 removes that flow
+and the merge tool with it.
+
+**A guest is a COUNT, in one of two places, and which one it is says whose seat
+it is:**
+
+| | Lives on | Removal is | Renders as |
+|---|---|---|---|
+| **House guest** | `games.guest_count` | a decrement | `Guest N` |
+| **Party guest** | `bookings.guest_count` | cancelling the booking | `<First>'s Guest N` |
+
+House guests are **interchangeable** and that is what makes them "simple":
+there is nothing about Guest 2 that differs from Guest 3, so removing one is
+arithmetic rather than the deletion of a particular row.
+
+**EXISTING SHADOW PLAYERS ARE A THIRD KIND AND NEEDED NO MIGRATION.** A shadow
+is exactly `players.auth_user_id is null`; the roster view projects that as
+`is_guest`, so every one of them started rendering as a guest — under its own
+name — without a row being touched. One that is later claimed gains an auth
+user and stops being a guest, which is the correct behaviour rather than a
+loose end.
+
+**GUESTS NEVER CARRY A PHOTOGRAPH AND ALWAYS SORT LAST.** No account, so
+nothing to show; and a row alternating between faces and monograms reads as a
+rendering fault rather than as a group. An anonymous guest gets a silhouette
+rather than initials, because initials taken from the word "Guest" put a line
+of identical `GU` badges on a card.
+
+## R25 — Seats are counted in ONE place, and the count is a view row
+
+`public.game_seats_taken()` is the only definition of how full a game is.
+`sync_game_fullness`, `create_booking_internal` and `set_game_capacity` call
+it; `lib/admin/queries.ts` mirrors it for the sole purpose of DISABLING a
+control, never for deciding one.
+
+**THE FAILURE THIS PREVENTS IS INVISIBLE.** A game whose seats are miscounted
+still renders, still books, and simply admits one player too many or refuses
+one too early. There is no error, no log line and no broken page — which is
+why the rule is a function rather than three careful copies of the same
+`count(*)`.
+
+**`game_roster_public` EMITS ONE ROW PER SEAT**, and that is what makes the
+application side follow for free: `countRosterByGame` counts rows, so every
+`{booked} / {capacity}`, every `spotsLeft` and the games list's own fullness
+became correct without a single caller learning what a guest is.
+
+**THE LABEL IS NOT IN THE VIEW.** "Karel's Guest 2" is copy. The view returns
+`guest_of` and `guest_index`; `lib/roster/guests.ts` builds the string from
+`lib/strings.ts` in three languages. Czech and Russian do not form a possessive
+with an apostrophe, so each language owns the entire pattern rather than a
+fragment something concatenates — a view that returned English would be a
+translation the Czech UI could not reach.
+
+## R26 — A party is ONE booking
+
+`price_czk` is the **whole party's**. That single decision is why the variable
+symbol, `credit_applied_czk`, the confirmation email, the admin unpaid list and
+`cancel_booking` all work untouched: one booking owes one number, which is what
+`price_czk` always meant.
+
+**The whole party fits or none of it does.** `create_booking_internal` refuses
+with `CAPACITY_FULL` rather than seating part of a party — a player who asked
+for three seats and received one has been given something they did not choose.
+
+**One attendance mark, because it is one decision.** The admin roster shows a
+party as `+2 guests` beside the name that brought them, not as three rows: three
+toggles where the organizer can make one choice would leave two of them
+permanently unanswered and settle blocked behind them.
+
+**THE CREDIT RULE IS DERIVED, NOT CORRECTED.** "Redeem credit" is offered only
+when the balance covers all `N + 1` seats, and growing the party past the wallet
+un-checks it **in the same render**. A `useEffect` would fix it one render late,
+and that frame is the one where Confirm is pressable — which would book the
+`cash` that "credit" maps to, producing an unpaid party with partial credit
+applied. Partial credit still happens inside `create_booking`, exactly as it
+always did; what the rule governs is whether the product *offers* a settled
+booking it can only half pay for.
+
+## R27 — The party ceiling is the second window that lives in two places
+
+`policy.booking.maxPartyGuests` is **display only**. The authority is
+`v_max_guests` inside `create_booking_internal`, which raises `PARTY_TOO_LARGE`,
+because a route guard is skipped by anyone using curl. If the two disagree, the
+database is right and the UI is lying — the same standing rule as
+`cancel_booking`'s cutoff, and moving the ceiling means editing both in one
+commit.
+
+**It is NOT a `POLICY_VERSION` bump.** Nothing transitions on it and no event is
+stamped with it: it bounds a control's options, and a booking made at a party of
+three does not become invalid if the ceiling later moves to four.

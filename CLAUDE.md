@@ -179,6 +179,16 @@ answers a missing function with a 404.
 | `20260802190000_pass_tiers_from_five` | Applied, verified |
 | `20260802210000_venue_amenities` | Applied 2026-08-10 |
 
+**Outstanding, and it is DDL — round 11's, and the code needs it.** The
+deployed application reads `games.guest_count` and `bookings.guest_count`.
+Until this runs, production has neither, so the guest and party surfaces fail
+against a column that is not there:
+
+```
+node scripts/apply-migration.mjs \
+  supabase/migrations/20260821100000_guests_and_parties.sql --production
+```
+
 **Outstanding, and it is DATA rather than DDL** — the venue separator moved
 from an em-dash to a bullet in the fixtures, and production rows still carry
 the old one. Owner runs this; it needs no migration file:

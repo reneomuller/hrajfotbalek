@@ -492,8 +492,10 @@ test("the game surface carries edit, roster, paid, attendance and cancel", async
     // Edit — the form itself, not a link to it.
     await expect(page.getByTestId("game-form-submit")).toBeVisible();
     await expect(page.getByTestId("organizer-name")).toBeVisible();
-    // Add player, and cancel.
-    await expect(page.getByTestId("add-player")).toBeVisible();
+    // Guests, and cancel. ~~Add player~~ — the shadow-player form went in
+    // round 11; the guest control stands in its place on the same surface,
+    // for the same job of seating somebody with no account.
+    await expect(page.getByTestId("guest-add")).toBeVisible();
     await expect(page.getByTestId("cancel-game")).toBeVisible();
 
     // The old routes still land somewhere correct rather than 404ing.

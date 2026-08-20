@@ -95,9 +95,23 @@ test("the anonymous roster exposes a nickname and a photo path, and nothing else
     // not paid.
     for (const row of data ?? []) {
       const keys = Object.keys(row).sort();
+      /*
+       * WIDENED IN ROUND 11, and this line having to be edited is the guard
+       * working rather than failing.
+       *
+       * The three new columns are facts about a SEAT, not about a person:
+       * `is_guest` says draw a monogram, `guest_of` names the player who
+       * brought this one — a nickname the holder's own row already publishes
+       * for the same game — and `guest_index` numbers it. The property this
+       * test exists for is unchanged and is still asserted exhaustively: no
+       * player_id, no email, no phone, no booking status.
+       */
       expect(keys).toEqual([
         "game_id",
         "games_played",
+        "guest_index",
+        "guest_of",
+        "is_guest",
         "nickname",
         "photo_path",
       ]);

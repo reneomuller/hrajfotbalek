@@ -132,6 +132,16 @@ quarantine held until the owner lifted it, item by item.
 | 51 | The pitch-name admin form label stays English | `SHIPPED round-10` (item 3) — see §5 |
 | 52 | *Not a request — a finding raised by row 49, filed here because R23 promises it a row.* `page-title` is probably one step too loud product-wide | `OPEN`, and it is the owner's call. Every frame measured — `p02`, `p05`, `p10`, `p11`, `p18` as well as all four admin ones — draws its page title at a **23.4px cap**. `page-title` renders 28.2; `title` renders 21.3. R17 added the step on the reading that our titles were "a third smaller than the design", and the pixels disagree. Correcting it moves **nineteen headings** across home, games, auth, pass and profile — surfaces nobody asked about in round 10, which is why admin was fixed alone. R23 |
 
+### Round 11 (one feature, two halves)
+
+| # | Request | Status |
+|---|---|---|
+| 53 | **Admin guests replace shadow players** — remove the shadow-creation and merge flows from the UI; admin adds and removes simple auto-named guests that consume capacity | `SHIPPED round-11` (A). Guests are a count on the game, not a `players` row: `players_nickname_key` is unique on `lower(nickname)`, so "Guest 1" could exist once in the whole database. `merge_players` and `claim_shadow_player` survive as RPCs with no UI — the first is the only repair for a split identity that already exists, the second is how a pre-round-11 shadow is claimed at sign-in |
+| 54 | Existing shadow players must keep rendering as guests, with no data loss | `SHIPPED round-11`. **No backfill and no row touched.** A shadow IS `players.auth_user_id is null`, and the roster view projects that as `is_guest`, so they became guests by definition rather than by migration — and they keep their own names. One that is later claimed gains an auth user and stops being a guest, which is correct |
+| 55 | **Party booking (+1/+2/+3)** — one booking, N+1 seats, guest avatars at the end of the row | `SHIPPED round-11` (B). `bookings.guest_count`; `price_czk` is the whole party's, which is what lets the variable symbol, the credit application, the confirmation email and `cancel_booking` work untouched. The ceiling is `policy.booking.maxPartyGuests` **and** a constant inside `create_booking_internal` — the second policy window that lives in two places, for the same reason the cancellation cutoff does |
+| 56 | Party payment: credits only when the balance covers all N+1, cash as today, online with an explicit "set quantity to N" line | `SHIPPED round-11`. The credit rule is DERIVED rather than corrected after the fact: growing the party past the wallet un-checks the option in the same render, because an effect would fix it one frame late and that frame is the one where Confirm is pressable. The quantity line exists because a Stripe Payment Link carries a fixed quantity of one and no parameter presets it |
+| 57 | **Apply `20260821100000_guests_and_parties.sql` to production** | `BUILT-DORMANT-ON-the owner running the migration`. Validated against the local database and rolled back; 23 SQL assertions pass. **Until it runs, production has no `guest_count` columns** — the deployed code would ask for a column that is not there, so this migration and the deploy belong together. Command in §6 |
+
 ---
 
 ## 4. `p14`: what still differs, and why each one is not code
@@ -160,8 +170,25 @@ items physically impossible without a new frame**. It is. What remains:
 
 ## 6. Standing owner actions
 
-**One command is outstanding.** It is row 48, and it is repeated here because a
-dormant row at the bottom of a table is a row that gets skimmed:
+**Two commands are outstanding.** They are rows 48 and 57, repeated here
+because a dormant row at the bottom of a table is a row that gets skimmed.
+
+**Round 11's migration, and it is the urgent one** — the deployed code reads
+`games.guest_count` and `bookings.guest_count`, and production has neither
+until this runs:
+
+```bash
+node scripts/apply-migration.mjs \
+  supabase/migrations/20260821100000_guests_and_parties.sql --production
+```
+
+It adds two columns with defaults, one function, one RPC, and rewrites
+`game_roster_public` to emit a row per seat. It is additive: no row changes and
+nothing is dropped except the four-argument `create_booking`, which the new
+five-argument one replaces. Rollback is
+`supabase/rollback/20260821100000_guests_and_parties_down.sql`.
+
+**Round 9's, still outstanding:**
 
 ```bash
 node scripts/apply-migration.mjs \
