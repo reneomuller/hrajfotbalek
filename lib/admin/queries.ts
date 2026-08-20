@@ -510,3 +510,79 @@ export async function getAdminPlayer(playerId: string): Promise<AdminPlayerDetai
     games: rows,
   };
 }
+
+
+/**
+ * Payments that arrived with nowhere to go.
+ *
+ * MONEY IS IN THE ACCOUNT AND NOBODY HAS A SEAT FOR IT. Three ways that
+ * happens, all of them flagged by `confirm_online_payment` rather than guessed
+ * at here: the payer was short, the window closed and the game filled behind
+ * them, or a second checkout session paid a booking that was already settled.
+ *
+ * THE LIST IS EXPECTED TO BE EMPTY, and that is why it is rendered at the TOP
+ * of the dashboard rather than behind a tab. A queue nobody visits is a queue
+ * that grows; a queue that is normally empty costs one line of dashboard and
+ * is impossible to miss on the day it is not.
+ *
+ * NOTHING RESOLVES IT AUTOMATICALLY. A sweep that refunded, or one that
+ * bumped somebody else off a seat, would be the product making a decision
+ * about a stranger's money. Oliver reads the row and decides.
+ */
+export interface PaymentAttentionRow {
+  bookingId: string;
+  gameId: string;
+  venue: string;
+  startsAt: string;
+  nickname: string;
+  amountOwedCzk: number;
+  seats: number;
+  reason: string;
+  flaggedAt: string;
+  stripeSessionId: string | null;
+}
+
+export async function listPaymentsNeedingAttention(): Promise<PaymentAttentionRow[]> {
+  const service = createServiceRoleSupabaseClient();
+
+  const { data: rows } = await service
+    .from("bookings")
+    /*
+     * ONE LITERAL, not a concatenation. The Supabase client infers the row
+     * shape from the select STRING at the type level, so a `+` between two
+     * halves erases it and every field below becomes an error object. Worth a
+     * long line.
+     */
+    .select("id, game_id, player_id, price_czk, credit_applied_czk, guest_count, payment_attention_at, payment_attention_reason, stripe_session_id")
+    .not("payment_attention_at", "is", null)
+    .order("payment_attention_at", { ascending: false })
+    .limit(50);
+
+  if (!rows || rows.length === 0) return [];
+
+  // Two lookups for the whole set rather than a pair per row — the same shape
+  // the dashboard's own rows use.
+  const gameIds = [...new Set(rows.map((r) => r.game_id))];
+  const playerIds = [...new Set(rows.map((r) => r.player_id))];
+
+  const [{ data: games }, { data: players }] = await Promise.all([
+    service.from("games").select("id, venue, starts_at").in("id", gameIds),
+    service.from("players").select("id, nickname").in("id", playerIds),
+  ]);
+
+  const gameById = new Map((games ?? []).map((g) => [g.id, g]));
+  const nickById = new Map((players ?? []).map((p) => [p.id, p.nickname]));
+
+  return rows.map((row) => ({
+    bookingId: row.id,
+    gameId: row.game_id,
+    venue: gameById.get(row.game_id)?.venue ?? "",
+    startsAt: gameById.get(row.game_id)?.starts_at ?? "",
+    nickname: nickById.get(row.player_id) ?? "",
+    amountOwedCzk: Math.max(0, row.price_czk - row.credit_applied_czk),
+    seats: 1 + row.guest_count,
+    reason: row.payment_attention_reason ?? "",
+    flaggedAt: row.payment_attention_at ?? "",
+    stripeSessionId: row.stripe_session_id,
+  }));
+}

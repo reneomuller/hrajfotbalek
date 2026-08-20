@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { execAsOwner } from "./clock.ts";
+import { assertTestDatabaseUrl } from "../../lib/env/testDatabase.ts";
 import { apiClientFor, players, serviceClient } from "./session.ts";
 
 /**
@@ -305,4 +306,47 @@ export async function resetWallet(playerId: string): Promise<void> {
   await execAsOwner("delete from public.credit_ledger where player_id = $1", [playerId]);
   await execAsOwner("delete from public.events where player_id = $1 and event_type in ('topup_requested','topup_confirmed','credit_expired')", [playerId]);
   await execAsOwner("delete from public.credit_topups where player_id = $1", [playerId]);
+}
+
+
+/**
+ * Ages a booking's online-payment stamp past its window.
+ *
+ * DIRECT POSTGRES, AND THAT IS NOT LAZINESS. `service_role` deliberately holds
+ * no UPDATE on `bookings` — every transition goes through an RPC — and there
+ * is deliberately no RPC for "pretend thirty minutes passed", because that
+ * would be a way to release somebody else's seat. The E2E suite met this exact
+ * wall once before, faking an elapsed grace window, and got a SILENT
+ * permission error: the update reported success and changed nothing.
+ *
+ * ROUTED THROUGH `assertTestDatabaseUrl`, which is the same guard the seed,
+ * the SQL runner and the reset script use and which refuses any non-local
+ * host. `.env.local` holds production; this must never reach it.
+ */
+export async function expireOnlinePayment(bookingId: string): Promise<void> {
+  const { Client } = await import("pg");
+  const url = process.env.SUPABASE_DB_URL;
+  // Throws unless the host is local. Same guard as the seed, the SQL runner
+  // and the reset script — `.env.local` holds production.
+  assertTestDatabaseUrl(process.env.NEXT_PUBLIC_SUPABASE_URL, {
+    runner: "e2e expireOnlinePayment",
+  });
+  if (!url) throw new Error("expireOnlinePayment needs SUPABASE_DB_URL");
+
+  const client = new Client({ connectionString: url });
+  await client.connect();
+  try {
+    const result = await client.query(
+      `update public.bookings
+          set payment_pending_at = now() - public.online_payment_window() - interval '1 minute'
+        where id = $1`,
+      [bookingId],
+    );
+    // The silent-failure lesson, asserted rather than assumed.
+    if (result.rowCount !== 1) {
+      throw new Error(`expireOnlinePayment touched ${result.rowCount} rows, expected 1`);
+    }
+  } finally {
+    await client.end();
+  }
 }

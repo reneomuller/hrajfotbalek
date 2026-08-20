@@ -160,3 +160,41 @@ export async function getOwnNextBooking(): Promise<BookingWithGame | null> {
     ) ?? null
   );
 }
+
+
+/**
+ * Where a booking stands with respect to an ONLINE payment.
+ *
+ * FOUR STATES, AND THE DIFFERENCE BETWEEN THE MIDDLE TWO IS THE FEATURE:
+ *
+ *   `none`      — not an online booking, or already settled. Cash, credit and
+ *                 bank-QR are all `none`, which is why nothing about them
+ *                 changed in round 12.
+ *   `waiting`   — inside the window. The seats are held and Stripe has not
+ *                 answered yet.
+ *   `expired`   — the window closed. The seats are NOT held any more; the
+ *                 booking still exists and can be retried.
+ *   `attention` — money arrived and no seat could be given. Only a person
+ *                 resolves this, so the panel offers no button for it.
+ *
+ * MIRRORS `booking_holds_seat()` IN SQL, which is the authority — this decides
+ * what a panel says, never whether a seat exists.
+ */
+export type OnlinePaymentState = "none" | "waiting" | "expired" | "attention";
+
+export function onlinePaymentState(
+  booking: Pick<
+    Database["public"]["Tables"]["bookings"]["Row"],
+    "status" | "payment_pending_at" | "payment_attention_at"
+  >,
+  now: number = Date.now(),
+): OnlinePaymentState {
+  if (booking.payment_attention_at) return "attention";
+  if (booking.status !== "reserved" || !booking.payment_pending_at) return "none";
+
+  const deadline =
+    new Date(booking.payment_pending_at).getTime() +
+    policy.booking.onlinePaymentMinutes * 60 * 1000;
+
+  return now <= deadline ? "waiting" : "expired";
+}

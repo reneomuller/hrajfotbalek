@@ -12,11 +12,13 @@ import { effectivePitchName, venueDisplayName } from "@/lib/venues/displayName";
 import { bookingBadge } from "@/lib/booking/badges";
 import { ToastFromQuery } from "@/components/ToastFromQuery";
 import { WaitlistPanel } from "@/components/game/WaitlistPanel";
+import { AwaitingPaymentPanel } from "@/components/game/AwaitingPaymentPanel";
 import { YourBookingPanel } from "@/components/game/YourBookingPanel";
 import { isOnWaitlist, waitlistPosition } from "@/lib/booking/waitlistConvert";
 import { readResumeIntent } from "@/lib/booking/resume";
 import { runJoinWaitlist } from "./waitlist/actions";
 import { getCurrentPlayer, getSessionUser } from "@/lib/auth/session";
+import { onlinePaymentState } from "@/lib/booking/queries";
 import { formatCzk, formatGameDateTime } from "@/lib/format";
 import { gameEndsAt, resolveDurationMinutes } from "@/lib/games/duration";
 import {
@@ -129,6 +131,15 @@ export default async function GameDetailPage({ params, searchParams }: GamePageP
   // nickname match against the public roster would be display-grade and would
   // hand anyone "their" booking by choosing the right nickname.
   const ownBooking = await getOwnActiveBooking(game.id);
+
+  /*
+   * Resolved on the SERVER, from the row RLS already let this caller read.
+   * `onlinePaymentState` mirrors `booking_holds_seat()` in SQL, which is the
+   * authority — this decides what a panel says, never whether a seat exists.
+   */
+  const paymentState = ownBooking
+    ? onlinePaymentState(ownBooking.booking)
+    : ("none" as const);
 
   const endsAt = gameEndsAt(game.starts_at, game.duration_minutes);
   const isFull = spotsLeft === 0;
@@ -308,9 +319,26 @@ export default async function GameDetailPage({ params, searchParams }: GamePageP
         sticky CTA at the bottom is bound by the SAME condition, so there is
         still exactly one claim button in the product (§5.6a).
       */}
-      {ownBooking && (
-        <YourBookingPanel booking={ownBooking.booking} />
-      )}
+      {/*
+        THE AWAITING-PAYMENT PANEL REPLACES the booking panel rather than
+        joining it (round 12, item 5a).
+
+        Two boxes about one booking, one saying "spot held" and the other
+        "waiting for your payment", is the page contradicting itself — and
+        "spot held" is the half that is not true once the window closes. One
+        booking, one answer.
+      */}
+      {ownBooking &&
+        (paymentState === "none" ? (
+          <YourBookingPanel booking={ownBooking.booking} />
+        ) : (
+          <AwaitingPaymentPanel
+            state={paymentState}
+            bookingId={ownBooking.booking.id}
+            gameId={game.id}
+            canRetry={Boolean(process.env.NEXT_PUBLIC_STRIPE_PAYMENT_URL)}
+          />
+        ))}
 
       {/*
         THE QUEUE'S CONTROL MOVED TO THE BAR (§2.4); WHAT STAYS HERE IS THE

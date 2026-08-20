@@ -540,6 +540,18 @@ export interface Database {
            * email and `cancel_booking` all work untouched.
            */
           guest_count: number;
+          /**
+           * Set while an ONLINE booking waits for Stripe (round 12). After
+           * `online_payment_window()` the booking stops holding seats without
+           * changing status. Null for cash, credit and bank-QR.
+           */
+          payment_pending_at: string | null;
+          /** The checkout session that paid it. Uniquely indexed — this is what
+           *  makes webhook redelivery a no-op. */
+          stripe_session_id: string | null;
+          /** Money arrived and no seat could be given. Resolved by hand. */
+          payment_attention_at: string | null;
+          payment_attention_reason: string | null;
           attendance: AttendanceStatus | null;
           nudge_sent_at: string | null;
           reminder_sent_at: string | null;
@@ -682,6 +694,16 @@ export interface Database {
            * ordinary single booking.
            */
           p_guest_count?: number;
+          /**
+           * Marks the booking as awaiting an online payment (round 12). It
+           * then holds its seats for thirty minutes rather than forever, and
+           * only the Stripe webhook can settle it.
+           *
+           * EXPLICIT RATHER THAN INFERRED FROM THE METHOD: the online option
+           * books onto the `qr` rail, but so does a bank transfer, and a bank
+           * transfer takes days.
+           */
+          p_online?: boolean;
         };
         Returns: BookingResult;
       };
@@ -830,6 +852,29 @@ export interface Database {
        * Sets the number of anonymous house guests on a game (round 11). Admin
        * or service role; capacity-checked against every other seat.
        */
+      /**
+       * The Stripe webhook's only write (round 12). SERVICE ROLE ONLY — it is
+       * not an admin surface, it exists for one caller.
+       *
+       * Every decision lives inside it, under the game's advisory lock:
+       * idempotency by `stripe_session_id`, the amount check, and whether a
+       * seat still exists. Returns what happened rather than raising, because
+       * three of the four outcomes are normal and a raise would make Stripe
+       * retry something that can never succeed.
+       */
+      confirm_online_payment: {
+        Args: { p_booking_id: string; p_session_id: string; p_amount_czk: number };
+        Returns: "confirmed" | "already" | "attention" | "unknown";
+      };
+      /**
+       * Restarts the thirty-minute window when a player presses "try again".
+       * `false` means the seats went while they were away — the caller must
+       * not send them back to Stripe to pay for a seat that no longer exists.
+       */
+      retry_online_payment: {
+        Args: { p_booking_id: string };
+        Returns: boolean;
+      };
       set_game_guests: {
         Args: { p_game_id: string; p_count: number };
         Returns: number;

@@ -365,6 +365,18 @@ export const ru: StringsOverlay = {
     partySummary: "{seats} мест · {total}",
     partyLimited: "На это поле поместится ещё только {n}.",
     partyOnlineQuantity: "На странице оплаты укажи количество {seats}.",
+    awaitingTitle: "Ждём твою оплату",
+    awaitingBody:
+      "Место держим {minutes} минут, пока проходит платёж. Страница обновится сама.",
+    awaitingExpiredTitle: "Платёж не пришёл",
+    awaitingExpiredBody:
+      "Мы не увидели оплату вовремя, и место вернулось в игру. Если ещё есть места, попробуй снова.",
+    awaitingAttentionTitle: "Проверяем твой платёж",
+    awaitingAttentionBody:
+      "Платёж пришёл, но место выдать не получилось. Мы уже разбираемся и свяжемся с тобой — не плати ещё раз.",
+    awaitingSeatGone:
+      "Пока тебя не было, игра заполнилась, так что платить не за что. Ничего не списано.",
+    awaitingRetry: "Повторить оплату",
     cancelReassuranceKickoff:
       "Отменить можно в любой момент до начала — всё вернётся кредитом в кошелёк.",
     cancelReassuranceCutoff:

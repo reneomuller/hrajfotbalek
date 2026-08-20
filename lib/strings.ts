@@ -696,6 +696,19 @@ export const strings = {
      * short of money on the day.
      */
     partyOnlineQuantity: "Set quantity to {seats} on the payment page.",
+    /* --- awaiting an online payment (round 12, item 5) --- */
+    awaitingTitle: "Waiting for your payment",
+    awaitingBody:
+      "Your spot is held for {minutes} minutes while the payment goes through. This page updates by itself once it does.",
+    awaitingExpiredTitle: "Payment not received",
+    awaitingExpiredBody:
+      "We did not see a payment in time, so the spot went back to the game. You can try again if there is still room.",
+    awaitingAttentionTitle: "We are checking your payment",
+    awaitingAttentionBody:
+      "Your payment arrived but we could not give you a spot. Someone is looking at it and will be in touch — do not pay again.",
+    awaitingSeatGone:
+      "This game filled up while you were away, so there is nothing to pay for. Nothing was charged.",
+    awaitingRetry: "Try the payment again",
     // Cancellation reassurance, shown before the player commits. The window is
     // never written as a literal: `cancellationReassurance()` picks the kickoff
     // wording under policy v1 (`cutoffHoursBeforeStart: 0`) and interpolates
@@ -1388,6 +1401,11 @@ export const strings = {
     // Beside a name on the admin roster: "+2 guests". The booking is one row
     // with one attendance mark, because it is one decision.
     rosterParty: "+{n} guests",
+    /* --- payments that arrived with no seat (round 12, item 5c) --- */
+    attentionTitle: "Payments needing attention ({n})",
+    attentionLede:
+      "Money arrived and no spot could be given. Nothing resolves these automatically — refund or seat each one by hand.",
+    attentionSeats: "seats",
     // Generic, and generic on purpose: every RPC that takes a player id can
     // raise this, and the merge tool that used to own the message is gone.
     playerNotFound: "No such player.",

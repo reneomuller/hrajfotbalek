@@ -362,6 +362,18 @@ export const cs: StringsOverlay = {
     partySummary: "{seats} míst · {total}",
     partyLimited: "Na tomhle hřišti se vejde už jen {n}.",
     partyOnlineQuantity: "Na platební stránce nastav počet na {seats}.",
+    awaitingTitle: "Čekáme na tvou platbu",
+    awaitingBody:
+      "Místo ti držíme {minutes} minut, než platba proběhne. Stránka se sama aktualizuje.",
+    awaitingExpiredTitle: "Platba nedorazila",
+    awaitingExpiredBody:
+      "Platbu jsme včas neviděli, takže se místo vrátilo do zápasu. Pokud je ještě volno, zkus to znovu.",
+    awaitingAttentionTitle: "Prověřujeme tvou platbu",
+    awaitingAttentionBody:
+      "Platba dorazila, ale místo ti nešlo přidělit. Někdo se na to dívá a ozve se ti — neplať znovu.",
+    awaitingSeatGone:
+      "Zápas se mezitím naplnil, takže není za co platit. Nic jsme ti nestrhli.",
+    awaitingRetry: "Zkusit platbu znovu",
     cancelReassuranceKickoff:
       "Zrušit můžeš kdykoli před výkopem — všechno se ti vrátí jako kredit.",
     cancelReassuranceCutoff:

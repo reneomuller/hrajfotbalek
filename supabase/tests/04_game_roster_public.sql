@@ -163,8 +163,39 @@ select pg_temp.ok(
    * that matters — without re-publishing the value to prove it.
    */
   (select pg_get_viewdef('public.game_roster_public'::regclass, true)
-     like '%b.status = ANY (ARRAY[''reserved''::booking_status, ''confirmed''::booking_status])%'),
-  'every roster row is an active (reserved/confirmed) booking');
+     like '%booking_holds_seat(b.status, b.payment_pending_at)%'),
+  'every roster row goes through booking_holds_seat');
+
+/*
+ * ...AND THAT PREDICATE IS ASSERTED DIRECTLY, which the inlined version could
+ * not be.
+ *
+ * Round 12 moved the filter out of the view body and into
+ * `booking_holds_seat`, because the same rule is needed by `game_seats_taken`
+ * and by both halves of this view — and a capacity rule written out three
+ * times is one that will disagree with itself. Reading the view definition
+ * now proves only that the rule is CALLED, so the rule itself is tested here:
+ * the two active statuses hold a seat, the two terminal ones do not, and an
+ * online payment that ran out of time stops holding one without its status
+ * changing at all.
+ */
+select pg_temp.ok(
+  public.booking_holds_seat('reserved',  null)
+  and public.booking_holds_seat('confirmed', null)
+  and not public.booking_holds_seat('cancelled', null)
+  and not public.booking_holds_seat('expired',   null),
+  'booking_holds_seat admits exactly the two active statuses');
+
+select pg_temp.ok(
+  public.booking_holds_seat('reserved', now())
+  and not public.booking_holds_seat(
+        'reserved', now() - public.online_payment_window() - interval '1 second'),
+  'a reserved booking stops holding its seat once its payment window closes');
+
+select pg_temp.ok(
+  public.booking_holds_seat(
+    'confirmed', now() - public.online_payment_window() - interval '1 day'),
+  'a CONFIRMED booking holds its seat whatever the pending stamp says');
 
 -- =============================================================================
 -- the view is genuinely reachable by anon (a denied read would pass the

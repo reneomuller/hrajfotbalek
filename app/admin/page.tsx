@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getAdminDashboard } from "@/lib/admin/dashboard";
+import { listPaymentsNeedingAttention } from "@/lib/admin/queries";
 import { requireAdmin } from "@/lib/auth/requireAdmin";
 import { formatCzk, formatGameDateTime } from "@/lib/format";
 import { strings } from "@/lib/strings";
@@ -47,7 +48,10 @@ const QUICK_ACTION =
 
 export default async function AdminDashboardPage() {
   await requireAdmin();
-  const d = await getAdminDashboard();
+  const [d, attention] = await Promise.all([
+    getAdminDashboard(),
+    listPaymentsNeedingAttention(),
+  ]);
 
   const tiles = [
     {
@@ -99,6 +103,52 @@ export default async function AdminDashboardPage() {
         Two-up, as p14 draws them — and on the frame's gaps, which are not
         square: 17px between the columns, 9.9px between the rows.
       */}
+      {/*
+        MONEY WITH NO SEAT, ABOVE EVERYTHING (round 12, item 5c).
+
+        This list is expected to be empty. That is exactly why it is here and
+        not behind a tab: a queue nobody visits is a queue that grows, and this
+        one holds payments that have already left somebody's account. One line
+        of dashboard on the ordinary day; impossible to miss on the day it is
+        not.
+
+        NOTHING RESOLVES IT AUTOMATICALLY. A sweep that refunded, or one that
+        moved somebody off a seat to make room, would be the product deciding
+        about a stranger's money.
+      */}
+      {attention.length > 0 && (
+        <section
+          data-testid="payment-attention"
+          className="lifted mt-5 rounded-card border-2 border-hairline-volt p-4"
+        >
+          <h3 className="m-0 font-display text-body-lg uppercase tracking-wide text-volt">
+            {strings.admin.attentionTitle.replace("{n}", String(attention.length))}
+          </h3>
+          <p className="mt-1 text-[13px] leading-snug text-muted">
+            {strings.admin.attentionLede}
+          </p>
+          <ul className="mt-3 list-none space-y-3 p-0">
+            {attention.map((row) => (
+              <li key={row.bookingId} data-testid="payment-attention-row">
+                <Link
+                  href={`/admin/games/${row.gameId}`}
+                  className="block no-underline"
+                >
+                  <span className="block text-body font-semibold text-white">
+                    {row.nickname} · {row.venue}
+                  </span>
+                  <span className="mt-1 block text-small text-muted">
+                    {formatGameDateTime(row.startsAt)} · {row.seats}{" "}
+                    {strings.admin.attentionSeats} · {formatCzk(row.amountOwedCzk)}
+                  </span>
+                  <span className="mt-1 block text-small text-bone">{row.reason}</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
       <section
         data-testid="dashboard-tiles"
         className="mt-6 grid grid-cols-2 gap-x-4 gap-y-2.5"

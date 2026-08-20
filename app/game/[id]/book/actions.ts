@@ -131,7 +131,12 @@ export async function createBookingAction(
     redirect(`/login?next=${encodeURIComponent(resume)}`);
   }
 
-  const bookingId = await runCreateBooking(gameId, method, guests);
+  /*
+   * `online` IS PASSED THROUGH, and it is the whole of round 12 item 5(a) at
+   * this layer. A booking marked online holds its seats for thirty minutes
+   * instead of forever, and only the Stripe webhook can settle it.
+   */
+  const bookingId = await runCreateBooking(gameId, method, guests, online);
   if (typeof bookingId !== "string") return bookingId;
 
   /*
@@ -183,6 +188,16 @@ export async function runCreateBooking(
    * URL that books three paid seats is a URL worth thinking about separately.
    */
   guests = 0,
+  /**
+   * Whether this booking is waiting on Stripe.
+   *
+   * Defaults to FALSE, which is what the post-auth resume path wants: it
+   * carries a game and a method through a login round trip, and a player
+   * coming back from `/login` has not been to Stripe. Marking that booking
+   * pending would expire it thirty minutes later with nothing having gone
+   * wrong.
+   */
+  online = false,
 ): Promise<string | BookingActionState> {
   const supabase = await createServerSupabaseClient();
 
@@ -190,6 +205,7 @@ export async function runCreateBooking(
     p_game_id: gameId,
     p_payment_method: method,
     p_guest_count: guests,
+    p_online: online,
   });
 
   if (error) {

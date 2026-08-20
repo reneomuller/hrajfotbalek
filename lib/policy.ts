@@ -141,6 +141,20 @@ export const policy = {
    */
   booking: {
     maxPartyGuests: 3,
+    /**
+     * How long an unpaid ONLINE booking holds its seats (round 12).
+     *
+     * DISPLAY ONLY, and the third window that lives in two places. The
+     * authority is `online_payment_window()` in SQL, which
+     * `booking_holds_seat()` reads and every seat count goes through. This
+     * value exists so the awaiting-payment panel can say "30 minutes" without
+     * a literal in a component.
+     *
+     * NOT A `POLICY_VERSION` BUMP: nothing transitions on it. A stale pending
+     * does not change status, is not swept, and simply stops being counted —
+     * which is what lets this ship without a cron job.
+     */
+    onlinePaymentMinutes: 30,
   },
 } as const;
 
