@@ -870,3 +870,134 @@ table invites you to defer:
 2. **A stage ships its surfaces' empty, loading, error and pending states.**
    There is no later stage that collects them (ruling P, and F9 of the
    analysis).
+
+---
+
+# 6. Redesign v2 — Round 0 rulings (2026-08-20)
+
+The 19-frame export in `/Users/oliverstaehelin/export` is audited in
+`docs/redesign-v2/AUDIT.md`. That audit raised thirteen items for ruling; the
+owner settled them here. **These rulings govern every redesign round.**
+
+The redesign era builds on `staging/v13`. `main` and production are untouched
+until the owner orders the merge — see `docs/redesign-v2/MERGE_READINESS.md`.
+
+## R1 — `Join →` on list cards: ADOPTED AS PAINT ONLY
+
+The frames draw a `Join →` button inside each list card. It ships as a
+**button-styled visual cue and nothing else**: no `<a>`, no `<button>`, no
+handler, no focus stop.
+
+**Ruling E is upheld, not reversed.** E removed the in-card CTA because a link
+inside a link is both redundant and the reason the card could not simply be an
+anchor. That reasoning is untouched — the whole card remains the single anchor.
+What changes is only that the card now *looks* like it carries an action.
+
+**No nested links, ever.** A future round that makes this element interactive
+reopens ruling E and needs its own ruling first.
+
+## R2 — Community nav tab: DEFERRED
+
+The pill stays at **three** (Home, Games, Profile). Ruling K is unchanged.
+
+`p12` draws a fourth `Community` tab. The tab may land **only in the round that
+ships an actual Community page** — a tab pointing at nothing is the defect
+ruling K's own reasoning describes.
+
+## R3 — Payment: QR RETIRED FROM THE REDESIGNED UI
+
+The frames disagree with each other: `p04` shows no bank transfer at all, while
+`p05` shows QR selected on the same flow. The owner resolved it toward `p04`.
+
+- **`Pay with Stripe` and `Pay with card` are ONE option.** They were the same
+  rail described twice.
+- **QR / bank transfer is REMOVED from the redesigned payment surfaces
+  entirely.** Card is the sole method shown.
+- The card option is **fully styled as designed and wired to NOTHING** — no
+  handler, no route, no action. The rail is integrated later.
+
+**SCOPE IS UI-LEVEL ONLY, and this is the load-bearing half.** The backend QR
+machinery is **not touched, removed, or refactored**: the `'26'`-series variable
+symbols, `create_topup` / `confirm_topup`, the pass paths and the credit ledger
+all stay exactly as they are. They are the substrate Stripe maps onto. A round
+that "cleans up" the QR backend because the UI no longer calls it is deleting
+the thing the next round needs.
+
+> ~~**Insufficient credits offers both routes** — get more credits, or pay for
+> this game now.~~ **REVERSED 2026-08-20 (R3).** Until Stripe is live there is
+> no working per-game payment route to offer, so the insufficient-credits state
+> shows the **Get-credits route only**. Recorded as a conscious reversal rather
+> than edited away: the dual route was right when a QR path existed behind it,
+> and it becomes right again the moment Stripe does.
+
+**"Never block a booking to upsell" is unchanged.** The pass is offered; it is
+never a gate.
+
+**Consequence, recorded in MERGE_READINESS.md as the first blocking item:**
+merging before Stripe activation leaves no working per-game payment path.
+
+## R4 — Per-game card payment FUNCTIONALITY: still deferred
+
+R3 grants UI **presence**, not functionality. The Stripe round ships passes
+first; per-game card payment remains deferred and is not built by any redesign
+round.
+
+## R5 — Anton: widened NARROWLY
+
+Anton extends to **display-scale numerals only** — hero money figures, large
+spots-left counters. **Never body-size figures. Never body text.**
+
+The standing ruling otherwise stands in full: Anton is the wordmark and the
+existing display headings; body is Onest.
+
+## R6 — Photographic backgrounds: ADOPTED
+
+The frames are the source of truth for the look.
+
+**The asset.** `farming1.png` in the export folder — 640×336, the only image
+that is not a 784px bezeled page frame. A web-ready copy lives at
+`public/pitch-default.jpg` (JPEG, 78 KB); the original is untouched in the
+export folder.
+
+**One DEFAULT pitch image for all games.** Per-venue photos are a later concern
+and are not built. `venues.image_path` already exists and is not touched.
+
+**Usage law:**
+
+- **(a) LIST CARDS / PILLS** — faded background, exactly as the frames draw it.
+- **(b) GAME DETAIL PAGE** — the photo backs the header band and **fades out
+  vertically**: fully faded below the venue-title line and above the first
+  content box beneath it, so that box sits on the normal flat surface.
+
+**Contrast floor, on both.** Scrim values are derived FROM the frames. Text
+legibility must equal the current flat surface, and the **1.5px volt outline
+must remain visibly intact over the photo**. Asserted by a spec when the card
+round builds it — not by eye.
+
+## R7 — Desktop: mobile-only export is BY DESIGN
+
+Build mobile from the frames. **Current v1.3 `md:` behaviour survives unchanged
+as interim law.** Desktop redesign is its own later phase.
+
+**No round may degrade an existing `md:` layout.** A round that cannot honour a
+breakpoint stops and asks.
+
+## R8 — Public player profile: QUARANTINED
+
+The privacy question rides with it. The three referencing surfaces —
+leaderboard, Player of the Month, roster avatars — ship **non-clickable and
+monogram-style**, mirroring the organizer-photo ruling.
+
+## R9 — Strips hygiene: standing practice
+
+Strips are committed **once**, when presented for review. Incidental
+regenerations of already-reviewed strips are **discarded** (`git restore`),
+never swept into a commit. A diff full of re-rendered PNGs hides the one file
+that actually changed.
+
+## Amendment to §5 build order
+
+**The payment round is UN-GATED from the Stripe integration.** Under R3 the
+payment surfaces are paint over an inert control, so they can be built from the
+frames without the rail existing. What remains gated is *activation*, which is
+MERGE_READINESS.md's first blocking item rather than a build dependency.

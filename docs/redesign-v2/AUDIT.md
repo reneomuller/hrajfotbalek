@@ -237,7 +237,9 @@ Ink/surface ladder reads the same. Deltas:
 
 ### FLAGGED FOR RULING — designs that contradict standing law
 
-> None of these were acted on. Each needs your word.
+> **SETTLED 2026-08-20.** All thirteen were ruled on in Round 0; the binding
+> text is `DESIGN_SYSTEM_V1.3.md` §6 (R1–R9). Dispositions annotated inline.
+> Nothing here was acted on before the ruling.
 
 1. **Card gains a `Join →` button** (`p01`, `p02`) — reverses **ruling E**, which
    removed the in-card CTA so the whole card could be one anchor. A button inside
@@ -279,6 +281,19 @@ Ink/surface ladder reads the same. Deltas:
     Same venue/pitch conflation as migration 41.
 13. **Modal/portal law** — no modal or dialog appears anywhere in the 19 frames.
     The cancel dialog, the one portalled surface, is **undesigned**.
+   **→ Open.** The cancel dialog is undesigned; portal law is unchanged and binding on anything that ships.
+   **→ Open, for the admin round.** Same venue/pitch conflation as migration 41, which is written and unapplied.
+   **→ Open.** No in-app messaging exists; the destination gap stands in §3a item 9.
+   **→ R2 defers Community.** Notifications stays quarantined in SCOPE.md.
+   **→ Open.** Deferred to the admin round (§5 round 8).
+   **→ Open, for the games round.** The calendar-width ruling stands: fewer cells must not mean a scrolling row.
+   **→ Open, for the card round.** R6's contrast floor requires the ladder to stay legible over the photo; whether the frames contradict it or simply do not render it is settled when the card is built.
+   **→ No violation, confirmed.** The flat-150 ruling holds on the one surface where it is visible.
+   **→ Covered by R3.** Until Stripe is live the insufficient-credits state shows the Get-credits route ONLY, recorded as a struck-through reversal of the dual-route ruling. “Never block a booking to upsell” is unchanged.
+   **→ R4: FUNCTIONALITY STILL DEFERRED.** R3 grants UI presence, not a working rail.
+   **→ R3: ONE OPTION, AND QR IS RETIRED FROM THE REDESIGNED UI.** Resolved toward `p04`. Card is the sole method shown, fully styled and wired to nothing. UI-level only — the QR backend is the substrate Stripe maps onto and is not touched.
+   **→ R2: DEFERRED.** The pill stays at three; the tab may land only in the round that ships an actual Community page.
+   **→ R1: ADOPTED AS PAINT ONLY.** Ruling E upheld — the whole card stays the single anchor and `Join →` is a non-interactive visual cue. No nested links, ever.
 
 ---
 
@@ -306,14 +321,19 @@ Pairs naturally with the Google-login feature round already proposed.
 
 **Round 6 — profile.** Cover, stats, tabs — closest to what shipped, so cheapest.
 
-**Round 7 — booking + payment.** *Gated on the Stripe round and on ruling 3/4
-above.* Do not start before the payment model is settled — this is money.
+**Round 7 — booking + payment.** **UN-GATED from the Stripe round by R3** — the
+surfaces are paint over an inert control, so they build from the frames without
+the rail existing. What stays gated is *activation*, which is
+MERGE_READINESS.md's first blocking item rather than a build dependency.
 
 **Round 8 — admin.** Dashboard, game detail, home page, then the undesigned
 admin routes as they get designs.
 
 **Round 9 — new pages.** Community, Notifications, Financials. Last, because each
 needs backend that does not exist and quarantine entries that need lifting.
+
+**Round 0 (rulings) — DONE.** R1–R9 in `DESIGN_SYSTEM_V1.3.md` §6.
+**Round 1 (chrome) — DONE.** Strips in `docs/redesign-v2/strips/chrome/`.
 
 **`/pass` sits outside this order** — it is linked from two designs, is
 commercially central, and has no frame. It either stays v1.3 or needs a design
