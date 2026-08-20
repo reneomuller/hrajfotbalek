@@ -149,9 +149,23 @@ export async function PassTierCard({
         <span data-testid="pass-tier-price" className="text-body-lg font-bold text-bone">
           {formatCzk(tier.priceCzk)}
         </span>
+        {/*
+          THE STRUCK ANCHOR GOES `muted`, NOT `danger`.
+
+          `danger` is the spots-left ladder's "nearly gone" red — the one place
+          in this palette where colour carries MEANING rather than character.
+          Spending it on a crossed-out price says the old price is an alarm,
+          and it also means two unrelated things on two surfaces render in the
+          same alarming red. The strike-through already says "not this one";
+          the colour only has to say "quieter than the real price".
+
+          All the pass law is untouched: the anchor is still the flat-150
+          reference, still struck, still beside the real price at the same
+          size, with the computed whole-percent discount after both.
+        */}
         <span
           data-testid="pass-tier-anchor"
-          className="text-body-lg text-danger line-through"
+          className="text-body-lg text-muted line-through"
         >
           {formatCzk(anchorCzk)}
         </span>

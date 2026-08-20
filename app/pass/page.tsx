@@ -36,7 +36,11 @@ export default async function PassPage() {
 
   return (
     <main className="relative z-10 mx-auto w-full max-w-shell px-gutter pb-16 pt-24">
-      <h1 className="m-0 font-display text-section-title uppercase tracking-wide text-white">
+      {/* `page-title`, the step every redesigned page heading uses since
+          round 3 — the pass page was still on `section-title`, which clamps to
+          24px at phone width and made this the one quiet title in the
+          product. */}
+      <h1 className="m-0 font-display text-page-title uppercase tracking-wide text-white">
         {t.pass.title}
       </h1>
       <p className="mt-3 max-w-[520px] text-[14px] leading-relaxed text-muted">
@@ -53,7 +57,10 @@ export default async function PassPage() {
       */}
       <p
         data-testid="credit-equivalence"
-        className="mt-6 inline-flex rounded-control border border-hairline-volt px-4 py-2 text-body-lg font-semibold text-volt"
+        /* A capsule with a `border-2` stroke: the frames give every outlined
+           control both, and R11 forbids the sub-pixel widths this page never
+           had but its neighbours did. */
+        className="mt-6 inline-flex rounded-pill border-2 border-hairline-volt px-4 py-2 text-body-lg font-semibold text-volt"
       >
         {t.pass.creditEqualsGame}
       </p>
@@ -64,8 +71,12 @@ export default async function PassPage() {
         ))}
       </div>
 
-      <section className="mt-10 rounded-card bg-surface p-5">
-        <h2 className="m-0 text-[17px] font-bold uppercase tracking-wide text-white">
+      {/* `.lifted`, like every other panel in the redesign. `rounded-card
+          bg-surface` was the pre-round-3 spelling — an edgeless box five points
+          of luminance off the page, which is the exact problem `.lifted`
+          exists to solve. */}
+      <section className="lifted mt-10 rounded-card p-5">
+        <h2 className="m-0 font-display text-community-title uppercase text-white">
           {t.pass.howItWorks}
         </h2>
         <p className="mt-2 text-[14px] leading-relaxed text-bone">
