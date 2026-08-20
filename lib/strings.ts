@@ -625,6 +625,11 @@ export const strings = {
      */
     payByQr: "Pay by QR",
     payByQrHint: "Scan a code in your banking app. Your spot is held until you pay.",
+    /* --- Redeem credit (round 8, item 11) --- */
+    payWithCredit: "Redeem credit",
+    payWithCreditHint: "Uses 1 credit from your wallet. Nothing to pay.",
+    payWithCreditNone: "You have no credits yet.",
+    addCredits: "Add credits →",
     payOnline: "Online payment",
     payOnlineHint: "Paid securely with Stripe",
     payOnlineComingSoon: "Coming soon",

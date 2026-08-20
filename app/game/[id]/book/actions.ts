@@ -9,6 +9,7 @@ import { createServerSupabaseClient, createServiceRoleSupabaseClient } from "@/l
 import { getSessionUser } from "@/lib/auth/session";
 import { toBookingErrorCode, type BookingErrorCode } from "@/lib/booking/errors";
 import { buildResumeUrl } from "@/lib/booking/resume";
+import { stripeBookingUrl, withStripeParams } from "@/lib/payments/stripeLinks";
 import type { BookingResult, ClientPaymentMethod } from "@/lib/types/database";
 
 export interface BookingActionState {
@@ -29,28 +30,28 @@ export interface BookingActionState {
  * booking: both produce an UNPAID booking that the admin unpaid view can
  * settle. When Stripe is integrated this mapping is the one line that moves.
  */
-type BookingOption = "online" | "cash";
+type BookingOption = "credit" | "online" | "cash";
 
+/**
+ * `credit` MAPS TO `cash`, AND THAT NEEDS SAYING (round 8, item 11).
+ *
+ * `create_booking` derives the `credit` payment method ITSELF when a wallet
+ * covers the price — it is an OUTCOME, and the RPC rejects it outright as an
+ * input. So choosing "Redeem credit" sends the same `cash` the third option
+ * does, and the RPC answers `credit` because the balance is there. The ledger
+ * sees exactly what it saw before: one redemption, spending the same amount.
+ *
+ * The UI is now explicit about something the server already did silently.
+ * That is the reversal item 11 records — see `PaymentMethodChoice`.
+ */
 const OPTION_TO_METHOD: Record<BookingOption, ClientPaymentMethod> = {
+  credit: "cash",
   online: "qr",
   cash: "cash",
 };
 
 function isBookingOption(value: unknown): value is BookingOption {
-  return value === "online" || value === "cash";
-}
-
-/**
- * The whole activation for online payment. Empty means the option is not
- * selectable in the UI and this module never redirects to it.
- *
- * READ IN BOTH PLACES from the same variable rather than passed from the
- * client: a form that says "selectable" and a server that says "no URL" would
- * be one deploy away from a booking that lands nowhere.
- */
-function stripePaymentUrl(): string | null {
-  const raw = process.env.NEXT_PUBLIC_STRIPE_PAYMENT_URL?.trim();
-  return raw ? raw : null;
+  return value === "credit" || value === "online" || value === "cash";
 }
 
 /**
@@ -97,7 +98,7 @@ export async function createBookingAction(
    * bypassed.
    */
   const online = rawOption === "online";
-  const payUrl = stripePaymentUrl();
+  const payUrl = stripeBookingUrl();
   if (online && !payUrl) {
     return { status: "error", code: "INSUFFICIENT_PERMISSION" };
   }
@@ -122,7 +123,18 @@ export async function createBookingAction(
    * spot that a race may already have given away.
    */
   if (online && payUrl) {
-    redirect(payUrl);
+    /*
+     * STAMPED WITH THE BOOKING ID AND THE PAYER (item 16). Reconciliation is
+     * manual, so `client_reference_id` is the only thread from a line in the
+     * Stripe dashboard back to a row here. A configured URL that does not
+     * parse falls through to the confirmation rather than sending anyone to a
+     * broken address.
+     */
+    const stamped = withStripeParams(payUrl, {
+      reference: bookingId,
+      email: user?.email ?? null,
+    });
+    if (stamped) redirect(stamped);
   }
 
   // The booking-created toast rides the redirect the flow already performs —

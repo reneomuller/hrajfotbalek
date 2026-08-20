@@ -3,6 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { BookingError } from "@/components/BookingError";
 import { PaymentMethodChoice } from "@/components/PaymentMethodChoice";
+import { getOwnCreditBalance } from "@/lib/booking/queries";
 import { getSessionUser } from "@/lib/auth/session";
 import { cancellationReassurance } from "@/lib/booking/reassurance";
 import { readResumeIntent } from "@/lib/booking/resume";
@@ -119,7 +120,18 @@ export default async function BookPage({ params, searchParams }: BookPageProps) 
       </div>
 
       <div className="mt-8">
-        <PaymentMethodChoice gameId={game.id} />
+        {/*
+          THE BALANCE AND THE PRICE (round 8, item 11). The chooser needs both
+          to decide whether "Redeem credit" is selectable and whether it is the
+          default. Read on the SERVER from the ledger, which is the authority —
+          a client-held balance is a second source of truth able to disagree
+          with the RPC that spends it.
+        */}
+        <PaymentMethodChoice
+          gameId={game.id}
+          priceCzk={game.price_czk}
+          creditCzk={await getOwnCreditBalance()}
+        />
       </div>
 
       {/*

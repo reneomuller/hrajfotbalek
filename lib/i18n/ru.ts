@@ -335,6 +335,11 @@ export const ru: StringsOverlay = {
     payByQrHint:
       "Отсканируй QR в банковском приложении. Место держим за тобой, пока не придёт платёж.",
     // DRAFT — flagged for the standing native-review batch.
+    // DRAFT — flagged for the standing native-review batch.
+    payWithCredit: "Списать кредит",
+    payWithCreditHint: "Спишется 1 кредит из кошелька. Платить ничего не нужно.",
+    payWithCreditNone: "У тебя пока нет кредитов.",
+    addCredits: "Пополнить кредиты →",
     payOnline: "Онлайн-оплата",
     payOnlineHint: "Безопасно через Stripe",
     payOnlineComingSoon: "Скоро",

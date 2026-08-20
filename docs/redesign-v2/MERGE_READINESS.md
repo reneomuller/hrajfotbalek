@@ -58,6 +58,20 @@ anywhere.
 > now the default rather than the second option. Merging before Stripe is live
 > ships a product where every player can pay.
 
+**ROUND 8 ADDS A THIRD OPTION AND TWO LINK VARIABLES.** The chooser is now
+Redeem credit / Online / Cash, with credit DEFAULT-SELECTED when the wallet
+covers the game and non-selectable with an "Add credits" pill when it does
+not. Pass tiers gained their own link map. Neither changes the gate above:
+with no variables set, credit and cash both work and online is inert.
+
+> **RECORDED REVERSAL — credit is no longer applied silently IN THE BOOKING
+> FLOW.** It used to be an invisible outcome: a player with a balance picked a
+> payment method, and `create_booking` quietly spent the wallet instead. That
+> is still exactly what happens in the LEDGER — one redemption, same amount,
+> `credit` still derived by the RPC and still rejected as an input — but the
+> player now says so first. Every other surface that applies credit
+> (waitlist convert, admin add-player) is untouched.
+
 **What is still owed when Stripe lands:** a real integration behind that URL —
 a session, a webhook, and a booking that flips to paid on confirmation.
 Redirecting to a hosted payment link books the spot unpaid and trusts the

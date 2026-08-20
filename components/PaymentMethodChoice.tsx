@@ -10,6 +10,10 @@ import Link from "next/link";
 
 export interface PaymentMethodChoiceProps {
   gameId: string;
+  /** This game's price, for deciding whether the wallet covers it. */
+  priceCzk: number;
+  /** The player's wallet balance, read server-side from the ledger. */
+  creditCzk: number;
 }
 
 const INITIAL: BookingActionState = { status: "idle" };
@@ -43,7 +47,11 @@ const INITIAL: BookingActionState = { status: "idle" };
  * would be predicting it from a stale number. Nothing here blocks a booking to
  * upsell, and nothing here offers a pass.
  */
-export function PaymentMethodChoice({ gameId }: PaymentMethodChoiceProps) {
+export function PaymentMethodChoice({
+  gameId,
+  priceCzk,
+  creditCzk,
+}: PaymentMethodChoiceProps) {
   const t = useStrings();
   const [state, formAction] = useActionState(createBookingAction, INITIAL);
 
@@ -53,7 +61,25 @@ export function PaymentMethodChoice({ gameId }: PaymentMethodChoiceProps) {
    * cannot disagree — the action reads the same variable.
    */
   const onlineReady = Boolean(process.env.NEXT_PUBLIC_STRIPE_PAYMENT_URL);
-  const [choice, setChoice] = useState<"online" | "cash" | null>(null);
+
+  /*
+   * THE WALLET COVERS THIS GAME, or it does not. One boolean decides three
+   * things: whether the credit option can be chosen, whether it starts
+   * chosen, and whether the box carries an "Add credits" pill instead.
+   *
+   * WHOLE GAMES ONLY, deliberately. A wallet holding less than the price is
+   * still spent — `create_booking` applies what is there and leaves the rest
+   * due — but that is the PARTIAL path, and offering "Redeem credit" for it
+   * would promise a settled booking and deliver an amount owing. Partial
+   * credit still happens; it just is not what this option says.
+   */
+  const creditCovers = creditCzk >= priceCzk;
+
+  const [choice, setChoice] = useState<"credit" | "online" | "cash" | null>(
+    // DEFAULT TO CREDIT WHEN IT COVERS THE GAME (item 11). A player who has
+    // already paid for this game should not have to say so.
+    creditCovers ? "credit" : null,
+  );
 
   /*
    * THE ERROR NO LONGER REPLACES THE FORM (§2.11).
@@ -69,7 +95,7 @@ export function PaymentMethodChoice({ gameId }: PaymentMethodChoiceProps) {
       ? describeBookingError(state.code, t)
       : null;
 
-  const optionClass = (value: "online" | "cash", disabled: boolean) =>
+  const optionClass = (value: "credit" | "online" | "cash", disabled: boolean) =>
     [
       "flex items-start gap-3 rounded-card border-2 p-4 transition-colors",
       disabled
@@ -88,6 +114,53 @@ export function PaymentMethodChoice({ gameId }: PaymentMethodChoiceProps) {
         </legend>
 
         <div className="flex flex-col gap-3">
+          {/* ---- credit -------------------------------------------------- */}
+          <label data-testid="pay-credit" className={optionClass("credit", !creditCovers)}>
+            <input
+              type="radio"
+              name="option"
+              value="credit"
+              disabled={!creditCovers}
+              checked={choice === "credit"}
+              onChange={() => setChoice("credit")}
+              data-testid="pay-credit-input"
+              className="mt-1 accent-volt"
+            />
+            <span className="min-w-0 flex-1">
+              <span className="block text-body-lg font-semibold text-bone">
+                {t.booking.payWithCredit}
+              </span>
+              <span className="mt-1 block text-[13px] leading-snug text-muted">
+                {creditCovers
+                  ? t.booking.payWithCreditHint
+                  : t.booking.payWithCreditNone}
+              </span>
+
+              {/*
+                THE PILL IS INSIDE THE BOX (item 11), and it is a LINK, so it
+                works while the option itself is unselectable. Nested inside a
+                `<label>`, a click on it would otherwise be swallowed as a
+                click on the label — `stopPropagation` is not available to a
+                server-rendered anchor, so the label's `htmlFor` is absent and
+                the input is a child instead, which scopes the label's activation
+                to its own text.
+
+                NEVER A GATE. The booking can still be completed with either of
+                the two options below; this is an offer, and the round's rule
+                is that nothing blocks a booking to upsell.
+              */}
+              {!creditCovers && (
+                <Link
+                  href="/pass"
+                  data-testid="add-credits"
+                  className="mt-3 inline-flex min-h-11 items-center rounded-pill border-2 border-hairline-volt px-4 text-small font-bold text-volt no-underline transition-colors hover:border-volt"
+                >
+                  {t.booking.addCredits}
+                </Link>
+              )}
+            </span>
+          </label>
+
           {/* ---- online ------------------------------------------------- */}
           <label data-testid="pay-online" className={optionClass("online", !onlineReady)}>
             <input
