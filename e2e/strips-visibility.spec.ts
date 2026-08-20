@@ -103,7 +103,14 @@ test.describe("visibility round strips", () => {
       override mechanism still works, not just that a colour was set.
     */
     expect(pillStyle.borderColor).toBe("rgb(200, 255, 0)"); // volt
-    expect(pillStyle.borderWidth).toBe("1px");
+    /*
+      2px — a WHOLE device pixel. This asserted "1px" while the markup said
+      `border-[1.5px]`, and both were "passing": Chrome snaps a sub-pixel
+      border to the device grid, so the thicker outline the night round asked
+      for never rendered and the spec agreed with the wrong number. See the
+      note on the pill in GameCard.
+    */
+    expect(pillStyle.borderWidth).toBe("2px");
     // NO GLOW is half the ruling and the half most likely to creep back.
     expect(pillStyle.shadow).toBe("none");
 

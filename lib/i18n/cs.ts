@@ -246,6 +246,8 @@ export const cs: StringsOverlay = {
     openMapFull: "Otevřít místo v Mapách",
     organizerRole: "Pořádá tento zápas",
     organizerWhatsApp: "Napsat pořadateli na WhatsApp",
+    // DRAFT — flagged for the standing native-review batch.
+    cardJoinCue: "Hrát",
     availabilityLabel: "Volná místa",
     playersOfCapacity: "{booked} / {capacity} hráčů",
     playersTitle: "Hráči ({count})",

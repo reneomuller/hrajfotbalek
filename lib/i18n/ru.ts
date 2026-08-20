@@ -249,6 +249,8 @@ export const ru: StringsOverlay = {
     openMapFull: "Открыть место на карте",
     organizerRole: "Организует этот матч",
     organizerWhatsApp: "Написать организатору в WhatsApp",
+    // DRAFT — flagged for the standing native-review batch.
+    cardJoinCue: "Играю",
     availabilityLabel: "Свободные места",
     playersOfCapacity: "{booked} / {capacity} игроков",
     playersTitle: "Игроки ({count})",

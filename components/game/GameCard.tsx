@@ -5,6 +5,7 @@ import { CardBadges } from "@/components/game/CardBadges";
 import { venueDisplayName } from "@/lib/venues/displayName";
 import { SpotsLeft } from "@/components/game/SpotsLeft";
 import { formatTime } from "@/lib/format";
+import { getStrings } from "@/lib/i18n/server";
 import type { RosterAvatar } from "@/lib/games/queries";
 import type { Database } from "@/lib/types/database";
 
@@ -91,85 +92,142 @@ export async function GameCard({
    * the calendar cells, which is where one implementation now serves both.
    */
 }) {
+  const t = await getStrings();
 
   const body = (
     <>
       {/*
-        THE ANATOMY, compressed (rulings 6–8, 2026-08-10):
-        venue · [day-time pill | badges] · capacity bar · spots · faces.
+        THE PHOTO, AND THE SCRIM OVER IT (redesign v2, R6a).
 
-        THIN IS THE REQUIREMENT. The card had grown a line per fact — day and
-        time on one row, format and surface on another — and each cost the fold
-        a card. The pill and the badges share ONE row, which is what buys the
-        height back without dropping anything.
+        The frames back every list card with the pitch photograph, faded hard.
+        `public/pitch-default.jpg` is the single default for all games —
+        per-venue photos are a later concern and `venues.image_path` is not
+        touched by this round.
+
+        TWO LAYERS, NOT A CSS BACKGROUND IMAGE. An `<img>` with `object-cover`
+        plus a gradient scrim, rather than an arbitrary background-image
+        utility — and note that writing that utility's literal syntax even
+        inside a COMMENT makes Tailwind generate it, which is how this file
+        first shipped a rule reading `background-image: url()` and took the
+        stylesheet down. The scrim needs its own
+        opacity ramp (lighter at the top where the sky is, heavier at the foot
+        where the avatars and the spots figure sit) and a single background
+        declaration cannot carry both the photo and that ramp without a second
+        layer anyway.
+
+        `aria-hidden` and empty `alt` — it is the same photograph on every card
+        and says nothing about this game. A screen reader announcing "aerial
+        view of playing fields" twelve times down a list is noise.
+
+        THE SCRIM IS THE CONTRAST FLOOR, and it is asserted rather than judged:
+        `e2e/strips-redesign-card.spec.ts` measures that the time pill's volt
+        stroke is still `rgb(200, 255, 0)` at 1.5px over the photo, and that the
+        scrim element covers the photo exactly. Values derived from the frames.
       */}
-      <span data-testid="card-venue" className="block truncate text-body-lg font-semibold leading-tight text-bone">
-        {venueDisplayName(game.venue, pitchName)}
+      <span aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden rounded-card">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/pitch-default.jpg"
+          alt=""
+          data-testid="card-photo"
+          className="h-full w-full object-cover"
+        />
+        <span
+          data-testid="card-scrim"
+          className="absolute inset-0 bg-gradient-to-b from-ink/[.68] via-ink/[.82] to-ink/[.92]"
+        />
       </span>
 
-      <div className="mt-[6px] flex items-center justify-between gap-2">
-        {/*
-          THE DAY-TIME PILL, WITH A VOLT OUTLINE AND MORE ROOM.
+      {/*
+        THE ANATOMY, RE-ORDERED TO THE FRAMES:
 
-          `.lifted` gives it the shared fill; `border-volt` overrides only the
-          stroke, which the utilities layer is allowed to do over a component
-          class. The vertical padding goes 3px -> 6px and the weight
-          semibold -> bold, because "larger visibility" on a pill that must not
-          grow wider is bought in height and weight rather than type size — the
-          card's four rows are already measured, and a bigger number here would
-          push the badges opposite it onto a second line.
+          venue                      · format/surface badges
+          time pill                  · spots left
+          capacity bar
+          faces                      · Join → (paint)
 
-          `border-[1.5px]`, NOT 1px, AND THE REPORT THAT PROMPTED IT WAS "the
-          outline is missing live". It was not missing: production computed
-          `rgb(200, 255, 0)` at 1px on both surfaces, and the class and the
-          stylesheet were both correct. A single volt pixel around a #161616
-          pill simply does not survive a phone screen in daylight, so "present"
-          and "visible" were two different things. 1.5px is the same weight the
-          header monogram uses and the smallest that actually reads.
+        What moved: the spots figure comes UP onto the time row, and the faces
+        drop to share the last row with the join cue. The previous order put
+        spots and faces together on the final row, which was right on a flat
+        card and wrong over a photograph — the two loudest elements both sat in
+        the darkest band and the middle of the card carried nothing.
+      */}
+      <span className="relative flex items-start justify-between gap-2">
+        <span data-testid="card-venue" className="min-w-0 flex-1 truncate text-body-lg font-bold leading-tight text-white">
+          {venueDisplayName(game.venue, pitchName)}
+        </span>
+        <CardBadges format={game.format} surface={game.surface} size="slim" />
+      </span>
 
-          THIS IS THE SECOND VOLT ELEMENT ON THE CARD, which softens ruling D's
-          "the spots figure is the only coloured text". The figure is still the
-          only coloured TEXT; this is a coloured EDGE around bone text, and the
-          kick-off time is the other thing a reader scans a list for. Recorded
-          rather than quietly done, because the one-accent rule was deliberate.
-        */}
-        {/*
-          THE TIME ALONE (Section 3, item 5). The date is gone from the pill —
-          the DAY-GROUP HEADING above carries it, and several games on one day
-          share one heading rather than repeating the date on every card.
-
-          LARGER (item 6): `body-lg` against the previous 10px. It is the one
-          number a reader scans a list for, and it was set smaller than the
-          badges opposite it.
-        */}
+      <span className="relative mt-2 flex items-center justify-between gap-2">
         <span
           data-testid="card-when"
-          className="lifted min-w-0 truncate rounded-pill border-[1.5px] border-volt px-3 py-[6px] text-body-lg font-bold text-bone"
+          /*
+            `border-2`, NOT `border-[1.5px]`, AND THE REASON IS THE DEVICE.
+
+            The night round set this to 1.5px to make the volt outline read.
+            It never rendered: Chrome snaps a border to whole device pixels, so
+            at this DPR 1.5px is used — and REPORTED by getComputedStyle — as
+            1px. The old spec asserted `1px` and passed, which is how it went
+            unnoticed through two rounds.
+
+            My first diagnosis here was wrong and is recorded so nobody repeats
+            it: I blamed `.lifted` beating the arbitrary utility from the
+            components layer. The built stylesheet disproves it — the utility
+            is emitted after `.lifted` and does win. The pixel snapping is the
+            whole of it.
+
+            2px is a whole pixel at every DPR, so it renders everywhere and the
+            assertion means something. The fill is spelled out rather than
+            taken from `.lifted` simply because this element states its own
+            stroke; that part of the change stands on its own.
+          */
+          className="min-w-0 shrink-0 truncate rounded-pill border-2 border-volt bg-surface-raised px-3 py-[6px] text-body-lg font-bold text-bone"
         >
           {formatTime(game.starts_at)}
         </span>
-
-        <CardBadges format={game.format} surface={game.surface} />
-      </div>
-
-      <div className="mt-[10px]">
-        <CapacityBar bookedCount={bookedCount} capacity={game.capacity} size="slim" />
-      </div>
-
-      <div className="mt-[6px] flex items-center justify-between gap-3">
-        <span data-testid="row-spots">
+        <span data-testid="row-spots" className="shrink-0">
           <SpotsLeft bookedCount={bookedCount} capacity={game.capacity} />
         </span>
+      </span>
+
+      <span className="relative mt-2 block">
+        <CapacityBar bookedCount={bookedCount} capacity={game.capacity} size="slim" />
+      </span>
+
+      <span className="relative mt-2 flex items-center justify-between gap-3">
+        {/* Absent at zero (§2.1) — a ring drawn around nobody is a question. */}
+        {roster.length > 0 ? (
+          <AvatarRow players={roster} max={3} size="card" supabaseUrl={supabaseUrl} />
+        ) : (
+          <span />
+        )}
 
         {/*
-          The faces sit on the spots row rather than under it — the last line
-          the compression could remove, and the two read as one statement
-          about who is in and how much room is left. Absent at zero (§2.1).
+          `Join →` — PAINT, NOT A CONTROL (R1).
+
+          A `<span>`. No href, no handler, no focus stop, no role. Ruling E is
+          UPHELD rather than reversed: the whole card is still one anchor, and
+          a link inside a link is the construction E removed. This only makes
+          the card LOOK like it carries the action it has always carried.
+
+          `aria-hidden`, because it is decoration on top of a link that already
+          announces itself — without it a screen reader reads the card's name
+          and then the word "Join" as if a second control existed.
+
+          Not rendered on a past card: the state is not tappable at all, and a
+          call to action on it would be a lie about what the card does.
         */}
-        {roster.length > 0 && (
-          <AvatarRow players={roster} max={3} size="card" supabaseUrl={supabaseUrl} />
+        {!past && (
+          <span
+            aria-hidden
+            data-testid="card-join-cue"
+            className="shrink-0 rounded-pill bg-volt px-4 py-1 text-body font-bold text-ink"
+          >
+            {t.games.cardJoinCue} →
+          </span>
         )}
-      </div>
+      </span>
     </>
   );
 
@@ -185,7 +243,7 @@ export async function GameCard({
       <div
         data-testid="game-row"
         data-past="true"
-        className="block rounded-card bg-surface px-4 py-3 opacity-45"
+        className="relative isolate block overflow-hidden rounded-card bg-surface px-4 py-3 opacity-45"
       >
         {body}
       </div>
@@ -197,7 +255,7 @@ export async function GameCard({
       href={`/game/${game.id}`}
       data-testid="game-row"
       data-past="false"
-      className="block rounded-card bg-surface px-4 py-3 no-underline transition-colors hover:bg-surface-raised"
+      className="relative isolate block overflow-hidden rounded-card bg-surface px-4 py-3 no-underline transition-colors"
     >
       {body}
     </Link>

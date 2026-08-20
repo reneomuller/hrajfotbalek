@@ -24,10 +24,10 @@ import type { GameSurface } from "@/lib/types/database";
  * The surface label is the TRANSLATED token (`games.surface.*`), never an
  * English string invented at the render site.
  *
- * THE BONE PILL NOW READS ITS FILL AND STROKE FROM `.lifted` (visibility
- * round, item 2) — the same treatment as home's step cards and the pass tier
- * cards, so the neutral pill on a card and the neutral card on a page are one
- * object rather than two near-misses.
+ * BOTH BADGES ARE `border-2`. They were `border-[1.5px]`, which Chrome snaps
+ * to a whole device pixel — so the "thicker outline" of the night round never
+ * rendered anywhere it was applied. A whole pixel renders at every DPR and is
+ * the only width an assertion can actually check.
  *
  * THE VOLT PILL DOES NOT, and deliberately. `.lifted` is the NEUTRAL surface
  * treatment; the format badge is the card's accent and its colour is the whole
@@ -59,7 +59,7 @@ export async function CardBadges({
       {format && (
         <span
           data-testid="game-format"
-          className={`rounded-pill border-[1.5px] border-volt bg-volt/[.12] ${pad} ${text} font-semibold text-volt`}
+          className={`rounded-pill border-2 border-volt bg-volt/[.12] ${pad} ${text} font-semibold text-volt`}
         >
           {format}
         </span>
@@ -67,7 +67,7 @@ export async function CardBadges({
       {surface && (
         <span
           data-testid="game-surface"
-          className={`lifted rounded-pill border-[1.5px] ${pad} ${text} font-semibold text-bone`}
+          className={`rounded-pill border-2 border-hairline-strong bg-surface-raised ${pad} ${text} font-semibold text-bone`}
         >
           {t.games.surface[surface]}
         </span>

@@ -441,6 +441,16 @@ export const strings = {
 
     // --- practical info (§5.7) -----------------------------------------------
     // --- availability / lineup (v1.2 §5.6) ----------------------------------
+    /*
+     * `Join →` ON A LIST CARD — PAINT, NOT A CONTROL (redesign v2, R1).
+     *
+     * The frames draw a button here. It ships as a button-STYLED span with no
+     * href, no handler and no focus stop: ruling E is upheld and the whole card
+     * remains the single anchor. The string exists because the words are still
+     * user-visible and still need three languages.
+     */
+    cardJoinCue: "Join",
+
     availabilityLabel: "Availability",
     // The supporting detail under the bar. Was "07/12" in 22px mono, which is
     // two numbers the reader has to subtract before it means anything.
