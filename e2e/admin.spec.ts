@@ -336,7 +336,22 @@ test("the whole admin lifecycle fits inside five minutes", async ({ page, contex
   const admin = serviceClient();
 
   try {
-    await admin.rpc("publish_game", { p_game_id: lifecycleGame });
+    /*
+     * CREATING PUBLISHES (round 7, item 6). This step used to be
+     * `admin.rpc("publish_game", ...)` — a second call the flow no longer
+     * needs, and one that would have gone on passing whether or not the
+     * change worked, because its error was never checked.
+     *
+     * Asserted on the DATABASE rather than on the page: the status column is
+     * what decides public visibility, and a badge can be right while the
+     * column is wrong.
+     */
+    const { data: created } = await admin
+      .from("games")
+      .select("status")
+      .eq("id", lifecycleGame)
+      .single();
+    expect(created?.status, "creating a game did not publish it").toBe("published");
 
     // --- fill --------------------------------------------------------------
     const runner = await apiClientFor(players.runner);

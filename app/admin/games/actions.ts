@@ -30,6 +30,12 @@ export interface AdminActionState {
   message?: string;
   /** Field-scoped errors keyed by form field name. */
   fieldErrors?: Partial<Record<keyof GameFormValues | "venue", string>>;
+  /**
+   * Set only when creation SUCCEEDED and the publish that follows it did not
+   * (round 7, item 6). The game exists; the form must not imply otherwise, or
+   * the organizer resubmits and creates a second one.
+   */
+  createdGameId?: string;
 }
 
 const OK: AdminActionState = { status: "saved" };
@@ -99,10 +105,51 @@ export async function createGameAction(
     return { status: "error", message: toAdminErrorMessage(error.message) };
   }
 
+  /*
+   * CREATING A GAME PUBLISHES IT (round 7, item 6).
+   *
+   * ~~The result is always a draft: creation and publication are separate
+   * admin actions so a half-configured game is never publicly visible.~~ In
+   * practice there is no half-configured state to protect against — the form
+   * validates every field the RPC requires before it is submitted, so the
+   * draft that came out the other side was always complete and always
+   * immediately published by hand. A second click that has never once been
+   * withheld is not a safety step, it is a step.
+   *
+   * THE DATA MODEL DOES NOT MOVE. `game_status` keeps `draft`, `publish_game`
+   * keeps its `game_published` event, and the detail page keeps its Publish
+   * button for any draft that already exists. Only the flow changes: the
+   * status column is still the thing that decides visibility, and a future
+   * round that wants a real draft workflow gets it back by deleting this call.
+   *
+   * NOT ONE TRANSACTION, AND THAT IS SURVIVABLE. `admin_create_game_v2` and
+   * `publish_game` are two round trips; if the second fails the game exists as
+   * a draft and the redirect below lands on its admin page with the Publish
+   * button showing. That is the pre-round-7 state exactly — recoverable in one
+   * click, and visible rather than silent. Merging them into one RPC would be
+   * a schema change, which this item explicitly is not.
+   */
+  const newGameId = gameId as string;
+  const { error: publishError } = await supabase.rpc("publish_game", {
+    p_game_id: newGameId,
+  });
+
+  if (publishError) {
+    // The game IS created. Saying otherwise would send the organizer back to
+    // a form that would create a second one.
+    return {
+      status: "error",
+      message: toAdminErrorMessage(publishError.message),
+      createdGameId: newGameId,
+    };
+  }
+
   revalidatePath("/admin/games");
+  revalidatePath("/games");
+  revalidatePath("/");
   // Straight to the game's admin surface: creating a game is never the last
   // thing the organizer wants to do with it.
-  redirect(`/admin/games/${gameId as string}`);
+  redirect(`/admin/games/${newGameId}`);
 }
 
 /**

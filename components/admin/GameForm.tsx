@@ -455,6 +455,23 @@ export function GameForm({
           {state.message}
         </p>
       )}
+      {/*
+        THE GAME EXISTS BUT IS NOT PUBLISHED (round 7, item 6).
+
+        Creation and publication are two round trips; if the second fails the
+        first still happened. Showing only "something went wrong" here invites
+        a resubmit, which creates a SECOND game — so this says what actually
+        exists and links to it, where one click finishes the job.
+      */}
+      {state.createdGameId && (
+        <a
+          href={`/admin/games/${state.createdGameId}`}
+          data-testid="game-created-unpublished"
+          className="text-[13px] font-semibold text-volt no-underline"
+        >
+          {strings.admin.createdNotPublished}
+        </a>
+      )}
     </form>
   );
 }

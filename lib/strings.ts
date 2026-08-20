@@ -1139,6 +1139,16 @@ export const strings = {
     saveGame: "Save changes",
     saved: "Saved",
     draftNotPublic: "This game is a draft — it is not on the public games list.",
+    /*
+     * Round 7 item 6: creating a game publishes it, so a draft is now either
+     * one made before that change or one whose publish call failed. This
+     * string is the second case, shown on the create form.
+     *
+     * ADMIN COPY IS ENGLISH ONLY — the panel is English and `nav.admin` is in
+     * INTENTIONALLY_UNTRANSLATED for that reason.
+     */
+    createdNotPublished:
+      "The game was created but not published. Open it and press Publish →",
 
     // --- errors --------------------------------------------------------------
     venueRequired: "Pick a venue, or add a new one.",
