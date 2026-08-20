@@ -142,4 +142,34 @@
   .lifted {
     @apply border border-hairline-strong bg-surface-raised;
   }
+
+  /*
+   * `.field` / `.field-label` — THE FORM CONTROL, WRITTEN ONCE.
+   *
+   * Added in redesign v2 round 5. `app/login/LoginForm.tsx` and
+   * `app/signup/SignupForm.tsx` each carried a byte-identical `FIELD_CLASS`
+   * and `LABEL_CLASS` pair, which is how the two auth screens were expected to
+   * stay in step — by two people remembering to edit both.
+   *
+   * TWO THINGS CHANGE AS WELL AS MOVE, both from `p08` and `p09`:
+   *
+   *   - the label loses JetBrains Mono. The frames set every field label in
+   *     the body face as tracked grey capitals, which is `eyebrow` — ruling
+   *     B's one uppercase style — and the mono face appears nowhere in any of
+   *     the nineteen frames.
+   *   - the field gets a fill. It was `bg-transparent` on `ink`, so an empty
+   *     input was an outline around the page; the frames draw a box slightly
+   *     lighter than what is behind it, which is what makes it read as
+   *     something you can type into before you have typed into it.
+   *
+   * `opacity-60` on the label is replaced by the `muted` token: an opacity on
+   * white is a colour the contrast table does not know about.
+   */
+  .field {
+    @apply rounded-control border border-hairline-strong bg-surface px-4 py-3 text-base text-bone outline-none transition-colors placeholder:text-faint focus:border-volt;
+  }
+
+  .field-label {
+    @apply text-eyebrow font-semibold uppercase text-muted;
+  }
 }

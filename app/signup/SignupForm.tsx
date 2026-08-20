@@ -10,10 +10,9 @@ import { useStrings } from "@/components/LocaleProvider";
 
 const initialState: SignupFormState = { status: "idle" };
 
-const FIELD_CLASS =
-  "rounded-control border border-hairline-strong bg-transparent px-4 py-3 text-base outline-none transition-colors focus:border-volt";
-const LABEL_CLASS =
-  "font-[family-name:var(--font-jetbrains-mono)] text-xs uppercase tracking-widest opacity-60";
+/* The shared control treatment — see the note in globals.css. */
+const FIELD_CLASS = "field";
+const LABEL_CLASS = "field-label";
 
 function FieldError({ show, message }: { show: boolean; message?: string }) {
   if (!show || !message) return null;
@@ -97,7 +96,8 @@ export function SignupForm({
   }
 
   return (
-    <form action={formAction} className="mt-8 flex flex-col gap-5">
+    /* p09's card: one lifted box holding the whole field stack. */
+    <form action={formAction} className="lifted mt-6 flex flex-col gap-5 rounded-card p-5">
       <input type="hidden" name="next" value={next} />
 
       {creating ? (
@@ -182,7 +182,8 @@ export function SignupForm({
           {SKILL_LEVELS.map((level) => (
             <label
               key={level}
-              className="flex cursor-pointer items-center gap-2 rounded-control border border-hairline-strong px-3 py-2 text-sm has-[:checked]:border-volt has-[:checked]:text-volt"
+              /* p09 draws the three levels as capsules, not rounded squares. */
+            className="flex cursor-pointer items-center gap-2 rounded-pill border border-hairline-strong px-3 py-2 text-sm has-[:checked]:border-volt has-[:checked]:text-volt"
             >
               <input
                 key={`skill-${level}-${valuesKey}`}
@@ -281,7 +282,8 @@ export function SignupForm({
         type="submit"
         disabled={pending}
         data-testid="signup-submit"
-        className="rounded-control bg-volt px-4 py-[15px] text-cta font-extrabold uppercase tracking-wide text-surface transition disabled:opacity-50"
+        /* `rounded-pill`, as p09 draws it. */
+        className="rounded-pill bg-volt px-4 py-[15px] text-cta font-extrabold uppercase tracking-wide text-surface transition disabled:opacity-50"
       >
         {pending ? t.common.loading : t.auth.createAccount}
       </button>

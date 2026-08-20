@@ -48,16 +48,21 @@ export default async function SignupPage({
     return (
       <main className="flex-1 flex items-center justify-center px-6 py-16">
         <div className="w-full max-w-sm">
-          <h1 className="font-[family-name:var(--font-anton)] text-4xl uppercase tracking-tight">
+          <h1 className="m-0 font-display text-page-title uppercase tracking-wide text-white">
             {t.auth.signupTitle}
           </h1>
-          <p className="mt-3 text-sm opacity-70">{t.auth.signupLede}</p>
+          <p className="mt-3 text-body text-muted">{t.auth.signupLede}</p>
 
           <SignupForm next={next} countries={countries} mode="create" />
 
-          <p className="mt-6 text-sm opacity-70">
+          {/* The way back, in the same volt-link idiom the rest of the
+              product uses for a secondary destination. */}
+          <p className="mt-6 text-center text-body text-muted">
             {t.auth.haveAccount}{" "}
-            <Link href={`/login?next=${encodeURIComponent(next)}`} className="underline">
+            <Link
+              href={`/login?next=${encodeURIComponent(next)}`}
+              className="font-bold text-volt no-underline"
+            >
               {t.auth.loginTitle}
             </Link>
           </p>
@@ -80,12 +85,22 @@ export default async function SignupPage({
   if (written.ok) redirect(next);
 
   return (
-    <main className="flex-1 flex items-center justify-center px-6 py-16">
-      <div className="w-full max-w-sm">
-        <h1 className="font-[family-name:var(--font-anton)] text-4xl uppercase tracking-tight">
+    /*
+      THE PAGE SHELL IS THE PRODUCT'S, NOT THE FORM'S (redesign v2, round 5).
+
+      It was `flex items-center justify-center px-6 py-16` around a `max-w-sm`
+      column — a vertically centred card, which is a login screen from a
+      different app. p08 and p09 draw the title top-left under the header, on
+      the same gutter and the same measure as every other page, and let the
+      content run down the page. `pt-24` and `px-gutter` are what `/games` and
+      the game detail use.
+    */
+    <main className="relative z-10 mx-auto w-full max-w-shell px-gutter pb-16 pt-24">
+      <div className="w-full">
+        <h1 className="m-0 font-display text-page-title uppercase tracking-wide text-white">
           {t.auth.signupFinishTitle}
         </h1>
-        <p className="mt-3 text-sm opacity-70">{t.auth.signupFinishLede}</p>
+        <p className="mt-3 text-body text-muted">{t.auth.signupFinishLede}</p>
 
         {written.message ? (
           <p role="alert" className="mt-4 text-sm text-red-400">

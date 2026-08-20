@@ -11,10 +11,18 @@ import { useStrings } from "@/components/LocaleProvider";
 
 const initialState: LoginFormState = { status: "idle" };
 
-const FIELD_CLASS =
-  "rounded-control border border-hairline-strong bg-transparent px-4 py-3 text-base outline-none transition-colors focus:border-volt";
-const LABEL_CLASS =
-  "font-[family-name:var(--font-jetbrains-mono)] text-xs uppercase tracking-widest opacity-60";
+/*
+ * `field` and `field-label` are the shared control treatment in globals.css —
+ * see the note there. They were two local constants duplicated byte-for-byte
+ * in the signup form, which is how the two auth screens stayed in step.
+ *
+ * `panel` is p08's card: the frames put the field stack inside a lifted box
+ * rather than loose on the page, and repeat the shape for the create-account
+ * block underneath it.
+ */
+const FIELD_CLASS = "field";
+const LABEL_CLASS = "field-label";
+const PANEL_CLASS = "lifted rounded-card p-5";
 
 /**
  * Sign in.
@@ -40,7 +48,7 @@ export function LoginForm({
 
   return (
     <>
-      <form action={formAction} className="mt-8 flex flex-col gap-4">
+      <form action={formAction} className={`mt-6 flex flex-col gap-4 ${PANEL_CLASS}`}>
         {/* Carried through so the booking intent survives the sign-in. */}
         <input type="hidden" name="gameId" value={gameId ?? ""} />
         <input type="hidden" name="action" value={action} />
@@ -82,7 +90,8 @@ export function LoginForm({
           type="submit"
           disabled={pending}
           data-testid="login-submit"
-          className="rounded-control bg-volt px-4 py-[15px] text-cta font-extrabold uppercase tracking-wide text-surface transition disabled:opacity-50"
+          /* `rounded-pill` — p08 draws every primary control as a capsule. */
+          className="rounded-pill bg-volt px-4 py-[15px] text-cta font-extrabold uppercase tracking-wide text-surface transition disabled:opacity-50"
         >
           {pending ? t.common.loading : t.auth.signInSubmit}
         </button>
@@ -122,10 +131,19 @@ function CodeRequestForm({
 
   return (
     <>
-      <form
-        action={formAction}
-        className="mt-8 flex flex-col gap-3 border-t border-hairline pt-8"
-      >
+      {/*
+        THE RECOVERY PATH KEEPS ITS BEHAVIOUR AND TAKES THE CARD (round 5).
+
+        p08 draws a `Forgot your password?` link here and nothing else — the
+        screen it leads to is one of the two password-reset frames the audit
+        lists as MISSING (§3a item 2). The owner's instruction for this round
+        is explicit: leave forgot-password functional in its current style and
+        do not invent the design. So the working two-step — request a code,
+        then type it — is untouched underneath, and only the box around it
+        changes so it stops looking like a different product from the form
+        above it.
+      */}
+      <form action={formAction} className={`mt-4 flex flex-col gap-3 ${PANEL_CLASS}`}>
         <input type="hidden" name="gameId" value={gameId ?? ""} />
         <input type="hidden" name="action" value={action} />
         <input type="hidden" name="next" value={next ?? ""} />
@@ -150,7 +168,7 @@ function CodeRequestForm({
           type="submit"
           disabled={pending}
           data-testid="request-code"
-          className="rounded-control border border-hairline-volt px-4 py-[15px] text-cta font-extrabold uppercase tracking-wide text-volt transition disabled:opacity-50"
+          className="rounded-pill border-2 border-hairline-volt px-4 py-[15px] text-cta font-extrabold uppercase tracking-wide text-volt transition disabled:opacity-50"
         >
           {pending ? t.common.loading : t.auth.forgotPasswordCta}
         </button>
