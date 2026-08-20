@@ -37,13 +37,21 @@ export function AdminNav() {
     */
     <nav className="-mx-gutter flex gap-2 overflow-x-auto px-gutter pb-1 [scrollbar-width:none] md:mx-0 md:flex-wrap md:px-0 [&::-webkit-scrollbar]:hidden">
       {adminNavLinks().map((link) => {
-        const current = pathname.startsWith(link.href);
+        /*
+         * `/admin` IS EXACT-MATCHED, for the reason `/` is in the nav pill:
+         * it is a prefix of every route in this section, so prefix-matching it
+         * would light Dashboard on every admin screen (round 8, item 2).
+         */
+        const current =
+          link.href === "/admin" ? pathname === "/admin" : pathname.startsWith(link.href);
         return (
           <Link
             key={link.href}
             href={link.href}
             aria-current={current ? "page" : undefined}
-            data-testid={`admin-nav-${link.href.split("/")[2]}`}
+            /* `/admin` has no third segment — `split("/")[2]` is undefined
+               there, which would ship `admin-nav-undefined`. */
+            data-testid={`admin-nav-${link.href.split("/")[2] ?? "dashboard"}`}
             className={`shrink-0 whitespace-nowrap rounded-pill border px-3 py-[6px] text-small font-semibold no-underline transition-colors ${
               current
                 ? "border-volt bg-volt/[.12] text-volt"

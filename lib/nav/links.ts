@@ -66,6 +66,13 @@ export function adminNavLinks(): NavLink[] {
   // Not localized, and not parameterized: the admin panel is English. See
   // lib/i18n/locales.ts.
   return [
+    /*
+     * THE DASHBOARD IS FIRST (round 8, item 2). `p14`'s fifth chip is clipped
+     * out of frame, but its left edge is volt where the other four are grey —
+     * which in this system means CURRENT — and `p14` IS the dashboard. The
+     * owner ruled it a Dashboard entry on that evidence.
+     */
+    { href: "/admin", label: strings.admin.navDashboard },
     { href: "/admin/games", label: strings.admin.navGames },
     { href: "/admin/players", label: strings.admin.navPlayers },
     { href: "/admin/topups", label: strings.admin.navTopups },

@@ -1067,6 +1067,7 @@ export const strings = {
 
     // --- shell ---------------------------------------------------------------
     title: "Admin",
+    navDashboard: "Dashboard",
     navGames: "Games",
     navPlayers: "Players",
     /* --- Financials (round 7, item 8, p19). Admin copy is English only. --- */
@@ -1085,6 +1086,17 @@ export const strings = {
        instead of linking nowhere. See the page header. */
     unpaidWhere: "Settle these on each game's admin page.",
     operationsTitle: "Operations",
+    /* --- the dashboard (round 8, item 2, p14) --- */
+    dashboardTitle: "Dashboard overview",
+    dashboardUpcoming: "Upcoming games",
+    dashboardAllGames: "All games →",
+    dashboardEmpty: "Nothing on the board.",
+    tileUpcoming: "Upcoming games",
+    tilePlayers: "Total players",
+    tileNewPlayers: "New players (7d)",
+    tileRevenue: "Revenue (month)",
+    quickActions: "Quick actions",
+    quickCreateGame: "+ Create game",
     /* --- admin player detail (round 7, item 9) --- */
     adminActionsTitle: "Admin actions",
     /* --- notifications (round 7, item 5). Admin copy is English only. --- */
