@@ -174,6 +174,33 @@ export async function Header({
         </Link>
 
         {/*
+          THE `ADMIN` BADGE, exactly as p14/p17/p18/p19 draw it: a volt-outlined
+          pill immediately right of the wordmark, on admin sessions only.
+
+          A BADGE, NOT A LINK — it has no `href` and takes no focus. The frames
+          draw it as a state marker ("you are acting as an admin"), and the
+          door into the panel is elsewhere: the header's `md:` link row and the
+          Profile tab's entry, which is the two-tap path the admin spec asserts.
+          Making this a link would add a third door to one destination.
+
+          OUTSIDE the wordmark's `<Link>`, deliberately. Nested inside it the
+          badge would be part of the home link's accessible name, so a screen
+          reader would announce "Hraj Fotbal Admin, link" and the mark would
+          stop saying where it goes.
+
+          DISPLAY ONLY, like every other admin affordance here: rendering it
+          grants nothing, `requireAdmin()` is the gate.
+        */}
+        {isAdmin && (
+          <span
+            data-testid="header-admin-badge"
+            className="shrink-0 rounded-pill border border-volt px-[10px] py-[3px] text-small font-bold uppercase tracking-wide text-volt"
+          >
+            {t.nav.admin}
+          </span>
+        )}
+
+        {/*
           THE MIDDLE COLUMN. Lifted out of the right-hand `<nav>` so it can
           occupy a grid track of its own — nested inside that flex row it
           could only ever be centred within the controls, which is not the
@@ -223,7 +250,10 @@ export async function Header({
                */
               aria-label={nav.profile}
               title={nickname}
-              className="flex h-[34px] w-[34px] items-center justify-center overflow-hidden rounded-full border-[1.5px] border-volt bg-surface-avatar text-small font-bold text-volt no-underline"
+              /* 38px, matching the brand mark at the other end of the bar — the frames
+                 draw the two circles the same size, and at 34 the avatar read as
+                 a smaller class of object than the logo rather than its pair. */
+              className="flex h-[38px] w-[38px] items-center justify-center overflow-hidden rounded-full border-[1.5px] border-volt bg-surface-avatar text-small font-bold text-volt no-underline"
             >
               {photo ? (
                 /* A plain <img>, like the roster avatars: a 34px circle from a
