@@ -337,18 +337,19 @@ export default async function GameDetailPage({ params, searchParams }: GamePageP
 
       {/*
         The organizer. The NAME is public — it tells a player who is running
-        the game. The PHONE arrives non-null only for someone holding a spot,
-        decided inside `game_organizer_phone()` from the session; there is no
-        branch here that could be wrong about it, because there is nothing here
-        to branch on.
+        the game.
+
+        THE NUMBER IS NOT PASSED DOWN (round 9, item 2). The card needs only to
+        know WHETHER one is recorded, so it receives a boolean; the digits and
+        the prefilled message are assembled inside `/api/wa/<id>`, which
+        redirects. That is what keeps them out of the page source entirely —
+        round 8's version rendered them as a `wa.me` href.
       */}
       {organizer.name && (
         <OrganizerCard
           name={organizer.name}
-          phone={organizer.phone}
-          /* Venue and kick-off, the same pair the share message uses — so the
-             organizer reads the fixture, not a game id. */
-          gameLabel={`${venueDisplayName(game.venue, pitchName)} · ${formatGameDateTime(game.starts_at)}`}
+          hasPhone={Boolean(organizer.phone)}
+          gameId={game.id}
         />
       )}
 

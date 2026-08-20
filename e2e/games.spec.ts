@@ -362,11 +362,12 @@ test("a game with no format shows no format at all, rather than one derived from
  *      nothing else that calls the RPC changed behaviour. That is what makes
  *      this ruling revertible by deleting one function.
  */
-test("everyone can message the organizer, and nobody sees the number", async ({
+test("everyone can message the organizer, and the number is never in the page", async ({
   page,
   context,
 }) => {
   const phone = "+420777654321";
+  const digits = "420777654321";
   const game = await createScratchGame({
     organizerName: "Organizer On Call",
     organizerPhone: phone,
@@ -375,15 +376,26 @@ test("everyone can message the organizer, and nobody sees the number", async ({
   const expectContactable = async (who: string) => {
     const link = page.getByTestId("organizer-whatsapp");
     await expect(link, `${who}: no WhatsApp control`).toBeVisible();
-    // wa.me wants bare digits, and the message carries the fixture.
-    const href = (await link.getAttribute("href")) ?? "";
-    expect(href, who).toContain("https://wa.me/420777654321");
-    expect(href, `${who}: the message is not prefilled`).toContain("?text=");
-    // The digits are in the href and NOWHERE on the page.
+
+    /*
+     * THE HREF IS OUR OWN ROUTE, not `wa.me` (round 9, item 2). The number is
+     * assembled server-side behind the redirect.
+     */
+    expect(await link.getAttribute("href"), who).toBe(`/api/wa/${game.id}`);
+
+    /*
+     * AND THE DIGITS ARE NOWHERE IN THE RENDERED SOURCE. `innerText` would
+     * only prove they are not VISIBLE; the whole point is that they are not in
+     * the markup either, in any spelling — with the `+`, without it, or as the
+     * bare digits a `wa.me` link carries.
+     */
+    const html = await page.content();
+    for (const spelling of [phone, digits, "777654321"]) {
+      expect(html.includes(spelling), `${who}: "${spelling}" is in the page source`).toBe(
+        false,
+      );
+    }
     await expect(page.getByTestId("organizer-phone")).toHaveCount(0);
-    await expect(page.locator("body"), `${who}: the number is printed`).not.toContainText(
-      phone,
-    );
   };
 
   try {
@@ -408,6 +420,26 @@ test("everyone can message the organizer, and nobody sees the number", async ({
     await page.goto(`/game/${game.id}`);
     await expectContactable("spot holder");
 
+    /*
+     * --- and the route still delivers, for everyone ------------------------
+     *
+     * `maxRedirects: 0` so the assertion is on OUR response rather than on
+     * whatever wa.me serves. The number appears here, in a Location header on
+     * a request somebody made — which is the feature. What it is no longer is
+     * harvestable from markup.
+     */
+    await context.clearCookies();
+    const hop = await page.request.get(`/api/wa/${game.id}`, { maxRedirects: 0 });
+    expect(hop.status(), "the redirect does not work for an anonymous visitor").toBe(302);
+    const location = hop.headers()["location"] ?? "";
+    expect(location).toContain(`https://wa.me/${digits}`);
+    // The message is prefilled with the fixture, as round 8 ruled.
+    expect(new URL(location).searchParams.get("text") ?? "").toContain(
+      "E2E Scratch Pitch",
+    );
+    // A cached redirect is a cached phone number.
+    expect(hop.headers()["cache-control"] ?? "").toContain("no-store");
+
     // --- and the RPC's own gate is exactly where it was --------------------
     const anon = anonClient();
     expect((await anon.rpc("game_organizer_phone", { p_game_id: game.id })).data ?? null)
@@ -417,6 +449,26 @@ test("everyone can message the organizer, and nobody sees the number", async ({
       (await stranger.rpc("game_organizer_phone", { p_game_id: game.id })).data ?? null,
       "the RPC gate was widened — it should not have been",
     ).toBeNull();
+  } finally {
+    await destroyScratchGame(game.id);
+  }
+});
+
+/*
+ * A GAME WITH NO NUMBER 404s RATHER THAN GUESSING A DESTINATION.
+ *
+ * The card draws no button in that case, so reaching the route means a
+ * hand-made request — and inventing somewhere plausible to send it would be
+ * worse than saying no.
+ */
+test("the WhatsApp route refuses a game with no organizer number", async ({ page }) => {
+  const game = await createScratchGame({ organizerName: "No Phone", organizerPhone: null });
+  try {
+    await page.goto(`/game/${game.id}`);
+    await expect(page.getByTestId("organizer-whatsapp")).toHaveCount(0);
+
+    const hop = await page.request.get(`/api/wa/${game.id}`, { maxRedirects: 0 });
+    expect(hop.status()).toBe(404);
   } finally {
     await destroyScratchGame(game.id);
   }

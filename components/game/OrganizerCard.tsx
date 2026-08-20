@@ -18,9 +18,14 @@ import { getStrings } from "@/lib/i18n/server";
  * lives in `lib/games/queries.ts`, where its cost is written down; this file
  * only stopped hiding the button.
  *
- * THE NUMBER ITSELF IS NEVER RENDERED. It is the href and nothing else. That
- * is not a privacy measure — the href is readable — it is a copy decision: a
- * raw number on the page invites a phone call, and the ruling is WhatsApp.
+ * THE NUMBER NEVER REACHES THE PAGE AT ALL (round 9, item 2).
+ *
+ * Round 8 rendered it as the `wa.me` href, and noted that this was a copy
+ * decision rather than a privacy one — the href was readable. It is now a
+ * privacy one too: the button points at `/api/wa/<gameId>`, which redirects
+ * server-side. Anyone who TAPS still learns the number, which is the feature;
+ * what stops is bulk harvesting, where a crawler reading one games list would
+ * otherwise collect every organizer's number without a single tap.
  *
  * THE MESSAGE IS PREFILLED WITH THE GAME. An organizer running four fixtures a
  * week gets "Hi, about Praha 7 • Letná on Thu 20 Aug" instead of "Hi", which
@@ -35,24 +40,29 @@ import { getStrings } from "@/lib/i18n/server";
  */
 export async function OrganizerCard({
   name,
-  phone,
-  /** For the prefilled message — "about <game> on <when>". */
-  gameLabel,
+  hasPhone,
+  gameId,
 }: {
   name: string;
-  phone: string | null;
-  gameLabel: string;
+  /**
+   * Whether a number is recorded — NOT the number (round 9, item 2).
+   *
+   * The card needs to know only whether to draw the button. Passing the digits
+   * here is what put them in the page source, and a boolean cannot leak.
+   */
+  hasPhone: boolean;
+  gameId: string;
 }) {
   const t = await getStrings();
 
-  // Bare digits for wa.me. A leading `00` is the other way of writing `+`, so
-  // it is stripped too; anything left that is not a digit was never dialable.
-  const waNumber = phone ? phone.replace(/\D/g, "").replace(/^00/, "") : null;
-  const waHref = waNumber
-    ? `https://wa.me/${waNumber}?text=${encodeURIComponent(
-        t.games.organizerWhatsAppMessage.replace("{game}", gameLabel),
-      )}`
-    : null;
+  /*
+   * THE HREF IS OUR OWN ROUTE, which 302s to `wa.me` with the number and the
+   * prefilled message built server-side. See `app/api/wa/[gameId]/route.ts`.
+   *
+   * Still an ordinary `<a href>`: middle-click, long-press-copy and
+   * no-JavaScript all keep working, and the tap is still one tap.
+   */
+  const waHref = hasPhone ? `/api/wa/${gameId}` : null;
 
   return (
     <section
