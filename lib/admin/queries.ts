@@ -34,13 +34,27 @@ export interface AdminGameRow extends GameRow {
 }
 
 /** Every game, newest kick-off first, including drafts and cancelled ones. */
-export async function listAllGames(): Promise<AdminGameRow[]> {
+export async function listAllGames(
+  { includeDrafts = false }: { includeDrafts?: boolean } = {},
+): Promise<AdminGameRow[]> {
   const service = createServiceRoleSupabaseClient();
 
-  const { data: games, error } = await service
-    .from("games")
-    .select("*")
-    .order("starts_at", { ascending: false });
+  /*
+   * DRAFTS ARE OUT OF THE GAMES LIST BY DEFAULT (round 9, item 7).
+   *
+   * Creating a game publishes it (round 8, item 6), so a draft is now either
+   * one made before that change or one whose publish call failed. Neither is a
+   * game on the board, and leaving them in the list meant scrolling past rows
+   * that are not real fixtures to reach the ones that are.
+   *
+   * They are not hidden — `/admin/games/new` lists them as unfinished work,
+   * which is where somebody about to make a game will see them. The flag is
+   * how that page asks for them.
+   */
+  let query = service.from("games").select("*").order("starts_at", { ascending: false });
+  if (!includeDrafts) query = query.neq("status", "draft");
+
+  const { data: games, error } = await query;
 
   if (error || !games) return [];
 
@@ -331,6 +345,21 @@ async function countWaitlist(gameIds: string[]): Promise<Map<string, number>> {
     counts.set(row.game_id, (counts.get(row.game_id) ?? 0) + 1);
   }
   return counts;
+}
+
+/**
+ * Draft games only, oldest first — the "unfinished games" list (round 9,
+ * item 7).
+ *
+ * OLDEST FIRST, unlike every other admin list. These are things somebody
+ * started and did not finish, so the interesting one is the one that has been
+ * sitting longest, not the newest.
+ */
+export async function listDraftGames(): Promise<AdminGameRow[]> {
+  const all = await listAllGames({ includeDrafts: true });
+  return all
+    .filter((game) => game.status === "draft")
+    .sort((a, b) => (a.starts_at < b.starts_at ? -1 : 1));
 }
 
 /** Which transitions the admin UI should offer for a game in this state. */

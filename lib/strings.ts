@@ -1233,6 +1233,11 @@ export const strings = {
     saveGame: "Save changes",
     saved: "Saved",
     draftNotPublic: "This game is a draft — it is not on the public games list.",
+    /* --- unfinished games (round 9, item 7) --- */
+    unfinishedTitle: "Unfinished games",
+    unfinishedLede:
+      "Started but never published. Open one to finish it, or cancel it.",
+    unfinishedOpen: "Open →",
     /*
      * Round 7 item 6: creating a game publishes it, so a draft is now either
      * one made before that change or one whose publish call failed. This
