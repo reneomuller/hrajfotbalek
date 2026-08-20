@@ -22,6 +22,12 @@ export interface DashboardGameRow {
   booked: number;
   status: string;
   organizer: string | null;
+  /**
+   * `5v5`, `7v7` … NULLABLE, and p14 draws it in every row. Optional in the
+   * database since migration 26, so the row renders without it rather than
+   * printing an empty separator (round 10, item 1).
+   */
+  format: string | null;
 }
 
 export interface AdminDashboard {
@@ -85,7 +91,7 @@ export async function getAdminDashboard(): Promise<AdminDashboard> {
      */
     service
       .from("games")
-      .select("id,venue,starts_at,capacity,status")
+      .select("id,venue,starts_at,capacity,status,format")
       .gt("starts_at", nowIso)
       .in("status", ["published", "full"])
       .order("starts_at", { ascending: true })
@@ -136,6 +142,7 @@ export async function getAdminDashboard(): Promise<AdminDashboard> {
       capacity: g.capacity,
       booked: booked.get(g.id) ?? 0,
       status: g.status,
+      format: g.format,
       organizer: organizerOf.get(g.id) ?? null,
     })),
   };

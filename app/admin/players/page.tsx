@@ -47,7 +47,7 @@ export default async function AdminPlayersPage({
   return (
     <>
       <div className="flex flex-wrap items-baseline justify-between gap-3">
-        <h2 className="m-0 text-[22px] font-bold uppercase tracking-wide text-bone">
+        <h2 className="m-0 font-display text-title uppercase tracking-wide text-white">
           {strings.admin.playersTitle}
         </h2>
         <div className="flex items-center gap-3">

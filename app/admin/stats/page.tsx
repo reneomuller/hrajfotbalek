@@ -117,7 +117,7 @@ export default async function FinancialsPage({
 
   return (
     <>
-      <h2 className="m-0 font-display text-page-title uppercase tracking-wide text-white">
+      <h2 className="m-0 font-display text-title uppercase tracking-wide text-white">
         {strings.admin.financialsTitle}
       </h2>
 

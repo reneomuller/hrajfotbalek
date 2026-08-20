@@ -100,15 +100,20 @@ describe("adminNavLinks", () => {
     // admin job, and a section reachable only by typing the URL is a section
     // nobody uses. Home page joined in Phase 17, for the same reason — the
     // two numbers on the landing page are edited from somewhere.
+    // THE ORDER IS p14's, and this assertion is the thing that holds it.
+    // Round 8 put Dashboard first on the reasoning that a landing page comes
+    // first; round 10 read the frame instead, where the four grey chips are
+    // Games, Players, Top-ups, Financials and the volt one — the current
+    // section, which on p14 IS the dashboard — is fifth, clipped at the right
+    // edge. Home page trails it because the frame has no room to draw a sixth
+    // and it has to live somewhere.
     expect(adminNavLinks()).toEqual([
-      // Dashboard joined in round 8: p14's clipped fifth chip, ruled by the
-      // owner. It is FIRST because it is the section's landing page.
-      { href: "/admin", label: strings.admin.navDashboard },
       { href: "/admin/games", label: strings.admin.navGames },
       { href: "/admin/players", label: strings.admin.navPlayers },
       { href: "/admin/topups", label: strings.admin.navTopups },
-      { href: "/admin/site", label: strings.admin.navSite },
       { href: "/admin/stats", label: strings.admin.navStats },
+      { href: "/admin", label: strings.admin.navDashboard },
+      { href: "/admin/site", label: strings.admin.navSite },
     ]);
   });
 

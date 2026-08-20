@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { AdminNav } from "@/components/admin/AdminNav";
 import { requireAdmin } from "@/lib/auth/requireAdmin";
 import { strings } from "@/lib/strings";
@@ -38,12 +37,27 @@ export default async function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  // Redirects a signed-out visitor to /login and a non-admin to /, before any
-  // nested page reads a single row.
-  const admin = await requireAdmin();
+  /*
+   * Redirects a signed-out visitor to /login and a non-admin to /, before any
+   * nested page reads a single row.
+   *
+   * THE RETURN VALUE IS NO LONGER USED HERE. It supplied the acting nickname
+   * for a row this layout no longer renders (round 10, item 1) — the header
+   * carries the avatar and the ADMIN badge instead. The CALL stays, because
+   * it is the gate for every route beneath this layout and its value was
+   * always the lesser half of what it does.
+   */
+  await requireAdmin();
 
+  /*
+   * `pt-[72px]`, NOT `pt-24` (round 10, item 1). p14 starts its chip row 37px
+   * under the header; `pt-24` started ours at 60. The number is the one the
+   * frame measures to and there is no spacing token at 72 — the scale runs
+   * 4/8/12/16/22/32/48 and this is a distance to a piece of fixed chrome,
+   * not a rhythm step.
+   */
   return (
-    <div className="relative z-10 mx-auto w-full max-w-shell px-gutter pb-16 pt-24">
+    <div className="relative z-10 mx-auto w-full max-w-shell px-gutter pb-16 pt-[72px]">
       {/*
         THE SHELL, STACKED (admin restyle).
 
@@ -57,42 +71,39 @@ export default async function AdminLayout({
         with the title. The reference puts an `ADMIN` badge next to the mark;
         here the whole page is the admin panel, so the badge is the title.
       */}
-      <header className="border-b border-hairline pb-3">
+      {/*
+        NO RULE UNDER THE CHIPS (round 10, item 1). Sampled across p14 at
+        every 2px from y=118 to y=142: flat ground, no hairline. The chip
+        row's own outlines are the edge; a rule under them draws a second one.
+      */}
+      <header>
         {/* Column at phone width: `ADMIN` plus a nickname plus a back link is
             wider than 390px, and wrapping mid-row put the back link half off
             the screen. Row again from `sm`, where it fits. */}
         {/*
-          THE `ADMIN` TITLE IS GONE (round 8, item 12).
+          NOTHING SITS BETWEEN THE SITE HEADER AND THE CHIPS (round 10, item 1).
 
-          `p14` puts the chip row DIRECTLY under the site header and nothing
-          above it. Ours spent about ninety pixels on a display-size `ADMIN`
-          heading before the chips — and that heading duplicates the volt
-          `ADMIN` badge the site header already carries, which round 1 built
-          FROM THIS SAME FRAME. Two things saying "you are in the admin panel",
-          one of them the largest type on the page, is most of why this surface
-          read as a different product from the frame.
+          `p14` goes straight from the header to the chip row. Round 8 removed
+          the display-size `ADMIN` heading from here and left a thin
+          `nickname · back to the site` row behind, which is still ~45px the
+          frame does not have and still the first thing under the header.
 
-          The two facts that block did carry — whose session is acting, and the
-          way out — survive as one thin row. They are genuinely useful and the
-          frame's equivalent is the avatar in the header, which we also have.
+          BOTH FACTS ARE ALREADY IN THE HEADER. The volt `ADMIN` badge says
+          which mode you are in, the avatar says who you are, and the wordmark
+          beside them is a link to `/` — which is exactly what "back to the
+          site" did. Three things restated in a row of their own.
         */}
-        <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
-          {/* Whose session is acting. Free text, escaped by JSX. */}
-          <span className="text-small text-faint">{admin.nickname}</span>
-          <Link
-            href="/"
-            className="text-small text-muted no-underline transition-colors hover:text-volt"
-          >
-            {strings.admin.backToSite}
-          </Link>
-        </div>
-
         <div className="mt-3">
           <AdminNav />
         </div>
       </header>
 
-      <main className="pt-8">{children}</main>
+      {/*
+        `pt-6`, NOT `pt-8` (round 10, item 1). p14 leaves 26px between the
+        chip row and the page title, and the header no longer contributes a
+        `pb-3` and a rule to that distance.
+      */}
+      <main className="pt-6">{children}</main>
     </div>
   );
 }

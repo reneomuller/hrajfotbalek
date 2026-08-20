@@ -67,17 +67,25 @@ export function adminNavLinks(): NavLink[] {
   // lib/i18n/locales.ts.
   return [
     /*
-     * THE DASHBOARD IS FIRST (round 8, item 2). `p14`'s fifth chip is clipped
-     * out of frame, but its left edge is volt where the other four are grey —
-     * which in this system means CURRENT — and `p14` IS the dashboard. The
-     * owner ruled it a Dashboard entry on that evidence.
+     * THE ORDER IS `p14`'s, READ OFF THE FRAME (round 10, item 1).
+     *
+     * The frame shows Games, Players, Top-ups, Financials, then a fifth chip
+     * clipped at the right edge whose left border is VOLT where the other four
+     * are grey — which in this system means CURRENT, and `p14` IS the
+     * dashboard. So Dashboard is FIFTH, not first.
+     *
+     * Round 8 put it first on the reasoning that a landing page comes first.
+     * That reasoning is fine and it is not what the frame does: on `/admin`
+     * the current chip sits at the right edge, half out of view, exactly as
+     * drawn. `Home page` follows it — the frame has no room to show a sixth,
+     * and it is the one section that has to live somewhere.
      */
-    { href: "/admin", label: strings.admin.navDashboard },
     { href: "/admin/games", label: strings.admin.navGames },
     { href: "/admin/players", label: strings.admin.navPlayers },
     { href: "/admin/topups", label: strings.admin.navTopups },
-    { href: "/admin/site", label: strings.admin.navSite },
     { href: "/admin/stats", label: strings.admin.navStats },
+    { href: "/admin", label: strings.admin.navDashboard },
+    { href: "/admin/site", label: strings.admin.navSite },
   ];
 }
 

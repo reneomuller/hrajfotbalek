@@ -52,9 +52,17 @@ export function AdminNav() {
             /* `/admin` has no third segment — `split("/")[2]` is undefined
                there, which would ship `admin-nav-undefined`. */
             data-testid={`admin-nav-${link.href.split("/")[2] ?? "dashboard"}`}
+            /*
+              NO TINT ON THE CURRENT CHIP (round 10, item 1). Sampled inside
+              p14's fifth chip — the volt-ringed one — and it is flat ground
+              (11,12,8) with the ring the only accent. Ours carried
+              `bg-volt/[.12]`, which reads at (31,38,7) and turns a switcher
+              into a switcher-with-a-selected-tab. The ring and the ink are
+              the whole distinction on the frame.
+            */
             className={`shrink-0 whitespace-nowrap rounded-pill border px-3 py-[6px] text-small font-semibold no-underline transition-colors ${
               current
-                ? "border-volt bg-volt/[.12] text-volt"
+                ? "border-volt text-volt"
                 : "border-hairline-strong text-muted hover:border-volt hover:text-volt"
             }`}
           >

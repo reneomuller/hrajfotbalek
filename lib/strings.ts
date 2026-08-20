@@ -1108,6 +1108,9 @@ export const strings = {
     tileRevenue: "Revenue (month)",
     quickActions: "Quick actions",
     quickCreateGame: "+ Create game",
+    /* p14's other two quick actions, given destinations in round 10 item 1. */
+    quickAddVenue: "+ Add venue",
+    quickExportData: "Export data",
     /* --- admin player detail (round 7, item 9) --- */
     adminActionsTitle: "Admin actions",
     /* --- notifications (round 7, item 5). Admin copy is English only. --- */

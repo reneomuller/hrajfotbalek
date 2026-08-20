@@ -57,6 +57,7 @@ export function GameForm({
   game,
   organizer,
   defaultOrganizerName,
+  initialVenueChoice,
 }: {
   action: (state: AdminActionState, formData: FormData) => Promise<AdminActionState>;
   venues: VenueRow[];
@@ -93,10 +94,19 @@ export function GameForm({
    * the game.
    */
   defaultOrganizerName?: string;
+  /**
+   * Pre-selects the venue picker on a fresh form — only `"new"` is passed
+   * today, by the dashboard's `+ Add venue` (round 10, item 1). Ignored when
+   * editing, because `game.venue_id` is the venue the game actually has and
+   * a query string must not be able to change it.
+   */
+  initialVenueChoice?: string;
 }) {
   const [state, formAction] = useActionState(action, INITIAL);
 
-  const [venueChoice, setVenueChoice] = useState(game?.venue_id ?? "");
+  const [venueChoice, setVenueChoice] = useState(
+    game?.venue_id ?? initialVenueChoice ?? "",
+  );
   const [pitchName, setPitchName] = useState(game?.pitch_name ?? "");
   const [newVenueName, setNewVenueName] = useState("");
   const [newVenueImage, setNewVenueImage] = useState("");
