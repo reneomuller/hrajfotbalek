@@ -116,6 +116,18 @@ test("the dashboard omits what p14 omits", async ({ page }) => {
 
   // The current chip is a ring, not a fill — sampled inside p14's volt chip
   // and it is flat ground.
+  // The status is p14's word, not the enum: a live game reads `Confirmed`,
+  // not `Published`.
+  const statuses = await page
+    .getByTestId("dashboard-game-row")
+    .evaluateAll((els) => els.map((el) => el.textContent ?? ""));
+  expect(statuses.length).toBeGreaterThan(0);
+  for (const text of statuses) {
+    expect(text, "a raw game_status enum reached the dashboard").not.toMatch(
+      /Published|Full\b/,
+    );
+  }
+
   const currentBg = await page
     .getByTestId("admin-nav-dashboard")
     .evaluate((el) => getComputedStyle(el).backgroundColor);

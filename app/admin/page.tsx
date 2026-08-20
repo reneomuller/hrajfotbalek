@@ -237,7 +237,7 @@ export default async function AdminDashboardPage() {
                           : "text-muted"
                       }`}
                     >
-                      {row.status}
+                      {strings.admin.dashboardStatus[row.status] ?? row.status}
                     </span>
                   </span>
                 </Link>

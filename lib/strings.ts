@@ -1110,6 +1110,20 @@ export const strings = {
     quickCreateGame: "+ Create game",
     /* p14's other two quick actions, given destinations in round 10 item 1. */
     quickAddVenue: "+ Add venue",
+    /*
+     * THE DASHBOARD ROW'S STATUS, IN p14's WORDS (round 10, item 1).
+     *
+     * The rows were printing the `game_status` enum through a `capitalize`,
+     * so a live game read `Published` and a full one read `Full`. p14 draws
+     * `Confirmed` and `Waitlist`, which are the words for what an organizer
+     * actually needs to know: the game is on, and new signups now queue.
+     * Anything outside the two states the dashboard queries falls back to the
+     * enum, which is a developer reading a row that should not be there.
+     */
+    dashboardStatus: {
+      published: "Confirmed",
+      full: "Waitlist",
+    } as Record<string, string>,
     quickExportData: "Export data",
     /* --- admin player detail (round 7, item 9) --- */
     adminActionsTitle: "Admin actions",
