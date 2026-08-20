@@ -330,6 +330,10 @@ export const cs: StringsOverlay = {
     payByQr: "Zaplatit QR platbou",
     payByQrHint:
       "Naskenuj QR platbu v bankovní aplikaci. Místo ti držíme, dokud platba nedorazí.",
+    // DRAFT — flagged for the standing native-review batch.
+    payOnline: "Platba online",
+    payOnlineHint: "Bezpečně přes Stripe",
+    payOnlineComingSoon: "Připravujeme",
     payByCash: "Zaplatit hotově na place",
     payByCashHint: "Vezmi hotovost. Organizátor tě potvrdí na místě.",
     choosePayment: "Jak chceš zaplatit?",

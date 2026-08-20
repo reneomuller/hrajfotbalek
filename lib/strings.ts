@@ -611,8 +611,18 @@ export const strings = {
     barLabel: "Your spot on this game",
     nicknameLabel: "Nickname",
     nicknameHint: "Letters, numbers, spaces, _ and - · up to 20 characters",
+    /*
+     * THE TWO OPTIONS (round 7, item 10, and ruling R3).
+     *
+     * `payByQr` is retired FROM THE UI and kept as a key: the QR rail is the
+     * substrate the online option books onto and R3 forbids touching it. The
+     * confirmation screen and the top-up flow still render it.
+     */
     payByQr: "Pay by QR",
     payByQrHint: "Scan a code in your banking app. Your spot is held until you pay.",
+    payOnline: "Online payment",
+    payOnlineHint: "Paid securely with Stripe",
+    payOnlineComingSoon: "Coming soon",
     payByCash: "Pay cash on the pitch",
     payByCashHint: "Bring cash. The organizer confirms you on the day.",
     choosePayment: "How do you want to pay?",

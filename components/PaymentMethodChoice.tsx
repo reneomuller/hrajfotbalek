@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { createBookingAction, type BookingActionState } from "@/app/game/[id]/book/actions";
 import { FormError } from "@/components/form/FormError";
 import { PendingButton } from "@/components/form/PendingButton";
@@ -14,20 +14,46 @@ export interface PaymentMethodChoiceProps {
 
 const INITIAL: BookingActionState = { status: "idle" };
 
-
 /**
- * QR-vs-cash choice.
+ * The payment choice: ONLINE or CASH, then one Confirm.
  *
- * These two are the ONLY values the UI ever sends. `credit` and `seed_free`
- * are derived inside `create_booking` — a player with a full wallet still
- * picks QR here and gets `credit` back from the RPC, which is what the
- * confirmation screen branches on. Offering a "pay with credit" option would
- * mean predicting the outcome from a balance this component does not have and
- * could not trust.
+ * ROUND 7, ITEM 10 — AND IT IS RULING R3 ARRIVING. R3 retired QR from the
+ * redesigned UI and said the backend rails must not be touched, because they
+ * are the substrate Stripe maps onto. Both halves hold here: the player sees
+ * "Online payment", and what the server books is the existing unpaid QR rail
+ * with its variable symbol, untouched and simply not shown.
+ *
+ * ONLINE IS A PLACEHOLDER, AND IT IS AN HONEST ONE. There is no Stripe
+ * integration. `NEXT_PUBLIC_STRIPE_PAYMENT_URL` is the entire activation: set
+ * it and choosing this option books the spot unpaid and hands the player to
+ * that URL; leave it empty and the option renders fully styled, marked "Coming
+ * soon", and CANNOT BE SELECTED.
+ *
+ * NOTHING IS PRESELECTED, which is the other half of "never pressable with a
+ * dead path behind it". The previous version defaulted to QR, so a player
+ * could press Confirm without having made a choice at all. Confirm is disabled
+ * until an option is chosen, and the online option cannot be the chosen one
+ * while its URL is empty — so there is no arrangement of clicks that submits a
+ * method with nothing behind it.
+ *
+ * CREDIT STILL WINS FIRST, and these options do not mention it. `credit` and
+ * `seed_free` are OUTCOMES `create_booking` derives under its own locks; a
+ * player with a full wallet picks either option here and gets `credit` back
+ * from the RPC. Predicting that from a balance this component does not hold
+ * would be predicting it from a stale number. Nothing here blocks a booking to
+ * upsell, and nothing here offers a pass.
  */
 export function PaymentMethodChoice({ gameId }: PaymentMethodChoiceProps) {
   const t = useStrings();
   const [state, formAction] = useActionState(createBookingAction, INITIAL);
+
+  /*
+   * Build-time inline, like every `NEXT_PUBLIC_*`. Read here rather than
+   * passed from the server so the enabled/disabled state and the redirect
+   * cannot disagree — the action reads the same variable.
+   */
+  const onlineReady = Boolean(process.env.NEXT_PUBLIC_STRIPE_PAYMENT_URL);
+  const [choice, setChoice] = useState<"online" | "cash" | null>(null);
 
   /*
    * THE ERROR NO LONGER REPLACES THE FORM (§2.11).
@@ -43,6 +69,15 @@ export function PaymentMethodChoice({ gameId }: PaymentMethodChoiceProps) {
       ? describeBookingError(state.code, t)
       : null;
 
+  const optionClass = (value: "online" | "cash", disabled: boolean) =>
+    [
+      "flex items-start gap-3 rounded-card border-2 p-4 transition-colors",
+      disabled
+        ? "cursor-not-allowed border-hairline bg-surface/60 opacity-60"
+        : "cursor-pointer bg-surface " +
+          (choice === value ? "border-volt" : "border-hairline-strong hover:border-hairline-volt"),
+    ].join(" ");
+
   return (
     <form action={formAction} className="flex flex-col gap-6">
       <input type="hidden" name="gameId" value={gameId} />
@@ -53,27 +88,56 @@ export function PaymentMethodChoice({ gameId }: PaymentMethodChoiceProps) {
         </legend>
 
         <div className="flex flex-col gap-3">
-          <label className="flex cursor-pointer items-start gap-3 rounded-card bg-surface p-4 has-[:checked]:border-hairline-volt">
+          {/* ---- online ------------------------------------------------- */}
+          <label data-testid="pay-online" className={optionClass("online", !onlineReady)}>
             <input
               type="radio"
-              name="method"
-              value="qr"
-              defaultChecked
+              name="option"
+              value="online"
+              disabled={!onlineReady}
+              checked={choice === "online"}
+              onChange={() => setChoice("online")}
+              data-testid="pay-online-input"
               className="mt-1 accent-volt"
             />
-            <span>
-              <span className="block text-body-lg font-semibold text-bone">
-                {t.booking.payByQr}
+            <span className="min-w-0">
+              <span className="flex flex-wrap items-center gap-2">
+                <span className="text-body-lg font-semibold text-bone">
+                  {t.booking.payOnline}
+                </span>
+                {/*
+                  The badge is the whole honesty of this control. Fully styled
+                  and visibly not yet available beats a hidden option — a
+                  player who has heard card payment is coming can see that it
+                  is, rather than concluding it was removed.
+                */}
+                {!onlineReady && (
+                  <span
+                    data-testid="pay-online-soon"
+                    className="rounded-pill border border-hairline-strong px-2 py-[2px] text-eyebrow font-semibold uppercase text-muted"
+                  >
+                    {t.booking.payOnlineComingSoon}
+                  </span>
+                )}
               </span>
               <span className="mt-1 block text-[13px] leading-snug text-muted">
-                {t.booking.payByQrHint}
+                {t.booking.payOnlineHint}
               </span>
             </span>
           </label>
 
-          <label className="flex cursor-pointer items-start gap-3 rounded-card bg-surface p-4 has-[:checked]:border-hairline-volt">
-            <input type="radio" name="method" value="cash" className="mt-1 accent-volt" />
-            <span>
+          {/* ---- cash --------------------------------------------------- */}
+          <label data-testid="pay-cash" className={optionClass("cash", false)}>
+            <input
+              type="radio"
+              name="option"
+              value="cash"
+              checked={choice === "cash"}
+              onChange={() => setChoice("cash")}
+              data-testid="pay-cash-input"
+              className="mt-1 accent-volt"
+            />
+            <span className="min-w-0">
               <span className="block text-body-lg font-semibold text-bone">
                 {t.booking.payByCash}
               </span>
@@ -106,6 +170,7 @@ export function PaymentMethodChoice({ gameId }: PaymentMethodChoiceProps) {
         label={t.booking.confirmBooking}
         testId="confirm-booking"
         className="w-full"
+        disabled={choice === null}
       />
     </form>
   );

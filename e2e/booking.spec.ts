@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { players, serviceClient, signInAs } from "./helpers/session.ts";
+import { apiClientFor, players, serviceClient, signInAs } from "./helpers/session.ts";
 import {
   createScratchGame,
   destroyScratchGame,
@@ -26,7 +26,19 @@ test.afterEach(async () => {
   await destroyScratchGame(game.id);
 });
 
-test("book to QR in under 60 seconds", async ({ page, context }) => {
+/*
+ * ROUND 7 ITEM 10 CHANGED WHAT THIS FLOW OFFERS, not how fast it is.
+ *
+ * The UI's two options are now ONLINE and CASH; QR is retired from the
+ * booking screens and survives as the rail online books onto (ruling R3).
+ * With `NEXT_PUBLIC_STRIPE_PAYMENT_URL` unset — the state this suite runs in
+ * and the state production ships in — cash is the selectable option, so that
+ * is what the timing criterion is measured through.
+ *
+ * The QR SCREEN keeps its own coverage further down, driven through the rail
+ * rather than through a control the UI no longer has.
+ */
+test("book to a confirmed spot in under 60 seconds", async ({ page, context }) => {
   await signInAs(context, players.runner);
   await setWalletTo(players.runner.id, 0);
 
@@ -37,25 +49,26 @@ test("book to QR in under 60 seconds", async ({ page, context }) => {
 
   await page.goto(`/game/${game.id}`);
   await page.getByTestId("book-cta").click();
-  await page.getByRole("radio", { name: /QR/i }).check();
+
+  // NOTHING IS PRESELECTED (item 10), so the choice is part of the measured
+  // flow rather than a default the player never sees.
+  await expect(page.getByTestId("confirm-booking")).toBeDisabled();
+  await page.getByTestId("pay-cash-input").check();
   await page.getByTestId("confirm-booking").click();
 
-  const qr = page.getByTestId("qr-payment");
-  await expect(qr).toBeVisible();
+  await expect(page.getByTestId("confirmation")).toBeVisible();
 
   const elapsedSeconds = (Date.now() - started) / 1000;
   expect(elapsedSeconds).toBeLessThan(60);
 
-  // A QR that renders but encodes nothing is not a payment. It is rendered as
-  // inline SVG (no image request, so it works with the network already gone),
-  // and it must carry real path data rather than an empty frame. The fallback
-  // fields — the ones someone types in when the camera will not focus — must
-  // be there too.
-  const svg = qr.locator("svg");
-  await expect(svg).toBeVisible();
-  expect(await svg.locator("path").count()).toBeGreaterThan(0);
-  await expect(page.getByTestId("fallback-vs")).toBeVisible();
-  await expect(page.getByTestId("fallback-account")).toBeVisible();
+  // NO QR ON A CASH BOOKING, which is item 10's visible half: the player
+  // chose to pay on the pitch and a code asking them to transfer money would
+  // be a second, contradictory instruction. The QR renderer's own assertions
+  // moved to the rail test at the bottom of this file.
+  await expect(page.getByTestId("qr-payment")).toHaveCount(0);
+  // `fallback-account` is part of the QR block and goes with it. What must
+  // survive is the AMOUNT — the player still owes it, they are just handing it
+  // over on the pitch.
   await expect(page.getByTestId("amount-due")).toContainText(String(game.priceCzk));
 });
 
@@ -65,6 +78,7 @@ test("full credit confirms instantly and shows no QR", async ({ page, context })
   await setWalletTo(players.creditRich.id, game.priceCzk + 250);
 
   await page.goto(`/game/${game.id}/book`);
+  await page.getByTestId("pay-cash-input").check();
   await page.getByTestId("confirm-booking").click();
 
   await expect(page.getByTestId("confirmation")).toBeVisible();
@@ -91,7 +105,7 @@ test("full credit confirms instantly and shows no QR", async ({ page, context })
   expect(await walletBalance(players.creditRich.id)).toBe(250);
 });
 
-test("partial credit reduces the amount due and still asks for a QR payment", async ({
+test("partial credit reduces the amount due and still asks for the rest", async ({
   page,
   context,
 }) => {
@@ -100,13 +114,17 @@ test("partial credit reduces the amount due and still asks for a QR payment", as
   await setWalletTo(players.creditPartial.id, credit);
 
   await page.goto(`/game/${game.id}/book`);
-  await page.getByRole("radio", { name: /QR/i }).check();
+  await page.getByTestId("pay-cash-input").check();
   await page.getByTestId("confirm-booking").click();
 
-  await expect(page.getByTestId("qr-payment")).toBeVisible();
+  await expect(page.getByTestId("confirmation")).toBeVisible();
 
-  // 200 priced, 50 covered, 150 due — and the number on the screen is the
-  // number in the QR, because both come from the persisted booking.
+  /*
+   * THE AMOUNT IS THE SUBJECT, not the instrument. This test was named for
+   * the QR screen because QR was the only way to owe money; round 7 item 10
+   * makes cash the offered option and the arithmetic is identical. 200 priced,
+   * 50 covered, 150 due.
+   */
   const due = game.priceCzk - credit;
   await expect(page.getByTestId("amount-due")).toContainText(String(due));
 
@@ -119,9 +137,79 @@ test("partial credit reduces the amount due and still asks for a QR payment", as
     .single();
 
   expect(data?.status).toBe("reserved");
-  expect(data?.payment_method).toBe("qr");
+  expect(data?.payment_method).toBe("cash");
   expect(data?.credit_applied_czk).toBe(credit);
   expect(await walletBalance(players.creditPartial.id)).toBe(0);
+});
+
+/*
+ * THE QR RAIL SURVIVES THE UI CHANGE — ruling R3's load-bearing half.
+ *
+ * R3 retired QR from the booking screens and was explicit that the machinery
+ * behind it must not be touched: the `26`-series variable symbols, the topup
+ * pair and the credit ledger are the substrate Stripe maps onto, and "a round
+ * that cleans up the QR backend because the UI no longer calls it is deleting
+ * the thing the next round needs".
+ *
+ * With QR gone from the booking form there is no click path to this screen any
+ * more, so it is driven through the RPC — which is also the honest shape of
+ * the claim. The claim is not "a player can reach this"; it is "the rail still
+ * works and still renders", which is what has to be true on the day Stripe is
+ * wired to it.
+ */
+test("the QR rail still books and still renders, with no UI offering it", async ({
+  page,
+  context,
+}) => {
+  const railGame = await createScratchGame({ hoursFromNow: 24 * 9, capacity: 8 });
+
+  try {
+    await setWalletTo(players.runner.id, 0);
+    await signInAs(context, players.runner);
+
+    // The rail, called directly. `qr` is still a value `create_booking`
+    // accepts from a client and that is deliberate.
+    const runner = await apiClientFor(players.runner);
+    const { data, error } = await runner.rpc("create_booking", {
+      p_game_id: railGame.id,
+      p_payment_method: "qr",
+    });
+    expect(error, "create_booking refused the QR rail").toBeNull();
+
+    /*
+     * `create_booking` returns the BOOKING ROW, not a bare id — and the
+     * variable symbol on it is the thing R3 is protecting. Reading `data` as
+     * a string produced `?booking=undefined` and a blank confirmation that
+     * looked exactly like "the QR block is gone", which is the wrong
+     * conclusion to reach from a typo.
+     */
+    const booking = data as unknown as { id: string; payment_code: number };
+    expect(booking.payment_code, "the 26-series variable symbol is gone").toBeGreaterThan(0);
+
+    await page.goto(`/game/${railGame.id}/book/confirmation?booking=${booking.id}`);
+
+    const qr = page.getByTestId("qr-payment");
+    await expect(qr).toBeVisible();
+
+    // A QR that renders but encodes nothing is not a payment. Inline SVG (no
+    // image request, so it works with the network already gone), carrying real
+    // path data rather than an empty frame, and the fallback fields someone
+    // types in when the camera will not focus.
+    const svg = qr.locator("svg");
+    await expect(svg).toBeVisible();
+    expect(await svg.locator("path").count()).toBeGreaterThan(0);
+    await expect(page.getByTestId("fallback-vs")).toBeVisible();
+
+    // AND THE BOOKING FORM DOES NOT OFFER IT. Both halves of R3 in one test:
+    // the rail lives, the UI does not expose it.
+    await page.goto(`/game/${railGame.id}/book`);
+    await expect(page.getByTestId("pay-online")).toBeVisible();
+    await expect(page.getByTestId("pay-cash")).toBeVisible();
+    const body = (await page.locator("form").innerText()).toLowerCase();
+    expect(body, "the booking form still names QR").not.toContain("qr");
+  } finally {
+    await destroyScratchGame(railGame.id);
+  }
 });
 
 test("a cancelled booking returns its value as wallet credit", async ({ page, context }) => {
@@ -129,6 +217,7 @@ test("a cancelled booking returns its value as wallet credit", async ({ page, co
   await setWalletTo(players.runner.id, 0);
 
   await page.goto(`/game/${game.id}/book`);
+  await page.getByTestId("pay-cash-input").check();
   await page.getByTestId("confirm-booking").click();
   await expect(page.getByTestId("confirmation")).toBeVisible();
 
@@ -216,6 +305,7 @@ test("a booking the wallet cannot cover offers credits AND still takes payment",
     await signInAs(context, players.runner);
 
     await page.goto(`/game/${game.id}/book`);
+    await page.getByTestId("pay-cash-input").check();
     await page.getByTestId("confirm-booking").click();
     await page.waitForURL(/\/book\/confirmation/);
 

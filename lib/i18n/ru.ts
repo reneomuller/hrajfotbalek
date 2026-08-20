@@ -333,6 +333,10 @@ export const ru: StringsOverlay = {
     payByQr: "Оплатить по QR (QR platba)",
     payByQrHint:
       "Отсканируй QR в банковском приложении. Место держим за тобой, пока не придёт платёж.",
+    // DRAFT — flagged for the standing native-review batch.
+    payOnline: "Онлайн-оплата",
+    payOnlineHint: "Безопасно через Stripe",
+    payOnlineComingSoon: "Скоро",
     payByCash: "Наличными на поле",
     payByCashHint: "Возьми наличные. Организатор подтвердит тебя на месте.",
     choosePayment: "Как будешь платить?",

@@ -17,23 +17,52 @@ had to hold.
 
 *(none — see the payment gate below)*
 
-### Payment gate: **GREEN** — old flow untouched
+### Payment gate: **RESOLVED** — credits and cash always work; online is a gated placeholder
 
-**Status 2026-08-20, night round.** The payment round was **excluded** from the
-night run by the owner. R3 is recorded law but **not executed**: the existing
-payment surfaces — the QR/bank-transfer path, `'26'`-series variable symbols,
-`create_topup`/`confirm_topup`, the ledger — are **byte-identical and live**.
+**Status 2026-08-20, round 7 item 10. R3 has now executed** and the gate
+resolves rather than returning to blocking. The reason it can is that the
+round was built so that no state of the system has a player unable to pay.
 
-So the original blocking item does not apply to this merge:
+**What a player can do today, in every configuration:**
+
+| Path | State | Who it covers |
+|---|---|---|
+| **Credits** | live, unchanged | anyone with a balance — applied FIRST by `create_booking`, never offered as a choice, never a gate |
+| **Cash on the pitch** | live, unchanged | everyone. Books the spot, marks it UNPAID, appears in the admin unpaid view for settling in person |
+| **Online payment** | placeholder, gated | nobody yet — see below |
+
+**Online is inert BY CONSTRUCTION, not by omission.**
+`NEXT_PUBLIC_STRIPE_PAYMENT_URL` is the entire activation. While it is empty
+the option renders fully styled and marked "Coming soon", **cannot be
+selected**, and is **refused server-side** if a stale tab or a hand-made POST
+submits it anyway. Confirm is disabled until something selectable is chosen,
+so there is no sequence of clicks that submits a method with a dead path
+behind it. Set the variable and the same option books the spot unpaid and
+hands the player to that URL.
+
+**The rails are untouched, which is R3's load-bearing half.** QR is gone from
+the booking screens and nowhere else: the `'26'`-series variable symbols,
+`create_topup` / `confirm_topup`, the pass paths and the credit ledger are
+byte-identical, and `create_booking` still accepts `qr` from a client. The
+online option books onto that rail — `online` → `qr` is a UI-to-rail
+translation in one `Record`, and it is the single line that moves when Stripe
+is integrated. `e2e/booking.spec.ts` asserts both halves in one test: the rail
+still books and still renders its QR, and the booking form does not name QR
+anywhere.
 
 > ~~**Payment: QR is removed from the redesigned UI and the card option is
 > inert — merging before Stripe activation leaves NO working per-game payment
 > path. Do not merge until Stripe is live or Oliver explicitly accepts
-> this.**~~ **NOT YET IN EFFECT.** R3 executes in a later round. Until it does,
-> the redesign carries the v1.3 payment flow unchanged and a player can pay.
+> this.**~~ **RESOLVED 2026-08-20.** The premise was that removing QR would
+> leave no working per-game path. Cash is that path, it always was, and it is
+> now the default rather than the second option. Merging before Stripe is live
+> ships a product where every player can pay.
 
-**This item returns to BLOCKING the moment the payment round runs.** Whoever
-executes R3 must move it back up and re-read the sentence above.
+**What is still owed when Stripe lands:** a real integration behind that URL —
+a session, a webhook, and a booking that flips to paid on confirmation.
+Redirecting to a hosted payment link books the spot unpaid and trusts the
+player to complete it, which is the same trust the cash path already extends
+and is acceptable only while the volume is what it is.
 
 ## Open (not yet blocking, must be resolved or accepted)
 

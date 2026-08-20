@@ -27,11 +27,21 @@ export function PendingButton({
   testId,
   variant = "primary",
   className = "",
+  disabled = false,
 }: {
   label: string;
   testId: string;
   variant?: "primary" | "secondary";
   className?: string;
+  /**
+   * Disabled for a reason OTHER than being in flight — round 7 item 10's
+   * "nothing selected yet". Kept separate from `pending` because the two mean
+   * different things to a reader: pending is "your tap landed, wait", and this
+   * is "there is nothing to submit". They also look different, which is the
+   * point: a pending button keeps its volt fill and gains a spinner, and this
+   * one goes flat.
+   */
+  disabled?: boolean;
 }) {
   const { pending } = useFormStatus();
 
@@ -45,13 +55,13 @@ export function PendingButton({
   return (
     <button
       type="submit"
-      disabled={pending}
+      disabled={pending || disabled}
       aria-busy={pending || undefined}
       data-testid={testId}
       data-pending={pending ? "true" : "false"}
       className={`${base} ${skin} ${
         pending ? "pointer-events-none bg-volt-dim opacity-90" : ""
-      } ${className}`}
+      } ${!pending && disabled ? "cursor-not-allowed opacity-40" : ""} ${className}`}
     >
       {pending && <Spinner />}
       {label}

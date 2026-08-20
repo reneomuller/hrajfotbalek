@@ -21,6 +21,43 @@ function isClientPaymentMethod(value: unknown): value is ClientPaymentMethod {
 }
 
 /**
+ * What the UI offers (round 7, item 10) and what it books onto.
+ *
+ * TWO VOCABULARIES, DELIBERATELY. The player chooses ONLINE or CASH; the
+ * database still records `qr` or `cash`, because ruling R3 forbids touching
+ * the QR rail — it is the substrate Stripe maps onto, and its variable
+ * symbols, `create_topup` / `confirm_topup` and the credit ledger all remain
+ * exactly as they are. What changed is the label, not the transition.
+ *
+ * So `online` -> `qr` is a UI-to-rail translation and not a lie about the
+ * booking: both produce an UNPAID booking that the admin unpaid view can
+ * settle. When Stripe is integrated this mapping is the one line that moves.
+ */
+type BookingOption = "online" | "cash";
+
+const OPTION_TO_METHOD: Record<BookingOption, ClientPaymentMethod> = {
+  online: "qr",
+  cash: "cash",
+};
+
+function isBookingOption(value: unknown): value is BookingOption {
+  return value === "online" || value === "cash";
+}
+
+/**
+ * The whole activation for online payment. Empty means the option is not
+ * selectable in the UI and this module never redirects to it.
+ *
+ * READ IN BOTH PLACES from the same variable rather than passed from the
+ * client: a form that says "selectable" and a server that says "no URL" would
+ * be one deploy away from a booking that lands nowhere.
+ */
+function stripePaymentUrl(): string | null {
+  const raw = process.env.NEXT_PUBLIC_STRIPE_PAYMENT_URL?.trim();
+  return raw ? raw : null;
+}
+
+/**
  * Creates a booking.
  *
  * TWO RULES GOVERN THIS FILE:
@@ -43,25 +80,54 @@ export async function createBookingAction(
   formData: FormData,
 ): Promise<BookingActionState> {
   const gameId = String(formData.get("gameId") ?? "");
-  const rawMethod = formData.get("method");
+  const rawOption = formData.get("option");
 
   if (!gameId) return { status: "error", code: "GAME_NOT_FOUND" };
-  if (!isClientPaymentMethod(rawMethod)) {
+  if (!isBookingOption(rawOption)) {
     // Reaching here means the form was tampered with — the UI only ever offers
     // the two values. Refuse rather than defaulting to one.
     return { status: "error", code: "INSUFFICIENT_PERMISSION" };
   }
 
+  /*
+   * ONLINE IS REFUSED SERVER-SIDE WHEN THERE IS NOWHERE TO SEND ANYONE.
+   *
+   * The form disables the option, which handles every honest player. This
+   * handles the other case, and it is not paranoia: without it a stale tab
+   * from before the variable was cleared, or a hand-made POST, creates an
+   * unpaid booking whose player is then dropped on a confirmation screen with
+   * no way to pay. Refusing is the behaviour the item asks for — Confirm is
+   * never live with a dead path behind it — enforced where it cannot be
+   * bypassed.
+   */
+  const online = rawOption === "online";
+  const payUrl = stripePaymentUrl();
+  if (online && !payUrl) {
+    return { status: "error", code: "INSUFFICIENT_PERMISSION" };
+  }
+
+  const method = OPTION_TO_METHOD[rawOption];
+
   // No pre-auth soft hold: an unauthenticated caller is sent to authenticate
   // and the booking is attempted only afterwards. Nothing is reserved here.
   const user = await getSessionUser();
   if (!user) {
-    const resume = buildResumeUrl(gameId, "book", rawMethod);
+    const resume = buildResumeUrl(gameId, "book", method);
     redirect(`/login?next=${encodeURIComponent(resume)}`);
   }
 
-  const bookingId = await runCreateBooking(gameId, rawMethod);
+  const bookingId = await runCreateBooking(gameId, method);
   if (typeof bookingId !== "string") return bookingId;
+
+  /*
+   * THE BOOKING EXISTS BEFORE THE PLAYER LEAVES, which is the right order.
+   * The spot is held the moment `create_booking` returns; the payment page is
+   * where they settle it. Booking after payment would mean taking money for a
+   * spot that a race may already have given away.
+   */
+  if (online && payUrl) {
+    redirect(payUrl);
+  }
 
   // The booking-created toast rides the redirect the flow already performs —
   // the acting request and the request that renders the confirmation are
