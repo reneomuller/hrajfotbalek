@@ -48,7 +48,6 @@ import type { Strings } from "@/lib/strings";
 export function ProfileIdentity({
   nickname,
   photoPath,
-  coverPath,
   photoVersion,
   countryName,
   createdAt,
@@ -57,15 +56,6 @@ export function ProfileIdentity({
 }: {
   nickname: string;
   photoPath: string | null;
-  /**
-   * The player's own cover key (round 8, item 10).
-   *
-   * THREE STATES, AND THEY ARE DIFFERENT: `undefined` means the column does
-   * not exist yet (migration 20260820140000 unapplied) and the control is
-   * hidden; `null` means the column exists and no cover is set, so the default
-   * pitch shows WITH the control; a string is their own picture.
-   */
-  coverPath?: string | null;
   /** Changes when the photo does, so a re-upload is not served from cache. */
   photoVersion: string | null;
   /** Already resolved to the reader's language, or null when unset. */
@@ -77,12 +67,6 @@ export function ProfileIdentity({
   const photoUrl = avatarUrl(
     process.env.NEXT_PUBLIC_SUPABASE_URL ?? "",
     photoPath,
-    photoVersion,
-  );
-  const coverSupported = coverPath !== undefined;
-  const coverUrl = avatarUrl(
-    process.env.NEXT_PUBLIC_SUPABASE_URL ?? "",
-    coverPath ?? null,
     photoVersion,
   );
 
@@ -135,61 +119,13 @@ export function ProfileIdentity({
         a stock pitch above someone's own name and stats is noise on the one
         page where a screen-reader user is reading about themselves.
       */}
-      <div className="relative -mx-gutter h-[132px] overflow-hidden">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={coverUrl ?? "/pitch-default.jpg"}
-          alt=""
-          aria-hidden
-          data-testid="profile-cover-photo"
-          data-own={coverUrl ? "true" : "false"}
-          className="h-full w-full object-cover object-center"
-        />
-        <span
-          aria-hidden
-          data-testid="profile-cover-scrim"
-          className="absolute inset-0 bg-gradient-to-b from-ink/[.45] via-ink/[.70] via-50% to-ink to-90%"
-        />
-
-        {/*
-          THE COVER IS CHANGED THE WAY THE AVATAR IS (round 8, item 10) — same
-          component, same bucket, same limits, same claim-the-path-first
-          ordering. What differs is only the crop ratio and which RPC records
-          it.
-
-          THE CONTROL IS A CORNER BUTTON, not the whole band. The avatar can be
-          the control because tapping a 80px circle has one obvious meaning; a
-          full-width band that opens a file picker would swallow taps meant for
-          the page.
-
-          RENDERED ONLY WHEN THE COLUMN EXISTS. `cover_path` is `undefined` on
-          a database without migration 20260820140000 and `null` with it — so
-          an unmigrated deployment shows the default pitch and NO control,
-          rather than a control whose RPC 404s.
-        */}
-        {coverSupported && (
-          <PhotoUpload
-            target="cover"
-            hasPhoto={Boolean(coverUrl)}
-            className="absolute bottom-2 right-gutter"
-          >
-            <span
-              data-testid="cover-upload-control"
-              className="flex h-9 items-center gap-2 rounded-pill border border-hairline-strong bg-surface-overlay px-3 text-small font-semibold text-bone"
-            >
-              {t.account.coverChange}
-            </span>
-          </PhotoUpload>
-        )}
-      </div>
-
       {/*
-        `relative`, AND IT IS LOad-BEARING. The cover above became a positioned
-        element when it gained the scrim, and a positioned element paints above
-        its non-positioned siblings whatever the source order says — so the
-        cover painted OVER this row and sliced the nickname in half along the
-        band's bottom edge. Two positioned siblings fall back to source order,
-        which puts the identity on top where it belongs.
+        `relative`, AND IT IS LOAD-BEARING. The cover is an absolutely
+        positioned layer behind this row (see `ProfileCover`), and a positioned
+        element paints above its non-positioned siblings whatever the source
+        order says — which once sliced the nickname in half along the cover's
+        bottom edge. Two positioned siblings fall back to source order, which
+        puts the identity on top where it belongs.
       */}
       <div className="relative -mt-10 flex items-end gap-4">
         <PhotoUpload hasPhoto={Boolean(photoPath)}>

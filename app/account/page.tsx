@@ -6,6 +6,7 @@ import { CreditBalance } from "@/components/CreditBalance";
 import { CreditBatches } from "@/components/account/CreditBatches";
 import { PlayerHistory } from "@/components/account/PlayerHistory";
 import { ProfileDetails } from "@/components/account/ProfileDetails";
+import { ProfileCover } from "@/components/account/ProfileCover";
 import { ProfileIdentity } from "@/components/account/ProfileIdentity";
 import { ProfileStats } from "@/components/account/ProfileStats";
 import { ProfileTabs, parseProfileTab } from "@/components/account/ProfileTabs";
@@ -112,19 +113,38 @@ export default async function AccountPage({
 
   return (
     <main className="relative z-10 mx-auto w-full max-w-shell px-gutter pb-16 pt-24">
-      <ProfileIdentity
-        nickname={player.nickname}
-        photoPath={player.photo_path}
-        /* `undefined` until migration 20260820140000 is applied — see the prop. */
-        coverPath={player.cover_path}
-        photoVersion={player.created_at}
-        countryName={countryName(player.country, locale)}
-        createdAt={player.created_at}
-        locale={locale}
-        t={t}
-      />
+{/*
+        THE COVER SPANS IDENTITY AND STATS BOTH (round 9, item 4), which is
+        what `p10` and `p11` draw — the photograph runs down to the tab row.
+        It can only do that from a layer behind both, so the two blocks share
+        one `relative` wrapper and the cover fills the top of it.
+      */}
+      {/*
+        `pt-[104px]` REPLACES THE BAND'S FORMER HEIGHT. The cover used to be a
+        block in the flow and everything below it started underneath; now it is
+        an absolute layer, so the identity row would begin at the very top of
+        the photograph. This padding puts it back where it sat — overlapping
+        the cover's lower half, which is `p10`'s composition.
+      */}
+      <div className="relative pt-[104px]">
+        <ProfileCover
+          /* `undefined` until migration 20260820140000 is applied — see the prop. */
+          coverPath={player.cover_path}
+          photoVersion={player.created_at}
+          t={t}
+        />
+        <ProfileIdentity
+          nickname={player.nickname}
+          photoPath={player.photo_path}
+          photoVersion={player.created_at}
+          countryName={countryName(player.country, locale)}
+          createdAt={player.created_at}
+          locale={locale}
+          t={t}
+        />
 
-      <ProfileStats stats={stats} locale={locale} t={t} />
+        <ProfileStats stats={stats} locale={locale} t={t} />
+      </div>
 
       <ProfileTabs selected={tab} t={t} />
 

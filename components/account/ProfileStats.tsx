@@ -51,7 +51,24 @@ export function ProfileStats({
       as unequal, and the strip showed the figures crowding the name they
       belong under rather than starting a new band of the page.
     */
-    <section data-testid="profile-stats" className="mt-7 grid grid-cols-3 gap-3">
+    /*
+      `relative`, FOR THE SAME REASON THE IDENTITY ROW HAS IT (round 9, item 4).
+
+      The cover is an absolutely positioned layer behind this row, and a
+      positioned element paints above its non-positioned siblings whatever the
+      source order says. Without this the photograph covered the three figures
+      entirely — measured, the whole band read a maximum luminance of 37, which
+      is to say the numerals were not on screen at all.
+
+      Round 6 hit the identical bug one row up, where it sliced the nickname in
+      half. Extending the cover past the identity block re-created it here, and
+      it is the reason the spec measures rendered pixels rather than trusting
+      the gradient.
+    */
+    <section
+      data-testid="profile-stats"
+      className="relative mt-7 grid grid-cols-3 gap-3"
+    >
       {cells.map((cell) => (
         <div key={cell.key} data-testid={`profile-stat-${cell.key}`}>
           <div
