@@ -126,11 +126,31 @@ export async function GameCard({
       */}
       <span aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden rounded-card">
         {/* eslint-disable-next-line @next/next/no-img-element */}
+        {/*
+          THE CROP IS BOTTOM-ANCHORED, NOT CENTRED (round 7, item 3).
+
+          `pitch-default.jpg` is 640x336 and its top fifth is sky and
+          mountains. On the DETAIL header and the PROFILE cover that reads
+          well — those bands are tall enough to want a horizon. The list card
+          is a 358x159 strip, and `object-center` on it put the pale sky
+          directly behind the venue title, which is the single most
+          conspicuous way this card failed to look like `p02`: the frame's
+          card is green field edge to edge.
+
+          `object-bottom` pushes the visible window down onto the fields. It
+          cannot remove the horizon entirely — cover only has 24px of slack at
+          this height — but it takes the pale band out from behind the title,
+          which is where it was doing the damage.
+
+          NOT A SECOND CROPPED ASSET. One default is R6's rule and a second
+          file is a second thing to keep in step; this is the same image read
+          differently by one surface.
+        */}
         <img
           src="/pitch-default.jpg"
           alt=""
           data-testid="card-photo"
-          className="h-full w-full object-cover object-center"
+          className="h-full w-full object-cover object-bottom"
         />
         {/*
           THE GRADIENT IS A RAMP, NOT A DIMMER — rebalanced from p02.
@@ -153,12 +173,22 @@ export async function GameCard({
         {/*
           TEXT PROTECTION, LOCAL TO THE TITLE LINE.
 
-          The venue title sits at the top, which is now the brightest part of
-          the photograph — and the sky in this particular image is pale. Rather
-          than dimming the WHOLE card back down to rescue one line (which is
-          what the first version effectively did), this is a short gradient
-          behind the title band only: opaque enough at the very top to hold
-          white text, gone within ~72px.
+          The venue title sits at the top, and rather than dimming the WHOLE
+          card to rescue one line, this is a short gradient behind the title
+          band only.
+
+          `.72` -> `.55`, AND THE CROP IS WHY IT CAN COME DOWN (round 7, item
+          3). `.72` was set against a PALE SKY sitting behind the title — the
+          measurement that mattered was white-on-cloud. `object-bottom` above
+          puts green field there instead, which is both darker and textured,
+          so the same legibility needs less scrim. Measured against `p02`: the
+          frame's card reads about 76 mean luminance across its title band and
+          this was rendering about 60, which is the "washed out, does not match
+          the frame" complaint stated as a number.
+
+          The two changes are one change. Dropping the scrim alone would put
+          white text on a pale sky; re-cropping alone would leave the photo
+          needlessly dim. Neither is correct on its own.
 
           A separate element rather than another stop on the ramp above,
           because the two do different jobs and one of them is allowed to
@@ -166,7 +196,7 @@ export async function GameCard({
         */}
         <span
           data-testid="card-title-scrim"
-          className="absolute inset-x-0 top-0 h-[72px] bg-gradient-to-b from-ink/[.72] to-transparent"
+          className="absolute inset-x-0 top-0 h-[64px] bg-gradient-to-b from-ink/[.55] to-transparent"
         />
       </span>
 

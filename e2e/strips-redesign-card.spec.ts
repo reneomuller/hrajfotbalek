@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { mkdirSync } from "node:fs";
 import path from "node:path";
+import { PNG } from "pngjs";
 import { LOCALE_COOKIE } from "../lib/i18n/locales";
 
 /**
@@ -21,6 +22,49 @@ import { LOCALE_COOKIE } from "../lib/i18n/locales";
  */
 
 const OUT = path.resolve(process.cwd(), "docs/redesign-v2/strips/card");
+
+/**
+ * Mean luminance of the card's title band, from the RENDERED pixels.
+ *
+ * DECODED FROM A SCREENSHOT, and it has to be. The composite is a JPEG behind
+ * two stacked gradients; computing it from the source image and the CSS would
+ * be reimplementing the compositor, and reading it off a canvas would measure
+ * the image without its scrims. The screenshot is the only place the actual
+ * answer exists.
+ *
+ * TEXT AND ACCENT PIXELS ARE EXCLUDED. The band contains white type and a volt
+ * badge, and both would drag the mean up and mask exactly the regression this
+ * guards against — a scrim creeping darker until the card is a slab with
+ * texture.
+ */
+const TITLE_BAND_FLOOR = 45;
+
+async function titleBandLuminance(card: import("@playwright/test").Locator) {
+  const shot = await card.screenshot();
+  const png = PNG.sync.read(shot);
+
+  // The title sits in the top fifth. Sampled below the very first rows so the
+  // card's own rounded corners and border are not counted as "dark photo".
+  const from = Math.round(png.height * 0.06);
+  const to = Math.round(png.height * 0.22);
+
+  let total = 0;
+  let counted = 0;
+  for (let y = from; y < to; y += 2) {
+    for (let x = Math.round(png.width * 0.06); x < png.width * 0.92; x += 3) {
+      const i = (png.width * y + x) << 2;
+      const r = png.data[i]!;
+      const g = png.data[i + 1]!;
+      const b = png.data[i + 2]!;
+      if (g > 200 && b < 120) continue; // volt badge
+      if (Math.min(r, g, b) > 170) continue; // white type
+      total += (r + g + b) / 3;
+      counted += 1;
+    }
+  }
+  return counted === 0 ? 0 : Math.round(total / counted);
+}
+
 
 test.use({ viewport: { width: 390, height: 844 } });
 
@@ -69,14 +113,48 @@ test("the card over the photo — scrim, outline and inert cue", async ({
   expect(cover.dw).toBeLessThanOrEqual(1);
   expect(cover.dh).toBeLessThanOrEqual(1);
 
-  // The photo is centre-weighted so it does not stretch oddly at wide
-  // viewports — the card is full-bleed and the image is not the card's ratio.
+  /*
+   * COVER, AND BOTTOM-ANCHORED (round 7, item 3).
+   *
+   * ~~The photo is centre-weighted so it does not stretch oddly.~~ `cover`
+   * is what prevents the stretch and it is unchanged. What changed is WHERE
+   * the crop sits: `pitch-default.jpg` is 640x336 and its top fifth is sky and
+   * mountains, so `object-center` on a 358x159 strip put a pale sky directly
+   * behind the venue title. That was the most conspicuous way this card failed
+   * to match `p02`, whose card is green field edge to edge.
+   *
+   * Asserted rather than left to the screenshot because the two plausible
+   * regressions — someone "tidying" it back to `object-center`, or a Tailwind
+   * class rename — both leave a card that still looks like a card.
+   */
   const fit = await photo.evaluate((el) => {
     const s = getComputedStyle(el);
     return { fit: s.objectFit, pos: s.objectPosition };
   });
   expect(fit.fit).toBe("cover");
-  expect(fit.pos).toBe("50% 50%");
+  expect(fit.pos, "the crop drifted back to centre and the sky is behind the title").toBe(
+    "50% 100%",
+  );
+
+  /*
+   * THE PHOTOGRAPH IS VISIBLE BEHIND THE TITLE — measured, not judged.
+   *
+   * This is the round-7 defect stated as a number. R6 requires the photo to
+   * read AS a photograph; the failure mode is a scrim that creeps up until the
+   * card is a dark slab with texture, which is what the round-2 note already
+   * warned about and what shipped anyway. `p02`'s card measures roughly 76
+   * mean luminance across its title band and production was rendering about
+   * 60.
+   *
+   * A FLOOR, NOT A TARGET. The exact number depends on the image and on the
+   * type, and pinning it would fail on any future asset. 45 is comfortably
+   * below the frame and comfortably above "dark slab".
+   */
+  const luminance = await titleBandLuminance(card);
+  expect(
+    luminance,
+    `the photograph is not visible behind the title (mean ${luminance}, floor ${TITLE_BAND_FLOOR})`,
+  ).toBeGreaterThanOrEqual(TITLE_BAND_FLOOR);
 
   // --- R6's named requirement: the volt outline survives the photo --------
   const pill = card.getByTestId("card-when");
