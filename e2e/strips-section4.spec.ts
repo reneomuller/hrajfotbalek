@@ -82,11 +82,18 @@ test.describe("Section 4 strips — the game card", () => {
         await page.goto(`/game/${game.id}`, { waitUntil: "networkidle" });
         await page.evaluate(() => document.fonts.ready);
 
-        // The rulings, asserted in the strip that claims them.
-        // The number is no longer printed (round 8, item 8) — only the control.
+        /*
+         * The rulings, asserted in the strip that claims them.
+         *
+         * ~~The number is no longer printed (round 8, item 8) — only the
+         * control.~~ ROUND 9, ITEM 2: the number is no longer in the page at
+         * all. The control points at our own route, which 302s to `wa.me`
+         * with the digits assembled server-side — so asserting a `wa.me` href
+         * here would be asserting the leak this change removed.
+         */
         await expect(page.getByTestId("organizer-whatsapp")).toHaveAttribute(
           "href",
-          /wa\.me\/420777654321/,
+          /^\/api\/wa\/[0-9a-f-]{36}$/,
         );
         await expect(page.getByTestId("amenity-grid")).toBeVisible();
         await expect(page.getByTestId("pitch-amenity-grid")).toBeVisible();
