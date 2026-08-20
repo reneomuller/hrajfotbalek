@@ -167,7 +167,7 @@ export function PhotoUpload({
       accept="image/jpeg,image/png,image/webp"
       onChange={onFile}
       disabled={busy}
-      data-testid="photo-input"
+      data-testid={target === "cover" ? "photo-input-cover" : "photo-input"}
       className="sr-only"
     />
   );
@@ -177,7 +177,15 @@ export function PhotoUpload({
   if (children) {
     return (
       <label
-        data-testid="photo-avatar-control"
+        /*
+          THE TARGET NAMES WHICH PICTURE (round 9, item 1). Both the avatar and
+          the cover render this component, and both shipped as
+          `photo-avatar-control` — so the cover's control was indistinguishable
+          from the avatar's in the DOM, and the first thing that tried to drive
+          it uploaded to the wrong one. Two controls that do different things
+          must not answer to the same name.
+        */
+        data-testid={target === "cover" ? "photo-cover-control" : "photo-avatar-control"}
         aria-label={hasPhoto ? t.account.photoReplace : t.account.photoUpload}
         className={`relative inline-block cursor-pointer ${className ?? ""}`}
       >

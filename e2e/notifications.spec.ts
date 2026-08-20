@@ -4,28 +4,15 @@ import { players, serviceClient, signInAs } from "./helpers/session.ts";
 /**
  * IN-APP NOTIFICATIONS, v1 (round 7, item 5).
  *
- * THIS SUITE SKIPS ITSELF UNTIL THE MIGRATION IS APPLIED, and that is a
- * deliberate, temporary arrangement rather than a permanent escape hatch. The
- * migration is handed to the owner to run against local and production; the
- * code ships before it does, degrading to no bell at all. A suite that failed
- * in that window would be reporting the plan, not a defect.
- *
- * IT MUST BE DELETED once the migration is applied everywhere — a self-
- * skipping test is indistinguishable from a passing one in a summary line,
- * which is exactly how a suite quietly stops covering something.
+ * THE SELF-SKIP IS GONE (round 9, item 1). Migration 20260820120000 is applied
+ * on local and on production, verified before this header was deleted, so
+ * these tests now run for real everywhere. The skip existed for exactly one
+ * window — code shipped ahead of the migration, degrading to no bell — and a
+ * self-skipping test is indistinguishable from a passing one in a summary
+ * line, which is how a suite quietly stops covering something.
  */
 
-async function storeExists(): Promise<boolean> {
-  const admin = serviceClient();
-  const { error } = await admin.from("notifications").select("id").limit(1);
-  return !error;
-}
-
 test.describe("notifications", () => {
-  test.beforeEach(async () => {
-    test.skip(!(await storeExists()), "migration 20260820120000 is not applied yet");
-  });
-
   test("the bell shows a published notification and clears its dot on open", async ({
     page,
     context,
