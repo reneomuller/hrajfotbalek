@@ -11,10 +11,17 @@ import { useStrings } from "@/components/LocaleProvider";
 
 const initialState: SecurityActionState = { status: "idle" };
 
-const FIELD_CLASS =
-  "rounded-control border border-hairline-strong bg-transparent px-4 py-3 text-base outline-none transition-colors focus:border-volt";
-const LABEL_CLASS =
-  "font-[family-name:var(--font-jetbrains-mono)] text-xs uppercase tracking-widest opacity-60";
+/*
+ * THE THIRD COPY OF THIS PAIR, now pointing at the shared treatment.
+ *
+ * Round 5 collapsed the login and signup forms onto `.field` / `.field-label`
+ * in globals.css and missed this file, so the account's security forms kept
+ * the JetBrains Mono label and the `bg-transparent` input that the rest of the
+ * product had already left behind. Three copies is how "they will stay in
+ * step" fails; two is the same failure with better odds.
+ */
+const FIELD_CLASS = "field";
+const LABEL_CLASS = "field-label";
 
 function Result({ state }: { state: SecurityActionState }) {
   if (state.status === "idle" || !state.message) return null;
@@ -97,14 +104,24 @@ export function ChangeEmailForm({ currentEmail = null }: { currentEmail?: string
   const t = useStrings();
   const [state, formAction, pending] = useActionState(changeEmailAction, initialState);
 
+  /*
+   * NO HEADING AND NO ECHO OF THE CURRENT ADDRESS (round 7, item 2).
+   *
+   * This form is disclosed by a text link that sits directly under the email
+   * address on the profile, so it opened with a heading repeating the link's
+   * own words and a line repeating the address two rows above it. Together
+   * with the bordered submit that made it read as a BOX appearing inside the
+   * settings card — a panel inside a panel — where p11 has a small link and
+   * the field it reveals.
+   *
+   * `currentEmail` is kept in the signature: the form is also reachable from
+   * places where the address is not already on screen, and dropping the prop
+   * would make that call site silently worse rather than fail to compile.
+   */
   return (
     <form action={formAction} className="flex flex-col gap-3">
-      <h3 className="m-0 text-base font-bold uppercase tracking-wide text-white">
-        {t.account.changeEmailTitle}
-      </h3>
-
       {currentEmail ? (
-        <p className="m-0 text-xs text-white/50">{currentEmail}</p>
+        <p className="m-0 text-small text-muted">{currentEmail}</p>
       ) : null}
 
       <label className="flex flex-col gap-2">
@@ -126,7 +143,7 @@ export function ChangeEmailForm({ currentEmail = null }: { currentEmail?: string
         type="submit"
         disabled={pending}
         data-testid="change-email"
-        className="rounded-control border border-hairline-volt px-4 py-3 text-cta font-extrabold uppercase tracking-wide text-volt transition disabled:opacity-50"
+        className="self-start rounded-pill border-2 border-hairline-volt px-5 py-3 text-cta font-extrabold uppercase tracking-wide text-volt transition disabled:opacity-50"
       >
         {pending ? t.common.loading : t.account.changeEmailSubmit}
       </button>

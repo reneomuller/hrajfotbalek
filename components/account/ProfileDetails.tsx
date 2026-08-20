@@ -147,7 +147,7 @@ export function ProfileDetails(props: ProfileDetailsProps) {
                 {t.account.changeEmailLink}
               </button>
               {changingEmail && (
-                <div className="mb-1 mt-1 max-w-[420px]">
+                <div className="mb-1 mt-2 max-w-[420px]">
                   <ChangeEmailForm />
                 </div>
               )}
