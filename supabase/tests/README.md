@@ -80,3 +80,33 @@ means the role has no GRANT (Postgres raises `insufficient_privilege`);
 secure, but they are different mechanisms — a test that accepted either would
 still pass if someone added a GRANT by accident. Every assertion names which
 one it expects.
+
+
+## pgTAP (round 12)
+
+One suite — `notifications.sql` — is written in pgTAP rather than in the
+hand-rolled `_results` harness the others use. It needs the extension, and it
+needs it **in the `tap` schema**:
+
+```sql
+create schema if not exists tap;
+create extension pgtap with schema tap;
+```
+
+`create extension pgtap` on its own puts ~1080 functions into `public`, and
+`v13_conformance/security.sql` enumerates every function in `public` to assert
+that no SECURITY INVOKER one writes state. A harness that changes what the
+conformance suites see is a harness that can hide a real finding, so pgTAP is
+kept out of the way and the suite sets `search_path = public, tap` for its own
+transaction — `public` first, so an unqualified table name still means the
+product's.
+
+`run.mjs` understands both report formats: an `ALL PASS` summary row, or a TAP
+plan (`1..9`) with a matching count of `ok` lines. A suite that emits a plan and
+then raises halfway through reports `HAS FAILURES`, because counting only
+`not ok` would let it pass.
+
+**Until round 12 this suite had never run at all.** pgTAP was not installed, so
+every invocation died on `function plan(integer) does not exist` — and the
+runner reported that as a failure for a second, unrelated reason, which hid the
+first.

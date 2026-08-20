@@ -62,6 +62,38 @@ exception
   when others then return 'error:' || sqlstate;
 end $$;
 
+/*
+ * Like `do_stmt`, but reports HOW MANY ROWS the statement touched: `ok:0` or
+ * `ok:1`.
+ *
+ * Added in round 12 for the cross-player assertions, and the reason it had to
+ * be added is the reason those assertions were worth writing. RLS does not
+ * REFUSE an UPDATE that names a column the caller may write — it matches no
+ * row and reports success. Through `do_stmt` that is indistinguishable from a
+ * write that landed, so a test using it would have passed while a player
+ * rewrote everybody else's profile.
+ */
+create function pg_temp.do_rows(sql text)
+returns text language plpgsql as $$
+declare n integer;
+begin
+  execute sql;
+  get diagnostics n = row_count;
+  return 'ok:' || n;
+exception
+  when insufficient_privilege then return 'denied';
+  when check_violation then return 'check_violation';
+  when others then return 'error:' || sqlstate;
+end $$;
+
+create function pg_temp.ok_rows(sql text, expected text, label text)
+returns void language plpgsql as $$
+declare r text;
+begin
+  r := pg_temp.do_rows(sql);
+  perform pg_temp.ok(r = expected, label, r);
+end $$;
+
 create function pg_temp.ok_call(sql text, expected text, label text)
 returns void language plpgsql as $$
 declare r text;
@@ -156,17 +188,83 @@ reset role;
 
 select pg_temp.act_as('a0000000-0000-0000-0000-0000000ef001'::uuid);
 
+/*
+ * ~~"a player cannot write their own country directly"~~
+ * ~~"a player cannot promote their own skill level directly"~~
+ *
+ * CORRECTED IN ROUND 12, AND THE SCHEMA WAS NEVER WRONG.
+ *
+ * Both assertions were written for migration 21's world, where `country` and
+ * `skill_level` existed and nothing but `complete_signup_v2` wrote them.
+ * Migration `20260810120000_player_positions` REPEALED that deliberately and
+ * said so in as many words: ruling L gives these an edit surface, so the
+ * reason for withholding the grant expired and
+ * `grant update (country, skill_level, positions)` followed.
+ *
+ * THE FILE WAS ALREADY CONTRADICTING ITSELF, which is how this was settled
+ * rather than guessed: forty lines below, three assertions expect
+ * `check_violation` from an UPDATE of `country` — an outcome only reachable if
+ * the UPDATE is PERMITTED and gets as far as the CHECK. Those passed. These
+ * two were the stale half.
+ *
+ * VERIFIED AGAINST PRODUCTION before being changed, because "the test is
+ * wrong" is the comfortable conclusion and the expensive one if it is not:
+ * `information_schema.column_privileges` on the live database grants
+ * `authenticated` exactly `country, marketing_opt_in, nickname, phone,
+ * positions, skill_level` — identical to local, no table-level UPDATE. Not
+ * drift, and not a hole.
+ *
+ * SO THE ASSERTIONS BECOME WHAT THE CONTRACT ACTUALLY IS. The security
+ * property was never "nobody may write these"; it is "nobody may write these
+ * ON SOMEBODY ELSE'S ROW", which is `players_update_own` and which nothing in
+ * this file was checking. It is checked now.
+ */
 select pg_temp.ok_do(
   $q$update public.players set country = 'SK'
      where id = 'bbbb0000-0000-0000-0000-0000000ef001'::uuid$q$,
-  'denied',
-  'a player cannot write their own country directly');
+  'ok',
+  'a player may set their own country (ruling L gave it an edit surface)');
 
 select pg_temp.ok_do(
   $q$update public.players set skill_level = 'advanced'
      where id = 'bbbb0000-0000-0000-0000-0000000ef001'::uuid$q$,
-  'denied',
-  'a player cannot promote their own skill level directly');
+  'ok',
+  'a player may set their own skill level (self-declared, and not a gate)');
+
+/*
+ * THE PROPERTY THAT MATTERS, and it was untested until round 12.
+ *
+ * `skill_level` is self-declared and display-only — `create_booking` never
+ * consults it (§5.3, REQ-GAME-011) — so a player raising their own is not an
+ * escalation. Writing SOMEBODY ELSE'S is, and RLS is the only thing standing
+ * between the two. `rows:0` rather than `denied`: the grant permits the
+ * column, and the policy matches no row.
+ */
+select pg_temp.ok_rows(
+  $q$update public.players set skill_level = 'advanced'
+     where id = 'bbbb0000-0000-0000-0000-0000000ef002'::uuid$q$,
+  'ok:0',
+  'a player cannot promote ANOTHER player''s skill level');
+
+select pg_temp.ok_rows(
+  $q$update public.players set country = 'SK'
+     where id = 'bbbb0000-0000-0000-0000-0000000ef002'::uuid$q$,
+  'ok:0',
+  'a player cannot write ANOTHER player''s country');
+
+/*
+ * And the row is genuinely untouched, not merely unreported.
+ *
+ * COUNTED, NOT READ. A bare scalar subquery over an invisible row returns
+ * NULL — and so does a VISIBLE row whose `skill_level` happens to be null, so
+ * the two states would be indistinguishable. Counting separates them, and it
+ * is the idiom this file already uses forty lines above for the same reason.
+ */
+select pg_temp.ok_call(
+  $q$select count(_p::text) from (select skill_level from public.players
+     where id = 'bbbb0000-0000-0000-0000-0000000ef002'::uuid) _p$q$,
+  '0',
+  'the other player''s row is invisible to this caller, so nothing was rewritten');
 
 -- Consent evidence. A player editing when they accepted the terms is not a
 -- feature, and it is the reason tos_* is not in the UPDATE grant.

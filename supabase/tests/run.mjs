@@ -142,14 +142,47 @@ for (const suite of suites) {
       }
     }
 
+    /*
+     * TWO REPORT FORMATS, because two kinds of suite live in this directory.
+     *
+     * MOST suites are hand-rolled: a `_results` table, a PASS/FAIL column and
+     * an `ALL PASS` summary row. `notifications.sql` is pgTAP, which emits
+     * TAP — `1..9` then `ok N` / `not ok N` — and has no summary row at all.
+     *
+     * BEFORE ROUND 12 the runner knew only the first, so the pgTAP suite
+     * reported `NO SUMMARY` and counted as failed no matter what it asserted.
+     * It had ALSO been erroring on `function plan(integer) does not exist`
+     * since it was written, because pgTAP was never installed locally — so
+     * "this suite is red" was true for two unrelated reasons at once and the
+     * second one hid the first.
+     */
     const failures = lines.filter((l) => /\bFAIL\b/.test(l));
     const allPass = lines.some((l) => /ALL PASS/.test(l));
+
+    const tapPlan = lines.find((l) => /^\d+\.\.(\d+)$/.test(l.trim()));
+    const tapNotOk = lines.filter((l) => /^not ok\b/.test(l.trim()));
+    const tapOk = lines.filter((l) => /^ok\b/.test(l.trim()));
 
     if (failures.length > 0) {
       verdict = 'HAS FAILURES';
       detail = `\n    ${failures.slice(0, 10).join('\n    ')}`;
+    } else if (tapNotOk.length > 0) {
+      verdict = 'HAS FAILURES';
+      detail = `\n    ${tapNotOk.slice(0, 10).join('\n    ')}`;
     } else if (allPass) {
       verdict = 'ALL PASS';
+    } else if (tapPlan) {
+      // The plan is the count pgTAP PROMISED. A suite that raises halfway
+      // through emits a plan and too few `ok` lines, and that must not read
+      // as a pass — which is exactly what counting only `not ok` would do.
+      const planned = Number(/^\d+\.\.(\d+)$/.exec(tapPlan.trim())[1]);
+      if (tapOk.length === planned) {
+        verdict = 'ALL PASS';
+        detail = ` (pgTAP, ${planned} assertions)`;
+      } else {
+        verdict = 'HAS FAILURES';
+        detail = ` (pgTAP planned ${planned}, saw ${tapOk.length} ok)`;
+      }
     } else {
       verdict = 'NO SUMMARY';
       detail = ' (suite printed no ALL PASS row)';

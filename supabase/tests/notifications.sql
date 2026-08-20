@@ -7,6 +7,24 @@
 
 begin;
 
+/*
+ * pgTAP LIVES IN ITS OWN SCHEMA, and that is not tidiness (round 12, item 4).
+ *
+ * This suite had never actually run: pgTAP was not installed, so every
+ * invocation died on `function plan(integer) does not exist` and the suite
+ * counted as failed for a reason nobody had read in months.
+ *
+ * Installing it into `public` fixed that and broke something else — pgTAP is
+ * ~1080 functions, and `v13_conformance/security.sql` enumerates every
+ * function in `public` to assert that no SECURITY INVOKER one writes state.
+ * A test harness that changes what the conformance suites see is a harness
+ * that can hide a real finding, so it goes in `tap` and `public` keeps its 64.
+ *
+ * The search_path is set for this transaction only. `public` stays FIRST so
+ * that an unqualified table name in an assertion still means the product's.
+ */
+set local search_path = public, tap;
+
 select plan(9);
 
 -- The store exists and is the shape the bell reads.
