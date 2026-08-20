@@ -1162,3 +1162,6 @@ than the churn of closing it.
 | Community stats, profile stats | Captions wrap to two lines where the frames keep them on one | `eyebrow`'s 3px tracking does not fit "GAMES PLAYED" in a third of 390. Ruling B's one uppercase style beats the frame's letter-spacing |
 | Day strip | Nine cells at 48px against the frames' six at ~52px | The calendar-width ruling forbids a scrolling row, so the cell count is fixed and the width follows |
 | Games list | Two whole cards above the fold, not three | R10 |
+| Every page | The pitch canvas is visible behind the content where the frames draw flat black | `SiteBackground` is round-1 chrome, already reviewed. Removing it globally is a chrome decision, not a page one |
+| Game detail | The header band is photographed where `p03` draws it flat | R13 — R6(b) postdates the frame |
+| Profile | The cover is 132px; `p10` runs the photograph down past the stats to the tab row | Extending it puts white stat numerals over the photograph's brightest region. That is a contrast question, and the round had no budget left to measure it properly — deferred rather than guessed |

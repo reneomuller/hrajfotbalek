@@ -961,6 +961,16 @@ test("a venue with no photo renders name and Open map, with no empty frame", asy
     await page.goto(`/game/${game.id}`);
 
     const hero = page.getByTestId("game-hero");
+    /*
+     * VISIBLE BEFORE MEASURED, and this is a real lesson rather than a
+     * paper-over. The height assertion below read 0 under a full-suite run
+     * and passed in isolation, twice — because `toHaveAttribute` and
+     * `toContainText` are satisfied by the SSR markup and do not wait for the
+     * element to have a box. On a loaded machine the measurement landed
+     * before layout. `toBeVisible` is Playwright's non-empty-bounding-box
+     * wait, which is exactly the precondition a geometry assertion needs.
+     */
+    await expect(hero).toBeVisible();
     await expect(hero).toHaveAttribute("data-photo", "false");
     await expect(hero).toContainText("E2E Scratch Pitch");
 
