@@ -35,11 +35,20 @@ One numbered row each, with a status: shipped, built-but-dormant, partial, open
 or declined-with-the-reason. **Every round updates it, and every end report
 closes by quoting its OPEN and BUILT-DORMANT rows verbatim.**
 
-It exists because five separate things the owner asked for are *shipped and
-invisible* — Google sign-in, the Stripe booking link, the pass-tier links and
-the profile-cover storage migration all wait on a step only he can take, and a
-feature that is finished and dormant looks exactly like a feature that was
-never built. The `BUILT-DORMANT-ON-<step>` status names the step.
+It exists because things the owner asked for keep ending up *shipped and
+invisible* — Google sign-in and the pass-tier links still wait on a step only
+he can take, and a feature that is finished and dormant looks exactly like a
+feature that was never built. The `BUILT-DORMANT-ON-<step>` status names the
+step.
+
+**A DORMANT OR OPEN ROW IS NEVER ECHOED; IT IS RE-VERIFIED BEFORE IT IS
+PRINTED** (round 12). "Still blocked" copied from last round is a claim about
+the past wearing the present's clothes. Checking found two rows that had
+silently come true: the Stripe booking link had been set in Vercel, and the
+cover-photo migration had been applied — both reported as blocked the round
+before. Verify a variable with `vercel env ls production`, a migration by
+querying the live catalog, and a grant by evaluating it on production under a
+real identity.
 
 The other thing it prevents is a request being asked a fifth time. `/admin`
 against `p14` was, which is what produced the file.
@@ -179,15 +188,19 @@ answers a missing function with a 404.
 | `20260802190000_pass_tiers_from_five` | Applied, verified |
 | `20260802210000_venue_amenities` | Applied 2026-08-10 |
 
-**Outstanding, and it is DDL — round 11's, and the code needs it.** The
-deployed application reads `games.guest_count` and `bookings.guest_count`.
-Until this runs, production has neither, so the guest and party surfaces fail
-against a column that is not there:
+**Outstanding, and it is DDL — round 12's, and the code needs it.** The
+deployed application calls `create_booking` with `p_online`, which
+production's five-argument version does not accept. Booking breaks if the code
+ships first, so this lands before the deploy, not after:
 
 ```
 node scripts/apply-migration.mjs \
-  supabase/migrations/20260821100000_guests_and_parties.sql --production
+  supabase/migrations/20260821200000_online_payment_pending.sql --production
 ```
+
+**Round 11's is applied and verified** (guests and parties), as is round 9's
+cover-key migration — both re-checked against the live catalog on 2026-08-20
+rather than carried forward on last round's word.
 
 **Outstanding, and it is DATA rather than DDL** — the venue separator moved
 from an em-dash to a bullet in the fixtures, and production rows still carry

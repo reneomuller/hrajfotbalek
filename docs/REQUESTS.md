@@ -15,6 +15,21 @@ owner asked for can go quiet.
 | `OPEN` | Not built, not declined, not blocked on the owner. Work still owed |
 | `DECLINED-because …` | Refused with reasoning. The reason is in the row so the next session does not re-propose it |
 
+**A DORMANT OR OPEN ROW IS NEVER ECHOED. It is re-verified against reality
+before it is printed** (standing rule, round 12). "Still dormant" copied from
+last round's report is a claim about the past wearing the present's clothes —
+and round 12 found two rows that had silently become true: the booking link had
+been set in Vercel and the cover migration had been applied. Both had been
+reported as blocked the round before.
+
+What counts as verifying, by kind of row:
+
+| Blocked on | Verify by |
+|---|---|
+| A Vercel environment variable | `npx vercel env ls production` — the name and its creation time |
+| A production migration | Query the live catalog for the object it creates |
+| A storage or grant change | Evaluate the predicate on production under a real identity, and drive one real round trip |
+
 Two rules for whoever edits this next:
 
 1. **A row is never deleted.** A request that turns out to be wrong becomes
@@ -53,7 +68,7 @@ quarantine held until the owner lifted it, item by item.
 | 6 | Per-game pitch names, typed at creation and reused from a dropdown | `SHIPPED round-9` — migration 41 applied (local + production, verified round 9 item 1). Free-text field with a `pitch_name_suggestions` datalist; every typed name is remembered, no save flag. Renders on the game detail. See row 51a for the label-language ruling |
 | 7 | In-app notifications surface | `SHIPPED round-7` (item 5) — `notifications` table, bell in the header, admin compose. Migration applied and verified |
 | 8 | Phone mandatory at signup | `SHIPPED round-7` (item 8) |
-| 9 | Stripe checkout | `BUILT-DORMANT-ON-setting the Stripe env vars in Vercel`. Hosted Payment Links, not an integration: `NEXT_PUBLIC_STRIPE_PAYMENT_URL` (per-game) and `NEXT_PUBLIC_STRIPE_PASS_URLS` (a JSON map of tier → link). Both unset today, so the online option renders as a gated placeholder and credits + cash work as they always have. Reconciliation is manual by design |
+| 9 | Stripe checkout — the per-game booking link | **`SHIPPED round-12`**, and it was the OWNER who unblocked it. `NEXT_PUBLIC_STRIPE_PAYMENT_URL` is **set in Vercel production**, created 2026-08-20 — verified with `vercel env ls production`, not assumed. Every deploy since carries it, so the online option is live rather than a gated placeholder. Round 12 item 5 then closed the hole this opened: an online booking used to hold its seats before Stripe had seen any money. See row 58 |
 | 10 | Admin user search | `SHIPPED round-7` (item 9) — the admin player detail page |
 | 11 | Admin ban / delete a player | `OPEN`, still quarantined — **ban is a new account state**, with consequences for bookings already held. Search was the cheap half and shipped; this is not |
 | 12 | Pitches as an entity under venues (Pitch 1, 2, 3…) | `OPEN`, still quarantined — a new entity, an FK on `games`, admin CRUD, and a decision about what a pitch inherits from its venue. Row 6 is the front-end answer that avoided all of it |
@@ -96,7 +111,7 @@ quarantine held until the owner lifted it, item by item.
 | 30 | Admin frames (`p14`–`p19`) mapping check | `SHIPPED round-7` (item 0) — and it found the audit wrong: `p15` is add-player, `p16` is the new-venue block **inside** `/admin/games/new`, `p19` is `/admin/stats`, `p12` is home's community section. Only `p13` was genuinely new |
 | 31 | New game flow, financials page, admin player detail | `SHIPPED round-7` |
 | 32 | Payment UI: three options | `SHIPPED round-7` (item 11) — three options with the online one gated. See row 9 |
-| 33 | Pass purchase links, one env var, JSON map of tier → link | `BUILT-DORMANT-ON-pasting the JSON map into Vercel` — `NEXT_PUBLIC_STRIPE_PASS_URLS`. The template with every real tier identifier as a key was printed for the owner in the round 7 report |
+| 33 | Pass purchase links, one env var, JSON map of tier → link | `BUILT-DORMANT-ON-pasting the JSON map into Vercel` — `NEXT_PUBLIC_STRIPE_PASS_URLS`. **Re-verified 2026-08-20: absent from `vercel env ls production`.** It is the only Stripe variable still missing now that row 9's is set; the template with every real tier identifier as a key was printed in the round 7 report |
 | 34 | Stripe redirect params — `client_reference_id` and `prefilled_email` on every outgoing link | `SHIPPED round-7` (item 16), asserted on the outgoing URL. Dormant in effect, because row 9's links are unset |
 
 ### Round 8 (fourteen items)
@@ -121,7 +136,7 @@ quarantine held until the owner lifted it, item by item.
 | 45 | Extend the profile cover and **measure** the contrast | `SHIPPED round-9` (item 4) — extended to 245px. Measuring is what caught the bug: the absolute cover was painting over `ProfileStats`, max luminance 37 across the stats band, numerals not on screen. The same stacking class as the round-6 nickname bug |
 | 46 | Merge the admin game pages; remove the drafts section | `SHIPPED round-9` |
 | 47 | Forgot password, built | `SHIPPED round-9` (item 8) — `/login/reset` in the product's own shell. No design invented, because there is still no frame |
-| 48 | **Apply `20260820160000_cover_key_and_grants.sql` to production** | `BUILT-DORMANT-ON-the owner running the migration`. Applied locally and verified; **not** applied to production. Until it is, a cover upload on production **saves a row but not the image**. The command is in every end report and is repeated at the bottom of this file |
+| 48 | **Apply `20260820160000_cover_key_and_grants.sql` to production** | **`SHIPPED round-12`**, verified against production rather than assumed. Three checks, all on the live database: `set_cover_photo` derives the `.cover.` key, so the migration IS applied; the `profile_photos_owner_insert` policy matches `players/<id>.%`, and evaluating it under a real player's `auth.uid()` admits `players/<id>.cover.png` — where the OLD `-cover.` key does not, which was exactly the round-9 bug; and a real upload → public read → delete round trip returned 200 / `image/png` / 70 bytes, with the test object removed |
 
 ### Round 10 (three items)
 
@@ -130,7 +145,7 @@ quarantine held until the owner lifted it, item by item.
 | 49 | **`/admin` = `p14`, uncapped — the fifth time this has been asked** | `SHIPPED round-10` (item 1). Side-by-side at 390px, iterated until the comparison stopped producing findings. Pinned by `e2e/strips-admin-dashboard.spec.ts`, which is the first spec this page has ever had — round 8's version could drift because nothing failed when it did. Residual divergences are listed in §4 below |
 | 50 | This file | `SHIPPED round-10` (item 2) |
 | 51 | The pitch-name admin form label stays English | `SHIPPED round-10` (item 3) — see §5 |
-| 52 | *Not a request — a finding raised by row 49, filed here because R23 promises it a row.* `page-title` is probably one step too loud product-wide | `OPEN`, and it is the owner's call. Every frame measured — `p02`, `p05`, `p10`, `p11`, `p18` as well as all four admin ones — draws its page title at a **23.4px cap**. `page-title` renders 28.2; `title` renders 21.3. R17 added the step on the reading that our titles were "a third smaller than the design", and the pixels disagree. Correcting it moves **nineteen headings** across home, games, auth, pass and profile — surfaces nobody asked about in round 10, which is why admin was fixed alone. R23 |
+| 52 | *A finding raised by row 49.* `page-title` is one step too loud product-wide | **`SHIPPED round-12`** (item 1) — **accepted by the owner and corrected.** `page-title` is `clamp(27px,7vw,36px)`: 27.3px at 390, a 23.5px cap, the frames' number. R17 is reversed on pixel evidence and recorded struck-through as R28; nineteen headings moved together and admin went back to `page-title` from the `title` round 10 settled for. ~~`OPEN`, and it is the owner's call. Every frame measured — `p02`, `p05`, `p10`, `p11`, `p18` as well as all four admin ones — draws its page title at a **23.4px cap**. `page-title` renders 28.2; `title` renders 21.3. R17 added the step on the reading that our titles were "a third smaller than the design", and the pixels disagree. Correcting it moves **nineteen headings** across home, games, auth, pass and profile — surfaces nobody asked about in round 10, which is why admin was fixed alone.~~ R23, R28 |
 
 ### Round 11 (one feature, two halves)
 
@@ -140,7 +155,20 @@ quarantine held until the owner lifted it, item by item.
 | 54 | Existing shadow players must keep rendering as guests, with no data loss | `SHIPPED round-11`. **No backfill and no row touched.** A shadow IS `players.auth_user_id is null`, and the roster view projects that as `is_guest`, so they became guests by definition rather than by migration — and they keep their own names. One that is later claimed gains an auth user and stops being a guest, which is correct |
 | 55 | **Party booking (+1/+2/+3)** — one booking, N+1 seats, guest avatars at the end of the row | `SHIPPED round-11` (B). `bookings.guest_count`; `price_czk` is the whole party's, which is what lets the variable symbol, the credit application, the confirmation email and `cancel_booking` work untouched. The ceiling is `policy.booking.maxPartyGuests` **and** a constant inside `create_booking_internal` — the second policy window that lives in two places, for the same reason the cancellation cutoff does |
 | 56 | Party payment: credits only when the balance covers all N+1, cash as today, online with an explicit "set quantity to N" line | `SHIPPED round-11`. The credit rule is DERIVED rather than corrected after the fact: growing the party past the wallet un-checks the option in the same render, because an effect would fix it one frame late and that frame is the one where Confirm is pressable. The quantity line exists because a Stripe Payment Link carries a fixed quantity of one and no parameter presets it |
-| 57 | **Apply `20260821100000_guests_and_parties.sql` to production** | `BUILT-DORMANT-ON-the owner running the migration`. Validated against the local database and rolled back; 23 SQL assertions pass. **Until it runs, production has no `guest_count` columns** — the deployed code would ask for a column that is not there, so this migration and the deploy belong together. Command in §6 |
+| 57 | **Apply `20260821100000_guests_and_parties.sql` to production** | **`SHIPPED round-11`**, applied by the owner and verified on the live catalog before that round's deploy: both `guest_count` columns, `game_seats_taken`, `set_game_guests`, the seven-column roster view, the `anon` read grant, the widened event catalog, and `create_booking` at exactly five arguments with no four-argument overload left shadowing it |
+
+### Round 12 (five items)
+
+| # | Request | Status |
+|---|---|---|
+| 58 | **Correct `page-title` to the frames' measured cap, product-wide** | `SHIPPED round-12` (item 1) — closes row 52. R28 |
+| 59 | **Branding (a): the header keeps only the logo mark** | `SHIPPED round-12`. The wordmark text is gone from beside the monogram; the `aria-label` on the link is now the only thing naming it. The share card and the landing footer's signature are untouched — item 2a is about the mark+text pair as site identity, and neither is that pair |
+| 60 | **Branding (b): the hero's display line is `HRAJ FOTBAL.` in every language** | `SHIPPED round-12`. It renders from `t.brand`, a section the i18n test forbids the overlays from touching, so it is **structurally** untranslatable rather than translatable-with-an-exemption. `landing.heroLine1` is deleted from all three tables; `heroLine2` still localizes. **This resolves the Cyrillic-hero question** — a Latin line takes Anton in Russian too, asserted directly on `fontFamily`. R29 |
+| 61 | **Ledger live-verification as a standing rule** | `SHIPPED round-12` (item 3) — written into this file's preamble, with what counts as verifying per kind of blocker. It immediately found two rows that had silently come true |
+| 62 | **Test substrate: pgTAP, and the two red security assertions** | `SHIPPED round-12` (item 4). The SQL suite is 33/33 for the first time. pgTAP had never been installed, so `notifications.sql` had never run; it lives in the `tap` schema because `public` would have broken the conformance suite. The two red assertions were STALE, not a hole — migration `20260810120000` granted those columns deliberately, and production was checked before the test was changed |
+| 63 | **Close the online-payment back-arrow hole** | `SHIPPED round-12` (item 5). Online bookings hold their seats for thirty minutes rather than forever; a signed webhook settles them; a stale pending stops holding seats with no cron. Cash and credit are untouched. See rows 64 and 65 for what is still owed |
+| 64 | **Apply `20260821200000_online_payment_pending.sql` to production** | `BUILT-DORMANT-ON-the owner running the migration`. Validated locally and rolled back; 22 SQL assertions and 4 e2e. **The deployed code calls `create_booking` with `p_online`, which production's five-argument version does not accept — so this migration and the deploy belong together, in that order.** Command in §6 |
+| 65 | **Set `STRIPE_WEBHOOK_SECRET` in Vercel** | `BUILT-DORMANT-ON-adding the endpoint in Stripe and pasting the signing secret into Vercel`. Verified absent from `vercel env ls production` on 2026-08-20. Until it is set, `/api/stripe/webhook` answers 503 to everything — which is the correct posture: an endpoint that confirms bookings and cannot verify who is asking must not confirm anything. **A server-side variable, NOT `NEXT_PUBLIC_`.** Steps in §6 |
 
 ---
 
@@ -170,39 +198,53 @@ items physically impossible without a new frame**. It is. What remains:
 
 ## 6. Standing owner actions
 
-**Two commands are outstanding.** They are rows 48 and 57, repeated here
-because a dormant row at the bottom of a table is a row that gets skimmed.
+**Everything here was re-verified on 2026-08-20, not copied forward.** Rows 48
+and 57 came OFF this list as a result; what follows is what is genuinely still
+owed.
 
-**Round 11's migration, and it is the urgent one** — the deployed code reads
-`games.guest_count` and `bookings.guest_count`, and production has neither
-until this runs:
-
-```bash
-node scripts/apply-migration.mjs \
-  supabase/migrations/20260821100000_guests_and_parties.sql --production
-```
-
-It adds two columns with defaults, one function, one RPC, and rewrites
-`game_roster_public` to emit a row per seat. It is additive: no row changes and
-nothing is dropped except the four-argument `create_booking`, which the new
-five-argument one replaces. Rollback is
-`supabase/rollback/20260821100000_guests_and_parties_down.sql`.
-
-**Round 9's, still outstanding:**
+### One migration, and it must land BEFORE the next deploy
 
 ```bash
 node scripts/apply-migration.mjs \
-  supabase/migrations/20260820160000_cover_key_and_grants.sql --production
+  supabase/migrations/20260821200000_online_payment_pending.sql --production
 ```
 
-Until it runs, **a profile cover uploaded on production saves a database row
-and no image.** The `--production` flag is deliberate and cannot be replaced by
-an environment variable — see CLAUDE.md on why implicitness is what failed.
+The deployed code calls `create_booking` with `p_online`, and production's
+five-argument version does not accept it — **booking breaks if the code ships
+first**. Additive otherwise: four nullable columns, two indexes, two functions,
+two RPCs, and a rewrite of `game_roster_public` and `game_seats_taken` to route
+their filter through `booking_holds_seat`. No row changes. Rollback is
+`supabase/rollback/20260821200000_online_payment_pending_down.sql`.
 
-**Three environment variables are unset**, and each holds a shipped feature
-dormant: `NEXT_PUBLIC_GOOGLE_AUTH` (row 27),
-`NEXT_PUBLIC_STRIPE_PAYMENT_URL` (row 9), `NEXT_PUBLIC_STRIPE_PASS_URLS`
-(row 33).
+The `--production` flag is deliberate and cannot be replaced by an environment
+variable — see CLAUDE.md on why implicitness is what failed.
+
+### The Stripe webhook, four steps (row 65)
+
+1. **Stripe → Developers → Webhooks → Add endpoint**, with the URL
+   `https://hrajfotbalek-wlya.vercel.app/api/stripe/webhook`
+2. Subscribe it to **`checkout.session.completed`** and nothing else. The route
+   answers 200 and ignores any other type, so extra subscriptions are noise
+   rather than damage — but each one is a delivery to pay attention to.
+3. **Copy the signing secret** (`whsec_…`) from that endpoint's page.
+4. **Vercel → Settings → Environment Variables → Production**, add
+   `STRIPE_WEBHOOK_SECRET` with that value. **Server-side — do NOT prefix it
+   with `NEXT_PUBLIC_`**, which would inline the signing secret into the
+   browser bundle and let anyone forge a confirmation. Then **redeploy**: the
+   route reads it at request time, but a redeploy is what makes the setting
+   take effect on the running build.
+
+**ADJUSTABLE QUANTITY ON THE LINK IS SAFE.** The handler checks
+`amount_total >= ` what the party owes, so a player who sets quantity 3 pays
+450 and is confirmed; an overpayment credits the wallet through the existing
+ledger path. Below the owed amount the booking is FLAGGED, never seated — an
+underpaid party is a pitch short of money on the day.
+
+### Two environment variables are still unset
+
+Each holds a finished feature dormant: `NEXT_PUBLIC_GOOGLE_AUTH` (row 27) and
+`NEXT_PUBLIC_STRIPE_PASS_URLS` (row 33). `NEXT_PUBLIC_STRIPE_PAYMENT_URL` is
+no longer among them — it was set on 2026-08-20 and row 9 is shipped.
 
 **One data statement is outstanding** and needs no migration file — the venue
 separator moved from an em-dash to a bullet in the fixtures and production rows
