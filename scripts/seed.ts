@@ -292,8 +292,14 @@ async function seed(): Promise<void> {
   // Amounts are chosen so the paths are both EXERCISED and still VISIBLE
   // afterwards. Credit auto-applies to the next booking, so a player given
   // exactly one game's worth ends at zero and the admin UI has no standing
-  // balance to render. CreditRich is given 450 (200 price + 250 headroom): the
-  // full-credit instant-confirm path fires, and 250 remains on the wallet.
+  // balance to render.
+  //
+  // ARITHMETIC RESTATED FOR THE FLAT 150 (round 8, item 1). Overpaying 650 on
+  // a 150 game leaves CreditRich 500, so the full-credit instant-confirm path
+  // fires and 350 remains after it. CreditPartial's 250 leaves 100, which is
+  // less than one game — which is the point of that fixture: it is the
+  // PARTIAL-credit path, and it stays partial at the new price (100 of 150
+  // covered, 50 due).
   for (const [session, playerId, received] of [
     [asRich, players.creditRich.id, 650],
     [asPartial, players.creditPartial.id, 250],
@@ -318,7 +324,7 @@ async function seed(): Promise<void> {
 
   // --- bookings in every state ----------------------------------------------
 
-  // RESERVED, with partial credit applied (50 of 200 => 150 due, keeps qr).
+  // RESERVED, with partial credit applied (100 of 150 => 50 due, keeps qr).
   check(
     "partial-credit reserved booking",
     (
