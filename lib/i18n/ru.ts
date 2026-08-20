@@ -248,7 +248,6 @@ export const ru: StringsOverlay = {
     skillNotEnforced: "Рады всем — это ориентир, а не правило.",
 
     organizerLabel: "Организатор",
-    organizerPhoneNote: "Виден тебе, потому что у тебя есть место на этом матче.",
 
     yourBookingTitle: "Ты в составе",
     yourBookingHeld: "Место забронировано — подтверди его оплатой.",
@@ -259,7 +258,9 @@ export const ru: StringsOverlay = {
 
     openMapFull: "Открыть место на карте",
     organizerRole: "Организует этот матч",
-    organizerWhatsApp: "Написать организатору в WhatsApp",
+    // DRAFT — flagged for the standing native-review batch.
+    organizerWhatsApp: "Написать в WhatsApp",
+    organizerWhatsAppMessage: "Привет! Вопрос по игре {game}.",
     // DRAFT — flagged for the standing native-review batch.
     cardJoinCue: "Играю",
     availabilityLabel: "Свободные места",

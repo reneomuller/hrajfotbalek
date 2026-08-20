@@ -83,7 +83,7 @@ test.describe("Section 4 strips — the game card", () => {
         await page.evaluate(() => document.fonts.ready);
 
         // The rulings, asserted in the strip that claims them.
-        await expect(page.getByTestId("organizer-phone")).toBeVisible();
+        // The number is no longer printed (round 8, item 8) — only the control.
         await expect(page.getByTestId("organizer-whatsapp")).toHaveAttribute(
           "href",
           /wa\.me\/420777654321/,

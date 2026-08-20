@@ -342,7 +342,27 @@ test("a game with no format shows no format at all, rather than one derived from
  * would gate the render and leave the number one call away. The SQL suite
  * proves the grant; this proves the page.
  */
-test("the organizer phone is visible only to a player holding a spot", async ({
+/*
+ * THE ORGANIZER IS REACHABLE BY EVERYONE (round 8, item 8).
+ *
+ * ~~The organizer phone is visible only to a player holding a spot.~~
+ * REVERSED by the owner: someone deciding whether to cross Prague for a pickup
+ * game should be able to ask a question first, so the WhatsApp control shows
+ * for an anonymous visitor, a signed-in stranger and a spot-holder alike.
+ *
+ * TWO THINGS SURVIVE THE REVERSAL AND ARE ASSERTED HERE.
+ *
+ *   1. THE NUMBER IS NEVER PRINTED. It is the href and nothing else — the
+ *      `tel:` link and the visible digits are gone. Not a privacy measure (the
+ *      href is readable) but a copy decision: a raw number invites a phone
+ *      call, and the ruling is WhatsApp.
+ *   2. `game_organizer_phone()` AND ITS GATE ARE UNTOUCHED. The RPC still
+ *      refuses `anon` and still requires a booking. The page reads the table
+ *      with the service client instead, so no database privilege widened and
+ *      nothing else that calls the RPC changed behaviour. That is what makes
+ *      this ruling revertible by deleting one function.
+ */
+test("everyone can message the organizer, and nobody sees the number", async ({
   page,
   context,
 }) => {
@@ -352,44 +372,51 @@ test("the organizer phone is visible only to a player holding a spot", async ({
     organizerPhone: phone,
   });
 
+  const expectContactable = async (who: string) => {
+    const link = page.getByTestId("organizer-whatsapp");
+    await expect(link, `${who}: no WhatsApp control`).toBeVisible();
+    // wa.me wants bare digits, and the message carries the fixture.
+    const href = (await link.getAttribute("href")) ?? "";
+    expect(href, who).toContain("https://wa.me/420777654321");
+    expect(href, `${who}: the message is not prefilled`).toContain("?text=");
+    // The digits are in the href and NOWHERE on the page.
+    await expect(page.getByTestId("organizer-phone")).toHaveCount(0);
+    await expect(page.locator("body"), `${who}: the number is printed`).not.toContainText(
+      phone,
+    );
+  };
+
   try {
     // --- anonymous ---------------------------------------------------------
     await page.goto(`/game/${game.id}`);
     await expect(page.getByTestId("organizer-name")).toHaveText("Organizer On Call");
-    await expect(page.getByTestId("organizer-phone")).toHaveCount(0);
-    await expect(page.locator("body")).not.toContainText(phone);
-
-    // Not through the API either. `anon` is denied EXECUTE outright, which is
-    // a stronger property than "the function returns null" — see migration 27.
-    const anon = anonClient();
-    const anonResult = await anon.rpc("game_organizer_phone", { p_game_id: game.id });
-    expect(anonResult.data ?? null).toBeNull();
+    await expectContactable("anonymous");
 
     // --- signed in, no booking on this game --------------------------------
-    // A different seeded player, so "signed in" and "holds a spot here" are
-    // genuinely separate conditions rather than the same one twice.
-    const stranger = await apiClientFor(players.creditRich);
-    const strangerResult = await stranger.rpc("game_organizer_phone", {
-      p_game_id: game.id,
-    });
-    expect(strangerResult.data ?? null).toBeNull();
-
     await signInAs(context, players.creditRich);
     await page.goto(`/game/${game.id}`);
-    await expect(page.getByTestId("organizer-phone")).toHaveCount(0);
-    await expect(page.locator("body")).not.toContainText(phone);
+    await expectContactable("signed-in stranger");
 
-    // --- holding a confirmed spot ------------------------------------------
+    // --- holding a spot ----------------------------------------------------
     const runner = await apiClientFor(players.runner);
     const { error } = await runner.rpc("create_booking", {
       p_game_id: game.id,
       p_payment_method: "cash",
     });
     expect(error).toBeNull();
-
     await signInAs(context, players.runner);
     await page.goto(`/game/${game.id}`);
-    await expect(page.getByTestId("organizer-phone")).toHaveText(phone);
+    await expectContactable("spot holder");
+
+    // --- and the RPC's own gate is exactly where it was --------------------
+    const anon = anonClient();
+    expect((await anon.rpc("game_organizer_phone", { p_game_id: game.id })).data ?? null)
+      .toBeNull();
+    const stranger = await apiClientFor(players.creditRich);
+    expect(
+      (await stranger.rpc("game_organizer_phone", { p_game_id: game.id })).data ?? null,
+      "the RPC gate was widened — it should not have been",
+    ).toBeNull();
   } finally {
     await destroyScratchGame(game.id);
   }

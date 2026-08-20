@@ -1,7 +1,10 @@
 import { canOfferCancel, isCancellationRefundable } from "@/lib/booking/badges";
 import { isInProgress } from "@/lib/games/duration";
 import { policy } from "@/lib/policy";
-import { createServerSupabaseClient } from "@/lib/supabase/clients";
+import {
+  createServerSupabaseClient,
+  createServiceRoleSupabaseClient,
+} from "@/lib/supabase/clients";
 import type { Database } from "@/lib/types/database";
 
 type GameRow = Database["public"]["Tables"]["games"]["Row"];
@@ -213,19 +216,52 @@ export interface GameOrganizer {
  */
 export async function getGameOrganizer(gameId: string): Promise<GameOrganizer> {
   const supabase = await createServerSupabaseClient();
-
-  const [nameResult, phoneResult] = await Promise.all([
-    supabase.rpc("game_organizer_public", { p_game_id: gameId }),
-    supabase.rpc("game_organizer_phone", { p_game_id: gameId }),
-  ]);
+  const nameResult = await supabase.rpc("game_organizer_public", {
+    p_game_id: gameId,
+  });
 
   return {
     name: nameResult.error ? null : ((nameResult.data as string | null) ?? null),
-    // An anonymous caller is DENIED execute on the phone function, so this
-    // errors rather than returning null for them. Both outcomes mean the same
-    // thing here and both render as nothing.
-    phone: phoneResult.error ? null : ((phoneResult.data as string | null) ?? null),
+    phone: await organizerWhatsAppNumber(gameId),
   };
+}
+
+/**
+ * The organizer's number for the WhatsApp link — READ FOR EVERYONE.
+ *
+ * ~~`game_organizer_phone()` resolves the caller's identity inside the
+ * function, so a viewer without a booking cannot see the number and an
+ * anonymous one may not even ask.~~
+ *
+ * **REVERSED 2026-08-20 by the owner (round 8, item 8).** The ruling is that
+ * the organizer is reachable on WhatsApp by EVERYONE looking at the game,
+ * including someone who has not booked and someone who is not signed in. A
+ * person deciding whether to travel across Prague for a pickup game should be
+ * able to ask a question first, and gating that behind a booking is the wrong
+ * way round.
+ *
+ * **WHAT THAT COSTS, STATED PLAINLY BECAUSE IT IS A REAL COST.** The number
+ * now reaches the HTML of a public page. Anyone — including a crawler — can
+ * read it out of the `wa.me` href. Migration 27 built the gate deliberately
+ * and its reasoning was sound; what changed is the owner's judgement about
+ * whose convenience wins, not a discovery that the gate was wrong.
+ *
+ * **THE RPC AND ITS GATE ARE UNTOUCHED.** `game_organizer_phone()` still
+ * exists, still refuses `anon`, and still gates on a booking. This reads the
+ * table directly with the service client instead — the same elevated read the
+ * admin surface already uses on this table — so no privilege is widened in the
+ * database and nothing else that calls the RPC changes behaviour. Reverting
+ * this ruling is deleting this function, not another migration.
+ */
+async function organizerWhatsAppNumber(gameId: string): Promise<string | null> {
+  const service = createServiceRoleSupabaseClient();
+  const { data, error } = await service
+    .from("game_organizer_contacts")
+    .select("organizer_phone")
+    .eq("game_id", gameId)
+    .maybeSingle();
+
+  return error || !data ? null : data.organizer_phone;
 }
 
 export interface OwnBookingOnGame {

@@ -337,7 +337,13 @@ export default async function GameDetailPage({ params, searchParams }: GamePageP
         to branch on.
       */}
       {organizer.name && (
-        <OrganizerCard name={organizer.name} phone={organizer.phone} />
+        <OrganizerCard
+          name={organizer.name}
+          phone={organizer.phone}
+          /* Venue and kick-off, the same pair the share message uses — so the
+             organizer reads the fixture, not a game id. */
+          gameLabel={`${venueDisplayName(game.venue, venueRow?.pitch_name)} · ${formatGameDateTime(game.starts_at)}`}
+        />
       )}
 
       <PlayersList rows={roster} supabaseUrl={supabaseUrl} />

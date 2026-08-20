@@ -245,7 +245,6 @@ export const cs: StringsOverlay = {
     skillNotEnforced: "Vítáni jsou všichni — je to vodítko, ne pravidlo.",
 
     organizerLabel: "Pořadatel",
-    organizerPhoneNote: "Vidíš ho, protože máš na tomhle zápase místo.",
 
     yourBookingTitle: "Jsi v sestavě",
     yourBookingHeld: "Místo ti držíme — potvrď ho platbou.",
@@ -256,7 +255,9 @@ export const cs: StringsOverlay = {
 
     openMapFull: "Otevřít místo v Mapách",
     organizerRole: "Pořádá tento zápas",
-    organizerWhatsApp: "Napsat pořadateli na WhatsApp",
+    // DRAFT — flagged for the standing native-review batch.
+    organizerWhatsApp: "Napsat na WhatsApp",
+    organizerWhatsAppMessage: "Ahoj! Dotaz k zápasu {game}.",
     // DRAFT — flagged for the standing native-review batch.
     cardJoinCue: "Hrát",
     availabilityLabel: "Volná místa",

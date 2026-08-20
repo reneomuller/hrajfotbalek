@@ -457,10 +457,15 @@ export const strings = {
     // Shown under the name when there is no phone to show — a card with a face
     // and a name and then nothing reads as something that failed to load.
     organizerRole: "Runs this game",
-    organizerWhatsApp: "Message the organizer on WhatsApp",
+    organizerWhatsApp: "Message on WhatsApp",
+    /*
+     * The prefilled message body (round 8, item 8). `{game}` is the venue and
+     * kick-off, so an organizer running four fixtures a week does not have to
+     * ask which one.
+     */
+    organizerWhatsAppMessage: "Hi! A question about {game}.",
     // Shown to a player holding a spot, and to nobody else. The line says so,
     // so the number does not look like something that leaked.
-    organizerPhoneNote: "Visible to you because you have a spot on this game.",
 
     // --- your booking (§5.6) -------------------------------------------------
     yourBookingTitle: "You are in",
