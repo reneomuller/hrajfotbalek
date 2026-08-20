@@ -130,6 +130,7 @@ quarantine held until the owner lifted it, item by item.
 | 49 | **`/admin` = `p14`, uncapped — the fifth time this has been asked** | `SHIPPED round-10` (item 1). Side-by-side at 390px, iterated until the comparison stopped producing findings. Pinned by `e2e/strips-admin-dashboard.spec.ts`, which is the first spec this page has ever had — round 8's version could drift because nothing failed when it did. Residual divergences are listed in §4 below |
 | 50 | This file | `SHIPPED round-10` (item 2) |
 | 51 | The pitch-name admin form label stays English | `SHIPPED round-10` (item 3) — see §5 |
+| 52 | *Not a request — a finding raised by row 49, filed here because R23 promises it a row.* `page-title` is probably one step too loud product-wide | `OPEN`, and it is the owner's call. Every frame measured — `p02`, `p05`, `p10`, `p11`, `p18` as well as all four admin ones — draws its page title at a **23.4px cap**. `page-title` renders 28.2; `title` renders 21.3. R17 added the step on the reading that our titles were "a third smaller than the design", and the pixels disagree. Correcting it moves **nineteen headings** across home, games, auth, pass and profile — surfaces nobody asked about in round 10, which is why admin was fixed alone. R23 |
 
 ---
 
