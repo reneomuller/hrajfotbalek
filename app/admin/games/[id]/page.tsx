@@ -23,6 +23,7 @@ import {
 import { formatCzk, formatGameTimeSpan } from "@/lib/format";
 import { gameEndsAt } from "@/lib/games/duration";
 import { strings } from "@/lib/strings";
+import { AddPlayerForm } from "@/components/admin/AddPlayerForm";
 import { NotifyForm } from "@/components/admin/NotifyForm";
 import { formatGameDateTime } from "@/lib/format";
 import { venueDisplayName } from "@/lib/venues/displayName";
@@ -55,10 +56,13 @@ export const dynamic = "force-dynamic";
  */
 export default async function AdminGamePage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const { id } = await params;
+  const query = searchParams ? await searchParams : {};
   const [admin, game] = await Promise.all([requireAdmin(), getAdminGame(id)]);
   if (!game) notFound();
 
@@ -170,16 +174,48 @@ export default async function AdminGamePage({
             testId="publish-game"
           />
         )}
-        {canEdit && (
-          <Link
-            href={`/admin/games/${game.id}/add-player`}
-            data-testid="add-player"
-            className="rounded-control border border-hairline-strong px-5 py-3 text-[15px] font-extrabold uppercase tracking-wide text-bone no-underline"
-          >
-            {strings.admin.addPlayer}
-          </Link>
-        )}
+
       </div>
+
+      {/*
+        --- add a player ------------------------------------------------------
+
+        FOLDED IN FROM ITS OWN PAGE (round 9, item 6). It was the last per-game
+        admin surface still sitting on a route of its own — Phase 18 merged
+        Edit and Attendance into this page and left this one behind, so "deal
+        with Sunday's game" still meant one hop out and back.
+
+        It is the same reasoning that merged the other two: the split was along
+        OUR boundary — which RPC does the write — rather than along anything
+        the organizer is doing. Adding someone who booked over WhatsApp is part
+        of managing the game, and it belongs beside the roster it changes.
+
+        BEHIND A DISCLOSURE, because it is a form with four fields and most
+        visits to this page do not need it. The roster is what the organizer
+        came to read; this opens under it when they need it.
+      */}
+      {canEdit && (
+        <section className="mt-12">
+          {/* Open on arrival from the old `/add-player` route — see its
+              redirect. Server-rendered `open`, so it needs no JavaScript. */}
+          <details
+            data-testid="add-player-section"
+            open={query.add === "1"}
+            className="group"
+          >
+            <summary
+              data-testid="add-player"
+              className="inline-flex min-h-11 cursor-pointer list-none items-center rounded-pill border-2 border-hairline-strong px-5 text-[15px] font-extrabold uppercase tracking-wide text-bone marker:content-none"
+            >
+              {strings.admin.addPlayer}
+            </summary>
+            <p className="mt-3 max-w-[480px] text-[13px] leading-relaxed text-muted">
+              {strings.admin.addPlayerLede}
+            </p>
+            <AddPlayerForm gameId={game.id} />
+          </details>
+        </section>
+      )}
 
       {/* --- reconciliation ---------------------------------------------------
           The only reconciliation surface. There is deliberately no separate

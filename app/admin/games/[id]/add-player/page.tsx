@@ -1,50 +1,29 @@
-import Link from "next/link";
-import { notFound } from "next/navigation";
-import { AddPlayerForm } from "@/components/admin/AddPlayerForm";
-import { getAdminGame } from "@/lib/admin/queries";
-import { strings } from "@/lib/strings";
-
-export const metadata = { title: strings.admin.addPlayerTitle };
-
-export const dynamic = "force-dynamic";
+import { redirect } from "next/navigation";
 
 /**
- * Add a shadow player to a game.
+ * `/admin/games/[id]/add-player` — merged into the game surface in round 9
+ * (item 6).
  *
- * Exists because people still book over WhatsApp and may never log in. The row
- * this creates is a first-class identity — it can be claimed automatically on
- * exact email match at first sign-in (Phase 8), or merged by an admin (Phase
- * 25) when there is no email to match on.
+ * KEPT AS A REDIRECT RATHER THAN DELETED, on exactly the precedent Phase 18
+ * set for `/edit` and `/attendance`: the route was linked from the game page,
+ * is typed from memory by the one person who uses this panel, and is navigated
+ * to by URL in `e2e/admin.spec.ts`. A 404 for any of those is a worse outcome
+ * than one extra hop, and the redirect costs nothing to keep.
+ *
+ * The form now sits under the roster it changes, behind a disclosure — see the
+ * note at its new home.
  */
-export default async function AddPlayerPage({
+export default async function AddPlayerRedirect({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const game = await getAdminGame(id);
-  if (!game) notFound();
-
-  return (
-    <>
-      <Link
-        href={`/admin/games/${game.id}`}
-        className="text-[11px] uppercase tracking-eyebrow text-muted no-underline"
-      >
-        {strings.common.back}
-      </Link>
-
-      <h2 className="mt-4 text-[22px] font-bold uppercase tracking-wide text-bone">
-        {strings.admin.addPlayerTitle}
-      </h2>
-      <p className="mt-1 text-[11px] tracking-[1px] text-muted">
-        {game.venue} · {game.activeCount}/{game.capacity}
-      </p>
-      <p className="mt-3 max-w-[480px] text-[13px] leading-relaxed text-muted">
-        {strings.admin.addPlayerLede}
-      </p>
-
-      <AddPlayerForm gameId={game.id} />
-    </>
-  );
+  /*
+   * `?add=1` OPENS THE DISCLOSURE ON ARRIVAL. Somebody following the old route
+   * — a bookmark, a typed URL, a link in a message — wanted the form, and
+   * dropping them on a page where it is collapsed makes them hunt for what
+   * they asked for by name.
+   */
+  redirect(`/admin/games/${id}?add=1`);
 }
