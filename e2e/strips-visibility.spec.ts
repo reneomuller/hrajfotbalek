@@ -127,15 +127,24 @@ test.describe("visibility round strips", () => {
     expect(tierBg).toBe("rgb(22, 22, 22)");
     await tier.screenshot({ path: path.join(OUT, "03-pass-tier-card.png") });
 
-    // Home's three step cards.
+    /*
+      Home's steps.
+
+      THE LIFTED SURFACE MOVED OUT ONE LEVEL (redesign v2, round 3). This read
+      `> div > div` and asserted `surface-raised` on each of three step CARDS.
+      p01 draws one panel with hairline rules between the steps instead, so the
+      lifted surface is now the panel and the rows sit transparent on it.
+
+      The visibility requirement is unchanged and is what is still asserted:
+      the thing that must read as an object against `ink` has the raised fill.
+      Retargeted rather than deleted — the round moved the boundary, it did not
+      remove it.
+    */
     await page.goto("/", { waitUntil: "networkidle" });
     await settle();
     const steps = page.getByTestId("how-it-works");
     await steps.scrollIntoViewIfNeeded();
-    const stepBg = await steps
-      .locator("> div > div")
-      .first()
-      .evaluate((el) => getComputedStyle(el).backgroundColor);
+    const stepBg = await steps.evaluate((el) => getComputedStyle(el).backgroundColor);
     expect(stepBg).toBe("rgb(22, 22, 22)");
     await steps.screenshot({ path: path.join(OUT, "04-home-step-cards.png") });
 
