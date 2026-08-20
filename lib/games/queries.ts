@@ -414,21 +414,44 @@ export async function getRoster(gameId: string): Promise<RosterRow[]> {
 /**
  * Pitch names for a set of games, keyed by game id, in one round trip.
  *
- * READ FROM `venues` THROUGH `venue_id`, never denormalised onto `games`.
- * `games.venue` is a deliberate snapshot — a rename must not rewrite the name
- * on a game already played (migration 20260722110000) — so the pitch name is
- * looked up live and joined at render. One extra query for a whole page, the
- * same shape as the roster lookup beside it.
+ * THE GAME'S OWN NAME WINS; THE VENUE'S IS THE DEFAULT (migration 41).
  *
- * A game with a null `venue_id` simply has no entry, which renders the venue
- * name alone. Those exist: every game created before the `venues` table
- * carried one until migration 19 backfilled them.
+ * ~~Read from `venues` through `venue_id`, never denormalised onto `games`.~~
+ * Both columns now exist and they mean different things: `venues.pitch_name`
+ * is the ground's default pitch, and `games.pitch_name` is the one THIS game
+ * is played on. A game names its own only when the organizer typed one; null
+ * inherits, which is why an empty box in the form stores null rather than "".
+ *
+ * The precedence has to be this way round. Storing a per-game name on `venues`
+ * would rewrite the pitch of every other game at that ground — including ones
+ * already played and settled — which is the reason migration 41 added a column
+ * at all instead of reusing the venue's.
+ *
+ * THE VENUE READ IS SKIPPED ENTIRELY when every game names its own, and the
+ * function still costs one round trip for a whole page. `games.venue` stays a
+ * snapshot for the reason it always was: a rename must not rewrite the name on
+ * a game already played (migration 20260722110000).
+ *
+ * A game with no name of its own and a null `venue_id` simply has no entry,
+ * which renders the venue name alone. Those exist: every game created before
+ * the `venues` table carried one until migration 19 backfilled them.
  */
 export async function listPitchNamesByGame(
-  games: { id: string; venue_id: string | null }[],
+  games: { id: string; venue_id: string | null; pitch_name?: string | null }[],
 ): Promise<Map<string, string>> {
   const pitchNames = new Map<string, string>();
-  const venueIds = [...new Set(games.map((g) => g.venue_id).filter((id): id is string => id !== null))];
+
+  // The game's own name first — no query needed for these at all.
+  const needVenue: { id: string; venue_id: string | null }[] = [];
+  for (const game of games) {
+    const own = game.pitch_name?.trim();
+    if (own) pitchNames.set(game.id, own);
+    else needVenue.push(game);
+  }
+
+  const venueIds = [
+    ...new Set(needVenue.map((g) => g.venue_id).filter((id): id is string => id !== null)),
+  ];
   if (venueIds.length === 0) return pitchNames;
 
   const supabase = await createServerSupabaseClient();
@@ -440,7 +463,7 @@ export async function listPitchNamesByGame(
   if (error || !data) return pitchNames;
 
   const byVenue = new Map(data.map((row) => [row.id, row.pitch_name]));
-  for (const game of games) {
+  for (const game of needVenue) {
     const pitch = game.venue_id ? byVenue.get(game.venue_id) : null;
     if (pitch) pitchNames.set(game.id, pitch);
   }

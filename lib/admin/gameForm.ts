@@ -60,6 +60,16 @@ export const SKILL_LEVELS: SkillLevel[] = ["beginner", "intermediate", "advanced
 /** Mirrors `organizer_name_length`. */
 export const ORGANIZER_NAME_MAX = 60;
 
+/**
+ * The pitch name's bound, mirroring `games_pitch_name_length` (migration 41).
+ *
+ * RESTATED RATHER THAN IMPORTED, like every other bound in this file: the
+ * CHECK is the authority and this is the courtesy that reports the problem
+ * beside the field instead of as an opaque constraint name. The two must move
+ * together, which is why the constraint is named in this comment.
+ */
+export const PITCH_NAME_MAX = 60;
+
 export interface GameFormValues {
   venueId: string | null;
   newVenueName: string | null;
@@ -74,6 +84,14 @@ export interface GameFormValues {
   /** Required (§5). The form pre-fills the creating admin's nickname. */
   organizerName: string;
   organizerPhone: string | null;
+  /**
+   * This game's pitch, typed per game (migration 41).
+   *
+   * NULL MEANS "USE THE VENUE'S", which is what an empty box has to mean —
+   * `venues.pitch_name` is the ground's default and a blank string stored here
+   * would render as a stray separator through `venueDisplayName`.
+   */
+  pitchName: string | null;
   durationMinutes: number | null;
   /**
    * Null means all levels and no badge. The RPC additionally collapses an
@@ -147,6 +165,11 @@ export function parseGameForm(form: FormData): GameFormResult {
   const surface = SURFACES.includes(surfaceRaw as GameSurface)
     ? (surfaceRaw as GameSurface)
     : null;
+
+  const pitchName = text(form, "pitchName");
+  if (pitchName.length > PITCH_NAME_MAX) {
+    fieldErrors.pitchName = strings.admin.pitchNameTooLong;
+  }
 
   const notes = text(form, "notes");
   if (notes.length > NOTES_MAX) {
@@ -235,6 +258,7 @@ export function parseGameForm(form: FormData): GameFormResult {
       notes: notes || null,
       organizerName,
       organizerPhone: organizerPhone || null,
+      pitchName: pitchName || null,
       durationMinutes,
       allowedSkillLevels,
       subsPerTeam,

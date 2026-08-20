@@ -99,6 +99,7 @@ export async function createGameAction(
     p_duration_minutes: values.durationMinutes,
     p_allowed_skill_levels: values.allowedSkillLevels,
     p_subs_per_team: values.subsPerTeam,
+    p_pitch_name: values.pitchName,
   });
 
   if (error) {
@@ -207,6 +208,7 @@ export async function updateGameAction(
     p_duration_minutes: values.durationMinutes,
     p_allowed_skill_levels: values.allowedSkillLevels,
     p_subs_per_team: values.subsPerTeam,
+    p_pitch_name: values.pitchName,
   });
 
   if (error) {

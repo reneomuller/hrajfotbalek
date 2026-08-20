@@ -155,6 +155,71 @@ describe("parseGameForm", () => {
    * price 200) or with an empty string. `verify-game-form.check.ts` carries the
    * same assertion the rest of the way, to the stored row.
    */
+  /*
+   * THE PITCH NAME (migration 41).
+   *
+   * The interesting case is the EMPTY one: a blank box must become null, not
+   * "". Null is what `venueDisplayName` reads as "use the venue's own pitch";
+   * an empty string would render as a stray separator on every card for that
+   * game.
+   */
+  describe("the pitch name", () => {
+    it("is optional, and empty means the venue's own", () => {
+      // Arrange / Act
+      const result = parseGameForm(form({ ...VALID, pitchName: "" }));
+
+      // Assert
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      expect(result.values.pitchName).toBeNull();
+    });
+
+    it("treats whitespace as empty rather than as a name", () => {
+      // Arrange / Act
+      const result = parseGameForm(form({ ...VALID, pitchName: "   " }));
+
+      // Assert
+      expect(result.ok && result.values.pitchName).toBeNull();
+    });
+
+    it("keeps a typed name, trimmed", () => {
+      // Arrange / Act
+      const result = parseGameForm(form({ ...VALID, pitchName: "  Pitch 2  " }));
+
+      // Assert
+      expect(result.ok && result.values.pitchName).toBe("Pitch 2");
+    });
+
+    /*
+     * The bound mirrors `games_pitch_name_length`. Checked here so the
+     * organizer sees it beside the field rather than as a constraint name in
+     * an error toast.
+     */
+    /*
+     * `...VALID` MATTERS MOST HERE. Without it every case above failed to
+     * parse for unrelated reasons — and this one PASSED, because "not ok" was
+     * true for the wrong reason entirely. An over-limit assertion that cannot
+     * distinguish its own failure from a missing venue is not an assertion.
+     */
+    it("refuses a name past the column's own limit", () => {
+      // Arrange / Act
+      const result = parseGameForm(form({ ...VALID, pitchName: "x".repeat(61) }));
+
+      // Assert
+      expect(result.ok).toBe(false);
+      if (result.ok) return;
+      expect(result.fieldErrors.pitchName).toBeTruthy();
+    });
+
+    it("accepts a name exactly at the limit", () => {
+      // Arrange / Act
+      const result = parseGameForm(form({ ...VALID, pitchName: "x".repeat(60) }));
+
+      // Assert
+      expect(result.ok).toBe(true);
+    });
+  });
+
   it("carries every non-default field through untouched", () => {
     const result = parseGameForm(
       form({
@@ -172,6 +237,7 @@ describe("parseGameForm", () => {
         organizerPhone: "+420 601 002 003",
         durationMinutes: "75",
         subsPerTeam: "3",
+        pitchName: "Pitch 2",
       }),
     );
 
@@ -190,6 +256,7 @@ describe("parseGameForm", () => {
       notes: "Gate code 4417, park on the north side.",
       organizerName: "Jindra",
       organizerPhone: "+420 601 002 003",
+      pitchName: "Pitch 2",
       durationMinutes: 75,
       allowedSkillLevels: null,
       subsPerTeam: 3,

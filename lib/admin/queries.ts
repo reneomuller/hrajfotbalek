@@ -93,6 +93,36 @@ export async function listVenues(): Promise<VenueRow[]> {
   return error || !data ? [] : data;
 }
 
+/**
+ * Every pitch name already in use, for the game form's suggestions list.
+ *
+ * READS THE VIEW, NOT THE TABLES. `pitch_name_suggestions` (migration 41) is
+ * the distinct non-null names across `games` and `venues` — a QUERY rather
+ * than a `saved_pitches` entity, so there is no second source of truth to
+ * disagree with the games referencing it, and no CRUD nobody asked for.
+ *
+ * NO SAVE FLAG. Every name an organizer types becomes available next time,
+ * which is how the migration was applied and what the owner confirmed. The
+ * flag version would be a boolean column and a second migration.
+ *
+ * THE EMPTY LIST IS THE NORMAL FIRST STATE, not a failure: nothing has been
+ * typed yet on either database. The field is free text and works without a
+ * single suggestion, which is why this returns `[]` on error rather than
+ * throwing — a broken suggestions read must not take down game creation.
+ */
+export async function listPitchNameSuggestions(): Promise<string[]> {
+  const service = createServiceRoleSupabaseClient();
+
+  const { data, error } = await service
+    .from("pitch_name_suggestions")
+    .select("pitch_name");
+
+  if (error || !data) return [];
+  return data
+    .map((row) => row.pitch_name)
+    .filter((name): name is string => typeof name === "string" && name !== "");
+}
+
 export type GameOrganizerRow =
   Database["public"]["Tables"]["game_organizer_contacts"]["Row"];
 

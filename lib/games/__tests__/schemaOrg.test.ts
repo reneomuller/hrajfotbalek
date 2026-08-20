@@ -22,6 +22,8 @@ const game: GameRow = {
   duration_minutes: null,
   allowed_skill_levels: null,
   subs_per_team: null,
+  // Migration 41. Null means the venue's own pitch name is used.
+  pitch_name: null,
 };
 
 const base = {

@@ -363,6 +363,15 @@ export interface Database {
            * Constrains nothing — capacity is the sole booking limit.
            */
           subs_per_team: number | null;
+          /**
+           * Migration 41. This game's own pitch, typed per game.
+           *
+           * NULL MEANS "use the venue's `pitch_name`", which is the ground's
+           * default — the two are different columns on purpose: storing a
+           * per-game name on `venues` would rewrite the pitch of every other
+           * game there, including ones already played.
+           */
+          pitch_name: string | null;
         };
         Insert: {
           id?: string;
@@ -423,6 +432,16 @@ export interface Database {
        * booking. Reachable from TypeScript with the service-role client only,
        * which is what the admin edit form uses to pre-fill the field.
        */
+      /**
+       * Migration 41's suggestions view — distinct pitch names across `games`
+       * and `venues`. Read-only by construction; a view has no Insert/Update.
+       */
+      pitch_name_suggestions: {
+        Row: { pitch_name: string | null };
+        Insert: never;
+        Update: never;
+        Relationships: [];
+      };
       game_organizer_contacts: {
         Row: {
           game_id: string;
@@ -915,6 +934,8 @@ export interface Database {
           p_duration_minutes?: number | null;
           p_allowed_skill_levels?: SkillLevel[] | null;
           p_subs_per_team?: number | null;
+          /** Migration 41: this game's own pitch, null to inherit the venue's. */
+          p_pitch_name?: string | null;
         };
         Returns: string;
       };
@@ -932,6 +953,8 @@ export interface Database {
           p_duration_minutes?: number | null;
           p_allowed_skill_levels?: SkillLevel[] | null;
           p_subs_per_team?: number | null;
+          /** Migration 41: this game's own pitch, null to inherit the venue's. */
+          p_pitch_name?: string | null;
         };
         Returns: string;
       };

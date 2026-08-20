@@ -8,7 +8,7 @@ import { OrganizerCard } from "@/components/game/OrganizerCard";
 import { PlayersList } from "@/components/game/PlayersList";
 import { ClaimBar } from "@/components/game/ClaimBar";
 import { ShareButton } from "@/components/game/ShareButton";
-import { venueDisplayName } from "@/lib/venues/displayName";
+import { effectivePitchName, venueDisplayName } from "@/lib/venues/displayName";
 import { bookingBadge } from "@/lib/booking/badges";
 import { ToastFromQuery } from "@/components/ToastFromQuery";
 import { WaitlistPanel } from "@/components/game/WaitlistPanel";
@@ -107,6 +107,12 @@ export default async function GameDetailPage({ params, searchParams }: GamePageP
   // avatar falls back to initials, which is the correct degradation.
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
   const venueRow = await getVenue(game.venue_id);
+  /*
+   * This game's pitch, falling back to the venue's default (migration 41).
+   * Resolved once and passed down, so the header and the WhatsApp draft below
+   * cannot disagree about which pitch this game is on.
+   */
+  const pitchName = effectivePitchName(game.pitch_name, venueRow?.pitch_name);
   // The queue is public — see migration 20 and getWaitlist(). Fetched for every
   // visitor, signed in or not, because "who is waiting" is part of what makes a
   // full game worth queueing for.
@@ -232,7 +238,7 @@ export default async function GameDetailPage({ params, searchParams }: GamePageP
         name costs nothing extra.
       */}
       <GameHero
-        venue={venueDisplayName(game.venue, venueRow?.pitch_name)}
+        venue={venueDisplayName(game.venue, pitchName)}
         venueRow={venueRow}
         supabaseUrl={supabaseUrl}
       />
@@ -342,7 +348,7 @@ export default async function GameDetailPage({ params, searchParams }: GamePageP
           phone={organizer.phone}
           /* Venue and kick-off, the same pair the share message uses — so the
              organizer reads the fixture, not a game id. */
-          gameLabel={`${venueDisplayName(game.venue, venueRow?.pitch_name)} · ${formatGameDateTime(game.starts_at)}`}
+          gameLabel={`${venueDisplayName(game.venue, pitchName)} · ${formatGameDateTime(game.starts_at)}`}
         />
       )}
 

@@ -24,3 +24,25 @@ export function venueDisplayName(
   const pitch = pitchName?.trim();
   return pitch ? `${pitch} \u00b7 ${venue}` : venue;
 }
+
+/**
+ * Which pitch name applies to a game (migration 41).
+ *
+ * ONE PLACE, because the precedence is a rule and not a `??` to be retyped at
+ * each render site. The game's own name wins; the venue's is the ground's
+ * default; neither renders the venue name alone.
+ *
+ * `listPitchNamesByGame` implements the same rule in bulk for list surfaces —
+ * it cannot call this, because it resolves the venue in one query for a whole
+ * page rather than per game. The two must agree, which is why they say so in
+ * each other's comments.
+ */
+export function effectivePitchName(
+  gamePitchName: string | null | undefined,
+  venuePitchName: string | null | undefined,
+): string | null {
+  const own = gamePitchName?.trim();
+  if (own) return own;
+  const fallback = venuePitchName?.trim();
+  return fallback ? fallback : null;
+}

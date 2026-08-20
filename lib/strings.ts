@@ -1245,6 +1245,12 @@ export const strings = {
       "Capacity cannot go below the players already booked. Cancel a booking first.",
     priceInvalid: "Price must be 0 or more.",
     formatInvalid: "Format looks like 6v6, or 6v6v6 — two or three numbers with a v between them.",
+    /* --- pitch name (migration 41, round 9). Admin copy is English only. --- */
+    pitchNameLabel: "Pitch name",
+    pitchNameHint:
+      "Optional. Leave empty to use the venue's own pitch. Names you type are remembered.",
+    pitchNameTooLong: "A pitch name is at most 60 characters.",
+    pitchNameSuggestions: "Pitch names already in use",
     notesTooLong: "Notes are limited to 500 characters.",
     organizerNameRequired: "Name whoever is running this game.",
     organizerNameTooLong: "The organizer name is limited to 60 characters.",
