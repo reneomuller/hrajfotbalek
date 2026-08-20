@@ -1201,3 +1201,36 @@ floor above the boundary and a ceiling below it.
 assertion sampled 80–97% with a ceiling of 30 and passed the broken gradient
 too, because the photograph's own foreground is dark down there. Both numbers
 and the sampling window are now measured against the real card.
+
+## R20 — Fidelity pass (round 8, item 12): what was fixed, what remains
+
+The owner's verdict was that several surfaces "barely resemble their frames",
+with `p14` named. Every frame was re-shot at 390px beside its export. The
+finding is that "different feel" lived almost entirely in three things, exactly
+as predicted: **surface treatment, label colour, and one type step** — not in
+missing elements.
+
+### Fixed
+
+| Surface | Was | Now |
+|---|---|---|
+| **All admin (p14, p17, p18, p19)** | The pitch canvas rendered behind every admin page; all four frames draw flat black | `SiteBackground` returns null under `/admin`. A pitch diagram under a table of figures competes with the volt, which on these screens carries meaning rather than character |
+| **p14** | A display-size `ADMIN` heading plus a nickname row above the chips — about 90px the frame does not have, duplicating the volt `ADMIN` badge round 1 built **from this same frame** | Heading removed; the two useful facts survive as one thin row |
+| **p14** | Tile labels grey, and wrapping onto two lines in all four tiles | Volt, `tracking-[1.5px]`, one line each |
+| **p14** | Game-row status greyed | Volt for a game that is on, muted otherwise — the frame colours it |
+| **p18** | Settings loose on the page; heading at 22px body-bold | Each setting in a `.lifted` card; heading at `page-title` in the display face |
+| **p01, p10, p11** | Stat captions wrapped at `eyebrow`'s 3px tracking | `tracking-[1.5px]`, one line — closing the divergence round 6 accepted |
+
+### Remaining, with honest severity
+
+| Surface | Divergence | Severity | Why it stands |
+|---|---|---|---|
+| p14 | No game NUMBER (`#62`) on rows | **Low** | `games` has no sequential id. A surrogate display number is a schema decision |
+| p14 | We add `All games →`; the frame has no such link | **Cosmetic** | The frame's rows are the only route onward; ours names it |
+| p14, p18, p19 | A `nickname · back to the site` row the frames lack | **Cosmetic** | The frames' equivalent is the header avatar, which we also have. Removing it takes away the only way out of the panel on a phone |
+| p11 | The cover stops above the stats; `p10`/`p11` run it to the tab row | **Medium** | Extending it puts white stat numerals over the photograph's brightest region. A contrast question that needs measuring, not guessing — the one I would do first |
+| p19 | Roughly twice the frame's height | **By design** | The frame is money only; the page also carries the operational metrics that would otherwise have been deleted. Recorded in item 8 |
+| p16 | Ours is the whole game form; the frame is a standalone "add pitch" | **By design** | Item 0: venue creation is folded into the game form deliberately, and `surface` / `opening time` are genuinely missing fields |
+| p04 | Three options and a disabled state where the frame shows three radios | **By design** | Rulings R3, R4 and round 8 item 11 |
+| p02, p03 | Taller than the frames | **Not a divergence** | Seed content, not layout — more games, longer venue names |
+| All | Russian display headings set in the body face | **Medium** | Anton ships no Cyrillic (R18). Needs a second display face, which is the owner's call |

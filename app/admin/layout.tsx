@@ -57,25 +57,34 @@ export default async function AdminLayout({
         with the title. The reference puts an `ADMIN` badge next to the mark;
         here the whole page is the admin panel, so the badge is the title.
       */}
-      <header className="border-b border-hairline pb-4">
+      <header className="border-b border-hairline pb-3">
         {/* Column at phone width: `ADMIN` plus a nickname plus a back link is
             wider than 390px, and wrapping mid-row put the back link half off
             the screen. Row again from `sm`, where it fits. */}
-        <div className="flex flex-col gap-1 sm:flex-row sm:flex-wrap sm:items-baseline sm:justify-between sm:gap-x-4">
-          <h1 className="m-0 font-display text-section-title uppercase tracking-wide text-white">
-            {strings.admin.title}
-          </h1>
+        {/*
+          THE `ADMIN` TITLE IS GONE (round 8, item 12).
 
-          <div className="flex items-baseline gap-4">
-            {/* Whose session is acting. Free text, escaped by JSX. */}
-            <span className="text-small text-faint">{admin.nickname}</span>
-            <Link
-              href="/"
-              className="text-small text-muted no-underline transition-colors hover:text-volt"
-            >
-              {strings.admin.backToSite}
-            </Link>
-          </div>
+          `p14` puts the chip row DIRECTLY under the site header and nothing
+          above it. Ours spent about ninety pixels on a display-size `ADMIN`
+          heading before the chips — and that heading duplicates the volt
+          `ADMIN` badge the site header already carries, which round 1 built
+          FROM THIS SAME FRAME. Two things saying "you are in the admin panel",
+          one of them the largest type on the page, is most of why this surface
+          read as a different product from the frame.
+
+          The two facts that block did carry — whose session is acting, and the
+          way out — survive as one thin row. They are genuinely useful and the
+          frame's equivalent is the avatar in the header, which we also have.
+        */}
+        <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
+          {/* Whose session is acting. Free text, escaped by JSX. */}
+          <span className="text-small text-faint">{admin.nickname}</span>
+          <Link
+            href="/"
+            className="text-small text-muted no-underline transition-colors hover:text-volt"
+          >
+            {strings.admin.backToSite}
+          </Link>
         </div>
 
         <div className="mt-3">

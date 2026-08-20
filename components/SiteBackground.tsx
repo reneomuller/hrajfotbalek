@@ -34,6 +34,22 @@ const FULL_ROUTES = ["/"];
 
 export function SiteBackground() {
   const pathname = usePathname() ?? "/";
+
+  /*
+   * THE ADMIN PANEL HAS NO PITCH BEHIND IT (round 8, item 12).
+   *
+   * All four admin frames — p14, p17, p18, p19 — draw a FLAT BLACK ground,
+   * and the difference is not decoration. The player-facing pages are a
+   * product about football and the texture belongs there; the admin panel is a
+   * dense reading surface of numbers, rows and forms, and a pitch diagram
+   * under a table of figures is exactly the kind of thing the owner meant by
+   * "completely different feel". It also competes with the volt, which on
+   * these screens is carrying meaning rather than character.
+   *
+   * The grain and vignette go with it: they are the same decision.
+   */
+  if (pathname.startsWith("/admin")) return null;
+
   const intensity: BackgroundIntensity = FULL_ROUTES.includes(pathname)
     ? "full"
     : "subtle";

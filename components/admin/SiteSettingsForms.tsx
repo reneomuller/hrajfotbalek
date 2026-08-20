@@ -91,7 +91,7 @@ function NumberForm({
   const [value, setValue] = useState(current !== null ? String(current) : "");
 
   return (
-    <form action={formAction} className="space-y-2">
+    <form action={formAction} className="lifted space-y-2 rounded-card p-5">
       <label className={LABEL} htmlFor={name}>
         {label}
       </label>
@@ -124,7 +124,7 @@ function PlayerOfMonthForm({
   );
 
   return (
-    <form action={formAction} className="space-y-2">
+    <form action={formAction} className="lifted space-y-2 rounded-card p-5">
       <label className={LABEL} htmlFor="playerId">
         {strings.admin.sitePotmLabel}
       </label>
@@ -159,7 +159,7 @@ function Submit({ label, testId }: { label: string; testId: string }) {
       type="submit"
       disabled={pending}
       data-testid={testId}
-      className="rounded-control bg-volt px-5 py-3 text-[15px] font-extrabold uppercase tracking-wide text-surface disabled:opacity-60"
+      className="rounded-pill bg-volt px-5 py-3 text-[15px] font-extrabold uppercase tracking-wide text-surface disabled:opacity-60"
     >
       {pending ? strings.common.loading : label}
     </button>

@@ -82,7 +82,19 @@ export default async function AdminDashboardPage() {
             data-testid={tile.testId}
             className="lifted rounded-card p-5 no-underline transition-colors hover:border-hairline-volt"
           >
-            <div className="text-eyebrow font-semibold uppercase text-muted">
+            {/*
+              VOLT AND UNWRAPPED (round 8, item 12). p14 sets these labels in
+              the accent, not in grey — that colour is a large part of what
+              makes the frame's tiles read as a set rather than as four boxes.
+
+              `tracking-[1.5px]` rather than `eyebrow`'s 3px: at 3px
+              "UPCOMING GAMES" and "NEW PLAYERS (7D)" both wrap onto two lines
+              in a half-width tile, which the frame keeps on one. This is the
+              same collision round 6 accepted on the profile's stat captions;
+              here it hits all four tiles at once and is worth the local
+              override.
+            */}
+            <div className="text-[10px] font-semibold uppercase tracking-[1.5px] text-volt-dim">
               {tile.label}
             </div>
             {/* Anton at display scale — R5's "large counters". */}
@@ -137,7 +149,19 @@ export default async function AdminDashboardPage() {
                     <span className="block text-body font-bold text-volt">
                       {row.booked} / {row.capacity}
                     </span>
-                    <span className="block text-eyebrow uppercase text-muted">
+                    {/*
+                      p14 colours the status rather than greying it —
+                      `Confirmed` reads volt on the frame. Volt for a game
+                      that is on, muted for anything else, so the row says
+                      "nothing to do here" at a glance.
+                    */}
+                    <span
+                      className={`block text-[10px] uppercase tracking-[1.5px] ${
+                        row.status === "published" || row.status === "full"
+                          ? "text-volt-dim"
+                          : "text-muted"
+                      }`}
+                    >
                       {row.status}
                     </span>
                   </span>

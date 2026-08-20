@@ -36,7 +36,10 @@ export default async function AdminSitePage() {
 
   return (
     <>
-      <h2 className=" text-[22px] font-bold uppercase tracking-wide text-bone">
+      {/* Anton at `page-title` — p18 draws this heading in the display face,
+          and every other page heading in the product moved to this step in
+          round 3. This one was left on a 22px body-bold. */}
+      <h2 className="m-0 font-display text-page-title uppercase tracking-wide text-white">
         {strings.admin.siteTitle}
       </h2>
       <p className="mt-2 max-w-[560px] text-[13px] leading-relaxed text-muted">

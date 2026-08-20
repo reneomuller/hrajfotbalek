@@ -67,11 +67,16 @@ export function ProfileStats({
             rule against truncating the things a reader scans for applies to a
             stat's own name as much as to a game's.
           */}
-          {/* TRACKED CAPS (p10), which is the same `eyebrow` treatment the
-              home page's two community figures already use — these are the
-              same object on a different surface, and they were reading as two
-              different components. */}
-          <div className="mt-[6px] text-eyebrow font-semibold uppercase leading-tight text-muted">
+          {/* TRACKED CAPS (p10), which is the same treatment the home page's
+              two community figures use — these are the same object on a
+              different surface, and they were reading as two components. */}
+          {/* `tracking-[1.5px]`, not `eyebrow`'s 3px (round 8, item 12). At 3px
+              these captions wrap onto two lines in a third of a 390px screen
+              — "GAME PLAYED" over two rows — where p10 and p11 keep them on
+              one. Round 6 accepted the wrap; the p14 tiles proved the fix, and
+              the same override closes it here. Still ruling B's uppercase
+              style, one notch tighter. */}
+          <div className="mt-[6px] text-[10px] font-semibold uppercase leading-tight tracking-[1.5px] text-muted">
             {statLabel(cell.key, cell.value, locale, t)}
           </div>
         </div>

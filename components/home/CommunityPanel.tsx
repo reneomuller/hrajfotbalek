@@ -116,7 +116,10 @@ export async function CommunityPanel({
                 {stat.value}
                 <span className="text-volt-dim">+</span>
               </div>
-              <div className="mt-1 text-[10px] uppercase tracking-eyebrow text-muted">
+              {/* `tracking-[1.5px]` — see ProfileStats. At `eyebrow`'s 3px
+                  "GAMES EVERY WEEK" wraps in a half-width column and p01
+                  keeps it on one line. */}
+              <div className="mt-1 text-[10px] font-semibold uppercase tracking-[1.5px] text-muted">
                 {stat.label}
               </div>
             </div>
