@@ -113,6 +113,20 @@ export function PitchBackground({
       const B = H - m;
       const FW = R - L;
       const FH = B - T;
+      /*
+       * A VIEWPORT TOO SHORT TO HOLD A PITCH DRAWS NOTHING, and this is a
+       * crash guard rather than an aesthetic one.
+       *
+       * The margin has a 20px floor, so below roughly `NAV + 40` of height
+       * `FH` goes negative, `cr` goes negative with it, and `arc()` throws
+       * `IndexSizeError` — an UNCAUGHT exception from a background decoration,
+       * on every surface, killing whatever else that effect had left to do.
+       *
+       * Reachable in the wild (a short in-app browser chrome, a resized
+       * desktop window) and reliably in the harness: a full-page screenshot
+       * resizes the viewport, and that is where it was found.
+       */
+      if (FW <= 0 || FH <= 0) return;
       const cx = (L + R) / 2;
       const cy = (T + B) / 2;
 
