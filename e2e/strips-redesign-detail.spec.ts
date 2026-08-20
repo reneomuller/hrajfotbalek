@@ -148,8 +148,9 @@ test("the back control and the venue title share a row", async ({ page, context 
     expect(rows.overlap, "back and title are stacked, not on one row").toBeGreaterThan(0);
     // …and the title is to the RIGHT of the back control, not over it.
     expect(rows.titleLeft).toBeGreaterThanOrEqual(rows.backRight - 1);
-    // `page-title`, the 32px step p03 draws.
-    expect(rows.size).toBeCloseTo(32, 0);
+    // `page-title`, ~~the 32px step~~ the 27px step p03 draws: its cap is
+    // 23.5px and Anton renders 0.86 of its em, not the published 0.73 (R28).
+    expect(rows.size).toBeCloseTo(27.3, 0);
   } finally {
     await destroyScratchGame(game.id);
   }

@@ -33,6 +33,13 @@ const P14 = {
 
 const TOLERANCE = 3;
 
+/**
+ * Anton's RENDERED cap-height ratio, measured off our own screenshots at a
+ * known font size in rounds 10 and 12. Its published metric is 0.73, and the
+ * 18% gap between the two is what R28 exists to correct.
+ */
+const ANTON_CAP_RATIO = 0.86;
+
 test.use({ viewport: { width: 390, height: 844 } });
 
 test.beforeEach(async ({ context }) => {
@@ -53,8 +60,26 @@ test("the dashboard matches p14's geometry", async ({ page }) => {
     return r;
   };
 
+  /*
+   * CAP TO CAP, not box to cap (fixed in round 12).
+   *
+   * `P14.titleTop` is where the frame's INK starts. A DOM box starts above
+   * its ink by half the leading plus the gap between the em box and the cap,
+   * and this assertion was comparing the two directly — which passed at 24px
+   * only because the two errors happened to cancel. The corrected step made
+   * them stop cancelling, which is the spec catching a latent fault rather
+   * than a regression.
+   *
+   * `ANTON_CAP_RATIO` is the measured 0.86 — the same number R28 turns on.
+   */
   const title = await box("main h2");
-  expect(Math.abs(title.y - P14.titleTop), `page title at ${title.y}`).toBeLessThan(TOLERANCE);
+  const titleSize = await page
+    .locator("main h2")
+    .evaluate((el) => parseFloat(getComputedStyle(el).fontSize));
+  const capTop = title.y + (title.height - titleSize * ANTON_CAP_RATIO) / 2;
+  expect(Math.abs(capTop - P14.titleTop), `page title cap at ${capTop.toFixed(1)}`).toBeLessThan(
+    TOLERANCE,
+  );
 
   const tile = await box("[data-testid='dashboard-tiles'] a");
   expect(Math.abs(tile.height - P14.tileHeight), `tile ${tile.height}px tall`).toBeLessThan(TOLERANCE);
@@ -78,13 +103,24 @@ test("the dashboard matches p14's geometry", async ({ page }) => {
  * Anton's rendered cap ratio of ~0.86 those are the three sizes below. Round 8
  * shipped 32 / 24 / 32 — two steps too loud at the top and, once corrected,
  * exactly right at the bottom.
+ *
+ * ROUND 12 moved the page title again, upward from 24 to 27.3, and that is
+ * not a reversal: round 10 chose `title` because it was the closest step to
+ * 23.4 that the scale HAD, and round 12 fixed the scale. Same target, better
+ * token.
  */
 test("the dashboard's type steps are p14's", async ({ page }) => {
   await page.goto("/admin", { waitUntil: "networkidle" });
   const size = (sel: string) =>
     page.locator(sel).first().evaluate((el) => getComputedStyle(el).fontSize);
 
-  expect(await size("main h2"), "page title").toBe("24px");
+    /*
+   * ~~24px.~~ ROUND 12: `page-title` was corrected to the frames' own cap
+   * (R28), so the closest-available token round 10 settled for became the
+   * correct one and admin went back to it. p14's cap is 23.4; 27.3px of Anton
+   * renders 23.5.
+   */
+  expect(await size("main h2"), "page title").toBe("27.3px");
   expect(await size("main h3"), "section heading").toBe("17px");
   expect(await size("[data-testid='tile-upcoming'] > div + div"), "tile numeral").toBe("32px");
   expect(await size("[data-testid='tile-upcoming'] > div"), "tile label").toBe("10px");

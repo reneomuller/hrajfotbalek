@@ -1428,3 +1428,76 @@ commit.
 **It is NOT a `POLICY_VERSION` bump.** Nothing transitions on it and no event is
 stamped with it: it bounds a control's options, and a booking made at a party of
 three does not become invalid if the ceiling later moves to four.
+
+---
+
+# 13. Round 12 rulings (2026-08-20)
+
+## R28 — `page-title` is 27px, and R17 is REVERSED on pixel evidence
+
+**~~R17: the frames set a page's display heading at 32px on a 390 viewport.~~**
+
+The cap measurement R17 made was correct and has never been disputed: `p01`,
+`p02`, `p05`, `p10`, `p11`, `p18` and all four admin frames draw their page
+heading at a **23.5px Anton cap**. What was wrong is the arithmetic that turned
+that cap into an em.
+
+| | ratio | 23.5px cap becomes |
+|---|---|---|
+| Anton's **published** metric (1462/2048) | 0.73 | 32px ← R17 |
+| Anton's **rendered** ratio, measured twice | 0.86 | **27px** ← R28 |
+
+`page-title` is now `clamp(27px,7vw,36px)`, which puts **27.3px** at 390 — a
+23.5px cap, the frames' number to a tenth of a pixel. Nineteen headings moved
+together across home, games, pass, auth, the game detail and all six admin
+pages.
+
+**THE GENERAL LESSON IS WORTH MORE THAN THE FIX.** Measure a font's cap ratio
+on the thing you are measuring with. A published metric describes the outline;
+the browser rasterises it with hinting, and for this face the two differ by
+18% — enough to ship a type step a fifth too large for nine rounds without
+anything looking obviously wrong, because a heading at the wrong step is still
+a perfectly good heading.
+
+**R23 IS NOT REVERSED, IT IS COMPLETED.** Round 10 moved admin headings to
+`title` because `page-title` rendered 28.2 against p14's 23.4 and `title`'s
+21.3 was the closest step the scale HAD. Round 12 fixed the scale, so admin
+went back to `page-title` — same target, better token, and admin still holds
+one page-title treatment across six pages.
+
+**WHAT DID NOT MOVE, and it looks like an omission:** the profile's `<h1>`. It
+is the player's nickname set at 26px in the BODY face beside their avatar — a
+name, not a display heading — so it is not on this step and was never meant to
+be.
+
+## R29 — The brand line is Latin in every language, and that is the Cyrillic answer
+
+**The hero's first line is `HRAJ FOTBAL.` in EN, CS and RU alike, and it cannot
+become copy.** It renders from `t.brand`, a section
+`lib/i18n/__tests__/i18n.test.ts` forbids the overlays from touching — so it is
+**structurally** untranslatable rather than translatable-with-an-exemption. An
+exemption is a rule somebody can delete; a section the test rejects is not.
+
+**THIS RESOLVES THE CYRILLIC-HERO QUESTION** raised in the redesign's morning
+report and carried open since. Anton ships no Cyrillic subset, so every Russian
+display heading fell back to the body face and the Russian product had no
+display typography at all. A Latin brand line takes Anton **in every language,
+Russian included** — the fallback is now confined to the supporting line
+instead of swallowing the whole hero.
+
+The second line still localizes (`heroLine2`), still breaks on the copy's own
+sentences, and still falls back to the body face in Russian. That is a
+supporting line in a face that supports the script, which is a different thing
+from a hero with no typography.
+
+**~~"The hero does not repeat the wordmark" (round 3).~~** Reversed, and the
+premise changed rather than the rule. Round 3's argument was that the header
+carried the name eighty pixels above, so the hero must not say it twice. Round
+12 removed the name from the header — **the mark stands alone** — so the hero
+is now the only place the name is written, and the same rule requires it to be
+there.
+
+**THE SHARE CARD IS UNTOUCHED.** The OG image renders what the frames show for
+it; item 2a is about the mark+text pair as *site identity in the header*, and
+the landing page's footer signature (`HRAJ FOTBAL Praha`) is a signature line
+with no mark beside it, so it is not that pair either.

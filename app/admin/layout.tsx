@@ -99,11 +99,18 @@ export default async function AdminLayout({
       </header>
 
       {/*
-        `pt-6`, NOT `pt-8` (round 10, item 1). p14 leaves 26px between the
-        chip row and the page title, and the header no longer contributes a
-        `pb-3` and a rule to that distance.
+        `pt-5`, NOT `pt-8` (round 10) and NOT `pt-6` (round 12).
+
+        p14 leaves 26px between the chip row and the page title, and the
+        header no longer contributes a `pb-3` and a rule to that distance.
+        Round 12's type correction (R28) grew the title's box by 3.4px, which
+        pushed everything under it that far down the page — so four pixels
+        come back here and the tiles land on p14's 192.8 exactly.
+
+        THE SPEC CAUGHT THIS, which is the point of measuring the whole page
+        rather than the heading: a type step is never only a type step.
       */}
-      <main className="pt-6">{children}</main>
+      <main className="pt-5">{children}</main>
     </div>
   );
 }

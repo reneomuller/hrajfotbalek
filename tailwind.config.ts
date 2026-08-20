@@ -245,26 +245,42 @@ const config: Config = {
       fontSize: {
         hero: ["clamp(44px,10vw,88px)", { lineHeight: "0.92", letterSpacing: "-1.5px" }],
         /*
-         * `page-title` — ADDED in redesign v2, round 3, and it is a step the
-         * scale did not have.
+         * `page-title` — ADDED in redesign v2 round 3 (R17), CORRECTED in
+         * round 12 (R28).
          *
-         * The frames set a page's display heading at 32px on a 390 viewport:
-         * `UPCOMING GAMES` on p02 and `UPCOMING MATCHES` on p01 both measure a
-         * 23.5px Anton cap height, which is a 32px em. `title` clamps to its
-         * 24px floor at that width, so every page heading in the product was
-         * rendering a third smaller than the design.
+         * ~~The frames set a page's display heading at 32px on a 390
+         * viewport: `UPCOMING GAMES` on p02 and `UPCOMING MATCHES` on p01
+         * both measure a 23.5px Anton cap height, which is a 32px em. `title`
+         * clamps to its 24px floor at that width, so every page heading in
+         * the product was rendering a third smaller than the design.~~
          *
-         * A NEW STEP RATHER THAN A WIDER `title`. `title` is aliased by
-         * `section-title`, `match-title`, `hero-sub` and `community-title` —
-         * 19 headings across admin, pass, profile and the game detail — and
-         * three of those rounds are not in scope. Raising the shared floor
-         * would move all of them on the authority of two frames.
+         * ~~The clamp keeps `title`'s 6vw slope so the two steps track each
+         * other above the fold-width, and the 42px ceiling is 32 scaled by
+         * the same 1.24 that separates the floors.~~
          *
-         * The clamp keeps `title`'s 6vw slope so the two steps track each
-         * other above the fold-width, and the 42px ceiling is 32 scaled by the
-         * same 1.24 that separates the floors.
+         * THE CAP MEASUREMENT WAS RIGHT AND THE CONVERSION WAS WRONG. 23.5px
+         * of cap is a 32px em only if Anton's cap-height ratio is 0.73, which
+         * is the figure its published metrics give (1462/2048). The ratio it
+         * actually RENDERS at is 0.86 — measured off our own screenshot at a
+         * known font size, twice, in rounds 10 and 12. So the frames' 23.5px
+         * cap is a **27px em**, and this step shipped a fifth too large for
+         * nine rounds.
+         *
+         * `clamp(27px,7vw,36px)` puts 27.3px at 390 — a 23.5px cap, which is
+         * the frames' number to a tenth of a pixel. The slope and ceiling keep
+         * their relationship to `title`: 7vw against 6vw, and 36 is 27 scaled
+         * by the same 1.33 that separates 27 from 24 at the ceiling end.
+         *
+         * A NEW STEP RATHER THAN A WIDER `title` still holds, and now holds
+         * for a better reason: at 390 the two are 27.3 and 24, which is a real
+         * step and a small one — exactly what the frames draw.
+         *
+         * THE GENERAL LESSON, which is worth more than the fix: measure a
+         * font's cap ratio on the thing you are measuring with. A published
+         * metric describes the outline; the browser rasterises it with
+         * hinting, and the two differ by 18% for this face.
          */
-        "page-title": ["clamp(32px,8vw,42px)", { lineHeight: "1.05" }],
+        "page-title": ["clamp(27px,7vw,36px)", { lineHeight: "1.05" }],
         title: ["clamp(24px,6vw,34px)", { lineHeight: "1.05" }],
         time: ["28px", { lineHeight: "1" }],
         "body-lg": ["17px", { lineHeight: "1.4" }],

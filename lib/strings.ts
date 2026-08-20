@@ -94,7 +94,13 @@ export const strings = {
      * fresh draft: the Czech and Russian there are the reviewed pair for this
      * exact line.
      */
-    heroLine1: "Play football",
+    /*
+     * ~~`heroLine1`~~ REMOVED IN ROUND 12 (item 2b). The hero's first line is
+     * `HRAJ FOTBAL.` in every language and renders from `brand`, which the
+     * overlays are forbidden to touch — so it is structurally untranslatable
+     * rather than translatable-with-an-exemption. An exemption is a rule
+     * somebody can delete; a section the test rejects is not.
+     */
     heroLine2: "Anytime. Anywhere.",
     vision:
       "One match that repeats itself. Find a game, claim your spot, show up.",

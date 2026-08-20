@@ -11,10 +11,11 @@ import { LOCALE_COOKIE } from "../lib/i18n/locales";
  * WHAT THIS ROUND ACTUALLY CHANGED, and therefore what is asserted here rather
  * than only photographed:
  *
- *   - the hero is the SLOGAN, not the wordmark (`p01`), in two Anton rows;
+ *   - the hero is the BRAND LINE plus the slogan (round 12), in two Anton
+ *     rows, the first of which never translates;
  *   - `how-it-works` is ONE divided panel, not three cards;
  *   - the three home panels wear the frames' NEUTRAL edge, not a volt one;
- *   - page headings are `page-title`, the 32px step `p02` draws;
+ *   - page headings are `page-title`, the 27px step `p02` draws (R28);
  *   - the nav bar's cells are inset while the band stays flush (R12).
  *
  * THREE LANGUAGES ON THE HERO, because it is the surface where the type system
@@ -67,9 +68,11 @@ test("the hero is the slogan and the CTA is a capsule", async ({ page, context }
   const headline = page.getByTestId("hero-headline");
   await expect(headline).toBeVisible();
 
-  // The wordmark is the HEADER's job. Asserted on the hero specifically, not
-  // on the page, because the header legitimately carries it.
-  expect((await headline.innerText()).toUpperCase()).not.toContain("HRAJ FOTBAL");
+  // ~~The wordmark is the HEADER's job.~~ REVERSED IN ROUND 12: the header
+  // keeps the mark alone and the hero carries the name, untranslated. The
+  // assertion moved to `home.spec.ts`, where it is checked in all three
+  // languages rather than only in the one this strip is shot in.
+  expect((await headline.innerText()).toUpperCase()).toContain("HRAJ FOTBAL");
 
   // THE CTA IS A CAPSULE, not a 14px rounded rectangle (p01). Compared against
   // its own height rather than to a literal, so the assertion survives a
@@ -161,11 +164,17 @@ test("how it works is one ordered list of three divided rows", async ({ page, co
 /**
  * THE PAGE HEADING IS THE FRAMES' STEP.
  *
- * `p02` sets `UPCOMING GAMES` at a 23.5px Anton cap height, which is a 32px
- * em; `section-title` clamps to 24px at phone width. Asserted as a computed
- * size at 390 because that is the width the frames are drawn at, and because
- * the failure mode is silent — the old token renders a perfectly good heading,
- * just a third too small.
+ * `p02` sets `UPCOMING GAMES` at a **23.5px Anton cap height**. That cap is
+ * the frame's fact and it has never changed; what changed in round 12 is the
+ * arithmetic that turns it into an em.
+ *
+ * ~~which is a 32px em~~ — only if Anton's cap ratio is its PUBLISHED 0.73.
+ * The ratio it RENDERS at is 0.86, so the frame's cap is a 27px em and this
+ * heading shipped a fifth too large for nine rounds (R28).
+ *
+ * ASSERTED AS A COMPUTED SIZE at 390, because that is the width the frames are
+ * drawn at and because the failure mode is silent either way — a heading at
+ * the wrong step is still a perfectly good heading.
  */
 test("the games and home headings are set at the frames' size", async ({ page, context }) => {
   await context.addCookies([
@@ -182,6 +191,7 @@ test("the games and home headings are set at the frames' size", async ({ page, c
       .locator(selector)
       .first()
       .evaluate((el) => parseFloat(getComputedStyle(el).fontSize));
-    expect(size, `${where} heading size`).toBeCloseTo(32, 0);
+    // `clamp(27px,7vw,36px)` at 390 → 27.3px → a 23.5px cap, which is p02's.
+    expect(size, `${where} heading size`).toBeCloseTo(27.3, 0);
   }
 });

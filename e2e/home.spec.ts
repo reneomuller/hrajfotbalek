@@ -360,10 +360,62 @@ test("the hero headline breaks only at sentence boundaries, in every language", 
  * Separate from the row count because it is a separate mistake: restoring the
  * brand line above the slogan would still leave the slogan at two rows.
  */
-test("the hero does not repeat the wordmark", async ({ page }) => {
+/*
+ * ~~"the hero does not repeat the wordmark"~~ INVERTED IN ROUND 12 (item 2b),
+ * and the inversion is a premise change rather than a change of mind.
+ *
+ * Round 3's rule was "the header carries the name, so the hero must not say it
+ * twice". Round 12 removed the name from the header (item 2a), so the hero is
+ * now the ONLY place it is written — and the same rule, applied to the new
+ * premise, requires it to be here.
+ *
+ * The line is asserted UNTRANSLATED in all three languages, which is the half
+ * that could regress quietly: an overlay author adding `landing.heroLine1`
+ * back would be adding copy nobody asked for to the largest type on the site.
+ */
+test("the hero's brand line is HRAJ FOTBAL in every language", async ({ page, context }) => {
+  for (const locale of ["en", "cs", "ru"] as const) {
+    await context.clearCookies();
+    await context.addCookies([
+      { name: LOCALE_COOKIE, value: locale, domain: "localhost", path: "/" },
+    ]);
+    await page.goto("/");
+
+    const brandLine = await page.getByTestId("hero-brand-line").innerText();
+    expect(brandLine.toUpperCase(), `brand line in ${locale}`).toContain("HRAJ FOTBAL");
+
+    // And the SECOND line is the one that localizes — so the hero is not
+    // simply untranslated everywhere.
+    const headline = await page.getByTestId("hero-headline").innerText();
+    if (locale === "cs") expect(headline.toLowerCase()).toContain("kdykoli");
+    // `toLowerCase()` on all three: the hero is `uppercase`, so `innerText`
+    // returns the rendered capitals, Cyrillic included.
+    if (locale === "ru") expect(headline.toLowerCase()).toContain("угодно");
+    if (locale === "en") expect(headline.toLowerCase()).toContain("anytime");
+  }
+});
+
+/*
+ * ANTON SETS THE BRAND LINE IN RUSSIAN TOO, and this is the resolution of the
+ * Cyrillic-hero question (R29).
+ *
+ * Anton ships no Cyrillic subset, so before round 12 every Russian display
+ * heading fell back to the body face and the Russian product had no display
+ * typography at all. `HRAJ FOTBAL.` is LATIN in every language, so the face
+ * applies everywhere — the fallback is now confined to the supporting line
+ * instead of swallowing the whole hero.
+ */
+test("the brand line holds the display face in Russian", async ({ page, context }) => {
+  await context.addCookies([
+    { name: LOCALE_COOKIE, value: "ru", domain: "localhost", path: "/" },
+  ]);
   await page.goto("/");
-  const headline = await page.getByTestId("hero-headline").innerText();
-  expect(headline.toUpperCase()).not.toContain("HRAJ FOTBAL");
+  await page.evaluate(() => document.fonts.ready);
+
+  const family = await page
+    .getByTestId("hero-brand-line")
+    .evaluate((el) => getComputedStyle(el).fontFamily);
+  expect(family).toContain("Anton");
 });
 
 /* And the grey sub-line under it is gone. */

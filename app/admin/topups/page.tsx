@@ -51,7 +51,7 @@ export default async function AdminTopupsPage({
   return (
     <div>
       <div className="flex flex-wrap items-baseline justify-between gap-3">
-        <h1 className="m-0 font-display text-title uppercase tracking-wide text-white">
+        <h1 className="m-0 font-display text-page-title uppercase tracking-wide text-white">
           {t.admin.topupsTitle}
         </h1>
         {/* The page is a worklist of PENDING top-ups; the file is every one of

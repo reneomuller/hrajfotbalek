@@ -79,21 +79,19 @@ export default async function AdminDashboardPage() {
   return (
     <>
       {/*
-        `title`, NOT `page-title` (round 10, item 1).
+        `page-title` — RESTORED IN ROUND 12 (R28).
 
-        MEASURED, NOT PREFERRED. Every admin frame draws its page title at a
-        23.4px cap height — p14 included — and `page-title` renders 28.2 at
-        390px. `title` renders 21.3. Two pixels under the frame beats five
-        over it, and it is a token rather than a number.
+        Round 10 moved every admin heading to `title` because `page-title`
+        rendered a 28.2px cap where all nineteen frames draw 23.4, and `title`
+        at 21.3 was the closest token the scale had. The finding it recorded —
+        that `page-title` itself was the thing that was wrong — is now acted
+        on: the step is 27.3px at 390, a 23.5px cap, and it IS the frames'
+        number. So the closest token became the correct one.
 
-        THE SAME MEASUREMENT SAYS SOMETHING LARGER about `page-title` itself,
-        which is recorded in `docs/REQUESTS.md` rather than acted on here: the
-        PLAYER frames draw a 23.4px cap too. R17 raised this step on the
-        reading that our titles were "a third smaller than the design"; the
-        pixels say otherwise. That is nineteen headings on surfaces nobody
-        asked about this round, so it is a finding, not an edit.
+        Admin still holds ONE page-title treatment across six pages, which is
+        what round 10 was really fixing; only the step underneath it moved.
       */}
-      <h2 className="m-0 font-display text-title uppercase tracking-wide text-white">
+      <h2 className="m-0 font-display text-page-title uppercase tracking-wide text-white">
         {strings.admin.dashboardTitle}
       </h2>
 

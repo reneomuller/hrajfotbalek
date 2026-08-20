@@ -21,7 +21,7 @@ export default async function AdminGamesPage() {
   return (
     <>
       <div className="flex items-baseline justify-between gap-3">
-        <h2 className="m-0 font-display text-title uppercase tracking-wide text-white">
+        <h2 className="m-0 font-display text-page-title uppercase tracking-wide text-white">
           {strings.admin.gamesTitle}
         </h2>
         <div className="flex items-center gap-2">

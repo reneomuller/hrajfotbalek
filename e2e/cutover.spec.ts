@@ -52,9 +52,21 @@ test("the football namespace serves the home page, the list and a game", async (
 test("the wordmark inside the namespace is unchanged", async ({ page }) => {
   await page.goto("/football");
 
-  const header = page.getByRole("banner");
-  await expect(header.getByText(/hraj/i).first()).toBeVisible();
-  await expect(header.getByText(/fotbal/i).first()).toBeVisible();
+  /*
+   * ~~const header = page.getByRole("banner")~~ — round 12 took the wordmark
+   * TEXT out of the header and left the mark alone (item 2a), so the name is
+   * no longer written there to be checked.
+   *
+   * THE PROPERTY IS UNCHANGED AND STILL WORTH ASSERTING: football keeps its
+   * own name inside the shared shell, and the change that introduces
+   * `/volleyball` will be tempted to make the brand say whatever the namespace
+   * says. The name now lives in the hero, so that is where the temptation has
+   * to fail.
+   */
+  await expect(page.getByTestId("brand-mark")).toBeVisible();
+  const hero = page.getByTestId("hero-brand-line");
+  await expect(hero).toBeVisible();
+  expect((await hero.innerText()).toUpperCase()).toContain("HRAJ FOTBAL");
 });
 
 /*

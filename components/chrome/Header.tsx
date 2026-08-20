@@ -10,7 +10,8 @@ import { getStrings } from "@/lib/i18n/server";
 /**
  * The site header, rendered once from the root layout, on every route.
  *
- * THREE THINGS AT EVERY WIDTH: the wordmark, the auth control and the language
+ * THREE THINGS AT EVERY WIDTH: the MARK (round 12: the mark alone, no
+ * wordmark text beside it), the auth control and the language
  * switcher. The LINK ROW is the only part that is width-dependent, appearing at
  * and above `md` where the floating nav pill is not rendered. Below `md` the
  * pill carries navigation at thumb height, and two controls saying "Games" on
@@ -36,8 +37,9 @@ import { getStrings } from "@/lib/i18n/server";
  *
  * RULING B applies here more than anywhere. The header was the densest
  * uppercase in the product — nav links, the sign-in button, the wordmark — and
- * `eyebrow` is now the only uppercase style. The wordmark keeps its capitals
- * because it is a wordmark rather than a label: HRAJ FOTBAL is how the brand is
+ * `eyebrow` is now the only uppercase style. ~~The wordmark keeps its capitals
+ * because it is a wordmark rather than a label:~~ the header's wordmark is
+ * gone entirely (round 12, item 2a); the note survives because HRAJ FOTBAL is
  * written, not a heading that happens to be shouted.
  *
  * `nickname`, `photoPath` and `isAdmin` are resolved server-side in the layout
@@ -81,7 +83,7 @@ export async function Header({
   photoVersion?: string | null;
 }) {
   const t = await getStrings();
-  const { brand, nav } = t;
+  const { nav } = t;
   const signedIn = nickname !== null;
   const photo = avatarUrl(
     process.env.NEXT_PUBLIC_SUPABASE_URL ?? "",
@@ -141,8 +143,10 @@ export async function Header({
             nearly invisible, "nearly" is a square edge that catches the light
             on an OLED screen at exactly the angle a phone is held.
 
-            `alt=""`: the link is already labelled by `aria-label`, and the
-            wordmark beside it says the name in text.
+            `alt=""`: the link is already labelled by `aria-label`, which is
+            now the ONLY thing naming it — ~~the wordmark beside it says the
+            name in text~~ (round 12). Losing that label would leave a screen
+            reader announcing an unnamed link to `/`.
           */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
@@ -154,28 +158,23 @@ export async function Header({
             className="h-[38px] w-[38px] shrink-0 rounded-full"
           />
           {/*
-            THE WORDMARK ECHOES THE HERO, scaled for the header.
+            ~~THE WORDMARK ECHOES THE HERO, scaled for the header.~~
+            THE MARK STANDS ALONE (round 12, item 2a).
 
-            The hero sets `HRAJ FOTBAL.` in the display face, uppercase, both
-            words in white with the FULL STOP carrying the volt. The header set
-            it in the body face at 16px with `FOTBAL` itself in volt — a
-            different logotype for the same brand, on two surfaces a reader
-            sees within one scroll of each other.
+            The header set `HRAJ FOTBAL.` in the display face beside the
+            monogram, so site identity was stated twice in one 38px row — a
+            roundel that already says the name, and the name.
 
-            So: `font-display`, uppercase, one line, and the accent moves off
-            the second word and onto the period, which is what makes the hero
-            version read as a mark rather than as two-tone text.
+            IT MOVED RATHER THAN LEFT. Round 3 took the wordmark out of the
+            hero on the reasoning that the header carried it eighty pixels
+            above; round 12 reverses which half survives. The hero's first
+            line is `HRAJ FOTBAL.` in every language now, at display scale
+            where a brand line is worth its space — and with that there, the
+            header repeating it is the duplication round 3 was complaining
+            about, pointing the other way.
 
-            `leading-none` because Anton carries a tall default line box that
-            would otherwise push the 38px monogram out of alignment beside it.
-
-            The brand is unchanged inside the football namespace — the rebrand
-            renames the site, not the brand within it.
+            The `aria-label` on this link is untouched and is what names it.
           */}
-          <span className="font-display text-[20px] uppercase leading-none tracking-wide text-white">
-            {brand.wordmarkLead} {brand.wordmarkAccent}
-            <span className="text-volt">.</span>
-          </span>
         </Link>
 
         {/*

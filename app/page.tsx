@@ -44,7 +44,7 @@ export const dynamic = "force-dynamic";
 
 export default async function LandingPage() {
   const t = await getStrings();
-  const { landing } = t;
+  const { brand, landing } = t;
   const locale = await getLocale();
 
   /*
@@ -106,25 +106,39 @@ export default async function LandingPage() {
         <section className="flex flex-col pb-10 pt-24 text-center">
           <div className="flex flex-col items-center justify-center">
             {/*
-              THE SLOGAN IS THE HERO NOW (redesign v2, round 3, p01).
+              ~~THE SLOGAN IS THE HERO NOW (redesign v2, round 3, p01).~~
+              THE BRAND LINE IS BACK, AND IT IS NEVER TRANSLATED
+              (round 12, item 2b).
 
-              It was the WORDMARK at hero scale — "HRAJ FOTBAL." on one
-              enforced row — with the slogan beneath it as an italic volt
-              sub-line. The frame draws no wordmark in the hero at all: the
-              header carries the mark eighty pixels above this, so the page's
-              largest type was saying the brand name a second time while the
-              one sentence a first-time visitor needs sat at a third the size.
+              Round 3 removed `HRAJ FOTBAL.` from the hero because the header
+              carried it eighty pixels above and the page's largest type was
+              saying the brand name a second time. That reasoning was sound
+              and its premise has been reversed rather than refuted: the
+              header now carries the MARK ALONE (item 2a), so the hero is the
+              only place the name is written at all.
 
-              TWO ROWS, AND THEY ARE THE COPY'S OWN SENTENCES. Line one is the
-              verb phrase, line two the two adverbs, which is where all three
-              languages break — so the rows come from two string keys rather
-              than from a `<br>` or from a width. That also means neither row
-              can wrap into a third: `text-balance` is not used, because a
-              balanced wrap would move the break away from the sentence.
+              LINE ONE IS NOT COPY, AND IT CANNOT BECOME COPY. It renders from
+              `t.brand`, which `lib/i18n/__tests__/i18n.test.ts` forbids
+              the overlays from touching — so "HRAJ FOTBAL." is structurally
+              untranslatable rather than translatable-but-please-do-not. That
+              is the point of reading it from `brand` instead of adding an
+              exemption for a `landing.` key: an exemption is a rule somebody
+              can delete.
+
+              LINE TWO STILL LOCALIZES, from `heroLine2`, and it is still the
+              copy's own sentence rather than a width or a `<br>`.
+
+              THE CYRILLIC QUESTION IS RESOLVED BY THIS SHAPE (R29). Anton
+              ships no Cyrillic subset, so before round 12 every Russian hero
+              fell back to the body face and the Russian product had no
+              display typography at all. Line one is LATIN in every language,
+              so Anton sets it everywhere — including Russian. Line two keeps
+              the fallback where the script needs one, which is now a
+              supporting line rather than the whole hero.
 
               THE PERIOD AFTER LINE ONE IS DRAWN HERE, IN VOLT, exactly as the
-              frame draws it — the same construction the wordmark used. It is
-              not in the string, or it would render in ink as well.
+              frame draws it. It is not in the string, or it would render in
+              ink as well.
 
               `uppercase` IS THE FRAME AND IT IS WITHIN RULING B: §1.4 marks
               the `hero` step "Upper", which is the step this is set in.
@@ -133,8 +147,10 @@ export default async function LandingPage() {
               data-testid="hero-headline"
               className="m-0 font-display text-hero uppercase text-white"
             >
-              {landing.heroLine1}
-              <span className="text-volt">.</span>
+              <span data-testid="hero-brand-line">
+                {brand.wordmarkLead} {brand.wordmarkAccent}
+                <span className="text-volt">.</span>
+              </span>
               <br />
               <span className="text-volt">{landing.heroLine2}</span>
             </h1>
