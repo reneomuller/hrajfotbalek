@@ -15,21 +15,25 @@ had to hold.
 
 ## Blocking
 
-- [ ] **Payment: QR is removed from the redesigned UI and the card option is
-      inert — merging before Stripe activation leaves NO working per-game
-      payment path. Do not merge until Stripe is live or Oliver explicitly
-      accepts this.**
+*(none — see the payment gate below)*
 
-  Ruling R3 retires QR from the redesigned payment surfaces and draws the card
-  option exactly as the frames show it, wired to nothing. The backend QR
-  machinery is untouched and still works — but no redesigned screen reaches it.
-  Between merge and Stripe activation, a player on the redesigned UI has no way
-  to pay for a game.
+### Payment gate: **GREEN** — old flow untouched
 
-  Resolution is one of: Stripe Checkout live and wired; or Oliver accepts a
-  payment-less window in writing; or the merge waits.
+**Status 2026-08-20, night round.** The payment round was **excluded** from the
+night run by the owner. R3 is recorded law but **not executed**: the existing
+payment surfaces — the QR/bank-transfer path, `'26'`-series variable symbols,
+`create_topup`/`confirm_topup`, the ledger — are **byte-identical and live**.
 
----
+So the original blocking item does not apply to this merge:
+
+> ~~**Payment: QR is removed from the redesigned UI and the card option is
+> inert — merging before Stripe activation leaves NO working per-game payment
+> path. Do not merge until Stripe is live or Oliver explicitly accepts
+> this.**~~ **NOT YET IN EFFECT.** R3 executes in a later round. Until it does,
+> the redesign carries the v1.3 payment flow unchanged and a player can pay.
+
+**This item returns to BLOCKING the moment the payment round runs.** Whoever
+executes R3 must move it back up and re-read the sentence above.
 
 ## Open (not yet blocking, must be resolved or accepted)
 
@@ -46,6 +50,12 @@ had to hold.
 - [ ] **Undesigned live routes** (AUDIT.md §3c) each need a stays-v1.3 /
       awaits-design ruling before merge, or the merged product is part-redesigned
       in ways nobody chose.
+
+- [ ] **New pages ship no dead affordances.** Any control the frames draw that
+      points at an unbuilt page is OMITTED, not shipped inert (owner, night
+      round). Community tab, bell/notifications, `+ ADD VENUE`, `View unpaid`,
+      `EXPORT DATA`, organizer `Message` and the public player profile are all
+      absent by that rule rather than forgotten.
 
 - [ ] **Public player profile is quarantined** (R8). Leaderboard, PotM and roster
       avatars ship non-clickable. If any round makes one clickable, this becomes
