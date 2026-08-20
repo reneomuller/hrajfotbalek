@@ -1165,3 +1165,39 @@ than the churn of closing it.
 | Every page | The pitch canvas is visible behind the content where the frames draw flat black | `SiteBackground` is round-1 chrome, already reviewed. Removing it globally is a chrome decision, not a page one |
 | Game detail | The header band is photographed where `p03` draws it flat | R13 — R6(b) postdates the frame |
 | Profile | The cover is 132px; `p10` runs the photograph down past the stats to the tab row | Extending it puts white stat numerals over the photograph's brightest region. That is a contrast question, and the round had no budget left to measure it properly — deferred rather than guessed |
+
+---
+
+# 9. Redesign v2 — Round 8 rulings (2026-08-20)
+
+## R19 — Gradient stop positions are on a 5% scale, or they do not exist
+
+**`via-52%`, `to-72%` and `to-92%` generate NOTHING.** Tailwind emits
+gradient-stop-position utilities only for multiples of five; an off-scale value
+produces no class, no warning, and a gradient that silently falls back to
+evenly-spaced colours.
+
+Three surfaces shipped that way — the list card, the game-detail header band
+and the profile cover — each asserting in its own comment that it reached `ink`
+before some boundary, and none of them doing it. The computed
+`background-image` carried **no stop positions at all**:
+
+```
+linear-gradient(rgba(8,8,8,.15), rgba(8,8,8,.45), rgb(8,8,8))
+```
+
+**This is R11's lesson in a second costume.** R11 forbade asserting a border
+width the stylesheet cannot render; this is the same failure on a different
+property, and it went unnoticed for the same reason — the result still looks
+like a gradient. Measured band-by-band, the list card read 31/29/15 across its
+bottom third where it should have read 8/9/9.
+
+**Use a multiple of five**, or arbitrary syntax (`to-[72%]`). And when a
+gradient's *boundary* is the point, assert the rendered pixels either side of
+it — `e2e/strips-redesign-card.spec.ts` decodes the screenshot and checks a
+floor above the boundary and a ceiling below it.
+
+**A ceiling that cannot fail is worse than none.** The first version of that
+assertion sampled 80–97% with a ceiling of 30 and passed the broken gradient
+too, because the photograph's own foreground is dark down there. Both numbers
+and the sampling window are now measured against the real card.

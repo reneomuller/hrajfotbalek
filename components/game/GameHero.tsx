@@ -87,11 +87,21 @@ export async function GameHero({
       data-photo={ownPhoto ? "true" : "false"}
       /*
         `-mx-gutter` cancels the page gutter so the photograph reaches both
-        edges, and `px-gutter` puts it back for the contents. `pt-20` places
-        the row where p03 does: 80px down, which clears the fixed site header
-        by about twenty.
+        edges, and `px-gutter` puts it back for the contents.
+        
+        THE BAND IS 176px, NOT 140 (round 8, item 4) — and the arithmetic is
+        the defect. The band starts at y=0, under the fixed header, which is
+        59px tall and opaque enough to hide what is behind it. At 140 that left
+        81px of visible photograph, and the scrim — which ramps across the
+        WHOLE box including the hidden part — was already at half strength by
+        the time the band emerged. The result read as a sliver of image pinched
+        between the header and the title, which is what it was.
+
+        `pt-28` puts the title row 112px down: 53px of clear photograph below
+        the header before any text, which is the band p03's proportions imply
+        and R6(b) asks for. The scrim's stops move with it — see below.
       */
-      className="relative -mx-gutter overflow-hidden px-gutter pb-4 pt-20"
+      className="relative -mx-gutter overflow-hidden px-gutter pb-5 pt-28"
     >
       {/*
         THE BAND'S BACKGROUND, and it is `aria-hidden` scenery: the alt text
@@ -139,9 +149,29 @@ export async function GameHero({
           hairline of photograph along the join that reads as a rendering
           artefact.
         */}
+        {/*
+          THE STOPS ARE MEASURED AGAINST THE VISIBLE BAND, not the box.
+
+          The box starts at y=0 and the header covers its first 59px — about a
+          third of it. A ramp beginning at `.55` therefore began underneath the
+          header and reached the eye already dark, which is half of why the
+          photograph did not read. It now starts near-clear, holds through the
+          third of the band that is actually on screen above the title, and
+          only then climbs.
+
+          It still ends at `ink` at FULL opacity before the band does, which is
+          R6(b) unchanged: the first content box sits on flat page ground with
+          no seam.
+
+          `to-92%` -> `to-90%` (R19, round 8). 92 is not on Tailwind's stop
+          scale, so it generated nothing and R6(b)'s "fully faded ABOVE the
+          first box" was quietly not happening — the fade reached ink at the
+          band's very edge instead. Rendered proof, not reasoning: the computed
+          gradient carried no stop positions at all.
+        */}
         <span
           data-testid="hero-scrim"
-          className="absolute inset-0 bg-gradient-to-b from-ink/[.55] via-ink/[.80] via-55% to-ink to-90%"
+          className="absolute inset-0 bg-gradient-to-b from-ink/[.30] via-ink/[.55] via-55% to-ink to-90%"
         />
       </span>
 

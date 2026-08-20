@@ -39,14 +39,33 @@ const OUT = path.resolve(process.cwd(), "docs/redesign-v2/strips/card");
  */
 const TITLE_BAND_FLOOR = 45;
 
-async function titleBandLuminance(card: import("@playwright/test").Locator) {
+/**
+ * THE FADE HAS A CEILING TOO (round 8, item 5).
+ *
+ * Below the boundary the card must be FLAT PAGE SURFACE, not a tenth of a
+ * photograph. `ink` is rgb(8,8,8), so a correct fade measures single digits
+ * there; the wash it replaced measured 29-31.
+ *
+ * THE NUMBERS AND THE WINDOW ARE BOTH MEASURED, not chosen. Band-by-band
+ * against the rendered card: the fade now reads 8/9/9 across 70-100% and the
+ * old wash read 31/29/15. Sampling 0.8-0.97 with a ceiling of 30 — the first
+ * attempt — passed BOTH, because the photograph's own foreground is dark down
+ * there. An assertion that cannot fail is worse than none, because it reports
+ * coverage it does not have.
+ */
+const FADED_CEILING = 15;
+
+/** Mean luminance of a horizontal slice, as a fraction of the card's height. */
+async function sliceLuminance(
+  card: import("@playwright/test").Locator,
+  fromPct: number,
+  toPct: number,
+) {
   const shot = await card.screenshot();
   const png = PNG.sync.read(shot);
 
-  // The title sits in the top fifth. Sampled below the very first rows so the
-  // card's own rounded corners and border are not counted as "dark photo".
-  const from = Math.round(png.height * 0.06);
-  const to = Math.round(png.height * 0.22);
+  const from = Math.round(png.height * fromPct);
+  const to = Math.round(png.height * toPct);
 
   let total = 0;
   let counted = 0;
@@ -56,13 +75,34 @@ async function titleBandLuminance(card: import("@playwright/test").Locator) {
       const r = png.data[i]!;
       const g = png.data[i + 1]!;
       const b = png.data[i + 2]!;
-      if (g > 200 && b < 120) continue; // volt badge
+      if (g > 200 && b < 120) continue; // volt: badge, bar, cue
       if (Math.min(r, g, b) > 170) continue; // white type
+      if (r > 180 && g > 120 && b < 80) continue; // warn/amber spots figure
       total += (r + g + b) / 3;
       counted += 1;
     }
   }
   return counted === 0 ? 0 : Math.round(total / counted);
+}
+
+/**
+ * Mean luminance of the card's title band, from the RENDERED pixels.
+ *
+ * DECODED FROM A SCREENSHOT, and it has to be. The composite is a JPEG behind
+ * two stacked gradients; computing it from the source image and the CSS would
+ * be reimplementing the compositor, and reading it off a canvas would measure
+ * the image without its scrims. The screenshot is the only place the actual
+ * answer exists.
+ *
+ * TEXT AND ACCENT PIXELS ARE EXCLUDED. The band contains white type and a volt
+ * badge, and both would drag the mean up and mask exactly the regression this
+ * guards against — a scrim creeping darker until the card is a slab with
+ * texture.
+ */
+function titleBandLuminance(card: import("@playwright/test").Locator) {
+  // The title sits in the top fifth. Sampled below the very first rows so the
+  // card's own rounded corners and border are not counted as "dark photo".
+  return sliceLuminance(card, 0.06, 0.22);
 }
 
 
@@ -155,6 +195,29 @@ test("the card over the photo — scrim, outline and inert cue", async ({
     luminance,
     `the photograph is not visible behind the title (mean ${luminance}, floor ${TITLE_BAND_FLOOR})`,
   ).toBeGreaterThanOrEqual(TITLE_BAND_FLOOR);
+
+  /*
+   * AND IT IS STILL THERE BEHIND THE TIME ROW. The boundary is below the time
+   * pill, so this slice must be bright too — a fade that finishes early
+   * satisfies the floor above and still loses the photograph where `p02`
+   * clearly has it.
+   */
+  const timeRow = await sliceLuminance(card, 0.3, 0.5);
+  expect(
+    timeRow,
+    `the photograph is gone behind the time row (mean ${timeRow})`,
+  ).toBeGreaterThanOrEqual(TITLE_BAND_FLOOR);
+
+  /*
+   * AND IT IS GONE BY THE CAPACITY / AVATAR REGION. This is the half the
+   * round-7 spec did not have: it proved the top was bright and said nothing
+   * about where the image stopped, so a wash that never finished passed.
+   */
+  const belowBoundary = await sliceLuminance(card, 0.72, 0.9);
+  expect(
+    belowBoundary,
+    `the photograph is still visible under the capacity bar and faces (mean ${belowBoundary}, ceiling ${FADED_CEILING})`,
+  ).toBeLessThanOrEqual(FADED_CEILING);
 
   // --- R6's named requirement: the volt outline survives the photo --------
   const pill = card.getByTestId("card-when");

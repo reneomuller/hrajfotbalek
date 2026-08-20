@@ -82,7 +82,7 @@ export default async function AdminPlayerPage({
           alt=""
           className="h-full w-full object-cover object-center"
         />
-        <span className="absolute inset-0 bg-gradient-to-b from-ink/[.45] via-ink/[.70] via-50% to-ink to-92%" />
+        <span className="absolute inset-0 bg-gradient-to-b from-ink/[.45] via-ink/[.70] via-50% to-ink to-90%" />
       </div>
 
       {/* `relative`, or the positioned cover above paints over this row — the

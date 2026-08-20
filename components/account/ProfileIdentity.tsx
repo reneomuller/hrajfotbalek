@@ -112,6 +112,9 @@ export function ProfileIdentity({
         the reversal note in this file's header for why the gradient existed
         and why it no longer needs to.
 
+        `to-92%` -> `to-90%` (R19, round 8): 92 is off Tailwind's 5% stop scale
+        and generated no stop, so the cover reached `ink` only at its own edge.
+
         `aria-hidden`, and `alt=""` on the image: this is scenery. Announcing
         a stock pitch above someone's own name and stats is noise on the one
         page where a screen-reader user is reading about themselves.
@@ -126,7 +129,7 @@ export function ProfileIdentity({
         />
         <span
           data-testid="profile-cover-scrim"
-          className="absolute inset-0 bg-gradient-to-b from-ink/[.45] via-ink/[.70] via-50% to-ink to-92%"
+          className="absolute inset-0 bg-gradient-to-b from-ink/[.45] via-ink/[.70] via-50% to-ink to-90%"
         />
       </div>
 
