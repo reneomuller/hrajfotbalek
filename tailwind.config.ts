@@ -363,8 +363,23 @@ const config: Config = {
          * property in globals.css, because Tailwind cannot express `env()`
          * arithmetic in a token and a hard-coded 64px would put the tab labels
          * under an iPhone's home indicator.
+         *
+         * 52 -> 72 (redesign v2, round 1), and MEASURED rather than reasoned.
+         *
+         * The frames give each tab its own filled cell with real gaps. The
+         * bar's own padding went 4px to 8px, and the cell gained `py-2` — which
+         * pushes it past the 44px target floor to 56px (20px icon + 2px gap +
+         * the label + 16px padding). 8 + 56 + 8 = 72.
+         *
+         * The first attempt at this number was 60, arrived at by assuming the
+         * cell stayed at its `min-h-11` floor. It did not. THREE things read
+         * this value — the page wrapper's bottom padding, the game page's
+         * fixed claim bar, and the bar itself — so the spec asserting that the
+         * claim bar's bottom edge MEETS the bar's top edge caught the 12px
+         * gap, twice. Measure this in the browser when the bar changes; do not
+         * add up the classes.
          */
-        tabbar: "52px",
+        tabbar: "72px",
       },
       /*
        * --- Radius: six become three -----------------------------------

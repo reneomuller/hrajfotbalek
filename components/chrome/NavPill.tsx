@@ -104,9 +104,28 @@ export function NavPill() {
       */
       className="fixed inset-x-0 bottom-0 z-40 md:hidden"
     >
+      {/*
+        THE CELLS CARRY THE SURFACE NOW (redesign v2, round 1).
+
+        The frames draw three DISTINCT rounded rectangles with visible gaps —
+        each tab is its own object, and the bar behind them is just ground. It
+        was the other way round: one `surface-raised` band with unfilled cells
+        inside it, so an inactive tab was a label floating on a slab and only
+        the active one read as a control.
+
+        So the band drops to `surface` and the cells rise to `surface-raised`.
+        Same two tokens, swapped, which is what makes the cells separate
+        without adding a stroke — ruling C still takes the outline off this
+        family.
+
+        FLUSH IS KEPT, AND THE FRAMES DISAGREE. They inset the cells from both
+        screen edges; the owner ruled flush in the night round and it shipped.
+        The ruling is two rounds old and explicit, so it wins over the frame —
+        flagged in the round report rather than silently reversed.
+      */}
       <ul
-        className="m-0 flex list-none items-stretch gap-1 rounded-t-card bg-surface-raised px-1 pt-1 shadow-lift"
-        style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 4px)" }}
+        className="m-0 flex list-none items-stretch gap-2 bg-surface px-2 pt-2 shadow-lift"
+        style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 8px)" }}
       >
         {tabs.map((tab) => {
           const active = tab.exact
@@ -130,8 +149,10 @@ export function NavPill() {
                  * screen is 97px wide, so width was never the constraint;
                  * height is.
                  */
-                className={`flex min-h-11 flex-col items-center justify-center gap-[2px] rounded-pill no-underline transition-colors ${
-                  active ? "bg-volt text-ink" : "text-muted hover:text-bone"
+                className={`flex min-h-11 flex-col items-center justify-center gap-[2px] rounded-card py-2 no-underline transition-colors ${
+                  active
+                    ? "bg-volt text-ink"
+                    : "bg-surface-raised text-muted hover:text-bone"
                 }`}
               >
                 <Icon name={tab.icon} className="h-[20px] w-[20px]" />
