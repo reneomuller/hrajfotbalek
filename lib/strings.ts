@@ -1074,6 +1074,13 @@ export const strings = {
        instead of linking nowhere. See the page header. */
     unpaidWhere: "Settle these on each game's admin page.",
     operationsTitle: "Operations",
+    /* --- admin player detail (round 7, item 9) --- */
+    adminActionsTitle: "Admin actions",
+    grantNoteRequired: "A note is required — say why this credit was granted.",
+    contactTitle: "Contact",
+    contactEmail: "Email",
+    contactPhone: "Phone",
+    contactNone: "Not set",
     recentTransactions: "Recent transactions",
     noTransactions: "No movements yet.",
     navStats: "Financials",

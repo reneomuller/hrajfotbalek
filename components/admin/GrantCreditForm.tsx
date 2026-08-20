@@ -56,9 +56,20 @@ export function GrantCreditForm({ playerId }: { playerId: string }) {
           <span className="block text-[10px] uppercase tracking-eyebrow text-muted">
             {strings.admin.grantNoteLabel}
           </span>
+          {/*
+            REQUIRED SINCE ROUND 7, item 9. A credit grant is money appearing
+            in someone's wallet with no booking behind it, and the ledger row
+            it writes is the only record of WHY. An unexplained grant is
+            indistinguishable from a mistake six weeks later — including to
+            the person who made it. The server enforces it too; this is the
+            courtesy that saves a round trip.
+          */}
           <input
             name="note"
+            required
+            minLength={3}
             maxLength={200}
+            data-testid="grant-note"
             className="mt-1 w-full rounded-control border border-hairline-strong bg-surface px-3 py-2 text-[13px] text-bone"
           />
         </label>

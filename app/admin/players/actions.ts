@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/auth/requireAdmin";
 import { toAdminErrorMessage } from "@/lib/admin/errors";
+import { strings } from "@/lib/strings";
 import { createServerSupabaseClient } from "@/lib/supabase/clients";
 
 export interface GrantCreditState {
@@ -35,12 +36,25 @@ export async function grantCreditAction(
 
   const playerId = String(formData.get("playerId") ?? "");
   const amount = Number(String(formData.get("amount") ?? "").trim());
+  /*
+   * THE NOTE IS REQUIRED (round 7, item 9), and it is required HERE rather
+   * than only in the form — the form's `required` attribute is skipped by
+   * anything that is not a browser, and this action is a POST endpoint.
+   *
+   * `grant_credit` accepts a null note and will go on accepting one: the RPC
+   * is also called by the seed and by top-up confirmation, which have their
+   * own provenance. What must carry a reason is a HAND-WRITTEN grant, which is
+   * this path.
+   */
   const note = String(formData.get("note") ?? "").trim() || null;
   const unmatched = formData.get("unmatched") === "on";
 
   if (!playerId) return { status: "error", message: toAdminErrorMessage("PLAYER_NOT_FOUND") };
   if (!Number.isInteger(amount) || amount === 0) {
     return { status: "error", message: toAdminErrorMessage("INVALID_CREDIT_DELTA") };
+  }
+  if (note === null || note.length < 3) {
+    return { status: "error", message: strings.admin.grantNoteRequired };
   }
 
   const supabase = await createServerSupabaseClient();
