@@ -139,7 +139,19 @@ export default async function GamesPage({
 
       {nextOwn && (
         <div className="mt-6">
-          <NextGameStrip game={nextOwn.game} bookedCount={nextOwnCount} />
+          {/*
+            The same roster and pitch name the list rows get (round 8, item 9)
+            — the strip IS a `GameCard` now, so withholding them would draw the
+            same game with a missing avatar stack directly above one that has
+            it.
+          */}
+          <NextGameStrip
+            game={nextOwn.game}
+            bookedCount={nextOwnCount}
+            roster={rosters.get(nextOwn.game.id) ?? []}
+            supabaseUrl={supabaseUrl}
+            pitchName={pitchNames.get(nextOwn.game.id)}
+          />
         </div>
       )}
 

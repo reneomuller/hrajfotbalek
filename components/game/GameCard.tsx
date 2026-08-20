@@ -69,6 +69,7 @@ export async function GameCard({
   supabaseUrl,
   pitchName,
   past = false,
+  joinCue = true,
 }: {
   game: GameCardGame;
   bookedCount: number;
@@ -82,6 +83,16 @@ export async function GameCard({
    * name alone.
    */
   pitchName?: string | null;
+  /**
+   * Whether to paint the `Join →` cue (round 8, item 9).
+   *
+   * FALSE WHERE THE VIEWER IS ALREADY IN. "Your next game" renders this card
+   * for a booking the player already holds, and a card telling them to join a
+   * game they are standing in is the same lie the `past` state exists to
+   * avoid. It is still paint either way — ruling E and R1 are untouched, the
+   * whole card remains the single anchor.
+   */
+  joinCue?: boolean;
   /** The `past` state — 45% opacity, not tappable, not focusable. */
   past?: boolean;
   /*
@@ -305,9 +316,10 @@ export async function GameCard({
           and then the word "Join" as if a second control existed.
 
           Not rendered on a past card: the state is not tappable at all, and a
-          call to action on it would be a lie about what the card does.
+          call to action on it would be a lie about what the card does. Nor
+          where the viewer already holds the spot — see `joinCue`.
         */}
-        {!past && (
+        {!past && joinCue && (
           <span
             aria-hidden
             data-testid="card-join-cue"
