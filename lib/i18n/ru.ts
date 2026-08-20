@@ -487,6 +487,7 @@ export const ru: StringsOverlay = {
     topupBackToAccount: "← Назад в мой профиль",
 
     photoTitle: "Фото профиля",
+    coverChange: "Сменить обложку",
     photoUpload: "Загрузить фото",
     photoReplace: "Заменить фото",
     photoBadType: "Подойдёт JPG, PNG или WebP.",

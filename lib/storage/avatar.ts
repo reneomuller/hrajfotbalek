@@ -22,6 +22,19 @@ export const MAX_PHOTO_BYTES = 2 * 1024 * 1024;
 /** The side length every upload is cropped to before it leaves the browser. */
 export const AVATAR_SIDE_PX = 512;
 
+/*
+ * THE COVER'S ENCODE SIZE (round 8, item 10).
+ *
+ * The band renders 390x132 on a phone and full-width on a desktop, so 1200x400
+ * is roughly 3x the phone and about 1.2x the widest realistic render — enough
+ * that it never looks soft, small enough to stay far under the bucket's 2 MiB.
+ * The 3:1 ratio is the band's own: cropping to it in the browser means the
+ * player sees at upload time what the page will show, rather than discovering
+ * that `object-cover` took the middle of their photograph.
+ */
+export const COVER_WIDTH_PX = 1200;
+export const COVER_HEIGHT_PX = 400;
+
 export function extensionForMimeType(mimeType: string): string | null {
   return ACCEPTED_IMAGE_TYPES[mimeType] ?? null;
 }

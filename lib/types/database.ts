@@ -234,6 +234,8 @@ export interface Database {
           tos_accepted_at: string | null;
           tos_version: string | null;
           photo_path: string | null;
+          /** Cover banner key, or null for the default pitch image. */
+          cover_path?: string | null;
           /**
            * Preferred positions (ruling L). Closed catalog, never null — the
            * column defaults to an empty array, which is the normal state for
@@ -1032,6 +1034,19 @@ export interface Database {
         Args: Record<string, never>;
         Returns: number;
       };
+      /* --- profile cover (round 8, item 10, migration 20260820140000) --- */
+
+      /** Owner-only. Derives `players/<own id>-cover.<ext>` and records it. */
+      set_cover_photo: {
+        Args: { p_extension: string };
+        Returns: string;
+      };
+      /** Owner-only. Back to the default pitch image. */
+      clear_cover_photo: {
+        Args: Record<string, never>;
+        Returns: undefined;
+      };
+
       /** The bell's payload: the newest notifications plus this caller's
        *  read flag, in one round trip. */
       my_notifications: {

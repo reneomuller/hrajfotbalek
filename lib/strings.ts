@@ -883,6 +883,7 @@ export const strings = {
     topupBackToAccount: "← Back to my account",
 
     photoTitle: "Profile photo",
+    coverChange: "Change cover",
     photoUpload: "Upload a photo",
     photoReplace: "Replace photo",
     photoBadType: "Use a JPG, PNG or WebP image.",

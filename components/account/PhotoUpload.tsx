@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { createBrowserSupabaseClient } from "@/lib/supabase/browser";
 import {
   AVATAR_SIDE_PX,
+  COVER_HEIGHT_PX,
+  COVER_WIDTH_PX,
   PROFILE_PHOTOS_BUCKET,
   extensionForMimeType,
   rejectPhoto,
@@ -25,26 +27,38 @@ import { useStrings } from "@/components/LocaleProvider";
  * goal but is a real benefit: phone photos carry GPS coordinates, and this one
  * is about to be public.
  */
-async function cropToSquare(file: File): Promise<Blob> {
+async function cropToRatio(file: File, outW: number, outH: number): Promise<Blob> {
   const bitmap = await createImageBitmap(file);
-  const side = Math.min(bitmap.width, bitmap.height);
+
+  /*
+   * CENTRE CROP TO THE OUTPUT'S RATIO, then scale. A square avatar takes the
+   * largest centred square; a 3:1 cover takes the largest centred 3:1 band.
+   * Same arithmetic, and generalising it is what let the cover reuse this
+   * whole function rather than growing a second one beside it (round 8,
+   * item 10).
+   */
+  const target = outW / outH;
+  const source = bitmap.width / bitmap.height;
+  const cropW = source > target ? bitmap.height * target : bitmap.width;
+  const cropH = source > target ? bitmap.height : bitmap.width / target;
+
   const canvas = document.createElement("canvas");
-  canvas.width = AVATAR_SIDE_PX;
-  canvas.height = AVATAR_SIDE_PX;
+  canvas.width = outW;
+  canvas.height = outH;
 
   const context = canvas.getContext("2d");
   if (!context) throw new Error("canvas unavailable");
 
   context.drawImage(
     bitmap,
-    (bitmap.width - side) / 2,
-    (bitmap.height - side) / 2,
-    side,
-    side,
+    (bitmap.width - cropW) / 2,
+    (bitmap.height - cropH) / 2,
+    cropW,
+    cropH,
     0,
     0,
-    AVATAR_SIDE_PX,
-    AVATAR_SIDE_PX,
+    outW,
+    outH,
   );
   bitmap.close();
 
@@ -70,9 +84,22 @@ async function cropToSquare(file: File): Promise<Blob> {
 export function PhotoUpload({
   hasPhoto,
   children,
+  target = "avatar",
+  className,
 }: {
   hasPhoto: boolean;
   children?: React.ReactNode;
+  /**
+   * Which picture this control changes (round 8, item 10).
+   *
+   * ONE COMPONENT, TWO TARGETS, because item 10's requirement is parity: the
+   * cover is changed "exactly as they change their profile picture". Two
+   * components would be two places for the size limit, the type allow-list,
+   * the claim-the-path-first ordering and the error copy to drift.
+   */
+  target?: "avatar" | "cover";
+  /** Wrapper classes — the cover's control overlays a band, not a circle. */
+  className?: string;
 }) {
   const t = useStrings();
   const router = useRouter();
@@ -97,7 +124,10 @@ export function PhotoUpload({
 
     setBusy(true);
     try {
-      const cropped = await cropToSquare(file);
+      const cropped =
+        target === "cover"
+          ? await cropToRatio(file, COVER_WIDTH_PX, COVER_HEIGHT_PX)
+          : await cropToRatio(file, AVATAR_SIDE_PX, AVATAR_SIDE_PX);
       const supabase = createBrowserSupabaseClient();
 
       /*
@@ -109,9 +139,10 @@ export function PhotoUpload({
        * no row pointing at it and nothing to clean it up.
        */
       const extension = extensionForMimeType("image/webp");
-      const { data: path, error: rpcError } = await supabase.rpc("set_profile_photo", {
-        p_extension: extension!,
-      });
+      const { data: path, error: rpcError } = await supabase.rpc(
+        target === "cover" ? "set_cover_photo" : "set_profile_photo",
+        { p_extension: extension! },
+      );
       if (rpcError || !path) throw new Error(rpcError?.message ?? "no path");
 
       const { error: uploadError } = await supabase.storage
@@ -148,18 +179,23 @@ export function PhotoUpload({
       <label
         data-testid="photo-avatar-control"
         aria-label={hasPhoto ? t.account.photoReplace : t.account.photoUpload}
-        className="relative inline-block cursor-pointer"
+        className={`relative inline-block cursor-pointer ${className ?? ""}`}
       >
         {input}
         <span className={busy ? "opacity-50 transition-opacity" : "transition-opacity"}>
           {children}
         </span>
-        <span
-          aria-hidden
-          className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full border-2 border-surface bg-volt text-[13px] leading-none text-surface"
-        >
-          ✎
-        </span>
+        {/* The pencil badge belongs to the AVATAR shape. The cover's control
+            carries its own label, so a second affordance on it would be two
+            things saying one thing. */}
+        {target === "avatar" && (
+          <span
+            aria-hidden
+            className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full border-2 border-surface bg-volt text-[13px] leading-none text-surface"
+          >
+            ✎
+          </span>
+        )}
         {error ? (
           <span role="alert" data-testid="photo-error" className="sr-only">
             {error}

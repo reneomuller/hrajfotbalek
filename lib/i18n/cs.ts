@@ -483,6 +483,7 @@ export const cs: StringsOverlay = {
     topupBackToAccount: "← Zpět na můj účet",
 
     photoTitle: "Profilová fotka",
+    coverChange: "Změnit pozadí",
     photoUpload: "Nahrát fotku",
     photoReplace: "Vyměnit fotku",
     photoBadType: "Použij JPG, PNG nebo WebP.",

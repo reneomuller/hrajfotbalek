@@ -115,6 +115,8 @@ export default async function AccountPage({
       <ProfileIdentity
         nickname={player.nickname}
         photoPath={player.photo_path}
+        /* `undefined` until migration 20260820140000 is applied — see the prop. */
+        coverPath={player.cover_path}
         photoVersion={player.created_at}
         countryName={countryName(player.country, locale)}
         createdAt={player.created_at}
