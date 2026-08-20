@@ -38,12 +38,20 @@ export default async function SetPasswordPage({
   if (!user) redirect(`/login?next=${encodeURIComponent(next)}`);
 
   return (
-    <main className="flex-1 flex items-center justify-center px-6 py-16">
-      <div className="w-full max-w-sm">
-        <h1 className="font-[family-name:var(--font-anton)] text-4xl uppercase tracking-tight">
+    /*
+      THE PRODUCT'S PAGE SHELL (round 9, item 8). This stayed a vertically
+      centred `max-w-sm` card long after login and signup left that layout,
+      because an earlier instruction said to leave the reset surfaces
+      functional and not invent a design for them. That instruction is lifted,
+      and nothing here is invented: same shell, same `page-title` step, same
+      panels as every other page.
+    */
+    <main className="relative z-10 mx-auto w-full max-w-shell px-gutter pb-16 pt-24">
+      <div className="w-full">
+        <h1 className="m-0 font-display text-page-title uppercase tracking-wide text-white">
           {t.auth.setPasswordTitle}
         </h1>
-        <p className="mt-3 text-sm opacity-70">{t.auth.setPasswordLede}</p>
+        <p className="mt-3 text-body text-muted">{t.auth.setPasswordLede}</p>
 
         <SetPasswordForm next={next} />
       </div>

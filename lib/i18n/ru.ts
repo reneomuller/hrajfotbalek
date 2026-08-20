@@ -90,12 +90,18 @@ export const ru: StringsOverlay = {
 
   auth: {
     loginTitle: "Вход",
-    loginLede: "Почта и пароль. Если пароля ещё нет, используй код ниже.",
+    // DRAFT — flagged for the standing native-review batch.
+    loginLede: "Почта и пароль. Пароля ещё нет? Воспользуйся ссылкой для сброса.",
     signInSubmit: "Войти",
     invalidCredentials: "Почта и пароль не совпадают.",
     emailNotConfirmed:
       "Сначала подтверди почту — открой ссылку, которую мы прислали при регистрации.",
 
+    // DRAFT — flagged for the standing native-review batch.
+    forgotPasswordLink: "Забыли пароль?",
+    resetTitle: "Сброс пароля",
+    resetLede: "Пришлём на почту шестизначный код. Введи его здесь и задай новый пароль.",
+    resetBackToLogin: "← Назад ко входу",
     forgotPasswordLead: "Забыл пароль или ещё не задавал его?",
     forgotPasswordCta: "Прислать код",
 

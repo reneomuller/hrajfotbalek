@@ -157,13 +157,49 @@ test("a wrong password is refused without saying which half was wrong", async ({
   await expect(page.getByTestId("login-error")).toHaveText(wrongPassword ?? "");
 });
 
+/*
+ * THE CODE PATH IS RECOVERY, NOT THE FRONT DOOR — and round 9 item 8 made that
+ * true of its WEIGHT as well as its position.
+ *
+ * ~~The code form sits underneath the password form.~~ It was a whole second
+ * card, permanently open, with its own email field — which gave a path most
+ * people never take the same billing as the one they came for, and put two
+ * email boxes on one screen. It is a small link now, and the two-step behind
+ * it lives at `/login/reset`.
+ *
+ * The FLOW is unchanged: `requestMagicLink` sends one email carrying both a
+ * link and a six-digit code, and `verifyEmailOtp` accepts the code.
+ */
 test("the code path is offered as recovery, not as the front door", async ({ page }) => {
   await page.goto("/login");
 
-  // Password first; the code is underneath, relabelled for someone who has no
-  // password yet or has forgotten it.
+  // Password first, and the recovery route is a link rather than a second form.
   await expect(page.getByTestId("login-submit")).toBeVisible();
+  await expect(page.getByTestId("forgot-password-link")).toBeVisible();
+  await expect(
+    page.getByTestId("request-code"),
+    "the recovery form is back on the login page as a second card",
+  ).toHaveCount(0);
+
+  // The link leads to the working two-step.
+  await page.getByTestId("forgot-password-link").click();
+  await page.waitForURL(/\/login\/reset/);
+  await expect(page.getByTestId("otp-email")).toBeVisible();
   await expect(page.getByTestId("request-code")).toBeVisible();
+});
+
+/*
+ * THE BOOKING INTENT SURVIVES THE RECOVERY HOP, exactly as it survives the
+ * login → signup hop. Someone who tapped "Claim your spot", failed a password
+ * and recovered should still land on the game they came for.
+ */
+test("the reset link carries the booking intent with it", async ({ page }) => {
+  await page.goto("/login?game=abc&action=book&next=%2Fgame%2Fabc%2Fbook");
+
+  const href = await page.getByTestId("forgot-password-link").getAttribute("href");
+  expect(href).toContain("/login/reset?");
+  expect(href).toContain("game=abc");
+  expect(href).toContain("action=book");
 });
 
 test("signup collects the profile and both legal acts, grouped apart from the preference", async ({

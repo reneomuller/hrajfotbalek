@@ -13,11 +13,12 @@ export function SetPasswordForm({ next }: { next: string }) {
   const [state, formAction, pending] = useActionState(setPassword, initialState);
 
   return (
-    <form action={formAction} className="mt-8 flex flex-col gap-4">
+    /* The product's panel treatment, like login and signup (round 9, item 8). */
+    <form action={formAction} className="lifted mt-6 flex flex-col gap-4 rounded-card p-5">
       <input type="hidden" name="next" value={next} />
 
       <label className="flex flex-col gap-2">
-        <span className="font-[family-name:var(--font-jetbrains-mono)] text-xs uppercase tracking-widest opacity-60">
+        <span className="field-label">
           {t.auth.passwordLabel}
         </span>
         <input
@@ -27,7 +28,7 @@ export function SetPasswordForm({ next }: { next: string }) {
           minLength={PASSWORD_MIN_LENGTH}
           autoComplete="new-password"
           data-testid="new-password"
-          className="rounded-control border border-hairline-strong bg-transparent px-4 py-3 text-base outline-none transition-colors focus:border-volt"
+          className="field"
         />
         <span className="text-xs opacity-50">{t.auth.passwordHint}</span>
       </label>
@@ -36,7 +37,7 @@ export function SetPasswordForm({ next }: { next: string }) {
         type="submit"
         disabled={pending}
         data-testid="save-password"
-        className="rounded-control bg-volt px-4 py-[15px] text-cta font-extrabold uppercase tracking-wide text-surface transition disabled:opacity-50"
+        className="rounded-pill bg-volt px-4 py-[15px] text-cta font-extrabold uppercase tracking-wide text-surface transition disabled:opacity-50"
       >
         {pending ? t.common.loading : t.auth.setPasswordSubmit}
       </button>
@@ -60,7 +61,7 @@ export function SetPasswordForm({ next }: { next: string }) {
       <Link
         href={next}
         data-testid="skip-password"
-        className="text-center text-sm text-white/60 underline underline-offset-4"
+        className="text-center text-small font-semibold text-volt no-underline"
       >
         {t.auth.setPasswordSkip}
       </Link>

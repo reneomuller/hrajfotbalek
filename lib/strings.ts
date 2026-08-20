@@ -161,7 +161,12 @@ export const strings = {
 
   auth: {
     loginTitle: "Sign in",
-    loginLede: "Email and password. If you have never set one, use the code below.",
+    /*
+     * "below" WAS TRUE UNTIL ROUND 9, ITEM 8. The code form sat permanently
+     * open under this one; it is behind a link now, so the sentence had to
+     * stop pointing down the page.
+     */
+    loginLede: "Email and password. No password yet? Use the reset link.",
     signInSubmit: "Sign in",
     /*
      * One message for a wrong password and an unknown address, deliberately.
@@ -178,6 +183,12 @@ export const strings = {
      * someone who has forgotten theirs. It is also the rollback if password
      * sign-in ever fails, which is why it stays exactly as it was underneath.
      */
+    /* --- reset (round 9, item 8) --- */
+    forgotPasswordLink: "Forgot your password?",
+    resetTitle: "Reset your password",
+    resetLede:
+      "We email you a six-digit code. Enter it here and you can set a new password.",
+    resetBackToLogin: "← Back to sign in",
     forgotPasswordLead: "Forgotten your password, or never set one?",
     forgotPasswordCta: "Email me a code",
 

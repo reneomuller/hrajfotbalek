@@ -93,7 +93,7 @@ test("the Google control appears only when its flag is set", async ({ page, cont
   }
 });
 
-test("the recovery path is still a working form, not a link to nowhere", async ({
+test("the recovery path is a small link to a working two-step", async ({
   page,
   context,
 }) => {
@@ -104,8 +104,27 @@ test("the recovery path is still a working form, not a link to nowhere", async (
   await page.goto("/login", { waitUntil: "networkidle" });
   await settle(page);
 
-  // Its own email field and its own submit, in a second <form> — the two-step
-  // that predates the redesign and was not touched by it.
+  /*
+   * ~~p08 draws a `Forgot your password?` link to a screen that does not
+   * exist, so the working two-step stays inline and only the box around it
+   * changes.~~ ROUND 9, ITEM 8: the screen exists now. The login page has the
+   * link p08 draws, and `/login/reset` is the two-step in the product's own
+   * shell — no design invented, because there is still no frame for it.
+   */
+  const link = page.getByTestId("forgot-password-link");
+  await expect(link).toBeVisible();
+
+  // SMALL, which is the point of the item. A link, not a panel: it must not
+  // be inside a `.lifted` box of its own.
+  const inPanel = await link.evaluate((el) => Boolean(el.closest(".lifted")));
+  expect(inPanel, "recovery is a panel again rather than a small link").toBe(false);
+
+  await link.click();
+  await page.waitForURL(/\/login\/reset/);
+  await settle(page);
+
+  // Its own email field and its own submit, in one <form> — the two-step that
+  // predates the redesign and was not touched by it.
   const email = page.getByTestId("otp-email");
   const submit = page.getByTestId("request-code");
   await expect(email).toBeVisible();
@@ -118,6 +137,8 @@ test("the recovery path is still a working form, not a link to nowhere", async (
     return e.form !== null && e.form === b.form;
   });
   expect(sameForm, "the recovery field and its button are not one form").toBe(true);
+
+  await page.screenshot({ path: path.join(OUT, "04-reset.png"), fullPage: true });
 });
 
 /**
@@ -149,17 +170,41 @@ test("the auth forms use the product's panel and label treatment", async ({
   expect(label.family, "a mono face survives on a field label").not.toContain("JetBrains");
   expect(label.transform).toBe("uppercase");
 
-  // Every primary control on the page is a capsule (p08).
+  /*
+   * Every primary control on the page is a capsule (p08).
+   *
+   * TWO, NOT THREE, SINCE ROUND 9 ITEM 8: `request-code` moved to
+   * `/login/reset` with the rest of the two-step, so the login page carries
+   * sign-in and create-an-account. The reset page's own control is asserted
+   * below rather than dropped.
+   */
   const radii = await page.evaluate(() =>
-    Array.from(document.querySelectorAll('[data-testid="login-submit"], [data-testid="request-code"], [data-testid="login-signup-link"]')).map(
-      (el) => {
-        const r = el.getBoundingClientRect();
-        return parseFloat(getComputedStyle(el).borderTopLeftRadius) / r.height;
-      },
-    ),
+    Array.from(
+      document.querySelectorAll(
+        '[data-testid="login-submit"], [data-testid="login-signup-link"]',
+      ),
+    ).map((el) => {
+      const r = el.getBoundingClientRect();
+      return parseFloat(getComputedStyle(el).borderTopLeftRadius) / r.height;
+    }),
   );
-  expect(radii.length).toBe(3);
+  expect(radii.length).toBe(2);
   for (const ratio of radii) expect(ratio).toBeGreaterThanOrEqual(0.45);
 
-  await page.locator("form").first().screenshot({ path: path.join(OUT, "03-sign-in-card.png") });
+  // And the reset page's control matches, so the two surfaces cannot drift.
+  await page.goto("/login/reset", { waitUntil: "networkidle" });
+  await settle(page);
+  const resetRadius = await page
+    .getByTestId("request-code")
+    .evaluate((el) => {
+      const r = el.getBoundingClientRect();
+      return parseFloat(getComputedStyle(el).borderTopLeftRadius) / r.height;
+    });
+  expect(resetRadius).toBeGreaterThanOrEqual(0.45);
+  const resetLabel = await page
+    .locator(".field-label")
+    .first()
+    .evaluate((el) => getComputedStyle(el).fontFamily);
+  expect(resetLabel, "a mono face survives on the reset page").not.toContain("JetBrains");
+
 });

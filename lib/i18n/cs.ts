@@ -87,12 +87,18 @@ export const cs: StringsOverlay = {
 
   auth: {
     loginTitle: "Přihlášení",
-    loginLede: "E-mail a heslo. Pokud sis heslo ještě nenastavil, použij kód níže.",
+    // DRAFT — flagged for the standing native-review batch.
+    loginLede: "E-mail a heslo. Ještě žádné nemáš? Použij odkaz na obnovu.",
     signInSubmit: "Přihlásit se",
     invalidCredentials: "E-mail a heslo spolu nesouhlasí.",
     emailNotConfirmed:
       "Nejdřív potvrď e-mail — otevři odkaz, který jsme ti poslali při registraci.",
 
+    // DRAFT — flagged for the standing native-review batch.
+    forgotPasswordLink: "Zapomenuté heslo?",
+    resetTitle: "Obnovit heslo",
+    resetLede: "Pošleme ti e-mailem šestimístný kód. Zadej ho tady a nastav si nové heslo.",
+    resetBackToLogin: "← Zpět na přihlášení",
     forgotPasswordLead: "Zapomněl jsi heslo, nebo sis ho ještě nenastavil?",
     forgotPasswordCta: "Poslat mi kód",
 
