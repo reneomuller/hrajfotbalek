@@ -1058,7 +1058,25 @@ export const strings = {
     title: "Admin",
     navGames: "Games",
     navPlayers: "Players",
-    navStats: "Stats",
+    /* --- Financials (round 7, item 8, p19). Admin copy is English only. --- */
+    financialsTitle: "Financials",
+    periodThisMonth: "This month",
+    periodLastMonth: "Last month",
+    periodAllTime: "All time",
+    revenueLabel: "Revenue",
+    revenueVsPrevious: "vs the month before",
+    gamesSettledLabel: "Games settled",
+    avgPerGameLabel: "Avg per game",
+    revenueByWeek: "Revenue by week",
+    outstandingLabel: "Outstanding",
+    unpaidSpots: "{count} unpaid spots",
+    /* The frame's `View unpaid →` has no route; this says where they are
+       instead of linking nowhere. See the page header. */
+    unpaidWhere: "Settle these on each game's admin page.",
+    operationsTitle: "Operations",
+    recentTransactions: "Recent transactions",
+    noTransactions: "No movements yet.",
+    navStats: "Financials",
     backToSite: "← Back to the site",
 
     // --- games list ----------------------------------------------------------

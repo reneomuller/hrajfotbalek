@@ -1,14 +1,19 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { StatCard } from "@/components/admin/StatCard";
 import { requireAdmin } from "@/lib/auth/requireAdmin";
 import { formatCzk, formatDate } from "@/lib/format";
 import { getAdminStats, ratio } from "@/lib/stats/queries";
 import { readStatWindow, STAT_WINDOWS, type StatWindow } from "@/lib/stats/window";
-import { ExportCsvLink } from "@/components/admin/ExportCsvLink";
 import { strings } from "@/lib/strings";
+import {
+  FINANCIAL_PERIODS,
+  getFinancials,
+  isFinancialPeriod,
+  type FinancialPeriod,
+} from "@/lib/admin/financials";
 
-export const metadata = { title: strings.admin.statsTitle };
-
+export const metadata: Metadata = { title: strings.admin.financialsTitle };
 export const dynamic = "force-dynamic";
 
 const WINDOW_LABEL: Record<StatWindow, string> = {
@@ -17,38 +22,76 @@ const WINDOW_LABEL: Record<StatWindow, string> = {
   month: strings.admin.statWindowMonth,
 };
 
+const PERIOD_LABEL: Record<FinancialPeriod, string> = {
+  this_month: strings.admin.periodThisMonth,
+  last_month: strings.admin.periodLastMonth,
+  all_time: strings.admin.periodAllTime,
+};
+
 /**
- * `/admin/stats` — read-only, gated by the admin layout.
+ * `/admin/stats` — FINANCIALS (round 7, item 8), from `p19`.
  *
- * FIVE METRICS, ALL BOUNDED (§7, REQ-ADMIN-005/006). Before Phase 19 every
- * number here was since-the-beginning-of-time, which is a figure that can only
- * go up and therefore says nothing about whether anything is working.
+ * THE ROUTE DOES NOT MOVE, and item 0 is why. The audit filed `p19` as a new
+ * page; checked against the route table it is this one — revenue, games
+ * settled and average per game are the three questions the stats page already
+ * answered. Adding `/admin/financials` beside it would be the "two surfaces
+ * answering one question" the audit itself flagged, built on purpose.
  *
- * The window is a `?window=` link rather than client state, for the same
- * reasons the games list's day picker is: the selection is shareable, the back
- * button is correct, and the filtering stays where the data is. `requireAdmin()`
- * runs here as well as in the layout — the clock is read once, in this
- * function, and handed to the pure range helpers.
+ * WHAT THE FRAME ADDS: a money-first arrangement, a period switcher instead of
+ * the old six windows, a weekly shape, and an outstanding figure — which is
+ * the one number here that answers "what should I chase".
+ *
+ * TWO AFFORDANCES FROM THE FRAME ARE OMITTED, per item 8's rule about
+ * destinations that do not exist:
+ *
+ *   - `View unpaid →`. There is no unpaid-spots route in this product; unpaid
+ *     bookings are settled per game on `/admin/games/[id]`. The FIGURE ships,
+ *     because it answers the question; the link does not, because it would go
+ *     nowhere. Building the route is a real item, not a paint job.
+ *   - `EXPORT CSV` on the transaction list. `lib/admin/csv.ts` and two working
+ *     export routes exist, so this is cheap — but it is a new endpoint with
+ *     its own column decisions, and inventing those tonight to fill a button
+ *     is how a CSV nobody asked for becomes the one somebody relies on.
  */
-export default async function AdminStatsPage({
+export default async function FinancialsPage({
   searchParams,
 }: {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
 }) {
   await requireAdmin();
+
   const query = searchParams ? await searchParams : {};
+  const requested = typeof query.period === "string" ? query.period : undefined;
+  const period: FinancialPeriod = isFinancialPeriod(requested) ? requested : "this_month";
 
+  // The clock is read in the data layer, which hands back the bounds it used —
+  // the page cannot read it during render, and the label and the figures must
+  // describe the same month.
+  const f = await getFinancials(period);
+
+  /*
+   * THE OPERATIONAL METRICS SURVIVE, AND RESTORING THEM IS THE POINT.
+   *
+   * The first version of this page replaced the stats page outright with
+   * `p19`'s money content — and silently deleted fill rate, no-show,
+   * new/returning and cancellations, which no item asked for and which the
+   * admin suite immediately failed on. `p19` overlaps `/admin/stats` on
+   * REVENUE and on nothing else; the audit's own flag 9 said as much.
+   *
+   * So one page does both jobs and no route is added. Money first, because
+   * that is what the frame makes the page about, and operations beneath it
+   * under their own heading.
+   *
+   * TWO PICKERS, and they are genuinely two questions. "This month vs last"
+   * is how money is read; day/week/month/quarter is how a fill rate is read,
+   * and collapsing them would make one of the two answer the wrong window.
+   * Each sits directly above the block it governs.
+   */
   const window = readStatWindow(query);
-  // The clock is read in the query layer, which hands back the exact bounds the
-  // numbers were computed against — so the label and the figures cannot end up
-  // describing different periods.
   const stats = await getAdminStats(window);
-
   const { range, noShow, fillRate, confirmedRevenueCzk, newReturning, cancellations } =
     stats;
 
-  // A window can legitimately hold nothing — "today" usually does — and a page
-  // of dashes reads as broken rather than as empty.
   const isEmpty =
     fillRate.capacity === 0 &&
     noShow.marked === 0 &&
@@ -56,24 +99,213 @@ export default async function AdminStatsPage({
     newReturning.newPlayers + newReturning.returning === 0 &&
     cancellations.total === 0;
 
+  /*
+   * The delta the frame prints as "+12% vs July".
+   *
+   * NOT RENDERED WHEN THE PREVIOUS PERIOD WAS ZERO. A jump from nothing to
+   * something is not a percentage — it is division by zero, and "+Infinity%"
+   * or a silent "+100%" are both lies about a first month.
+   */
+  const delta =
+    f.previousRevenueCzk !== null && f.previousRevenueCzk > 0
+      ? Math.round(((f.revenueCzk - f.previousRevenueCzk) / f.previousRevenueCzk) * 100)
+      : null;
+
+  const peak = Math.max(1, ...f.weeks.map((w) => w.revenueCzk));
+
   return (
     <>
-      <div className="flex flex-wrap items-baseline justify-between gap-3">
-        <h2 className="m-0 text-[22px] font-bold uppercase tracking-wide text-bone">
-          {strings.admin.statsTitle}
-        </h2>
-        {/* The export carries the SELECTED window, so the file matches the
-            screen it was taken from rather than a default period. */}
-        <ExportCsvLink
-          href={`/admin/stats/export?window=${window}`}
-          testId="export-stats"
-        />
-      </div>
-      <p className="mt-2 max-w-[560px] text-[13px] leading-relaxed text-muted">
-        {strings.admin.statsLede}
-      </p>
+      <h2 className="m-0 font-display text-page-title uppercase tracking-wide text-white">
+        {strings.admin.financialsTitle}
+      </h2>
 
-      {/* --- the window -------------------------------------------------------- */}
+      {/* The period switcher — three pills, as p19 draws them. */}
+      <nav data-testid="financial-period" className="mt-5 flex flex-wrap gap-2">
+        {FINANCIAL_PERIODS.map((option) => {
+          const selected = option === period;
+          return (
+            <Link
+              key={option}
+              href={`/admin/stats?period=${option}`}
+              data-testid={`period-${option}`}
+              data-selected={selected ? "true" : "false"}
+              aria-current={selected ? "page" : undefined}
+              className={`rounded-pill border-2 px-4 py-2 text-small font-semibold no-underline transition-colors ${
+                selected
+                  ? "border-volt bg-volt text-ink"
+                  : "border-hairline-strong text-muted hover:border-volt hover:text-volt"
+              }`}
+            >
+              {PERIOD_LABEL[option]}
+            </Link>
+          );
+        })}
+      </nav>
+
+      {/* --- revenue, loud (p19) ------------------------------------------ */}
+      <section data-testid="financials-revenue" className="lifted mt-5 rounded-card p-5">
+        <div className="text-eyebrow font-semibold uppercase text-muted">
+          {strings.admin.revenueLabel}
+        </div>
+        {/*
+          Anton at display scale, which is R5's first named case exactly:
+          "hero money figures".
+        */}
+        <div className="mt-2 font-display text-[40px] leading-none text-volt">
+          {formatCzk(f.revenueCzk)}
+        </div>
+        {delta !== null && (
+          <div data-testid="revenue-delta" className="mt-2 text-small">
+            <span className={delta >= 0 ? "font-bold text-volt" : "font-bold text-warn"}>
+              {delta >= 0 ? "+" : ""}
+              {delta}%
+            </span>{" "}
+            <span className="text-muted">{strings.admin.revenueVsPrevious}</span>
+          </div>
+        )}
+      </section>
+
+      {/* --- two tiles ----------------------------------------------------- */}
+      <section className="mt-4 grid grid-cols-2 gap-4">
+        <div data-testid="financials-settled" className="lifted rounded-card p-5">
+          <div className="text-eyebrow font-semibold uppercase text-muted">
+            {strings.admin.gamesSettledLabel}
+          </div>
+          <div className="mt-2 font-display text-[32px] leading-none text-white">
+            {f.gamesSettled}
+          </div>
+        </div>
+        <div data-testid="financials-average" className="lifted rounded-card p-5">
+          <div className="text-eyebrow font-semibold uppercase text-muted">
+            {strings.admin.avgPerGameLabel}
+          </div>
+          {/*
+            A dash rather than 0 when nothing settled. "0 CZK average" reads as
+            a business problem; "—" reads as an empty window, which is what it
+            is.
+          */}
+          <div className="mt-2 font-display text-[32px] leading-none text-white">
+            {f.avgPerGameCzk === null ? "—" : formatCzk(f.avgPerGameCzk)}
+          </div>
+        </div>
+      </section>
+
+      {/* --- revenue by week ----------------------------------------------- */}
+      {f.weeks.length > 0 && (
+        <section data-testid="financials-weeks" className="lifted mt-4 rounded-card p-5">
+          <div className="text-eyebrow font-semibold uppercase text-muted">
+            {strings.admin.revenueByWeek}
+          </div>
+          {/*
+            BARS AS DIVS, NOT A CHART LIBRARY. Four values with no axis, no
+            tooltip and no interaction is a bar chart in the same sense a
+            progress bar is: `height` is the only variable, and the alternative
+            is shipping a charting dependency to draw four rectangles.
+
+            The heights are a percentage of the tallest bar, which is the only
+            place in this file an inline style is correct — it is a computed
+            value per render, not a static one.
+          */}
+          {/*
+            THE COLUMN OWNS THE HEIGHT, NOT THE ROW — and the first version got
+            this wrong in a way worth recording: the bars did not render at
+            all. A percentage height resolves against a parent with a DEFINITE
+            height, and the bar's wrapper was a `flex-1` box inside an
+            auto-height column, so every bar computed to zero and the chart was
+            an empty grey panel with labels under it. It looked like "no data".
+
+            Now each column is `h-full` inside the fixed-height row and the bar
+            is a percentage of the column. Labels sit in their own row beneath,
+            outside the measured area, so they cannot eat into it.
+          */}
+          <div className="mt-4 flex items-end gap-3" style={{ height: 120 }}>
+            {f.weeks.map((week) => (
+              <div key={week.label} className="flex h-full flex-1 flex-col justify-end">
+                <div
+                  data-testid={`week-bar-${week.label}`}
+                  title={formatCzk(week.revenueCzk)}
+                  className={`w-full rounded-control ${
+                    week.revenueCzk > 0 && week.revenueCzk === peak
+                      ? "bg-volt"
+                      : "bg-volt/[.35]"
+                  }`}
+                  /* A 2% floor so an empty week is a visible baseline rather
+                     than a gap the eye reads as a missing bar. */
+                  style={{ height: `${Math.max(2, (week.revenueCzk / peak) * 100)}%` }}
+                />
+              </div>
+            ))}
+          </div>
+          <div className="mt-2 flex gap-3">
+            {f.weeks.map((week) => (
+              <div
+                key={week.label}
+                className="flex-1 text-center text-eyebrow font-semibold uppercase text-muted"
+              >
+                {week.label}
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* --- outstanding ---------------------------------------------------- */}
+      <section
+        data-testid="financials-outstanding"
+        className="mt-4 rounded-card border-2 border-hairline-volt bg-surface-raised p-5"
+      >
+        <div className="text-eyebrow font-semibold uppercase text-muted">
+          {strings.admin.outstandingLabel}
+        </div>
+        <div className="mt-2 text-body-lg font-bold text-white">
+          {formatCzk(f.outstandingCzk)} ·{" "}
+          {strings.admin.unpaidSpots.replace("{count}", String(f.unpaidSpots))}
+        </div>
+        {/* The frame's `View unpaid →` is omitted — see the file header. */}
+        <p className="m-0 mt-2 text-small text-muted">{strings.admin.unpaidWhere}</p>
+      </section>
+
+      {/* --- recent transactions -------------------------------------------- */}
+      <section data-testid="financials-transactions" className="lifted mt-4 rounded-card p-5">
+        <div className="text-eyebrow font-semibold uppercase text-muted">
+          {strings.admin.recentTransactions}
+        </div>
+        {f.transactions.length === 0 ? (
+          <p className="m-0 mt-3 text-small text-muted">{strings.admin.noTransactions}</p>
+        ) : (
+          <ul className="m-0 mt-3 list-none p-0">
+            {f.transactions.map((tx) => (
+              <li
+                key={tx.id}
+                className="flex items-center justify-between gap-3 border-b border-hairline py-3 last:border-b-0 last:pb-0"
+              >
+                <span className="min-w-0">
+                  <span className="block truncate text-body font-semibold text-white">
+                    {tx.who}
+                  </span>
+                  <span className="block truncate text-small text-muted">{tx.what}</span>
+                </span>
+                <span
+                  className={`shrink-0 text-body font-bold ${
+                    tx.amountCzk >= 0 ? "text-volt" : "text-muted"
+                  }`}
+                >
+                  {tx.amountCzk >= 0 ? "+" : "−"}
+                  {formatCzk(Math.abs(tx.amountCzk))}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
+      {/* --- operations ------------------------------------------------------
+          Everything the stats page has always answered, unchanged and under
+          its own window. See the note where `window` is read. */}
+      <section className="mt-10 border-t border-hairline pt-8">
+        <h3 className="m-0 font-display text-section-title uppercase tracking-wide text-white">
+          {strings.admin.operationsTitle}
+        </h3>
       <nav data-testid="stat-window-picker" className="mt-6 flex flex-wrap gap-2">
         {STAT_WINDOWS.map((option) => {
           const isSelected = option === window;
@@ -155,6 +387,7 @@ export default async function AdminStatsPage({
           </div>
         </section>
       )}
+      </section>
     </>
   );
 }
