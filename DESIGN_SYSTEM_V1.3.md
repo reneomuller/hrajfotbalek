@@ -1057,3 +1057,108 @@ comment arguing for whichever one it happens to read first.
 safe-area-inset-as-bottom-padding both survive from the flush work untouched.
 `e2e/nav-pill.spec.ts` asserts the two halves separately: `assertFlush` on the
 bar, `assertCellsInset` on the cells, symmetric left and right.
+
+---
+
+# 8. Redesign v2 — Rounds 4–6 rulings (2026-08-20)
+
+Decisions taken during the night run, in the order the rounds hit them. Each
+one is either a divergence from a frame or a reversal of standing law, and each
+is recorded because the next session comparing page to frame will see it
+immediately.
+
+## R13 — Game detail: ONE header band, and the photo wins over the frame
+
+There is one header for every game: back circle and venue title on a single
+row, first content box directly beneath. The two v1.2 layouts — a 280px
+full-bleed hero for a venue with a photograph, a compact text header for one
+without — are gone. The same page opening two different ways depending on a
+column most venues leave null is the defect; the tall one also pushed "when is
+it" below the fold.
+
+**`p03` DRAWS THE BAND FLAT BLACK. R6(b) WINS ANYWAY.** The ruling postdates
+the frame and says the photograph backs the band. The scrim's last stop is
+`ink` at **full** opacity — the page's own ground — because that is what makes
+the join invisible; anything short of it leaves a hairline of photograph along
+the top of the first card that reads as a rendering artefact.
+
+**Which photograph:** the venue's own when it has one, R6's default otherwise.
+R6 forbids *building* per-venue photos; it does not require deleting the ones
+that already work. `data-photo` keeps meaning "this venue has a picture of its
+own", and the band is never empty.
+
+## R14 — R5's two named cases, applied
+
+Anton was granted to "display-scale numerals only — hero money figures, large
+spots-left counters" and had been applied to neither. `p03` sets both in it:
+the availability counter and the claim bar's price. **The list card's figure
+stays on the body face** — `body-lg` at weight 700 is a body-size figure, which
+is the half R5 forbids. Both directions are asserted.
+
+## R15 — Auth: Google is NOT built, and forgot-password keeps its behaviour
+
+`p08` draws `Continue with Google` and `Sign up with Google`. **There is no
+Google OAuth in this product.** A button that cannot sign anyone in is the dead
+affordance the run's own rule forbids; it lands with the capability, not
+before. A spec fails if a later round paints one from the frame.
+
+`p08` also draws `Forgot your password?` as a link to a screen that does not
+exist — the audit lists both reset frames as missing (§3a item 2). **The
+working two-step (request a code, then type it) is untouched underneath**; only
+the box around it changes. Asserted as "still a form, with its own field and
+its own submit", so it cannot be quietly swapped for the frame's link.
+
+**The field treatment moved into `globals.css` as `.field` / `.field-label`**,
+beside `.lifted`. Two byte-identical constants in two files is not a shared
+treatment. The label loses JetBrains Mono, which appears in none of the
+nineteen frames, and takes `eyebrow`; the field gains a fill, because
+`bg-transparent` on `ink` makes an empty input an outline around the page.
+
+## R16 — Profile cover: photograph, REVERSING the gradient
+
+> ~~The cover is a gradient, not a photograph. A venue photo would be a picture
+> of a pitch this player may never have played on, presented as if it were
+> theirs — an invented fact under someone's face.~~ **REVERSED 2026-08-20.**
+
+The reasoning was sound and its **premise changed**: it assumed the only
+photograph available was some particular venue's. R6 introduced one generic
+pitch used identically behind every list card and every game header, so here it
+is furniture — like the pitch canvas already behind this page — and not a claim
+about where anyone has played. The objection stands in full against a *venue*
+photo on a profile, and that is still not built.
+
+`p10` and `p11` both draw the photographic cover; the audit lists it as a delta
+from v1.3 rather than as a request.
+
+**The stacking bug this created is law now.** Giving the cover a scrim made it
+a POSITIONED element, and a positioned element paints above its non-positioned
+siblings whatever the source order says — so the cover painted over the
+overlapping identity row and sliced the nickname in half. It reads as a
+font-rendering artefact. Diagnose with `elementFromPoint`, which is CLAUDE.md's
+standing method for the z-index family, and give the overlapping row its own
+`relative`.
+
+## R17 — `page-title`, a type step the scale did not have
+
+The frames set a page's display heading at **32px** on a 390 viewport; `title`
+clamps to its 24px floor there, so every page heading in the product was
+rendering a third small. A new step rather than a wider `title`, which is
+aliased by `section-title`, `match-title`, `hero-sub` and `community-title`
+across 19 headings in rounds that are not in scope.
+
+Applied to: `/games` h1, home's `UPCOMING MATCHES`, the game detail's venue,
+the auth titles, and the Player of the Month's name.
+
+## R18 — Accepted divergences, listed
+
+Cosmetic gaps that ship. Each was measured against its frame and judged smaller
+than the churn of closing it.
+
+| Surface | Divergence | Why it ships |
+|---|---|---|
+| Home hero | 44px against the frames' ~48px | `hero`'s clamp floor is ruling J's, set so the three steps clear the fold |
+| Home hero, RU | Three rows, not two | **Anton ships no Cyrillic subset.** Russian display copy falls back to the body face and sets far wider; fitting line two on one row needs a 29px hero. The break still lands on the sentence boundary, which is what the spec asserts |
+| Home, `All games` | A button under the cards, where `p01` puts a link in the heading row | Ruling J moved it there deliberately and gave its reasons. Law beats frame on an affordance's prominence, as under R1 |
+| Community stats, profile stats | Captions wrap to two lines where the frames keep them on one | `eyebrow`'s 3px tracking does not fit "GAMES PLAYED" in a third of 390. Ruling B's one uppercase style beats the frame's letter-spacing |
+| Day strip | Nine cells at 48px against the frames' six at ~52px | The calendar-width ruling forbids a scrolling row, so the cell count is fixed and the width follows |
+| Games list | Two whole cards above the fold, not three | R10 |
