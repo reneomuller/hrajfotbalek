@@ -1001,3 +1001,59 @@ that actually changed.
 payment surfaces are paint over an inert control, so they can be built from the
 frames without the rail existing. What remains gated is *activation*, which is
 MERGE_READINESS.md's first blocking item rather than a build dependency.
+
+---
+
+# 7. Redesign v2 — Round 3 rulings (2026-08-20)
+
+Three stops from the night run, settled by the owner. R10 and R11 are lessons
+promoted to law; R12 moves a component.
+
+## R10 — List density: 2 whole cards, RATIFIED
+
+The games list shows **two whole cards above the fold, not three**. The frames'
+own density is two — `p02` draws the third below the fold — so the redesign
+card at 159px against the old 141px is the design, not an implementation miss.
+It was already trimmed as far as the frames allow (padding 16→12, row gaps
+10→8, cue padding 6→4) and no further trim is authorised.
+
+**The count is relaxed; the criterion it protected is not.** What the old
+three-card rule actually defended is that **the list visibly continues past the
+fold** — the reader must be able to see that scrolling yields more. That is
+unchanged, still asserted, and is the thing a later round must not break. A
+change that fits three cards by making the list *stop* at the fold fails this
+ruling even though it satisfies the number.
+
+## R11 — Sub-pixel borders: PROHIBITED, and the diagnosis is law
+
+**No spec may assert a border width the built stylesheet cannot render.**
+
+Chrome snaps a border to the device pixel grid, so `border-[1.5px]` is applied
+and *reported* as `1px`. A "make the outline thicker" change therefore did not
+render for two rounds, and the spec asserting `1px` agreed with it — a green
+suite over a change that never happened.
+
+Every outline in the redesign is **`border-2`**. Do not reintroduce a
+fractional border, and do not blame `.lifted`: the built stylesheet shows the
+utility wins the cascade. §6 R6's "1.5px volt outline" is superseded by this
+ruling wherever the two are read together.
+
+## R12 — Nav bar geometry: THE FRAMES WIN (second reversal)
+
+The **band** is flush — full-bleed, bottom edge on the viewport's bottom edge.
+The **cells** are inset **12px from each screen edge**, with a **6px** gap,
+measured off `p02` at a 390px viewport.
+
+> ~~The pill floats 16px clear on every side (ruling K).~~ **REVERSED
+> 2026-08-19** to flush on all edges, cells at 8px.
+> ~~Flush wins over the frames, which inset the cells.~~ **REVERSED
+> 2026-08-20 (this ruling).** The frames win on the horizontal geometry.
+
+**Second reversal on this element, and the lineage is recorded rather than
+edited away** — three positions in two days means the next session will find a
+comment arguing for whichever one it happens to read first.
+
+**Only the geometry moves.** The `elementFromPoint` top-layer guarantee and the
+safe-area-inset-as-bottom-padding both survive from the flush work untouched.
+`e2e/nav-pill.spec.ts` asserts the two halves separately: `assertFlush` on the
+bar, `assertCellsInset` on the cells, symmetric left and right.

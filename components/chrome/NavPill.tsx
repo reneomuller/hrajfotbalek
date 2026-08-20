@@ -8,11 +8,13 @@ import { useStrings } from "@/components/LocaleProvider";
 /**
  * The floating navigation pill (v1.3, ruling K).
  *
- * FLUSH TO THE BOTTOM EDGE, full width — see the note on the element itself.
- * Ruling K made it float 16px clear on every side; the owner reversed that in
- * the night round of 2026-08-19. The one surviving shadow in the product still
- * points UPWARD (`shadow-lift`), which is now the only cue that content passes
- * beneath it rather than stopping at it.
+ * THE BAND IS FLUSH, THE CELLS ARE INSET — see the note on the list itself for
+ * the full lineage. Ruling K made the whole pill float 16px clear on every
+ * side; the night round of 2026-08-19 reversed that to flush; round 3 of the
+ * redesign reversed the horizontal half back to the frames' 12px cell inset.
+ * The one surviving shadow in the product still points UPWARD (`shadow-lift`),
+ * which is the only cue that content passes beneath the bar rather than
+ * stopping at it.
  *
  * THREE DESTINATIONS AS OF THE PASS RULING: Home, Games, Profile. `Pass` came
  * out because the panel on the games list is now the sole entry point to it —
@@ -118,13 +120,28 @@ export function NavPill() {
         without adding a stroke — ruling C still takes the outline off this
         family.
 
-        FLUSH IS KEPT, AND THE FRAMES DISAGREE. They inset the cells from both
-        screen edges; the owner ruled flush in the night round and it shipped.
-        The ruling is two rounds old and explicit, so it wins over the frame —
-        flagged in the round report rather than silently reversed.
+        ~~FLUSH IS KEPT, AND THE FRAMES DISAGREE. They inset the cells from
+        both screen edges; the owner ruled flush in the night round and it
+        shipped.~~ **REVERSED 2026-08-20 (redesign v2, round 3): THE FRAMES
+        WIN.** The cells take the frames' inset — measured off `p02` at 12px
+        from each screen edge with a 6px gap, against the 8px/8px that shipped.
+
+        SECOND REVERSAL ON THIS ELEMENT, and the lineage is the point:
+          1. Ruling K floated the whole pill 16px clear on all four sides.
+          2. Night round 2026-08-19 reversed that to flush — `inset-x-0
+             bottom-0`, no gap on any edge, cells at `px-2`.
+          3. This ruling reverses the horizontal half of (2) back toward the
+             frames, and ONLY the horizontal half.
+
+        WHAT DOES NOT MOVE. The BAND is still full-bleed and still flush to the
+        viewport's bottom and side edges — the frames draw it that way too, and
+        `nav-pill.spec.ts`'s flush assertion is on the bar, not the cells. The
+        safe-area inset stays inside as bottom padding, and the elementFromPoint
+        top-layer guarantee is untouched. Only the cells' horizontal geometry
+        changes.
       */}
       <ul
-        className="m-0 flex list-none items-stretch gap-2 bg-surface px-2 pt-2 shadow-lift"
+        className="m-0 flex list-none items-stretch gap-1.5 bg-surface px-3 pt-2 shadow-lift"
         style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 8px)" }}
       >
         {tabs.map((tab) => {

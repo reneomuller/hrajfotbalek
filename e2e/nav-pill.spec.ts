@@ -3,8 +3,9 @@ import { apiClientFor, players, signInAs } from "./helpers/session.ts";
 import { createScratchGame, destroyScratchGame } from "./helpers/scaffold.ts";
 
 /**
- * THE NAV PILL IS FLUSH, FIXED, AND ON TOP — on every surface (night round,
- * item 4).
+ * THE NAV BAR IS FLUSH, FIXED, AND ON TOP — on every surface (night round,
+ * item 4) — AND ITS CELLS ARE INSET (redesign v2, round 3). Those are two
+ * separate guarantees on one element and they are asserted separately.
  *
  * ASSERTED WITH `document.elementFromPoint`, NOT BY READING z-index. This
  * codebase has been bitten twice by the same law: a `z-50` dialog that the nav
@@ -60,7 +61,35 @@ async function assertFlush(page: import("@playwright/test").Page, where: string)
   expect(gap.leftGap, `${where}: gap beside the bar`).toBe(0);
 }
 
-test("the pill is flush and on top on home, games, pass and profile", async ({
+/**
+ * THE CELLS ARE INSET FROM BOTH SCREEN EDGES, and by the SAME amount.
+ *
+ * The band is flush (above) and the cells are not — the two halves of the
+ * 2026-08-20 reversal, which is exactly the pair a later round is likely to
+ * collapse back into one. Measured off `p02`: 12px at a 390px viewport.
+ *
+ * SYMMETRY IS ASSERTED SEPARATELY from the value. A one-sided inset is the
+ * failure that looks fine in a centred screenshot, and it is what `px-3` on a
+ * flex row silently produces if someone adds a margin to the first cell
+ * instead.
+ */
+const CELL_INSET_PX = 12;
+
+async function assertCellsInset(page: import("@playwright/test").Page, where: string) {
+  const geom = await page.evaluate(() => {
+    const pill = document.querySelector('[data-testid="nav-pill"]')!;
+    const tabs = Array.from(pill.querySelectorAll("a")).map((a) =>
+      a.getBoundingClientRect(),
+    );
+    const first = tabs[0]!;
+    const last = tabs[tabs.length - 1]!;
+    return { left: first.left, right: window.innerWidth - last.right };
+  });
+  expect(geom.left, `${where}: left cell inset`).toBeCloseTo(CELL_INSET_PX, 0);
+  expect(geom.right, `${where}: right cell inset`).toBeCloseTo(CELL_INSET_PX, 0);
+}
+
+test("the band is flush, the cells are inset, and the pill is on top everywhere", async ({
   page,
   context,
 }) => {
@@ -76,6 +105,7 @@ test("the pill is flush and on top on home, games, pass and profile", async ({
     const tabs = await assertPillOnTop(page, where);
     expect(tabs).toBeGreaterThan(0);
     await assertFlush(page, where);
+    await assertCellsInset(page, where);
 
     // FIXED, not merely present at the top of the scroll. Scrolled to the
     // bottom is where the site footer lives, which is the element that
