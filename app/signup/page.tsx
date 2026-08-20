@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { SignupForm } from "./SignupForm";
+import { GoogleAuthBlock } from "@/components/auth/GoogleAuthBlock";
 import { writeProfileFromMetadata } from "./actions";
 import { getSessionUser, getCurrentPlayer } from "@/lib/auth/session";
 import { getLocale, getStrings } from "@/lib/i18n/server";
@@ -52,6 +53,14 @@ export default async function SignupPage({
             {t.auth.signupTitle}
           </h1>
           <p className="mt-3 text-body text-muted">{t.auth.signupLede}</p>
+
+          {/* p09. Gated identically to /login — see GoogleAuthBlock. */}
+          <GoogleAuthBlock
+            label={t.auth.googleSignUp}
+            orLabel={t.auth.authOr}
+            action="signup"
+            next={next}
+          />
 
           <SignupForm next={next} countries={countries} mode="create" />
 

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { LoginForm } from "./LoginForm";
+import { GoogleAuthBlock } from "@/components/auth/GoogleAuthBlock";
 import { getStrings } from "@/lib/i18n/server";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -50,6 +51,22 @@ export default async function LoginPage({
           {t.auth.loginTitle}
         </h1>
         <p className="mt-3 text-body text-muted">{t.auth.loginLede}</p>
+
+        {/*
+          GOOGLE FIRST, THEN THE DIVIDER, THEN EMAIL (p08).
+
+          Both render nothing when `NEXT_PUBLIC_GOOGLE_AUTH` is unset — the
+          divider is inside the same gate as the button, or an unflagged
+          deployment shows a rule with the word "or" above a form and nothing
+          on the other side of it.
+        */}
+        <GoogleAuthBlock
+          label={t.auth.googleContinue}
+          orLabel={t.auth.authOr}
+          gameId={params.game ?? null}
+          action={params.action ?? "login"}
+          next={params.next ?? null}
+        />
 
         <LoginForm
           gameId={params.game ?? null}

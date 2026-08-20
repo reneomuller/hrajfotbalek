@@ -163,6 +163,11 @@ export const ru: StringsOverlay = {
     noAccountLead: "Ещё не с нами?",
     createAccountCta: "Регистрация →",
     haveAccount: "Уже есть аккаунт?",
+    // DRAFT — flagged for the standing native-review batch.
+    googleContinue: "Продолжить через Google",
+    googleSignUp: "Регистрация через Google",
+    googleFailed: "Не удалось начать вход через Google. Попробуй ещё раз.",
+    authOr: "или",
     noAccount: "Впервые здесь?",
     nicknameLabel: "Ник",
     nicknameHint: "Буквы, цифры, пробелы, _ и - · до 20 символов",

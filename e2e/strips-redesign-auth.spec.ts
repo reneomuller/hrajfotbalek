@@ -55,17 +55,41 @@ test("login and signup, in three languages", async ({ page, context }) => {
   }
 });
 
-test("no Google control ships before Google OAuth does", async ({ page, context }) => {
+/*
+ * THE GOOGLE CONTROL IS GATED, NOT ABSENT (round 7, item 1).
+ *
+ * Round 5 shipped no Google button at all, because there was no Google OAuth
+ * behind it and a button that cannot sign anyone in is worse than no button
+ * (ruling R15). Round 7 builds the flow and puts the control behind
+ * `NEXT_PUBLIC_GOOGLE_AUTH`, which is the same ruling honoured differently:
+ * the code ships, the control appears when three dashboards agree.
+ *
+ * SO THE ASSERTION FOLLOWS THE FLAG rather than asserting absence. Under the
+ * suite's environment the flag is unset, so the guarantee round 5 made still
+ * holds and is still checked — and the test now also fails if someone renders
+ * the button unconditionally, which is the actual regression to fear.
+ */
+test("the Google control appears only when its flag is set", async ({ page, context }) => {
   await context.addCookies([
     { name: LOCALE_COOKIE, value: "en", domain: "localhost", path: "/" },
   ]);
 
+  const enabled = process.env.NEXT_PUBLIC_GOOGLE_AUTH === "1";
+
   for (const url of ["/login", "/signup"]) {
     await page.goto(url, { waitUntil: "networkidle" });
-    const body = (await page.locator("body").innerText()).toLowerCase();
-    expect(body, `${url} offers a Google control with nothing behind it`).not.toContain(
-      "google",
-    );
+    const control = page.getByTestId("google-auth");
+    await expect(control, `${url} with flag=${enabled}`).toHaveCount(enabled ? 1 : 0);
+
+    // The divider goes with it. Two independently gated elements produce a
+    // rule reading "or" with nothing on one side the first time someone edits
+    // one of them.
+    await expect(page.getByTestId("google-auth-block")).toHaveCount(enabled ? 1 : 0);
+
+    if (!enabled) {
+      const body = (await page.locator("body").innerText()).toLowerCase();
+      expect(body, `${url} names Google with nothing behind it`).not.toContain("google");
+    }
   }
 });
 

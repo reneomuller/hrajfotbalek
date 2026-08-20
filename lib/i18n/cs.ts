@@ -160,6 +160,11 @@ export const cs: StringsOverlay = {
     noAccountLead: "Ještě nejsi člen?",
     createAccountCta: "Registrace →",
     haveAccount: "Už máš účet?",
+    // DRAFT — flagged for the standing native-review batch.
+    googleContinue: "Pokračovat přes Google",
+    googleSignUp: "Registrace přes Google",
+    googleFailed: "Přihlášení přes Google se nepodařilo spustit. Zkus to prosím znovu.",
+    authOr: "nebo",
     noAccount: "Jsi tu poprvé?",
     nicknameLabel: "Přezdívka",
     nicknameHint: "Písmena, číslice, mezery, _ a - · max. 20 znaků",

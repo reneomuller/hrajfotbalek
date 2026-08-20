@@ -286,6 +286,19 @@ export const strings = {
     noAccountLead: "Not a member yet?",
     createAccountCta: "Sign up →",
     haveAccount: "Already have an account?",
+    /*
+     * GOOGLE (round 7, item 1). Rendered only when `NEXT_PUBLIC_GOOGLE_AUTH`
+     * is set — see `components/auth/GoogleAuthButton.tsx` — so these keys
+     * exist before the control does.
+     *
+     * "Google" is the company's name and is not translated in any of the
+     * three; the verb around it is.
+     */
+    googleContinue: "Continue with Google",
+    googleSignUp: "Sign up with Google",
+    googleFailed: "We could not start the Google sign-in. Please try again.",
+    /* The divider between the Google button and the email form (p08, p09). */
+    authOr: "or",
     noAccount: "New here?",
   },
 
