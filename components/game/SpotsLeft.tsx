@@ -82,8 +82,21 @@ export async function SpotsLeft({
         700 VARIANT of one scale step, not a step of its own (§1.4). It was a
         loose 16px, which is a step the scale does not have.
       */
-      className={` font-bold leading-none tracking-tight ${
-        size === "hero" ? "text-[30px]" : "text-body-lg"
+      /*
+        THE HERO VARIANT IS ANTON (redesign v2, round 4, and R5 names it).
+
+        R5 widened the display face to "display-scale numerals only — hero
+        money figures, LARGE SPOTS-LEFT COUNTERS". This is that counter, and
+        p03 draws it in Anton at roughly 40px: a 29px cap height at 390. It was
+        30px Onest bold, which is the same words at a body weight.
+
+        `row` DOES NOT MOVE. §2.1's list figure is `body-lg` at weight 700 — a
+        body-size figure, which is exactly what R5 forbids Anton on.
+      */
+      className={` leading-none tracking-tight ${
+        size === "hero"
+          ? "font-display text-[40px]"
+          : "text-body-lg font-bold"
       } ${TONE_TEXT[tone]}`}
     >
       {tone === "full" ? t.games.full : spotsLeftLabel(bookedCount, capacity, t)}

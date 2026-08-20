@@ -8,30 +8,50 @@ import type { Database } from "@/lib/types/database";
 type VenueRow = Database["public"]["Tables"]["venues"]["Row"];
 
 /**
- * The game page's hero: the pitch, full-bleed, with the venue over it.
+ * The game page's header band — back, venue, and the pitch behind both.
  *
- * FULL-BLEED IS THE POINT (v1.2 §5.4). The photograph used to sit in a 220px
- * rounded box a third of the way down the page, below a heading, a chip row and
- * a price — so the first thing a player saw after tapping a WhatsApp link was
- * text, and the picture of the place they were deciding whether to travel to
- * was a thumbnail. It is now the first thing, edge to edge, with the name and
- * the address on top of it.
+ * REBUILT IN REDESIGN v2 ROUND 4, from `p03` and ruling R6(b).
  *
- * NO PHOTO IS A FIRST-CLASS STATE, not a broken one. Most venues have no
- * photograph and the honest rendering is a compact header — name, address, back
- * button — rather than a grey rectangle of the same height pretending an image
- * is loading. That was the Phase 16 ruling about the old panel and it survives
- * the rebuild: no empty frame.
+ * WHAT IT WAS: two entirely different headers. A venue WITH a photograph got a
+ * 280px full-bleed hero with the name laid over the bottom of the image; a
+ * venue without one got a compact text header — back button on its own row,
+ * then the name beneath it. Two layouts meant the same page opened differently
+ * depending on a column most venues leave null, and the tall one pushed the
+ * first fact about the game (when it is) below the fold.
+ *
+ * WHAT IT IS: ONE band, the same for every game. `p03` draws the back circle
+ * and the venue title on a single row, about 75px tall, with the first content
+ * box immediately under it — so "when is it" is the second thing on the page
+ * instead of the fifth.
+ *
+ * R6(b), AND IT IS THE HALF THAT NEEDED A RULING. The photograph backs the
+ * band and fades out VERTICALLY: clearly present behind the title, fully gone
+ * before the band ends, so the box beneath sits on the flat surface with no
+ * seam. The final stop is `ink` at full opacity — the page's own ground —
+ * which is what makes the join invisible rather than merely subtle. p03 itself
+ * draws a flat black band; the photo is the owner's ruling and wins, and this
+ * divergence from the frame is recorded rather than silently resolved.
+ *
+ * WHICH PHOTOGRAPH, and this is the one decision R6 does not settle outright.
+ * R6 says one DEFAULT image for all games and that `venues.image_path` is not
+ * touched — meaning per-venue photos are not to be BUILT, not that the ones
+ * already working are to be deleted. So: the venue's own photograph when it
+ * has one, the R6 default otherwise. `data-photo` keeps its old meaning —
+ * "this venue has a picture of its own" — and the band is never empty.
  *
  * THE BACK BUTTON IS A CIRCLE OVER THE IMAGE, which is the one piece of
  * furniture that has to work against an unknown photograph — hence the opaque
- * surface fill and the border, rather than a bare glyph that disappears against
- * a bright sky.
+ * surface fill and the border, rather than a bare glyph that disappears
+ * against a bright sky.
  *
  * ESCAPING: `venue` and the address are admin-supplied free text interpolated
  * as JSX children, which React escapes. `image_path` reaches an `<img src>` and
  * is constrained where it is STORED (`venues_image_path_format`), not here.
  */
+
+/** R6's single default, the same file the list card carries. */
+const DEFAULT_PITCH = "/pitch-default.jpg";
+
 export async function GameHero({
   venue,
   venueRow,
@@ -45,8 +65,9 @@ export async function GameHero({
 
   // Two shapes, one reader: a committed repo asset or a bucket key. The leading
   // slash is what tells them apart — see `venuePhotoUrl`.
-  const image = venuePhotoUrl(supabaseUrl, venueRow?.image_path);
-  const isRemote = image !== null && !image.startsWith("/");
+  const ownPhoto = venuePhotoUrl(supabaseUrl, venueRow?.image_path);
+  const image = ownPhoto ?? DEFAULT_PITCH;
+  const isRemote = !image.startsWith("/");
 
   /*
    * `map_query` AS THE ADDRESS LINE. It is what the organizer typed to make the
@@ -60,66 +81,41 @@ export async function GameHero({
       ? venueRow.map_query
       : null;
 
-  const back = (
-    <Link
-      href="/games"
-      data-testid="game-back"
-      aria-label={t.games.backToGames}
-      className="flex h-11 w-11 items-center justify-center rounded-full border border-hairline-strong bg-surface-overlay text-bone no-underline transition hover:border-hairline-volt"
-    >
-      <Icon name="arrowLeft" className="h-5 w-5" />
-    </Link>
-  );
-
-  // --- no photograph: a compact header, not a frame around an absence -------
-  if (!image) {
-    return (
-      <header data-testid="game-hero" data-photo="false" className="pt-24">
-        {back}
-        <h1 className="mt-4 font-display text-section-title uppercase leading-none tracking-wide text-white">
-          {venue}
-        </h1>
-        {address && (
-          <p data-testid="game-hero-address" className="mt-2 text-[14px] leading-snug text-muted">
-            {address}
-          </p>
-        )}
-      </header>
-    );
-  }
-
-  // --- the photograph --------------------------------------------------------
   return (
     <header
       data-testid="game-hero"
-      data-photo="true"
+      data-photo={ownPhoto ? "true" : "false"}
       /*
-        `-mx-gutter` cancels the page gutter so the image reaches both edges,
-        and the negative top margin pulls it under the fixed header — the photo
-        starts at the top of the viewport, which is what "full-bleed" means on
-        a phone. The gradient below is what keeps the header legible over it.
+        `-mx-gutter` cancels the page gutter so the photograph reaches both
+        edges, and `px-gutter` puts it back for the contents. `pt-20` places
+        the row where p03 does: 80px down, which clears the fixed site header
+        by about twenty.
       */
-      className="relative -mx-gutter -mt-[1px] overflow-hidden"
+      className="relative -mx-gutter overflow-hidden px-gutter pb-4 pt-20"
     >
-      <div className="relative h-[280px] w-full bg-surface">
-        {/*
-          A committed asset goes through next/image, which can optimise a file
-          it can see on disk. A bucket object does not: the optimizer would need
-          a remote-pattern allow-list per Supabase project and would bill a
-          transform per venue per size, to resize a photograph an admin already
-          uploaded for this panel.
-        */}
+      {/*
+        THE BAND'S BACKGROUND, and it is `aria-hidden` scenery: the alt text
+        would announce a stock pitch on every game page, which is noise on the
+        one surface where a screen-reader user is trying to find a time and a
+        price.
+      */}
+      <span aria-hidden className="pointer-events-none absolute inset-0">
         {isRemote ? (
+          // A bucket object does not go through next/image: the optimizer would
+          // need a remote-pattern allow-list per Supabase project and would
+          // bill a transform per venue per size.
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={image}
-            alt={t.games.venuePhotoAlt.replace("{venue}", venue)}
-            className="absolute inset-0 h-full w-full object-cover object-center"
+            alt=""
+            data-testid="hero-photo"
+            className="h-full w-full object-cover object-center"
           />
         ) : (
           <Image
             src={image}
-            alt={t.games.venuePhotoAlt.replace("{venue}", venue)}
+            alt=""
+            data-testid="hero-photo"
             fill
             priority
             sizes="(max-width: 980px) 100vw, 980px"
@@ -128,29 +124,58 @@ export async function GameHero({
         )}
 
         {/*
-          Two overlays doing two jobs. The top one is for the back button, which
-          has to survive a bright sky; the bottom one carries the name and the
-          address down into the page's black so there is no seam.
+          R6(b)'s FADE, IN ONE GRADIENT.
+
+          It starts at half strength so the pitch is visibly there behind the
+          title — R6 calls for the photograph to read as a photograph, and the
+          round-2 lesson on the card was that a uniform wash turns it into a
+          dark slab with texture.
+
+          IT ENDS AT `ink`, FULL OPACITY, AT 90% OF THE BAND. Two things follow
+          from that and both are the ruling: the last tenth of the band is flat
+          page ground, so the fade completes ABOVE the first content box rather
+          than at its edge; and the final colour is the page's own background,
+          so there is no seam to see. A `to-ink/[.95]` here would leave a
+          hairline of photograph along the join that reads as a rendering
+          artefact.
         */}
-        <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-ink/80 to-transparent" />
-        <div className="absolute inset-x-0 bottom-0 h-3/5 bg-gradient-to-t from-ink via-ink/80 to-transparent" />
+        <span
+          data-testid="hero-scrim"
+          className="absolute inset-0 bg-gradient-to-b from-ink/[.55] via-ink/[.80] via-55% to-ink to-90%"
+        />
+      </span>
 
-        <div className="absolute left-gutter top-[76px]">{back}</div>
+      {/*
+        BACK AND TITLE ON ONE ROW (p03). They were stacked, which spent a whole
+        row on a 44px circle.
 
-        <div className="absolute inset-x-0 bottom-4 px-gutter">
-          <h1 className="m-0 font-display text-section-title uppercase leading-none tracking-wide text-white">
-            {venue}
-          </h1>
-          {address && (
-            <p
-              data-testid="game-hero-address"
-              className="mt-[6px] text-[14px] leading-snug text-bone"
-            >
-              {address}
-            </p>
-          )}
-        </div>
+        `min-w-0` on the heading so a long venue name shortens instead of
+        pushing the circle off the left edge — the flex default would let the
+        text win.
+      */}
+      <div className="relative flex items-center gap-3">
+        <Link
+          href="/games"
+          data-testid="game-back"
+          aria-label={t.games.backToGames}
+          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-hairline-strong bg-surface-overlay text-bone no-underline transition hover:border-hairline-volt"
+        >
+          <Icon name="arrowLeft" className="h-5 w-5" />
+        </Link>
+
+        <h1 className="m-0 min-w-0 font-display text-page-title uppercase leading-none tracking-wide text-white">
+          {venue}
+        </h1>
       </div>
+
+      {address && (
+        <p
+          data-testid="game-hero-address"
+          className="relative mt-2 text-[14px] leading-snug text-bone"
+        >
+          {address}
+        </p>
+      )}
     </header>
   );
 }

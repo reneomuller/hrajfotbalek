@@ -935,11 +935,22 @@ test("spots left is coloured by absolute count: volt, amber, then red", async ({
  * empty frame.
  *
  * The scratch venue deliberately has no `image_path`, which is why it is the
- * fixture for this. The ruling survives the v1.2 rebuild unchanged: the hero
- * used to draw its vignette, pin and chips whether or not a photo existed, so
- * a venue without one got 220px of decoration that looked like an image still
- * loading. Now it is a compact text header, and the assertion is the same one
- * — a photo-less hero must not be a tall box.
+ * fixture for this. The ruling has survived two rebuilds: the v1.1 hero drew
+ * its vignette, pin and chips whether or not a photo existed, so a venue
+ * without one got 220px of decoration that looked like an image still loading;
+ * v1.2 answered that with a second, compact layout for the no-photo case.
+ *
+ * REDESIGN v2 ROUND 4 REMOVES THE SECOND LAYOUT. There is one header band for
+ * every game — p03's back-and-title row — and under R6(b) it is always backed
+ * by a pitch photograph, the venue's own if it has one and the R6 default
+ * otherwise. So "no img" is no longer the right question, and asserting it
+ * would forbid the ruling.
+ *
+ * WHAT IS ASSERTED INSTEAD IS THE REQUIREMENT ITSELF, in two halves:
+ *   - the band is COMPACT — the failure this test exists for is a tall box of
+ *     nothing, and a height bound catches that whatever fills it;
+ *   - the image is R6's DEFAULT, not a venue file. `data-photo="false"` says
+ *     the venue has none; this says the band did not go looking for one.
  */
 test("a venue with no photo renders name and Open map, with no empty frame", async ({
   page,
@@ -952,7 +963,16 @@ test("a venue with no photo renders name and Open map, with no empty frame", asy
     const hero = page.getByTestId("game-hero");
     await expect(hero).toHaveAttribute("data-photo", "false");
     await expect(hero).toContainText("E2E Scratch Pitch");
-    await expect(hero.locator("img")).toHaveCount(0);
+
+    // R6's single default, not a bucket object built from a null path.
+    const src = await hero.getByTestId("hero-photo").getAttribute("src");
+    expect(src).toContain("pitch-default");
+
+    // NOT A TALL BOX. The v1.2 hero was 280px; the band is a 44px row plus its
+    // padding. 200 is comfortably above the band and far below a hero.
+    const bandHeight = await hero.evaluate((el) => el.getBoundingClientRect().height);
+    expect(bandHeight, "the header band grew into a hero again").toBeLessThan(200);
+    expect(bandHeight, "the header band has no height at all").toBeGreaterThan(0);
 
     // The map link moved into the info card, which is where every other thing
     // you DO with a game now lives.

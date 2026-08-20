@@ -58,33 +58,31 @@ export async function AvailabilityCard({
         </span>
       </div>
 
-      <div className="mt-3">
+      {/*
+        THE FIGURE AND THE FACES SHARE A ROW (redesign v2, round 4, p03).
+
+        They were stacked with the capacity bar between them: figure, bar,
+        faces. p03 puts the counter at the left and the avatar stack at the
+        right of the SAME line, with the bar spanning underneath both — which
+        is the list card's anatomy one size up, and saves a row on the fold.
+
+        `flex-wrap` with the stack `shrink-0`: a long counter in Czech or
+        Russian pushes the faces to their own line rather than squeezing them
+        into overlapping slivers.
+      */}
+      <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
         <SpotsLeft bookedCount={bookedCount} capacity={capacity} size="hero" />
+        {roster.length > 0 && (
+          <span className="shrink-0">
+            <AvatarRow players={roster} max={3} size="card" supabaseUrl={supabaseUrl} />
+          </span>
+        )}
       </div>
 
       <div className="mt-3">
         <CapacityBar bookedCount={bookedCount} capacity={capacity} />
       </div>
 
-      {/*
-        THE FACES, ON THE ROW THE LIST CARD PUTS THEM ON (gate confirmed,
-        2026-08-16).
-
-        The dotted rule is gone with the list card's — the four-row anatomy
-        replaced it there, and leaving a seam here would make the two surfaces
-        different shapes again, which is the whole thing the canonical card
-        exists to stop.
-
-        Absent at zero (§2.1): the hero spots figure and the bar directly above
-        already say the game is empty, and a ring drawn around nobody is a
-        question. The full lineup, with names and games-played counts, is
-        further down the page — this is the glance.
-      */}
-      {roster.length > 0 && (
-        <div className="mt-4">
-          <AvatarRow players={roster} max={3} size="card" supabaseUrl={supabaseUrl} />
-        </div>
-      )}
     </section>
   );
 }

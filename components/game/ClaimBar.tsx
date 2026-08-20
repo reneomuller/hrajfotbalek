@@ -110,7 +110,19 @@ export async function ClaimBar({
    * equality against the reference constant, never a range.
    */
   const price = (
-    <span data-testid="claim-bar-price" className="shrink-0 text-body-lg font-bold text-bone">
+    /*
+      ANTON, AT DISPLAY SCALE (redesign v2, round 4). R5's other named case:
+      "hero money figures". p03 draws the price as the loudest thing on the
+      bar — a 16px cap, so a 22px em in this face — against the `body-lg` bold
+      it was, which put the price at the same weight as the button's label.
+
+      The `/ 1 credit` suffix stays at `small` and stays conditional: see the
+      note above it.
+    */
+    <span
+      data-testid="claim-bar-price"
+      className="shrink-0 font-display text-[22px] leading-none text-bone"
+    >
       {formatCzk(priceCzk)}
       {priceCzk === PASS_REFERENCE_PRICE_CZK && (
         <span data-testid="claim-bar-price-credit" className="ml-1 text-small font-normal text-muted">
@@ -213,7 +225,9 @@ export async function ClaimBar({
         <Link
           href={`/game/${gameId}/book`}
           data-testid="book-cta"
-          className="ml-auto flex min-h-[52px] shrink-0 items-center justify-center rounded-control bg-volt px-5 text-body-lg font-bold text-ink no-underline transition-colors hover:bg-volt-dim"
+          /* `rounded-pill` — p03 draws the bar's action as a full capsule,
+             the same shape the home hero's CTA took in round 3. */
+          className="ml-auto flex min-h-[52px] shrink-0 items-center justify-center rounded-pill bg-volt px-5 text-body-lg font-bold text-ink no-underline transition-colors hover:bg-volt-dim"
         >
           {state.kind === "open-signed-in"
             ? t.booking.claimSpot
@@ -258,7 +272,7 @@ export function ClaimBarSkeleton() {
     >
       <div className={`${INNER} animate-pulse`}>
         <div className="h-[22px] w-[72px] rounded-pill bg-surface-avatar" />
-        <div className="ml-auto h-[52px] w-[148px] rounded-control bg-surface-avatar" />
+        <div className="ml-auto h-[52px] w-[148px] rounded-pill bg-surface-avatar" />
       </div>
     </div>
   );
