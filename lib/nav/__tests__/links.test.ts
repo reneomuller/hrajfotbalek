@@ -101,6 +101,9 @@ describe("adminNavLinks", () => {
     // nobody uses. Home page joined in Phase 17, for the same reason — the
     // two numbers on the landing page are edited from somewhere.
     expect(adminNavLinks()).toEqual([
+      // Dashboard joined in round 8: p14's clipped fifth chip, ruled by the
+      // owner. It is FIRST because it is the section's landing page.
+      { href: "/admin", label: strings.admin.navDashboard },
       { href: "/admin/games", label: strings.admin.navGames },
       { href: "/admin/players", label: strings.admin.navPlayers },
       { href: "/admin/topups", label: strings.admin.navTopups },
@@ -109,9 +112,16 @@ describe("adminNavLinks", () => {
     ]);
   });
 
-  it("keeps every section under /admin, so the layout gate covers all of them", () => {
+  /*
+   * The property is that the LAYOUT GATE covers every section — `requireAdmin`
+   * runs in `app/admin/layout.tsx`, which every route beneath `/admin` passes
+   * through, `/admin` itself included. The old assertion spelled that as
+   * "starts with `/admin/`" with the trailing slash, which was equivalent
+   * until the dashboard's own two-segment path joined the list.
+   */
+  it("keeps every section under the admin layout's gate", () => {
     for (const link of adminNavLinks()) {
-      expect(link.href.startsWith("/admin/")).toBe(true);
+      expect(link.href === "/admin" || link.href.startsWith("/admin/")).toBe(true);
     }
   });
 });
