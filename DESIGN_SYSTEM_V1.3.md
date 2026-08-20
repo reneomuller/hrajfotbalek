@@ -1234,3 +1234,36 @@ missing elements.
 | p04 | Three options and a disabled state where the frame shows three radios | **By design** | Rulings R3, R4 and round 8 item 11 |
 | p02, p03 | Taller than the frames | **Not a divergence** | Seed content, not layout — more games, longer venue names |
 | All | Russian display headings set in the body face | **Medium** | Anton ships no Cyrillic (R18). Needs a second display face, which is the owner's call |
+
+---
+
+# 10. Redesign v2 — Round 9 rulings (2026-08-20)
+
+## R21 — Badge dimensions are identical, and that overrides `p03`
+
+**Every badge is one object wearing three colours.** `6v6`, `Turf`, `Advanced`
+and anything after them share `.badge-pill`: one height, one padding, one
+radius, one type size, one border width. A call site chooses **ink** and
+nothing else.
+
+**`p03` DRAWS THE DETAIL BADGE LARGER than `p02` draws the card's** — about
+three points. That divergence is **deliberate and this ruling is the record of
+it**, confirmed by the owner in round 9.
+
+The reasoning is that a three-point difference between two surfaces is not a
+hierarchy any reader perceives. It is indistinguishable from drift — and drift
+is exactly what was there before: the format and surface badges carried
+`border-2` while the skill badge carried `border`, and a `size` prop rendered
+the same badge at `text-small` on the list and `text-body` on the detail. On
+the game page the three sat in one row at three heights, which reads as a
+rendering fault.
+
+**The `size` prop is removed rather than defaulted**, so a future surface
+cannot quietly reintroduce per-instance sizing. Asserted by measurement, not by
+eye: `e2e/tmp` aside, the strips spec reports one identical tuple of height,
+font-size, border-width, padding and radius for every `.badge-pill` on a game
+carrying a format, a surface and a skill restriction.
+
+**If a size difference is ever wanted back**, it is a second class next to
+`.badge-pill` with its own name and its own reason — never a prop that lets
+each call site decide.
