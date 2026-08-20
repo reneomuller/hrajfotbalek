@@ -172,4 +172,33 @@
   .field-label {
     @apply text-eyebrow font-semibold uppercase text-muted;
   }
+
+  /*
+   * `.badge-pill` — EVERY BADGE IS THE SAME OBJECT (round 8, item 6).
+   *
+   * `6v6`, `Turf`, `Advanced` and anything after them are one component wearing
+   * three colours, and they had drifted into three: the format and surface
+   * badges carried `border-2` while the skill badge carried `border`, and the
+   * list and detail surfaces sized their type differently through a `size`
+   * prop. On the detail page the three sat in one row at three heights, which
+   * reads as a rendering fault rather than as a hierarchy.
+   *
+   * GEOMETRY LIVES HERE AND ONLY HERE — height, padding, radius, type size,
+   * border width. A call site chooses INK and nothing else. The `size` prop is
+   * gone rather than defaulted, so a future surface cannot quietly reintroduce
+   * per-instance sizing.
+   *
+   * `border-2` per R11: Chrome snaps a fractional border to the device grid,
+   * so `border-[1.5px]` is applied and reported as 1px and the difference
+   * never renders.
+   *
+   * ONE SIZE ACROSS LIST AND DETAIL, which is a small, recorded divergence
+   * from the frames: `p03` draws the detail badge about three points larger
+   * than `p02` draws the card's. The instruction is identical dimensions, and
+   * a three-point difference between two surfaces is not a hierarchy anyone
+   * reads — it is the drift this class exists to end.
+   */
+  .badge-pill {
+    @apply inline-flex shrink-0 items-center rounded-pill border-2 px-3 py-[6px] text-small font-semibold;
+  }
 }

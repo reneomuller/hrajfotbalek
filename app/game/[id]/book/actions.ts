@@ -16,10 +16,6 @@ export interface BookingActionState {
   code?: BookingErrorCode;
 }
 
-function isClientPaymentMethod(value: unknown): value is ClientPaymentMethod {
-  return value === "qr" || value === "cash";
-}
-
 /**
  * What the UI offers (round 7, item 10) and what it books onto.
  *

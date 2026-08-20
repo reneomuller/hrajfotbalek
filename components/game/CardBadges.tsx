@@ -24,10 +24,11 @@ import type { GameSurface } from "@/lib/types/database";
  * The surface label is the TRANSLATED token (`games.surface.*`), never an
  * English string invented at the render site.
  *
- * BOTH BADGES ARE `border-2`. They were `border-[1.5px]`, which Chrome snaps
- * to a whole device pixel — so the "thicker outline" of the night round never
- * rendered anywhere it was applied. A whole pixel renders at every DPR and is
- * the only width an assertion can actually check.
+ * GEOMETRY COMES FROM `.badge-pill` (round 8, item 6) — height, padding,
+ * radius, type size and border width, written once in globals.css. This file
+ * chooses INK and nothing else. The `size` prop is gone: the list and the
+ * detail rendered the same badge at two sizes, and on the detail page it sat
+ * beside a skill badge at a third.
  *
  * THE VOLT PILL DOES NOT, and deliberately. `.lifted` is the NEUTRAL surface
  * treatment; the format badge is the card's accent and its colour is the whole
@@ -38,28 +39,19 @@ import type { GameSurface } from "@/lib/types/database";
 export async function CardBadges({
   format,
   surface,
-  size = "default",
 }: {
   format: string | null;
   surface: GameSurface | null;
-  /** `slim` is the list card; `default` is the game card's larger row. */
-  size?: "default" | "slim";
 }) {
   const t = await getStrings();
   if (!format && !surface) return null;
-
-  const text = size === "slim" ? "text-small" : "text-body";
-  // `slim` matches the time pill's new height exactly (visibility round 2): the
-  // two sit on one row, and a 3px pill beside a 6px one reads as a mistake
-  // rather than as a hierarchy.
-  const pad = size === "slim" ? "px-3 py-[6px]" : "px-3 py-1";
 
   return (
     <div data-testid="card-badges" className="flex shrink-0 flex-wrap items-center gap-1">
       {format && (
         <span
           data-testid="game-format"
-          className={`rounded-pill border-2 border-volt bg-volt/[.12] ${pad} ${text} font-semibold text-volt`}
+          className="badge-pill border-volt bg-volt/[.12] text-volt"
         >
           {format}
         </span>
@@ -67,7 +59,7 @@ export async function CardBadges({
       {surface && (
         <span
           data-testid="game-surface"
-          className={`rounded-pill border-2 border-hairline-strong bg-surface-raised ${pad} ${text} font-semibold text-bone`}
+          className="badge-pill border-hairline-strong bg-surface-raised text-bone"
         >
           {t.games.surface[surface]}
         </span>

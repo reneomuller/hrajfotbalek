@@ -245,7 +245,7 @@ export async function GameCard({
         <span data-testid="card-venue" className="min-w-0 flex-1 truncate text-body-lg font-bold leading-tight text-white">
           {venueDisplayName(game.venue, pitchName)}
         </span>
-        <CardBadges format={game.format} surface={game.surface} size="slim" />
+        <CardBadges format={game.format} surface={game.surface} />
       </span>
 
       <span className="relative mt-2 flex items-center justify-between gap-2">

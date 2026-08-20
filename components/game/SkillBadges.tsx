@@ -22,7 +22,6 @@ import type { SkillLevel } from "@/lib/types/database";
  */
 export async function SkillBadges({
   levels,
-  size = "default",
 }: {
   levels: SkillLevel[] | null;
   size?: "default" | "slim";
@@ -50,7 +49,6 @@ export async function SkillBadges({
     6v6" and "this game is restricted", which is the one distinction on the row
     that changes what a reader can do.
   */
-  const text = size === "slim" ? "text-small" : "text-body";
 
   return (
     <div className="flex flex-wrap items-center gap-2" data-testid="skill-badges">
@@ -58,7 +56,7 @@ export async function SkillBadges({
         <span
           key={level}
           data-testid={`skill-badge-${level}`}
-          className={`rounded-pill border border-hairline-volt bg-volt/[.08] px-3 py-1 ${text} font-semibold text-volt`}
+          className="badge-pill border-hairline-volt bg-volt/[.08] text-volt"
         >
           {t.games.skillLevel[level]}
         </span>
