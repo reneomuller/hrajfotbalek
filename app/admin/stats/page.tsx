@@ -45,14 +45,15 @@ const PERIOD_LABEL: Record<FinancialPeriod, string> = {
  * TWO AFFORDANCES FROM THE FRAME ARE OMITTED, per item 8's rule about
  * destinations that do not exist:
  *
- *   - `View unpaid →`. There is no unpaid-spots route in this product; unpaid
- *     bookings are settled per game on `/admin/games/[id]`. The FIGURE ships,
- *     because it answers the question; the link does not, because it would go
- *     nowhere. Building the route is a real item, not a paint job.
- *   - `EXPORT CSV` on the transaction list. `lib/admin/csv.ts` and two working
- *     export routes exist, so this is cheap — but it is a new endpoint with
- *     its own column decisions, and inventing those tonight to fill a button
- *     is how a CSV nobody asked for becomes the one somebody relies on.
+ *   - `View unpaid →`. STILL OMITTED, confirmed by the owner in round 8.
+ *     There is no unpaid-spots route in this product; unpaid bookings are
+ *     settled per game on `/admin/games/[id]`. The FIGURE ships, because it
+ *     answers the question; the link does not, because it would go nowhere.
+ *     It lands when the surface is designed.
+ *   - ~~`EXPORT CSV` on the transaction list.~~ **BUILT in round 8 item 3**,
+ *     now that the columns are decided rather than guessed. See
+ *     `app/admin/stats/transactions/route.ts` for why the file is wider than
+ *     the list above it.
  */
 export default async function FinancialsPage({
   searchParams,
@@ -268,8 +269,18 @@ export default async function FinancialsPage({
 
       {/* --- recent transactions -------------------------------------------- */}
       <section data-testid="financials-transactions" className="lifted mt-4 rounded-card p-5">
-        <div className="text-eyebrow font-semibold uppercase text-muted">
-          {strings.admin.recentTransactions}
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="text-eyebrow font-semibold uppercase text-muted">
+            {strings.admin.recentTransactions}
+          </div>
+          {/*
+            p19's EXPORT CSV, built in round 8 item 3. It is NOT this list:
+            the page shows the last eight ledger movements and the file is
+            every booking and every top-up, because the columns the item names
+            — method, game/pass reference — are properties of a payment rather
+            than of a ledger row.
+          */}
+          <ExportCsvLink href="/admin/stats/transactions" testId="export-transactions" />
         </div>
         {f.transactions.length === 0 ? (
           <p className="m-0 mt-3 text-small text-muted">{strings.admin.noTransactions}</p>
