@@ -15,35 +15,33 @@ import type { GameCardGame } from "@/components/game/GameCard";
  * A player with nothing booked is not missing anything here; they are being
  * shown the list, which is the right answer for them.
  *
- * ~~Deliberately NOT a match card. It is a pointer to something already
- * settled, so it carries the minimum that identifies the game plus how full it
- * is.~~
+ * ~~Deliberately NOT a match card — a pointer to something already settled.~~
+ * ~~Round 8 item 9: IT IS THE MATCH CARD; a pointer to a game should look like
+ * that game, and a private layout above a column of canonical cards is "the
+ * same game drawn three ways".~~
+ * ~~Round 13 item 17: IT IS A BANNER at the Game Pass promo's dimensions — a
+ * full card here is ~240px spent telling a player something they already
+ * know, directly above the list they came to read.~~
  *
- * ~~REVERSED 2026-08-20 (round 8, item 9): IT IS THE MATCH CARD. A pointer to
- * a game should look like that game, and a private layout above a column of
- * canonical cards is "the same game drawn three ways in one product".~~
+ * **ROUND 14 ITEM 14: IT IS A MY-GAMES ROW.** The owner's correction to item
+ * 17, and the fourth treatment this element has had.
  *
- * **REVERSED AGAIN, ROUND 13 ITEM 17: IT IS A BANNER.**
+ * ITEM 17 WAS RIGHT ABOUT THE SIZE AND WRONG ABOUT THE BORROWED LANGUAGE. The
+ * Game Pass promo is a volt-tinted, volt-bordered advertisement — the loudest
+ * quiet thing on the page — and dressing a game the player has ALREADY BOOKED
+ * in it made a settled fact look like an offer. Two blocks in the same paint,
+ * one selling and one confirming.
  *
- * Round 8's argument was about DRIFT — a bespoke layout that would slowly stop
- * matching the card beneath it. That argument was right and this does not
- * revive the thing it was aimed at: what follows is not a private copy of a
- * card's structure, it is four facts in a row.
+ * THE PLAYED-GAME ROWS UNDER PROFILE → MY GAMES ARE THE RIGHT PRECEDENT and
+ * were there the whole time: a baseline row, a bottom hairline, no card
+ * surface, title / time / status. That is exactly this element's content, and
+ * it is already how this product draws "a game of yours, stated". Same
+ * anatomy, same density, so a player meets one pattern in both places.
  *
- * What round 8 did not weigh is COST. A full card here is a photograph, a
- * fade, badges, a capacity bar and an avatar stack — roughly 240px — spent
- * telling a player something they already know, directly above the list they
- * came to read. The owner asked for the Game Pass promo's dimensions, and
- * `PassPanel` is the shape: one row, `px-5 py-4`, a bordered volt tint.
- *
- * THE THREE FACTS ARE THE ITEM'S: title, time, status. "Status" here is how
- * full it is, which is the only thing about a game you are already in that can
- * still change.
- *
- * `PassPanel`'S GEOMETRY IS COPIED, NOT IMPORTED, and that is the honest
- * trade: they are two different destinations with two different tints, and
- * sharing a component to keep two paddings equal would couple them for the
- * sake of eight characters.
+ * `PlayerHistory`'S MARKUP IS MATCHED, NOT IMPORTED. Those rows come from a
+ * `history.past` shape with an attendance mark; this is one upcoming game with
+ * an occupancy. Sharing a component to keep two paddings equal would couple
+ * two surfaces that differ in what they are ABOUT.
  */
 export async function NextGameStrip({
   game,
@@ -64,43 +62,39 @@ export async function NextGameStrip({
 
   return (
     <section data-testid="next-game-strip">
-      <h2 className="m-0 mb-2 text-eyebrow font-semibold uppercase text-volt">
+      {/*
+        The same heading treatment "My games" gives its two sections, for the
+        same reason: this is a titled list of the reader's own games, and there
+        it is `text-[17px] font-bold uppercase`.
+      */}
+      <h2 className="m-0 mb-2 text-[17px] font-bold uppercase tracking-wide text-white">
         {t.games.nextGameStrip}
       </h2>
 
       <Link
         href={`/game/${game.id}`}
-        data-testid="next-game-banner"
-        className="flex items-center justify-between gap-3 rounded-card border border-hairline-volt bg-volt/[.10] px-5 py-4 no-underline transition-colors hover:bg-volt/[.16]"
+        data-testid="next-game-row"
+        className="flex flex-wrap items-baseline justify-between gap-2 border-b border-hairline py-3 no-underline"
       >
-        <span className="min-w-0">
-          <span className="block truncate text-body-lg font-bold text-white">
-            {pitchName ? `${game.venue} · ${pitchName}` : game.venue}
-          </span>
-          <span className="mt-[2px] block truncate text-small text-muted">
-            {formatGameDateTime(game.starts_at)}
-          </span>
+        <span className="text-base font-bold text-white">
+          {pitchName ? `${game.venue} · ${pitchName}` : game.venue}
         </span>
-
+        <span className="text-xs text-white/50">{formatGameDateTime(game.starts_at)}</span>
         {/*
-          HOW FULL, which is the only thing about a game you are already in
-          that can still change — and the one number the list card spends a
-          capacity bar on.
+          THE STATUS, in the eyebrow the played rows use for attendance. For a
+          game already booked, how full it is is the only thing that can still
+          change — and it is volt while there is room, muted once there is not,
+          which is the same "nothing to do here" reading the admin rows use.
         */}
-        <span className="shrink-0 text-right">
-          <span className="block text-body font-bold text-volt">
-            {bookedCount} / {game.capacity}
-          </span>
-          <span className="block text-[12px] text-muted">
-            {/*
-              `spotsLeft` / `spotLeft` are BARE NOUNS in the table — the count
-              is interpolated by the caller, which is how the list card does
-              it too. A `{count}` replace here would have printed the literal.
-            */}
-            {spotsLeft === 0
-              ? t.games.full
-              : `${spotsLeft} ${spotsLeft === 1 ? t.games.spotLeft : t.games.spotsLeft}`}
-          </span>
+        <span
+          data-testid="next-game-status"
+          className={`text-[11px] uppercase tracking-eyebrow ${
+            spotsLeft === 0 ? "text-white/40" : "text-volt"
+          }`}
+        >
+          {spotsLeft === 0
+            ? t.games.full
+            : `${spotsLeft} ${spotsLeft === 1 ? t.games.spotLeft : t.games.spotsLeft}`}
         </span>
       </Link>
     </section>
