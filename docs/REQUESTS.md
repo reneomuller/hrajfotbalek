@@ -170,6 +170,42 @@ quarantine held until the owner lifted it, item by item.
 | 64 | **Apply `20260821200000_online_payment_pending.sql` to production** | `BUILT-DORMANT-ON-the owner running the migration`. Validated locally and rolled back; 22 SQL assertions and 4 e2e. **The deployed code calls `create_booking` with `p_online`, which production's five-argument version does not accept — so this migration and the deploy belong together, in that order.** Command in §6 |
 | 65 | **Set `STRIPE_WEBHOOK_SECRET` in Vercel** | `BUILT-DORMANT-ON-adding the endpoint in Stripe and pasting the signing secret into Vercel`. Verified absent from `vercel env ls production` on 2026-08-20. Until it is set, `/api/stripe/webhook` answers 503 to everything — which is the correct posture: an endpoint that confirms bookings and cannot verify who is asking must not confirm anything. **A server-side variable, NOT `NEXT_PUBLIC_`.** Steps in §6 |
 
+### Round 13 (31 items, sections A–E)
+
+**SECTION A was carried from round 12 as "never delivered". It HAD been** — the
+commits are `01e2d84`, `7c2902c`, `eb14bac`, `726ac74` and the deploy was
+`dpl_GvdqTD2NgvtpfyL8fVUtAc6tGwT2`, Ready at 04:05 on 2026-08-21. The
+observation almost certainly predates it. Rows 58–63 stand as shipped; what
+round 13 added is item 2's reversal and a re-verification of item 3.
+
+| # | Request | Status |
+|---|---|---|
+| 66 | **(2) The hero slogan TRANSLATES again** — R29 struck | `SHIPPED round-13`. The header still keeps the mark alone, so the brand name is now written nowhere in the chrome — the roundel is the name. The Russian display-face fallback returns, accepted under the sentence-boundary break rule and asserted so nobody "fixes" it with a face that cannot set Cyrillic. R30 |
+| 67 | **(6) Remove all QR** | `SHIPPED round-13`. The renderer, the `/account/topup` flow and its `[id]` screen, the code on the confirmation, the "Pay by QR" jump. **The RAIL is untouched** (R3): `payment_method = 'qr'`, `payment_code` and the 26-series sequence stay, because live bookings carry them |
+| 68 | **(7) Pass rail → Stripe links** | `SHIPPED round-13`, dormant on row 33. `begin_pass_purchase` records a pending purchase, its id travels as `client_reference_id`, and `confirm_online_purchase` dispatches a reference to a booking OR a purchase. **A tier NEVER falls back to the single-game link** — tier prices are discounted, so that charges the undiscounted price even at the right quantity. Unconfigured tiers render "Coming soon" and the action refuses before writing |
+| 69 | **(8) Admin top-ups deleted** | `SHIPPED round-13`. The screen, its export and its nav chip. Deprecation SQL for the server functions is **handed over, not run** — `docs/ops/deprecate-qr-topup-rail.sql`, with an audit query, an explicit do-not-drop list and a pending-purchase check |
+| 70 | **(9) "Credit applied −150 CZK" removed** | `SHIPPED round-13` |
+| 71 | **(10) An unmistakable confirmed state** | `SHIPPED round-13`. It was an 11px eyebrow — the same treatment the product gives the word "Availability" — on the one screen whose job is saying the thing worked |
+| 72 | **(11) The FAQ, four Q&As, claims verified** | `SHIPPED round-13`. The waitlist promise is **TRUE**: `notify_waitlist` stamps and emits in one transaction and `notifyWaitlistForGame` mails everyone, driven from both paths that free a spot. See row 79 for the gap it does NOT cover |
+| 73 | **(12) "All welcome" line removed** | `SHIPPED round-13` |
+| 74 | **(13) Game-form helper texts cut** | `SHIPPED round-13`. Fourteen hints to one clause each; what survived is only what a label cannot carry |
+| 75 | **(14) Game information above What's included, modernized** | `SHIPPED round-13`. The ordering was already right; the card had **no heading at all**, so the one block that answers "what is this game" was the only one a reader could not name |
+| 76 | **(15) Pass "How it works", verbatim** | `SHIPPED round-13`, three languages, and the "150 CZK a game" line beneath it gone |
+| 77 | **(16) Games tab loses its title** | `SHIPPED round-13`. The `<h1>` goes rather than being hidden — the day group heads the list and is the real outline |
+| 78 | **(17) "Your next game" is a banner** | `SHIPPED round-13`, reversing round 8 item 9. That reversal's DRIFT argument was right and is not revived; what it did not weigh was ~240px spent telling a player something they already know |
+| 79 | **(18) Contact popup + admin edit** | `SHIPPED round-13`, dormant on row 82. Portalled per the modal law and asserted with `elementFromPoint`. Values in `site_settings`, edited in /admin, no deploy. An empty phone list shows no phone |
+| 80 | **(19) Telegram tile** | `SHIPPED round-13`, wired and live. The row had to be rebalanced and the Instagram label became the platform name — a copy change nobody asked for, made because the third tile overflowed the panel |
+| 81 | **(20) Dashboard sections; games list shortened** | `SHIPPED round-13`. `/admin/games` was 137px a row and is 67. The dashboard's OWN rows stayed at p14's 64 |
+| 82 | **(21) One button per game** | `SHIPPED round-13`. Round 9 merged the destinations, so "Edit" reached the same page as "Manage" via a redirect |
+| 83 | **(22) ADMIN badge out of the header** | `SHIPPED round-13`. The assertion INVERTS so it cannot come back from the frame |
+| 84 | **(23) Credit-redemption bug** | `PARTIAL` — **does not reproduce**, and rows 84a–84c record what was checked. A regression spec and a calling-contract guard shipped. See §7 |
+| 85 | **(24) Venue management** | `SHIPPED round-13`, dormant on row 88. `/admin/venues` with create, rename, map link, pitch name, photo and both amenity sets. The venue's photo now backs its games on the CARD as well as the band, reversing REQ-GAME-019 — see R31 for why that premise moved |
+| 86 | **(25) Admin guests on the game card** | `ALREADY SHIPPED round-11`. `components/admin/GuestControl.tsx` has been on `/admin/games/[id]` since guests existed. Verified, not rebuilt |
+| 87 | **(26) Shadow claim removed** | `SHIPPED round-13`. `claim_shadow_player`'s removal SQL is handed over with the query that counts how many claimable rows remain. `merge_players` stays as the undocumented repair — **this row is its documentation** |
+| 88 | **Apply round 13's three migrations to production** | `BUILT-DORMANT-ON-the owner running them`. `20260821210000_pass_via_stripe`, `20260821220000_contact_settings`, `20260821230000_venue_management`. **Verified absent from production on 2026-08-21.** Commands in §6 |
+| 89 | *Gap found while verifying row 72.* The waitlist notifies by EMAIL only; the bell does not carry it | `OPEN`. The round-7 notifications store is a broadcast to `audience: 'all'` with no per-player recipient, so wiring the waitlist into it is a schema change rather than a cheap join. The FAQ says "emailed" rather than softening the claim |
+| 90 | *Deferred from row 85.* Per-game amenity OVERRIDES | `OPEN`. A game inherits its venue's presets because both surfaces read `venues.amenities` — inheritance, but not editable per game. Needs a nullable per-game column and a merge-on-read rule, with a real design question in it: does an empty override mean "nothing provided" or "inherit"? |
+
 ---
 
 ## 4. `p14`: what still differs, and why each one is not code
@@ -202,7 +238,32 @@ items physically impossible without a new frame**. It is. What remains:
 and 57 came OFF this list as a result; what follows is what is genuinely still
 owed.
 
-### One migration, and it must land BEFORE the next deploy
+### Round 13's three migrations
+
+**None is required for the deployed code to be SAFE** — that was checked before
+shipping, and it is why round 13 deployed ahead of them. Each one enables a
+surface that currently degrades rather than breaks:
+
+| Migration | Until it runs |
+|---|---|
+| `20260821210000_pass_via_stripe` | The pass buy action 404s on `begin_pass_purchase` — unreachable anyway while row 33 is unset, because every tier says "Coming soon". The WEBHOOK also needs it: `confirm_online_purchase` is what the route now calls |
+| `20260821220000_contact_settings` | The admin Contact form fails with SETTING_KEY_UNKNOWN. The footer dialog still works, on the built-in address |
+| `20260821230000_venue_management` | `/admin/venues` renders and its photo and amenity controls work; only Save (rename / map link / pitch name) fails |
+
+```bash
+node scripts/apply-migration.mjs \
+  supabase/migrations/20260821210000_pass_via_stripe.sql --production
+node scripts/apply-migration.mjs \
+  supabase/migrations/20260821220000_contact_settings.sql --production
+node scripts/apply-migration.mjs \
+  supabase/migrations/20260821230000_venue_management.sql --production
+```
+
+**IN THAT ORDER**, though only the first matters: the webhook's dispatcher must
+exist before `STRIPE_WEBHOOK_SECRET` is set, or the first real payment reaches
+a route that cannot settle it.
+
+### ~~One migration, and it must land BEFORE the next deploy~~ (round 12, applied)
 
 ```bash
 node scripts/apply-migration.mjs \
@@ -240,11 +301,59 @@ variable — see CLAUDE.md on why implicitness is what failed.
 ledger path. Below the owed amount the booking is FLAGGED, never seated — an
 underpaid party is a pitch short of money on the day.
 
+### §7 — Row 84, the credit-redemption report
+
+**It does not reproduce.** Four layers were checked on 2026-08-21:
+
+| Layer | Method | Result |
+|---|---|---|
+| The function | Called `create_booking` on PRODUCTION as a real player with a real balance against a real game, in a rolled-back transaction | `credit / confirmed / 150 applied` |
+| PostgREST | Called it over the production REST API with `p_online` | Resolves and reaches the function body |
+| Signatures | Compared both databases | Identical, one overload, no 4-argument version anywhere |
+| The application | Drove the button end to end in a browser, INCLUDING with `NEXT_PUBLIC_STRIPE_PAYMENT_URL` set — the one environmental difference | Passes |
+
+**The likeliest explanation** is that the report predates round 12's deploy at
+04:05, the same window in which items 1–5 looked undelivered and had been. The
+logs cannot confirm it: Vercel's retention had aged out everything but the
+probes.
+
+**The one unverified link** is a real signed-in booking through the deployed
+build, which needs a session for the owner's own account. Minting one to
+create and cancel a booking against a live game is not something to do unasked.
+
+**What shipped regardless:** `e2e/credit-redeem.spec.ts` (the flow had NO
+browser test — the chooser had specs for which options render, the SQL suite
+for what the RPC derives, and between them sat the button), and a
+calling-contract guard in `booking_create.sql` asserting one overload, the six
+parameter names its callers send, and that only two are required.
+
 ### Two environment variables are still unset
 
 Each holds a finished feature dormant: `NEXT_PUBLIC_GOOGLE_AUTH` (row 27) and
 `NEXT_PUBLIC_STRIPE_PASS_URLS` (row 33). `NEXT_PUBLIC_STRIPE_PAYMENT_URL` is
-no longer among them — it was set on 2026-08-20 and row 9 is shipped.
+no longer among them — set 2026-08-20, row 9 shipped, **re-verified 2026-08-21**.
+
+`STRIPE_WEBHOOK_SECRET` (row 65) is the third, and it is now the one that
+matters most: **re-verified absent on 2026-08-21 by probing the live endpoint**,
+which answered 503. Until it is set an online booking holds its seats for
+thirty minutes and then quietly stops, because nothing can confirm it.
+
+### THE PASS JSON TEMPLATE, printed again (row 33)
+
+Every real tier identifier as a key, ready to paste into Vercel as
+`NEXT_PUBLIC_STRIPE_PASS_URLS`. **One Payment Link per tier** — never the
+single-game link, at any quantity, because tier prices are discounted:
+
+```json
+{"1":"","5":"","10":"","15":"","20":""}
+```
+
+Run this to print the keys your `pass_tiers` table actually holds, rather than
+trusting the line above:
+
+```sql
+select jsonb_object_agg(games::text, '') from public.pass_tiers;
+```
 
 **One data statement is outstanding** and needs no migration file — the venue
 separator moved from an em-dash to a bullet in the fixtures and production rows

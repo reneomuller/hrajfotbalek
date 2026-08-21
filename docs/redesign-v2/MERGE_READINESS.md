@@ -121,3 +121,56 @@ and is acceptable only while the volume is what it is.
 - [x] **`staging/v13` contains `main`.** Re-verified at the start of every
       redesign round by merging `main` in first, so the branch stays trivially
       mergeable back. Last verified: Round 1, `main` fully contained.
+
+
+---
+
+## Round 13 — the payment gate, restated (2026-08-21)
+
+**THE PAYMENT FLOW CHANGED SHAPE THIS ROUND**, so the gate this document
+carries needs restating rather than re-checking.
+
+### What is gone
+
+- **QR, everywhere a player looks.** `components/QrPayment.tsx`, the whole
+  `/account/topup` flow, the code on the booking confirmation.
+- **The admin top-ups reconciliation queue** and its CSV export.
+
+**THE RAIL UNDERNEATH IS UNTOUCHED** and that is ruling R3's load-bearing half:
+`payment_method = 'qr'`, `bookings.payment_code` and the 26-series sequence
+stay, because live bookings carry them and a variable symbol is the permanent
+identifier of a payment that already happened. `booking.spec.ts` asserts both
+halves — the RPC still accepts `qr` and stamps a symbol, and no screen shows a
+code.
+
+### What replaced it
+
+| | Before | Now |
+|---|---|---|
+| A game | QR, cash, or credits | **Card/wallet via Stripe**, cash, or credits |
+| A pass | QR, admin confirms by hand | **Card/wallet via Stripe**, webhook confirms |
+| Who confirms | An admin matching a bank transfer | `POST /api/stripe/webhook`, signature-verified |
+
+### The pending state (round 12, item 5)
+
+An online booking holds its seats for **thirty minutes** and no longer forever.
+`booking_holds_seat()` is the one predicate; `game_seats_taken` and both
+branches of `game_roster_public` read it. There is **no cron** — a stale
+pending simply stops being counted.
+
+Money that arrives with no seat to give it is flagged
+(`payment_attention_at`) and listed at the top of the admin dashboard. Nothing
+resolves it automatically.
+
+### THE GATE, AND IT IS AMBER
+
+**Buying credit is impossible until `NEXT_PUBLIC_STRIPE_PASS_URLS` is set.** The
+QR flow was the only working way and it is gone; every tier renders "Coming
+soon". Booking a game is unaffected — the per-game link IS set, and cash and
+credits work as they always have.
+
+**Online booking cannot be CONFIRMED until `STRIPE_WEBHOOK_SECRET` is set.** The
+endpoint answers 503 to everything, which is the correct posture for something
+that confirms bookings and cannot verify who is asking — but it means an online
+booking made today holds its seats for thirty minutes and then quietly stops.
+Cash and credits are the working paths until the secret lands.

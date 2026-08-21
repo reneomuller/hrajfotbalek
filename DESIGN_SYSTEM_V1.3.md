@@ -1536,3 +1536,28 @@ breaker can only split inside one that does not, and three rows reading
 "ИГРАЙ В ФУТБОЛ. / КОГДА УГОДНО. / ГДЕ УГОДНО." is the copy's own punctuation.
 
 A real display face with Cyrillic remains the owner's call and remains unbuilt.
+
+## R31 — Round 13's reversals, with their lineage
+
+Four decisions were overturned this round. Each is recorded struck-through
+where it lived, and collected here because a reader looking for "why does this
+contradict the comment above it" should find one page that answers all four.
+
+| Reversed | Was ruled | Why it stood | Why it fell |
+|---|---|---|---|
+| **The hero translates** | R29, round 12 | The header had just lost its wordmark, so the hero was the only place the brand name was written | The owner's call. The roundel *is* the name; the largest type on the page is better spent telling a first-time visitor what the site is FOR, in their language |
+| **QR retires** | R3, rounds 1–12 | QR was the payment rail, and its machinery is the substrate Stripe maps onto | Stripe arrived. **The RAIL is untouched** — `payment_method = 'qr'`, `payment_code`, the 26-series sequence — only the code on the screen is gone |
+| **Shadow claim removed** | Phase 1 | A shadow player's history should follow them onto a real account automatically | Round 11 removed the flow that CREATED shadow players, so it ran on every sign-in to adopt a population that stopped growing |
+| **Venue photos on cards** | REQ-GAME-019 | Twelve photographs down a list is twelve backgrounds competing with twelve sets of text | **The scrim changed.** R6a's ramp runs to `ink` at full opacity across the lower two thirds and is measured; a photograph under it is a texture, not a background |
+
+**AND R17 → R28, from round 12**, which is a fifth: the frames' page-title cap
+was converted with Anton's *published* ratio instead of its *rendered* one.
+
+**THE PATTERN WORTH NAMING.** Four of these five fell because a PREMISE
+changed, not because the reasoning was wrong. R29 assumed a header with no
+name; R3 assumed no card processor; the shadow claim assumed shadows were still
+being made; REQ-GAME-019 assumed an unscrimmed card. Only R17 was an error.
+
+That is the argument for writing the *reason* into a ruling rather than only
+the decision: a rule with its premise recorded can be re-examined when the
+premise moves, and a rule without one can only be obeyed or broken.
