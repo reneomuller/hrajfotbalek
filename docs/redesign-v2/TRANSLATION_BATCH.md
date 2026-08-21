@@ -24,6 +24,14 @@ which is what this file is for.
 | `games.gameInfoTitle` | Game information | New this round |
 | `errors.passNotConfigured` | This pass is not on sale yet. | New this round |
 | `siteFooter.contactTitle` | Get in touch | New this round |
+| `games.infoWhen` / `infoWhere` / `infoFormat` / `infoLevel` | When / Where / Format / Level | **Round 14.** Field labels on the game-detail fact list, at 10px uppercase with letter-spacing. One word each, and both drafts are one word — but CS `Úroveň` and RU `Уровень` are the longest of the four in their language and sit against a value on the same line |
+| `pass.batchesExpiring` / `batchesNever` | {credits} remaining · expires {date} | **Round 14.** `{credits}` arrives already pluralised by `lib/pass/credits.ts` (CLDR, three forms in both languages), so the surrounding words must agree with a phrase rather than a number — which is why the CS draft leads with `Zbývá` instead of trailing the count |
+| `pass.paymentsSoon` | Payments launching shortly. | **Round 14.** Sits under a green Purchase pill that LOOKS live, so the sentence is the only thing telling a player it is not. It must not read as an error |
+
+**The public profile added no strings** (round 14, item 13). Its four blocks —
+banner, picture, stats, badges — reuse the keys the owner's own profile already
+uses, which is the point of composing it from the same three components: the
+two surfaces cannot drift into two vocabularies for one thing.
 
 ## Deliberately NOT translated
 
