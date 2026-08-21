@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { AvatarRow } from "@/components/game/AvatarRow";
 import { GuestIcon } from "@/components/game/GuestIcon";
 import { sortRoster, toRosterAvatar, type RosterAvatar } from "@/lib/games/queries";
@@ -98,7 +99,7 @@ export async function PlayersList({ rows, supabaseUrl }: PlayersListProps) {
             coming back, which a row of faces cannot.
           */}
           <div className="mt-3">
-            <AvatarRow players={seats} supabaseUrl={supabaseUrl} max={14} />
+            <AvatarRow players={seats} supabaseUrl={supabaseUrl} max={14} linkProfiles />
           </div>
 
           <ul className="mt-4 flex list-none flex-col p-0" data-testid="roster">
@@ -108,14 +109,36 @@ export async function PlayersList({ rows, supabaseUrl }: PlayersListProps) {
               data-guest={seat.isGuest ? "true" : undefined}
               className="flex items-center gap-3 border-b border-hairline py-[10px] last:border-b-0"
             >
-              <Avatar seat={seat} supabaseUrl={supabaseUrl} index={i} />
-              <span
-                className={`min-w-0 flex-1 truncate text-[15px] ${
-                  seat.isGuest ? "text-muted" : "text-bone"
-                }`}
-              >
-                {guestLabel(seat, t)}
-              </span>
+              {/*
+                THE ROW OPENS THE PLAYER (round 14, item 13), and GUESTS DO NOT
+                LINK. A guest is a seat rather than a person (R24), and a
+                pre-round-11 shadow is somebody who never signed up — neither
+                has a profile, and `public_player_profile` refuses both, so a
+                link would be a 404 with a name on it.
+
+                THE WHOLE NAME-AND-FACE IS THE TARGET rather than the avatar
+                alone: a 34px circle is a small tap area, and the two are one
+                object to a reader.
+              */}
+              {seat.isGuest || !seat.nickname ? (
+                <>
+                  <Avatar seat={seat} supabaseUrl={supabaseUrl} index={i} />
+                  <span className="min-w-0 flex-1 truncate text-[15px] text-muted">
+                    {guestLabel(seat, t)}
+                  </span>
+                </>
+              ) : (
+                <Link
+                  href={`/player/${encodeURIComponent(seat.nickname)}`}
+                  data-testid="roster-player-link"
+                  className="flex min-w-0 flex-1 items-center gap-3 no-underline"
+                >
+                  <Avatar seat={seat} supabaseUrl={supabaseUrl} index={i} />
+                  <span className="min-w-0 flex-1 truncate text-[15px] text-bone">
+                    {seat.nickname}
+                  </span>
+                </Link>
+              )}
               {/*
                 Rendered only when it is a real number — a null means the view
                 could not count, which is not the same as zero.

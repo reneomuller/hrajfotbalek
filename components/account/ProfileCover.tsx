@@ -29,6 +29,7 @@ import type { Strings } from "@/lib/strings";
  */
 export function ProfileCover({
   coverPath,
+  editable = false,
   photoVersion,
   t,
 }: {
@@ -41,11 +42,30 @@ export function ProfileCover({
    * shows WITH the control; a string is their own picture.
    */
   coverPath?: string | null;
+  /**
+   * Whether to render the "Change cover" control. FALSE unless a caller says
+   * otherwise — only the owner's own account page may say otherwise.
+   */
+  editable?: boolean;
   /** Changes when the photo does, so a re-upload is not served from cache. */
   photoVersion: string | null;
   t: Strings;
 }) {
-  const coverSupported = coverPath !== undefined;
+  /*
+   * THE CONTROL IS OPT-IN, AND DEFAULTS TO OFF (round 14, item 13).
+   *
+   * ~~`coverSupported = coverPath !== undefined`~~ — which is a test for
+   * whether the COLUMN exists, not for whether the viewer owns the profile. So
+   * the first surface to reuse this component for somebody ELSE'S banner — the
+   * public profile — rendered a file picker on a stranger's photograph. The
+   * public-profile spec caught it, which is the whole reason that spec asserts
+   * absences rather than presences.
+   *
+   * `editable` defaults to FALSE so the mistake cannot repeat: a new caller
+   * gets the read-only band unless it explicitly asks for the control, rather
+   * than getting the control unless it remembers to suppress it.
+   */
+  const showControl = editable && coverPath !== undefined;
   const coverUrl = avatarUrl(
     process.env.NEXT_PUBLIC_SUPABASE_URL ?? "",
     coverPath ?? null,
@@ -107,7 +127,7 @@ export function ProfileCover({
         — a full-bleed backdrop over the identity row would otherwise eat every
         tap meant for the content on top of it.
       */}
-      {coverSupported && (
+      {showControl && (
         <PhotoUpload
           target="cover"
           hasPhoto={Boolean(coverUrl)}

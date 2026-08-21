@@ -130,6 +130,8 @@ export default async function AccountPage({
         <ProfileCover
           /* `undefined` until migration 20260820140000 is applied — see the prop. */
           coverPath={player.cover_path}
+          /* The one surface that may edit it: the owner's own profile. */
+          editable
           photoVersion={player.created_at}
           t={t}
         />

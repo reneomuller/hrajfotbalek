@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { initials } from "@/lib/roster/initials";
 import { guestLabel, isAnonymousGuest } from "@/lib/roster/guests";
 import { GuestIcon } from "@/components/game/GuestIcon";
@@ -59,6 +60,7 @@ export async function AvatarRow({
   max = 12,
   size = "default",
   supabaseUrl,
+  linkProfiles = false,
 }: {
   players: RosterAvatar[];
   /** Nickname to ring as the viewer's own, if present. */
@@ -79,6 +81,15 @@ export async function AvatarRow({
    * the correct degradation rather than a broken image.
    */
   supabaseUrl?: string;
+  /**
+   * Whether a face opens its player's public profile (round 14, item 13).
+   *
+   * OFF BY DEFAULT, so every existing caller keeps its behaviour and the two
+   * that should link say so. The waiting list in particular must NOT: those
+   * are real people, but the surface is a queue, and tapping a face to leave
+   * the page is not what anybody means there.
+   */
+  linkProfiles?: boolean;
 }) {
   const t = await getStrings();
   const shown = players.slice(0, max);
@@ -98,13 +109,32 @@ export async function AvatarRow({
         const photo =
           supabaseUrl && !player.isGuest ? avatarUrl(supabaseUrl, player.photoPath) : null;
 
-        return (
-          <span
-            key={`${player.guestOf ?? player.nickname ?? "guest"}-${player.guestIndex ?? 0}-${i}`}
-            title={isYou ? `${label} — ${t.games.waitlistYou}` : label}
-            data-guest={player.isGuest ? "true" : undefined}
-            data-testid={isYou ? "avatar-you" : "avatar"}
-            className={`-ml-2 flex items-center justify-center overflow-hidden rounded-full border-2 font-bold ${dim} ${
+        /*
+          A REAL PLAYER'S FACE OPENS THEIR PROFILE (round 14, item 13); a
+          guest's does not. `linkTo` is null for a guest, for a seat with no
+          nickname, and for the waiting list — which passes `plainAvatar`
+          rows that are people but whose surface is a QUEUE, where tapping a
+          face to leave the page is not what anybody means.
+        */
+        const linkTo =
+          linkProfiles && !player.isGuest && player.nickname
+            ? `/player/${encodeURIComponent(player.nickname)}`
+            : null;
+
+        /*
+          TWO EXPLICIT BRANCHES, not a polymorphic `Tag`. A `const Tag = linkTo
+          ? Link : "span"` does not type-check — `LinkProps.href` is required,
+          so a spread that MIGHT omit it widens to `string | undefined` and
+          fails. Spelling both out costs six lines and keeps the props honest.
+        */
+        // `key` is NOT in here: React reads it off the element, and passing it
+        // through a spread warns and is ignored.
+        const key = `${player.guestOf ?? player.nickname ?? "guest"}-${player.guestIndex ?? 0}-${i}`;
+        const shared = {
+          title: isYou ? `${label} — ${t.games.waitlistYou}` : label,
+          "data-guest": player.isGuest ? "true" : undefined,
+          "data-testid": isYou ? "avatar-you" : "avatar",
+          className: `-ml-2 flex items-center justify-center overflow-hidden rounded-full border-2 font-bold ${dim} ${
               isYou
                 ? "border-volt bg-surface-avatar text-volt"
                 : `border-surface-raised bg-surface-avatar ${
@@ -117,8 +147,11 @@ export async function AvatarRow({
                     */
                     !player.isGuest && i % 3 === 0 ? "text-volt" : "text-muted"
                   }`
-            }`}
-          >
+            }`,
+        };
+
+        const face = (
+          <>
             {photo ? (
               /*
                 A plain <img>, not next/image. The bucket is a public Supabase
@@ -144,6 +177,16 @@ export async function AvatarRow({
             ) : (
               initials(player.nickname ?? "", t)
             )}
+          </>
+        );
+
+        return linkTo ? (
+          <Link key={key} {...shared} href={linkTo} data-linked="true">
+            {face}
+          </Link>
+        ) : (
+          <span key={key} {...shared}>
+            {face}
           </span>
         );
       })}

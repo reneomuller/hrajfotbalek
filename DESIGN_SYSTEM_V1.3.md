@@ -1561,3 +1561,70 @@ being made; REQ-GAME-019 assumed an unscrimmed card. Only R17 was an error.
 That is the argument for writing the *reason* into a ruling rather than only
 the decision: a rule with its premise recorded can be re-examined when the
 premise moves, and a rule without one can only be obeyed or broken.
+
+---
+
+# 15. Round 14 rulings (2026-08-21)
+
+## R32 — Public player profiles: the quarantine is LIFTED, with this scope
+
+**~~R8 — Public player profile: QUARANTINED.~~** Lifted by the owner in round
+14, and the scope is the ruling rather than a note beside it.
+
+**A PUBLIC PROFILE SHOWS FOUR THINGS:**
+
+1. the profile picture
+2. the banner
+3. the three profile stats
+4. badges
+
+**And nothing else.** No contact details, no booking history, no wallet or
+credits, no country, no join date, no positions, no controls.
+
+**THE ENFORCEMENT IS THE FUNCTION, NOT THE PAGE.**
+`public_player_profile(text)` returns a **six-column composite** and there is
+no way to ask it for a seventh. A page that merely declined to render the other
+fields would be one careless `select *` away from publishing them — and the
+fields are all on `players`, which anonymous callers cannot read at all. The
+scope is a type signature.
+
+**KEYED BY NICKNAME, NOT BY ID.** `game_roster_public` deliberately projects no
+`player_id`, and that boundary was NOT widened for this: the nickname is
+already public on every roster, `players_nickname_key` is unique on
+`lower(nickname)` so the lookup is unambiguous, and the URL is readable.
+Nothing anywhere gained the ability to turn a roster row into an id.
+
+**GUESTS HAVE NO PROFILE**, in the UI and in the function both. A guest is a
+seat rather than a person (R24) and a pre-round-11 shadow is somebody who never
+signed up. A guest's face does not link, and a hand-typed URL 404s —
+identically to a stranger's, because distinguishing them would answer "does
+this nickname belong to a real account" for anyone willing to type one in.
+
+**THE WAITING LIST DOES NOT LINK EITHER.** Those are real people, but the
+surface is a QUEUE: tapping a face to leave the page is not what anybody means
+there. `AvatarRow` takes `linkProfiles` and it defaults to **off**.
+
+### What the lift cost, and what caught it
+
+Reusing `ProfileCover` for somebody else's banner rendered the **"Change cover"
+control on a stranger's photograph** — a file picker for a picture the viewer
+does not own. Its guard was `coverPath !== undefined`, which tests whether the
+COLUMN exists rather than whether the viewer owns the row.
+
+`editable` now defaults to **false**, so a new caller gets the read-only band
+unless it explicitly asks — rather than getting the control unless it remembers
+to suppress it.
+
+**It was caught by the spec asserting ABSENCES**, which is why that spec checks
+the page's whole text for the email and the phone rather than querying
+selectors: a selector-based check passes when a field is rendered somewhere the
+test did not think to look, which is exactly how a profile leaks a phone number.
+
+## R33 — Round 14's other reversals
+
+| Reversed | Was | Now | Why the premise moved |
+|---|---|---|---|
+| **"Your next game"** | R13 item 17's Game Pass banner | a My-games row | Right about the size, wrong about the borrowed language: a volt-tinted ADVERTISEMENT dressed a booked game as an offer |
+| **Drafts** | kept reachable (round 9) so stranded rows were not lost | the concept is gone | Creating a game has published it since round 8; the surfaces taught a concept nobody could reach |
+| **Venue photo & amenities on the game surface** | edited beside the game they belong to | `/admin/venues` only | They always wrote to the VENUE, so editing from one game silently changed every other game at that ground |
+| **The notify offer** | on every published game | post-publish only | Its condition was "published" rather than "just created", so a three-week-old fixture invited an announcement that it was new |

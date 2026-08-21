@@ -921,6 +921,24 @@ export interface Database {
         Args: { p_booking_id: string };
         Returns: boolean;
       };
+      /**
+       * The public profile (round 14, item 13): nickname, photo, cover and the
+       * three stats, and NOTHING else — the composite return type is where the
+       * quarantine lift's scope is enforced, not in the page.
+       *
+       * Null for a guest, a shadow player or a nickname nobody holds.
+       */
+      public_player_profile: {
+        Args: { p_nickname: string };
+        Returns: {
+          nickname: string | null;
+          photo_path: string | null;
+          cover_path: string | null;
+          games_played: number | null;
+          hours: number | string | null;
+          venues: number | null;
+        } | null;
+      };
       set_game_guests: {
         Args: { p_game_id: string; p_count: number };
         Returns: number;

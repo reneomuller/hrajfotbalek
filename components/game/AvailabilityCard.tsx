@@ -74,7 +74,8 @@ export async function AvailabilityCard({
         <SpotsLeft bookedCount={bookedCount} capacity={capacity} size="hero" />
         {roster.length > 0 && (
           <span className="shrink-0">
-            <AvatarRow players={roster} max={3} size="card" supabaseUrl={supabaseUrl} />
+            <AvatarRow
+          linkProfiles players={roster} max={3} size="card" supabaseUrl={supabaseUrl} />
           </span>
         )}
       </div>
