@@ -123,6 +123,52 @@ async function reset(): Promise<void> {
   check("delete games", (await admin.from("games").delete().in("id", allGameIds)).error);
   check("delete players", (await admin.from("players").delete().in("id", allPlayerIds)).error);
 
+  /*
+   * TEST RESIDUE, AND IT BLOCKED THE ONE COMMAND THAT FIXES DRIFT.
+   *
+   * The deletes above are scoped to fixture ids on purpose — a database
+   * holding real data beside the fixtures keeps it. But a spec's SCRATCH game
+   * is neither: it carries a fresh uuid, so `in(allGameIds)` never matches it,
+   * and it sits on a FIXTURE venue. Specs destroy their own, and a run that is
+   * killed between creating and destroying does not.
+   *
+   * One stray is then enough to fail `delete venues` on
+   * `games_venue_id_fkey` — which fails the whole reset, half-emptied, and
+   * leaves a database where every admin spec reports INSUFFICIENT_PERMISSION
+   * because the organizer row is gone. The remedy for seed drift became a
+   * cause of it.
+   *
+   * SO STRAYS ARE COLLECTED BY VENUE rather than by id, and their dependants
+   * go first. It is LOUD: a reset that silently deleted games nobody listed
+   * would be the wrong tool to reach for twice.
+   */
+  const { data: fixtureVenues, error: venueLookupError } = await admin
+    .from("venues")
+    .select("id")
+    .in("name", allVenueNames);
+  check("look up fixture venues", venueLookupError);
+
+  const fixtureVenueIds = (fixtureVenues ?? []).map((v) => v.id);
+  if (fixtureVenueIds.length > 0) {
+    const { data: strays, error: strayError } = await admin
+      .from("games")
+      .select("id")
+      .in("venue_id", fixtureVenueIds);
+    check("look up stray games", strayError);
+
+    const strayIds = (strays ?? []).map((g) => g.id);
+    if (strayIds.length > 0) {
+      console.log(
+        `Removing ${strayIds.length} stray game(s) on fixture venues — ` +
+          "left behind by a spec run that did not finish its teardown.",
+      );
+      check("delete stray waitlist", (await admin.from("waitlist").delete().in("game_id", strayIds)).error);
+      check("delete stray bookings", (await admin.from("bookings").delete().in("game_id", strayIds)).error);
+      check("delete stray events", (await admin.from("events").delete().in("game_id", strayIds)).error);
+      check("delete stray games", (await admin.from("games").delete().in("id", strayIds)).error);
+    }
+  }
+
   // After the games, which reference them ON DELETE RESTRICT. Scoped to the
   // fixture names, so a venue an admin created by hand survives a reset.
   check("delete venues", (await admin.from("venues").delete().in("name", allVenueNames)).error);
