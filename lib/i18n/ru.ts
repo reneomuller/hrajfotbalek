@@ -285,6 +285,10 @@ export const ru: StringsOverlay = {
     gamePlayedOne: "1 матч",
     gamesPlayedNone: "Первый матч",
     gameInfoTitle: "Информация об игре",
+    infoWhen: "Когда",
+    infoWhere: "Где",
+    infoFormat: "Формат",
+    infoLevel: "Уровень",
     includedTitle: "Что входит",
     pitchAmenitiesTitle: "Инфраструктура площадки",
     amenities: {

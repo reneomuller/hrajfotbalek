@@ -575,6 +575,11 @@ export const strings = {
      * the point: three sections down the page, all named the same way.
      */
     gameInfoTitle: "Game information",
+    /* The four labels of the game-information list (round 14, item 12). */
+    infoWhen: "When",
+    infoWhere: "Where",
+    infoFormat: "Format",
+    infoLevel: "Level",
     includedTitle: "What's included",
     /*
      * THE SECOND HEADING (Section 4, item 2). The column is one flat `text[]`;

@@ -282,6 +282,10 @@ export const cs: StringsOverlay = {
     gamePlayedOne: "1 zápas",
     gamesPlayedNone: "První zápas",
     gameInfoTitle: "Informace o zápase",
+    infoWhen: "Kdy",
+    infoWhere: "Kde",
+    infoFormat: "Formát",
+    infoLevel: "Úroveň",
     includedTitle: "Co je v ceně",
     pitchAmenitiesTitle: "Vybavení hřiště",
     amenities: {

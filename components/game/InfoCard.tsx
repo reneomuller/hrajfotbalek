@@ -2,6 +2,7 @@ import { Icon } from "@/components/Icon";
 import { CardBadges } from "@/components/game/CardBadges";
 import { SkillBadges } from "@/components/game/SkillBadges";
 import { formatGameDate, formatTimeSpan } from "@/lib/format";
+import { venueDisplayName } from "@/lib/venues/displayName";
 import { getStrings } from "@/lib/i18n/server";
 import type { Database } from "@/lib/types/database";
 
@@ -27,6 +28,13 @@ type GameRow = Database["public"]["Tables"]["games"]["Row"];
  * The chips interpolate as JSX children (React escapes); the maps URL runs its
  * query through `encodeURIComponent`.
  */
+/**
+ * The label column's treatment, named once so the four rows cannot drift. The
+ * product's one uppercase style (ruling B), at the size the dashboard's tile
+ * labels use.
+ */
+const FACT_LABEL = "m-0 pt-[2px] text-[10px] uppercase tracking-eyebrow text-muted";
+
 export async function InfoCard({
   game,
   venueRow,
@@ -42,7 +50,12 @@ export async function InfoCard({
     | "subs_per_team"
     | "allowed_skill_levels"
   >;
-  venueRow: Pick<VenueRow, "map_query"> | null;
+  /*
+   * `pitch_name` JOINS `map_query` (round 14, item 12): the Where row names
+   * the ground and its pitch, through the same `venueDisplayName` the card and
+   * the hero use, so three surfaces cannot spell one place three ways.
+   */
+  venueRow: Pick<VenueRow, "map_query" | "pitch_name"> | null;
   endsAt: Date;
 }) {
   const t = await getStrings();
@@ -74,71 +87,76 @@ export async function InfoCard({
         {t.games.gameInfoTitle}
       </h2>
 
-      {/* When. The SPAN, not the kick-off alone (§5.2, REQ-GAME-007) — the end
-          comes from `gameEndsAt`, the same call the `.ics` DTEND and the
-          schema.org endDate make, so the page cannot disagree with the calendar
-          entry a player downloads from it. */}
-      <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
-        <span className="flex items-center gap-2 text-[15px] text-white">
-          <Icon name="calendar" className="h-[18px] w-[18px] text-volt" />
-          {formatGameDate(game.starts_at)}
-        </span>
-        <span
-          data-testid="game-time-span"
-          className="flex items-center gap-2 text-[15px] text-white"
-        >
-          <Icon name="clock" className="h-[18px] w-[18px] text-volt" />
-          {formatTimeSpan(game.starts_at, endsAt)}
-        </span>
-        {/*
-          NO PRICE HERE ANY MORE (v1.3 §3: "No price in the info card").
-
-          The line that stood here was justified by a real gap: the price was
-          on the claim button, and the button was ABSENT for a full game, a
-          cancelled game, a started game and a holder — so without this a
-          signed-out visitor arriving at a full game from a shared link found
-          no price anywhere in the product.
-
-          RULING G DISSOLVED THAT ARGUMENT RATHER THAN OVERRULING IT. The claim
-          bar is now present in all seven states and carries the figure in five
-          of them; the two it does not are the two where the player's own money
-          has replaced it (`Paid`, `200 CZK due`), which is a better answer than
-          the price. So the fact is never missing, and stating it twice on one
-          screen is what it always would have been without the gap.
-        */}
-      </div>
-
-      {/* What kind. Format, substitutes, surface, and the skill badge only when
-          the game is actually restricted (§5.3, REQ-GAME-009). Derived from
-          capacity nowhere. */}
       {/*
-        THE SAME BADGE TREATMENT AS THE LIST CARD (ruling 6, 2026-08-10) —
-        semi-transparent fill, solid coloured outline. `FormatChips` drew the
-        format as a SOLID volt chip here and the surface as a bare outline,
-        which is a third styling of the same two facts.
+        A LABELLED FACT LIST (round 14, item 12), which is the third go at this
+        card and the first that matches the page it is on.
 
-        Substitutes stay as `FormatChips` handled them — plain text beside the
-        badges, and only when the organizer set a number (§5.3a).
+        ~~Two icon chips for the date and the time, then a loose row of badges,
+        then a hairline.~~ Nothing was LABELLED: the format and surface badges
+        floated with no word saying what they were, and the reader had to infer
+        "6v6" and "Turf" were the same kind of fact as the clock beside them.
+
+        THE QUALITY BAR IS THE DASHBOARD AND FINANCIALS, and both are built the
+        same way — a quiet eyebrow label over a strong value, in rows. That is
+        the language this card now speaks, so a reader scanning down the page
+        meets one pattern rather than four.
+
+        `dl`, NOT DIVS. These are literally terms and their definitions, the
+        element exists, and a screen reader announces the pairing for free.
+        Grid rather than the default flow so the values line up in a column —
+        an unaligned definition list reads as a paragraph.
       */}
-      <div className="mt-4 flex flex-wrap items-center gap-2">
-        <CardBadges format={game.format} surface={game.surface} />
-        {game.subs_per_team !== null && (
-          <span data-testid="game-subs" className="text-small text-muted">
-            {t.games.subsPerTeam.replace("{count}", String(game.subs_per_team))}
+      <dl className="m-0 grid grid-cols-[84px_1fr] gap-x-4 gap-y-3">
+        <dt className={FACT_LABEL}>{t.games.infoWhen}</dt>
+        <dd className="m-0 text-[15px] text-white">
+          {formatGameDate(game.starts_at)}
+          <span data-testid="game-time-span" className="mt-[2px] block text-small text-muted">
+            {formatTimeSpan(game.starts_at, endsAt)}
           </span>
+        </dd>
+
+        <dt className={FACT_LABEL}>{t.games.infoWhere}</dt>
+        <dd className="m-0 text-[15px] text-white">
+          {venueDisplayName(game.venue, venueRow?.pitch_name ?? null)}
+        </dd>
+
+        {/*
+          FORMAT AND LEVEL ARE TWO ROWS, not one line of mixed badges. A
+          restricted game's level is the fact on this card that changes what a
+          reader may do; sharing a row with the format made it a decoration
+          beside one.
+        */}
+        <dt className={FACT_LABEL}>{t.games.infoFormat}</dt>
+        <dd className="m-0 flex flex-wrap items-center gap-2">
+          <CardBadges format={game.format} surface={game.surface} />
+          {game.subs_per_team !== null && (
+            <span data-testid="game-subs" className="text-small text-muted">
+              {t.games.subsPerTeam.replace("{count}", String(game.subs_per_team))}
+            </span>
+          )}
+        </dd>
+
+        {game.allowed_skill_levels && (
+          <>
+            <dt className={FACT_LABEL}>{t.games.infoLevel}</dt>
+            <dd className="m-0">
+              <SkillBadges levels={game.allowed_skill_levels} />
+            </dd>
+          </>
         )}
-        <SkillBadges levels={game.allowed_skill_levels} />
-      </div>
+      </dl>
 
       {/*
-        ~~"All welcome — this is a guide, not a rule." under the level badge.~~
-        REMOVED (round 13, item 12).
+        ~~NO PRICE HERE (v1.3 §3), and the reasoning survives the restyle.~~
+        The claim bar is present in all seven states and carries the figure in
+        five; the two it does not are the two where the player's own money has
+        replaced it. So the fact is never missing, and stating it twice on one
+        screen is what it always would have been without that gap.
 
-        The badges above already say which levels a game is pitched at, and a
-        caption explaining that a badge is not a gate is a caption apologising
-        for the element above it. THE RULE IT DESCRIBED IS UNCHANGED and still
-        true — `create_booking` never consults skill (§5.3, REQ-GAME-011), a
-        restricted game refuses nobody — it simply is not written on the page.
+        ~~"All welcome — this is a guide, not a rule."~~ Removed round 13 item
+        12: the badges say which levels a game is pitched at, and a caption
+        explaining that a badge is not a gate apologises for the element above
+        it. The rule is unchanged — `create_booking` never consults skill.
       */}
 
       {/* How to get there, and how to tell someone else. Both are things you do
