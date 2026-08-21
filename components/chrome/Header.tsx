@@ -178,31 +178,23 @@ export async function Header({
         </Link>
 
         {/*
-          THE `ADMIN` BADGE, exactly as p14/p17/p18/p19 draw it: a volt-outlined
-          pill immediately right of the wordmark, on admin sessions only.
+          ~~THE `ADMIN` BADGE, exactly as p14/p17/p18/p19 draw it: a
+          volt-outlined pill immediately right of the wordmark, on admin
+          sessions only.~~ REMOVED (round 13, item 22).
 
-          A BADGE, NOT A LINK — it has no `href` and takes no focus. The frames
-          draw it as a state marker ("you are acting as an admin"), and the
-          door into the panel is elsewhere: the header's `md:` link row and the
-          Profile tab's entry, which is the two-tap path the admin spec asserts.
-          Making this a link would add a third door to one destination.
+          The frames draw it because in the frames the admin panel and the
+          player site share one chrome. They do not here: `/admin` carries its
+          own chip row, its own page titles and its own everything, so the
+          badge told an admin what mode they were in on the pages where they
+          were NOT in it — and said nothing at all on the pages where they
+          were, because the panel's own furniture already does.
 
-          OUTSIDE the wordmark's `<Link>`, deliberately. Nested inside it the
-          badge would be part of the home link's accessible name, so a screen
-          reader would announce "Hraj Fotbal Admin, link" and the mark would
-          stop saying where it goes.
-
-          DISPLAY ONLY, like every other admin affordance here: rendering it
-          grants nothing, `requireAdmin()` is the gate.
+          What it cost, on every player-facing page an admin ever looks at, was
+          a volt pill in the header competing with the one control up there
+          that matters. The door into the panel is unchanged: the `md:` link
+          row and the Profile tab's entry, which is the two-tap path the admin
+          spec asserts.
         */}
-        {isAdmin && (
-          <span
-            data-testid="header-admin-badge"
-            className="shrink-0 rounded-pill border border-volt px-[10px] py-[3px] text-small font-bold uppercase tracking-wide text-volt"
-          >
-            {t.nav.admin}
-          </span>
-        )}
 
         {/*
           THE MIDDLE COLUMN. Lifted out of the right-hand `<nav>` so it can

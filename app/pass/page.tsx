@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { PassTierCard } from "@/components/pass/PassTierCard";
 import { getSessionUser } from "@/lib/auth/session";
-import { formatCzk } from "@/lib/format";
 import { listPassTiers } from "@/lib/pass/queries";
 import { getStrings } from "@/lib/i18n/server";
 
@@ -82,12 +81,13 @@ export default async function PassPage() {
         <p className="mt-2 text-[14px] leading-relaxed text-bone">
           {t.pass.howItWorksBody}
         </p>
-        {/* The reference price, stated once. Every tier's arithmetic is built
-            on it, and a page that shows six prices without it makes the reader
-            do the division themselves. */}
-        <p className="mt-3 text-[12px] tracking-[1px] text-faint">
-          {t.pass.tierPerGame.replace("{amount}", formatCzk(150))}
-        </p>
+        {/*
+          ~~The reference price, stated once beneath the body.~~ REMOVED
+          (round 13, item 15). Every tier card already shows its own per-game
+          figure, so this was the seventh statement of the same arithmetic and
+          the only one detached from a price it explained. The box shrinks by
+          its height, which is the visible half of the change.
+        */}
       </section>
     </main>
   );

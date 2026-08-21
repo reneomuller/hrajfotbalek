@@ -192,6 +192,8 @@ const config: Config = {
         // External brand
         whatsapp: "#25D366",
         instagram: "#E1306C",
+        // Telegram's brand blue (round 13, item 19).
+        telegram: "#229ED9",
       },
       /*
        * --- Families: four become two, plus one reserved ---------------

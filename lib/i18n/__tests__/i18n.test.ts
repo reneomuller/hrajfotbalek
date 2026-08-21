@@ -85,6 +85,9 @@ const INTENTIONALLY_UNTRANSLATED = new Set([
   "landing.community.whatsapp",
   "landing.community.instagram",
   "landing.community.instagramUrl",
+  // Same reasoning, round 13: a product's name is not a word.
+  "landing.community.telegram",
+  "landing.community.telegramUrl",
   "landing.footer.wordmarkLead",
   "landing.footer.wordmarkAccent",
   "games.rosterUnknown",

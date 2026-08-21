@@ -597,7 +597,7 @@ export const cs: StringsOverlay = {
     equivalence: "≈ {count} zápasů",
     howItWorks: "Jak to funguje",
     howItWorksBody:
-      "Zaplatíš QR kódem jako každé jiné dobití. Po potvrzení platby ti kredit přistane v peněžence a utrácí se automaticky — nejdřív ten, co vyprší nejdřív, aby ti permanentka nepropadla.",
+      "Zaplatíš kartou nebo mobilní peněženkou. Jakmile je platba potvrzená, kredity se ti automaticky připíšou na účet.",
     batchesTitle: "Tvůj kredit",
     batchesExpiring: "Zbývá {amount} · vyprší {date}",
     batchesNever: "{amount} · bez expirace",

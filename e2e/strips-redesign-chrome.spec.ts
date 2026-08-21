@@ -83,13 +83,22 @@ test("chrome on every surface the bar renders on — en", async ({ page, context
   await footer.scrollIntoViewIfNeeded();
   await footer.screenshot({ path: path.join(OUT, "05-footer.png") });
 
-  // --- admin: the badge the frames draw beside the wordmark ----------------
+  /*
+   * ~~admin: the badge the frames draw beside the wordmark~~ REMOVED IN ROUND
+   * 13 (item 22), and the assertion inverts rather than disappearing.
+   *
+   * The frames draw it because in the frames the panel and the player site
+   * share one chrome. They do not here — `/admin` has its own chip row and its
+   * own titles — so the badge announced a mode on the pages where the admin
+   * was not in it. It must not come back from the frame, which is exactly what
+   * an absent assertion would allow.
+   */
   await signInAs(context, players.organizer);
   await page.goto("/admin/games", { waitUntil: "networkidle" });
   await settle();
-  await expect(page.getByTestId("header-admin-badge")).toBeVisible();
+  await expect(page.getByTestId("header-admin-badge")).toHaveCount(0);
   await page.getByTestId("site-header").screenshot({
-    path: path.join(OUT, "06-header-admin-badge.png"),
+    path: path.join(OUT, "06-header-admin-signed-in.png"),
   });
 });
 

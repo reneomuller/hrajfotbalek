@@ -175,13 +175,26 @@ export async function CommunityPanel({
         `alt=""` throughout — the label sits directly beneath each one, and
         announcing "WhatsApp" twice is noise on a screen reader.
       */}
-      <div className="mt-4 flex gap-3">
+      {/*
+        THREE TILES, AND THE ROW HAD TO GIVE (round 13, item 19).
+
+        At 390 the panel's inner width is about 306px. Two tiles fitted a 15px
+        label comfortably; three leave roughly 94px each, and `@HRAJFOTBAL` at
+        15px is 120 — it overflowed the panel's right edge, which is how the
+        first attempt rendered.
+
+        `gap-2`, `px-2`, `text-[13px]` and `min-w-0` buy the width back, and
+        the Instagram label becomes the PLATFORM NAME like the other two. The
+        handle is not lost: it is the destination, and it was the only tile
+        naming an account where its neighbours named an app.
+      */}
+      <div className="mt-4 flex gap-2">
         <a
           href={community.whatsappUrl}
           target="_blank"
           rel="noopener noreferrer"
           data-testid="community-whatsapp"
-          className="flex flex-1 basis-0 flex-col items-center justify-center gap-2 rounded-control border border-hairline-strong px-3 py-4 text-center text-[15px] font-bold tracking-wide text-bone no-underline transition hover:border-whatsapp"
+          className="flex min-w-0 flex-1 basis-0 flex-col items-center justify-center gap-2 rounded-control border border-hairline-strong px-2 py-4 text-center text-[13px] font-bold tracking-wide text-bone no-underline transition hover:border-whatsapp"
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/brand/whatsapp-96.png" alt="" width={44} height={44} className="h-11 w-11" />
@@ -192,11 +205,31 @@ export async function CommunityPanel({
           target="_blank"
           rel="noopener noreferrer"
           data-testid="community-instagram"
-          className="flex flex-1 basis-0 flex-col items-center justify-center gap-2 rounded-control border border-hairline-strong px-3 py-4 text-center text-[15px] font-bold tracking-wide text-bone no-underline transition hover:border-instagram"
+          className="flex min-w-0 flex-1 basis-0 flex-col items-center justify-center gap-2 rounded-control border border-hairline-strong px-2 py-4 text-center text-[13px] font-bold tracking-wide text-bone no-underline transition hover:border-instagram"
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/brand/instagram-96.png" alt="" width={44} height={44} className="h-11 w-11 rounded-[10px]" />
           {community.instagram}
+        </a>
+        {/*
+          TELEGRAM, THIRD (round 13, item 19), and the row still fits at 390:
+          three `flex-1 basis-0` tiles are ~110px each, and the longest label
+          is "Instagram" at about 70px inside `px-3`.
+
+          `telegram-96.png` is drawn in the same flat treatment as the other
+          two — Telegram publishes a gradient roundel, and a gradient at 44px
+          is a smudge next to WhatsApp's flat green.
+        */}
+        <a
+          href={community.telegramUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          data-testid="community-telegram"
+          className="flex min-w-0 flex-1 basis-0 flex-col items-center justify-center gap-2 rounded-control border border-hairline-strong px-2 py-4 text-center text-[13px] font-bold tracking-wide text-bone no-underline transition hover:border-telegram"
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/brand/telegram-96.png" alt="" width={44} height={44} className="h-11 w-11" />
+          {community.telegram}
         </a>
       </div>
     </div>

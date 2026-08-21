@@ -131,11 +131,21 @@ export default async function GamesPage({
 
   return (
     <main className="relative z-10 mx-auto w-full max-w-shell px-gutter pb-16 pt-24">
-      {/* `page-title`, the step p02 actually draws — see the token's own note.
-          `section-title` clamps to 24px at phone width and the frame is 32. */}
-      <h1 className="m-0 font-display text-page-title uppercase tracking-wide text-white">
-        {t.games.listTitle}
-      </h1>
+      {/*
+        ~~The page title, `page-title`, the step p02 draws.~~ REMOVED (round 13,
+        item 16).
+
+        The tab that got here is already called Games and is still lit in the
+        nav pill two inches below; the day strip under this said which day. A
+        heading repeating the tab name is the largest type on the page spent on
+        the one fact the reader cannot have arrived without knowing.
+
+        THE `<h1>` GOES WITH IT RATHER THAN BEING HIDDEN. A visually-hidden
+        heading would keep the document outline and cost nothing — but the page
+        has a real one now: the day group heads the list, and `groupByDay`
+        renders those. An empty `<h1>` above them would be a second, competing
+        outline root.
+      */}
 
       {nextOwn && (
         <div className="mt-6">

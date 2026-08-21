@@ -66,12 +66,16 @@ export async function BookingList({ rows }: BookingListProps) {
               <span className="text-[12px] tracking-[1px] text-volt">
                 {formatGameDateTime(game.starts_at)}
               </span>
-              {booking.credit_applied_czk > 0 && (
-                <span className="text-[12px] text-muted">
-                  {t.booking.creditApplied} −
-                  {formatCzk(booking.credit_applied_czk)}
-                </span>
-              )}
+              {/*
+                ~~`Credit applied −150 CZK`~~ REMOVED (round 13, item 9).
+
+                It answered a question nobody asks about a game they are ABOUT
+                to play. The row already carries the badge that says the
+                booking is settled; how it was settled is history, and it is on
+                the confirmation screen and in the wallet where history
+                belongs. What stays is `amountDue`, which is the one number on
+                this row that asks the reader to do something.
+              */}
               {booking.status === "reserved" && amountDue > 0 && (
                 <span className="text-[12px] text-bone">
                   {t.booking.amountDue} {formatCzk(amountDue)}

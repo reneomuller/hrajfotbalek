@@ -112,11 +112,16 @@ export async function InfoCard({
         <SkillBadges levels={game.allowed_skill_levels} />
       </div>
 
-      {game.allowed_skill_levels && (
-        <p className="mt-3 text-small tracking-[1px] text-faint">
-          {t.games.skillNotEnforced}
-        </p>
-      )}
+      {/*
+        ~~"All welcome — this is a guide, not a rule." under the level badge.~~
+        REMOVED (round 13, item 12).
+
+        The badges above already say which levels a game is pitched at, and a
+        caption explaining that a badge is not a gate is a caption apologising
+        for the element above it. THE RULE IT DESCRIBED IS UNCHANGED and still
+        true — `create_booking` never consults skill (§5.3, REQ-GAME-011), a
+        restricted game refuses nobody — it simply is not written on the page.
+      */}
 
       {/* How to get there, and how to tell someone else. Both are things you do
           with the game rather than facts about it, so they sit together below

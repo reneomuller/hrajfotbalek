@@ -162,8 +162,21 @@ export const strings = {
       body: "Follow our socials to keep up to date with the latest community news",
       whatsapp: "WhatsApp",
       whatsappUrl: "https://chat.whatsapp.com/LjPjGf3rf32CNifizwzsW9?mode=gi_t",
-      instagram: "@HRAJFOTBAL",
+      /*
+       * ~~"@HRAJFOTBAL"~~ — the PLATFORM name, since round 13 (item 19). With
+       * a third tile the handle no longer fits a third of the row, and it was
+       * the only tile naming an account where its neighbours named an app.
+       * The handle is the destination.
+       */
+      instagram: "Instagram",
       instagramUrl: "https://instagram.com/hrajfotbal",
+      /*
+       * TELEGRAM (round 13, item 19). A product's name is not a word, so both
+       * keys join WhatsApp's and Instagram's in the intentionally-untranslated
+       * set rather than being written out three times identically.
+       */
+      telegram: "Telegram",
+      telegramUrl: "https://t.me/+yXnyRFfxCGkyYWJi",
     },
 
     footer: {
@@ -1820,8 +1833,16 @@ export const strings = {
     // The honest framing of what is actually stored.
     equivalence: "≈ {count} games",
     howItWorks: "How it works",
+    /*
+     * THE OWNER'S WORDING, VERBATIM (round 13, item 15).
+     *
+     * ~~"You pay by QR like any other top-up..."~~ — QR is retired product-wide
+     * (item 6), so the old body described a rail that no longer exists. It also
+     * explained the soonest-expiring-first allocator, which is true and is not
+     * what somebody reads this box to find out.
+     */
     howItWorksBody:
-      "You pay by QR like any other top-up. Once the payment is confirmed the credit lands in your wallet and is spent automatically — soonest-expiring first, so a pass is never left behind while permanent credit is used up.",
+      "You pay via your credit card or mobile wallet. Once the payment is confirmed, the credits will be applied to your account automatically.",
     batchesTitle: "Your credit",
     batchesExpiring: "{amount} left · expires {date}",
     batchesNever: "{amount} · never expires",
