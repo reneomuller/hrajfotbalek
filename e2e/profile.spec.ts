@@ -32,13 +32,22 @@ test("a top-up is requested, shows a QR, and is not money until confirmed", asyn
   expect(topup.status).toBe("pending");
 
   // The 27-series is what lets a bank statement tell a top-up from a booking.
+  // It survives the rail change (round 13): a variable symbol is the permanent
+  // identifier of a payment, and history is not rewritten because the till
+  // changed.
   expect(String(topup.payment_code)).toMatch(/^27\d{8}$/);
 
   await signInAs(context, players.runner);
-  await page.goto(`/account/topup/${topup.id}`);
 
-  await expect(page.getByTestId("qr-payment")).toBeVisible();
-  await expect(page.getByText(String(topup.payment_code))).toBeVisible();
+  /*
+   * ~~`/account/topup/[id]` renders the QR and the variable symbol.~~ REMOVED
+   * IN ROUND 13 (items 6-7): the screen and the whole QR flow are retired, and
+   * credit is bought through a Stripe Payment Link instead.
+   *
+   * WHAT THIS TEST IS STILL FOR is the half that never depended on the screen:
+   * a PENDING top-up is not balance. That is a ledger property, it is the one
+   * that would cost real money to get wrong, and it is asserted below.
+   */
 
   // Pending is not balance. Asserted as a BALANCE rather than a ledger row
   // count, because `setWalletTo` normalises by writing a compensating row —
@@ -46,25 +55,29 @@ test("a top-up is requested, shows a QR, and is not money until confirmed", asyn
   expect(await walletBalance(players.runner.id)).toBe(0);
 });
 
-test("an admin confirms a top-up and the wallet reflects what arrived", async ({
-  page,
-  context,
-}) => {
+/*
+ * ~~"an admin confirms a top-up and the wallet reflects what arrived"~~
+ * REWRITTEN IN ROUND 13 (item 8). There is no admin top-ups screen: its whole
+ * job was matching a bank transfer by variable symbol, and there are no bank
+ * transfers. A pass is confirmed by the Stripe webhook.
+ *
+ * THE LEDGER PROPERTY IS UNCHANGED AND IS WHAT THIS STILL TESTS — a confirmed
+ * top-up credits what ACTUALLY ARRIVED, not what was asked for. `confirm_topup`
+ * owns that rule and the webhook calls it, so the assertion moved from a
+ * button to the function underneath it.
+ */
+test("a confirmed top-up credits what actually arrived", async () => {
   const runner = await apiClientFor(players.runner);
   const { data: topup } = await runner.rpc("create_topup", { p_amount_czk: 300 });
 
-  await signInAs(context, players.organizer);
-  await page.goto("/admin/topups");
+  const service = serviceClient();
+  const { error } = await service.rpc("confirm_topup", {
+    p_topup_id: topup.id,
+    p_confirmed_by: players.organizer.id,
+    p_received_amount_czk: 300,
+  });
+  expect(error).toBeNull();
 
-  const row = page
-    .getByTestId("pending-topup")
-    .filter({ hasText: String(topup.payment_code) });
-  await expect(row).toBeVisible();
-  await row.getByTestId("confirm-topup").click();
-
-  // Assert the DATABASE, not the re-render: the confirmation revalidates the
-  // page, and a client-state marker can be unmounted before it is observed
-  // (CLAUDE.md).
   await expect(async () => {
     expect(await walletBalance(players.runner.id)).toBe(300);
   }).toPass();

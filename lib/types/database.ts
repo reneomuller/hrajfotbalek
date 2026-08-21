@@ -323,6 +323,13 @@ export interface Database {
            * §4.2.
            */
           pass_games: number | null;
+          /** Round 13: the checkout session that paid it, uniquely indexed. */
+          stripe_session_id: string | null;
+          /** Round 13: set while the purchase waits for Stripe. */
+          payment_pending_at: string | null;
+          /** Round 13: money arrived and could not be credited automatically. */
+          payment_attention_at: string | null;
+          payment_attention_reason: string | null;
         };
         Insert: never;
         Update: never;
@@ -862,6 +869,27 @@ export interface Database {
        * three of the four outcomes are normal and a raise would make Stripe
        * retry something that can never succeed.
        */
+      /**
+       * Records a pass purchase as PENDING and returns the row whose id
+       * travels to Stripe as `client_reference_id` (round 13, item 7).
+       *
+       * A thin wrapper over `create_pass_topup`, which stays the authority on
+       * the price: a second opinion about what a tier costs is the one thing a
+       * payment flow must not have.
+       */
+      begin_pass_purchase: {
+        Args: { p_pass_games: number };
+        Returns: Database["public"]["Tables"]["credit_topups"]["Row"];
+      };
+      /**
+       * The webhook's ONLY write since round 13. Dispatches a
+       * `client_reference_id` to a booking or a pass purchase and settles it
+       * through that path's existing ledger function.
+       */
+      confirm_online_purchase: {
+        Args: { p_reference: string; p_session_id: string; p_amount_czk: number };
+        Returns: "confirmed" | "already" | "attention" | "unknown";
+      };
       confirm_online_payment: {
         Args: { p_booking_id: string; p_session_id: string; p_amount_czk: number };
         Returns: "confirmed" | "already" | "attention" | "unknown";

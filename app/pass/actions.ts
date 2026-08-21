@@ -39,8 +39,28 @@ export async function buyPassAction(
     return { status: "error", code: toBookingErrorCode("PASS_TIER_NOT_FOUND") };
   }
 
+  /*
+   * THE LINK IS RESOLVED BEFORE ANYTHING IS WRITTEN (round 13, item 7).
+   *
+   * ~~The record was created first and a missing link fell through to the QR
+   * screen — "the behaviour before any of this existed".~~ There is no QR
+   * screen any more (item 6), so a tier with no link would leave a `pending`
+   * purchase behind with nowhere to pay it. Resolving first means an
+   * unconfigured tier writes nothing at all.
+   *
+   * NEVER THE SINGLE-GAME LINK AS A FALLBACK. Tier prices are DISCOUNTED, so
+   * paying a tier through the per-game link — even at the right quantity —
+   * charges the undiscounted price. A tier with no link of its own is not a
+   * tier that can be sold, and the button says "Coming soon" rather than
+   * selling it wrong.
+   */
+  const link = stripePassUrl(games);
+  if (!link) {
+    return { status: "error", code: "PASS_NOT_CONFIGURED" };
+  }
+
   const supabase = await createServerSupabaseClient();
-  const { data, error } = await supabase.rpc("create_pass_topup", {
+  const { data, error } = await supabase.rpc("begin_pass_purchase", {
     p_pass_games: games,
   });
 
@@ -49,32 +69,24 @@ export async function buyPassAction(
   }
 
   /*
-   * A CONFIGURED TIER GOES TO STRIPE; EVERY OTHER TIER IS UNCHANGED
-   * (round 8, item 15).
+   * PENDING FROM THE MOMENT IT EXISTS, exactly like an online booking
+   * (round 12, item 5). `begin_pass_purchase` stamps `payment_pending_at`, so
+   * an abandoned checkout leaves a row that resolves itself into "not paid"
+   * rather than a purchase that waits forever for an admin who no longer has
+   * a screen to confirm it on.
    *
-   * THE RECORD IS ALREADY WRITTEN either way. `create_pass_topup` has just
-   * created the top-up PENDING and unpaid on the existing rail — with its
-   * `'26'`-series variable symbol and its ledger expectations intact — so the
-   * only difference between the two branches is where the player is sent to
-   * settle it. That is what makes this reversible by clearing one environment
-   * variable, and what makes reconciliation possible while it is manual.
-   *
-   * STAMPED WITH THE TOP-UP ID AND THE PAYER (item 16). `client_reference_id`
-   * is the only thread from a line in the Stripe dashboard back to this row.
-   *
-   * A tier with no link, malformed JSON in the variable, or a URL that does
-   * not parse all fall through to the QR screen — the behaviour before any of
-   * this existed.
+   * STAMPED WITH THE PURCHASE ID AND THE PAYER. `client_reference_id` is the
+   * only thread from a line in the Stripe dashboard back to this row, and it
+   * is what `confirm_online_purchase` dispatches on.
    */
-  const link = stripePassUrl(games);
-  if (link) {
-    const stamped = withStripeParams(link, {
-      reference: data.id,
-      email: user.email ?? null,
-    });
-    if (stamped) redirect(stamped);
+  const stamped = withStripeParams(link, {
+    reference: (data as { id: string }).id,
+    email: user.email ?? null,
+  });
+
+  if (!stamped) {
+    return { status: "error", code: "PASS_NOT_CONFIGURED" };
   }
 
-  // Straight to the QR, which is the only thing left to do.
-  redirect(`/account/topup/${data.id}`);
+  redirect(stamped);
 }

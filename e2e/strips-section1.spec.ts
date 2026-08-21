@@ -70,13 +70,20 @@ test.describe("Section 1 strips", () => {
     });
     const page = await context.newPage();
 
-    // No `hf_locale` cookie is set anywhere in this test — that is the point.
-    await page.goto("/games", { waitUntil: "networkidle" });
+    /*
+     * No `hf_locale` cookie is set anywhere in this test — that is the point.
+     *
+     * ~~`/games` and its h1.~~ The heading went in round 13 item 16, so the
+     * probe is the HOME HERO: a translated sentence in the largest type on the
+     * site, which is a stronger proof that the whole table resolved than a
+     * single heading was.
+     */
+    await page.goto("/", { waitUntil: "networkidle" });
     await page.evaluate(() => document.fonts.ready);
 
-    await expect(page.getByRole("heading", { level: 1 })).toContainText(
-      "Nadcházející zápasy",
-    );
+    // Case-insensitive: the hero is uppercased in CSS, and `toContainText`
+    // reads textContent rather than the rendered glyphs.
+    await expect(page.getByTestId("hero-headline")).toHaveText(/hraj fotbal/i);
     // And the switcher is still there, which is what makes it a default
     // rather than a forcing.
     await expect(page.getByTestId("locale-trigger")).toBeVisible();

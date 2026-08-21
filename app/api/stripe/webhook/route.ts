@@ -89,8 +89,18 @@ export async function POST(request: Request) {
   }
 
   const supabase = createServiceRoleSupabaseClient();
-  const { data, error } = await supabase.rpc("confirm_online_payment", {
-    p_booking_id: session.clientReferenceId,
+  /*
+   * ONE ENTRY POINT FOR BOTH THINGS THIS PRODUCT SELLS (round 13, item 7).
+   *
+   * ~~`confirm_online_payment`, which assumed the reference was a booking.~~
+   * Since the pass rail moved onto Stripe links, a `client_reference_id` can
+   * name a booking OR a pass purchase, and the DISPATCH IS IN SQL: two round
+   * trips from here ("is it a booking? no? is it a top-up?") is two chances to
+   * act on a stale answer, and neither read would be under the lock the
+   * settling function then takes.
+   */
+  const { data, error } = await supabase.rpc("confirm_online_purchase", {
+    p_reference: session.clientReferenceId,
     p_session_id: session.id,
     p_amount_czk: minorUnitsToCzk(session.amountTotal),
   });

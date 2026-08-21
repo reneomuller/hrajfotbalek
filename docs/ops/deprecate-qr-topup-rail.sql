@@ -1,0 +1,73 @@
+-- =============================================================================
+-- DEPRECATION SQL — round 13, item 8. HANDED OVER, NOT RUN.
+--
+-- This file is NOT a migration and is deliberately not in supabase/migrations.
+-- Nothing in the repository applies it. It is here so the owner can drop the
+-- server functions that the retired admin top-ups screen was the only caller
+-- of, at a moment of his choosing, having read what each one does.
+--
+-- WHY IT IS NOT A MIGRATION. Every function below touches money. A migration
+-- is something a future session runs as a matter of course; a file that says
+-- HANDED OVER at the top is something a person decides about. The distinction
+-- matters more than usual here because the list of "only the admin screen
+-- called this" is a claim about call sites, and a call site can be added by
+-- the same change that makes the claim wrong.
+--
+-- =============================================================================
+-- WHAT IS SAFE TO DROP — verify each line before running it
+-- =============================================================================
+--
+-- `admin_list_topups` and `admin_confirm_topup` (if they exist under those
+-- names in your schema) existed to render and settle the reconciliation queue.
+-- The queue is gone: a pass is paid by card and confirmed by the Stripe
+-- webhook, which calls `confirm_online_purchase` -> `confirm_topup`.
+--
+-- RUN THE AUDIT FIRST. It lists every function whose name mentions topup, so
+-- the drop list below is checked against reality rather than against this
+-- comment:
+--
+--   select p.proname, pg_get_function_identity_arguments(p.oid)
+--     from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+--    where n.nspname = 'public' and p.proname ilike '%topup%'
+--    order by p.proname;
+--
+-- =============================================================================
+-- WHAT MUST NOT BE DROPPED, WHATEVER THE AUDIT SHOWS
+-- =============================================================================
+--
+--   public.create_topup(integer)          -- still the generic "record an
+--                                            intent to add credit"
+--   public.create_pass_topup(integer)     -- prices a tier from `pass_tiers`;
+--                                            `begin_pass_purchase` wraps it
+--   public.confirm_topup(uuid, uuid, int) -- THE LEDGER PATH. The webhook calls
+--                                            it. Dropping this stops every pass
+--                                            purchase from ever crediting.
+--   public.credit_topups                  -- the pending-purchase table itself
+--   public.credit_ledger                  -- obviously
+--   public.next_topup_code()              -- the variable-symbol sequence
+--
+-- A pass purchase that has been paid for and not yet credited lives in
+-- `credit_topups` with `status = 'pending'`. CHECK FOR THOSE BEFORE DROPPING
+-- ANYTHING:
+--
+--   select count(*) from public.credit_topups where status = 'pending';
+--
+-- =============================================================================
+-- THE DROPS, commented out. Uncomment the ones the audit above confirms.
+-- =============================================================================
+
+-- drop function if exists public.admin_list_topups();
+-- drop function if exists public.admin_confirm_topup(uuid, integer);
+
+-- =============================================================================
+-- WHAT IS NOT HERE, AND WHY
+-- =============================================================================
+--
+-- `payment_method = 'qr'` and `bookings.payment_code` STAY. Ruling R3 keeps the
+-- QR rail as the substrate Stripe maps onto, live bookings carry both, and the
+-- variable symbol is the permanent identifier of a payment that has already
+-- happened. Round 13 item 6 removed the QR from the SCREEN, not from history.
+--
+-- `lib/payments/spd.ts` stays in the repository for the same reason: it builds
+-- the SPD string the confirmation EMAILS still carry for bookings made on the
+-- old rail. Delete it when those bookings are all settled and not before.

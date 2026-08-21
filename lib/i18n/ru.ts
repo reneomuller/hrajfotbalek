@@ -566,6 +566,7 @@ export const ru: StringsOverlay = {
   errors: {
     generic: "Что-то пошло не так. Попробуй ещё раз.",
     partyTooLarge: "Столько гостей на одну бронь не поместится.",
+    passNotConfigured: "Этот абонемент пока не продаётся.",
     capacityFull: "Пока ты думал, место занял кто-то другой.",
     capacityFullTitle: "Место уже занято",
     duplicateActiveBooking: "У тебя уже есть место в этом матче.",

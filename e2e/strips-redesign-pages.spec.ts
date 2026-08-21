@@ -181,10 +181,11 @@ test("the games and home headings are set at the frames' size", async ({ page, c
     { name: LOCALE_COOKIE, value: "en", domain: "localhost", path: "/" },
   ]);
 
-  for (const [where, url, selector] of [
-    ["games", "/games", "h1"],
-    ["home", "/", "h2"],
-  ] as const) {
+  /*
+   * ~~["games", "/games", "h1"]~~ — the games heading was removed in round 13
+   * item 16. Home's `h2` carries the same token and is the one that remains.
+   */
+  for (const [where, url, selector] of [["home", "/", "h2"]] as const) {
     await page.goto(url, { waitUntil: "networkidle" });
     await settle(page);
     const size = await page

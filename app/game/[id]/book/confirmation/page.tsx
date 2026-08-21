@@ -1,11 +1,10 @@
 import type { Metadata } from "next";
 import { ToastFromQuery } from "@/components/ToastFromQuery";
 import Link from "next/link";
-import { QrPayment } from "@/components/QrPayment";
 import { requireCurrentPlayer } from "@/lib/auth/session";
 import { getOwnBookingWithGame } from "@/lib/booking/queries";
 import { formatCzk, formatGameDateTime } from "@/lib/format";
-import { amountDueCzk, paymentIban, shouldRenderQr } from "@/lib/payments/spd";
+import { amountDueCzk } from "@/lib/payments/spd";
 import { getStrings } from "@/lib/i18n/server";
 import { bestDiscountPercent, listPassTiers } from "@/lib/pass/queries";
 
@@ -38,7 +37,12 @@ export default async function ConfirmationPage({
   const { id: gameId } = await params;
   const query = await searchParams;
 
-  const player = await requireCurrentPlayer(`/game/${gameId}`);
+  /*
+   * THE GATE, and only the gate. Its return value fed the QR's nickname line
+   * (round 13, item 6 removed it); the CALL stays because it is what sends a
+   * signed-out visitor to log in before this page reads a booking.
+   */
+  await requireCurrentPlayer(`/game/${gameId}`);
 
   const raw = query.booking;
   const bookingId = Array.isArray(raw) ? raw[0] : raw;
@@ -74,7 +78,6 @@ export default async function ConfirmationPage({
   const isSeed = booking.payment_method === "seed_free";
   const amountDue = amountDueCzk(booking.price_czk, booking.credit_applied_czk);
   const needsPayment = booking.status === "reserved" && amountDue > 0;
-  const showQr = booking.status === "reserved" && shouldRenderQr(booking);
 
   return (
     <main className="relative z-10 mx-auto w-full max-w-shell px-gutter pb-16 pt-24">
@@ -162,15 +165,12 @@ export default async function ConfirmationPage({
                 >
                   {t.booking.getCredits}
                 </Link>
-                {showQr && (
-                  <a
-                    href="#qr"
-                    data-testid="pay-by-qr-this-game"
-                    className="min-h-11 px-2 text-body font-semibold text-muted no-underline transition-colors hover:text-bone"
-                  >
-                    {t.booking.payByQrThisGame}
-                  </a>
-                )}
+                {/*
+                  ~~"Pay by QR for this game", the secondary route beside the
+                  offer.~~ REMOVED (round 13, item 6). There is no QR to jump
+                  to any more, and an anchor to a section that no longer
+                  renders is a link with nowhere to go.
+                */}
               </div>
             </div>
 
@@ -181,22 +181,16 @@ export default async function ConfirmationPage({
             )}
 
             {/*
-              The QR renders only for an unpaid `qr` booking carrying a VS and
-              a non-zero amount — `shouldRenderQr` owns that decision so the
-              suppression rules live next to the string builder they guard.
+              ~~The QR, for an unpaid `qr` booking carrying a VS and a non-zero
+              amount.~~ REMOVED (round 13, item 6).
+
+              THE RAIL UNDERNEATH IT IS UNTOUCHED. `payment_method = 'qr'`,
+              `payment_code` and the whole variable-symbol sequence stay: ruling
+              R3 keeps them as the substrate Stripe maps onto, and there are
+              live bookings carrying them. What is gone is the CODE ON THE
+              SCREEN and every instruction to scan one — the way a player pays
+              is now a card or a wallet, through Stripe.
             */}
-            {showQr && (
-              // `id` so the offer's secondary route lands here rather than
-              // being a link with nowhere to go.
-              <div id="qr" className="mt-4 scroll-mt-24">
-                <QrPayment
-                  iban={paymentIban()}
-                  amountCzk={amountDue}
-                  variableSymbol={booking.payment_code!}
-                  nickname={player.nickname}
-                />
-              </div>
-            )}
           </div>
         )}
 

@@ -339,7 +339,7 @@ test("D16-admin-exports", async ({ page, context }) => {
     for (const [path, testId, name] of [
       ["/admin/games", "export-games", "D16-admin-games"],
       ["/admin/players", "export-players", "D16-admin-players"],
-      ["/admin/topups", "export-topups", "D16-admin-topups"],
+      // ~~["/admin/topups", ...]~~ retired in round 13 item 8.
       ["/admin/stats", "export-stats", "D16-admin-stats"],
       [`/admin/games/${game.id}`, "export-roster", "D16-admin-game-roster"],
     ] as const) {

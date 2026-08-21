@@ -100,6 +100,8 @@ describe("adminNavLinks", () => {
     // admin job, and a section reachable only by typing the URL is a section
     // nobody uses. Home page joined in Phase 17, for the same reason — the
     // two numbers on the landing page are edited from somewhere.
+    // ~~Top-ups~~ left the row in round 13 item 8 with the rail it served.
+    //
     // THE ORDER IS p14's, and this assertion is the thing that holds it.
     // Round 8 put Dashboard first on the reasoning that a landing page comes
     // first; round 10 read the frame instead, where the four grey chips are
@@ -110,7 +112,6 @@ describe("adminNavLinks", () => {
     expect(adminNavLinks()).toEqual([
       { href: "/admin/games", label: strings.admin.navGames },
       { href: "/admin/players", label: strings.admin.navPlayers },
-      { href: "/admin/topups", label: strings.admin.navTopups },
       { href: "/admin/stats", label: strings.admin.navStats },
       { href: "/admin", label: strings.admin.navDashboard },
       { href: "/admin/site", label: strings.admin.navSite },

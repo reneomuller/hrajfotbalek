@@ -22,9 +22,20 @@ export function BuyPassButton({
   label,
   variant = "primary",
   signedIn,
+  configured,
 }: {
   games: number;
   label: string;
+  /**
+   * Whether THIS TIER has a Stripe link (round 13, item 7).
+   *
+   * A tier without one cannot be sold: its price is discounted, so it can
+   * never fall back to the single-game link — even at the right quantity that
+   * charges the undiscounted price. The button says "Coming soon" and does not
+   * submit, which is the same honesty the booking page's online option shows
+   * when its URL is unset.
+   */
+  configured: boolean;
   /**
    * `quiet` is the pass card's treatment: an outline, compact, not spanning
    * the card. Five cards each carrying a full-width volt button made the
@@ -37,6 +48,17 @@ export function BuyPassButton({
 }) {
   const t = useStrings();
   const [state, formAction] = useActionState(buyPassAction, INITIAL);
+
+  if (!configured) {
+    return (
+      <span
+        data-testid={`buy-pass-${games}-soon`}
+        className="inline-flex min-h-11 items-center rounded-pill border-2 border-hairline px-4 text-small font-bold uppercase tracking-wide text-muted"
+      >
+        {t.booking.payOnlineComingSoon}
+      </span>
+    );
+  }
 
   return (
     <form action={formAction}>

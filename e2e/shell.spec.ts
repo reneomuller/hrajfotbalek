@@ -181,7 +181,8 @@ test("every admin table exports a well-formed CSV", async ({ page, context }) =>
   const exports = [
     { path: "/admin/games/export", firstColumn: "id", slug: "games" },
     { path: "/admin/players/export", firstColumn: "nickname", slug: "players" },
-    { path: "/admin/topups/export", firstColumn: "payment_code", slug: "topups" },
+    // ~~topups~~ the screen and its export retired with the QR rail
+    // (round 13, item 8).
     { path: "/admin/stats/export?window=month", firstColumn: "metric", slug: "stats" },
   ];
 
@@ -255,7 +256,6 @@ test("the exports refuse a caller who is not an admin", async ({ page, context }
   for (const path of [
     "/admin/games/export",
     "/admin/players/export",
-    "/admin/topups/export",
     "/admin/stats/export",
   ]) {
     const response = await page.request.get(path, { maxRedirects: 0 });

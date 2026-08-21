@@ -82,7 +82,14 @@ export function adminNavLinks(): NavLink[] {
      */
     { href: "/admin/games", label: strings.admin.navGames },
     { href: "/admin/players", label: strings.admin.navPlayers },
-    { href: "/admin/topups", label: strings.admin.navTopups },
+    /*
+     * ~~Top-ups.~~ REMOVED (round 13, item 8). Its whole job was matching a
+     * bank transfer to a `credit_topups` row by variable symbol, and there are
+     * no bank transfers any more: a pass is paid by card and confirmed by the
+     * Stripe webhook. Payments that cannot be settled automatically surface on
+     * the DASHBOARD instead, which is where an exception belongs — a section
+     * that is empty on every ordinary day is a section nobody opens.
+     */
     { href: "/admin/stats", label: strings.admin.navStats },
     { href: "/admin", label: strings.admin.navDashboard },
     { href: "/admin/site", label: strings.admin.navSite },

@@ -47,7 +47,8 @@ test("account surfaces", async ({ page, context }) => {
 
   for (const [name, url] of [
     ["06-account", "/account"],
-    ["07-topup", "/account/topup"],
+    // ~~["07-topup", "/account/topup"]~~ the screen retired with the QR
+    // rail in round 13 (items 6-7).
     ["08-set-password", "/login/set-password?next=%2Faccount"],
   ] as const) {
     await page.goto(url, { waitUntil: "networkidle" });
@@ -55,19 +56,12 @@ test("account surfaces", async ({ page, context }) => {
   }
 });
 
-test("the top-up QR, which is the one screen a player uses at a bank app", async ({
-  page,
-  context,
-}) => {
-  const runner = await apiClientFor(players.runner);
-  const { data: topup } = await runner.rpc("create_topup", { p_amount_czk: 300 });
-
-  await signInAs(context, players.runner);
-  await page.goto(`/account/topup/${topup.id}`);
-  await expect(page.getByTestId("qr-payment")).toBeVisible();
-  await strip(page, "09-topup-qr");
-});
-
+/*
+ * ~~"the top-up QR, which is the one screen a player uses at a bank app"~~
+ * REMOVED IN ROUND 13 (items 6-7). There is no such screen: credit is bought
+ * through a Stripe Payment Link and confirmed by the webhook. The strip goes
+ * with it — `09-topup-qr.png` documents a flow that no longer exists.
+ */
 test("admin surfaces", async ({ page, context }) => {
   await signInAs(context, players.organizer);
 

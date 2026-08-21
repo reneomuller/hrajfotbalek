@@ -143,7 +143,8 @@ test("partial credit reduces the amount due and still asks for the rest", async 
 });
 
 /*
- * THE QR RAIL SURVIVES THE UI CHANGE — ruling R3's load-bearing half.
+ * THE QR RAIL SURVIVES THE UI CHANGE — ruling R3's load-bearing half, and
+ * round 13 item 6 is the change it was written for.
  *
  * R3 retired QR from the booking screens and was explicit that the machinery
  * behind it must not be touched: the `26`-series variable symbols, the topup
@@ -188,17 +189,23 @@ test("the QR rail still books and still renders, with no UI offering it", async 
 
     await page.goto(`/game/${railGame.id}/book/confirmation?booking=${booking.id}`);
 
-    const qr = page.getByTestId("qr-payment");
-    await expect(qr).toBeVisible();
-
-    // A QR that renders but encodes nothing is not a payment. Inline SVG (no
-    // image request, so it works with the network already gone), carrying real
-    // path data rather than an empty frame, and the fallback fields someone
-    // types in when the camera will not focus.
-    const svg = qr.locator("svg");
-    await expect(svg).toBeVisible();
-    expect(await svg.locator("path").count()).toBeGreaterThan(0);
-    await expect(page.getByTestId("fallback-vs")).toBeVisible();
+    /*
+     * ~~The QR renders: inline SVG with real path data, plus the fallback
+     * fields someone types in when the camera will not focus.~~
+     *
+     * ROUND 13 ITEM 6 REMOVED THE CODE FROM THE SCREEN, and the assertion
+     * inverts rather than disappearing. R3's two halves are still both here
+     * and are still the point of this test — what changed is which half is
+     * visible:
+     *
+     *   THE RAIL LIVES: `create_booking` still accepts `qr` from a client, the
+     *   booking still gets a 26-series variable symbol, and the confirmation
+     *   still renders for it. Both are asserted above and below.
+     *   THE SCREEN IS GONE: there is no code to scan anywhere in the product,
+     *   because a player pays by card now.
+     */
+    await expect(page.getByTestId("qr-payment")).toHaveCount(0);
+    await expect(page.getByTestId("confirmation")).toBeVisible();
 
     // AND THE BOOKING FORM DOES NOT OFFER IT. Both halves of R3 in one test:
     // the rail lives, the UI does not expose it.

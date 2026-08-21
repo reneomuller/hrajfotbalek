@@ -28,6 +28,8 @@ export type BookingErrorCode =
   | "INVALID_TRANSITION"
   /* Round 11: the party is bigger than one booking may hold. */
   | "PARTY_TOO_LARGE"
+  /* Round 13: this tier has no Stripe link, so it cannot be sold yet. */
+  | "PASS_NOT_CONFIGURED"
   | "UNKNOWN";
 
 const KNOWN_CODES: BookingErrorCode[] = [
@@ -44,6 +46,7 @@ const KNOWN_CODES: BookingErrorCode[] = [
   "BOOKING_NOT_FOUND",
   "INVALID_TRANSITION",
   "PARTY_TOO_LARGE",
+  "PASS_NOT_CONFIGURED",
 ];
 
 /** Extracts a known code from a PostgREST error message. */
@@ -85,6 +88,8 @@ export function describeBookingError(
       return { code, title: t.errors.tryAgain, message: t.errors.gameNotWaitlistable };
     case "CANCEL_WINDOW_CLOSED":
       return { code, title: t.errors.tryAgain, message: t.errors.cancelWindowClosed };
+    case "PASS_NOT_CONFIGURED":
+      return { code, title: t.errors.tryAgain, message: t.errors.passNotConfigured };
     case "PARTY_TOO_LARGE":
       return { code, title: t.errors.tryAgain, message: t.errors.partyTooLarge };
     case "INSUFFICIENT_PERMISSION":

@@ -135,62 +135,83 @@ test("a signed-out visitor can read the tiers and reach them from the games list
  * REQ-PASS-002 — buying lands on the standard QR, and an exact payment credits
  * the pass VALUE with an expiry.
  */
-test("buying a pass lands on the QR, and an exact payment credits the pass value", async ({
+/*
+ * ~~"buying a pass lands on the QR, and an exact payment credits the pass
+ * value"~~ REWRITTEN IN ROUND 13 (items 6-7).
+ *
+ * There is no QR screen. A pass is bought through a Stripe Payment Link and
+ * confirmed by the signed webhook, exactly like an online booking — so the
+ * two halves of the old test split: the BUTTON is asserted here, and the
+ * CREDITING is asserted through `confirm_online_purchase` below, which is the
+ * path the webhook actually takes.
+ */
+test("a tier with no Stripe link says so instead of selling itself wrong", async ({
   page,
   context,
 }) => {
+  await signInAs(context, players.creditPartial);
+  await page.goto("/pass", { waitUntil: "networkidle" });
+
+  /*
+   * `NEXT_PUBLIC_STRIPE_PASS_URLS` is unset under the suite, so every tier is
+   * unconfigured and every button is a "Coming soon" chip.
+   *
+   * THE IMPORTANT HALF IS WHAT IT DOES NOT DO. A tier without its own link
+   * must never fall back to the single-game link: tier prices are DISCOUNTED,
+   * so paying one through the per-game link charges the undiscounted price
+   * even at the right quantity.
+   */
+  await expect(page.getByTestId("buy-pass-5-soon")).toBeVisible();
+  await expect(page.getByTestId("buy-pass-5")).toHaveCount(0);
+});
+
+test("the webhook credits a pass purchase through the existing ledger path", async () => {
   await clearWallet(players.creditPartial.id);
 
   try {
-    await signInAs(context, players.creditPartial);
-    await page.goto("/pass");
-    await page.getByTestId("buy-pass-5").click();
-
-    // A pass is a top-up with a known amount: same screen, same 27-series VS.
-    await page.waitForURL(/\/account\/topup\/[0-9a-f-]{36}/);
-    await expect(page.getByTestId("qr-payment")).toBeVisible();
-
-    const admin = serviceClient();
-    const { data: topup } = await admin
-      .from("credit_topups")
-      .select("id, amount_czk, pass_games, payment_code")
-      .eq("player_id", players.creditPartial.id)
-      .single();
-
+    const player = await apiClientFor(players.creditPartial);
+    const { data: topup, error: startError } = await player.rpc("begin_pass_purchase", {
+      p_pass_games: 5,
+    });
+    expect(startError).toBeNull();
     expect(topup!.amount_czk).toBe(700);
     expect(topup!.pass_games).toBe(5);
+    // The 27-series is what lets a bank statement tell a top-up from a
+    // booking. It survives the rail change: it is the permanent identifier of
+    // a payment, and history does not get rewritten because the till changed.
     expect(String(topup!.payment_code).startsWith("27")).toBe(true);
+    expect(topup!.payment_pending_at).not.toBeNull();
 
     // Pending contributes nothing.
-    const before = await balanceOf(players.creditPartial.id);
-    expect(before).toBe(0);
+    expect(await balanceOf(players.creditPartial.id)).toBe(0);
 
-    // Confirmed at exactly the pass price -> the pass VALUE, with an expiry.
-    const { data: result, error } = await admin.rpc("confirm_topup", {
-      p_topup_id: topup!.id,
-      p_confirmed_by: players.organizer.id,
-      p_received_amount_czk: 700,
+    const admin = serviceClient();
+    const { data: outcome, error } = await admin.rpc("confirm_online_purchase", {
+      p_reference: topup!.id,
+      p_session_id: "cs_pass_e2e_1",
+      p_amount_czk: 700,
     });
     expect(error).toBeNull();
-    expect(result!.credited_czk).toBe(750);
+    expect(outcome).toBe("confirmed");
+
+    // The PASS VALUE, not the price paid — `confirm_topup` owns that rule and
+    // the webhook did not have to know it.
     expect(await balanceOf(players.creditPartial.id)).toBe(750);
 
-    // §4.2: /account shows BATCHES, not one opaque total.
-    await page.goto("/account");
-    const batches = page.getByTestId("credit-batch");
-    await expect(batches).toHaveCount(1);
-    await expect(batches.first()).toContainText("750");
-    // The games-equivalent, which is why CZK works as the unit at all.
-    await expect(batches.first()).toContainText("5 games");
+    // Redelivery is a no-op, so a retried webhook cannot credit twice.
+    const { data: again } = await admin.rpc("confirm_online_purchase", {
+      p_reference: topup!.id,
+      p_session_id: "cs_pass_e2e_1",
+      p_amount_czk: 700,
+    });
+    expect(again).toBe("already");
+    expect(await balanceOf(players.creditPartial.id)).toBe(750);
   } finally {
     await clearWallet(players.creditPartial.id);
   }
 });
 
-/*
- * REQ-PASS-002, the other half — any other amount falls back to the standing
- * rule. A player who sends 690 against a 700 pass has made a top-up.
- */
+
 test("a near-miss payment credits what arrived, with no expiry", async () => {
   await clearWallet(players.creditPartial.id);
 

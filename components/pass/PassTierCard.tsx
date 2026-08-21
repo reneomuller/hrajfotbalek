@@ -1,4 +1,5 @@
 import { BuyPassButton } from "@/components/pass/BuyPassButton";
+import { stripePassUrl } from "@/lib/payments/stripeLinks";
 import { formatCzk } from "@/lib/format";
 import { MOST_POPULAR_GAMES, PASS_REFERENCE_PRICE_CZK } from "@/lib/pass/queries";
 import type { PassTier } from "@/lib/pass/queries";
@@ -184,10 +185,18 @@ export async function PassTierCard({
 
       {/* Quietest: the control. */}
       <div className="mt-4">
+        {/*
+          `configured` IS RESOLVED HERE, on the server (round 13, item 7).
+          `NEXT_PUBLIC_*` is inlined at build time either way, but reading it
+          in the card keeps the button a presentational component and keeps
+          the one question "can this tier be sold" in the same place as the
+          price it would be sold at.
+        */}
         <BuyPassButton
           games={tier.games}
           label={t.pass.tierPurchase}
           signedIn={signedIn}
+          configured={stripePassUrl(tier.games) !== null}
           variant="quiet"
         />
       </div>

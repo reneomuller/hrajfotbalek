@@ -1583,6 +1583,13 @@ export const strings = {
      * number lives in two places and this string would be the third.
      */
     partyTooLarge: "That is more guests than one booking can hold.",
+    /*
+     * Only reachable by a client that ignored the button, which says "Coming
+     * soon" when a tier has no link. It never offers the single-game link as a
+     * substitute: tier prices are discounted, and paying one through the
+     * per-game link charges the undiscounted price.
+     */
+    passNotConfigured: "This pass is not on sale yet.",
     capacityFull: "That spot was taken while you were deciding.",
     capacityFullTitle: "Spot already taken",
     duplicateActiveBooking: "You already have a spot in this game.",

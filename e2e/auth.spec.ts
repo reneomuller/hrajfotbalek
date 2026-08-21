@@ -89,7 +89,10 @@ test("signed in, the header shows an account avatar and no login button", async 
  * REQ-AUTH-019 — the language control is a dropdown, EN → CZ → RU with flags.
  */
 test("the language dropdown opens, lists all three, and switches", async ({ page }) => {
-  await page.goto("/games");
+  // HOME, not `/games`: the switch reloads the page it was pressed on, and the
+  // hero is the localized sentence this test reads back (round 13, item 16
+  // removed the games heading it used to read).
+  await page.goto("/");
 
   const trigger = page.getByTestId("locale-trigger");
   await expect(trigger).toBeVisible();
@@ -104,14 +107,21 @@ test("the language dropdown opens, lists all three, and switches", async ({ page
   await expect(menu.getByTestId("locale-ru")).toBeVisible();
 
   await menu.getByTestId("locale-cs").click();
-  // The page comes back in Czech, which is the only assertion that proves the
-  // control did anything.
-  await expect(page.getByRole("heading", { level: 1 })).toHaveText(/Nadcházející/);
+  /*
+   * The page comes back in Czech, which is the only assertion that proves the
+   * control did anything.
+   *
+   * ~~The `/games` h1.~~ It was removed in round 13 item 16 — the tab that got
+   * you there is already called Games. The probe moves to the HOME HERO, which
+   * is a better one anyway: round 13 item 2 made it the page's translated
+   * sentence, so if it is in Czech the whole table resolved.
+   */
+  await expect(page.getByTestId("hero-headline")).toHaveText(/Hraj fotbal/i);
 
   // And back, so the spec leaves the cookie as it found it.
   await page.getByTestId("locale-trigger").click();
   await page.getByTestId("locale-en").click();
-  await expect(page.getByRole("heading", { level: 1 })).toHaveText(/Upcoming/);
+  await expect(page.getByTestId("hero-headline")).toHaveText(/Play football/i);
 });
 
 test("a returning player signs in with a password", async ({ page }) => {
