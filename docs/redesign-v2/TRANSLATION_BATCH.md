@@ -28,6 +28,9 @@ which is what this file is for.
 | `pass.batchesExpiring` / `batchesNever` | {credits} remaining · expires {date} | **Round 14.** `{credits}` arrives already pluralised by `lib/pass/credits.ts` (CLDR, three forms in both languages), so the surrounding words must agree with a phrase rather than a number — which is why the CS draft leads with `Zbývá` instead of trailing the count |
 | `pass.paymentsSoon` | Payments launching shortly. | **Round 14.** Sits under a green Purchase pill that LOOKS live, so the sentence is the only thing telling a player it is not. It must not read as an error |
 
+| `payment.confirming*` / `slow*` / `returnUnknown*` (9 keys) | Confirming your payment… | **Round 15.** The highest-stakes copy in the product and the reason is not length: this screen must never say the payment succeeded before the webhook does, and never imply it failed. Every line describes OUR state, not the money's. **`slowBookingBody` and `slowPassBody` both end on "you do not need to pay again"** — that clause is the whole point of the sentence and must survive translation as an instruction, not as reassurance |
+| `pass.creditsAdded*` (3 keys) | Credits added successfully | **Round 15.** `{credits}` in `creditsAddedCount` is a PHRASE, not a number — it arrives from `creditsLabel` already carrying its own noun form ("1 kredit" / "3 kredity" / "12 kreditů"). A translator who makes the sentence agree with a number will get Russian 11 and 21 wrong, and it will read as fluent to anyone checking in English |
+
 **The public profile added no strings** (round 14, item 13). Its four blocks —
 banner, picture, stats, badges — reuse the keys the owner's own profile already
 uses, which is the point of composing it from the same three components: the
