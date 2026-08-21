@@ -220,6 +220,10 @@ round 13 added is item 2's reversal and a re-verification of item 3.
 | 103 | **(R14-13) Public player profiles** | `SHIPPED round-14`, dormant on row 105. **The quarantine is lifted with the owner's exact scope and no more:** picture, banner, the three stats, badges. No contact, no history, no credits. Guests stay unclickable, `linkProfiles` defaults to **false** so a roster opts in, and `/player/[nickname]` is `noindex`. Keyed by nickname so the public roster never gains a player id. **The spec asserting ABSENCES caught a leak a selector check would have passed** — `ProfileCover` tested whether the cover COLUMN exists, not whether the viewer owns the row, and put a file picker on strangers' banners |
 | 104 | **(R14-14) "Your next game" restyled** | `SHIPPED round-14`. **Reverses round 13 item 17's banner ruling** at the owner's instruction: it keeps its place on the games page and takes the row anatomy of Profile → My games |
 | 105 | **Apply `20260821240000_public_player_profile.sql` to production** | `BUILT-DORMANT-ON-the owner running it`. Validated locally and rolled back. **Verified absent 2026-08-21: the `public_profile` composite type is not in `pg_type`.** Until it is applied, `/player/<nickname>` answers 404 for everyone and the roster avatars link nowhere useful. Command in §6 |
+| 106 | **(R15-1) The Stripe return page** | `SHIPPED round-15`, dormant on rows 65 and 88. `/payment/return` is the one URL all six Payment Links come back to. It finds the purchase three ways in order — a cookie written by the server action that minted the id, then this player's most recent purchase that actually went to Stripe within the hour, then an honest empty state — and polls until the webhook settles it. **It never claims success before the webhook says so**: Stripe's redirect lands in the browser and the confirmation lands on the server, and the browser's leg carries no proof |
+| 107 | **(R15-2) The credits-added page** | `SHIPPED round-15`. `/pass/credits-added` — the pass sibling of the booking confirmation. The count is read from the LEDGER, not from the purchase, so a player who already held credit sees their real balance. It reads nothing from `?topup=`, which is what lets it also be the landing for a future in-app credit grant |
+| 108 | **Set the return URL on all six Payment Links** | `BUILT-DORMANT-ON-the owner pasting one URL into six Stripe links`. `https://hrajfotbalek-wlya.vercel.app/payment/return`, under each link's *After payment → Redirect customers to your website*. Until it is set, Stripe shows its own hosted receipt and the player never reaches either new page — the booking or the credits still land, because the WEBHOOK is what settles them and it is a separate path. Steps in §6 |
+| 109 | *Found while writing row 108.* The pass-tier template named tiers that do not exist | **`CORRECTED round-15`**. Row 33's template was `{"1","5","10","15","20"}`; the live table holds `{5, 8, 12, 15, 20}`. Pasting it would have left the 8- and 12-game tiers permanently unsellable and two keys matching nothing — quietly, because an unmapped tier says "Coming soon" rather than selling wrong. Fixed in §7 against the live table |
 
 ---
 
@@ -318,6 +322,29 @@ their filter through `booking_holds_seat`. No row changes. Rollback is
 The `--production` flag is deliberate and cannot be replaced by an environment
 variable — see CLAUDE.md on why implicitness is what failed.
 
+### The return URL, six links (row 108)
+
+**One URL, pasted six times.** In Stripe, each Payment Link → *After payment*
+→ **Redirect customers to your website**:
+
+```
+https://hrajfotbalek-wlya.vercel.app/payment/return
+```
+
+The six are the per-game booking link and one per pass tier — `5`, `8`, `12`,
+`15`, `20`, which is what `pass_tiers` actually holds (§7 has the corrected
+template).
+
+**NOTHING BREAKS WITHOUT IT.** The webhook is what settles a payment, and it
+is a different path entirely; a player who is not redirected still gets their
+booking or their credits. What they lose is being TOLD — they end on Stripe's
+own receipt page and have to navigate back themselves. So this is a
+completeness step, not a blocking one.
+
+**It is the same URL for every link.** The page works out what was bought
+without being told, which is the whole of round 15 item 1 — there is no
+per-link URL to get wrong, and no query parameter to append.
+
 ### The Stripe webhook, four steps (row 65)
 
 1. **Stripe → Developers → Webhooks → Add endpoint**, with the URL
@@ -383,8 +410,16 @@ Every real tier identifier as a key, ready to paste into Vercel as
 single-game link, at any quantity, because tier prices are discounted:
 
 ```json
-{"1":"","5":"","10":"","15":"","20":""}
+{"5":"","8":"","12":"","15":"","20":""}
 ```
+
+**CORRECTED 2026-08-21 against the live `pass_tiers` table**, which holds
+`5, 8, 12, 15, 20`. ~~`{"1":"","5":"","10":"","15":"","20":""}`~~ was written
+from memory in round 7 and never checked: it invents a 1-tier and a 10-tier
+that do not exist, and omits 8 and 12 — so pasting it would have left two real
+tiers permanently unsellable while two keys sat there matching nothing. The
+tiers with no key say "Coming soon" rather than selling at the wrong price, so
+the mistake would have been quiet.
 
 Run this to print the keys your `pass_tiers` table actually holds, rather than
 trusting the line above:
