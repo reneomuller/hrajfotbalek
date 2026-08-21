@@ -28,7 +28,7 @@ import { GuestControl } from "@/components/admin/GuestControl";
 import { NotifyForm } from "@/components/admin/NotifyForm";
 import { formatGameDateTime } from "@/lib/format";
 import { venueDisplayName } from "@/lib/venues/displayName";
-import { publishGameAction, updateGameAction } from "../actions";
+import { updateGameAction } from "../actions";
 import { markPlayedAction } from "./attendance/actions";
 
 export const metadata = { title: strings.admin.manageGame };
@@ -90,7 +90,7 @@ export default async function AdminGamePage({
   // lists incoming payments in.
   const pending = unpaidBookings(bookings);
 
-  const { canPublish, canEdit, canPlay, canSettle, canCancel } = availableTransitions(
+  const { canEdit, canPlay, canSettle, canCancel } = availableTransitions(
     game.status,
   );
 
@@ -168,21 +168,23 @@ export default async function AdminGamePage({
         </div>
       )}
 
-      {game.status === "draft" && (
-        <p className="mt-6 rounded-control border border-hairline-strong px-4 py-3 text-[11px] tracking-[1px] text-faint">
-          {strings.admin.draftNotPublic}
-        </p>
-      )}
+      {/*
+        ~~"This game is not public yet" for a draft.~~ REMOVED with the concept
+        (round 14, item 1).
+      */}
 
       <div className="mt-6 flex flex-wrap gap-3">
-        {canPublish && (
-          <TransitionButton
-            action={publishGameAction}
-            gameId={game.id}
-            label={strings.admin.publishGame}
-            testId="publish-game"
-          />
-        )}
+        {/*
+          ~~Publish, for a draft.~~ REMOVED (round 14, item 1). There is one
+          path now: create a game and it is published. A button whose only
+          reachable state is a row nobody can create any more is a button that
+          teaches a concept the product no longer has.
+
+          `publish_game` SURVIVES AS AN RPC. It is the only way to move a
+          pre-existing draft onto the board, and deleting the repair because
+          its button went is the mistake `merge_players` is a standing note
+          about.
+        */}
 
       </div>
 
