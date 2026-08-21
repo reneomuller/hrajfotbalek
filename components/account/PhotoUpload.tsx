@@ -187,7 +187,31 @@ export function PhotoUpload({
         */
         data-testid={target === "cover" ? "photo-cover-control" : "photo-avatar-control"}
         aria-label={hasPhoto ? t.account.photoReplace : t.account.photoUpload}
-        className={`relative inline-block cursor-pointer ${className ?? ""}`}
+        /*
+          NO `relative` IN THE BASE CLASS (round 14, item 3), and this is the
+          bug Oliver kept hitting.
+          
+          It used to read `relative inline-block cursor-pointer ${className}`,
+          and the COVER passes `absolute right-gutter top-2`. Two position
+          utilities in one class string do not resolve by their order in the
+          attribute — they resolve by their order in the STYLESHEET, and
+          Tailwind emits `.absolute` before `.relative`. So `relative` won, the
+          `right`/`top` offsets applied to an in-FLOW element instead of a
+          positioned one, and the control landed at x = -22: off the left edge
+          of the screen, underneath the profile tab row.
+          
+          It was measurable the whole time and looked fine in a screenshot,
+          because the thing was simply not where anyone was looking. Same
+          family as the `z-50` lesson in CLAUDE.md: a utility that is correct
+          in isolation and defeated by its neighbour.
+          
+          `relative` now belongs to the AVATAR case only, which is the case
+          that needs it — its pencil badge is absolutely positioned against
+          this label. The cover brings its own position.
+        */
+        className={`${target === "avatar" ? "relative " : ""}inline-block cursor-pointer ${
+          className ?? ""
+        }`}
       >
         {input}
         <span className={busy ? "opacity-50 transition-opacity" : "transition-opacity"}>

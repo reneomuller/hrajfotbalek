@@ -113,9 +113,22 @@ export function ProfileCover({
           hasPhoto={Boolean(coverUrl)}
           className="pointer-events-auto absolute right-gutter top-2"
         >
+          {/*
+            VOLT, AND IT READS AS AN ACTION (round 14, item 3).
+
+            It was a grey pill on `hairline-strong` over a photograph — which
+            at the top of a dark banner is nearly invisible even when it IS
+            where it should be. The owner reported he could not change his
+            banner; the position bug was half of that, and a control he could
+            not SEE was the other half.
+
+            The accent is the product's one "you can press this" signal, and
+            the whole rest of this screen is read-only. `border-2` and a tinted
+            fill so it holds against a bright photograph as well as a dark one.
+          */}
           <span
             data-testid="cover-upload-control"
-            className="flex h-9 items-center gap-2 rounded-pill border border-hairline-strong bg-surface-overlay px-3 text-small font-semibold text-bone"
+            className="flex h-9 items-center gap-2 rounded-pill border-2 border-volt bg-ink/70 px-4 text-small font-bold text-volt"
           >
             {t.account.coverChange}
           </span>
