@@ -441,6 +441,52 @@ select pg_temp.ok(
   'no player''s ledger sums below zero anywhere in this run');
 
 -- =============================================================================
+-- THE CALLING CONTRACT — round 13, item 23
+--
+-- The reported defect was "credit redemption fails with Try again", and the
+-- first hypothesis was signature drift: round 11 dropped the four-argument
+-- `create_booking` for a five-argument one and round 12 made it six, so a
+-- caller still sending the old shape would fail with exactly that message.
+--
+-- It was not the cause — the function resolves and works, on production, for a
+-- real player with a real balance. But the hypothesis was worth a test,
+-- because the failure mode is real, it is silent, and NOTHING in this
+-- repository was checking it: the application names its arguments and the
+-- database names its parameters, and the two agree only by memory.
+--
+-- SO THE CONTRACT IS ASSERTED FROM BOTH ENDS. If `app/game/[id]/book/actions.ts`
+-- or `app/game/[id]/waitlist/actions.ts` ever sends a name this function does
+-- not have, PostgREST answers PGRST202 and the player sees "Try again" with
+-- nothing in the logs to say why.
+-- =============================================================================
+
+-- Exactly one overload. Two would let a stale caller keep working against the
+-- old one, which is worse than failing: it books with the wrong defaults.
+select pg_temp.ok(
+  (select count(*) from pg_proc p
+     join pg_namespace n on n.oid = p.pronamespace
+    where n.nspname = 'public' and p.proname = 'create_booking') = 1,
+  'create_booking has exactly one overload');
+
+-- Every name the application sends, and the two it may omit.
+select pg_temp.ok(
+  (select array_agg(a order by a) from unnest(
+     (select proargnames from pg_proc p
+        join pg_namespace n on n.oid = p.pronamespace
+       where n.nspname = 'public' and p.proname = 'create_booking')) a)
+  = array['p_from_waitlist_id', 'p_game_id', 'p_guest_count', 'p_online',
+          'p_payment_method', 'p_player_id'],
+  'create_booking names exactly the parameters its callers send');
+
+-- The two the callers ALWAYS send must be the two without defaults, so a call
+-- that omits everything else still resolves.
+select pg_temp.ok(
+  (select pronargs - pronargdefaults from pg_proc p
+     join pg_namespace n on n.oid = p.pronamespace
+    where n.nspname = 'public' and p.proname = 'create_booking') = 2,
+  'only p_game_id and p_payment_method are required; the rest default');
+
+-- =============================================================================
 -- results
 -- =============================================================================
 
