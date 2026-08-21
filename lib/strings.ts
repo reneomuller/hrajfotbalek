@@ -1323,6 +1323,10 @@ export const strings = {
     venueNewHeading: "Add a venue",
     venuePitchNameHint: "The ground's default pitch. A game can name its own instead.",
     venuePresetsHeading: "Inherited by every game here",
+    // The two facts you scan a venue list for, on the closed row.
+    venueHasPhoto: "Photo set",
+    venueNoPhoto: "No photo",
+    venueNoPitchName: "No pitch name",
     venueImageLabel: "Image file",
     venueImageHint:
       "A file under public/venues/, e.g. prazacka.jpg.",

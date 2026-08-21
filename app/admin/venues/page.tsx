@@ -23,10 +23,19 @@ export const dynamic = "force-dynamic";
  * photograph, what is provided, where the map points — are inherited by all of
  * them.
  *
- * ONE PAGE, EVERY VENUE, EXPANDED. Not a list that links to a detail page per
- * venue: there are a handful of grounds, each has four fields, and a list of
- * links would be a click between the organizer and the thing they came to
- * change.
+ * ONE PAGE, EVERY VENUE, ONE OPEN AT A TIME. Not a list that links to a detail
+ * page per venue: a link is a page load between the organizer and the thing
+ * they came to change, and the browser's back button then loses their place.
+ *
+ * ~~EXPANDED, because there are a handful of grounds.~~ THERE ARE ELEVEN, and
+ * each carries a form, a photo control and a ten-box amenity grid. Rendered
+ * open that is roughly 3,000px per venue and a THIRTY-TWO-THOUSAND-PIXEL page
+ * — measured, an hour after this page first shipped, by screenshotting it.
+ *
+ * `<details>` RATHER THAN STATE. Server-rendered, no JavaScript, keyboard and
+ * screen-reader behaviour for free, and the browser keeps one open while you
+ * work in it. The summary carries the two facts you scan a venue list for:
+ * its name, and whether it has a photograph yet.
  */
 export default async function AdminVenuesPage() {
   await requireAdmin();
@@ -61,8 +70,33 @@ export default async function AdminVenuesPage() {
               key={venue.id}
               data-testid="venue-row"
               data-venue-id={venue.id}
-              className="lifted rounded-card p-5"
+              className="lifted rounded-card"
             >
+              <details className="group">
+                <summary
+                  data-testid="venue-summary"
+                  className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 px-5 py-4 marker:content-none"
+                >
+                  <span className="min-w-0">
+                    <span className="block truncate text-body font-semibold text-white">
+                      {venue.name}
+                    </span>
+                    <span className="mt-[1px] block truncate text-[12px] text-muted">
+                      {venue.pitch_name ?? strings.admin.venueNoPitchName}
+                    </span>
+                  </span>
+                  <span
+                    className={`shrink-0 text-[12px] font-semibold ${
+                      venue.image_path ? "text-volt-dim" : "text-faint"
+                    }`}
+                  >
+                    {venue.image_path
+                      ? strings.admin.venueHasPhoto
+                      : strings.admin.venueNoPhoto}
+                  </span>
+                </summary>
+
+                <div className="border-t border-hairline px-5 pb-5 pt-5">
               <VenueForm venue={venue} />
 
               {/*
@@ -87,6 +121,8 @@ export default async function AdminVenuesPage() {
                   <VenueAmenities venueId={venue.id} current={venue.amenities} />
                 </div>
               </div>
+                </div>
+              </details>
             </li>
           ))}
         </ul>
