@@ -285,19 +285,23 @@ test("C8-game-detail-no-photo", async ({ page }) => {
   }
 });
 
-/** Item 11 — the admin surface behind the grid. */
+/**
+ * Item 11 — the admin surface behind the grid.
+ *
+ * ~~On the GAME page, where the amenity boxes lived.~~ ROUND 14 ITEM 2 moved
+ * them to `/admin/venues`: they always wrote to the VENUE, so editing them
+ * from one game silently changed every other game at that ground and the
+ * surface gave no hint of it. The strip follows the control.
+ */
 test("C11-admin-amenities", async ({ page, context }) => {
-  const game = await createScratchGame({ hoursFromNow: 24 * 7 });
+  const { signInAs } = await import("./helpers/session.ts");
+  await signInAs(context, players.organizer);
+  await page.goto("/admin/venues", { waitUntil: "networkidle" });
 
-  try {
-    const { signInAs } = await import("./helpers/session.ts");
-    await signInAs(context, players.organizer);
-    await page.goto(`/admin/games/${game.id}`, { waitUntil: "networkidle" });
-    await page.getByTestId("amenity-bibs").scrollIntoViewIfNeeded();
-    await strip(page, "C11-admin-what-this-pitch-provides");
-  } finally {
-    await destroyScratchGame(game.id);
-  }
+  // The venue rows are collapsed by default; the amenity grid is inside one.
+  await page.getByTestId("venue-summary").first().click();
+  await page.getByTestId("amenity-bibs").first().scrollIntoViewIfNeeded();
+  await strip(page, "C11-admin-what-this-pitch-provides");
 });
 
 /** Item 15 — the app shell: bottom tabs, and the CTA stacked above them. */

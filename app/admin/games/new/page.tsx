@@ -33,18 +33,14 @@ export default async function NewGamePage({
   searchParams,
 }: {
   /*
-   * `?venue=new` OPENS THE FORM ON THE NEW-VENUE BRANCH (round 10, item 1).
-   *
-   * p14's `+ ADD VENUE` needs a destination and this is the only surface that
-   * creates one — the block p16 draws lives inside this form, behind the
-   * venue picker's "new" option. The parameter picks that option for the
-   * admin instead of landing them on a game form with no clue where the
-   * venue fields are. Any other value is ignored and the form opens unset,
-   * which is what every existing link to this page does.
+   * ~~`?venue=new` opened the form on the new-venue branch.~~ REMOVED (round
+   * 14, item 2): venues are created at `/admin/venues` and this form only
+   * PICKS one. The prop stays because the route still accepts search params;
+   * nothing reads them.
    */
-  searchParams: Promise<{ venue?: string }>;
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  const { venue } = await searchParams;
+  void searchParams;
   // The admin's own nickname pre-fills the organizer field (REQ-GAME-001).
   // `requireAdmin()` is already run by the admin layout; calling it here is how
   // the page gets the player row, not a second gate.
@@ -86,7 +82,6 @@ export default async function NewGamePage({
         action={createGameAction}
         pitchNames={pitchNames}
         venues={venues}
-        initialVenueChoice={venue === "new" ? "new" : undefined}
         defaultOrganizerName={admin.nickname}
       />
     </>

@@ -7,8 +7,6 @@ import { GameForm } from "@/components/admin/GameForm";
 import { SettleButton } from "@/components/admin/SettleButton";
 import { TransitionButton } from "@/components/admin/TransitionButton";
 import { ExportCsvLink } from "@/components/admin/ExportCsvLink";
-import { VenueAmenities } from "@/components/admin/VenueAmenities";
-import { VenuePhotoUpload } from "@/components/admin/VenuePhotoUpload";
 import { requireAdmin } from "@/lib/auth/requireAdmin";
 import {
   activeBookings,
@@ -327,37 +325,48 @@ export default async function AdminGamePage({
           week. A terminal game shows no form: its time and price are what the
           roster and the ledger already agreed on. */}
       {/*
-        The pitch photograph, beside the game it belongs to.
-        
-        On the GAME surface rather than a venue screen there isn't one of: the
-        organizer is here anyway, and "add a photo of this pitch" is a thought
-        they have while looking at the game, not while browsing a venue list.
-        It writes to the venue, so every game at that pitch gets it.
+        ~~The pitch photograph and the amenity boxes, beside the game they
+        belong to — "add a photo of this pitch" is a thought the organizer has
+        while looking at the game.~~ MOVED (round 14, item 2).
+
+        They always wrote to the VENUE, which is what made them confusing here:
+        editing them from one game silently changed every other game at that
+        ground, and the surface gave no hint of that. `/admin/venues` says so
+        in its own heading — "Inherited by every game here".
+
+        WHAT REPLACES THEM IS A READ-ONLY SUMMARY. The organizer standing on a
+        game still needs to know what it will show, and now gets that without a
+        control that edits eleven other games.
       */}
       {game.venue_id && (
-        <section className="mt-12 border-t border-hairline pt-6">
-          <h3 className="m-0 mb-3 text-[18px] font-bold uppercase tracking-wide text-bone">
-            {strings.admin.venuePhotoTitle}
+        <section className="mt-12 border-t border-hairline pt-6" data-testid="venue-inherited">
+          <h3 className="m-0 text-[18px] font-bold uppercase tracking-wide text-bone">
+            {strings.admin.venueInheritedTitle}
           </h3>
-          <VenuePhotoUpload
-            venueId={game.venue_id}
-            hasPhoto={Boolean(venuePhoto)}
-          />
-
-          {/* What the pitch provides, feeding the game page's "What's
-              included" grid. Same surface as the photo and for the same
-              reason — and like the photo, it writes to the VENUE, so every
-              game at this pitch gets it. */}
-          <h3 className="m-0 mb-3 mt-8 text-[18px] font-bold uppercase tracking-wide text-bone">
-            {strings.admin.venueAmenitiesTitle}
-          </h3>
-          <p className="mb-3 max-w-[520px] text-[12px] leading-snug text-muted">
-            {strings.admin.venueAmenitiesHint}
+          <p className="mt-2 max-w-[520px] text-[12px] leading-snug text-muted">
+            {strings.admin.venueInheritedLede}
           </p>
-          <VenueAmenities
-            venueId={game.venue_id}
-            current={venueRow?.amenities ?? []}
-          />
+
+          <dl className="mt-4 grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-small">
+            <dt className="text-muted">{strings.admin.venuePhotoTitle}</dt>
+            <dd className="m-0 text-bone">
+              {venuePhoto ? strings.admin.venueHasPhoto : strings.admin.venueNoPhoto}
+            </dd>
+            <dt className="text-muted">{strings.admin.venueAmenitiesTitle}</dt>
+            <dd className="m-0 text-bone">
+              {(venueRow?.amenities?.length ?? 0) > 0
+                ? String(venueRow!.amenities.length)
+                : strings.admin.venueNoAmenities}
+            </dd>
+          </dl>
+
+          <Link
+            href="/admin/venues"
+            data-testid="edit-venue-link"
+            className="mt-4 inline-flex min-h-11 items-center rounded-pill border-2 border-hairline-volt px-4 text-small font-bold text-volt no-underline transition-colors hover:border-volt"
+          >
+            {strings.admin.venueEditLink}
+          </Link>
         </section>
       )}
 

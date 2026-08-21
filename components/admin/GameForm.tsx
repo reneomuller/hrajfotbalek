@@ -57,7 +57,6 @@ export function GameForm({
   game,
   organizer,
   defaultOrganizerName,
-  initialVenueChoice,
 }: {
   action: (state: AdminActionState, formData: FormData) => Promise<AdminActionState>;
   venues: VenueRow[];
@@ -94,23 +93,19 @@ export function GameForm({
    * the game.
    */
   defaultOrganizerName?: string;
-  /**
-   * Pre-selects the venue picker on a fresh form — only `"new"` is passed
-   * today, by the dashboard's `+ Add venue` (round 10, item 1). Ignored when
-   * editing, because `game.venue_id` is the venue the game actually has and
-   * a query string must not be able to change it.
+  /*
+   * ~~`initialVenueChoice`, which pre-selected "new" for the dashboard's
+   * `+ Add venue`.~~ REMOVED (round 14, item 2): there is no "new" option any
+   * more, and `+ Add venue` goes to `/admin/venues`.
    */
-  initialVenueChoice?: string;
 }) {
   const [state, formAction] = useActionState(action, INITIAL);
 
   const [venueChoice, setVenueChoice] = useState(
-    game?.venue_id ?? initialVenueChoice ?? "",
+    game?.venue_id ?? "",
   );
   const [pitchName, setPitchName] = useState(game?.pitch_name ?? "");
-  const [newVenueName, setNewVenueName] = useState("");
-  const [newVenueImage, setNewVenueImage] = useState("");
-  const [newVenueMapQuery, setNewVenueMapQuery] = useState("");
+
 
   // The visible wall-clock text and the absolute instant that is actually
   // submitted, kept as two pieces of state for the reason in the header.
@@ -177,7 +172,6 @@ export function GameForm({
               {venue.name}
             </option>
           ))}
-          <option value="new">{strings.admin.venueNew}</option>
         </select>
         {errors.venue && <p className={ERROR}>{errors.venue}</p>}
       </div>
@@ -226,56 +220,27 @@ export function GameForm({
         {errors.pitchName && <p className={ERROR}>{errors.pitchName}</p>}
       </div>
 
-      {venueChoice === "new" && (
-        <div className="space-y-4 rounded-card bg-surface p-4">
-          <div>
-            <label className={LABEL} htmlFor="newVenueName">
-              {strings.admin.venueNameLabel}
-            </label>
-            <input
-              id="newVenueName"
-              name="newVenueName"
-              className={FIELD}
-              maxLength={80}
-              value={newVenueName}
-              onChange={(event) => setNewVenueName(event.target.value)}
-            />
-          </div>
-          <div>
-            <label className={LABEL} htmlFor="newVenueImage">
-              {strings.admin.venueImageLabel}
-            </label>
-            {/*
-              A FILENAME, not a path or a URL. The action prefixes `/venues/`,
-              so the directory is never user input, and the filename shape is
-              checked here, in the action, and by the venues_image_path_format
-              CHECK. Images are committed assets — nothing is uploaded.
-            */}
-            <input
-              id="newVenueImage"
-              name="newVenueImage"
-              className={FIELD}
-              placeholder="prazacka.jpg"
-              value={newVenueImage}
-              onChange={(event) => setNewVenueImage(event.target.value)}
-            />
-            <p className={HINT}>{strings.admin.venueImageHint}</p>
-          </div>
-          <div>
-            <label className={LABEL} htmlFor="newVenueMapQuery">
-              {strings.admin.venueMapQueryLabel}
-            </label>
-            <input
-              id="newVenueMapQuery"
-              name="newVenueMapQuery"
-              className={FIELD}
-              value={newVenueMapQuery}
-              onChange={(event) => setNewVenueMapQuery(event.target.value)}
-            />
-            <p className={HINT}>{strings.admin.venueMapQueryHint}</p>
-          </div>
-        </div>
-      )}
+      {/*
+        ~~THE NEW-VENUE BLOCK: name, image filename and map query, revealed by
+        picking "new" in the dropdown above.~~ REMOVED (round 14, item 2).
+
+        THE VENUE IS THE SINGLE SOURCE OF TRUTH NOW. It is created and edited
+        at `/admin/venues`, where its photograph is an UPLOAD rather than the
+        name of a file somebody had to commit first, and where its amenities
+        live beside it. A game picks a venue and inherits all of it.
+
+        Two things this removes that were quietly wrong:
+
+          · the image field asked for a filename already committed under
+            `public/venues/`, which meant adding a venue photo was a deploy;
+          · a game form could create a venue as a side effect, so the same
+            ground could be typed twice under two spellings by two people
+            making two games.
+
+        THE PITCH NAME STAYS, directly above. It is the one venue-adjacent
+        fact that belongs to THIS game — migration 41 exists because storing it
+        on the venue would rewrite the pitch of every game ever played there.
+      */}
 
       {/* --- when ------------------------------------------------------------- */}
       <div>

@@ -1327,6 +1327,12 @@ export const strings = {
     venueHasPhoto: "Photo set",
     venueNoPhoto: "No photo",
     venueNoPitchName: "No pitch name",
+    /* --- what a game inherits from its venue (round 14, item 2) --- */
+    venueInheritedTitle: "From the venue",
+    venueInheritedLede:
+      "The photo and amenities come from the venue and are shared by every game there. Change them on the venue.",
+    venueNoAmenities: "None recorded",
+    venueEditLink: "Edit this venue →",
     venueImageLabel: "Image file",
     venueImageHint:
       "A file under public/venues/, e.g. prazacka.jpg.",
