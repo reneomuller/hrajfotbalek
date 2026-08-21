@@ -195,7 +195,7 @@ test.describe("the Stripe return page", () => {
        * five games were bought, so five is both — which is the point: if this
        * page ever renders the tier instead of the balance, the assertion that
        * catches it is a player who already had credit. That case is covered
-       * in the standalone test below.
+       * in `e2e/credits-added.spec.ts`.
        */
       const panel = page.getByTestId("credits-added");
       await expect(panel).toBeVisible();
