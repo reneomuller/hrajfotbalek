@@ -607,8 +607,9 @@ export const ru: StringsOverlay = {
     howItWorksBody:
       "Платишь картой или мобильным кошельком. Как только платёж подтверждён, кредиты автоматически зачисляются на счёт.",
     batchesTitle: "Твой кредит",
-    batchesExpiring: "Осталось {amount} · сгорает {date}",
-    batchesNever: "{amount} · без срока",
+    batchesExpiring: "Осталось {credits} · сгорает {date}",
+    batchesNever: "{credits} · без срока",
+    paymentsSoon: "Оплата скоро заработает.",
     tryThePass: "Или попробуй Game Pass →",
     batchesNone: "Кредита со сроком нет.",
   },

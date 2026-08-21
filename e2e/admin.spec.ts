@@ -335,8 +335,11 @@ test("the whole admin lifecycle fits inside five minutes", async ({ page, contex
   // Creating redirects straight to the new game's page — `game-form-saved` is
   // the EDIT form's confirmation and never appears here. The redirect is also
   // where the id comes from, which beats guessing at "the most recent game".
-  await page.waitForURL(/\/admin\/games\/[0-9a-f-]{36}$/);
-  const lifecycleGame = page.url().split("/").pop()!;
+  // The redirect carries `?created=1` since round 14 item 11, which is what
+  // scopes the notify offer to a game just made — so the id is the last PATH
+  // segment and the pattern must not anchor at the end of the URL.
+  await page.waitForURL(/\/admin\/games\/[0-9a-f-]{36}(\?|$)/);
+  const lifecycleGame = new URL(page.url()).pathname.split("/").pop()!;
 
   const admin = serviceClient();
 

@@ -339,13 +339,19 @@ test("an admin reaches the panel in two taps from the nav pill", async ({
   await page.getByTestId("tab-account").click();
   await page.waitForURL("**/account");
 
-  // Tap two: the admin entry, and it lands somewhere real rather than
-  // bouncing off `requireAdmin()`.
+  /*
+   * Tap two: the admin entry, and it lands on the DASHBOARD rather than
+   * bouncing off `requireAdmin()` or dropping into a list.
+   *
+   * ~~It used to wait for the games list.~~ ROUND 14 ITEM 8: every door lands on
+   * `/admin`: it is the surface that answers "does anything need me today",
+   * and both doors — this one and the nav pill's — went straight past it.
+   */
   const adminLink = page.getByTestId("account-admin-link");
   await expect(adminLink).toBeVisible();
   await adminLink.click();
-  await page.waitForURL("**/admin/games");
-  await expect(page.getByTestId("admin-game-row").first()).toBeVisible();
+  await page.waitForURL(/\/admin$/);
+  await expect(page.getByTestId("dashboard-tiles")).toBeVisible();
 });
 
 /* And a non-admin is not shown a door that would bounce them. */

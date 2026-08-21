@@ -62,7 +62,9 @@ test("a game created through the form is published, not drafted", async ({ page,
   await page.getByTestId("game-form-submit").click();
 
   await page.waitForURL(/\/admin\/games\/[0-9a-f-]{36}/, { timeout: 20000 });
-  const id = page.url().split("/").pop()!;
+  // The redirect carries `?created=1` (round 14, item 11), so the id is the
+  // last PATH segment rather than the last thing after a slash.
+  const id = new URL(page.url()).pathname.split("/").pop()!;
 
   try {
     const { data: game } = await admin.from("games").select("status").eq("id", id).single();

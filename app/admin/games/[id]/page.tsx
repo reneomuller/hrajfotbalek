@@ -68,7 +68,9 @@ export default async function AdminGamePage({
    * route still accepts them and removing it from the signature would be a
    * change to the page's contract for no gain.
    */
-  void searchParams;
+  const query = searchParams ? await searchParams : {};
+  // Set by `createGameAction`'s redirect, and by nothing else.
+  const justCreated = query.created === "1";
   const [admin, game] = await Promise.all([requireAdmin(), getAdminGame(id)]);
   if (!game) notFound();
 
@@ -154,7 +156,22 @@ export default async function AdminGamePage({
         would vanish, and a message worth sending is worth more than three
         seconds to decide about.
       */}
-      {game.status !== "draft" && game.status !== "cancelled" && (
+      {/*
+        ~~Rendered on any published game.~~ POST-PUBLISH ONLY (round 14,
+        item 11).
+
+        Round 7's reasoning is intact and is the reason this still exists: a
+        message worth sending is worth more than a toast's three seconds, and
+        creating a game redirects HERE, so this is where the owner lands with
+        it fresh in mind.
+
+        What was wrong is that the condition was "the game is published" rather
+        than "the game was just created", so an organizer opening a fixture
+        from three weeks ago got a prefilled offer to announce it as new. The
+        standing composer on `/admin/site` is the one place to write a message
+        that is not about a game you just made.
+      */}
+      {justCreated && game.status !== "cancelled" && (
         <div className="mt-6">
           <NotifyForm
             asOffer

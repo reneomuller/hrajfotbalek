@@ -603,8 +603,9 @@ export const cs: StringsOverlay = {
     howItWorksBody:
       "Zaplatíš kartou nebo mobilní peněženkou. Jakmile je platba potvrzená, kredity se ti automaticky připíšou na účet.",
     batchesTitle: "Tvůj kredit",
-    batchesExpiring: "Zbývá {amount} · vyprší {date}",
-    batchesNever: "{amount} · bez expirace",
+    batchesExpiring: "Zbývá {credits} · vyprší {date}",
+    batchesNever: "{credits} · bez expirace",
+    paymentsSoon: "Platby brzy spustíme.",
     tryThePass: "Nebo zkus Game Pass →",
     batchesNone: "Žádný kredit s expirací.",
   },

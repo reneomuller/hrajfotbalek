@@ -173,7 +173,8 @@ export default async function AccountPage({
           */}
           {isAdmin && (
             <Link
-              href="/admin/games"
+              // `/admin`, not `/admin/games` (round 14, item 8).
+              href="/admin"
               data-testid="account-admin-link"
               className="mt-8 flex min-h-11 items-center justify-between gap-3 rounded-control border border-hairline-strong px-4 text-body-lg font-semibold text-bone no-underline transition-colors hover:border-hairline-volt"
             >

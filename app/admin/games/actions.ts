@@ -150,7 +150,13 @@ export async function createGameAction(
   revalidatePath("/");
   // Straight to the game's admin surface: creating a game is never the last
   // thing the organizer wants to do with it.
-  redirect(`/admin/games/${newGameId}`);
+  /*
+   * `?created=1` IS WHAT MAKES THE NOTIFY OFFER POST-PUBLISH (round 14,
+   * item 11). Without it the offer rendered on EVERY published game forever,
+   * prefilled with "New game published" — so an organizer opening a fixture
+   * from three weeks ago was invited to announce it as new.
+   */
+  redirect(`/admin/games/${newGameId}?created=1`);
 }
 
 /**

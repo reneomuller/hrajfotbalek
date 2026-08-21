@@ -5,9 +5,27 @@ import { requireAdmin } from "@/lib/auth/requireAdmin";
 import { listPlayers } from "@/lib/admin/queries";
 import { filterPlayers } from "@/lib/admin/playerSearch";
 import { initials } from "@/lib/roster/initials";
-import { formatCzk } from "@/lib/format";
 import { ExportCsvLink } from "@/components/admin/ExportCsvLink";
 import { strings } from "@/lib/strings";
+import { creditsLabel } from "@/lib/pass/credits";
+import { PASS_REFERENCE_PRICE_CZK } from "@/lib/pass/queries";
+
+/**
+ * A wallet balance as whole credits (round 14, item 9).
+ *
+ * `Math.floor`, exactly as `CreditBalance` does it for the player's own
+ * wallet: a partial credit buys no game, so rounding up would tell an admin
+ * somebody can book when they cannot.
+ */
+/*
+ * `"en"` IS HARDCODED at the call site below, and that is R22 rather than an
+ * oversight: the admin panel is English, `strings` is the English table, and
+ * asking for the reader's locale here would give a Czech plural rule over
+ * English words.
+ */
+function creditsFor(balanceCzk: number): number {
+  return Math.floor(Math.max(0, balanceCzk) / PASS_REFERENCE_PRICE_CZK);
+}
 
 export const metadata = { title: strings.admin.playersTitle };
 
@@ -131,7 +149,12 @@ export default async function AdminPlayersPage({
                 as a person rather than a record, and it gives the eye a fixed
                 left edge to run down a long list against.
               */
-              className="lifted flex flex-wrap items-start gap-x-4 gap-y-3 rounded-card px-4 py-4"
+              /*
+                `py-3` and `gap-y-2`, from `py-4` and `gap-y-3` (round 14,
+                item 9). With the identity block down from three lines to two,
+                the padding was the rest of the height the owner asked for.
+              */
+              className="lifted flex flex-wrap items-start gap-x-4 gap-y-2 rounded-card px-4 py-3"
             >
               {/* The tile. `aria-hidden` — the nickname is right beside it. */}
               <span
@@ -171,22 +194,36 @@ export default async function AdminPlayersPage({
                     </span>
                   )}
                 </div>
-                <div className="mt-[2px] truncate text-small text-muted">
-                  {player.email ?? strings.admin.noEmail}
-                </div>
+                {/*
+                  CONTACT ON ONE LINE, CREDITS ON THE NEXT (round 14, item 9).
 
-                {/* The two figures ride with the identity rather than being
-                    two more wrapping columns. */}
-                <div className="mt-2 flex flex-wrap items-baseline gap-x-4 gap-y-1">
-                  <span className="text-small text-muted">
-                    {strings.admin.bookingsLabel} {player.bookingCount}
-                  </span>
+                  ~~Email alone, then bookings and a WALLET in crowns.~~ Three
+                  things changed and each was asked for:
+
+                    · THE PHONE IS HERE. An organizer looking somebody up in
+                      this list is usually trying to reach them, and the number
+                      was one more tap away on the player page for no reason.
+                    · CREDITS, NOT "Wallet 600 CZK". The credits ruling's unit,
+                      the same `creditsLabel` the player's own wallet uses, so
+                      the two surfaces cannot describe one balance differently.
+                    · TWO LINES INSTEAD OF THREE, which is most of the height.
+                */}
+                <div className="mt-[2px] truncate text-[12px] text-muted">
+                  {[player.email ?? strings.admin.noEmail, player.phone]
+                    .filter(Boolean)
+                    .join("  ·  ")}
+                </div>
+                <div className="mt-[2px] flex flex-wrap items-baseline gap-x-3 text-[12px]">
                   <span
                     data-testid="player-balance"
                     data-balance={player.balanceCzk}
-                    className="text-small font-semibold text-volt"
+                    data-credits={creditsFor(player.balanceCzk)}
+                    className="font-semibold text-volt"
                   >
-                    {strings.admin.balanceLabel} {formatCzk(player.balanceCzk)}
+                    {creditsLabel(creditsFor(player.balanceCzk), "en", strings)}
+                  </span>
+                  <span className="text-muted">
+                    {strings.admin.bookingsLabel} {player.bookingCount}
                   </span>
                 </div>
               </div>

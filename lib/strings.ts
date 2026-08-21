@@ -1551,6 +1551,13 @@ export const strings = {
     // --- players, credit grants, merge ---------------------------------------
     playersTitle: "Players",
     playersEmpty: "No players yet.",
+    /*
+     * ~~"Wallet", with a CZK figure beside it.~~ The admin players list counts
+     * CREDITS now (round 14, item 9) and renders them through `creditsLabel`,
+     * so this label has no call site left. Kept as a struck-through note
+     * rather than deleted, because "why does the admin see crowns where the
+     * player sees credits" is a question somebody will ask again.
+     */
     balanceLabel: "Wallet",
     bookingsLabel: "Bookings",
     shadowTag: "Shadow",
@@ -1932,11 +1939,24 @@ export const strings = {
     howItWorksBody:
       "You pay via your credit card or mobile wallet. Once the payment is confirmed, the credits will be applied to your account automatically.",
     batchesTitle: "Your credit",
-    batchesExpiring: "{amount} left · expires {date}",
-    batchesNever: "{amount} · never expires",
+    /*
+     * CREDITS, NOT CROWNS (round 14, item 10). These read
+     * "600 CZK left · expires 20 Oct" — the exact shape the credits ruling
+     * removed everywhere else, surviving on the profile overview because the
+     * batch list was written before it. `{credits}` is `creditsLabel`, so the
+     * plural is CLDR's in all three languages.
+     */
+    batchesExpiring: "{credits} remaining · expires {date}",
+    batchesNever: "{credits} · never expires",
     batchesNone: "No expiring credit.",
     // Under the sticky claim button on a game page. Someone about to pay full
     // price for one game is exactly who pre-buying is worth anything to.
+    /*
+     * The one line an unconfigured tier shows on a press (round 14, item 7).
+     * It says WHEN rather than "unavailable", because the button is real and
+     * the only thing missing is a link the owner pastes into Vercel.
+     */
+    paymentsSoon: "Payments launching shortly.",
     tryThePass: "Or try the Game Pass →",
   },
 

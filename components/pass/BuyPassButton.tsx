@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { buyPassAction, type PassActionState } from "@/app/pass/actions";
 import { describeBookingError } from "@/lib/booking/errors";
@@ -48,15 +48,51 @@ export function BuyPassButton({
 }) {
   const t = useStrings();
   const [state, formAction] = useActionState(buyPassAction, INITIAL);
+  // Shown only for an unconfigured tier, and only after a press.
+  const [notice, setNotice] = useState(false);
 
+  /*
+   * ~~A grey "Coming soon" chip when the tier has no link.~~ ROUND 14 ITEM 7:
+   * THE BUTTON IS VISUALLY FINAL EITHER WAY.
+   *
+   * The price list is the page's product. A column of grey disabled chips
+   * reads as "this is not a real product yet", and the owner will be turning
+   * these on by pasting a JSON map into Vercel — a change that must be
+   * INVISIBLE on the page, because nothing about the page is what changed.
+   *
+   * SO IT IS THE SAME VOLT PILL IN BOTH STATES. Unconfigured, pressing it
+   * shows one brief line and does nothing else — no navigation, no row
+   * written, no half-finished purchase left behind. `buyPassAction` refuses
+   * before it writes anything, so this is the same answer the server gives,
+   * shown without the round trip.
+   *
+   * THIS IS NOT A DEAD AFFORDANCE in the sense round 7 forbade. That rule was
+   * about a control with NOTHING behind it and no explanation — a Google
+   * button that could sign nobody in. This one tells you exactly what is
+   * happening and when it will work.
+   */
   if (!configured) {
     return (
-      <span
-        data-testid={`buy-pass-${games}-soon`}
-        className="inline-flex min-h-11 items-center rounded-pill border-2 border-hairline px-4 text-small font-bold uppercase tracking-wide text-muted"
-      >
-        {t.booking.payOnlineComingSoon}
-      </span>
+      <div>
+        <button
+          type="button"
+          onClick={() => setNotice(true)}
+          data-testid={`buy-pass-${games}`}
+          data-configured="false"
+          className={
+            variant === "quiet"
+              ? "inline-flex min-h-11 items-center justify-center rounded-pill border-2 border-volt px-5 text-small font-bold uppercase tracking-wide text-volt transition-colors hover:bg-volt/10"
+              : "inline-flex min-h-11 w-full items-center justify-center rounded-control bg-volt px-5 text-body-lg font-bold text-ink transition-colors hover:bg-volt-dim"
+          }
+        >
+          {signedIn ? label : t.booking.logInToClaim}
+        </button>
+        {notice && (
+          <p role="status" data-testid="pass-soon-notice" className="mt-2 text-[12px] text-muted">
+            {t.pass.paymentsSoon}
+          </p>
+        )}
+      </div>
     );
   }
 

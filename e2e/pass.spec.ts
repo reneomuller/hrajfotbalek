@@ -145,7 +145,7 @@ test("a signed-out visitor can read the tiers and reach them from the games list
  * CREDITING is asserted through `confirm_online_purchase` below, which is the
  * path the webhook actually takes.
  */
-test("a tier with no Stripe link says so instead of selling itself wrong", async ({
+test("an unconfigured tier looks final, says when, and does nothing else", async ({
   page,
   context,
 }) => {
@@ -154,15 +154,35 @@ test("a tier with no Stripe link says so instead of selling itself wrong", async
 
   /*
    * `NEXT_PUBLIC_STRIPE_PASS_URLS` is unset under the suite, so every tier is
-   * unconfigured and every button is a "Coming soon" chip.
+   * unconfigured.
    *
-   * THE IMPORTANT HALF IS WHAT IT DOES NOT DO. A tier without its own link
-   * must never fall back to the single-game link: tier prices are DISCOUNTED,
-   * so paying one through the per-game link charges the undiscounted price
-   * even at the right quantity.
+   * ~~Every button is a grey "Coming soon" chip.~~ ROUND 14 ITEM 7: the button
+   * is VISUALLY FINAL either way, so that turning payments on is a JSON paste
+   * in Vercel and not a visible change to the page.
    */
-  await expect(page.getByTestId("buy-pass-5-soon")).toBeVisible();
-  await expect(page.getByTestId("buy-pass-5")).toHaveCount(0);
+  const button = page.getByTestId("buy-pass-5");
+  await expect(button).toBeVisible();
+  await expect(button).toHaveAttribute("data-configured", "false");
+  await expect(page.getByTestId("buy-pass-5-soon")).toHaveCount(0);
+
+  // Pressing it says WHEN, and does nothing else.
+  await expect(page.getByTestId("pass-soon-notice")).toHaveCount(0);
+  await button.click();
+  await expect(page.getByTestId("pass-soon-notice")).toBeVisible();
+
+  /*
+   * AND NOTHING WAS WRITTEN. The failure worth catching is a press that
+   * records a `pending` purchase with nowhere to pay it — which is what the
+   * old fall-through did before round 13 resolved the link first.
+   */
+  await expect(page).toHaveURL(/\/pass$/);
+  const admin = serviceClient();
+  const { count } = await admin
+    .from("credit_topups")
+    .select("id", { count: "exact", head: true })
+    .eq("player_id", players.creditPartial.id)
+    .eq("status", "pending");
+  expect(count ?? 0, "an unconfigured press created a purchase row").toBe(0);
 });
 
 test("the webhook credits a pass purchase through the existing ledger path", async () => {

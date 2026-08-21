@@ -51,7 +51,14 @@ export function primaryNavLinks(
    */
   const links: NavLink[] = [{ href: "/games", label: t.nav.games }];
 
-  if (session.isAdmin) links.push({ href: "/admin/games", label: t.nav.admin });
+  /*
+   * `/admin`, NOT `/admin/games` (round 14, item 8). The dashboard IS the
+   * admin landing — it answers "does anything need me today" — and this link
+   * went straight past it into a list. The owner reported entering the panel
+   * somewhere other than the dashboard; this was one of the two doors doing
+   * it, the other being the Profile page's.
+   */
+  if (session.isAdmin) links.push({ href: "/admin", label: t.nav.admin });
   return links;
 }
 

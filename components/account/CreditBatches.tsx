@@ -1,6 +1,7 @@
-import { formatCzk, formatDate } from "@/lib/format";
+import { formatDate } from "@/lib/format";
 import { gamesEquivalent, type CreditBatch } from "@/lib/pass/queries";
-import { getStrings } from "@/lib/i18n/server";
+import { getLocale, getStrings } from "@/lib/i18n/server";
+import { creditsLabel } from "@/lib/pass/credits";
 
 /**
  * The wallet, broken into batches (§4.2).
@@ -21,6 +22,7 @@ import { getStrings } from "@/lib/i18n/server";
  */
 export async function CreditBatches({ batches }: { batches: CreditBatch[] }) {
   const t = await getStrings();
+  const locale = await getLocale();
 
   if (batches.length === 0) return null;
 
@@ -37,16 +39,19 @@ export async function CreditBatches({ batches }: { batches: CreditBatch[] }) {
             data-testid="credit-batch"
             className="flex flex-wrap items-baseline justify-between gap-3 rounded-card bg-surface px-4 py-3"
           >
+            {/*
+              ~~"600 CZK left · expires 20 Oct", with "≈ 4 games" beside it.~~
+              CREDITS ONLY (round 14, item 10).
+
+              A crown figure here re-introduced the unit the credits ruling
+              removed, on the screen whose job is to say what a credit is — and
+              then the chip beside it translated the crowns BACK into games, so
+              the row said the same thing twice in two units.
+            */}
             <span className="text-[13px] text-bone">
               {t.pass.batchesExpiring
-                .replace("{amount}", formatCzk(batch.remainingCzk))
+                .replace("{credits}", creditsLabel(gamesEquivalent(batch.remainingCzk), locale, t))
                 .replace("{date}", formatDate(batch.expiresAt))}
-            </span>
-            <span className="text-[11px] text-volt-dim">
-              {t.pass.equivalence.replace(
-                "{count}",
-                String(gamesEquivalent(batch.remainingCzk)),
-              )}
             </span>
           </li>
         ))}

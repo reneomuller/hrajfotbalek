@@ -36,7 +36,7 @@ describe("primaryNavLinks", () => {
 
   it("shows the admin door only to an admin session, and last", () => {
     expect(primaryNavLinks({ isAdmin: true }).at(-1)).toEqual({
-      href: "/admin/games",
+      href: "/admin",
       label: strings.nav.admin,
     });
     expect(primaryNavLinks({ isAdmin: true })).toHaveLength(2);
@@ -44,7 +44,7 @@ describe("primaryNavLinks", () => {
 
   it("hides the admin link from a non-admin and from a signed-out visitor", () => {
     for (const session of [{ isAdmin: false }, {}]) {
-      expect(primaryNavLinks(session).map((l) => l.href)).not.toContain("/admin/games");
+      expect(primaryNavLinks(session).map((l) => l.href)).not.toContain("/admin");
     }
   });
 
