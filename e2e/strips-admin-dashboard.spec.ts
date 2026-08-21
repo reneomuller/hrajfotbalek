@@ -180,7 +180,8 @@ test("p14's four quick actions each reach a real surface", async ({ page }) => {
 
   const expected: Array<[string, string]> = [
     ["quick-create-game", "/admin/games/new"],
-    ["quick-add-venue", "/admin/games/new?venue=new"],
+    // ~~"/admin/games/new?venue=new"~~ round 13 item 24 gave venues a page.
+    ["quick-add-venue", "/admin/venues"],
     ["quick-export", "/admin/stats/transactions"],
     ["quick-financials", "/admin/stats"],
   ];
@@ -188,9 +189,13 @@ test("p14's four quick actions each reach a real surface", async ({ page }) => {
     await expect(page.getByTestId(testId)).toHaveAttribute("href", href);
   }
 
-  // `?venue=new` must actually open the new-venue branch, or the button is a
-  // link to a form with the fields it promises hidden behind a picker.
-  await page.goto("/admin/games/new?venue=new", { waitUntil: "networkidle" });
-  await expect(page.getByTestId("venue-select")).toHaveValue("new");
-  await expect(page.locator("#newVenueName")).toBeVisible();
+  /*
+   * ~~`?venue=new` must open the new-venue branch of the game form.~~ Round 13
+   * item 24: the destination is a management page, and what has to be true of
+   * it is that a venue can be created there — the button promises "add venue"
+   * and must not land on a read-only list.
+   */
+  await page.goto("/admin/venues", { waitUntil: "networkidle" });
+  await expect(page.getByTestId("venue-create-section")).toBeVisible();
+  await expect(page.getByTestId("venue-name-input").first()).toBeVisible();
 });

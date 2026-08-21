@@ -113,6 +113,7 @@ describe("adminNavLinks", () => {
       { href: "/admin/games", label: strings.admin.navGames },
       { href: "/admin/players", label: strings.admin.navPlayers },
       { href: "/admin/stats", label: strings.admin.navStats },
+      { href: "/admin/venues", label: strings.admin.venuesTitle },
       { href: "/admin", label: strings.admin.navDashboard },
       { href: "/admin/site", label: strings.admin.navSite },
     ]);

@@ -1311,6 +1311,18 @@ export const strings = {
     venueLabel: "Venue",
     venueNew: "Add a new venue",
     venueNameLabel: "Venue name",
+    /* --- venue management (round 13, item 24) --- */
+    venuesTitle: "Venues",
+    venuesLede:
+      "Every ground you play at. A venue's photo, map link and amenities are inherited by every game there.",
+    venuesEmpty: "No venues yet.",
+    venueCreate: "Add venue",
+    venueCreated: "Venue added",
+    venueSave: "Save venue",
+    venueSaved: "Venue updated",
+    venueNewHeading: "Add a venue",
+    venuePitchNameHint: "The ground's default pitch. A game can name its own instead.",
+    venuePresetsHeading: "Inherited by every game here",
     venueImageLabel: "Image file",
     venueImageHint:
       "A file under public/venues/, e.g. prazacka.jpg.",

@@ -1293,35 +1293,58 @@ test("a venue with a photo renders it full-bleed, with the name over it", async 
 });
 
 /*
- * REQ-GAME-019 — no venue photo on the LIST, even for a venue that has one.
+ * ~~REQ-GAME-019 — no venue photo on the LIST, even for a venue that has one.~~
+ * REVERSED BY THE OWNER, ROUND 13 ITEM 24.
  *
- * Asserted with the photo venue specifically: the density criterion is about
- * what the list does when a photo exists, and a game with no photo would pass
- * this trivially.
+ * THE ORIGINAL REASON WAS DENSITY and it was a good one: "twelve different
+ * photographs down a list is twelve different backgrounds competing with
+ * twelve sets of text". It survived R6 by being restated — R6 put ONE default
+ * pitch photo on every card, a constant rather than a variable, so the rule
+ * narrowed from "no img" to "no VENUE img".
+ *
+ * WHAT CHANGED IS THE SCRIM. When REQ-GAME-019 was written the card had no
+ * fade. R6a's ramp now runs to `ink` at full opacity across the lower two
+ * thirds, and `strips-redesign-card.spec.ts` MEASURES that the text sits on a
+ * contrast floor rather than on the image. A photograph under that ramp is a
+ * texture, not a background — which is the premise the density argument stood
+ * on, and it no longer holds.
+ *
+ * THE ASSERTION INVERTS PRECISELY. What is worth catching now is the two
+ * surfaces DISAGREEING, which is what they did before this round: the detail
+ * band had used the venue's photo since R13 while the list always drew the
+ * default, so one game showed two different pitches.
  */
-test("the list carries no venue photo even when the venue has one", async ({ page }) => {
+test("a venue's own photo backs its games on the list and the detail alike", async ({
+  page,
+}) => {
   const game = await createScratchGame({ withVenuePhoto: true, hoursFromNow: 24 * 22 });
 
   try {
     await page.goto(listUrlFor(game));
     const row = page.locator(`[data-testid="game-row"][href="/game/${game.id}"]`);
     await expect(row).toBeVisible();
+
+    const cardPhoto = row.locator('[data-testid="card-photo"]');
+    await expect(cardPhoto).toHaveAttribute("data-photo", "venue");
+    const cardSrc = await cardPhoto.getAttribute("src");
+    expect(cardSrc, "the card fell back to the default").not.toBe("/pitch-default.jpg");
+
     /*
-     * REQ-GAME-019 SURVIVES R6, RESTATED. The rule was never "no images on a
-     * card" — it was NO VENUE PHOTO: a per-venue image on the list is the
-     * density problem, because twelve different photographs down a list is
-     * twelve different backgrounds competing with twelve sets of text.
+     * ...and the detail band shows the SAME image.
      *
-     * R6 ships ONE default pitch photograph on every card, which is the
-     * opposite property — a constant, not a variable. So the assertion moves
-     * from "no img" to "no VENUE img": this game is at the photo venue
-     * specifically, and its photo must still not reach the list.
+     * COMPARED AS SOURCE FILES, not as URLs. The hero goes through
+     * `next/image` and the card does not, so the band's `src` is
+     * `/_next/image?url=%2Fvenues%2F…` where the card's is the plain path.
+     * Asserting the raw strings would be asserting which surface uses the
+     * optimizer, which is not the property — the property is that one game
+     * does not show two different pitches.
      */
-    await expect(row.locator('img[src^="/venues/"]')).toHaveCount(0);
-    await expect(row.getByTestId("card-photo")).toHaveAttribute(
-      "src",
-      "/pitch-default.jpg",
-    );
+    await page.goto(`/game/${game.id}`);
+    const heroSrc = (await page.getByTestId("hero-photo").first().getAttribute("src")) ?? "";
+    const heroSource = heroSrc.startsWith("/_next/image")
+      ? decodeURIComponent(new URL(heroSrc, "http://x").searchParams.get("url") ?? "")
+      : heroSrc;
+    expect(heroSource).toBe(cardSrc);
   } finally {
     await destroyScratchGame(game.id);
   }

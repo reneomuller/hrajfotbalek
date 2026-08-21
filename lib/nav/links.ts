@@ -91,6 +91,9 @@ export function adminNavLinks(): NavLink[] {
      * that is empty on every ordinary day is a section nobody opens.
      */
     { href: "/admin/stats", label: strings.admin.navStats },
+    // Venues joined in round 13 item 24, after Financials so p14's four
+    // leading chips keep the order the frame draws.
+    { href: "/admin/venues", label: strings.admin.venuesTitle },
     { href: "/admin", label: strings.admin.navDashboard },
     { href: "/admin/site", label: strings.admin.navSite },
   ];

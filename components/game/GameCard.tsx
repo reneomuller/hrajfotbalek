@@ -5,9 +5,13 @@ import { CardBadges } from "@/components/game/CardBadges";
 import { venueDisplayName } from "@/lib/venues/displayName";
 import { SpotsLeft } from "@/components/game/SpotsLeft";
 import { formatTime } from "@/lib/format";
+import { venuePhotoUrl } from "@/lib/storage/avatar";
 import { getStrings } from "@/lib/i18n/server";
 import type { RosterAvatar } from "@/lib/games/queries";
 import type { Database } from "@/lib/types/database";
+
+/** The single fallback, when a venue has no photograph of its own (R6). */
+const DEFAULT_PITCH = "/pitch-default.jpg";
 
 type GameRowData = Database["public"]["Tables"]["games"]["Row"];
 
@@ -67,6 +71,7 @@ export async function GameCard({
   bookedCount,
   roster = [],
   supabaseUrl,
+  venueImagePath,
   pitchName,
   past = false,
   joinCue = true,
@@ -77,6 +82,14 @@ export async function GameCard({
   roster?: RosterAvatar[];
   /** Storage origin for avatar photos; absent falls back to initials. */
   supabaseUrl?: string;
+  /**
+   * The venue's own photograph, when it has one (round 13, item 24).
+   *
+   * PASSED IN RATHER THAN LOOKED UP. The list renders a dozen of these and a
+   * per-card venue read would be a dozen round trips; the page already has
+   * the venue rows for the pitch names it prints.
+   */
+  venueImagePath?: string | null;
   /**
    * The pitch's own name, read live from `venues` (Section 3 item 4). Absent
    * for most games and for any with a null `venue_id`, which renders the venue
@@ -105,15 +118,31 @@ export async function GameCard({
 }) {
   const t = await getStrings();
 
+  /*
+   * THE VENUE'S PHOTOGRAPH, OR THE DEFAULT (round 13, item 24).
+   *
+   * `venuePhotoUrl` returns null for a null path AND for a path in neither
+   * recognised shape, so a malformed `image_path` falls back to the default
+   * rather than rendering a broken image on every card for that ground.
+   */
+  const photo = venuePhotoUrl(supabaseUrl ?? "", venueImagePath) ?? DEFAULT_PITCH;
+
   const body = (
     <>
       {/*
         THE PHOTO, AND THE SCRIM OVER IT (redesign v2, R6a).
 
         The frames back every list card with the pitch photograph, faded hard.
-        `public/pitch-default.jpg` is the single default for all games —
+
+        ~~`public/pitch-default.jpg` is the single default for all games —
         per-venue photos are a later concern and `venues.image_path` is not
-        touched by this round.
+        touched by this round.~~
+
+        ROUND 13 ITEM 24: A VENUE'S OWN PHOTOGRAPH WINS, and the default is
+        the fallback. The detail band has worked this way since R13; the card
+        did not, so the same game showed one pitch on the list and another on
+        its page. Every law below is unchanged and applies to whichever image
+        renders — the bottom-anchored crop, the ramp, the contrast floor.
 
         TWO LAYERS, NOT A CSS BACKGROUND IMAGE. An `<img>` with `object-cover`
         plus a gradient scrim, rather than an arbitrary background-image
@@ -158,9 +187,10 @@ export async function GameCard({
           differently by one surface.
         */}
         <img
-          src="/pitch-default.jpg"
+          src={photo}
           alt=""
           data-testid="card-photo"
+          data-photo={photo === DEFAULT_PITCH ? "default" : "venue"}
           className="h-full w-full object-cover object-bottom"
         />
         {/*

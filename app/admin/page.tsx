@@ -346,10 +346,11 @@ export default async function AdminDashboardPage() {
 
           · EXPORT DATA is `/admin/stats/transactions`, the CSV round 8 itself
             built for the financials page an item earlier.
-          · ADD VENUE is the new-venue block inside `/admin/games/new` — p16,
-            per AUDIT §3b — reached with `?venue=new`, which opens the form
-            with that branch already chosen rather than landing the admin on
-            a game form and asking them to find it.
+          · ~~ADD VENUE is the new-venue block inside `/admin/games/new`,
+            reached with `?venue=new`.~~ ROUND 13 ITEM 24: it is
+            `/admin/venues`, a real management surface. Creating a venue as a
+            side effect of making a game was backwards — a venue outlives
+            every game played on it.
 
         The frame's two rows are two tiers and ours already read that way:
         the create/add pair sits on the brighter volt hairline, export and
@@ -375,7 +376,7 @@ export default async function AdminDashboardPage() {
             {strings.admin.quickCreateGame}
           </Link>
           <Link
-            href="/admin/games/new?venue=new"
+            href="/admin/venues"
             data-testid="quick-add-venue"
             className={QUICK_ACTION}
           >

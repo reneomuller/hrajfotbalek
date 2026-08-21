@@ -752,6 +752,24 @@ export interface Database {
       };
 
       /** Admin-only. Returns the new venue id; raises VENUE_EXISTS on a clash. */
+      /**
+       * Admin-only. Renames a venue and sets its map query and pitch name
+       * (round 13, item 24).
+       *
+       * RENAMING DOES NOT REWRITE HISTORY: `games.venue` is a snapshot taken
+       * at creation and deliberately not a foreign key to this text, so a
+       * rename changes what future games are called and leaves every played
+       * game reading what it read on the day.
+       */
+      admin_update_venue: {
+        Args: {
+          p_venue_id: string;
+          p_name: string;
+          p_map_query?: string | null;
+          p_pitch_name?: string | null;
+        };
+        Returns: Database["public"]["Tables"]["venues"]["Row"];
+      };
       admin_create_venue: {
         Args: { p_name: string; p_image_path?: string | null; p_map_query?: string | null };
         Returns: string;

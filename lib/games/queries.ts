@@ -643,3 +643,44 @@ export async function getVenues(
   if (error || !data) return new Map();
   return new Map(data.map((venue) => [venue.id, venue]));
 }
+
+
+/**
+ * Each game's venue photograph, keyed by game id (round 13, item 24).
+ *
+ * ONE ROUND TRIP FOR A WHOLE PAGE, like `listPitchNamesByGame` beside it — the
+ * list renders a dozen cards and a per-card venue read would be a dozen trips.
+ *
+ * SEPARATE FROM `listPitchNamesByGame` RATHER THAN FOLDED INTO IT. That
+ * function has four call sites and returns a `Map<string, string>` they all
+ * destructure; widening its value to an object would touch every one of them
+ * to add a field two of them do not want. Two small queries that each answer
+ * one question beat one that answers two badly.
+ *
+ * A GAME WITH NO `venue_id` SIMPLY HAS NO ENTRY, which renders the default.
+ * Those exist: every game created before the `venues` table carried a null
+ * until migration 19 backfilled them, and the fallback is the point.
+ */
+export async function listVenueImagesByGame(
+  games: { id: string; venue_id: string | null }[],
+): Promise<Map<string, string>> {
+  const images = new Map<string, string>();
+
+  const venueIds = [...new Set(games.map((g) => g.venue_id).filter((id): id is string => !!id))];
+  if (venueIds.length === 0) return images;
+
+  const supabase = await createServerSupabaseClient();
+  const { data, error } = await supabase
+    .from("venues")
+    .select("id, image_path")
+    .in("id", venueIds);
+
+  if (error || !data) return images;
+
+  const byVenue = new Map(data.map((row) => [row.id, row.image_path]));
+  for (const game of games) {
+    const path = game.venue_id ? byVenue.get(game.venue_id) : null;
+    if (path) images.set(game.id, path);
+  }
+  return images;
+}

@@ -8,6 +8,7 @@ import { GameCard } from "@/components/game/GameCard";
 import { getHomeContent } from "@/lib/home/queries";
 import {
   listPitchNamesByGame,
+  listVenueImagesByGame,
   listRostersByGame,
   listUpcomingGames,
 } from "@/lib/games/queries";
@@ -69,7 +70,11 @@ export default async function LandingPage() {
   // three games rather than one apiece.
   const rosters = await listRostersByGame(games.map(({ game }) => game.id));
   // Pitch names, live from `venues` — see `listPitchNamesByGame`.
-  const pitchNames = await listPitchNamesByGame(games.map(({ game }) => game));
+  const [pitchNames, venueImages] = await Promise.all([
+    listPitchNamesByGame(games.map(({ game }) => game)),
+    // The venue's own photograph, where it has one (round 13, item 24).
+    listVenueImagesByGame(games.map(({ game }) => game)),
+  ]);
   // Storage origin for the Player-of-the-Month photo (§4a). Absent, the panel
   // falls back to initials, which is the ordinary case rather than a failure.
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
@@ -302,6 +307,7 @@ export default async function LandingPage() {
                             roster={rosters.get(game.id) ?? []}
                             supabaseUrl={supabaseUrl}
                             pitchName={pitchNames.get(game.id)}
+                            venueImagePath={venueImages.get(game.id) ?? null}
                           />
                         ))}
                       </div>

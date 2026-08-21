@@ -10,6 +10,7 @@ import { getSessionUser } from "@/lib/auth/session";
 import { buildDayTabs, groupByDay, pragueDayKey, resolveSelectedDay } from "@/lib/games/days";
 import {
   listPitchNamesByGame,
+  listVenueImagesByGame,
   listRostersByGame,
   listUpcomingGames,
 } from "@/lib/games/queries";
@@ -72,7 +73,7 @@ export default async function GamesPage({
   const { games, now } = await listUpcomingGames(null);
 
   const signedIn = (await getSessionUser()) !== null;
-  const [rosters, pitchNames, nextOwn] = await Promise.all([
+  const [rosters, pitchNames, venueImages, nextOwn] = await Promise.all([
     /*
      * THE ROSTERS ARE BACK, and this is ruling D's cost rather than a
      * regression of the v1.1.4 removal. They were dropped because eight
@@ -82,6 +83,7 @@ export default async function GamesPage({
      */
     listRostersByGame(games.map(({ game }) => game.id)),
     listPitchNamesByGame(games.map(({ game }) => game)),
+    listVenueImagesByGame(games.map(({ game }) => game)),
     // Own-row RLS makes this empty for a signed-out visitor, which is the
     // right answer — but skipping it saves a round trip on the anonymous
     // path, which is the common one from a shared link.
@@ -212,6 +214,7 @@ export default async function GamesPage({
                     roster={rosters.get(game.id) ?? []}
                     supabaseUrl={supabaseUrl}
                     pitchName={pitchNames.get(game.id)}
+                    venueImagePath={venueImages.get(game.id) ?? null}
                   />
                 ))}
               </div>
