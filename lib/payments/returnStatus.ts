@@ -166,6 +166,18 @@ const RECOVERY_WINDOW_MINUTES = 60;
 /** Pending, or already settled by Stripe. Either way it went to Stripe. */
 const WENT_TO_STRIPE = "payment_pending_at.not.is.null,stripe_session_id.not.is.null";
 
+/*
+ * A CANCELLED PURCHASE IS NEVER ADOPTED, and it is the recovery lookup's
+ * sharpest edge. Cancelling does not erase `stripe_session_id` or move
+ * `created_at`, so a booking somebody cancelled an hour ago still answers
+ * "went to Stripe recently" — and it would be adopted ahead of nothing at
+ * all, sending a player who made no payment to a game page for a booking they
+ * had already given up. The precise path never has this problem, because the
+ * cookie names the row; only the guess needs telling what not to guess.
+ */
+const LIVE_BOOKING_STATUSES = ["reserved", "confirmed"] as const;
+const LIVE_TOPUP_STATUSES = ["pending", "confirmed"] as const;
+
 export async function findRecentPendingPurchase(
   now: number = Date.now(),
 ): Promise<PendingPurchase | null> {
@@ -177,6 +189,7 @@ export async function findRecentPendingPurchase(
       .from("bookings")
       .select("id, created_at")
       .gte("created_at", since)
+      .in("status", LIVE_BOOKING_STATUSES)
       .or(WENT_TO_STRIPE)
       .order("created_at", { ascending: false })
       .limit(1),
@@ -184,6 +197,7 @@ export async function findRecentPendingPurchase(
       .from("credit_topups")
       .select("id, created_at")
       .gte("created_at", since)
+      .in("status", LIVE_TOPUP_STATUSES)
       .or(WENT_TO_STRIPE)
       .order("created_at", { ascending: false })
       .limit(1),

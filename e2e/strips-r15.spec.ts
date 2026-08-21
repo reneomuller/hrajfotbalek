@@ -38,7 +38,15 @@ test("the wait and the credits page, in three languages", async ({ page, context
   const game = await createScratchGame({ capacity: 6, priceCzk: CREDIT_CZK });
 
   try {
+    /*
+     * ZEROED FIRST, for the reason `payment-return.spec.ts` documents at
+     * length: `create_booking` spends credit when there is credit, and a
+     * covered booking comes back CONFIRMED — so there would be no wait to
+     * photograph. Cancelling credits the player, so this file would otherwise
+     * pay itself into that state over a few runs.
+     */
     await clearActiveBookings("runner");
+    await resetWallet(players.runner.id);
     await signInAs(context, players.runner);
 
     const asRunner = await apiClientFor(players.runner);
@@ -75,6 +83,7 @@ test("the wait and the credits page, in three languages", async ({ page, context
     }
   } finally {
     await clearActiveBookings("runner");
+    await resetWallet(players.runner.id);
     await destroyScratchGame(game.id);
   }
 

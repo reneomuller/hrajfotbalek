@@ -11,6 +11,26 @@ import {
 } from "./helpers/scaffold";
 
 /**
+ * ZERO WALLET BEFORE EVERY BOOKING, AND IT IS NOT HOUSEKEEPING.
+ *
+ * `create_booking` spends credit when there is credit: a covered booking comes
+ * back CONFIRMED and `p_online` never applies, so there is no pending payment
+ * and nothing for this page to wait for. Cancelling a booking CREDITS the
+ * player — which is what `clearActiveBookings` does — so each run of this file
+ * paid the runner back for the last one, and after a few the wallet covered a
+ * 150 CZK game outright and every test here failed on a booking that was
+ * already confirmed.
+ *
+ * That is the seed drifting, caused by this file rather than suffered by it.
+ * The fix belongs at the start of each test, not in teardown: teardown cannot
+ * undo a refund that has not happened yet.
+ */
+async function withEmptyWallet(playerKey: "runner"): Promise<void> {
+  await clearActiveBookings(playerKey);
+  await resetWallet(players[playerKey].id);
+}
+
+/**
  * ROUND 15 ITEM 1 — the Stripe return page, driven end to end.
  *
  * THE RACE THIS PAGE EXISTS FOR IS THE THING UNDER TEST. Coming back from
@@ -31,6 +51,21 @@ test.use({ viewport: { width: 390, height: 844 } });
 
 const PRICE = 150;
 const SECRET = process.env.STRIPE_WEBHOOK_SECRET ?? "";
+
+/*
+ * A SESSION ID THAT IS NEW EVERY RUN.
+ *
+ * `credit_topups.stripe_session_id` and `bookings.stripe_session_id` are
+ * UNIQUELY indexed — that index IS the idempotency, and it is what makes a
+ * webhook redelivery a no-op. A hardcoded id therefore works exactly once per
+ * database: the second run's "payment" is read as a redelivery of the first
+ * one and settles nothing, and the failure surfaces three assertions later as
+ * a page that did not navigate.
+ *
+ * That is the suite's own rule about the seed, in a different costume: a spec
+ * whose result depends on how many times it has been run cannot be reproduced.
+ */
+const RUN = Date.now().toString(36);
 
 function signedEvent(sessionId: string, reference: string, amountMinor: number) {
   const payload = JSON.stringify({
@@ -87,7 +122,7 @@ test.describe("the Stripe return page", () => {
   }) => {
     const game = await createScratchGame({ capacity: 6, priceCzk: PRICE });
     try {
-      await clearActiveBookings("runner");
+      await withEmptyWallet("runner");
       await signInAs(context, players.runner);
       await inEnglish(context);
 
@@ -123,7 +158,7 @@ test.describe("the Stripe return page", () => {
       expect(early, "the wait claims the booking is confirmed").not.toContain("confirmed");
 
       // --- and now the webhook, late, as it is in life --------------------
-      const { payload, header } = signedEvent("cs_r15_book", bookingId, PRICE * 100);
+      const { payload, header } = signedEvent(`cs_r15_book_${RUN}`, bookingId, PRICE * 100);
       const res = await request.post("/api/stripe/webhook", {
         headers: { "stripe-signature": header, "content-type": "application/json" },
         data: payload,
@@ -151,7 +186,7 @@ test.describe("the Stripe return page", () => {
       );
       expect(left?.value ?? "", "the stash outlived the payment").toBe("");
     } finally {
-      await clearActiveBookings("runner");
+      await withEmptyWallet("runner");
       await destroyScratchGame(game.id);
     }
   });
@@ -178,7 +213,7 @@ test.describe("the Stripe return page", () => {
       await expect(page.getByTestId("payment-confirming")).toBeVisible();
 
       const { payload, header } = signedEvent(
-        "cs_r15_pass",
+        `cs_r15_pass_${RUN}`,
         topup.id,
         topup.amount_czk * 100,
       );
@@ -224,7 +259,7 @@ test.describe("the Stripe return page", () => {
   }) => {
     const game = await createScratchGame({ capacity: 6, priceCzk: PRICE });
     try {
-      await clearActiveBookings("runner");
+      await withEmptyWallet("runner");
       await signInAs(context, players.runner);
       await inEnglish(context);
 
@@ -238,7 +273,7 @@ test.describe("the Stripe return page", () => {
       const bookingId = (data as { id: string }).id;
 
       // THE WEBHOOK FIRST, this time — and it clears `payment_pending_at`.
-      const { payload, header } = signedEvent("cs_r15_early", bookingId, PRICE * 100);
+      const { payload, header } = signedEvent(`cs_r15_early_${RUN}`, bookingId, PRICE * 100);
       const res = await request.post("/api/stripe/webhook", {
         headers: { "stripe-signature": header, "content-type": "application/json" },
         data: payload,
@@ -251,7 +286,7 @@ test.describe("the Stripe return page", () => {
       await page.waitForURL(new RegExp(`/game/${game.id}/book/confirmation`));
       await expect(page.getByTestId("booking-confirmed")).toBeVisible();
     } finally {
-      await clearActiveBookings("runner");
+      await withEmptyWallet("runner");
       await destroyScratchGame(game.id);
     }
   });
@@ -270,7 +305,7 @@ test.describe("the Stripe return page", () => {
   }) => {
     const game = await createScratchGame({ capacity: 6, priceCzk: PRICE });
     try {
-      await clearActiveBookings("runner");
+      await withEmptyWallet("runner");
       await signInAs(context, players.runner);
       await inEnglish(context);
 
@@ -289,7 +324,7 @@ test.describe("the Stripe return page", () => {
       await expect(page.getByTestId("payment-confirming")).toBeVisible();
       await expect(page.getByTestId("payment-return-unknown")).toHaveCount(0);
     } finally {
-      await clearActiveBookings("runner");
+      await withEmptyWallet("runner");
       await destroyScratchGame(game.id);
     }
   });
@@ -313,7 +348,7 @@ test("a return with nothing to confirm says so, and points onward", async ({
   page,
   context,
 }) => {
-  await clearActiveBookings("runner");
+  await withEmptyWallet("runner");
   await signInAs(context, players.runner);
   await inEnglish(context);
 
@@ -345,7 +380,7 @@ test("after a minute it stops implying it is imminent, and says what is true", a
 }) => {
   const game = await createScratchGame({ capacity: 6, priceCzk: PRICE });
   try {
-    await clearActiveBookings("runner");
+    await withEmptyWallet("runner");
     await signInAs(context, players.runner);
     await inEnglish(context);
 
@@ -379,7 +414,7 @@ test("after a minute it stops implying it is imminent, and says what is true", a
     await page.getByTestId("payment-slow-link").click();
     await page.waitForURL(new RegExp(`/game/${game.id}`));
   } finally {
-    await clearActiveBookings("runner");
+    await withEmptyWallet("runner");
     await destroyScratchGame(game.id);
   }
 });
