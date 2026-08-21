@@ -53,7 +53,14 @@ export const strings = {
     // money and holds personal data needs one reachable line that is not a
     // WhatsApp group, and GDPR expects a controller contact anyway.
     contact: "Contact",
+    /*
+     * THE FALLBACK, not the source of truth (round 13, item 18). The addresses
+     * and numbers the dialog shows live in `site_settings` and are edited in
+     * `/admin`; this is what renders when the owner has not set any, so a
+     * fresh database still has one reachable line rather than an empty box.
+     */
     contactEmail: "ahoj@hrajfotbal.com",
+    contactTitle: "Get in touch",
   },
 
   /**
@@ -1076,23 +1083,48 @@ export const strings = {
     // one under it is a person — this heading has to be recognised as a
     // convention at a glance rather than read as a word.
     title: "FAQ",
+    /*
+     * THE OWNER'S FOUR (round 13, item 11), replacing six.
+     *
+     * ~~"When should I show up?" (10 minutes before kickoff) and "What if I
+     * can't make it?" (cancel anytime for full wallet credit)~~ are gone —
+     * the second is on the booking screen already, above the button it
+     * concerns, which is where a cancellation policy is actually read.
+     *
+     * EVERY ANSWER HERE WAS CHECKED AGAINST THE CODE BEFORE IT SHIPPED, which
+     * is the point of the item rather than a courtesy:
+     *
+     *   PAYMENT — rewritten. It said "scan the QR from your banking app",
+     *   which item 6 retired. Card, wallet, credits and cash are what the
+     *   booking screen actually offers.
+     *
+     *   THE WAITLIST — VERIFIED TRUE. `notify_waitlist` stamps every entry and
+     *   emits `waitlist_notified` in one transaction, and
+     *   `notifyWaitlistForGame` mails everyone it returns. It is driven from
+     *   BOTH paths that can free a spot: a player cancelling
+     *   (`app/account/actions.ts`) and the expiry sweep
+     *   (`app/api/cron/expiry/route.ts`). The answer says EMAIL rather than
+     *   "we'll let you know", because the bell does not carry it — see the
+     *   gap recorded in docs/REQUESTS.md — and it says everyone is told at
+     *   once, because the race is settled by `create_booking`'s capacity
+     *   check and a reader who thinks they have been offered a reserved spot
+     *   has been misled.
+     *
+     *   LEVELS — verified. `create_booking` never consults skill (§5.3,
+     *   REQ-GAME-011), so a badge really is a signal and not a gate.
+     */
     items: [
-      { q: "When should I show up?", a: "10 minutes before kickoff." },
       {
         q: "What should I bring?",
         a: "Shoes and yourself. Bibs, gloves and balls are provided.",
       },
       {
         q: "How do I pay?",
-        a: "Scan the QR from your banking app after booking, or pay cash at the pitch.",
-      },
-      {
-        q: "What if I can't make it?",
-        a: "Cancel anytime before kickoff for full wallet credit.",
+        a: "By card or mobile wallet when you book, with credits from a game pass, or cash at the pitch.",
       },
       {
         q: "What if the game is full?",
-        a: "Join the waitlist; we email you the moment a spot opens.",
+        a: "Join the waitlist. Everyone on it is emailed the moment a spot opens, and the first to claim it takes it.",
       },
       {
         q: "Do I need to be good?",
@@ -1422,6 +1454,20 @@ export const strings = {
     // Beside a name on the admin roster: "+2 guests". The booking is one row
     // with one attendance mark, because it is one decision.
     rosterParty: "+{n} guests",
+    /* --- contact details, shown in the footer dialog (round 13, item 18) ---
+     * Named `siteContact*` because `contactTitle` / `contactEmail` /
+     * `contactPhone` are already taken above by the GAME organizer's contact
+     * block, which is a different thing entirely.
+     */
+    siteContactTitle: "Contact info",
+    siteContactLede:
+      "What the footer's Contact dialog shows. Saved straight away — no deploy.",
+    siteContactEmailsLabel: "Email addresses",
+    siteContactEmailsHint: "One per line. At least one; the built-in address is used if you leave it empty.",
+    siteContactPhonesLabel: "Phone numbers",
+    siteContactPhonesHint: "One per line. Leave empty to show no phone number at all.",
+    siteContactSave: "Save contact info",
+    siteContactSaved: "Contact info updated",
     /* --- payments that arrived with no seat (round 12, item 5c) --- */
     attentionTitle: "Payments needing attention ({n})",
     attentionLede:

@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { ContactDialog } from "@/components/chrome/ContactDialog";
+import { getContactDetails } from "@/lib/home/queries";
 import { getStrings } from "@/lib/i18n/server";
 
 /**
@@ -28,6 +30,7 @@ import { getStrings } from "@/lib/i18n/server";
  */
 export async function Footer() {
   const t = await getStrings();
+  const contact = await getContactDetails(t.siteFooter.contactEmail);
   const { siteFooter } = t;
 
   const linkClass =
@@ -68,9 +71,16 @@ export async function Footer() {
         <Link href="/terms" className={linkClass}>
           {siteFooter.terms}
         </Link>
-        <a href={`mailto:${siteFooter.contactEmail}`} className={linkClass}>
-          {siteFooter.contact}
-        </a>
+        {/*
+          ~~A `mailto:` to a hardcoded address.~~ A DIALOG (round 13, item 18).
+
+          On a phone the old link opened a mail client over the site with a
+          blank message, which is a lot to ask of somebody who wanted to know
+          whether there is a phone number. The dialog shows what there is and
+          lets them choose — and its contents come from `site_settings`, so
+          the owner edits them in `/admin` without a deploy.
+        */}
+        <ContactDialog emails={contact.emails} phones={contact.phones} />
       </div>
       <div className="text-small text-faint">{siteFooter.copyright}</div>
     </footer>

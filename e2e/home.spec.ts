@@ -137,13 +137,22 @@ test("the home page shows the next three games as list rows", async ({ page }) =
 });
 
 /*
- * REQ-HOME-007 — the six FAQ entries, as specified.
+ * ~~REQ-HOME-007 — the six FAQ entries, as specified.~~ FOUR since round 13
+ * item 11, which is the owner's own list.
+ *
+ * "When should I show up?" and "What if I can't make it?" left it: the second
+ * is on the booking screen already, directly above the button it concerns,
+ * which is where a cancellation policy is actually read.
+ *
+ * THE COUNT IS STILL ASSERTED. An FAQ is exactly the surface that grows by one
+ * question at a time until nobody reads any of it, and a number here is what
+ * makes adding a fifth a decision rather than a commit.
  */
-test("the FAQ carries all six entries and they open", async ({ page }) => {
+test("the FAQ carries the owner's four entries and they open", async ({ page }) => {
   await page.goto("/");
 
   const entries = page.getByTestId("faq-panel").locator("details");
-  await expect(entries).toHaveCount(6);
+  await expect(entries).toHaveCount(4);
 
   // Closed to begin with, and openable without JavaScript state.
   const first = entries.first();

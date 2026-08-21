@@ -1,0 +1,7 @@
+-- Rollback for 20260821220000_contact_settings.
+--
+-- Re-apply `set_site_setting` from 20260802200000_setting_games_per_week.sql,
+-- which carries the three-key version. The stored values are left in place:
+-- `settings` is a jsonb blob and an unread key costs nothing, whereas deleting
+-- the owner's contact details to undo a code change would be destroying data
+-- to reverse a function definition.

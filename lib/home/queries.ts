@@ -181,3 +181,51 @@ async function getPitchHours(
   return pitchHours(games.map((game) => game.duration_minutes));
 }
 
+
+
+/**
+ * The contact details the footer's dialog shows (round 13, item 18).
+ *
+ * READ SEPARATELY FROM `getHomeContent`, because the footer is on every page
+ * and the home content is on one. Same singleton row and the same
+ * `site_settings` grant — Supabase dedupes neither, so this is one extra
+ * round trip on pages that render both, which is the price of not making
+ * every page load the player-of-the-month card.
+ *
+ * GUARDED RATHER THAN CAST, for the reason `wholeNumber` is: this renders to
+ * every visitor, and a value that somehow is not an array of strings has to
+ * become "no contact listed", never `[object Object]` in a `mailto:`.
+ */
+export interface ContactDetails {
+  emails: string[];
+  phones: string[];
+}
+
+export async function getContactDetails(fallbackEmail: string): Promise<ContactDetails> {
+  const supabase = await createServerSupabaseClient();
+
+  const { data } = await supabase
+    .from("site_settings")
+    .select("settings")
+    .eq("id", "singleton")
+    .maybeSingle();
+
+  const settings = (data?.settings ?? {}) as {
+    contact_emails?: unknown;
+    contact_phones?: unknown;
+  };
+
+  const emails = stringList(settings.contact_emails);
+  return {
+    // NEVER AN EMPTY EMAIL LIST. A contact dialog with no way to make contact
+    // is worse than the `mailto:` it replaced, so the built-in address stands
+    // in until the owner sets one.
+    emails: emails.length > 0 ? emails : [fallbackEmail],
+    phones: stringList(settings.contact_phones),
+  };
+}
+
+function stringList(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  return value.filter((entry): entry is string => typeof entry === "string" && entry.trim() !== "");
+}

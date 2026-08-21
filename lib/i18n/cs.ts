@@ -43,6 +43,7 @@ export const cs: StringsOverlay = {
     privacy: "Soukromí",
     terms: "Podmínky",
     contact: "Kontakt",
+    contactTitle: "Ozvi se nám",
   },
 
   notFound: {
@@ -639,22 +640,17 @@ export const cs: StringsOverlay = {
   faq: {
     title: "Otázky",
     items: [
-      { q: "Kdy mám dorazit?", a: "10 minut před výkopem." },
       {
         q: "Co si mám vzít?",
         a: "Boty a sebe. Rozlišováky, brankářské rukavice i míče jsou zajištěny.",
       },
       {
         q: "Jak zaplatím?",
-        a: "Po rezervaci naskenujte QR kód ve své bankovní aplikaci, nebo zaplaťte hotově na hřišti.",
-      },
-      {
-        q: "Co když nemůžu přijít?",
-        a: "Zrušte rezervaci kdykoli před výkopem a celá částka se vám vrátí jako kredit do peněženky.",
+        a: "Kartou nebo mobilní peněženkou při rezervaci, kredity z permanentky, nebo hotově na hřišti.",
       },
       {
         q: "Co když je zápas plný?",
-        a: "Přidejte se na čekací listinu; jakmile se uvolní místo, okamžitě vám napíšeme e-mail.",
+        a: "Přidej se na čekací listinu. Jakmile se místo uvolní, pošleme e-mail všem na ní — a místo dostane ten, kdo si ho vezme první.",
       },
       {
         q: "Musím být dobrý?",

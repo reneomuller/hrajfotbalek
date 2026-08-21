@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
+import { ContactForm } from "@/components/admin/ContactForm";
 import { SiteSettingsForms } from "@/components/admin/SiteSettingsForms";
 import { requireAdmin } from "@/lib/auth/requireAdmin";
-import { getHomeContent } from "@/lib/home/queries";
+import { getContactDetails, getHomeContent } from "@/lib/home/queries";
 import { createServiceRoleSupabaseClient } from "@/lib/supabase/clients";
 import { NotifyForm } from "@/components/admin/NotifyForm";
 import { strings } from "@/lib/strings";
@@ -26,12 +27,16 @@ export default async function AdminSitePage() {
   await requireAdmin();
 
   const service = createServiceRoleSupabaseClient();
-  const [{ data: players }, home] = await Promise.all([
+  const [{ data: players }, home, contact] = await Promise.all([
     service
       .from("players")
       .select("id, nickname")
       .order("nickname", { ascending: true }),
     getHomeContent(),
+    // The same singleton row `getHomeContent` reads, asked for separately —
+    // the form needs the raw lists, and the home content deliberately does not
+    // carry them.
+    getContactDetails(strings.siteFooter.contactEmail),
   ]);
 
   return (
@@ -52,6 +57,24 @@ export default async function AdminSitePage() {
         players={players ?? []}
         currentPlayerOfMonth={home.playerOfMonth?.nickname ?? null}
       />
+      {/*
+        CONTACT INFO (round 13, item 18).
+
+        On this screen for the same reason the notify block below it is: this
+        is where the owner already comes to change what the site SAYS, as
+        opposed to what it does. The footer's dialog reads exactly these two
+        lists, and saving here changes every page without a deploy.
+      */}
+      <section className="mt-10" data-testid="contact-section">
+        <h3 className="m-0 font-display text-body-lg uppercase tracking-wide text-white">
+          {strings.admin.siteContactTitle}
+        </h3>
+        <p className="mt-2 max-w-[560px] text-[13px] leading-relaxed text-muted">
+          {strings.admin.siteContactLede}
+        </p>
+        <ContactForm emails={contact.emails} phones={contact.phones} />
+      </section>
+
       {/*
         NOTIFY PLAYERS (round 7, item 5).
 

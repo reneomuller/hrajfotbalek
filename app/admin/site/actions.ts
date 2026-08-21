@@ -96,3 +96,61 @@ export async function setPlayerOfMonthAction(
   revalidatePath("/admin/site");
   return { status: "saved" };
 }
+
+
+/**
+ * The contact lists the footer's dialog shows (round 13, item 18).
+ *
+ * ONE TEXTAREA PER LIST, one entry per line. Not a repeating field set with
+ * add/remove buttons: the owner edits this twice a year, the values are short,
+ * and a textarea is the control that needs no explanation and no JavaScript.
+ *
+ * EMPTY IS A VALID PHONE LIST and means "show no phone". It is not a valid
+ * EMAIL list — `getContactDetails` falls back to the built-in address rather
+ * than rendering a contact dialog with no way to make contact — but the RPC
+ * accepts an empty array for both, because a store should not encode a
+ * rendering preference.
+ */
+export async function setContactAction(
+  _prev: SiteSettingState,
+  formData: FormData,
+): Promise<SiteSettingState> {
+  await requireAdmin();
+
+  const emails = toLines(formData.get("contactEmails"));
+  const phones = toLines(formData.get("contactPhones"));
+
+  const supabase = await createServerSupabaseClient();
+
+  for (const [key, value] of [
+    ["contact_emails", emails],
+    ["contact_phones", phones],
+  ] as const) {
+    const { error } = await supabase.rpc("set_site_setting", {
+      p_key: key,
+      p_value: value,
+    });
+    if (error) {
+      return { status: "error", message: toAdminErrorMessage(error.message) };
+    }
+  }
+
+  // Every page renders the footer, so the whole site is stale after this.
+  revalidatePath("/", "layout");
+
+  return { status: "saved" };
+}
+
+/**
+ * A textarea into a list of trimmed, non-empty lines.
+ *
+ * The blank-line filter is what makes a trailing newline harmless — and a
+ * trailing newline is what a textarea produces when somebody presses enter
+ * before saving, which is most of the time.
+ */
+function toLines(raw: FormDataEntryValue | null): string[] {
+  return String(raw ?? "")
+    .split("\n")
+    .map((line) => line.trim())
+    .filter((line) => line !== "");
+}
