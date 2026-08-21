@@ -56,6 +56,24 @@ export async function InfoCard({
       data-testid="game-info-card"
       className="mt-4 rounded-card bg-surface p-5"
     >
+      {/*
+        A HEADING, AT LAST (round 13, item 14).
+
+        This card carried the game's when, where, format, surface and level
+        with NO LABEL AT ALL, directly under the hero — so the one block on the
+        page that answers "what is this game" was the only one a reader could
+        not name. "What's included" and "Pitch amenities" beneath it both have
+        one, in exactly this treatment, which made the unlabelled card read as
+        a preamble rather than a section.
+
+        IT WAS ALREADY ABOVE "What's included" in the source, and it stays
+        there — the item's ordering half was already satisfied. What was
+        missing was the presentation that makes the order legible.
+      */}
+      <h2 className="m-0 mb-4 text-body-lg font-semibold text-white">
+        {t.games.gameInfoTitle}
+      </h2>
+
       {/* When. The SPAN, not the kick-off alone (§5.2, REQ-GAME-007) — the end
           comes from `gameEndsAt`, the same call the `.ics` DTEND and the
           schema.org endDate make, so the page cannot disagree with the calendar

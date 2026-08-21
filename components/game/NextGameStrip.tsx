@@ -1,7 +1,7 @@
-import { GameCard } from "@/components/game/GameCard";
+import Link from "next/link";
+import { formatGameDateTime } from "@/lib/format";
 import { getStrings } from "@/lib/i18n/server";
 import type { GameCardGame } from "@/components/game/GameCard";
-import type { RosterAvatar } from "@/lib/games/queries";
 
 /**
  * "Your next game" — above the list, for a player who already holds a booking.
@@ -19,53 +19,90 @@ import type { RosterAvatar } from "@/lib/games/queries";
  * settled, so it carries the minimum that identifies the game plus how full it
  * is.~~
  *
- * **REVERSED 2026-08-20 (round 8, item 9): IT IS THE MATCH CARD.**
+ * ~~REVERSED 2026-08-20 (round 8, item 9): IT IS THE MATCH CARD. A pointer to
+ * a game should look like that game, and a private layout above a column of
+ * canonical cards is "the same game drawn three ways in one product".~~
  *
- * The old reasoning treated "already settled" as a reason to draw the same
- * game a different way — a private layout with its own surface, its own type
- * and no photograph, sitting directly above a column of canonical cards. That
- * is the exact defect `GameCard`'s own header calls out: "the same game drawn
- * three ways in one product". A pointer to a game should look like that game.
+ * **REVERSED AGAIN, ROUND 13 ITEM 17: IT IS A BANNER.**
  *
- * SO THIS IS NOW A LABEL AND A CARD, and the card is the component, not a
- * copy of its structure. Photo, fade, venue, badges, time pill, spots,
- * capacity bar and faces all arrive by construction and cannot drift from the
- * list beneath it, because they ARE the list's card.
+ * Round 8's argument was about DRIFT — a bespoke layout that would slowly stop
+ * matching the card beneath it. That argument was right and this does not
+ * revive the thing it was aimed at: what follows is not a private copy of a
+ * card's structure, it is four facts in a row.
  *
- * THE LABEL IS THE ONLY THING THIS FILE DRAWS. `eyebrow` in volt, matching the
- * day headings the list uses further down — so the page reads as one column of
- * grouped cards rather than a widget above a list.
+ * What round 8 did not weigh is COST. A full card here is a photograph, a
+ * fade, badges, a capacity bar and an avatar stack — roughly 240px — spent
+ * telling a player something they already know, directly above the list they
+ * came to read. The owner asked for the Game Pass promo's dimensions, and
+ * `PassPanel` is the shape: one row, `px-5 py-4`, a bordered volt tint.
+ *
+ * THE THREE FACTS ARE THE ITEM'S: title, time, status. "Status" here is how
+ * full it is, which is the only thing about a game you are already in that can
+ * still change.
+ *
+ * `PassPanel`'S GEOMETRY IS COPIED, NOT IMPORTED, and that is the honest
+ * trade: they are two different destinations with two different tints, and
+ * sharing a component to keep two paddings equal would couple them for the
+ * sake of eight characters.
  */
 export async function NextGameStrip({
   game,
   bookedCount,
-  roster = [],
-  supabaseUrl,
   pitchName,
 }: {
   game: GameCardGame;
   bookedCount: number;
-  /** Same stack the list card carries; empty renders none (§2.1). */
-  roster?: RosterAvatar[];
-  supabaseUrl?: string;
+  /*
+   * ~~`roster` and `supabaseUrl` — the avatar stack the list card carries.~~
+   * A banner has no faces on it (round 13, item 17), and props a component
+   * accepts and ignores are props somebody will keep passing.
+   */
   pitchName?: string | null;
 }) {
   const t = await getStrings();
+  const spotsLeft = Math.max(0, game.capacity - bookedCount);
 
   return (
     <section data-testid="next-game-strip">
       <h2 className="m-0 mb-2 text-eyebrow font-semibold uppercase text-volt">
         {t.games.nextGameStrip}
       </h2>
-      <GameCard
-        game={game}
-        bookedCount={bookedCount}
-        roster={roster}
-        supabaseUrl={supabaseUrl}
-        pitchName={pitchName}
-        /* The reader is already in this game — see `joinCue` on GameCard. */
-        joinCue={false}
-      />
+
+      <Link
+        href={`/game/${game.id}`}
+        data-testid="next-game-banner"
+        className="flex items-center justify-between gap-3 rounded-card border border-hairline-volt bg-volt/[.10] px-5 py-4 no-underline transition-colors hover:bg-volt/[.16]"
+      >
+        <span className="min-w-0">
+          <span className="block truncate text-body-lg font-bold text-white">
+            {pitchName ? `${game.venue} · ${pitchName}` : game.venue}
+          </span>
+          <span className="mt-[2px] block truncate text-small text-muted">
+            {formatGameDateTime(game.starts_at)}
+          </span>
+        </span>
+
+        {/*
+          HOW FULL, which is the only thing about a game you are already in
+          that can still change — and the one number the list card spends a
+          capacity bar on.
+        */}
+        <span className="shrink-0 text-right">
+          <span className="block text-body font-bold text-volt">
+            {bookedCount} / {game.capacity}
+          </span>
+          <span className="block text-[12px] text-muted">
+            {/*
+              `spotsLeft` / `spotLeft` are BARE NOUNS in the table — the count
+              is interpolated by the caller, which is how the list card does
+              it too. A `{count}` replace here would have printed the literal.
+            */}
+            {spotsLeft === 0
+              ? t.games.full
+              : `${spotsLeft} ${spotsLeft === 1 ? t.games.spotLeft : t.games.spotsLeft}`}
+          </span>
+        </span>
+      </Link>
     </section>
   );
 }

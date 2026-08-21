@@ -150,16 +150,17 @@ export default async function GamesPage({
       {nextOwn && (
         <div className="mt-6">
           {/*
-            The same roster and pitch name the list rows get (round 8, item 9)
-            — the strip IS a `GameCard` now, so withholding them would draw the
-            same game with a missing avatar stack directly above one that has
-            it.
+            ~~The same roster and pitch name the list rows get — the strip IS
+            a `GameCard` now, so withholding them would draw the same game
+            with a missing avatar stack directly above one that has it.~~
+
+            IT IS A BANNER SINCE ROUND 13 (item 17): a row of four facts at the
+            Game Pass promo's dimensions, not a card. No roster, no photo — it
+            takes the venue, the count and the pitch name and nothing else.
           */}
           <NextGameStrip
             game={nextOwn.game}
             bookedCount={nextOwnCount}
-            roster={rosters.get(nextOwn.game.id) ?? []}
-            supabaseUrl={supabaseUrl}
             pitchName={pitchNames.get(nextOwn.game.id)}
           />
         </div>

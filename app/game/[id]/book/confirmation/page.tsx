@@ -86,13 +86,46 @@ export default async function ConfirmationPage({
         data-status={booking.status}
         data-method={booking.payment_method}
       >
-        <div className="text-[11px] uppercase tracking-eyebrow text-volt">
-          {booking.status === "confirmed"
-            ? t.booking.confirmed
-            : t.booking.reserved}
-        </div>
+        {/*
+          AN UNMISTAKABLE CONFIRMED STATE (round 13, item 10).
 
-        <h1 className="mt-3 font-display text-section-title uppercase tracking-wide text-white">
+          ~~An 11px volt eyebrow reading "Payment confirmed".~~ That is the
+          same treatment this page gives the word "Availability", on the one
+          screen whose entire job is to tell somebody the thing they just did
+          worked. A player arriving here after paying wants a full stop, not a
+          label.
+
+          SO: a volt panel, the display face, and a mark. It renders for a
+          CONFIRMED booking however it got there — credits, a seed account, or
+          the Stripe webhook — because those are the same fact to the reader
+          and differ only in the sentence underneath.
+
+          A RESERVED booking keeps the quieter treatment, and it should: the
+          spot is held and something is still owed, which is not the same
+          message and must not look like it.
+        */}
+        {booking.status === "confirmed" ? (
+          <div
+            data-testid="booking-confirmed"
+            className="flex items-center gap-3 rounded-card border-2 border-volt bg-volt/[.08] px-5 py-4"
+          >
+            <span
+              aria-hidden="true"
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-volt text-[20px] font-bold leading-none text-ink"
+            >
+              ✓
+            </span>
+            <span className="font-display text-title uppercase leading-none tracking-wide text-volt">
+              {t.booking.bookingConfirmed}
+            </span>
+          </div>
+        ) : (
+          <div className="text-[11px] uppercase tracking-eyebrow text-volt">
+            {t.booking.reserved}
+          </div>
+        )}
+
+        <h1 className="mt-4 font-display text-section-title uppercase tracking-wide text-white">
           {game.venue}
         </h1>
 

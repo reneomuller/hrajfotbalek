@@ -569,6 +569,12 @@ export const strings = {
     gamesPlayedNone: "First game",
 
     // --- what's included (v1.2 §5.7) ----------------------------------------
+    /*
+     * The game-information card's heading (round 13, item 14). It sits
+     * directly above `includedTitle` and takes the same treatment, which is
+     * the point: three sections down the page, all named the same way.
+     */
+    gameInfoTitle: "Game information",
     includedTitle: "What's included",
     /*
      * THE SECOND HEADING (Section 4, item 2). The column is one flat `text[]`;
@@ -746,6 +752,13 @@ export const strings = {
     cancelReassuranceCutoff:
       "Cancel up to {hours}h before kickoff for full wallet credit.",
     confirmBooking: "Confirm booking",
+    /*
+     * THE FULL STOP (round 13, item 10). Shown on the confirmation screen for
+     * a CONFIRMED booking however it got there — credits, a seed account, or
+     * the Stripe webhook — because those are one fact to the reader and differ
+     * only in the sentence underneath.
+     */
+    bookingConfirmed: "Booking confirmed",
     reserved: "Spot reserved",
     confirmed: "Payment confirmed",
     creditApplied: "Credit applied",
@@ -1300,7 +1313,7 @@ export const strings = {
     venueNameLabel: "Venue name",
     venueImageLabel: "Image file",
     venueImageHint:
-      "A file already committed under public/venues/ — e.g. prazacka.jpg. Leave empty for no photo.",
+      "A file under public/venues/, e.g. prazacka.jpg.",
     // --- venue photograph (§5.4, migration 34) --------------------------------
     venueAmenitiesIncluded: "What's included",
     venueAmenitiesPitch: "Pitch amenities",
@@ -1319,14 +1332,14 @@ export const strings = {
     venuePhotoFailed: "The upload did not go through. Try again.",
     venuePhotoNoVenue: "Save the game first — a photo attaches to a venue, and this one is new.",
     venueMapQueryLabel: "Map search (optional)",
-    venueMapQueryHint: "What to search for in Google Maps. Defaults to the venue name.",
+    venueMapQueryHint: "Defaults to the venue name.",
     startsAtLabel: "Kick-off",
     capacityLabel: "Capacity",
-    capacityHint: "Cannot be lowered below the players already booked.",
+    capacityHint: "Cannot go below the players already booked.",
     priceLabel: "Price (CZK)",
-    priceHint: "Applies to future bookings only — existing bookings keep their price.",
+    priceHint: "Future bookings only.",
     formatLabel: "Format (optional)",
-    formatHint: "Like 6v6, or 6v6v6 for a rotating three-way. Leave empty if it varies.",
+    formatHint: "Like 6v6, or 6v6v6 for a three-way.",
     surfaceLabel: "Surface (optional)",
     surfaceNone: "Not specified",
     surfaceOptions: {
@@ -1336,19 +1349,19 @@ export const strings = {
       sand: "Sand",
     },
     notesLabel: "Notes (optional)",
-    notesHint: "Logistics for players — gate codes, parking, what to bring.",
+    notesHint: "Gate codes, parking, what to bring.",
 
     // --- organizer, duration, skill (Phase 2 §5) ------------------------------
     organizerHeading: "Organizer",
     organizerNameLabel: "Organizer name",
-    organizerNameHint: "Shown publicly on the card and the game page.",
+    organizerNameHint: "Shown publicly.",
     organizerPhoneLabel: "Organizer phone (optional)",
     // Says where the number goes, because an organizer deciding whether to give
     // one needs to know that before they type it, not after.
     organizerPhoneHint:
-      "Only players holding a spot on this game can see it. Never public, and not readable through the API by anyone else.",
+      "Only players holding a spot can see it.",
     durationLabel: "Duration (minutes)",
-    durationHint: "Between 30 and 180. Leave empty to use the standard 60.",
+    durationHint: "30 to 180. Empty uses 60.",
     skillHeading: "Skill level",
     skillHint:
       "Leave everything unticked for all levels — that shows no badge. Ticking every level means the same thing.",
@@ -1359,9 +1372,9 @@ export const strings = {
       advanced: "Advanced",
     },
     subsLabel: "Substitutes per team (optional)",
-    subsHint: "Renders beside the format, like 6v6 · 2 subs per team. Limits nothing.",
+    subsHint: "Display only — limits nothing.",
     createGame: "Create as draft",
-    createGameHint: "A new game is a draft. Publishing it is a separate step.",
+    createGameHint: "A new game is a draft; publishing is a separate step.",
     saveGame: "Save changes",
     saved: "Saved",
     draftNotPublic: "This game is a draft — it is not on the public games list.",
@@ -1396,7 +1409,7 @@ export const strings = {
     /* --- pitch name (migration 41, round 9). Admin copy is English only. --- */
     pitchNameLabel: "Pitch name",
     pitchNameHint:
-      "Optional. Leave empty to use the venue's own pitch. Names you type are remembered.",
+      "Empty uses the venue's own. Names you type are remembered.",
     pitchNameTooLong: "A pitch name is at most 60 characters.",
     pitchNameSuggestions: "Pitch names already in use",
     notesTooLong: "Notes are limited to 500 characters.",

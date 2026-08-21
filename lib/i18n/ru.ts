@@ -284,6 +284,7 @@ export const ru: StringsOverlay = {
     gamesPlayed: "матчей: {count}",
     gamePlayedOne: "1 матч",
     gamesPlayedNone: "Первый матч",
+    gameInfoTitle: "Информация об игре",
     includedTitle: "Что входит",
     pitchAmenitiesTitle: "Инфраструктура площадки",
     amenities: {
@@ -384,6 +385,7 @@ export const ru: StringsOverlay = {
     cancelReassuranceCutoff:
       "Отменить можно за {hours} ч до начала — всё вернётся кредитом в кошелёк.",
     confirmBooking: "Подтвердить бронь",
+    bookingConfirmed: "Бронь подтверждена",
     reserved: "Место забронировано",
     confirmed: "Платёж подтверждён",
     creditApplied: "Кредит применён",

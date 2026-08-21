@@ -281,6 +281,7 @@ export const cs: StringsOverlay = {
     gamesPlayed: "{count} zápasů",
     gamePlayedOne: "1 zápas",
     gamesPlayedNone: "První zápas",
+    gameInfoTitle: "Informace o zápase",
     includedTitle: "Co je v ceně",
     pitchAmenitiesTitle: "Vybavení hřiště",
     amenities: {
@@ -381,6 +382,7 @@ export const cs: StringsOverlay = {
     cancelReassuranceCutoff:
       "Zrušit můžeš až do {hours} h před výkopem — všechno se ti vrátí jako kredit.",
     confirmBooking: "Potvrdit rezervaci",
+    bookingConfirmed: "Rezervace potvrzena",
     reserved: "Místo rezervované",
     confirmed: "Platba potvrzená",
     creditApplied: "Kredit uplatněný",
