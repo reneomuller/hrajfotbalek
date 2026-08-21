@@ -1,5 +1,4 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { claimShadowPlayer } from "@/lib/auth/shadowClaim";
 
 /**
  * What happens immediately after a credential is accepted — for BOTH ways in.
@@ -37,14 +36,25 @@ export async function completePostAuth(
     console.error("record_auth_completed failed", eventError.message);
   }
 
-  let playerId: string | null = null;
-  try {
-    playerId = await claimShadowPlayer(supabase);
-  } catch (error) {
-    console.error("claim_shadow_player failed", (error as Error).message);
-  }
-
-  return { hasPlayer: playerId !== null || hadPlayerRow === true };
+  /*
+   * ~~`claimShadowPlayer(supabase)` — on first sign-in, adopt any shadow row
+   * whose email matches, so the WhatsApp-era history follows the person onto
+   * their new account.~~ REMOVED (round 13, item 26).
+   *
+   * The flow that MADE shadow players went in round 11: an admin holds
+   * anonymous guest seats now, and a guest is a seat rather than an identity.
+   * So nothing has created a claimable row for two rounds, and this ran on
+   * every single sign-in to adopt a population that stopped growing.
+   *
+   * WHAT IT MEANS FOR THE ROWS THAT ALREADY EXIST, stated plainly because it
+   * is a real loss: a pre-round-11 shadow with an email will no longer be
+   * adopted automatically when that person signs up. Their history does not
+   * vanish — it is still on the shadow row, still rendering in every lineup
+   * they were in — but it no longer merges into the new account by itself.
+   * `merge_players` survives, unreferenced, as the repair for exactly that
+   * case, and the ledger says so.
+   */
+  return { hasPlayer: hadPlayerRow === true };
 }
 
 /**

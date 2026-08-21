@@ -63,7 +63,14 @@ export default async function AdminGamePage({
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const { id } = await params;
-  const query = searchParams ? await searchParams : {};
+  /*
+   * ~~`query.add === "1"` opened the add-player disclosure on arrival from the
+   * old `/add-player` route.~~ That flow went in round 11 with shadow players,
+   * so nothing reads the search params any more. The PROP stays because the
+   * route still accepts them and removing it from the signature would be a
+   * change to the page's contract for no gain.
+   */
+  void searchParams;
   const [admin, game] = await Promise.all([requireAdmin(), getAdminGame(id)]);
   if (!game) notFound();
 

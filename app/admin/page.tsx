@@ -236,6 +236,15 @@ export default async function AdminDashboardPage() {
                 <Link
                   href={`/admin/games/${row.id}`}
                   data-testid="dashboard-game-row"
+                  /*
+                    `py-3` AND p14's GEOMETRY, UNCHANGED. Item 20's "much
+                    vertically shorter per row" is about the GAMES PILL LIST at
+                    `/admin/games`, which was 137px a row; these are 64, which
+                    is the pitch p14 draws and `strips-admin-dashboard` pins.
+                    Shortening a row the frame specifies to satisfy a
+                    complaint about a different list would trade one fidelity
+                    for another.
+                  */
                   className="flex items-center justify-between gap-3 px-5 py-3 no-underline"
                 >
                   <span className="min-w-0">
@@ -244,16 +253,10 @@ export default async function AdminDashboardPage() {
                     </span>
                     {/*
                       `date · format · organizer`, which is p14's meta line
-                      (round 10, item 1). The format was the one fact on the
-                      frame's row that the query already had within reach and
-                      round 8 left out.
+                      (round 10, item 1).
                     */}
                     <span className="block truncate text-small text-muted">
-                      {[
-                        formatGameDateTime(row.startsAt),
-                        row.format,
-                        row.organizer,
-                      ]
+                      {[formatGameDateTime(row.startsAt), row.format, row.organizer]
                         .filter(Boolean)
                         .join(" · ")}
                     </span>
@@ -293,6 +296,46 @@ export default async function AdminDashboardPage() {
             ))}
           </ul>
         )}
+      </section>
+
+      {/*
+        GAMES AND PLAYERS, BETWEEN THE BOARD AND THE ACTIONS (round 13,
+        item 20).
+
+        The chip row at the top of every admin page already reaches both, and
+        that is the objection to putting them here — answered by what the
+        dashboard is FOR. The rows above are the six games that need attention
+        today; these are the two lists you go to when the answer is not on that
+        board. A chip row is navigation you use when you know where you are
+        going; this is the dashboard finishing its own sentence.
+
+        SECTIONS, NOT PILLS. The duplicate pill row that used to sit at the
+        bottom of this page was the chip row a second time, in a place that
+        made it look like a different set of destinations.
+      */}
+      <section className="mt-5" data-testid="dashboard-sections">
+        <div className="grid grid-cols-2 gap-3">
+          {[
+            { href: "/admin/games", label: strings.admin.navGames, testId: "dashboard-to-games" },
+            {
+              href: "/admin/players",
+              label: strings.admin.navPlayers,
+              testId: "dashboard-to-players",
+            },
+          ].map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              data-testid={link.testId}
+              className="lifted flex min-h-11 items-center justify-between rounded-card px-4 py-3 text-body font-semibold text-bone no-underline transition-colors hover:border-hairline-volt"
+            >
+              {link.label}
+              <span aria-hidden="true" className="text-volt">
+                →
+              </span>
+            </Link>
+          ))}
+        </div>
       </section>
 
       {/*

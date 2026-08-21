@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { availableTransitions, listAllGames } from "@/lib/admin/queries";
+import { listAllGames } from "@/lib/admin/queries";
 import { formatCzk, formatGameDateTime } from "@/lib/format";
 import { ExportCsvLink } from "@/components/admin/ExportCsvLink";
 import { strings } from "@/lib/strings";
@@ -41,77 +41,75 @@ export default async function AdminGamesPage() {
           {strings.admin.gamesEmpty}
         </p>
       ) : (
-        <ul className="mt-6 list-none space-y-3 p-0">
+        <ul className="mt-6 list-none space-y-2 p-0">
           {games.map((game) => {
-            const { canEdit } = availableTransitions(game.status);
+            // ~~`canEdit` gated the second link.~~ There is one link now
+            // (round 13, item 21) and it is available in every status: the
+            // game surface it opens is where a played game is settled and a
+            // cancelled one is read.
             return (
               <li
                 key={game.id}
                 data-testid="admin-game-row"
                 data-status={game.status}
                 /*
-                  VENUE AND COUNT ON ONE ROW, everything else beneath (admin
-                  restyle). The reference draws a fixture as a bold venue with
-                  the occupancy hard right and a quiet detail line under both —
-                  which is exactly what an organizer scans a list of games for:
-                  where, and how full.
-                */
-                className="lifted flex flex-col gap-3 rounded-card px-4 py-4"
-              >
-                <div className="flex items-start justify-between gap-3">
-                  {/* `venue` is admin-supplied free text; JSX escapes it. */}
-                  <div className="min-w-0 flex-1">
-                    <div className="truncate text-body-lg font-bold text-white">
-                      {game.venue}
-                    </div>
-                    <div className="mt-[2px] text-small text-muted">
-                      {formatGameDateTime(game.starts_at)} · {formatCzk(game.price_czk)}
-                    </div>
-                  </div>
+                  ~~A card: venue and count on one row, a detail line beneath,
+                  a waitlist line beneath that, and a link row at the bottom.~~
+                  ONE ROW (round 13, item 20).
 
-                  <div className="shrink-0 text-right">
-                    <div className="text-body-lg font-bold text-volt">
+                  It was 137px per game. Ten games was fourteen hundred pixels
+                  of scrolling to answer "which of these needs me", and every
+                  one of those rows carried four separate lines to say what the
+                  dashboard says in two.
+
+                  WHAT SURVIVED IS WHAT AN ORGANIZER SCANS FOR: where, when,
+                  how full, and what state it is in. The waitlist depth stays
+                  because it is the expansion-trigger sensor (REQ-UI-018) and
+                  it is the one number on this page that is not on the
+                  dashboard — but it only renders WHEN THERE IS A QUEUE, which
+                  is the difference between a sensor and a column of zeroes.
+
+                  THE WHOLE ROW IS THE LINK, so the separate "Manage" text link
+                  is gone with it (item 21) — a row that navigates does not
+                  need a word telling you it navigates.
+                */
+                className="lifted rounded-card"
+              >
+                <Link
+                  href={`/admin/games/${game.id}`}
+                  data-testid="admin-manage-game"
+                  className="flex items-center justify-between gap-3 px-4 py-3 no-underline"
+                >
+                  <span className="min-w-0 flex-1">
+                    {/* `venue` is admin-supplied free text; JSX escapes it. */}
+                    <span className="block truncate text-body font-semibold text-white">
+                      {game.venue}
+                    </span>
+                    <span className="mt-[1px] block truncate text-[12px] text-muted">
+                      {formatGameDateTime(game.starts_at)} · {formatCzk(game.price_czk)}
+                      {game.waitlistCount > 0 && (
+                        <>
+                          {" · "}
+                          <span data-testid="admin-waitlist-depth" className="text-volt">
+                            {strings.admin.waitlistLabel} {game.waitlistCount}
+                          </span>
+                        </>
+                      )}
+                    </span>
+                  </span>
+
+                  <span className="shrink-0 text-right">
+                    <span className="block text-body font-bold text-volt">
                       {game.activeCount}/{game.capacity}
-                    </div>
-                    <div
+                    </span>
+                    <span
                       data-testid="admin-game-status"
-                      className="mt-[2px] text-small text-volt-dim"
+                      className="block text-[12px] text-volt-dim"
                     >
                       {strings.admin.status[game.status]}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-small">
-                  {/* `Booked x/y` USED TO SIT HERE TOO. The occupancy moved to
-                      the top-right of the row above, so printing it again three
-                      lines down was the same fact twice — which reads as two
-                      different numbers that happen to agree. */}
-                  {/* Waitlist depth — the expansion-trigger sensor (REQ-UI-018). */}
-                  <span
-                    data-testid="admin-waitlist-depth"
-                    className={game.waitlistCount > 0 ? "text-volt" : "text-faint"}
-                  >
-                    {strings.admin.waitlistLabel} {game.waitlistCount}
+                    </span>
                   </span>
-                </div>
-
-                <div className="flex gap-3">
-                  <Link
-                    href={`/admin/games/${game.id}`}
-                    className="text-[11px] uppercase tracking-eyebrow text-volt no-underline"
-                  >
-                    {strings.admin.manageGame}
-                  </Link>
-                  {canEdit && (
-                    <Link
-                      href={`/admin/games/${game.id}/edit`}
-                      className="text-[11px] uppercase tracking-eyebrow text-muted no-underline"
-                    >
-                      {strings.admin.editGame}
-                    </Link>
-                  )}
-                </div>
+                </Link>
               </li>
             );
           })}

@@ -71,3 +71,33 @@
 -- `lib/payments/spd.ts` stays in the repository for the same reason: it builds
 -- the SPD string the confirmation EMAILS still carry for bookings made on the
 -- old rail. Delete it when those bookings are all settled and not before.
+
+-- =============================================================================
+-- ROUND 13 ITEM 26 — the shadow-claim RPC. ALSO HANDED OVER, NOT RUN.
+-- =============================================================================
+--
+-- `claim_shadow_player()` adopted a shadow `players` row whose email matched
+-- the person signing in. Nothing calls it any more: round 11 removed the flow
+-- that CREATED shadow players (an admin holds anonymous guest seats now, and a
+-- guest is a seat rather than an identity), and round 13 item 26 removed the
+-- call from `lib/auth/postAuth.ts`.
+--
+-- READ THIS BEFORE DROPPING IT. Pre-round-11 shadow rows still exist and still
+-- render — under their own names, as guests, in every lineup they were in.
+-- What the RPC did was merge one into a real account automatically at first
+-- sign-in. With it gone, that merge is manual, and `merge_players` is the tool.
+--
+--   select count(*) from public.players
+--    where auth_user_id is null and email is not null;
+--
+-- If that count is greater than zero, those are people who could still sign up
+-- and whose history would no longer follow them automatically. Dropping the
+-- function does not change that — the call site is already gone — but the
+-- number is worth knowing before deciding this is finished.
+--
+-- drop function if exists public.claim_shadow_player();
+--
+-- `merge_players` STAYS, deliberately and undocumented in the UI. It is the
+-- only repair for a split identity, and a repair is not deleted because its
+-- button was. It is recorded in docs/REQUESTS.md so the next session does not
+-- rediscover it as dead code.
