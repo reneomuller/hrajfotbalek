@@ -132,7 +132,7 @@ export default async function GamesPage({
   const grouped = groupByDay(visible, ({ game }) => game.starts_at, now, t, locale);
 
   return (
-    <main className="relative z-10 mx-auto w-full max-w-shell px-gutter pb-16 pt-24">
+    <main className="relative z-10 mx-auto w-full max-w-shell px-gutter pb-16 pt-16">
       {/*
         ~~The page title, `page-title`, the step p02 draws.~~ REMOVED (round 13,
         item 16).
@@ -150,7 +150,7 @@ export default async function GamesPage({
       */}
 
       {nextOwn && (
-        <div className="mt-6">
+        <div className="mt-2">
           {/*
             ~~The same roster and pitch name the list rows get — the strip IS
             a `GameCard` now, so withholding them would draw the same game
@@ -168,11 +168,27 @@ export default async function GamesPage({
         </div>
       )}
 
+      {/*
+        THE RHYTHM, TOP TO BOTTOM (round 14, item 6).
+
+        `pt-24` was sized for a page with a title in it. With the title gone
+        (round 13, item 16) it left a hand's width of nothing under the header,
+        so the content comes UP to `pt-16`.
+
+        And the three blocks below get room to be three blocks: the day strip,
+        the pass banner and the first game box were `mt-4 / mt-4 / mt-3`, which
+        at this density read as one undifferentiated stack. `mt-6` between each
+        is the noticeable step the item asks for, spent where it separates
+        things that are actually different rather than at the top of the page
+        where it separated nothing from nothing.
+      */}
       <DayPicker tabs={dayTabs} selected={selectedDay} allLabel={t.games.dayFilterAll} />
 
       {/* Between the day-picker and the list, per §4.2. Someone scanning for a
           game is the person for whom pre-buying games is worth anything. */}
-      <PassPanel />
+      <div className="mt-6">
+        <PassPanel />
+      </div>
 
       {games.length === 0 ? (
         <div className="mt-8">
@@ -184,7 +200,7 @@ export default async function GamesPage({
           />
         </div>
       ) : (
-        <div className="mt-3 flex flex-col gap-4" data-testid="game-list">
+        <div className="mt-6 flex flex-col gap-5" data-testid="game-list">
           {grouped.map((day) => (
             <section key={day.key} data-testid="day-group" data-day={day.key}>
               {/* The heading carries the date as well as the relative word:
@@ -195,13 +211,23 @@ export default async function GamesPage({
               <h2
                 data-testid="day-heading"
                 /*
-                  WHITE, not `faint` (Section 3, item 3). These headings are
-                  the only thing carrying the DATE now — item 5 takes it off
-                  the pills — so a colour chosen when they were a repeat of
-                  what the pill already said is the wrong weight for a line
-                  that is now the sole answer to "which day is this".
+                  WHITE, not `faint` (Section 3, item 3) — these headings are
+                  the only thing carrying the DATE.
+
+                  AND `body-lg`, NOT `eyebrow` (round 14, item 4). Every group
+                  always HAD a heading; the owner reported that days beyond
+                  today and tomorrow were missing one, and what he was reading
+                  is real: at 11px with 3px tracking, "TODAY · MON 24 AUG"
+                  still reads as a header because the word anchors it, and a
+                  bare "MON 7 SEPT" reads as a caption on the box beneath.
+
+                  So every date group now gets the SAME treatment, and it is
+                  the section language the rest of the product uses — the same
+                  `body-lg` white heading as "What's included" and "Game
+                  information". A header that only looks like one when it says
+                  "Today" is not a header.
                 */
-                className="m-0 mb-2 text-eyebrow font-semibold uppercase text-white"
+                className="m-0 mb-3 text-body-lg font-semibold text-white"
               >
                 {day.label}
               </h2>

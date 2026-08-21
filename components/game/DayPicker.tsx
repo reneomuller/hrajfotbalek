@@ -109,8 +109,20 @@ export function DayPicker({
     rounded rectangle while it is under half the SHORT side. Below that it is
     a pill, whatever it is named.
   */
+  /*
+    BIGGER, AND THE ROW SCROLLS (round 14, item 5).
+
+    ~~`h-12 min-w-0 flex-1`~~ — nine cells sharing 346px is 38px each, which is
+    a 38px tap target carrying two lines of type. `flex-1` was doing the
+    squeezing: the row could never overflow because every cell gave way.
+
+    `h-16 w-14 shrink-0` fixes the cell and lets the row overflow instead, on
+    the same `-mx-gutter … overflow-x-auto` pattern `AdminNav` already uses —
+    so the strip bleeds to both screen edges and the tenth day is a swipe away
+    rather than a narrower box.
+  */
   const cell =
-    "flex h-12 min-w-0 flex-1 flex-col items-center justify-center gap-[1px] rounded-control border no-underline transition-colors";
+    "flex h-16 w-14 shrink-0 flex-col items-center justify-center gap-[2px] rounded-control border no-underline transition-colors";
   const skin = (isSelected: boolean, hasGames: boolean) =>
     isSelected
       ? "border-hairline-volt bg-volt text-ink"
@@ -122,7 +134,7 @@ export function DayPicker({
     <nav
       data-testid="day-picker"
       aria-label={allLabel}
-      className="mt-4 flex gap-1"
+      className="-mx-gutter mt-4 flex gap-2 overflow-x-auto px-gutter pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
     >
       {/* The way back to everything, and the resting state. It flexes with the
           day cells rather than sizing to its label, so the nine are one row of
@@ -133,7 +145,7 @@ export function DayPicker({
         data-testid="day-tab-all"
         data-selected={selected === null ? "true" : "false"}
         aria-current={selected === null ? "page" : undefined}
-        className={`${cell} text-[11px] font-semibold ${
+        className={`${cell} text-[12px] font-semibold ${
           selected === null
             ? "border-hairline-volt bg-volt text-ink"
             : "border-hairline-strong text-muted hover:border-hairline-volt"
@@ -165,13 +177,13 @@ export function DayPicker({
               abbreviation style is the original's.
             */}
             <span
-              className={`whitespace-nowrap text-[8px] uppercase ${
+              className={`whitespace-nowrap text-[9px] uppercase ${
                 isSelected ? "text-ink/70" : hasGames ? "text-muted" : "text-faint"
               }`}
             >
               {tab.weekday}
             </span>
-            <span className="text-[15px] font-bold leading-none">{tab.dayOfMonth}</span>
+            <span className="text-[19px] font-bold leading-none">{tab.dayOfMonth}</span>
             {/*
               The dot marks a day with football on it — a fixed-height slot
               rather than a conditional element, so every cell is the same size
