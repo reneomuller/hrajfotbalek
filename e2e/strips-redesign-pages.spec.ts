@@ -11,8 +11,7 @@ import { LOCALE_COOKIE } from "../lib/i18n/locales";
  * WHAT THIS ROUND ACTUALLY CHANGED, and therefore what is asserted here rather
  * than only photographed:
  *
- *   - the hero is the BRAND LINE plus the slogan (round 12), in two Anton
- *     rows, the first of which never translates;
+ *   - the hero is the SLOGAN (`p01`), in two rows, translated (round 13);
  *   - `how-it-works` is ONE divided panel, not three cards;
  *   - the three home panels wear the frames' NEUTRAL edge, not a volt one;
  *   - page headings are `page-title`, the 27px step `p02` draws (R28);
@@ -68,11 +67,12 @@ test("the hero is the slogan and the CTA is a capsule", async ({ page, context }
   const headline = page.getByTestId("hero-headline");
   await expect(headline).toBeVisible();
 
-  // ~~The wordmark is the HEADER's job.~~ REVERSED IN ROUND 12: the header
-  // keeps the mark alone and the hero carries the name, untranslated. The
-  // assertion moved to `home.spec.ts`, where it is checked in all three
-  // languages rather than only in the one this strip is shot in.
-  expect((await headline.innerText()).toUpperCase()).toContain("HRAJ FOTBAL");
+  // ~~The wordmark is the HEADER's job.~~ ~~Round 12: the hero carries the
+  // name, untranslated.~~ Round 13 reversed that: the hero is the SLOGAN and
+  // it translates, and the header keeps the mark alone. The per-language
+  // assertion lives in `home.spec.ts`; here it is enough that the brand name
+  // is not the largest type on the page.
+  expect((await headline.innerText()).toUpperCase()).not.toContain("HRAJ FOTBAL");
 
   // THE CTA IS A CAPSULE, not a 14px rounded rectangle (p01). Compared against
   // its own height rather than to a literal, so the assertion survives a

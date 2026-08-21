@@ -54,6 +54,7 @@ export const ru: StringsOverlay = {
     // DRAFT — flagged for the standing native-review batch.
     // Split at the first sentence; the period after line one is drawn in volt
     // by the component, so it is not in the string.
+    heroLine1: "Играй в футбол",
     heroLine2: "Когда угодно. Где угодно.",
     vision: "Один матч, который повторяется. Найди игру, займи место, приходи.",
     heroCta: "Найти матч →",

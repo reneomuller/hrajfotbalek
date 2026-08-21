@@ -55,6 +55,7 @@ export const cs: StringsOverlay = {
     // DRAFT — flagged for the standing native-review batch.
     // Split at the first sentence; the period after line one is drawn in volt
     // by the component, so it is not in the string.
+    heroLine1: "Hraj fotbal",
     heroLine2: "Kdykoli. Kdekoli.",
     vision: "Jeden zápas, který se opakuje. Najdi hru, zaber si místo, přijď.",
     heroCta: "Najít zápas →",

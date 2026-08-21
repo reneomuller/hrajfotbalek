@@ -44,7 +44,7 @@ export const dynamic = "force-dynamic";
 
 export default async function LandingPage() {
   const t = await getStrings();
-  const { brand, landing } = t;
+  const { landing } = t;
   const locale = await getLocale();
 
   /*
@@ -106,35 +106,35 @@ export default async function LandingPage() {
         <section className="flex flex-col pb-10 pt-24 text-center">
           <div className="flex flex-col items-center justify-center">
             {/*
-              ~~THE SLOGAN IS THE HERO NOW (redesign v2, round 3, p01).~~
-              THE BRAND LINE IS BACK, AND IT IS NEVER TRANSLATED
-              (round 12, item 2b).
+              THE SLOGAN IS THE HERO, AND IT TRANSLATES (round 13, item 2).
 
-              Round 3 removed `HRAJ FOTBAL.` from the hero because the header
-              carried it eighty pixels above and the page's largest type was
-              saying the brand name a second time. That reasoning was sound
-              and its premise has been reversed rather than refuted: the
-              header now carries the MARK ALONE (item 2a), so the hero is the
-              only place the name is written at all.
+              THE LINEAGE, because this element has now moved twice:
 
-              LINE ONE IS NOT COPY, AND IT CANNOT BECOME COPY. It renders from
-              `t.brand`, which `lib/i18n/__tests__/i18n.test.ts` forbids
-              the overlays from touching — so "HRAJ FOTBAL." is structurally
-              untranslatable rather than translatable-but-please-do-not. That
-              is the point of reading it from `brand` instead of adding an
-              exemption for a `landing.` key: an exemption is a rule somebody
-              can delete.
+                ~~Phase 1: the WORDMARK at hero scale, slogan beneath it as an
+                italic volt sub-line.~~
+                ~~Round 3: the slogan replaced it — p01 draws no wordmark in
+                the hero, and the header carried the name eighty pixels above.~~
+                ~~Round 12 (item 2b, R29): `HRAJ FOTBAL.` came back as line
+                one, untranslated in every language, rendered from `t.brand`
+                so the overlays could not reach it. The header had just lost
+                its wordmark, so the hero was the only place the name was
+                written.~~
+                Round 13: THE OWNER REVERSED IT. The hero is the slogan again
+                and the slogan TRANSLATES.
 
-              LINE TWO STILL LOCALIZES, from `heroLine2`, and it is still the
-              copy's own sentence rather than a width or a `<br>`.
+              The header still keeps the mark alone — item 2a stands — so the
+              name is now written nowhere in the chrome, and that is the
+              decision rather than an oversight: the roundel IS the name, and
+              the largest type on the page is better spent telling a
+              first-time visitor what the site is for, in their own language.
 
-              THE CYRILLIC QUESTION IS RESOLVED BY THIS SHAPE (R29). Anton
-              ships no Cyrillic subset, so before round 12 every Russian hero
-              fell back to the body face and the Russian product had no
-              display typography at all. Line one is LATIN in every language,
-              so Anton sets it everywhere — including Russian. Line two keeps
-              the fallback where the script needs one, which is now a
-              supporting line rather than the whole hero.
+              WHAT COMES BACK WITH IT is the Russian display-face fallback.
+              Anton ships no Cyrillic, so the Russian hero sets in the body
+              face — accepted under the sentence-boundary break rule, which is
+              the rule that actually protects the reading: every sentence must
+              fit on a row, so a greedy breaker can only split inside one that
+              does not, and three rows reading "ИГРАЙ В ФУТБОЛ. / КОГДА
+              УГОДНО. / ГДЕ УГОДНО." is the copy's own punctuation.
 
               THE PERIOD AFTER LINE ONE IS DRAWN HERE, IN VOLT, exactly as the
               frame draws it. It is not in the string, or it would render in
@@ -147,10 +147,8 @@ export default async function LandingPage() {
               data-testid="hero-headline"
               className="m-0 font-display text-hero uppercase text-white"
             >
-              <span data-testid="hero-brand-line">
-                {brand.wordmarkLead} {brand.wordmarkAccent}
-                <span className="text-volt">.</span>
-              </span>
+              {landing.heroLine1}
+              <span className="text-volt">.</span>
               <br />
               <span className="text-volt">{landing.heroLine2}</span>
             </h1>

@@ -1501,3 +1501,38 @@ there.
 it; item 2a is about the mark+text pair as *site identity in the header*, and
 the landing page's footer signature (`HRAJ FOTBAL Praha`) is a signature line
 with no mark beside it, so it is not that pair either.
+
+---
+
+# 14. Round 13 rulings (2026-08-21)
+
+## R30 — The hero is the slogan, and the slogan TRANSLATES (R29 reversed)
+
+**~~R29: the hero's first line is `HRAJ FOTBAL.` in every language and renders
+from `t.brand`, so it is structurally untranslatable.~~** Reversed by the owner
+one round after it shipped.
+
+The lineage of this one element, because it has now moved three times:
+
+| | The hero was | Because |
+|---|---|---|
+| Phase 1 | ~~the wordmark at hero scale, slogan beneath~~ | — |
+| Round 3 | ~~the slogan~~ | `p01` draws no wordmark in the hero, and the header carried the name |
+| Round 12 | ~~`HRAJ FOTBAL.`, untranslated~~ | the header had just lost its wordmark, so the hero was the only place the name was written |
+| **Round 13** | **the slogan, translated** | **the owner's call** |
+
+**THE HEADER STILL KEEPS THE MARK ALONE** — item 2a stands. So the brand name
+is now written nowhere in the chrome, and that is the decision rather than an
+oversight: the roundel *is* the name, and the largest type on the page is
+better spent telling a first-time visitor what the site is FOR, in their own
+language.
+
+**THE RUSSIAN DISPLAY-FACE FALLBACK RETURNS, ACCEPTED.** Anton ships no
+Cyrillic subset, so the Russian hero sets in the body face. Round 12 dodged
+that by making line one Latin everywhere; with the reversal it is back, and it
+is accepted under **the sentence-boundary break rule** — the guarantee that
+actually protects the reading. Every sentence must fit on a row, so a greedy
+breaker can only split inside one that does not, and three rows reading
+"ИГРАЙ В ФУТБОЛ. / КОГДА УГОДНО. / ГДЕ УГОДНО." is the copy's own punctuation.
+
+A real display face with Cyrillic remains the owner's call and remains unbuilt.

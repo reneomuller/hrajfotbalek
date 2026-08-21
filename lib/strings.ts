@@ -95,12 +95,20 @@ export const strings = {
      * exact line.
      */
     /*
-     * ~~`heroLine1`~~ REMOVED IN ROUND 12 (item 2b). The hero's first line is
-     * `HRAJ FOTBAL.` in every language and renders from `brand`, which the
-     * overlays are forbidden to touch — so it is structurally untranslatable
-     * rather than translatable-with-an-exemption. An exemption is a rule
-     * somebody can delete; a section the test rejects is not.
+     * ~~REMOVED IN ROUND 12 (item 2b): the hero's first line is `HRAJ FOTBAL.`
+     * in every language and renders from `brand`, which the overlays are
+     * forbidden to touch.~~
+     *
+     * RESTORED IN ROUND 13 (item 2) — the owner reversed it. The hero is the
+     * SLOGAN again and the slogan translates: a Czech reader arriving on a
+     * Czech site should be told what the site is FOR in Czech, and the brand
+     * name is already the roundel eighty pixels above.
+     *
+     * TWO KEYS, NOT A `<br>`, and that part never changed: line one is the
+     * verb phrase and line two the two adverbs, which is where all three
+     * languages break. A width-driven break would move it off the sentence.
      */
+    heroLine1: "Play football",
     heroLine2: "Anytime. Anywhere.",
     vision:
       "One match that repeats itself. Find a game, claim your spot, show up.",
