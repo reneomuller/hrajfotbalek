@@ -207,6 +207,56 @@ test.describe("the Stripe return page", () => {
   });
 
   /*
+   * THE RECOVERY LOOKUP WHEN THE WEBHOOK GOT THERE FIRST — the case that only
+   * breaks when everything WORKS.
+   *
+   * `confirm_online_purchase` nulls `payment_pending_at` when it settles a
+   * purchase. A recovery search for "pending" therefore finds nothing the
+   * moment the webhook wins the race, which is the normal case — so a player
+   * returning on a second device seconds after a perfect payment would be
+   * told there was nothing to confirm. The search looks for "went to Stripe"
+   * instead, and this is the test that says so.
+   */
+  test("finds a purchase the webhook already settled, with no stash", async ({
+    page,
+    context,
+    request,
+  }) => {
+    const game = await createScratchGame({ capacity: 6, priceCzk: PRICE });
+    try {
+      await clearActiveBookings("runner");
+      await signInAs(context, players.runner);
+      await inEnglish(context);
+
+      const asRunner = await apiClientFor(players.runner);
+      const { data } = await asRunner.rpc("create_booking", {
+        p_game_id: game.id,
+        p_payment_method: "qr",
+        p_guest_count: 0,
+        p_online: true,
+      });
+      const bookingId = (data as { id: string }).id;
+
+      // THE WEBHOOK FIRST, this time — and it clears `payment_pending_at`.
+      const { payload, header } = signedEvent("cs_r15_early", bookingId, PRICE * 100);
+      const res = await request.post("/api/stripe/webhook", {
+        headers: { "stripe-signature": header, "content-type": "application/json" },
+        data: payload,
+      });
+      expect((await res.json()).outcome).toBe("confirmed");
+
+      // No stash, and nothing pending left to find.
+      await page.goto("/payment/return");
+
+      await page.waitForURL(new RegExp(`/game/${game.id}/book/confirmation`));
+      await expect(page.getByTestId("booking-confirmed")).toBeVisible();
+    } finally {
+      await clearActiveBookings("runner");
+      await destroyScratchGame(game.id);
+    }
+  });
+
+  /*
    * THE RECOVERY LOOKUP — a return with no stash at all.
    *
    * This is the different-device case, and it is not exotic: paying on a

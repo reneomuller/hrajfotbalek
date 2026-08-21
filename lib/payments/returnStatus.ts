@@ -136,18 +136,35 @@ async function readPassStatus(
  * THE RECOVERY LOOKUP, for a return with no stash: a different browser, a
  * different device, a cookie jar cleared between paying and coming back.
  *
- * "THE MOST RECENT" IS A GUESS AND IS TREATED AS ONE. It is only consulted
- * when the precise answer is missing, it only considers purchases that
- * actually went to Stripe (`payment_pending_at` is stamped by the same action
- * that builds the link), and it only looks back an hour — a player who paid
- * is coming back within seconds, and anything older is somebody else's
- * abandoned checkout being adopted by this one.
+ * IT LOOKS FOR "WENT TO STRIPE", NOT FOR "IS PENDING", and the difference is
+ * a bug that only appears when things go RIGHT. `confirm_online_purchase`
+ * NULLS `payment_pending_at` when it settles a purchase — so a webhook that
+ * lands before the player gets back, which is the normal case, erases the
+ * only marker a pending-only search could see. The player would arrive at
+ * "nothing to confirm here" moments after a payment that worked perfectly.
+ *
+ * So the filter is: created within the window, AND either still carrying the
+ * pending stamp or already carrying the session that settled it. One of those
+ * two is true from the moment the Stripe link is built until long after.
+ *
+ * `created_at` IS THE RECENCY KEY because it is the one field that survives
+ * confirmation unchanged. It is also honest here: both rows are created by
+ * the same action that builds the Stripe URL, seconds before the player
+ * leaves.
+ *
+ * IT IS STILL A GUESS AND IS TREATED AS ONE. Only consulted when the precise
+ * answer is missing, and only an hour back — a player who paid is returning
+ * within seconds, and anything older is somebody else's abandoned checkout
+ * being adopted by this one.
  *
  * IT CANNOT LEAK. Both reads are RLS-scoped to the signed-in player, so the
  * worst case is showing them one of their OWN purchases rather than the one
  * they meant, and both destinations are pages they may already visit.
  */
 const RECOVERY_WINDOW_MINUTES = 60;
+
+/** Pending, or already settled by Stripe. Either way it went to Stripe. */
+const WENT_TO_STRIPE = "payment_pending_at.not.is.null,stripe_session_id.not.is.null";
 
 export async function findRecentPendingPurchase(
   now: number = Date.now(),
@@ -158,17 +175,17 @@ export async function findRecentPendingPurchase(
   const [bookings, topups] = await Promise.all([
     supabase
       .from("bookings")
-      .select("id, payment_pending_at")
-      .not("payment_pending_at", "is", null)
-      .gte("payment_pending_at", since)
-      .order("payment_pending_at", { ascending: false })
+      .select("id, created_at")
+      .gte("created_at", since)
+      .or(WENT_TO_STRIPE)
+      .order("created_at", { ascending: false })
       .limit(1),
     supabase
       .from("credit_topups")
-      .select("id, payment_pending_at")
-      .not("payment_pending_at", "is", null)
-      .gte("payment_pending_at", since)
-      .order("payment_pending_at", { ascending: false })
+      .select("id, created_at")
+      .gte("created_at", since)
+      .or(WENT_TO_STRIPE)
+      .order("created_at", { ascending: false })
       .limit(1),
   ]);
 
@@ -180,9 +197,8 @@ export async function findRecentPendingPurchase(
   if (!booking) return { kind: "pass", id: topup.id };
 
   // Both exist: the newer one is the one they just paid for.
-  const bookingAt = new Date(booking.payment_pending_at!).getTime();
-  const topupAt = new Date(topup.payment_pending_at!).getTime();
-  return topupAt > bookingAt
+  return new Date(topup.created_at).getTime() >
+    new Date(booking.created_at).getTime()
     ? { kind: "pass", id: topup.id }
     : { kind: "booking", id: booking.id };
 }
