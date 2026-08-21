@@ -10,6 +10,7 @@ import { getSessionUser } from "@/lib/auth/session";
 import { toBookingErrorCode, type BookingErrorCode } from "@/lib/booking/errors";
 import { buildResumeUrl } from "@/lib/booking/resume";
 import { policy } from "@/lib/policy";
+import { rememberPendingPurchase } from "@/lib/payments/pendingPurchaseCookie";
 import { stripeBookingUrl, withStripeParams } from "@/lib/payments/stripeLinks";
 import type { BookingResult, ClientPaymentMethod } from "@/lib/types/database";
 
@@ -157,7 +158,22 @@ export async function createBookingAction(
       reference: bookingId,
       email: user?.email ?? null,
     });
-    if (stamped) redirect(stamped);
+    if (stamped) {
+      /*
+       * REMEMBERED BEFORE THEY LEAVE (round 15, item 1). Every Payment Link
+       * returns to ONE url — `/payment/return` — which carries nothing about
+       * what was bought, so the return page has to be told. This is the only
+       * moment in the whole flow where the id and a `Set-Cookie` header exist
+       * in the same request: it is minted three lines up and the redirect
+       * happens on the next one.
+       *
+       * The same value goes into the cookie and into `client_reference_id`,
+       * so the thread the webhook follows and the thread the browser follows
+       * cannot name different rows.
+       */
+      await rememberPendingPurchase({ kind: "booking", id: bookingId });
+      redirect(stamped);
+    }
   }
 
   // The booking-created toast rides the redirect the flow already performs —

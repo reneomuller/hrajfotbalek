@@ -428,6 +428,22 @@ export const ru: StringsOverlay = {
     amount: "Сумма",
     paidAlready: "Я заплатил",
     pendingConfirmation: "Ждём, пока организатор подтвердит платёж.",
+
+    // Round 15, item 1 — DRAFT, for the native-review batch.
+    returnTitle: "Подтверждаем платёж",
+    confirmingTitle: "Подтверждаем твой платёж…",
+    confirmingBody:
+      "Stripe получил платёж. Ждём, пока подтверждение дойдёт до нас — обычно это несколько секунд.",
+    slowTitle: "Ещё обрабатываем",
+    slowBookingBody:
+      "Stripe принял платёж и обрабатывает его. Бронь подтвердится совсем скоро — платить второй раз не нужно.",
+    slowPassBody:
+      "Stripe принял платёж и обрабатывает его. Кредиты появятся совсем скоро — платить второй раз не нужно.",
+    slowBackToGame: "Назад к игре",
+    slowBackToGames: "Назад к играм",
+    returnUnknownTitle: "Подтверждать нечего",
+    returnUnknownBody:
+      "По этому аккаунту нет ожидающих платежей. Если ты только что заплатил и это повторяется, твои игры и кредиты — в профиле.",
   },
 
   profile: {
@@ -599,6 +615,13 @@ export const ru: StringsOverlay = {
     creditsFew: "{n} кредита",
     creditsMany: "{n} кредитов",
     creditEqualsGame: "1 кредит = 1 игра",
+
+    // Round 15, item 2 — DRAFT. `{credits}` — это готовая фраза вместе с
+    // формой существительного ("1 кредит" / "3 кредита" / "12 кредитов"),
+    // поэтому предложение вокруг неё не должно согласовываться с числом.
+    creditsAddedTitle: "Кредиты добавлены",
+    creditsAddedCount: "Теперь у тебя {credits}.",
+    creditsAddedBack: "Назад к играм",
     tierPerGame: "{amount} за матч",
     tierSaving: "Экономия {amount}",
     tierExpiresDays: "Действует {days} дней с момента зачисления",

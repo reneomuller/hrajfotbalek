@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { getSessionUser } from "@/lib/auth/session";
+import { rememberPendingPurchase } from "@/lib/payments/pendingPurchaseCookie";
 import { stripePassUrl, withStripeParams } from "@/lib/payments/stripeLinks";
 import { toBookingErrorCode, type BookingErrorCode } from "@/lib/booking/errors";
 import { createServerSupabaseClient } from "@/lib/supabase/clients";
@@ -87,6 +88,13 @@ export async function buyPassAction(
   if (!stamped) {
     return { status: "error", code: "PASS_NOT_CONFIGURED" };
   }
+
+  /*
+   * REMEMBERED BEFORE THEY LEAVE (round 15, item 1) — the booking path does
+   * the same thing for the same reason. `kind: "pass"` is what makes the
+   * return page send this one to the credits screen rather than to a game.
+   */
+  await rememberPendingPurchase({ kind: "pass", id: (data as { id: string }).id });
 
   redirect(stamped);
 }

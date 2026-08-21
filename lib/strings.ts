@@ -843,6 +843,45 @@ export const strings = {
     amount: "Amount",
     paidAlready: "I have paid",
     pendingConfirmation: "Waiting for the organizer to confirm your payment.",
+
+    /*
+     * THE STRIPE RETURN PAGE (round 15, item 1).
+     *
+     * EVERY LINE HERE IS WRITTEN AGAINST ONE RULE: never claim the payment
+     * succeeded before the webhook says so, and never imply it failed. The
+     * browser comes back from Stripe carrying no proof of anything — the
+     * redirect and the webhook are two different journeys and they race. So
+     * the copy describes OUR state ("we are waiting for the confirmation"),
+     * not the payment's, which is the only thing this screen actually knows.
+     */
+    returnTitle: "Confirming your payment",
+    confirmingTitle: "Confirming your payment…",
+    confirmingBody:
+      "Stripe has your payment. We are waiting for the confirmation to reach us — this usually takes a few seconds.",
+
+    /*
+     * THE SLOW STATE. Not an error, and it must not read as one: the money is
+     * with Stripe either way, and the only thing that has not happened is our
+     * side hearing about it. "You do not need to pay again" is the sentence
+     * that stops the expensive mistake.
+     */
+    slowTitle: "Still processing",
+    slowBookingBody:
+      "Stripe has received your payment and it is being processed. Your booking will confirm shortly — you do not need to pay again.",
+    slowPassBody:
+      "Stripe has received your payment and it is being processed. Your credits will appear shortly — you do not need to pay again.",
+    slowBackToGame: "Back to the game",
+    slowBackToGames: "Back to games",
+
+    /*
+     * NOTHING TO LOOK UP. Reachable by opening this URL directly, or by
+     * returning on a device where the stash is gone AND no recent purchase of
+     * this player's is pending. It states what is true and points onward
+     * rather than guessing.
+     */
+    returnUnknownTitle: "Nothing to confirm here",
+    returnUnknownBody:
+      "We have no payment waiting for this account. If you have just paid and this keeps happening, your games and credits are on your profile.",
   },
 
   profile: {
@@ -1900,6 +1939,23 @@ export const strings = {
      * in credits was supposed to remove.
      */
     creditEqualsGame: "1 credit = 1 game",
+
+    /*
+     * THE CREDITS-ADDED PAGE (round 15, item 2) — the pass half of the
+     * booking-confirmed screen, and deliberately its sibling in tone: a full
+     * stop, not a receipt.
+     *
+     * `{credits}` IS AN ALREADY-PLURALISED PHRASE, not a number. It arrives
+     * from `creditsLabel`, which asks `Intl.PluralRules` — so the sentence
+     * around it must work with "1 kredit", "3 kredity" and "12 kreditů"
+     * substituted whole. A translator who reaches for a form that agrees with
+     * a NUMBER here will get 11 and 21 wrong in Russian; the phrase carries
+     * its own agreement and the sentence must not fight it.
+     */
+    creditsAddedTitle: "Credits added successfully",
+    creditsAddedCount: "You now have {credits}.",
+    creditsAddedBack: "Back to games",
+
     tierPerGame: "{amount} a game",
     tierSaving: "Save {amount}",
     // Stated LOUDLY and before the button, per §4.2: an expiry discovered

@@ -423,6 +423,22 @@ export const cs: StringsOverlay = {
     amount: "Částka",
     paidAlready: "Zaplatil jsem",
     pendingConfirmation: "Čekáme, až organizátor potvrdí tvoji platbu.",
+
+    // Round 15, item 1 — DRAFT, for the native-review batch.
+    returnTitle: "Potvrzujeme platbu",
+    confirmingTitle: "Potvrzujeme tvoji platbu…",
+    confirmingBody:
+      "Stripe má tvoji platbu. Čekáme, až k nám dorazí potvrzení — obvykle to trvá pár vteřin.",
+    slowTitle: "Stále zpracováváme",
+    slowBookingBody:
+      "Stripe tvoji platbu přijal a zpracovává ji. Rezervaci potvrdíme během chvilky — znovu platit nemusíš.",
+    slowPassBody:
+      "Stripe tvoji platbu přijal a zpracovává ji. Kredity se objeví během chvilky — znovu platit nemusíš.",
+    slowBackToGame: "Zpět na zápas",
+    slowBackToGames: "Zpět na zápasy",
+    returnUnknownTitle: "Není co potvrzovat",
+    returnUnknownBody:
+      "K tomuto účtu nečeká žádná platba. Pokud jsi právě zaplatil a tohle se opakuje, své zápasy a kredity najdeš v profilu.",
   },
 
   profile: {
@@ -595,6 +611,13 @@ export const cs: StringsOverlay = {
     creditsFew: "{n} kredity",
     creditsMany: "{n} kreditů",
     creditEqualsGame: "1 kredit = 1 zápas",
+
+    // Round 15, item 2 — DRAFT. `{credits}` je celá fráze včetně tvaru
+    // podstatného jména ("1 kredit" / "3 kredity" / "12 kreditů"), takže věta
+    // kolem něj se nesmí snažit shodovat s číslem.
+    creditsAddedTitle: "Kredity byly přidány",
+    creditsAddedCount: "Teď máš {credits}.",
+    creditsAddedBack: "Zpět na zápasy",
     tierPerGame: "{amount} za zápas",
     tierSaving: "Ušetříš {amount}",
     tierExpiresDays: "Platí {days} dní od připsání platby",
