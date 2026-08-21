@@ -45,8 +45,8 @@ test("a typed pitch name is stored, rendered, and offered next time", async ({
     // pitch would be impossible.
     await page.getByTestId("pitch-name").fill(name);
     await page.getByTestId("game-form-submit").click();
-    await page.waitForURL(/\/admin\/games\/[0-9a-f-]{36}$/);
-    gameId = page.url().split("/").pop()!;
+    await page.waitForURL(/\/admin\/games\/[0-9a-f-]{36}(\?|$)/);
+    gameId = new URL(page.url()).pathname.split("/").pop()!;
 
     // --- stored on the GAME, not on the venue ------------------------------
     // The distinction is the reason migration 41 added a column: writing it to
@@ -110,8 +110,8 @@ test("an empty pitch name inherits the venue's rather than storing a blank", asy
     await page.locator('input[name="priceCzk"]').fill("150");
     // The pitch-name box is left untouched.
     await page.getByTestId("game-form-submit").click();
-    await page.waitForURL(/\/admin\/games\/[0-9a-f-]{36}$/);
-    gameId = page.url().split("/").pop()!;
+    await page.waitForURL(/\/admin\/games\/[0-9a-f-]{36}(\?|$)/);
+    gameId = new URL(page.url()).pathname.split("/").pop()!;
 
     const { data } = await admin
       .from("games")

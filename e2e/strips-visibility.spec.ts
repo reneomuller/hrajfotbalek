@@ -45,17 +45,35 @@ test.describe("visibility round strips", () => {
     const picker = page.getByTestId("day-picker");
     await expect(picker).toBeVisible();
 
-    // NOTHING SCROLLS. The ruling is "scrolling calendars hide days", so the
-    // assertion is on the scroll extent rather than on how it looks: a row
-    // whose content is wider than its box has a day nobody can reach.
-    const overflow = await picker.evaluate(
-      (el) => el.scrollWidth - el.clientWidth,
-    );
-    expect(overflow, "the calendar row scrolls horizontally").toBeLessThanOrEqual(0);
+    /*
+     * ~~NOTHING SCROLLS. The ruling is "scrolling calendars hide days", so the
+     * assertion is on the scroll extent: a row whose content is wider than its
+     * box has a day nobody can reach.~~
+     *
+     * REVERSED BY THE OWNER, ROUND 14 ITEM 5: the chips get "a noticeable
+     * step" larger, "keeping the row scrollable".
+     *
+     * THE OLD RULING TRADED SIZE FOR REACHABILITY and the trade had gone bad.
+     * Fitting nine cells across 346px left each one 38px wide carrying two
+     * lines of type — a tap target below the 44px floor everything else in
+     * this product respects, to protect days that were technically visible and
+     * practically unreadable.
+     *
+     * SO THE PROPERTY CHANGES FROM "fits" TO "REACHABLE", which is what the
+     * old rule was really protecting. A scrolling row reaches every day by
+     * swiping; the assertions below are that the row genuinely CAN scroll to
+     * its end, and that no cell is smaller than the tap floor.
+     */
+    const metrics = await picker.evaluate((el) => ({
+      scrollWidth: el.scrollWidth,
+      clientWidth: el.clientWidth,
+      overflowX: getComputedStyle(el).overflowX,
+    }));
 
-    // NINE EQUAL CELLS — `All` plus eight days — and the row's edges on the
-    // page gutter. `toBeCloseTo` at 0 decimal places because flexbox
-    // distributes a fractional remainder and 34.875 vs 34.876 is not a defect.
+    expect(metrics.overflowX, "the row cannot scroll, so its tail is unreachable").toBe(
+      "auto",
+    );
+
     const boxes = await picker.evaluate((el) =>
       Array.from(el.children).map((child) => {
         const rect = child.getBoundingClientRect();
@@ -63,18 +81,24 @@ test.describe("visibility round strips", () => {
       }),
     );
     expect(boxes).toHaveLength(9);
+
+    // EVERY CELL CLEARS THE TAP FLOOR, which is what the extra width bought.
     for (const box of boxes) {
+      expect(box.width, "a day chip is below the 44px tap floor").toBeGreaterThanOrEqual(44);
       expect(box.width).toBeCloseTo(boxes[0].width, 0);
     }
 
-    // Equal margins: the first cell's left edge and the last cell's right edge
-    // are the page gutter (22px) in from each side of a 390px viewport.
+    // The row starts on the page gutter, and its content genuinely exceeds the
+    // box — otherwise "scrollable" is a property nothing exercises.
     expect(boxes[0].left).toBeCloseTo(22, 0);
-    expect(boxes[8].right).toBeCloseTo(368, 0);
+    expect(
+      metrics.scrollWidth - metrics.clientWidth,
+      "the row does not actually overflow, so the days all fit and this is the old layout",
+    ).toBeGreaterThan(0);
 
-    // Equal gaps, and they are the `gap-1` the row declares.
+    // Equal gaps, and they are the `gap-2` the row declares.
     for (let i = 1; i < boxes.length; i += 1) {
-      expect(boxes[i].left - boxes[i - 1].right).toBeCloseTo(4, 0);
+      expect(boxes[i].left - boxes[i - 1].right).toBeCloseTo(8, 0);
     }
 
     await picker.screenshot({ path: path.join(OUT, "01-calendar-full-width.png") });

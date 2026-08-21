@@ -121,17 +121,19 @@ test("05-auth-copy", async ({ page }) => {
   await strip(page, "05-login-signup-link");
 });
 
-/** Item 7 — the venue photo upload, and the panel it feeds. */
+/**
+ * Item 7 — the venue photo upload, and the panel it feeds.
+ *
+ * ~~On the GAME surface.~~ ROUND 14 ITEM 2 moved it to `/admin/venues`: it
+ * always wrote to the VENUE, so editing it from one game silently changed
+ * every other game at that ground. The strip follows the control.
+ */
 test("07-venue-photo", async ({ page, context }) => {
-  const game = await createScratchGame({ hoursFromNow: 24 * 8 });
-
-  try {
-    await signInAs(context, players.organizer);
-    await page.goto(`/admin/games/${game.id}`, { waitUntil: "networkidle" });
-    await expect(page.getByTestId("venue-photo-input")).toBeAttached();
-    await page.getByTestId("venue-photo-input").scrollIntoViewIfNeeded();
-    await strip(page, "07-admin-venue-photo-upload");
-  } finally {
-    await destroyScratchGame(game.id);
-  }
+  await signInAs(context, players.organizer);
+  await page.goto("/admin/venues", { waitUntil: "networkidle" });
+  // The venue rows are collapsed; the upload lives inside one.
+  await page.getByTestId("venue-summary").first().click();
+  await expect(page.getByTestId("venue-photo-input").first()).toBeAttached();
+  await page.getByTestId("venue-photo-input").first().scrollIntoViewIfNeeded();
+  await strip(page, "07-admin-venue-photo-upload");
 });
