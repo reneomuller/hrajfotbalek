@@ -12,6 +12,7 @@ import {
   extensionForMimeType,
   rejectPhoto,
 } from "@/lib/storage/avatar";
+import { PhotoCropper, type CropRect } from "@/components/account/PhotoCropper";
 import { useStrings } from "@/components/LocaleProvider";
 
 /**
@@ -28,20 +29,41 @@ import { useStrings } from "@/components/LocaleProvider";
  * goal but is a real benefit: phone photos carry GPS coordinates, and this one
  * is about to be public.
  */
-async function cropToRatio(file: File, outW: number, outH: number): Promise<Blob> {
+async function cropToRatio(
+  file: File,
+  outW: number,
+  outH: number,
+  /**
+   * The part of the image to keep, in the ORIGINAL's pixels (round 16, item
+   * 15). Omitted means the centred rectangle of the output's aspect, which is
+   * what this function always did.
+   */
+  rect?: { sx: number; sy: number; sw: number; sh: number },
+): Promise<Blob> {
   const bitmap = await createImageBitmap(file);
 
   /*
-   * CENTRE CROP TO THE OUTPUT'S RATIO, then scale. A square avatar takes the
-   * largest centred square; a 3:1 cover takes the largest centred 3:1 band.
-   * Same arithmetic, and generalising it is what let the cover reuse this
-   * whole function rather than growing a second one beside it (round 8,
-   * item 10).
+   * ~~CENTRE CROP TO THE OUTPUT'S RATIO, then scale.~~ STILL THE FALLBACK, and
+   * still right when nobody has said otherwise — but it is no longer the only
+   * option, because for a PORTRAIT photograph cropped to 3:1 the centred band
+   * is a strip across the middle of whatever happened to be halfway down.
+   *
+   * `rect` is what the cropper returns. When it is absent the arithmetic below
+   * is unchanged, which is why every caller that does not crop interactively
+   * behaves exactly as before.
    */
   const target = outW / outH;
   const source = bitmap.width / bitmap.height;
-  const cropW = source > target ? bitmap.height * target : bitmap.width;
-  const cropH = source > target ? bitmap.height : bitmap.width / target;
+  const centred = {
+    sw: source > target ? bitmap.height * target : bitmap.width,
+    sh: source > target ? bitmap.height : bitmap.width / target,
+  };
+  const area = rect ?? {
+    sx: (bitmap.width - centred.sw) / 2,
+    sy: (bitmap.height - centred.sh) / 2,
+    sw: centred.sw,
+    sh: centred.sh,
+  };
 
   const canvas = document.createElement("canvas");
   canvas.width = outW;
@@ -50,17 +72,7 @@ async function cropToRatio(file: File, outW: number, outH: number): Promise<Blob
   const context = canvas.getContext("2d");
   if (!context) throw new Error("canvas unavailable");
 
-  context.drawImage(
-    bitmap,
-    (bitmap.width - cropW) / 2,
-    (bitmap.height - cropH) / 2,
-    cropW,
-    cropH,
-    0,
-    0,
-    outW,
-    outH,
-  );
+  context.drawImage(bitmap, area.sx, area.sy, area.sw, area.sh, 0, 0, outW, outH);
   bitmap.close();
 
   const blob = await new Promise<Blob | null>((resolve) =>
@@ -116,6 +128,8 @@ export function PhotoUpload({
   const inputRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  /** The chosen file, waiting to be framed. Null when no crop is in progress. */
+  const [pending, setPending] = useState<File | null>(null);
 
   async function onFile(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
@@ -132,12 +146,24 @@ export function PhotoUpload({
       return;
     }
 
+    /*
+     * THE CROPPER OPENS FIRST, AND NOTHING IS UPLOADED UNTIL IT CLOSES
+     * (round 16, item 15). The upload rules are unchanged and still run BEFORE
+     * it: refusing a 9 MB HEIC after somebody has spent thirty seconds framing
+     * it would be worse than refusing it immediately.
+     */
+    setPending(file);
+    event.target.value = "";
+  }
+
+  async function upload(file: File, rect?: CropRect) {
+    setPending(null);
     setBusy(true);
     try {
       const cropped =
         target === "cover"
-          ? await cropToRatio(file, COVER_WIDTH_PX, COVER_HEIGHT_PX)
-          : await cropToRatio(file, AVATAR_SIDE_PX, AVATAR_SIDE_PX);
+          ? await cropToRatio(file, COVER_WIDTH_PX, COVER_HEIGHT_PX, rect)
+          : await cropToRatio(file, AVATAR_SIDE_PX, AVATAR_SIDE_PX, rect);
       const supabase = createBrowserSupabaseClient();
 
       /*
@@ -209,6 +235,24 @@ export function PhotoUpload({
       if (inputRef.current) inputRef.current.value = "";
     }
   }
+
+  /*
+   * THE SAME CROPPER FOR BOTH TARGETS, at the aspect each one stores. The
+   * avatar's frame is square and the cover's is 3:1; the component takes the
+   * output size and derives the rest, so there is one implementation of the
+   * drag, the clamp and the source-rect arithmetic rather than two that must
+   * agree. The owner asked for the avatar "if it shares the component and it
+   * is cheap" — it does, and it was.
+   */
+  const cropper = pending ? (
+    <PhotoCropper
+      file={pending}
+      outputWidth={target === "cover" ? COVER_WIDTH_PX : AVATAR_SIDE_PX}
+      outputHeight={target === "cover" ? COVER_HEIGHT_PX : AVATAR_SIDE_PX}
+      onCancel={() => setPending(null)}
+      onConfirm={(rect) => void upload(pending, rect)}
+    />
+  ) : null;
 
   const input = (
     <input
@@ -283,6 +327,7 @@ export function PhotoUpload({
             {error}
           </span>
         ) : null}
+        {cropper}
       </label>
     );
   }
@@ -299,6 +344,7 @@ export function PhotoUpload({
           {error}
         </span>
       ) : null}
+      {cropper}
     </div>
   );
 }

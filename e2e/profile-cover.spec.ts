@@ -83,6 +83,14 @@ test("a player uploads a banner and it survives a reload", async ({ page, contex
     });
 
     /*
+     * THE CROPPER IS A STEP NOW (round 16, item 15). Choosing a file opens it;
+     * nothing is uploaded until the player has said which part of the photo
+     * they want. Accepting the default framing is one tap, which is what this
+     * does — the framing itself is exercised in `photo-cropper.spec.ts`.
+     */
+    await page.getByTestId("photo-cropper-save").click();
+
+    /*
      * ASSERTED ON THE ROW, not on a re-render. The upload finishes with
      * `router.refresh()`, and a client-state marker can be unmounted before it
      * is observed (CLAUDE.md).
@@ -169,6 +177,9 @@ test("REPLACING a banner changes what is on the screen", async ({ page, context 
       mimeType: "image/png",
       buffer: bytes,
     });
+
+    // Accept the default framing — see the note in the test above.
+    await page.getByTestId("photo-cropper-save").click();
   }
 
   try {

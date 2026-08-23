@@ -547,6 +547,11 @@ export const ru: StringsOverlay = {
     topupBackToAccount: "← Назад в мой профиль",
 
     photoTitle: "Фото профиля",
+    // Round 16 item 15 — DRAFT.
+    cropTitle: "Размести фото",
+    cropHint: "Перетащи его и приблизь так, чтобы в рамку попало то, что нужно.",
+    cropZoom: "Масштаб",
+    cropSave: "Использовать",
     coverChange: "Сменить обложку",
     photoUpload: "Загрузить фото",
     photoReplace: "Заменить фото",

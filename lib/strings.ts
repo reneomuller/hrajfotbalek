@@ -1054,6 +1054,12 @@ export const strings = {
     topupBackToAccount: "← Back to my account",
 
     photoTitle: "Profile photo",
+    /* Round 16 item 15 — positioning a photo instead of guessing at its
+       middle. Player-facing, so all three languages. */
+    cropTitle: "Position your photo",
+    cropHint: "Drag to move it, and zoom until the part you want fills the frame.",
+    cropZoom: "Zoom",
+    cropSave: "Use this",
     coverChange: "Change cover",
     photoUpload: "Upload a photo",
     photoReplace: "Replace photo",

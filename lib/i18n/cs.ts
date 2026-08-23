@@ -543,6 +543,11 @@ export const cs: StringsOverlay = {
     topupBackToAccount: "← Zpět na můj účet",
 
     photoTitle: "Profilová fotka",
+    // Round 16 item 15 — DRAFT.
+    cropTitle: "Umísti fotku",
+    cropHint: "Tažením ji posuň a přibliž tak, aby rámeček vyplnilo to, co chceš.",
+    cropZoom: "Přiblížení",
+    cropSave: "Použít",
     coverChange: "Změnit pozadí",
     photoUpload: "Nahrát fotku",
     photoReplace: "Vyměnit fotku",
