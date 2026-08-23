@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { AvatarRow } from "@/components/game/AvatarRow";
 import { GuestIcon } from "@/components/game/GuestIcon";
 import { sortRoster, toRosterAvatar, type RosterAvatar } from "@/lib/games/queries";
 import { guestLabel, isAnonymousGuest } from "@/lib/roster/guests";
@@ -84,24 +83,24 @@ export async function PlayersList({ rows, supabaseUrl }: PlayersListProps) {
       ) : (
         <>
           {/*
-            THE STACK, AS THE WAITING LIST DRAWS ITS ENTRIES (Section 4, item
-            5) — overlapping circles above the named list, the same
-            `AvatarRow` that panel uses.
+            ~~THE STACK — overlapping circles above the named list, the same
+            `AvatarRow` the waiting-list panel uses (Section 4, item 5).~~
+            REMOVED (round 16, item 5), and this is the one the owner meant.
 
-            WITH PHOTOS HERE, unlike the waitlist. That is not an
-            inconsistency: §4a admitted `photo_path` to the ROSTER view and
-            deliberately not to `game_waitlist_public`, so the waitlist passes
-            null because it has nothing else to pass. This section has the
-            column and uses it.
+            IT SAT DIRECTLY ABOVE A LIST OF THE SAME PEOPLE, in the same card,
+            one showing their faces and the next showing their faces AND their
+            names. Its own comment gave the game away: the named list "stays
+            beneath, because it carries the games-played count" — which is an
+            argument for the list, not for both.
 
-            The named list stays beneath, because it carries the games-played
-            count — the thing that answers whether these are people who keep
-            coming back, which a row of faces cannot.
+            Round 14 item 13 made both clickable, so a roster of six became
+            twelve links to six profiles, stacked.
+
+            THE LIST WINS on the stack's own reasoning. Every row already
+            begins with the avatar, so no face is lost; what goes is the second
+            rendering of it. The other duplication — three faces beside the
+            counter in `AvailabilityCard` — went with it in the same item.
           */}
-          <div className="mt-3">
-            <AvatarRow players={seats} supabaseUrl={supabaseUrl} max={14} linkProfiles />
-          </div>
-
           <ul className="mt-4 flex list-none flex-col p-0" data-testid="roster">
           {seats.map((seat, i) => (
             <li

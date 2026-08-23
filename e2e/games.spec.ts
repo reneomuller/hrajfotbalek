@@ -1475,10 +1475,27 @@ test("a booked game shows its avatar stack on the card AND on the detail", async
       "the detail is showing its players twice again",
     ).toHaveCount(0);
 
-    // The people are still on the page — once, with their names.
+    /*
+     * The people are still on the page — ONCE, with their names.
+     *
+     * One avatar for one player, and that is the whole assertion: the roster
+     * card used to draw an overlapping STACK directly above the named list, so
+     * a single booking produced two avatars in one card. Counting them is the
+     * only check that separates "the faces are shown" from "the faces are
+     * shown twice".
+     */
     const list = page.getByTestId("players-list");
     await expect(list).toBeVisible();
-    await expect(list.getByTestId("avatar")).toHaveCount(1);
+    /*
+     * `roster-avatar`, WHICH IS THE ROW'S OWN. `avatar` was `AvatarRow`'s —
+     * the stack that used to sit above this list — and asserting on it now
+     * would be asserting that the duplication is back.
+     */
+    await expect(list.getByTestId("roster-avatar")).toHaveCount(1);
+    await expect(
+      list.getByTestId("avatar"),
+      "the roster card is drawing its players twice again",
+    ).toHaveCount(0);
 
     await page.goto(`/game/${empty.id}`);
     await expect(page.getByTestId("availability-card").getByTestId("avatar")).toHaveCount(0);
