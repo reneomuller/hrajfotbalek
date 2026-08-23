@@ -1409,8 +1409,14 @@ export const strings = {
     priceHint: "Future bookings only.",
     formatLabel: "Format (optional)",
     formatHint: "Like 6v6, or 6v6v6 for a three-way.",
-    surfaceLabel: "Surface (optional)",
-    surfaceNone: "Not specified",
+    /*
+     * ~~"Surface (optional)" with a "Not specified" default.~~ REQUIRED since
+     * round 16 item 10: optional meant the surface badge never rendered on the
+     * one upcoming game production had, because nobody had said what it was.
+     */
+    surfaceLabel: "Surface",
+    surfaceNone: "Choose a surface",
+    surfaceRequired: "Pick the surface — it shows on the game's card.",
     surfaceOptions: {
       turf: "Turf",
       grass: "Grass",

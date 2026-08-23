@@ -1,3 +1,4 @@
+import { PASS_REFERENCE_PRICE_CZK } from "@/lib/pass/creditPrice";
 import { createServerSupabaseClient } from "@/lib/supabase/clients";
 
 /**
@@ -85,7 +86,13 @@ export async function listMyBatches(): Promise<CreditBatch[]> {
  * booking path reads. This exists so "≈ 5 games" can be computed, and it is
  * exported so the number appears once rather than in each caller.
  */
-export const PASS_REFERENCE_PRICE_CZK = 150;
+/*
+ * RE-EXPORTED, NOT DEFINED HERE (round 16, item 20). It moved to
+ * `lib/pass/creditPrice.ts` because this module opens a server Supabase client
+ * — so a CLIENT component importing the constant from here dragged
+ * `next/headers` across the boundary. Existing callers are unchanged.
+ */
+export { PASS_REFERENCE_PRICE_CZK };
 
 /**
  * The tier the pass page tags "Most popular".

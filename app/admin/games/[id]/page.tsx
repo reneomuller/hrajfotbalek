@@ -15,7 +15,6 @@ import {
   getAdminGame,
   getGameOrganizer,
   listGameBookings,
-  listPitchNameSuggestions,
   listVenues,
   unpaidBookings,
 } from "@/lib/admin/queries";
@@ -74,10 +73,9 @@ export default async function AdminGamePage({
   const [admin, game] = await Promise.all([requireAdmin(), getAdminGame(id)]);
   if (!game) notFound();
 
-  const [bookings, venues, pitchNames, organizer] = await Promise.all([
+  const [bookings, venues, organizer] = await Promise.all([
     listGameBookings(game.id),
     listVenues(),
-    listPitchNameSuggestions(),
     getGameOrganizer(game.id),
   ]);
 
@@ -395,7 +393,6 @@ export default async function AdminGamePage({
           <GameForm
             action={updateGameAction}
             venues={venues}
-            pitchNames={pitchNames}
             game={game}
             organizer={organizer}
             defaultOrganizerName={admin.nickname}

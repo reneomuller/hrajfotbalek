@@ -145,7 +145,18 @@ export function DayPicker({
         data-testid="day-tab-all"
         data-selected={selected === null ? "true" : "false"}
         aria-current={selected === null ? "page" : undefined}
-        className={`${cell} text-[12px] font-semibold ${
+        /*
+          `text-[15px]`, NOT 12 (round 16, item 9). The CELL is unchanged —
+          round 14 sized these and they stay sized — but its label was set
+          three steps below the day numerals beside it, so the one chip that
+          is a WORD rather than a date read as the quietest thing in a row it
+          is the default state of.
+
+          15 rather than the numerals' 19: "All" is a word and 19px semibold
+          would overrun a 56px cell in Czech and Russian, where it is "Vše" and
+          "Все". This is the largest step the narrowest language can hold.
+        */
+        className={`${cell} text-[15px] font-semibold ${
           selected === null
             ? "border-hairline-volt bg-volt text-ink"
             : "border-hairline-strong text-muted hover:border-hairline-volt"

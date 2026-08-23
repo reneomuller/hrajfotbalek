@@ -3,7 +3,7 @@ import { CardBadges } from "@/components/game/CardBadges";
 import { SkillBadges } from "@/components/game/SkillBadges";
 import { formatGameDate, formatTimeSpan } from "@/lib/format";
 import { resolveDurationMinutes } from "@/lib/games/duration";
-import { venueDisplayName } from "@/lib/venues/displayName";
+import { effectivePitchName, venueDisplayName } from "@/lib/venues/displayName";
 import { getStrings } from "@/lib/i18n/server";
 import type { Database } from "@/lib/types/database";
 
@@ -51,6 +51,7 @@ export async function InfoCard({
     | "subs_per_team"
     | "allowed_skill_levels"
     | "duration_minutes"
+    | "pitch_name"
   >;
   /*
    * `pitch_name` JOINS `map_query` (round 14, item 12): the Where row names
@@ -119,7 +120,26 @@ export async function InfoCard({
 
         <dt className={FACT_LABEL}>{t.games.infoWhere}</dt>
         <dd className="m-0 text-[15px] text-white">
-          {venueDisplayName(game.venue, venueRow?.pitch_name ?? null)}
+          {/*
+            `effectivePitchName`, NOT the venue's alone (found while doing
+            round 16 item 20).
+
+            This card read `venueRow?.pitch_name` and ignored `games.pitch_name`
+            entirely, while the LIST card resolved both through
+            `listPitchNamesByGame`. So a game carrying its own pitch name
+            showed one name on the list and a different one on its detail —
+            the layout law's own principle broken by the two surfaces
+            answering the same question in two places.
+
+            `effectivePitchName` is the rule written down: the game's own name
+            wins, the venue's is the ground's default. Its docstring already
+            said the bulk version "must agree" with it; the detail was not
+            calling either.
+          */}
+          {venueDisplayName(
+            game.venue,
+            effectivePitchName(game.pitch_name, venueRow?.pitch_name),
+          )}
         </dd>
 
         {/*

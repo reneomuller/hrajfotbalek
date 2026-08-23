@@ -161,10 +161,34 @@ export function parseGameForm(form: FormData): GameFormResult {
     fieldErrors.format = strings.admin.formatInvalid;
   }
 
+  /*
+   * SURFACE IS REQUIRED (round 16, item 10), and this is why.
+   *
+   * The owner asked for the surface badge to sit next to the format badge
+   * "everywhere game boxes render". It already does — `CardBadges` puts them
+   * in one row on the card and in one row on the detail. What was missing was
+   * the DATA: the field was labelled "(optional)" and defaulted to "Not
+   * specified", so production's one upcoming game carries `surface: null` and
+   * draws no badge at all. Two rows apart would have been a layout bug; this
+   * was a form that made the fact skippable.
+   *
+   * THE BADGE IS STILL NEVER INVENTED. v1.1.2 §5.3a rules against deriving
+   * facts about a game, and nothing here derives one — it asks the organizer,
+   * who knows, and refuses to save until they answer. That is the opposite of
+   * inventing it.
+   *
+   * REQUIRED ON EDIT TOO, not just on create. A legacy game with no surface is
+   * exactly the row whose badge is missing, and the person editing it is the
+   * one person who can say. Letting the save through would preserve the gap
+   * for the games that already have it.
+   */
   const surfaceRaw = text(form, "surface");
   const surface = SURFACES.includes(surfaceRaw as GameSurface)
     ? (surfaceRaw as GameSurface)
     : null;
+  if (!surface) {
+    fieldErrors.surface = strings.admin.surfaceRequired;
+  }
 
   const pitchName = text(form, "pitchName");
   if (pitchName.length > PITCH_NAME_MAX) {

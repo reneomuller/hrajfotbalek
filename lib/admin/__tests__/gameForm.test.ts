@@ -23,6 +23,12 @@ const VALID = {
   // Required since Phase 2 §5. The form pre-fills the creating admin's
   // nickname, so a real submission always carries one.
   organizerName: "Oliver",
+  /*
+   * REQUIRED SINCE ROUND 16 ITEM 10. It used to be optional and default to
+   * "Not specified", which is why production's one upcoming game drew no
+   * surface badge — the fact was skippable, so it was skipped.
+   */
+  surface: "turf",
 };
 
 describe("parseGameForm", () => {
@@ -34,7 +40,7 @@ describe("parseGameForm", () => {
     expect(result.values.capacity).toBe(14);
     expect(result.values.priceCzk).toBe(200);
     expect(result.values.format).toBeNull();
-    expect(result.values.surface).toBeNull();
+    expect(result.values.surface).toBe("turf");
     expect(result.values.notes).toBeNull();
     // The Phase 2 fields default to "not stated", which is a real answer.
     expect(result.values.durationMinutes).toBeNull();
@@ -125,11 +131,27 @@ describe("parseGameForm", () => {
     expect(parseGameForm(form({ ...VALID, format: "6v6v" })).ok).toBe(false);
   });
 
-  it("drops an unknown surface instead of sending it to the CHECK", () => {
+  /*
+   * ~~It DROPPED an unknown surface and saved the game without one.~~ It now
+   * refuses (round 16, item 10). The reason for dropping was that an unknown
+   * value must never reach the CHECK constraint, and that still holds — what
+   * changed is what happens next. Silently saving `null` is how a game ends up
+   * with no surface badge, which is the defect; refusing puts the question in
+   * front of the one person who can answer it.
+   */
+  it("refuses an unknown surface rather than saving the game without one", () => {
     const result = parseGameForm(form({ ...VALID, surface: "lava" }));
-    expect(result.ok).toBe(true);
-    if (!result.ok) return;
-    expect(result.values.surface).toBeNull();
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.fieldErrors.surface).toBe(strings.admin.surfaceRequired);
+  });
+
+  it("refuses a game with no surface chosen at all", () => {
+    const { surface: _omitted, ...withoutSurface } = VALID;
+    const result = parseGameForm(form(withoutSurface));
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.fieldErrors.surface).toBe(strings.admin.surfaceRequired);
   });
 
   it("keeps a known surface", () => {
@@ -286,6 +308,9 @@ describe("parseGameForm", () => {
       "priceCzk",
       "startsAt",
       "subsPerTeam",
+      // Round 16 item 10: an unchosen surface is now one of the fields the
+      // form reports rather than one it silently accepts as null.
+      "surface",
       "venue",
     ]);
   });

@@ -71,13 +71,47 @@ export async function NextGameStrip({
         {t.games.nextGameStrip}
       </h2>
 
+      {/*
+        A CARD YOU CAN SEE IS A CONTROL (round 16, item 8) — the fifth
+        treatment, and a correction to the fourth rather than a replacement of
+        it.
+
+        ROUND 14 ITEM 14 GOT THE ANATOMY RIGHT and the affordance wrong. Its
+        reasoning holds: this is one of the reader's own games stated plainly,
+        and the played rows under Profile → My games are how this product
+        already draws that. So the CONTENT and the density are unchanged.
+
+        What it inherited from those rows was their flatness — a baseline row
+        on a bottom hairline. That is correct in My games, where the whole
+        screen is a list of such rows and the pattern teaches itself. Here it
+        is one row alone above a column of cards, and a lone flat row reads as
+        a caption for the list below it. It was a link the entire time and
+        nothing said so; hover is not an affordance on a phone.
+
+        `rounded-card bg-surface` and a chevron: the two things every other
+        tappable box on this product has. NOT the full match card — no
+        photograph, no badges, no capacity bar — because round 13 item 17 was
+        right that ~240px is too much to spend telling somebody what they
+        already know.
+      */}
       <Link
         href={`/game/${game.id}`}
         data-testid="next-game-row"
-        className="flex flex-wrap items-baseline justify-between gap-2 border-b border-hairline py-3 no-underline"
+        className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 rounded-card bg-surface px-4 py-3 no-underline transition-colors hover:bg-surface-raised"
       >
-        <span className="text-base font-bold text-white">
-          {pitchName ? `${game.venue} · ${pitchName}` : game.venue}
+        <span className="flex min-w-0 items-baseline gap-2 text-base font-bold text-white">
+          <span className="truncate">
+            {pitchName ? `${game.venue} · ${pitchName}` : game.venue}
+          </span>
+          {/*
+            The chevron rides with the TITLE rather than sitting at the far
+            right of the box. At 390px the row wraps, and a chevron anchored to
+            the row's end lands under the status on a second line, pointing at
+            nothing.
+          */}
+          <span aria-hidden className="shrink-0 text-volt">
+            →
+          </span>
         </span>
         <span className="text-xs text-white/50">{formatGameDateTime(game.starts_at)}</span>
         {/*

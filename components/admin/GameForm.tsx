@@ -8,12 +8,12 @@ import {
   DURATION_MAX,
   DURATION_MIN,
   ORGANIZER_NAME_MAX,
-  PITCH_NAME_MAX,
   SKILL_LEVELS,
   SUBS_MAX,
   SUBS_MIN,
   SURFACES,
 } from "@/lib/admin/gameForm";
+import { PASS_REFERENCE_PRICE_CZK } from "@/lib/pass/creditPrice";
 import { strings } from "@/lib/strings";
 import type { Database, GameSurface, SkillLevel } from "@/lib/types/database";
 
@@ -53,7 +53,6 @@ const ERROR = "mt-1 text-[12px] text-volt";
 export function GameForm({
   action,
   venues,
-  pitchNames = [],
   game,
   organizer,
   defaultOrganizerName,
@@ -65,7 +64,12 @@ export function GameForm({
    * (migration 41). Suggestions only — the field is free text and works with
    * an empty list, which is its state until somebody types the first one.
    */
-  pitchNames?: string[];
+  /*
+   * ~~`pitchNames` — the datalist of names already in use.~~ REMOVED with the
+   * field (round 16, item 20). Kept OUT of the props rather than accepted and
+   * ignored: a prop a component takes and does nothing with is one every
+   * caller keeps computing.
+   */
   /** Present when editing; absent when creating. */
   game?: {
     id: string;
@@ -104,7 +108,6 @@ export function GameForm({
   const [venueChoice, setVenueChoice] = useState(
     game?.venue_id ?? "",
   );
-  const [pitchName, setPitchName] = useState(game?.pitch_name ?? "");
 
 
   // The visible wall-clock text and the absolute instant that is actually
@@ -115,7 +118,18 @@ export function GameForm({
   const [startsAtIso, setStartsAtIso] = useState(game?.starts_at ?? "");
 
   const [capacity, setCapacity] = useState(String(game?.capacity ?? 14));
-  const [priceCzk, setPriceCzk] = useState(String(game?.price_czk ?? 200));
+  /*
+   * THE PREFILL IS 150, NOT 200 (round 16, item 20).
+   *
+   * `PASS_REFERENCE_PRICE_CZK` rather than a literal: the credits ruling makes
+   * one credit one game at 150 CZK, and the whole product divides balances by
+   * that number. A form that proposes 200 was quietly inviting an organizer to
+   * create games a credit does not cover — which is the one price at which the
+   * wallet arithmetic stops meaning anything.
+   */
+  const [priceCzk, setPriceCzk] = useState(
+    String(game?.price_czk ?? PASS_REFERENCE_PRICE_CZK),
+  );
   const [format, setFormat] = useState(game?.format ?? "");
   const [surface, setSurface] = useState<string>(game?.surface ?? "");
   const [notes, setNotes] = useState(game?.notes ?? "");
@@ -176,49 +190,25 @@ export function GameForm({
         {errors.venue && <p className={ERROR}>{errors.venue}</p>}
       </div>
 
-      {/* --- pitch name --------------------------------------------------------
-          FREE TEXT WITH SUGGESTIONS, not a picker. A pitch this organizer has
-          never named must be typeable, and `<datalist>` is exactly that: the
-          browser offers the list and accepts anything. A `<select>` would make
-          the first use of every new pitch impossible.
+      {/*
+        ~~PITCH NAME — free text with a datalist of names already in use, empty
+        meaning "use the venue's".~~ REMOVED (round 16, item 20), and it is a
+        reversal of the round 8 / round 9 feature.
 
-          NO SAVE FLAG. Every name typed becomes a suggestion next time,
-          because `pitch_name_suggestions` is a view over the names already
-          stored — so "remembering" is a consequence of saving the game, not a
-          second thing to do. Migration 41 left that choice open and the owner
-          settled it this way.
+        THE PREMISE MOVED, WHICH IS WHY THE RULING DID (R31). Pitch name was
+        added when a game named its own ground as free text and venues were
+        barely an entity. Round 13 built `/admin/venues` with a `pitch_name` of
+        its own, and round 14 made a game INHERIT its venue — at which point
+        this box was a second place to say a thing the venue already says, on
+        the screen where somebody is least likely to know the ground's real
+        name.
 
-          EMPTY MEANS "USE THE VENUE'S". `venues.pitch_name` is the ground's
-          default; the RPC trims a blank to null so an empty box inherits it
-          rather than storing a blank that renders as a stray separator.
-
-          The datalist is omitted entirely when there is nothing to suggest —
-          an empty dropdown arrow that opens onto nothing is worse than none. */}
-      <div>
-        <label className={LABEL} htmlFor="pitchName">
-          {strings.admin.pitchNameLabel}
-        </label>
-        <input
-          id="pitchName"
-          name="pitchName"
-          className={FIELD}
-          maxLength={PITCH_NAME_MAX}
-          list={pitchNames.length > 0 ? "pitch-name-options" : undefined}
-          autoComplete="off"
-          data-testid="pitch-name"
-          value={pitchName}
-          onChange={(event) => setPitchName(event.target.value)}
-        />
-        {pitchNames.length > 0 && (
-          <datalist id="pitch-name-options" data-testid="pitch-name-options">
-            {pitchNames.map((name) => (
-              <option key={name} value={name} />
-            ))}
-          </datalist>
-        )}
-        <p className={HINT}>{strings.admin.pitchNameHint}</p>
-        {errors.pitchName && <p className={ERROR}>{errors.pitchName}</p>}
-      </div>
+        THE COLUMN AND THE RENDERING STAY. `games.pitch_name` is untouched and
+        `venueDisplayName` still shows one where a game already carries it —
+        deleting the display would blank a name on live fixtures to tidy a
+        form. What is gone is the ability to set a NEW one per game: the venue
+        is where a pitch is named, and `/admin/venues` is where that is edited.
+      */}
 
       {/*
         ~~THE NEW-VENUE BLOCK: name, image filename and map query, revealed by
@@ -336,6 +326,8 @@ export function GameForm({
               </option>
             ))}
           </select>
+          {/* Required since round 16 item 10 — see `lib/admin/gameForm.ts`. */}
+          {errors.surface && <p className={ERROR}>{errors.surface}</p>}
         </div>
       </div>
 
