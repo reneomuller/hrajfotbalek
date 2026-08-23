@@ -128,7 +128,7 @@ export function ProfileIdentity({
         puts the identity on top where it belongs.
       */}
       <div className="relative -mt-10 flex items-end gap-4">
-        <PhotoUpload hasPhoto={Boolean(photoPath)}>
+        <PhotoUpload hasPhoto={Boolean(photoPath)} photoVersion={photoVersion}>
           <span
             data-testid="account-avatar"
             className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-volt bg-surface text-2xl font-extrabold text-volt"

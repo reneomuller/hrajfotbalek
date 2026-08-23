@@ -1,3 +1,4 @@
+import { photoVersionFor } from "@/lib/storage/avatar";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ToastFromQuery } from "@/components/ToastFromQuery";
@@ -132,13 +133,13 @@ export default async function AccountPage({
           coverPath={player.cover_path}
           /* The one surface that may edit it: the owner's own profile. */
           editable
-          photoVersion={player.created_at}
+          photoVersion={photoVersionFor(player)}
           t={t}
         />
         <ProfileIdentity
           nickname={player.nickname}
           photoPath={player.photo_path}
-          photoVersion={player.created_at}
+          photoVersion={photoVersionFor(player)}
           countryName={countryName(player.country, locale)}
           createdAt={player.created_at}
           locale={locale}

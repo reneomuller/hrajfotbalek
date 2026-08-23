@@ -224,6 +224,21 @@ export interface Database {
           is_seed: boolean;
           marketing_opt_in: boolean;
           created_at: string;
+          /*
+           * OPTIONAL IN THE TYPE, AND THE `?` IS THE MIGRATION-SAFE RULE MADE
+           * MECHANICAL (round 16, item 2).
+           *
+           * `20260823100000_players_updated_at` is written and validated but
+           * not applied to production, so a row read tonight has no such key
+           * and a row read tomorrow does. Declaring it `string` would make
+           * every `player.updated_at` type-check while being `undefined` at
+           * run time on the live site; declaring it optional makes the
+           * compiler insist on the `?? created_at` fallback at every use.
+           *
+           * The `?` comes OFF when the migration is applied and `npm run
+           * db:types` regenerates this file.
+           */
+          updated_at?: string;
           // Phase 2 (migration 21). Nullable without exception: the players who
           // predate Phase 2 supplied none of this, and a default would assert a
           // nationality and an ability on their behalf. Written by

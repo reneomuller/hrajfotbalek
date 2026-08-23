@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createBrowserSupabaseClient } from "@/lib/supabase/browser";
 import {
+  avatarUrl,
   AVATAR_SIDE_PX,
   COVER_HEIGHT_PX,
   COVER_WIDTH_PX,
@@ -85,6 +86,7 @@ export function PhotoUpload({
   hasPhoto,
   children,
   target = "avatar",
+  photoVersion = null,
   className,
 }: {
   hasPhoto: boolean;
@@ -98,6 +100,14 @@ export function PhotoUpload({
    * the claim-the-path-first ordering and the error copy to drift.
    */
   target?: "avatar" | "cover";
+  /**
+   * The version suffix the PAGE is currently rendering on this photo's URL.
+   *
+   * Needed to bust it — see `onFile`. It has to be the page's value rather
+   * than one computed here, because busting a URL nobody rendered achieves
+   * nothing: the browser's cache is keyed on the exact string in `src`.
+   */
+  photoVersion?: string | null;
   /** Wrapper classes — the cover's control overlays a band, not a circle. */
   className?: string;
 }) {
@@ -149,6 +159,46 @@ export function PhotoUpload({
         .from(PROFILE_PHOTOS_BUCKET)
         .upload(path, cropped, { contentType: "image/webp", upsert: true });
       if (uploadError) throw new Error(uploadError.message);
+
+      /*
+       * THE UPLOAD WORKED AND THE SCREEN DID NOT CHANGE (round 16, item 2).
+       *
+       * The object key is derived from the player id and never varies, so a
+       * REPLACEMENT writes new bytes to a URL this browser already has. The
+       * page's cache-buster was supposed to prevent that — `avatarUrl` takes a
+       * parameter literally named `updatedAt` and its docstring says it "moves
+       * whenever the row does". Every caller passes `players.created_at`,
+       * because `players` has no `updated_at` column to pass. So the suffix is
+       * a constant per player, and the URL after a replacement is byte-identical
+       * to the URL before it.
+       *
+       * Measured rather than reasoned: uploading magenta then yellow left the
+       * screen magenta, before AND after a full reload.
+       *
+       * `cache: "reload"` FIXES IT FOR THE UPLOADER WITH NO SCHEMA. It forces
+       * a network fetch and REPLACES this browser's cache entry for that exact
+       * URL, so the `router.refresh()` on the next line re-renders an `<img>`
+       * whose unchanged `src` now resolves to the new bytes. The URL has to be
+       * rebuilt with the page's own `photoVersion`, since the cache is keyed on
+       * the string that was rendered.
+       *
+       * IT IS HALF THE FIX. Everyone ELSE still holds the old bytes, and only
+       * a moving version in the URL cures that — `players.updated_at`, which is
+       * migration `20260823100000` and lands when the owner applies it. Until
+       * then this is the half that addresses what was actually reported, and it
+       * stays afterwards: it costs one request and removes the round trip
+       * between uploading and seeing.
+       */
+      const rendered = avatarUrl(
+        process.env.NEXT_PUBLIC_SUPABASE_URL ?? "",
+        path as string,
+        photoVersion,
+      );
+      if (rendered) {
+        // Best-effort: a failed revalidation must not read as a failed upload,
+        // because the upload has already succeeded by this line.
+        await fetch(rendered, { cache: "reload", mode: "cors" }).catch(() => undefined);
+      }
 
       router.refresh();
     } catch (cause) {

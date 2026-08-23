@@ -131,6 +131,7 @@ export function ProfileCover({
         <PhotoUpload
           target="cover"
           hasPhoto={Boolean(coverUrl)}
+          photoVersion={photoVersion}
           className="pointer-events-auto absolute right-gutter top-2"
         >
           {/*

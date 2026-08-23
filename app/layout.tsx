@@ -6,6 +6,7 @@ import { SessionProvider } from "@/components/SessionProvider";
 import { SiteBackground } from "@/components/SiteBackground";
 import { Footer } from "@/components/chrome/Footer";
 import { Header } from "@/components/chrome/Header";
+import { photoVersionFor } from "@/lib/storage/avatar";
 import { EMPTY_BELL, getBellState } from "@/lib/notifications/queries";
 import { getCurrentPlayer } from "@/lib/auth/session";
 import { getLocale, getStrings } from "@/lib/i18n/server";
@@ -171,7 +172,7 @@ export default async function RootLayout({
               photoPath={player?.photo_path ?? null}
               /* `created_at` moves when the row does, which is when the photo
                  bytes changed — the same cache-busting value `/account` uses. */
-              photoVersion={player?.created_at ?? null}
+              photoVersion={player ? photoVersionFor(player) : null}
             />
             {/*
               `--tabbar-h` is the bottom bar's footprint including the iPhone
