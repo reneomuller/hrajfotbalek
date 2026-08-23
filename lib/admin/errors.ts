@@ -34,6 +34,15 @@ const CODES: Array<[string, string]> = [
   ["INVALID_CREDIT_REASON", strings.admin.grantInvalid],
   ["CANNOT_CHANGE_OWN_ADMIN", strings.admin.adminCannotChangeOwn],
   /*
+   * Round 16 item 18. These two say WHAT TO DO NEXT rather than what went
+   * wrong: a refusal an admin cannot act on is the same as a broken button,
+   * and both of these have an obvious next step — cancel the game, reassign
+   * the games.
+   */
+  ["GAME_HAS_BOOKINGS", strings.admin.deleteGameBlocked],
+  ["VENUE_HAS_GAMES", strings.admin.deleteVenueBlocked],
+  ["REASON_REQUIRED", strings.errors.reasonRequired],
+  /*
    * ~~MERGE_SELF / NOT_A_SHADOW / MERGE_CONFLICT.~~ REMOVED IN ROUND 11 with
    * the merge tool. `merge_players` still exists as an RPC and still raises
    * them; nothing in the product calls it, so a message for an admin who

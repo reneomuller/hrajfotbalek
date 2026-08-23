@@ -7,6 +7,7 @@ import {
   type AttendanceState,
 } from "@/app/admin/games/[id]/attendance/actions";
 import { PaymentBadge } from "@/components/admin/PaymentBadge";
+import { RemovePlayerControl } from "@/components/admin/RemovePlayerControl";
 import type { AdminBookingRow } from "@/lib/admin/queries";
 import { strings } from "@/lib/strings";
 
@@ -23,14 +24,23 @@ const INITIAL: AttendanceState = { status: "idle" };
 export function AttendanceRow({
   booking,
   gameId,
+  canRemove = false,
 }: {
   booking: AdminBookingRow;
   gameId: string;
+  /**
+   * Whether this database can release a seat (round 16, item 17).
+   * `admin_remove_booking` arrives with the round-16 migration and the code
+   * ships first, so false hides the control rather than offering a 404.
+   */
+  canRemove?: boolean;
 }) {
   const [state, formAction] = useActionState(markAttendanceAction, INITIAL);
 
   // The server row is the truth; the action state only reports the last write.
   const marked = booking.attendance;
+  // Only a live seat can be released. A cancelled row is already released.
+  const isActive = booking.status === "reserved" || booking.status === "confirmed";
 
   return (
     <li
@@ -84,6 +94,21 @@ export function AttendanceRow({
           testId="mark-no-show"
         />
       </form>
+
+      {/*
+        REMOVE, LAST AND QUIETEST (round 16, item 17).
+
+        On the row rather than in a section of its own, because it is the third
+        thing an organizer decides about one person — did they turn up, did they
+        pay, are they still coming — and the first two are already here.
+
+        BEHIND A DIALOG, and the dialog says what happens to the money. Present
+        and no-show are reversible by pressing the other one; this releases a
+        seat and moves credit, and there is no button that puts it back.
+      */}
+      {canRemove && isActive && (
+        <RemovePlayerControl booking={booking} gameId={gameId} />
+      )}
 
       {state.status === "error" && state.message && (
         <span role="alert" className="text-[12px] text-muted">

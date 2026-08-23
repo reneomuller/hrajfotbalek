@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import { VenueAmenities } from "@/components/admin/VenueAmenities";
+import { DeleteControl } from "@/components/admin/DeleteControl";
 import { VenueForm } from "@/components/admin/VenueForm";
+import { deleteVenueAction } from "@/app/admin/venues/actions";
+import { appCapabilities } from "@/lib/db/capabilities";
 import { VenuePhotoUpload } from "@/components/admin/VenuePhotoUpload";
 import { requireAdmin } from "@/lib/auth/requireAdmin";
 import { listVenues } from "@/lib/admin/queries";
@@ -39,7 +42,7 @@ export const dynamic = "force-dynamic";
  */
 export default async function AdminVenuesPage() {
   await requireAdmin();
-  const venues = await listVenues();
+  const [venues, capabilities] = await Promise.all([listVenues(), appCapabilities()]);
 
   return (
     <>
@@ -121,6 +124,33 @@ export default async function AdminVenuesPage() {
                   <VenueAmenities venueId={venue.id} current={venue.amenities} />
                 </div>
               </div>
+
+              {/*
+                DELETE, LAST AND QUIETEST (round 16, item 18).
+
+                Below the presets rather than beside the name: it is the one
+                control here that cannot be undone by pressing something else,
+                and putting it next to Save is how somebody deletes a venue
+                they meant to rename.
+
+                THE REFUSAL IS THE SAFETY, not the placement. `admin_delete_venue`
+                counts the games referencing this row and raises rather than
+                orphaning them; the dialog explains, and the error names the
+                next step. Gated on the round-16 migration.
+              */}
+              {capabilities.adminDelete && (
+                <div className="mt-8 border-t border-hairline pt-4">
+                  <DeleteControl
+                    action={deleteVenueAction}
+                    hiddenFields={{ venueId: venue.id }}
+                    label={strings.admin.deleteVenue}
+                    title={strings.admin.deleteVenueConfirmTitle}
+                    body={strings.admin.deleteVenueConfirmBody}
+                    confirmLabel={strings.admin.deleteVenueConfirm}
+                    testId="venue-delete"
+                  />
+                </div>
+              )}
                 </div>
               </details>
             </li>

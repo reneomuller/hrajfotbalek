@@ -1685,7 +1685,6 @@ export const strings = {
 
 
     // --- attendance + settle -------------------------------------------------
-    attendanceTitle: "Attendance",
     attendanceLink: "Attendance & settle",
     attendanceLede: "Mark who turned up, clear anything unpaid, then close the books.",
     markPresent: "Present",
@@ -1699,11 +1698,24 @@ export const strings = {
     settleBlocked: "Settle is blocked — these bookings are still unpaid:",
     settleBlockedHint:
       "Take payment (✓ Paid on the game page) or cancel the booking, then settle.",
-    settleNeedsPlayed: "Mark the game as played first.",
 
     // --- reconciliation ------------------------------------------------------
-    paymentsTitle: "Awaiting payment",
-    paymentsEmpty: "Nothing outstanding — every spot on this game is settled up.",
+/* Round 16 item 17 — releasing a seat from the roster. Admin is English by
+       ruling R22, so these are not translated. */
+    rosterRemove: "Remove",
+    rosterRemoveConfirmTitle: "Remove this player?",
+    rosterRemoveConfirmBody:
+      "Their seat is released and their credit is returned in full — the same rule a cancelled game uses, because they did not choose this.",
+    rosterRemoveConfirm: "Yes — remove them",
+    rosterRemoved: "Removed",
+    rosterRemoveFailed: "We could not remove that booking.",
+    /*
+     * ~~`paymentsTitle`, `paymentsEmpty`, `attendanceTitle`,
+     * `settleNeedsPlayed`.~~ DELETED with the two sections they headed
+     * (round 16, item 16), rather than left behind — the same lesson item 1
+     * cost us tonight: a string that outlives the thing it labelled is
+     * invisible to every test and comes back the next time somebody greps.
+     */
     rosterTitle: "Roster",
     rosterEmpty: "Nobody has claimed a spot yet.",
     vsLabel: "VS",
@@ -1731,9 +1743,31 @@ export const strings = {
       expired: "Expired",
     },
 
+    /* Round 16 item 18 — deleting, as opposed to cancelling. English (R22). */
+    deleteGame: "Delete this game",
+    deleteGameConfirmTitle: "Delete this game?",
+    deleteGameConfirmBody:
+      "It disappears from the board and from the admin list. This cannot be undone.",
+    deleteGameConfirm: "Yes — delete it",
+    deleteGameFailed: "We could not delete that game.",
+    deleteGameBlocked:
+      "This game has bookings. Cancel it first — that credits everyone — and the delete becomes available.",
+    deleteVenue: "Delete",
+    deleteVenueConfirmTitle: "Delete this venue?",
+    deleteVenueConfirmBody:
+      "It disappears from the venue picker. Games already at it are unaffected.",
+    deleteVenueConfirm: "Yes — delete it",
+    deleteVenueFailed: "We could not delete that venue.",
+    deleteVenueBlocked:
+      "Games reference this venue, so it cannot be deleted. Delete or reassign those games first.",
     cancelGame: "Cancel this game",
     cancelGameWarning:
       "This cancels every booking, returns every player's money as credit, clears the waitlist and emails everyone. It cannot be undone.",
+    /* Round 16 item 19. English by ruling R22 — the admin panel is. */
+    cancelReasonLabel: "Why is it cancelled?",
+    cancelReasonPlaceholder: "Waterlogged pitch — the ground called it off",
+    cancelReasonHint:
+      "Sent to every booked player by email, word for word, and posted as a notification.",
     cancelGameConfirm: "Yes — cancel the game",
     cancelGameDone: "Game cancelled",
     cancelledBookings: "Bookings cancelled",
@@ -1759,6 +1793,11 @@ export const strings = {
      * substitute: tier prices are discounted, and paying one through the
      * per-game link charges the undiscounted price.
      */
+    /* Round 16 item 19. Reachable only from the admin panel, but it lives in
+       `errors` with its neighbours rather than in `admin` — the error table is
+       keyed by CODE, and splitting it by audience is how one code ends up with
+       two messages. */
+    reasonRequired: "Write a reason — every booked player is about to read it.",
     passNotConfigured: "This pass is not on sale yet.",
     capacityFull: "That spot was taken while you were deciding.",
     capacityFullTitle: "Spot already taken",

@@ -30,7 +30,23 @@ function ConfirmButton() {
  * and mails everyone. There is no undo — `cancel_game` refuses to run twice,
  * and nothing restores a cancelled game.
  */
-export function CancelGameButton({ gameId, venue }: { gameId: string; venue: string }) {
+export function CancelGameButton({
+  gameId,
+  venue,
+  needsReason = false,
+}: {
+  gameId: string;
+  venue: string;
+  /**
+   * Whether this database can RECORD a reason (round 16, item 19).
+   *
+   * The field is not shown when it cannot be stored: asking somebody to
+   * explain themselves and then discarding what they wrote is worse than not
+   * asking. `cancel_game_with_reason` arrives with the round-16 migration and
+   * this code ships first.
+   */
+  needsReason?: boolean;
+}) {
   const [armed, setArmed] = useState(false);
   const [state, formAction] = useActionState(cancelGameAction, INITIAL);
 
@@ -78,6 +94,38 @@ export function CancelGameButton({ gameId, venue }: { gameId: string; venue: str
       <p className="mb-4 text-[14px] leading-relaxed text-bone">
         {strings.admin.cancelGameWarning} <strong>{venue}</strong>
       </p>
+
+      {/*
+        THE REASON, REQUIRED (round 16, item 19).
+
+        `required` on the element AND checked in the action AND validated in
+        SQL. The first is the courtesy — it stops the submit before a round
+        trip; the second is the one that holds, because a server action is a
+        POST endpoint reachable without this form; the third is the authority,
+        because an action is skipped by anyone using curl.
+
+        THE LABEL SAYS WHO READS IT. An organizer typing "can't make it" into
+        an unlabelled box writes something different from one who knows every
+        booked player is about to receive it verbatim.
+      */}
+      {needsReason && (
+        <label className="mb-4 block">
+          <span className="field-label block">{strings.admin.cancelReasonLabel}</span>
+          <textarea
+            name="reason"
+            required
+            rows={3}
+            maxLength={500}
+            data-testid="cancel-reason"
+            className="field mt-1 w-full"
+            placeholder={strings.admin.cancelReasonPlaceholder}
+          />
+          <span className="mt-1 block text-[12px] text-muted">
+            {strings.admin.cancelReasonHint}
+          </span>
+        </label>
+      )}
+
       <ConfirmButton />
       <button
         type="button"

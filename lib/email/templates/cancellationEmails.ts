@@ -19,6 +19,14 @@ export interface CancellationEmailProps {
   /** Credit issued by the cancellation. Zero for an unpaid reservation. */
   creditCzk: number;
   accountUrl: string;
+  /**
+   * The organizer's own words for why (round 16, item 19).
+   *
+   * OPTIONAL, and absent is a real state rather than a gap to fill: a game
+   * cancelled before the round-16 migration has no reason recorded, and
+   * inventing one would be worse than the silence the email always had.
+   */
+  reason?: string | null;
 }
 
 /**
@@ -65,12 +73,26 @@ export function gameCancelledEmail(props: CancellationEmailProps): RenderedEmail
   const hasCredit = props.creditCzk > 0;
   const body = hasCredit ? emails.gameCancelled.body : emails.gameCancelled.noCreditBody;
 
+  /*
+   * THE REASON GOES ABOVE THE FACTS, not below them (round 16, item 19).
+   *
+   * It is the thing the reader opened the email to find out. Putting it under
+   * where/when/credit would make them scroll past three fields they can guess
+   * to reach the one they cannot — and on a phone the credit line is often the
+   * fold.
+   *
+   * `reason` IS THE ORGANIZER'S FREE TEXT. `paragraph` escapes it for the HTML
+   * body; the text body needs no escaping.
+   */
+  const reason = props.reason?.trim() || null;
+
   return {
     subject: emails.gameCancelled.subject,
     html: emailShell(
       emails.gameCancelled.heading,
       join([
         paragraph(body),
+        reason ? paragraph(reason) : null,
         fact(emails.common.where, props.venue),
         fact(emails.common.when, when),
         hasCredit ? fact(emails.common.credit, formatCzk(props.creditCzk)) : null,
@@ -80,6 +102,7 @@ export function gameCancelledEmail(props: CancellationEmailProps): RenderedEmail
     text: textBody([
       emails.gameCancelled.heading,
       body,
+      reason,
       `${emails.common.where}: ${props.venue}`,
       `${emails.common.when}: ${when}`,
       hasCredit ? `${emails.common.credit}: ${formatCzk(props.creditCzk)}` : null,

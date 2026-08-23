@@ -590,6 +590,8 @@ export const cs: StringsOverlay = {
   errors: {
     generic: "Něco se pokazilo. Zkus to prosím znovu.",
     partyTooLarge: "Tolik hostů se na jednu rezervaci nevejde.",
+    // Round 16 item 19 — DRAFT.
+    reasonRequired: "Napiš důvod — přečtou si ho všichni přihlášení hráči.",
     passNotConfigured: "Tahle permanentka zatím není v prodeji.",
     capacityFull: "Tohle místo ti někdo vyfoukl, než ses rozhodl.",
     capacityFullTitle: "Místo je pryč",

@@ -30,6 +30,10 @@ export type BookingErrorCode =
   | "PARTY_TOO_LARGE"
   /* Round 13: this tier has no Stripe link, so it cannot be sold yet. */
   | "PASS_NOT_CONFIGURED"
+  /* Round 16 item 19: cancelling a game needs a written reason. Admin-only,
+     which is why its message is English by ruling R22 like the rest of the
+     panel — it can never reach a player. */
+  | "REASON_REQUIRED"
   | "UNKNOWN";
 
 const KNOWN_CODES: BookingErrorCode[] = [
@@ -47,6 +51,7 @@ const KNOWN_CODES: BookingErrorCode[] = [
   "INVALID_TRANSITION",
   "PARTY_TOO_LARGE",
   "PASS_NOT_CONFIGURED",
+  "REASON_REQUIRED",
 ];
 
 /** Extracts a known code from a PostgREST error message. */
@@ -90,6 +95,8 @@ export function describeBookingError(
       return { code, title: t.errors.tryAgain, message: t.errors.cancelWindowClosed };
     case "PASS_NOT_CONFIGURED":
       return { code, title: t.errors.tryAgain, message: t.errors.passNotConfigured };
+    case "REASON_REQUIRED":
+      return { code, title: t.errors.tryAgain, message: t.errors.reasonRequired };
     case "PARTY_TOO_LARGE":
       return { code, title: t.errors.tryAgain, message: t.errors.partyTooLarge };
     case "INSUFFICIENT_PERMISSION":

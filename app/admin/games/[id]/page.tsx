@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AttendanceRow } from "@/components/admin/AttendanceRow";
+import { DeleteControl } from "@/components/admin/DeleteControl";
+import { appCapabilities } from "@/lib/db/capabilities";
 import { CancelGameButton } from "@/components/admin/CancelGameButton";
 import { ConfirmPaymentRow } from "@/components/admin/ConfirmPaymentRow";
 import { GameForm } from "@/components/admin/GameForm";
@@ -27,6 +29,7 @@ import { formatGameDateTime } from "@/lib/format";
 import { venueDisplayName } from "@/lib/venues/displayName";
 import { updateGameAction } from "../actions";
 import { markPlayedAction } from "./attendance/actions";
+import { deleteGameAction } from "./actions";
 
 export const metadata = { title: strings.admin.manageGame };
 
@@ -88,6 +91,7 @@ export default async function AdminGamePage({
   // lists incoming payments in.
   const pending = unpaidBookings(bookings);
 
+  const capabilities = await appCapabilities();
   const { canEdit, canPlay, canSettle, canCancel } = availableTransitions(
     game.status,
   );
@@ -234,28 +238,23 @@ export default async function AdminGamePage({
         </section>
       )}
 
-      {/* --- reconciliation ---------------------------------------------------
-          The only reconciliation surface. There is deliberately no separate
-          payment queue: the organizer is looking at their banking app, and a
-          second screen to switch to is a second screen to lose. */}
-      <section className="mt-12">
-        <h3 className="m-0 text-[18px] font-bold uppercase tracking-wide text-bone">
-          {strings.admin.paymentsTitle}
-        </h3>
+      {/*
+        ~~"Awaiting payment" — a section of its own listing every unpaid
+        booking, above the roster that lists the same people again with a
+        payment badge on each.~~ THE SECTION IS GONE (round 16, item 16).
 
-        {pending.length === 0 ? (
-          <p className="mt-3 text-[12px] tracking-[1px] text-faint">
-            {strings.admin.paymentsEmpty}
-          </p>
-        ) : (
-          <ul className="mt-4 list-none space-y-3 p-0">
-            {pending.map((booking) => (
-              <ConfirmPaymentRow key={booking.id} booking={booking} gameId={game.id} />
-            ))}
-          </ul>
-        )}
-      </section>
+        IT WAS A SUMMARY OF THE LIST UNDERNEATH IT. Every name in it appeared
+        again twenty pixels lower with its payment state already shown, so an
+        organizer read the same roster twice — once filtered, once whole — and
+        the filtered copy was the one with the controls on it.
 
+        THE CONTROLS DID NOT GO WITH IT. Confirming a cash payment is still the
+        only way a cash booking gets settled, and "amount differs" is still the
+        only way an underpayment is recorded. Those rows now render inside the
+        roster section with no heading of their own — present when there is
+        something to reconcile, absent when there is not, rather than a section
+        that exists to say "nothing".
+      */}
       {/* --- roster, with attendance on the same rows ---------------------------
           Merged in Phase 18. The two questions at close-out are "did they turn
           up" and "did they pay", and settle is blocked on the second — so the
@@ -266,6 +265,15 @@ export default async function AdminGamePage({
           {strings.admin.rosterTitle}
         </h3>
 
+        {/* What is still owed, where the roster is — see the note above. */}
+        {pending.length > 0 && (
+          <ul className="mt-4 list-none space-y-3 p-0">
+            {pending.map((booking) => (
+              <ConfirmPaymentRow key={booking.id} booking={booking} gameId={game.id} />
+            ))}
+          </ul>
+        )}
+
         {roster.length === 0 ? (
           <p className="mt-3 text-[12px] tracking-[1px] text-faint">
             {strings.admin.rosterEmpty}
@@ -273,7 +281,13 @@ export default async function AdminGamePage({
         ) : (
           <ul className="mt-4 list-none space-y-2 p-0">
             {roster.map((booking) => (
-              <AttendanceRow key={booking.id} booking={booking} gameId={game.id} />
+              <AttendanceRow
+                key={booking.id}
+                booking={booking}
+                gameId={game.id}
+                /* Round 16 item 17 — hidden until the migration exists. */
+                canRemove={capabilities.adminRemoveBooking}
+              />
             ))}
           </ul>
         )}
@@ -284,10 +298,21 @@ export default async function AdminGamePage({
           discovered by pressing it: a `reserved` booking surviving into
           `settled` is an unreconciled debt with no surface that will ever raise
           it again. */}
+      {/*
+        ~~A section headed "Attendance", holding Mark played and Settle.~~ THE
+        HEADING IS GONE (round 16, item 16) and so is its placeholder line.
+
+        IT NAMED THE WRONG THING. Attendance is marked on the roster rows
+        above, one player at a time; this block has never contained an
+        attendance control. What it holds is CLOSE-OUT — the two buttons that
+        end a game's life — and on a published game it rendered a heading, no
+        buttons and a sentence explaining that there was nothing to do yet.
+
+        THE BUTTONS STAY, bare. They are the only way a game becomes played and
+        then settled, and removing them would strand every fixture in
+        `published` forever. What went is the chrome around them.
+      */}
       <section className="mt-10 border-t border-hairline pt-6">
-        <h3 className="m-0 mb-4 text-[18px] font-bold uppercase tracking-wide text-bone">
-          {strings.admin.attendanceTitle}
-        </h3>
 
         {canPlay && (
           <TransitionButton
@@ -319,12 +344,6 @@ export default async function AdminGamePage({
             )}
             <SettleButton gameId={game.id} />
           </>
-        )}
-
-        {!canPlay && !canSettle && game.status !== "settled" && (
-          <p className="text-[12px] tracking-[1px] text-faint">
-            {strings.admin.settleNeedsPlayed}
-          </p>
         )}
 
         {game.status === "settled" && (
@@ -402,7 +421,35 @@ export default async function AdminGamePage({
 
       {canCancel && (
         <div className="mt-10 border-t border-hairline pt-6">
-          <CancelGameButton gameId={game.id} venue={game.venue} />
+          <CancelGameButton
+            gameId={game.id}
+            venue={game.venue}
+            needsReason={capabilities.cancelWithReason}
+          />
+
+          {/*
+            DELETE, BELOW CANCEL AND DELIBERATELY AFTER IT (round 16, item 18).
+
+            The two are not alternatives and the order says so. Cancelling is
+            what you do to a game with people on it — it credits everyone and
+            mails them. Deleting is for a game nobody booked: a duplicate, a
+            wrong date, a test. `admin_delete_game` refuses anything with a
+            booking on it and the message names the next step, so pressing this
+            first on a real fixture teaches the order rather than punishing it.
+          */}
+          {capabilities.adminDelete && (
+            <div className="mt-6">
+              <DeleteControl
+                action={deleteGameAction}
+                hiddenFields={{ gameId: game.id }}
+                label={strings.admin.deleteGame}
+                title={strings.admin.deleteGameConfirmTitle}
+                body={strings.admin.deleteGameConfirmBody}
+                confirmLabel={strings.admin.deleteGameConfirm}
+                testId="game-delete"
+              />
+            </div>
+          )}
         </div>
       )}
     </>

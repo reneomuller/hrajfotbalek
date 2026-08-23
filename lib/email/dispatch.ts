@@ -71,6 +71,8 @@ export interface DispatchContext {
   variableSymbol?: number;
   spdString?: string;
   creditCzk?: number;
+  /** Round 16 item 19 — the organizer's written reason for a cancellation. */
+  reason?: string | null;
   ics?: EmailAttachment;
   /**
    * True when `create_booking` derived `credit` or `seed_free` — the booking
@@ -149,6 +151,8 @@ export function renderTemplate(
         ...base,
         creditCzk: ctx.creditCzk ?? 0,
         accountUrl: ctx.accountUrl,
+        // Round 16 item 19. Null on a game cancelled before reasons existed.
+        reason: ctx.reason ?? null,
       });
   }
 }
@@ -207,6 +211,8 @@ export interface FanOutInput {
   gameUrl: string;
   accountUrl: string;
   recipients: CancelledRecipient[];
+  /** Round 16 item 19 — the organizer's written reason, sent to everyone. */
+  reason?: string | null;
 }
 
 export interface FanOutSummary {
@@ -270,6 +276,7 @@ export async function fanOutGameCancelled(input: FanOutInput): Promise<FanOutSum
       gameUrl: input.gameUrl,
       accountUrl: input.accountUrl,
       creditCzk: recipient.creditCzk,
+      reason: input.reason ?? null,
     };
 
     const sends: { event: DispatchableEvent; key: string }[] = [

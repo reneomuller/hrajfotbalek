@@ -3,7 +3,9 @@
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/auth/requireAdmin";
 import { toAdminErrorMessage } from "@/lib/admin/errors";
+import type { DeleteState } from "@/app/admin/games/[id]/actions";
 import { createServerSupabaseClient } from "@/lib/supabase/clients";
+import { strings } from "@/lib/strings";
 
 export interface VenueFormState {
   status: "idle" | "saved" | "created" | "error";
@@ -72,4 +74,34 @@ export async function updateVenueAction(
    */
   revalidatePath("/", "layout");
   return { status: "saved" };
+}
+
+/**
+ * Delete a venue (round 16, item 18).
+ *
+ * IT REFUSES A VENUE WITH GAMES, in SQL. `games.venue_id` is a real reference
+ * and a game whose venue vanished renders a blank where a name should be —
+ * which is not a crash, and is therefore the kind of breakage nobody notices
+ * for a week. The refusal names the next step rather than the problem.
+ *
+ * SHARES `DeleteState` WITH THE GAME DELETE so one dialog component drives
+ * both. The two refusals differ; the shape does not.
+ */
+export async function deleteVenueAction(
+  _prev: DeleteState,
+  formData: FormData,
+): Promise<DeleteState> {
+  await requireAdmin();
+
+  const venueId = String(formData.get("venueId") ?? "");
+  if (!venueId) return { status: "error", message: strings.admin.deleteVenueFailed };
+
+  const supabase = await createServerSupabaseClient();
+  const { error } = await supabase.rpc("admin_delete_venue", { p_venue_id: venueId });
+
+  if (error) return { status: "error", message: toAdminErrorMessage(error.message) };
+
+  // A venue reaches every card that names it, so the whole layout is stale.
+  revalidatePath("/", "layout");
+  return { status: "idle" };
 }

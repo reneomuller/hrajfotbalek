@@ -1,9 +1,11 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { requireAdmin } from "@/lib/auth/requireAdmin";
 import { parseUnderpayment, toAdminErrorMessage } from "@/lib/admin/errors";
 import { createServerSupabaseClient } from "@/lib/supabase/clients";
+import { strings } from "@/lib/strings";
 import type { ConfirmResult } from "@/lib/types/database";
 
 export interface ConfirmPaymentState {
@@ -86,4 +88,90 @@ export async function confirmPaymentAction(
     // credited in full, spot not reinstated, and the UI must not offer one.
     wasExpired: result?.status === "expired",
   };
+}
+
+/**
+ * Release a player's seat from the roster (round 16, item 17).
+ *
+ * THE MONEY RULE IS `cancel_game`'S, AND THE CHOICE IS RECORDED IN SQL. The
+ * owner asked for no new money behaviour, so this picks between the two rules
+ * that exist rather than inventing a third: `cancel_booking` applies the
+ * lateness forfeit because the PLAYER chose to leave, and `cancel_game`
+ * credits in full because they chose nothing. An admin removal is the second
+ * shape. See `admin_remove_booking`.
+ *
+ * THE ROUTE GUARD IS NOT THE AUTHORIZATION. `requireAdmin()` here because a
+ * server action is a POST endpoint reachable without rendering an admin page,
+ * and again inside the RPC, because a route guard is skipped by anyone using
+ * curl.
+ */
+export interface RemoveBookingState {
+  status: "idle" | "removed" | "error";
+  message?: string;
+}
+
+export async function removeBookingAction(
+  _prevState: RemoveBookingState,
+  formData: FormData,
+): Promise<RemoveBookingState> {
+  await requireAdmin();
+
+  const bookingId = String(formData.get("bookingId") ?? "");
+  const gameId = String(formData.get("gameId") ?? "");
+  if (!bookingId || !gameId) {
+    return { status: "error", message: strings.admin.rosterRemoveFailed };
+  }
+
+  const supabase = await createServerSupabaseClient();
+  const { error } = await supabase.rpc("admin_remove_booking", {
+    p_booking_id: bookingId,
+  });
+
+  if (error) return { status: "error", message: toAdminErrorMessage(error.message) };
+
+  revalidatePath(`/admin/games/${gameId}`);
+  revalidatePath(`/game/${gameId}`);
+  return { status: "removed" };
+}
+
+export interface DeleteState {
+  status: "idle" | "error";
+  message?: string;
+}
+
+/**
+ * Delete a game outright (round 16, item 18).
+ *
+ * IT REFUSES A GAME WITH BOOKINGS, and the refusal is in SQL rather than in
+ * this action or in the dialog. A booking is what the credit ledger is keyed
+ * to; deleting one quietly is how a wallet stops adding up. The route is
+ * skipped by anyone using curl, so the guarantee has to live where the write
+ * does.
+ *
+ * THE ORDER IS CANCEL, THEN DELETE. `cancel_game` credits everyone through the
+ * loop that already exists; only after that is there nothing left to lose —
+ * and even then a cancelled game with cancelled bookings stays, because those
+ * rows are the audit trail. What deletes is a game nobody ever booked.
+ *
+ * IT REDIRECTS ON SUCCESS, because the page it was called from no longer
+ * exists. Returning a state to a route that 404s on its next render is a
+ * spinner that never resolves.
+ */
+export async function deleteGameAction(
+  _prevState: DeleteState,
+  formData: FormData,
+): Promise<DeleteState> {
+  await requireAdmin();
+
+  const gameId = String(formData.get("gameId") ?? "");
+  if (!gameId) return { status: "error", message: strings.admin.deleteGameFailed };
+
+  const supabase = await createServerSupabaseClient();
+  const { error } = await supabase.rpc("admin_delete_game", { p_game_id: gameId });
+
+  if (error) return { status: "error", message: toAdminErrorMessage(error.message) };
+
+  revalidatePath("/admin/games");
+  revalidatePath("/games");
+  redirect("/admin/games");
 }
