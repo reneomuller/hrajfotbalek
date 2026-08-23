@@ -27,7 +27,32 @@ export async function PublicIdentity({
   const photo = supabaseUrl ? avatarUrl(supabaseUrl, photoPath) : null;
 
   return (
-    <section data-testid="public-identity" className="flex items-end gap-4">
+    /*
+      `relative` IS LOAD-BEARING, AND ITS ABSENCE WAS INVISIBLE TO THE OBVIOUS
+      TEST (round 16, item 3).
+
+      `ProfileCover` is `absolute`, which makes it a POSITIONED element; this
+      row was a plain in-flow `<section>`. In the painting order a positioned
+      element and its descendants go above non-positioned in-flow content at
+      the same stacking level regardless of source order — so the cover's two
+      SCRIMS were painted over the avatar and the nickname. White on the ramp's
+      55% ink is the grey Oliver reported as "invisible".
+
+      `elementFromPoint` DID NOT CATCH IT and could not have. The cover layer is
+      `pointer-events-none`, so hit-testing walks straight past the scrims and
+      answers `public-nickname` — reachable, on top, and unreadable. That is
+      the same lesson as the `z-50` nav pill in CLAUDE.md read from the other
+      end: there, a thing that looked right was unreachable; here, a thing that
+      IS reachable looks wrong. Reachability and legibility are different
+      questions and need different instruments — the spec measures decoded
+      pixels.
+
+      The owner's own profile never had the bug because `ProfileIdentity`'s row
+      is `relative` for its own reasons (the avatar's pencil badge is absolutely
+      positioned against it). It was carrying this for free, which is why
+      copying the composition without that class copied a latent defect.
+    */
+    <section data-testid="public-identity" className="relative flex items-end gap-4">
       <span
         data-testid="public-avatar"
         className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-volt bg-surface-avatar text-[26px] font-bold text-volt"

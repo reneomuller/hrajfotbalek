@@ -1,4 +1,6 @@
 import { expect, test } from "@playwright/test";
+import { PNG } from "pngjs";
+import { signInAs } from "./helpers/session";
 import { LOCALE_COOKIE } from "../lib/i18n/locales";
 import { apiClientFor, players, serviceClient } from "./helpers/session";
 import { clearActiveBookings, createScratchGame, destroyScratchGame } from "./helpers/scaffold";
@@ -126,4 +128,84 @@ test("the RPC is anon-callable and returns only the six columns", async () => {
     "photo_path",
     "venues",
   ]);
+});
+
+
+/**
+ * ROUND 16 ITEM 3 — the avatar and the nickname, painted over by the banner.
+ *
+ * THE OBVIOUS INSTRUMENT PASSES AGAINST THIS BUG, which is the whole reason
+ * the assertion below looks the way it does.
+ *
+ * `ProfileCover` is `absolute` — a POSITIONED element — and this page's
+ * identity row was a plain in-flow `<section>`. Positioned content paints
+ * above non-positioned in-flow content at the same stacking level whatever the
+ * source order, so the cover's two scrims went over the avatar and the name.
+ * White under a 55% ink ramp is the grey the owner reported as invisible.
+ *
+ * `document.elementFromPoint` at the nickname's centre answered
+ * `public-nickname`: on top, reachable, and unreadable. The cover layer is
+ * `pointer-events-none`, so hit-testing skips the scrims entirely — painting
+ * does not. That is CLAUDE.md's `z-50` lesson from the other end. There, a
+ * thing that looked right could not be touched; here, a thing that can be
+ * touched does not look right. Two questions, two instruments.
+ *
+ * SO IT MEASURES DECODED PIXELS. White text under the ramp tops out around
+ * 115; unobscured it reaches 255. The floor is 200 — far above what the bug
+ * could produce and far below what a correct render gives, so it discriminates
+ * without being brittle about anti-aliasing.
+ */
+test("the name and the face are not painted over by the banner", async ({
+  page,
+  context,
+}) => {
+  const admin = serviceClient();
+  // A cover has to be SET for the bug to appear — the default pitch is dark
+  // enough that grey-on-grey reads as intentional.
+  await admin
+    .from("players")
+    .update({ cover_path: "players/probe.cover.webp" })
+    .eq("id", players.runner.id);
+
+  try {
+    await signInAs(context, players.creditRich);
+    await page.goto(`/player/${players.runner.nickname}`, { waitUntil: "networkidle" });
+
+    /** The brightest pixel inside an element, as actually rendered. */
+    async function peak(testId: string): Promise<number> {
+      const png = PNG.sync.read(await page.getByTestId(testId).screenshot());
+      let best = 0;
+      for (let i = 0; i < png.data.length; i += 4) {
+        // Rec. 601 luma — the same weighting the profile strips use.
+        const l =
+          0.299 * png.data[i]! + 0.587 * png.data[i + 1]! + 0.114 * png.data[i + 2]!;
+        if (l > best) best = l;
+      }
+      return best;
+    }
+
+    expect(
+      await peak("public-nickname"),
+      "the nickname is dimmed — the cover is painting over the identity row",
+    ).toBeGreaterThan(200);
+
+    expect(
+      await peak("public-avatar"),
+      "the avatar is dimmed — the cover is painting over the identity row",
+    ).toBeGreaterThan(150);
+
+    /*
+     * AND THE ROW IS POSITIONED, stated directly. The pixel test is the one
+     * that catches the defect; this names the cause, so a future edit that
+     * strips `relative` fails with the reason rather than with a number.
+     */
+    const positioned = await page
+      .getByTestId("public-identity")
+      .evaluate((el) => getComputedStyle(el).position);
+    expect(positioned, "the identity row is not positioned, so the cover outranks it").not.toBe(
+      "static",
+    );
+  } finally {
+    await admin.from("players").update({ cover_path: null }).eq("id", players.runner.id);
+  }
 });
