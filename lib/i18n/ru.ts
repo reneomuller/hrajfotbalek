@@ -451,6 +451,8 @@ export const ru: StringsOverlay = {
   },
 
   profile: {
+    // Round 16 improvement pass — DRAFT.
+    detailsTitle: "Твои данные",
     editDetails: "Изменить данные",
     saveProfile: "Сохранить профиль",
     cancelEdit: "Отмена",

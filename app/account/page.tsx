@@ -235,7 +235,21 @@ export default async function AccountPage({
             the page had a photo, a balance and a list of links, and no way to
             change the six facts the product knows about you.
           */}
-          <div className="mt-8">
+          {/*
+            A HEADING, WHICH IT DID NOT NEED AS A TAB AND DOES NOW.
+
+            Under Settings this block WAS the screen, so it explained itself.
+            On the overview it follows the badge grid, and a reader scrolling
+            past meets a card that opens with "DISPLAY NAME" and no statement
+            of what they are looking at. The other two blocks on this tab —
+            the wallet and the badges — both announce themselves; this is the
+            one that stopped doing so when it moved.
+          */}
+          <h2 className="mt-12 mb-0 text-[17px] font-bold uppercase tracking-wide text-white">
+            {t.profile.detailsTitle}
+          </h2>
+
+          <div className="mt-4">
             <ProfileDetails
               nickname={player.nickname}
               phone={player.phone}

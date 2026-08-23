@@ -1208,6 +1208,30 @@ test("the detail carries arrival and duration, with equipment in the venue grid"
     await expect(info.getByTestId("game-duration")).toContainText("90 minutes");
     await expect(info.getByTestId("game-arrival")).toContainText("10 minutes before");
 
+    /*
+     * NO LABEL WITHOUT A VALUE (round 16 improvement pass).
+     *
+     * `CardBadges` renders nothing when a game has neither format nor
+     * surface, so the Format row used to print its term with an empty
+     * definition beside it — the "Meeting point: —" problem arriving through
+     * a different door. Asserted structurally rather than on one fixture:
+     * every `<dt>` in this list must have a `<dd>` with something in it,
+     * which holds for whatever the seed happens to contain.
+     */
+    const emptyTerms = await info.evaluate((card) => {
+      const list = card.querySelector("dl");
+      if (!list) return ["no dl"];
+      const out: string[] = [];
+      list.querySelectorAll("dt").forEach((term) => {
+        const value = term.nextElementSibling;
+        if (!value || value.tagName !== "DD" || (value.textContent ?? "").trim() === "") {
+          out.push((term.textContent ?? "").trim());
+        }
+      });
+      return out;
+    });
+    expect(emptyTerms, "a fact label is rendered with nothing beside it").toEqual([]);
+
     // Equipment is a venue claim, and it is not in the fact card either.
     await expect(info).not.toContainText("bibs");
 

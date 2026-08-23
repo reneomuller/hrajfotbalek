@@ -148,15 +148,33 @@ export async function InfoCard({
           reader may do; sharing a row with the format made it a decoration
           beside one.
         */}
-        <dt className={FACT_LABEL}>{t.games.infoFormat}</dt>
-        <dd className="m-0 flex flex-wrap items-center gap-2">
-          <CardBadges format={game.format} surface={game.surface} />
-          {game.subs_per_team !== null && (
-            <span data-testid="game-subs" className="text-small text-muted">
-              {t.games.subsPerTeam.replace("{count}", String(game.subs_per_team))}
-            </span>
-          )}
-        </dd>
+        {/*
+          THE ROW IS CONDITIONAL, and finding out why is worth the line.
+
+          `CardBadges` returns null when a game has neither a format nor a
+          surface, and `subs_per_team` is usually null — so on such a game this
+          rendered the word FORMAT with an empty box beside it. A definition
+          list with a term and no definition is the "Meeting point: —" problem
+          the old practical card was careful to avoid, arriving through a
+          different door: there the placeholder was written on purpose and
+          removed, here it was the absence of a guard.
+
+          It still matters after item 10 made surface required. That rule binds
+          new saves; games created before tonight can carry neither.
+        */}
+        {(game.format || game.surface || game.subs_per_team !== null) && (
+          <>
+            <dt className={FACT_LABEL}>{t.games.infoFormat}</dt>
+            <dd className="m-0 flex flex-wrap items-center gap-2">
+              <CardBadges format={game.format} surface={game.surface} />
+              {game.subs_per_team !== null && (
+                <span data-testid="game-subs" className="text-small text-muted">
+                  {t.games.subsPerTeam.replace("{count}", String(game.subs_per_team))}
+                </span>
+              )}
+            </dd>
+          </>
+        )}
 
         {game.allowed_skill_levels && (
           <>

@@ -899,6 +899,9 @@ export const strings = {
      * of translated words could not be grouped by, and the CHECK would have to
      * list every translation.
      */
+    /* Round 16 improvement pass — the block lost its context when item 14
+       moved it off a tab of its own onto the overview. */
+    detailsTitle: "Your details",
     editDetails: "Edit details",
     saveProfile: "Save profile",
     cancelEdit: "Cancel",

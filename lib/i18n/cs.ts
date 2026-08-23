@@ -446,6 +446,8 @@ export const cs: StringsOverlay = {
   },
 
   profile: {
+    // Round 16 improvement pass — DRAFT.
+    detailsTitle: "Tvoje údaje",
     editDetails: "Upravit údaje",
     saveProfile: "Uložit profil",
     cancelEdit: "Zrušit",
