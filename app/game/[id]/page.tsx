@@ -20,7 +20,7 @@ import { runJoinWaitlist } from "./waitlist/actions";
 import { getCurrentPlayer, getSessionUser } from "@/lib/auth/session";
 import { onlinePaymentState } from "@/lib/booking/queries";
 import { formatCzk, formatGameDateTime } from "@/lib/format";
-import { gameEndsAt, resolveDurationMinutes } from "@/lib/games/duration";
+import { gameEndsAt } from "@/lib/games/duration";
 import {
   getGameById,
   getGameOrganizer,
@@ -28,8 +28,6 @@ import {
   getRoster,
   getVenue,
   getWaitlist,
-  sortRoster,
-  toRosterAvatar,
 } from "@/lib/games/queries";
 import { gameEventSchema } from "@/lib/games/schemaOrg";
 import { spotsLeftLabel } from "@/lib/games/urgency";
@@ -275,12 +273,22 @@ export default async function GameDetailPage({ params, searchParams }: GamePageP
         </div>
       )}
 
-      <AvailabilityCard
-        bookedCount={bookedCount}
-        capacity={game.capacity}
-        roster={sortRoster(roster.map(toRosterAvatar))}
-        supabaseUrl={supabaseUrl}
-      />
+      {/*
+        ~~`roster` AND `supabaseUrl`, which drew three faces beside the
+        counter.~~ REMOVED (round 16, item 5).
+
+        THE PAGE SHOWED THE SAME PEOPLE TWICE. The faces here are p03's
+        summary — the list card's anatomy one size up — and `PlayersList`
+        below is the roster proper, avatar and name per row. Each was right
+        for its own job when it landed; together on one screen they are one
+        set of players rendered twice, and round 14 item 13 made both sets
+        clickable, so they became two links to the same profile 300px apart.
+
+        The LIST wins because it answers the question the summary only hints
+        at: a face without a name tells a player nothing about whether they
+        know anyone going.
+      */}
+      <AvailabilityCard bookedCount={bookedCount} capacity={game.capacity} />
 
       {isCancelled && (
         <p className="mt-4 rounded-control border border-hairline-strong px-4 py-3 text-small tracking-[1px] text-faint">
@@ -392,43 +400,27 @@ export default async function GameDetailPage({ params, searchParams }: GamePageP
       )}
 
       {/*
-        PRACTICAL INFORMATION (§5.7, REQ-GAME-023) — what is left of it.
-        Arrival and duration are true of the game rather than of the venue, so
-        they stay here; equipment moved into the amenity grid above, where it
-        is a per-venue fact an organizer can turn off rather than a promise a
-        string table makes about every pitch forever.
-      */}
-      <section
-        data-testid="practical-info"
-        className="mt-4 rounded-card bg-surface p-5"
-      >
-        {/* Sentence case (ruling B) — a card title is not an eyebrow. */}
-        <h2 className="m-0 text-body-lg font-semibold text-bone">
-          {t.games.practicalTitle}
-        </h2>
-        {/*
-          FIVE LINES (Section 4, item 7): duration, arrival, the meeting point,
-          and the two rotations.
+        ~~PRACTICAL INFORMATION (§5.7, REQ-GAME-023) — duration, arrival and
+        the two rotations, in a card of their own at the bottom of the
+        page.~~ REMOVED (round 16, item 4).
 
-          THE MEETING POINT'S LINE IS HIDDEN WHEN EMPTY rather than rendered
-          with a placeholder — most games will not carry one, and "Meeting
-          point: —" is a question rather than an answer. It is a per-GAME
-          field, not a venue one: a pitch has an entrance, but a fixture can
-          meet by the changing rooms this week and at the far goal next.
-        */}
-        <ul className="mt-3 flex list-none flex-col gap-2 p-0 text-[14px] leading-relaxed text-bone">
-          <li>
-            <span className="text-muted">{t.games.practicalDuration}: </span>
-            {t.games.practicalDurationValue.replace(
-              "{minutes}",
-              String(resolveDurationMinutes(game.duration_minutes)),
-            )}
-          </li>
-          <li>{t.games.practicalArrival}</li>
-          <li>{t.games.practicalRotatingKeepers}</li>
-          <li>{t.games.practicalRotatingSubs}</li>
-        </ul>
-      </section>
+        WHY THERE WERE EVER TWO. They came from two different contract
+        sections and were never meant to be one card: §5.2 is the fixture's
+        facts and §5.7 is "practical information", and while the top card was
+        an icon chip row those read as different KINDS of thing. Round 14
+        item 12 restyled the top card into a labelled fact list and titled it
+        "Game information" — and at that moment the two became indistinguishable
+        to a reader: two lists of facts about the same game, 400px apart, one
+        called Game information and one called Practical information.
+
+        Nothing duplicated in the CODE, which is why no assertion caught it.
+        The duplication was in what the page SAID, and only a person reading
+        the whole screen top to bottom could see it.
+
+        Duration and the arrival line moved into the top card, where they
+        belong. The two rotation lines went with the section and are not
+        replaced — see the report.
+      */}
 
       {/*
         SHARE, LAST BEFORE THE BAR (§3's order: … `Good to know` → share on

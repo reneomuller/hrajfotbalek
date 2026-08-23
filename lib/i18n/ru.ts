@@ -289,6 +289,7 @@ export const ru: StringsOverlay = {
     infoWhere: "Где",
     infoFormat: "Формат",
     infoLevel: "Уровень",
+    infoDuration: "Длительность",
     includedTitle: "Что входит",
     pitchAmenitiesTitle: "Инфраструктура площадки",
     amenities: {

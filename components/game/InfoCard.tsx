@@ -2,6 +2,7 @@ import { Icon } from "@/components/Icon";
 import { CardBadges } from "@/components/game/CardBadges";
 import { SkillBadges } from "@/components/game/SkillBadges";
 import { formatGameDate, formatTimeSpan } from "@/lib/format";
+import { resolveDurationMinutes } from "@/lib/games/duration";
 import { venueDisplayName } from "@/lib/venues/displayName";
 import { getStrings } from "@/lib/i18n/server";
 import type { Database } from "@/lib/types/database";
@@ -49,6 +50,7 @@ export async function InfoCard({
     | "surface"
     | "subs_per_team"
     | "allowed_skill_levels"
+    | "duration_minutes"
   >;
   /*
    * `pitch_name` JOINS `map_query` (round 14, item 12): the Where row names
@@ -144,7 +146,43 @@ export async function InfoCard({
             </dd>
           </>
         )}
+
+        {/*
+          DURATION, MOVED UP FROM "Practical information" (round 16, item 4).
+
+          It belongs beside When and Where: how long a game runs is a fact of
+          the fixture, in the same class as when it starts and what format it
+          is, and it was 400px further down in a card of its own.
+
+          `resolveDurationMinutes` rather than the raw column, so a game
+          created before `duration_minutes` existed reads the policy default
+          instead of rendering nothing.
+        */}
+        <dt className={FACT_LABEL}>{t.games.infoDuration}</dt>
+        <dd data-testid="game-duration" className="m-0 text-[15px] text-white">
+          {t.games.practicalDurationValue.replace(
+            "{minutes}",
+            String(resolveDurationMinutes(game.duration_minutes)),
+          )}
+        </dd>
       </dl>
+
+      {/*
+        THE ARRIVAL LINE, AND IT IS NOT A FACT ROW (round 16, item 4).
+
+        Everything in the list above answers "what is this game". This one
+        tells the reader to do something, and putting an instruction in the
+        `dl` would make it the definition of a term that is not a term. It sits
+        under the rule as a note, which is also where the eye lands last on the
+        card — the right place for the thing you act on after you have decided
+        to come.
+      */}
+      <p
+        data-testid="game-arrival"
+        className="mt-4 border-t border-hairline pt-3 text-[14px] leading-relaxed text-bone"
+      >
+        {t.games.practicalArrival}
+      </p>
 
       {/*
         ~~NO PRICE HERE (v1.3 §3), and the reasoning survives the restyle.~~

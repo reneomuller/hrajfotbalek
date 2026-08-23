@@ -253,7 +253,9 @@ test("C8-C14-game-detail", async ({ page }) => {
 
     // Item 14 — the CTA is still there after scrolling to the bottom, which is
     // the entire reason it is fixed rather than sticky.
-    await page.getByTestId("practical-info").scrollIntoViewIfNeeded();
+    // `practical-info` was removed in round 16 item 4; the fact card is the
+    // surface that carries duration and arrival now.
+    await page.getByTestId("game-info-card").scrollIntoViewIfNeeded();
     await expect(page.getByTestId("claim-bar")).toBeInViewport();
     await strip(page, "C14-sticky-cta-at-the-bottom");
 

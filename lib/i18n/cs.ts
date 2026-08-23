@@ -286,6 +286,7 @@ export const cs: StringsOverlay = {
     infoWhere: "Kde",
     infoFormat: "Formát",
     infoLevel: "Úroveň",
+    infoDuration: "Délka",
     includedTitle: "Co je v ceně",
     pitchAmenitiesTitle: "Vybavení hřiště",
     amenities: {

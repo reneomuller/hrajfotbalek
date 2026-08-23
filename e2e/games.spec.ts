@@ -1191,18 +1191,25 @@ test("the detail carries arrival and duration, with equipment in the venue grid"
   try {
     await page.goto(`/game/${game.id}`);
 
-    const block = page.getByTestId("practical-info");
-    await expect(block).toBeVisible();
-    await expect(block).toContainText("10 minutes before");
-    // The two rotations joined it (Section 4, item 7).
-    await expect(block).toContainText("Rotating goalkeepers");
-    await expect(block).toContainText("Rotating subs");
-    // The duration agrees with the span at the top of the page, because both
-    // resolve through the same helper.
-    await expect(block).toContainText("90 minutes");
+    /*
+     * ~~`practical-info`, a card at the bottom holding duration, arrival and
+     * the two rotations.~~ REMOVED (round 16, item 4) — it and the top card
+     * had become two lists of facts about one game, 400px apart, one titled
+     * "Game information" and the other "Practical information".
+     *
+     * THE ASSERTION INVERTS rather than disappearing, so a later round cannot
+     * quietly bring the second card back.
+     */
+    await expect(page.getByTestId("practical-info")).toHaveCount(0);
 
-    // Equipment is a venue claim now, and it is no longer in this block.
-    await expect(block).not.toContainText("bibs");
+    // Duration and arrival live in the top card now, and the duration still
+    // agrees with the span beside it because both resolve through one helper.
+    const info = page.getByTestId("game-info-card");
+    await expect(info.getByTestId("game-duration")).toContainText("90 minutes");
+    await expect(info.getByTestId("game-arrival")).toContainText("10 minutes before");
+
+    // Equipment is a venue claim, and it is not in the fact card either.
+    await expect(info).not.toContainText("bibs");
 
     /*
      * TWO SECTIONS NOW (Section 4, item 2), splitting one column along the
@@ -1422,13 +1429,32 @@ test("a booked game shows its avatar stack on the card AND on the detail", async
     await expect(emptyRow).toHaveCount(1);
     await expect(emptyRow.getByTestId("avatar")).toHaveCount(0);
 
-    // The detail answers it the same way, under the capacity line.
+    /*
+     * ~~The detail answers it the same way, under the capacity line.~~
+     * NO LONGER, AND DELIBERATELY (round 16, item 5).
+     *
+     * The detail carried BOTH the three-face summary here and the full
+     * `players-list` below it — one set of people rendered twice, and round 14
+     * item 13 made both clickable, so two links to the same profile sat 300px
+     * apart. The list wins: a face without a name does not answer whether you
+     * know anyone going.
+     *
+     * The LIST CARD keeps its stack, which is why the assertions above are
+     * unchanged. That surface has no roster to show instead, so there the
+     * faces are the only answer rather than a second one.
+     */
     await page.goto(`/game/${booked.id}`);
     const availability = page.getByTestId("availability-card");
-    // No caption under the rule on the detail either — the hero spots figure
-    // and the capacity bar sit directly above it.
     await expect(availability.getByTestId("players-count")).toHaveCount(0);
-    await expect(availability.getByTestId("avatar")).toHaveCount(1);
+    await expect(
+      availability.getByTestId("avatar"),
+      "the detail is showing its players twice again",
+    ).toHaveCount(0);
+
+    // The people are still on the page — once, with their names.
+    const list = page.getByTestId("players-list");
+    await expect(list).toBeVisible();
+    await expect(list.getByTestId("avatar")).toHaveCount(1);
 
     await page.goto(`/game/${empty.id}`);
     await expect(page.getByTestId("availability-card").getByTestId("avatar")).toHaveCount(0);

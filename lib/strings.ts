@@ -580,6 +580,9 @@ export const strings = {
     infoWhere: "Where",
     infoFormat: "Format",
     infoLevel: "Level",
+    // Round 16 item 4: duration joins the fixture facts, from the card that
+    // used to hold it at the bottom of the page.
+    infoDuration: "Duration",
     includedTitle: "What's included",
     /*
      * THE SECOND HEADING (Section 4, item 2). The column is one flat `text[]`;
