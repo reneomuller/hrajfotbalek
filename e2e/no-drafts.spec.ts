@@ -45,6 +45,48 @@ test("no surface offers the draft concept", async ({ page, context }) => {
 });
 
 /**
+ * THE COPY, WHICH IS WHERE THE CONCEPT ACTUALLY SURVIVED (round 16, item 1).
+ *
+ * Round 14 removed the draft concept from the page, the action and the RPC,
+ * and this file was written to keep it removed. It checked the SURFACES. The
+ * button on the create form still said "Create as draft" and the hint under
+ * it still said publishing was a separate step — for two rounds, in three
+ * languages, all faithfully translated.
+ *
+ * Nothing could have caught that: the i18n test asks whether a key has a
+ * translation, never whether it is still true. So the assertion here reads
+ * the RENDERED WORDS on the one screen an organizer sees before pressing the
+ * button, which is the only place the lie could do any damage.
+ */
+test("the create form does not describe a workflow that was removed", async ({
+  page,
+  context,
+}) => {
+  await signInAs(context, players.organizer);
+  await page.goto("/admin/games/new", { waitUntil: "networkidle" });
+
+  const submit = page.getByTestId("game-form-submit");
+  await expect(submit).toHaveText(/publish/i);
+
+  /*
+   * And no LABEL, hint, heading or control says it either.
+   *
+   * Scoped to the form's own chrome rather than to the whole page, because
+   * the venue picker lists real rows and the seed deliberately keeps one
+   * called "Praha 3 • Pražačka (draft)" — a pre-round-14 game that must still
+   * render. Asserting over the page text would fail on DATA, which is the
+   * fastest way to get an assertion deleted rather than fixed.
+   */
+  const chrome = await page
+    .locator("main label, main p, main button, main h1, main h2")
+    .allInnerTexts();
+  expect(
+    chrome.join(" ").toLowerCase(),
+    "the create form still describes the draft workflow",
+  ).not.toContain("draft");
+});
+
+/**
  * CREATING A GAME PUBLISHES IT. The property the single path rests on, and the
  * one that would strand rows again if it regressed.
  */

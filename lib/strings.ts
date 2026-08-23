@@ -1439,11 +1439,30 @@ export const strings = {
     },
     subsLabel: "Substitutes per team (optional)",
     subsHint: "Display only — limits nothing.",
-    createGame: "Create as draft",
-    createGameHint: "A new game is a draft; publishing is a separate step.",
+    /*
+     * ~~`createGame: "Create as draft"` and a hint saying publishing was a
+     * separate step.~~ CORRECTED (round 16, item 1).
+     *
+     * THE BEHAVIOUR MOVED TWICE AND THE COPY MOVED NEITHER TIME. Round 9
+     * made creation PUBLISH — "a click that has never once been withheld is
+     * not a safety step" — and round 14 removed the draft concept and its
+     * unfinished-games panel. Both rounds worked on the page, the action and
+     * the RPC. Neither touched this line, so the last thing an organizer read
+     * before pressing the button was a description of a workflow that had not
+     * existed for two rounds.
+     *
+     * NOTHING COULD HAVE CAUGHT IT. The i18n coverage test checks that every
+     * player-facing key HAS a translation, and both of these had one — in
+     * three languages, all of them faithfully wrong. A key whose content has
+     * gone stale is indistinguishable from a key that is fine, which is why
+     * item 1 asked for the root cause rather than the rename: the lesson is
+     * that removing a concept means grepping the STRING TABLE for it, not
+     * just the code.
+     */
+    createGame: "Publish game",
+    createGameHint: "The game goes on the public list as soon as you publish it.",
     saveGame: "Save changes",
     saved: "Saved",
-    draftNotPublic: "This game is a draft — it is not on the public games list.",
     /* --- unfinished games (round 9, item 7) --- */
     unfinishedTitle: "Unfinished games",
     unfinishedLede:
