@@ -67,8 +67,14 @@ test.describe("item 3 — the rebuilt profile", () => {
       .textContent();
     expect(Number(gamesPlayed)).toBeGreaterThan(0);
 
-    // Three tabs, Overview selected by default.
-    await expect(page.getByTestId("profile-tab")).toHaveCount(3);
+    /*
+     * ~~Three tabs~~ TWO, since round 16 item 14 folded Settings into
+     * Overview. Ruling L's split — Overview is what you look at, Settings what
+     * you change — was clean and cost a tap on the two things people come to
+     * this page for. Asserted as an exact count rather than a minimum, so a
+     * third tab reappearing fails here rather than being absorbed.
+     */
+    await expect(page.getByTestId("profile-tab")).toHaveCount(2);
     await expect(
       page.getByTestId("profile-tab").filter({ hasText: /overview/i }),
     ).toHaveAttribute("data-selected", "true");

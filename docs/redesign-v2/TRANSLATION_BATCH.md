@@ -31,6 +31,18 @@ which is what this file is for.
 | `payment.confirming*` / `slow*` / `returnUnknown*` (9 keys) | Confirming your payment… | **Round 15.** The highest-stakes copy in the product and the reason is not length: this screen must never say the payment succeeded before the webhook does, and never imply it failed. Every line describes OUR state, not the money's. **`slowBookingBody` and `slowPassBody` both end on "you do not need to pay again"** — that clause is the whole point of the sentence and must survive translation as an instruction, not as reassurance |
 | `pass.creditsAdded*` (3 keys) | Credits added successfully | **Round 15.** `{credits}` in `creditsAddedCount` is a PHRASE, not a number — it arrives from `creditsLabel` already carrying its own noun form ("1 kredit" / "3 kredity" / "12 kreditů"). A translator who makes the sentence agree with a number will get Russian 11 and 21 wrong, and it will read as fluent to anyone checking in English |
 
+| `games.waitlistLeave` / `waitlistLeftDone` | Leave the waitlist | **Round 16.** The first control this product has for getting OFF a list. The Czech and Russian both need the perfective — "I have left", a completed act — because the sentence appears after the fact, not as a promise |
+| `account.waitlistTitle` | Waitlist | **Round 16.** A section heading between "Upcoming" and "Already played" |
+| `notifications.clearAll` | Clear all | **Round 16.** It empties the bell for this player only, and neither draft should imply the notifications were deleted for everybody |
+| `account.cropTitle` / `cropHint` / `cropZoom` / `cropSave` | Position your photo | **Round 16.** The hint is the only instruction in the product that describes a GESTURE — "drag to move it, and zoom" — and both drafts should read as something you do with a thumb rather than with a mouse |
+| `errors.reasonRequired` | Write a reason — every booked player is about to read it. | **Round 16.** Admin-only in practice, but it lives in `errors` because that table is keyed by CODE. The clause that matters is the second one: it is what makes an organizer write a sentence rather than a word |
+| `games.infoDuration` | Duration | **Round 16.** One word, in the game-detail fact list beside When / Where / Format / Level |
+
+**Nothing in the cancellation copy changed for policy v3** (round 16, item 6),
+in any language, and that is worth knowing before the review: every sentence
+interpolates `{hours}` from the policy, so the 10 → 8 move carried itself. If a
+reviewer sees a number spelled out anywhere in these three files, it is a bug.
+
 **The public profile added no strings** (round 14, item 13). Its four blocks —
 banner, picture, stats, badges — reuse the keys the owner's own profile already
 uses, which is the point of composing it from the same three components: the

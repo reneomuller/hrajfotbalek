@@ -105,13 +105,13 @@ quarantine held until the owner lifted it, item by item.
 
 | # | Request | Status |
 |---|---|---|
-| 27 | Google sign-in | `BUILT-DORMANT-ON-setting NEXT_PUBLIC_GOOGLE_AUTH=1 and configuring Google OAuth in Supabase`. **Re-verified 2026-08-21: absent from `vercel env ls production`.** The flow ships; `components/auth/GoogleAuthBlock.tsx` returns null while the flag is unset, and a spec fails if anyone renders it unconditionally |
+| 27 | Google sign-in | `BUILT-DORMANT-ON-setting NEXT_PUBLIC_GOOGLE_AUTH=1 and configuring Google OAuth in Supabase`. **Re-verified 2026-08-23: absent from `vercel env ls production`.** The flow ships; `components/auth/GoogleAuthBlock.tsx` returns null while the flag is unset, and a spec fails if anyone renders it unconditionally |
 | 28 | Change email | `SHIPPED round-7` |
 | 29 | Game-pill photo fade | `SHIPPED round-7` |
 | 30 | Admin frames (`p14`–`p19`) mapping check | `SHIPPED round-7` (item 0) — and it found the audit wrong: `p15` is add-player, `p16` is the new-venue block **inside** `/admin/games/new`, `p19` is `/admin/stats`, `p12` is home's community section. Only `p13` was genuinely new |
 | 31 | New game flow, financials page, admin player detail | `SHIPPED round-7` |
 | 32 | Payment UI: three options | `SHIPPED round-7` (item 11) — three options with the online one gated. See row 9 |
-| 33 | Pass purchase links, one env var, JSON map of tier → link | `BUILT-DORMANT-ON-pasting the JSON map into Vercel` — `NEXT_PUBLIC_STRIPE_PASS_URLS`. **Re-verified 2026-08-21: `vercel env ls production` lists exactly one variable, `NEXT_PUBLIC_STRIPE_PAYMENT_URL`.** ~~It is the only Stripe variable still missing now that row 9's is set~~ — wrong when it was written and corrected here: row 65's `STRIPE_WEBHOOK_SECRET` is missing too, and the two are missing for different reasons. The template with every real tier identifier as a key was printed in the round 7 report. Round 14 item 7 made the tier control a live-looking green pill, so this variable is now the difference between a Purchase button that opens Stripe and one that explains itself |
+| 33 | Pass purchase links, one env var, JSON map of tier → link | `BUILT-DORMANT-ON-pasting the JSON map into Vercel` — `NEXT_PUBLIC_STRIPE_PASS_URLS`. **Re-verified 2026-08-23: `vercel env ls production` lists `STRIPE_WEBHOOK_SECRET` and `NEXT_PUBLIC_STRIPE_PAYMENT_URL` and nothing else.** It is now the LAST thing between a player and a pass: round 15 built the return page, the webhook secret is set, and the migration behind `begin_pass_purchase` is applied. The corrected template is in §7 — `{"5","8","12","15","20"}`, which is what `pass_tiers` actually holds |
 | 34 | Stripe redirect params — `client_reference_id` and `prefilled_email` on every outgoing link | `SHIPPED round-7` (item 16), asserted on the outgoing URL. Dormant in effect, because row 9's links are unset |
 
 ### Round 8 (fourteen items)
@@ -168,7 +168,7 @@ quarantine held until the owner lifted it, item by item.
 | 62 | **Test substrate: pgTAP, and the two red security assertions** | `SHIPPED round-12` (item 4). The SQL suite is 33/33 for the first time. pgTAP had never been installed, so `notifications.sql` had never run; it lives in the `tap` schema because `public` would have broken the conformance suite. The two red assertions were STALE, not a hole — migration `20260810120000` granted those columns deliberately, and production was checked before the test was changed |
 | 63 | **Close the online-payment back-arrow hole** | `SHIPPED round-12` (item 5). Online bookings hold their seats for thirty minutes rather than forever; a signed webhook settles them; a stale pending stops holding seats with no cron. Cash and credit are untouched. See rows 64 and 65 for what is still owed |
 | 64 | **Apply `20260821200000_online_payment_pending.sql` to production** | **`SHIPPED round-12`** — applied by the owner and **re-verified against the live catalog on 2026-08-21**, not carried forward on his word: `online_payment_window()`, `retry_online_payment(uuid)`, `booking_holds_seat(booking_status, timestamptz)`, `confirm_online_payment(uuid, text, integer)`, and `bookings` carrying `payment_pending_at` / `payment_attention_at` / `payment_attention_reason`. `create_booking` is at **six** arguments ending `p_online boolean`, which is the one that mattered — the deployed code calls it that way and the five-argument version would have rejected every online booking. ~~`BUILT-DORMANT-ON-the owner running the migration`.~~ |
-| 65 | **Set `STRIPE_WEBHOOK_SECRET` in Vercel** | `BUILT-DORMANT-ON-adding the endpoint in Stripe and pasting the signing secret into Vercel`. **Re-verified 2026-08-21 twice over: absent from `vercel env ls production`, and `POST /api/stripe/webhook` on the live deployment answers 503.** That is the correct posture, not a fault: an endpoint that confirms bookings and cannot verify who is asking must not confirm anything. **A server-side variable, NOT `NEXT_PUBLIC_`.** Steps in §6 |
+| 65 | **Set `STRIPE_WEBHOOK_SECRET` in Vercel** | **`SHIPPED`, and the OWNER did it** — set 2026-08-21, found on the re-verification rather than reported. **Verified twice on 2026-08-23:** present in `vercel env ls production`, and `POST /api/stripe/webhook` on the live deployment now answers **400** to an unsigned request instead of 503 — which is the endpoint working: it refuses what it cannot verify and no longer refuses everything. ~~`BUILT-DORMANT-ON-adding the endpoint in Stripe and pasting the signing secret into Vercel`.~~ |
 
 ### Round 13 (31 items, sections A–E)
 
@@ -202,7 +202,7 @@ round 13 added is item 2's reversal and a re-verification of item 3.
 | 85 | **(24) Venue management** | `SHIPPED round-13`, dormant on row 88. `/admin/venues` with create, rename, map link, pitch name, photo and both amenity sets. The venue's photo now backs its games on the CARD as well as the band, reversing REQ-GAME-019 — see R31 for why that premise moved |
 | 86 | **(25) Admin guests on the game card** | `ALREADY SHIPPED round-11`. `components/admin/GuestControl.tsx` has been on `/admin/games/[id]` since guests existed. Verified, not rebuilt |
 | 87 | **(26) Shadow claim removed** | `SHIPPED round-13`. `claim_shadow_player`'s removal SQL is handed over with the query that counts how many claimable rows remain. `merge_players` stays as the undocumented repair — **this row is its documentation** |
-| 88 | **Apply round 13's three migrations to production** | `BUILT-DORMANT-ON-the owner running them`. `20260821210000_pass_via_stripe`, `20260821220000_contact_settings`, `20260821230000_venue_management`. **Still absent 2026-08-21, each probed for the thing it creates rather than for a filename:** `credit_topups` holds 0 of the 4 payment columns, `set_site_setting`'s source does not contain `contact_emails`, and `admin_update_venue` is not in `pg_proc`. Commands in §6 |
+| 88 | **Apply round 13's three migrations to production** | **`SHIPPED`, and the OWNER did it** — found on the 2026-08-23 re-verification, not reported. All three probed for the object they create: `begin_pass_purchase`, `confirm_online_purchase` and `admin_update_venue` are all in `pg_proc`. ~~`BUILT-DORMANT-ON-the owner running them`.~~ |
 | 89 | *Gap found while verifying row 72.* The waitlist notifies by EMAIL only; the bell does not carry it | `OPEN`. The round-7 notifications store is a broadcast to `audience: 'all'` with no per-player recipient, so wiring the waitlist into it is a schema change rather than a cheap join. The FAQ says "emailed" rather than softening the claim |
 | 90 | *Deferred from row 85.* Per-game amenity OVERRIDES | **`DECLINED round-14`** (item 2) — *"this answers row 90: no per-game override; strike the question"*. A game inherits its venue's presets and that is the whole model; the design question the row held open (does an empty override mean "nothing provided" or "inherit"?) is moot because there is no override to be empty. ~~`OPEN`. Needs a nullable per-game column and a merge-on-read rule.~~ |
 | 91 | **(R14-1) Drafts fully dead** | `SHIPPED round-14`. The unfinished-games panel is gone from `/admin/games/new` and nothing in the product produces or offers a draft. `game_status` keeps the value and `publish_game` keeps its event — the CONCEPT is retired, not the column, because a row that still exists must still render. **Production holds 0 draft rows**, counted on the live database rather than assumed; `docs/ops/delete-draft-games.sql` is handed over anyway, for the day one appears |
@@ -219,11 +219,24 @@ round 13 added is item 2's reversal and a re-verification of item 3.
 | 102 | **(R14-12) Game information above Organizer, restyled** | `SHIPPED round-14`. A labelled `<dl>` fact list — When / Where / Format / Level — rather than a second card |
 | 103 | **(R14-13) Public player profiles** | `SHIPPED round-14`, dormant on row 105. **The quarantine is lifted with the owner's exact scope and no more:** picture, banner, the three stats, badges. No contact, no history, no credits. Guests stay unclickable, `linkProfiles` defaults to **false** so a roster opts in, and `/player/[nickname]` is `noindex`. Keyed by nickname so the public roster never gains a player id. **The spec asserting ABSENCES caught a leak a selector check would have passed** — `ProfileCover` tested whether the cover COLUMN exists, not whether the viewer owns the row, and put a file picker on strangers' banners |
 | 104 | **(R14-14) "Your next game" restyled** | `SHIPPED round-14`. **Reverses round 13 item 17's banner ruling** at the owner's instruction: it keeps its place on the games page and takes the row anatomy of Profile → My games |
-| 105 | **Apply `20260821240000_public_player_profile.sql` to production** | `BUILT-DORMANT-ON-the owner running it`. Validated locally and rolled back. **Verified absent 2026-08-21: the `public_profile` composite type is not in `pg_type`.** Until it is applied, `/player/<nickname>` answers 404 for everyone and the roster avatars link nowhere useful. Command in §6 |
+| 105 | **Apply `20260821240000_public_player_profile.sql` to production** | **`SHIPPED`, and the OWNER did it.** `public_player_profile` is in `pg_proc` and `GET /player/oliver` on the live site answers **200** — it answered 404 for everyone last round. ~~`BUILT-DORMANT-ON-the owner running it`.~~ |
 | 106 | **(R15-1) The Stripe return page** | `SHIPPED round-15`, dormant on rows 65 and 88. `/payment/return` is the one URL all six Payment Links come back to. It finds the purchase three ways in order — a cookie written by the server action that minted the id, then this player's most recent purchase that actually went to Stripe within the hour, then an honest empty state — and polls until the webhook settles it. **It never claims success before the webhook says so**: Stripe's redirect lands in the browser and the confirmation lands on the server, and the browser's leg carries no proof |
 | 107 | **(R15-2) The credits-added page** | `SHIPPED round-15`. `/pass/credits-added` — the pass sibling of the booking confirmation. The count is read from the LEDGER, not from the purchase, so a player who already held credit sees their real balance. It reads nothing from `?topup=`, which is what lets it also be the landing for a future in-app credit grant |
 | 108 | **Set the return URL on all six Payment Links** | `BUILT-DORMANT-ON-the owner pasting one URL into six Stripe links`. `https://hrajfotbalek-wlya.vercel.app/payment/return`, under each link's *After payment → Redirect customers to your website*. Until it is set, Stripe shows its own hosted receipt and the player never reaches either new page — the booking or the credits still land, because the WEBHOOK is what settles them and it is a separate path. Steps in §6 |
 | 109 | *Found while writing row 108.* The pass-tier template named tiers that do not exist | **`CORRECTED round-15`**. Row 33's template was `{"1","5","10","15","20"}`; the live table holds `{5, 8, 12, 15, 20}`. Pasting it would have left the 8- and 12-game tiers permanently unsellable and two keys matching nothing — quietly, because an unmapped tier says "Coming soon" rather than selling wrong. Fixed in §7 against the live table |
+| 110 | **(R16-1) "Create as draft" on the game form** | `SHIPPED round-16`. Round 9 made creation publish and round 14 removed the draft concept; neither touched the BUTTON, so for two rounds the last words before the press described a workflow that did not exist. **Nothing could have caught it** — the i18n test asks whether a key has a translation, and this one had three, all faithfully wrong. The spec now reads the rendered words on the form's chrome |
+| 111 | **(R16-2) A replaced profile photo did not appear** | `SHIPPED round-16`, dormant on row 117 for the durable half. The object key never varies and the cache-buster was `players.created_at`, which never varies either — so a replacement wrote new bytes behind a byte-identical URL. Reproduced with decoded pixels (magenta, then yellow, still magenta) before anything was touched |
+| 112 | **(R16-3) The public profile's name and face were invisible** | `SHIPPED round-16`. `ProfileCover` is `absolute` and the identity row was not, so the cover's scrims painted over it. **`elementFromPoint` passes against this bug** — the cover is `pointer-events-none`, so hit-testing walks past the scrims and painting does not. The spec measures luma instead |
+| 113 | **(R16-4) "Game information" appeared twice** | `SHIPPED round-16`. Two contract sections (§5.2 facts, §5.7 practical) that read as different KINDS of thing until round 14 restyled the top one into a fact list — at which point they became two lists about one game, 400px apart. Duration and the arrival line moved up; the two rotation lines went with the section and are **not** replaced, see §8 |
+| 114 | **(R16-5) Players rendered twice on the game detail** | `SHIPPED round-16`. p03's three-face summary above the full roster, and round 14 item 13 made both clickable — two links to one profile 300px apart. The list wins; the list CARD keeps its stack, because there the faces are the only answer rather than a second one |
+| 115 | **(R16-6) Cancellation cutoff 10h → 8h (policy v3)** | `SHIPPED round-16`, dormant on row 118. **No copy changed in any language** — every sentence already interpolates `{hours}`, which is the "policy windows are values, never branches" rule collecting its debt. What changed is where the number comes FROM: `cancellation_refund_cutoff_hours()` reads the constant `cancel_booking` enforces, so the UI cannot contradict it |
+| 116 | **(R16-7 … R16-20) The remaining eighteen items** | `SHIPPED round-16`. Day headings (7), the next-game card (8), the All chip (9), the surface badge (10), leave a waitlist (11), the waitlist in My games (12), Clear all (13), Settings folded into Overview (14), the banner cropper (15), the two admin summary sections (16), Remove player (17), admin delete (18), cancel with a reason (19), price prefill and the pitch-name reversal (20). Items 11, 13, 17, 18 and 19 are dormant on row 119 |
+| 117 | **Apply `20260823100000_players_updated_at.sql`** | `BUILT-DORMANT-ON-the owner running it`. **Verified absent 2026-08-23: `players` has no `updated_at` column.** Until it is applied a REPLACED photo still shows the old one to everyone but the uploader — the code reads `updated_at ?? created_at`, so it degrades to today's behaviour rather than erroring. `cache: "reload"` fixes it for the uploader with no schema |
+| 118 | **Apply `20260823110000_policy_v3_eight_hours.sql`** | `BUILT-DORMANT-ON-the owner running it`. **Verified absent 2026-08-23: `cancel_booking` still carries `v_cutoff_hours := 10`.** Until it is applied the product says 10 hours and enforces 10 hours, which is correct and consistent — the UI reads the enforced number, so there is no window in which it promises a refund the database refuses |
+| 119 | **Apply `20260823120000_round16_actions.sql`** | `BUILT-DORMANT-ON-the owner running it`. **Verified absent 2026-08-23: none of its seven functions is in `pg_proc`.** Leave-waitlist, Clear all, Remove player, both deletes and cancel-with-a-reason are all HIDDEN until it is applied — `app_capabilities()` is created by this migration, so its absence switches them off rather than leaving buttons that 404 |
+| 120 | *Found while doing R16-10.* One upcoming game has no surface recorded | `OPEN, and it is a data fix rather than code`. Praha 10 • Strašnice carries `surface: null`, so it draws no surface badge — which is what item 10 was reported as. The form now REQUIRES a surface, so no new game can repeat it; this one predates the change and needs a human who knows the ground. Set it in `/admin/games/<id>` |
+| 121 | *Found while doing R16-20.* The detail card ignored the game's own pitch name | **`FIXED round-16`**. It read `venueRow.pitch_name` while list cards resolved `effectivePitchName`, so a game carrying its own name showed one name on the list and another on its detail. `effectivePitchName`'s own docstring said the two "must agree"; the detail was calling neither |
+| 122 | *Found while doing R16-20.* A pure constant lived in a module that opens a database client | **`FIXED round-16`**. `PASS_REFERENCE_PRICE_CZK` was exported from `lib/pass/queries.ts`, so a CLIENT component importing it dragged `next/headers` across the boundary and broke the page at runtime. `tsc`, `eslint` and `next build` were all clean — the e2e run caught it in a browser console |
 
 ---
 
@@ -321,6 +334,40 @@ their filter through `booking_holds_seat`. No row changes. Rollback is
 
 The `--production` flag is deliberate and cannot be replaced by an environment
 variable — see CLAUDE.md on why implicitness is what failed.
+
+### Round 16's three migrations (rows 117, 118, 119)
+
+**Run them in this order.** Nothing depends on the order except your reading of
+the output, but the third is the one whose verification prints a summary worth
+seeing:
+
+```bash
+node scripts/apply-migration.mjs \
+  supabase/migrations/20260823100000_players_updated_at.sql --production
+node scripts/apply-migration.mjs \
+  supabase/migrations/20260823110000_policy_v3_eight_hours.sql --production
+node scripts/apply-migration.mjs \
+  supabase/migrations/20260823120000_round16_actions.sql --production
+```
+
+All three are validated against local inside a transaction and rolled back, and
+all three are additive. **The deployed code already tolerates each one being
+absent**, which is not a claim but a shape:
+
+| Migration | Before it runs | After it runs |
+|---|---|---|
+| `players_updated_at` | A replaced photo shows the old one to everyone but the uploader — today's behaviour | Every photo URL moves with its bytes |
+| `policy_v3_eight_hours` | The product says 10 hours and enforces 10 — consistent, because the UI reads the enforced number | It says 8 and enforces 8 |
+| `round16_actions` | Leave-waitlist, Clear all, Remove player, both deletes and cancel-with-a-reason are HIDDEN | They appear, with no deploy |
+
+**No deploy is needed after any of them.** That is deliberate: each surface
+asks the database what it can do rather than being told by a build.
+
+**THE THIRD ONE DROPS AND RE-ADDS `events_event_type_catalog`**, which is
+pre-approved (CLAUDE.md, 2026-08-01) while the new list is a strict superset —
+it is: four additions, nothing removed. Its verification INSERTS one row of
+each new type and rolls it back, because a CHECK that lists a value and a CHECK
+that accepts it are not the same thing when the list was retyped by hand.
 
 ### The return URL, six links (row 108)
 
@@ -428,7 +475,8 @@ trusting the line above:
 select jsonb_object_agg(games::text, '') from public.pass_tiers;
 ```
 
-**One data statement is outstanding** and needs no migration file — the venue
-separator moved from an em-dash to a bullet in the fixtures and production rows
-still carry the old one. It is in CLAUDE.md under "Migrations applied to
-production".
+~~**One data statement is outstanding** — the venue separator moved from an
+em-dash to a bullet in the fixtures and production rows still carry the old
+one.~~ **DONE, and the owner did it.** Counted on the live database on
+2026-08-23: zero venues and zero games still carry `' — '`. It came off this
+page by being checked rather than by being reported.
