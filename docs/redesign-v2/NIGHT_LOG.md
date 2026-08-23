@@ -6,11 +6,16 @@ deliverable.
 
 ## Where things stand
 
-**Done and pushed:** items 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 20.
-**Outstanding:** items 15, 16, 17, 18, 19, 21, 22 and the improvement pass.
+**All twenty-two done and pushed**, plus the improvement pass.
 
-**Checkpoint deploy 1:** `dpl_Ha7agJXGvcLhjLaDRKGTFQGoAUMT` — Ready, aliased.
-Covers items 1–10 and 20.
+**Checkpoint deploys:** `dpl_Ha7agJXGvcLhjLaDRKGTFQGoAUMT` (items 1–10, 20) and
+`dpl_41dTPnP2TGyQ8s8cHHVGnmVApfSB` (11–21). The final one is in the end report.
+
+**Item 5 was done twice**, and the second time is the one that counts. The
+first change removed `AvailabilityCard`'s three-face summary; the duplication
+the owner described — an avatar stack directly above the named list, same card
+— was inside `PlayersList` and survived. Found by screenshotting the page, not
+by reading the diff.
 
 ## Migrations written tonight, NONE applied to production
 
@@ -45,3 +50,16 @@ how the code is built:
   console. It lives in a leaf now.
 - **The detail card ignored `games.pitch_name`** while list cards honoured it,
   so the two surfaces could disagree about a pitch's name.
+
+## What a later session should know
+
+- **Do not edit files while the e2e suite runs.** A `cutover` failure was
+  traced to a torn read of a page being rewritten mid-run. It looks exactly
+  like a real regression.
+- **`app_capabilities()` is the pattern to reuse** for anything that needs a
+  migration the owner cannot apply yet. The migration creates the function, so
+  its absence switches the feature off — no flag, nothing to set, nothing to
+  forget, and applying it turns the feature on with no deploy.
+- **Round 16's three migrations are queued and nothing else is.** The end
+  report's morning block is the authority; `docs/REQUESTS.md` §6 carries the
+  same commands.
