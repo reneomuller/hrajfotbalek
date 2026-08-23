@@ -9,7 +9,7 @@ import { createServerSupabaseClient } from "@/lib/supabase/clients";
 import type { ClientPaymentMethod } from "@/lib/types/database";
 
 export interface WaitlistActionState {
-  status: "idle" | "joined" | "already" | "error";
+  status: "idle" | "joined" | "already" | "left" | "error";
   code?: BookingErrorCode;
 }
 
@@ -116,4 +116,46 @@ export async function convertWaitlistAction(
   if (!booking?.id) return { status: "error", code: "UNKNOWN" };
 
   redirect(`/game/${gameId}/book/confirmation?booking=${booking.id}`);
+}
+
+
+/**
+ * Leave a waitlist you joined (round 16, item 11).
+ *
+ * THE MISSING HALF OF A DOOR THAT ONLY OPENED. A player could join a queue and
+ * had no way off it — so the only exits were converting a spot they no longer
+ * wanted, or ignoring the email when it came. The second is the one that
+ * actually happened, and under notify-all FCFS an ignored notification is a
+ * spot that sits open while somebody further down never hears about it.
+ *
+ * THROUGH `leave_waitlist`, never a `.delete()`. `authenticated` holds no
+ * DELETE on `waitlist` and is not getting one: the row and its `waitlist_left`
+ * event have to land together, and a grant would be the only write path in
+ * this product with no event behind it.
+ *
+ * A SECOND TAP IS NOT AN ERROR. The RPC returns false when there was nothing
+ * to remove, and that maps to the same `left` state as a successful removal —
+ * both mean "you are not on this list", which is the only thing the player
+ * asked to be true.
+ */
+export async function leaveWaitlistAction(
+  _prevState: WaitlistActionState,
+  formData: FormData,
+): Promise<WaitlistActionState> {
+  const gameId = String(formData.get("gameId") ?? "");
+  if (!gameId) return { status: "error", code: "GAME_NOT_FOUND" };
+
+  const user = await getSessionUser();
+  if (!user) return { status: "error", code: "INSUFFICIENT_PERMISSION" };
+
+  const supabase = await createServerSupabaseClient();
+  const { error } = await supabase.rpc("leave_waitlist", { p_game_id: gameId });
+
+  if (error) {
+    return { status: "error", code: toBookingErrorCode(error.message) };
+  }
+
+  revalidatePath(`/game/${gameId}`);
+  revalidatePath("/account");
+  return { status: "left" };
 }

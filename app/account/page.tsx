@@ -15,7 +15,11 @@ import { SecurityLinks } from "@/components/account/SecurityLinks";
 import { countryName, countryOptions } from "@/lib/auth/countries";
 import { requireCurrentPlayer } from "@/lib/auth/session";
 import { splitHistory } from "@/lib/booking/history";
-import { getOwnCreditBalance, listOwnBookings } from "@/lib/booking/queries";
+import {
+  getOwnCreditBalance,
+  listOwnBookings,
+  listOwnWaitlisted,
+} from "@/lib/booking/queries";
 import { getLocale, getStrings } from "@/lib/i18n/server";
 import { listMyBatches } from "@/lib/pass/queries";
 import { playerBadges } from "@/lib/profile/badges";
@@ -94,13 +98,15 @@ export default async function AccountPage({
    * The wallet reads are the two that are genuinely tab-specific, and they are
    * cheap enough not to be worth branching a `Promise.all` around.
    */
-  const [balanceCzk, batches, bookings] = await Promise.all([
+  const [balanceCzk, batches, bookings, waitlisted] = await Promise.all([
     getOwnCreditBalance(),
     // The wallet broken into batches (§4.2). A single number cannot say that
     // 750 of a 900 balance runs out on the 3rd, which is the one thing a pass
     // holder needs in order to use it.
     listMyBatches(),
     listOwnBookings(),
+    // Round 16 item 12 — the Waitlist subsection under My games.
+    listOwnWaitlisted(),
   ]);
 
   const stats = profileStats(bookings);
@@ -206,39 +212,23 @@ export default async function AccountPage({
           </div>
 
           <BadgeGrid badges={badges} t={t} />
-        </>
-      )}
 
-      {tab === "games" && (
-        <div className="mt-8">
-          {history.upcoming.length === 0 && history.past.length === 0 ? (
-            /*
-             * THE SAME EMPTY STATE `/my-games` RENDERS, and for the same
-             * reason: it sends a new player to the board rather than reporting
-             * an absence. A page that says "you have no games" and stops is a
-             * dead end for exactly the person most likely to be looking for
-             * one.
-             */
-            <div data-testid="my-games-empty" className="rounded-card bg-surface p-6">
-              <p className="m-0 text-[15px] leading-relaxed text-bone">
-                {t.account.myGamesEmpty}
-              </p>
-              <Link
-                href="/games"
-                data-testid="my-games-empty-cta"
-                className="mt-4 inline-block rounded-control bg-volt px-5 py-3 text-[15px] font-extrabold uppercase tracking-wide text-surface no-underline"
-              >
-                {t.account.myGamesEmptyCta}
-              </Link>
-            </div>
-          ) : (
-            <PlayerHistory history={history} />
-          )}
-        </div>
-      )}
+          {/*
+            EVERYTHING THAT WAS UNDER "Settings" (round 16, item 14).
 
-      {tab === "settings" && (
-        <>
+            THE SPLIT WAS DEFENSIBLE AND STILL WRONG. Ruling L's reasoning was
+            that Overview holds what you look at and Settings what you change —
+            a clean line, and it cost a tap on the two things people actually
+            come to this page to do: fix a phone number and sign out. Three
+            tabs for one screen's worth of content is a tab bar earning its
+            keep on the strength of the tab bar.
+
+            THE ORDER IS LOOK, THEN CHANGE. The wallet, the badges and the
+            admin door are what a player reads; the edit fields and the account
+            actions are what they act on, and they come after. Nothing about
+            either block changed — this is a move, not a redesign, which is why
+            the section comments below still read as they did.
+          */}
           {/*
             THE PROFILE BLOCK (ruling L, §3 screen 7) — display and edit. It is
             what the page is named after, and before ruling L it sat nowhere:
@@ -308,6 +298,35 @@ export default async function AccountPage({
           </section>
         </>
       )}
+
+      {tab === "games" && (
+        <div className="mt-8">
+          {history.upcoming.length === 0 && history.past.length === 0 ? (
+            /*
+             * THE SAME EMPTY STATE `/my-games` RENDERS, and for the same
+             * reason: it sends a new player to the board rather than reporting
+             * an absence. A page that says "you have no games" and stops is a
+             * dead end for exactly the person most likely to be looking for
+             * one.
+             */
+            <div data-testid="my-games-empty" className="rounded-card bg-surface p-6">
+              <p className="m-0 text-[15px] leading-relaxed text-bone">
+                {t.account.myGamesEmpty}
+              </p>
+              <Link
+                href="/games"
+                data-testid="my-games-empty-cta"
+                className="mt-4 inline-block rounded-control bg-volt px-5 py-3 text-[15px] font-extrabold uppercase tracking-wide text-surface no-underline"
+              >
+                {t.account.myGamesEmptyCta}
+              </Link>
+            </div>
+          ) : (
+            <PlayerHistory history={history} waitlisted={waitlisted} />
+          )}
+        </div>
+      )}
+
 
       {/* Signed in, or a cancellation made from this page. */}
       <ToastFromQuery query={query} />

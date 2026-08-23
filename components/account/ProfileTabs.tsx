@@ -2,7 +2,7 @@ import Link from "next/link";
 import type { Strings } from "@/lib/strings";
 
 /**
- * Overview · My games · Settings.
+ * Overview · My games.
  *
  * LINKS AND A `?tab=` QUERY, NOT CLIENT STATE — the same decision the day
  * filter makes, for the same three reasons. The selection is shareable, the
@@ -28,12 +28,21 @@ import type { Strings } from "@/lib/strings";
  * the word longer.
  */
 
-export type ProfileTab = "overview" | "games" | "settings";
+/*
+ * ~~"overview" | "games" | "settings".~~ TWO TABS SINCE ROUND 16 ITEM 14.
+ *
+ * `"settings"` SURVIVES AS A VALUE and resolves to the overview, which is
+ * where its content now lives. Dropping it from the union would 404 nothing —
+ * `parseProfileTab` already sends anything unrecognised to the overview — but
+ * keeping it named is the difference between a link somebody bookmarked
+ * landing on the right screen by accident and landing there by design.
+ */
+export type ProfileTab = "overview" | "games";
 
 /** Anything unrecognised is the overview, including a repeated `?tab=`. */
 export function parseProfileTab(value: string | string[] | undefined): ProfileTab {
   if (value === "games") return "games";
-  if (value === "settings") return "settings";
+  // `?tab=settings` is an old bookmark. Its content is on the overview now.
   return "overview";
 }
 
@@ -41,7 +50,10 @@ export function ProfileTabs({ selected, t }: { selected: ProfileTab; t: Strings 
   const tabs: { key: ProfileTab; href: string; label: string }[] = [
     { key: "overview", href: "/account", label: t.profile.tabOverview },
     { key: "games", href: "/account?tab=games", label: t.profile.tabGames },
-    { key: "settings", href: "/account?tab=settings", label: t.profile.tabSettings },
+    /*
+      ~~Settings.~~ REMOVED (round 16, item 14) — its content moved onto the
+      overview, so a third tab would point at the tab you are already on.
+    */
   ];
 
   return (

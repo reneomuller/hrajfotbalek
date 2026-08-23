@@ -63,3 +63,27 @@ export async function publishNotificationAction(
   revalidatePath("/", "layout");
   return { status: "sent" };
 }
+
+/**
+ * Clear the bell (round 16, item 13).
+ *
+ * DISMISSAL IS NOT READ, and the two are different columns for a reason.
+ * Opening the bell marks everything read and the list stays — right, because
+ * a notification you have seen is still one you may want to re-read. "Clear
+ * all" is the player saying they are done with it, and only they can say so.
+ *
+ * NO IDS, like `markNotificationsReadAction` beside it. The player is clearing
+ * everything by definition, and sending N ids would mean reconciling a partial
+ * failure over a control whose entire meaning is "all of it".
+ *
+ * SILENT ON A MISSING FUNCTION. The RPC arrives with the round-16 migration;
+ * until then the control is not rendered at all (`appCapabilities`), so
+ * reaching this is either a stale tab or a hand-made POST. Neither deserves an
+ * error surface, and the failure costs a list that did not clear.
+ */
+export async function dismissNotificationsAction(): Promise<void> {
+  const supabase = await createServerSupabaseClient();
+  const { error } = await supabase.rpc("dismiss_all_notifications");
+  if (error) console.error("dismiss_all_notifications failed", error.message);
+  revalidatePath("/", "layout");
+}

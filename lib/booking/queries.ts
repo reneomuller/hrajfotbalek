@@ -198,3 +198,62 @@ export function onlinePaymentState(
 
   return now <= deadline ? "waiting" : "expired";
 }
+
+/**
+ * The games the signed-in player is WAITLISTED on (round 16, item 12).
+ *
+ * WHY IT IS ITS OWN QUERY AND NOT PART OF `PlayerHistory`. That type splits
+ * BOOKINGS by tense; a waitlist row is not a booking and has no tense to be
+ * split on — it is a standing intention about a game that has not happened.
+ * Folding it in would mean `upcoming` held two things with different actions
+ * on them, which is the shape `splitHistory` exists to avoid.
+ *
+ * ACCESS CONTROL IS `waitlist_select_own` RLS, not a filter written here — the
+ * same rule the rest of this file follows.
+ *
+ * CONVERTED ROWS ARE EXCLUDED. A waitlist entry that became a booking is
+ * already on the upcoming list as a booking; showing it in both would tell a
+ * player they are simultaneously in and waiting.
+ */
+export interface WaitlistedGame {
+  waitlistId: string;
+  joinedAt: string;
+  game: GameRow;
+}
+
+export async function listOwnWaitlisted(
+  now: number = Date.now(),
+): Promise<WaitlistedGame[]> {
+  const supabase = await createServerSupabaseClient();
+
+  const { data: rows, error } = await supabase
+    .from("waitlist")
+    .select("id, game_id, joined_at")
+    .is("converted_booking_id", null);
+
+  if (error || !rows || rows.length === 0) return [];
+
+  const { data: games } = await supabase
+    .from("games")
+    .select("*")
+    .in("id", rows.map((row) => row.game_id));
+
+  const byId = new Map((games ?? []).map((game) => [game.id, game]));
+
+  return rows
+    .map((row) => {
+      const game = byId.get(row.game_id);
+      return game ? { waitlistId: row.id, joinedAt: row.joined_at, game } : null;
+    })
+    .filter((row): row is WaitlistedGame => row !== null)
+    /*
+     * ONLY GAMES THAT HAVE NOT KICKED OFF. A waitlist row on a game that has
+     * already been played is a queue nobody is in any more; the sweep that
+     * clears them runs on cancellation, not on kickoff, so stale rows exist.
+     */
+    .filter((row) => new Date(row.game.starts_at).getTime() > now)
+    .sort(
+      (a, b) =>
+        new Date(a.game.starts_at).getTime() - new Date(b.game.starts_at).getTime(),
+    );
+}

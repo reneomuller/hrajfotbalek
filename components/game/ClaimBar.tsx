@@ -3,6 +3,8 @@ import { CancelBookingForm } from "@/components/CancelBookingForm";
 import { WaitlistButton } from "@/components/WaitlistButton";
 import { formatCzk, formatTime } from "@/lib/format";
 import { claimBarState, type ClaimBarFacts } from "@/lib/games/claimBar";
+import { LeaveWaitlistControl } from "@/components/game/LeaveWaitlistControl";
+import { appCapabilities } from "@/lib/db/capabilities";
 import { refundCutoffHours } from "@/lib/policy/refundCutoff";
 import { creditsLabel } from "@/lib/pass/credits";
 import { PASS_REFERENCE_PRICE_CZK } from "@/lib/pass/queries";
@@ -91,6 +93,7 @@ export async function ClaimBar({
    * comes to promise a refund the database refuses.
    */
   const cutoffHours = await refundCutoffHours();
+  const capabilities = await appCapabilities();
 
   const t = await getStrings();
 
@@ -199,13 +202,26 @@ export async function ClaimBar({
       break;
 
     case "waitlisted":
-      right = note(
-        "claim-bar-waitlisted",
-        state.position === null
-          ? t.booking.barOnWaitlistNoPosition
-          : t.booking.barOnWaitlist.replace("{n}", String(state.position)),
-        "text-muted",
+      /*
+       * THE POSITION, AND A WAY OFF THE LIST (round 16, item 11).
+       *
+       * This state used to be a note and nothing else — the one place a
+       * waitlisted player sees where they stand, with no control on it. The
+       * leave link is gated on the round-16 migration: without it the bar is
+       * exactly what it was, rather than offering a button that 404s.
+       */
+      left = (
+        <span data-testid="claim-bar-waitlisted" className="text-small text-muted">
+          {state.position === null
+            ? t.booking.barOnWaitlistNoPosition
+            : t.booking.barOnWaitlist.replace("{n}", String(state.position))}
+        </span>
       );
+      right = capabilities.leaveWaitlist ? (
+        <div className="ml-auto shrink-0">
+          <LeaveWaitlistControl gameId={gameId} />
+        </div>
+      ) : undefined;
       break;
 
     case "full":

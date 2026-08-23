@@ -204,6 +204,9 @@ export const cs: StringsOverlay = {
     onWaitlist: "Jsi ve frontě",
     waitlistJoined: "Jsi ve frontě. Napíšeme ti, jakmile se místo uvolní.",
     waitlistAlready: "Ve frontě na tenhle zápas už jsi.",
+    // Round 16 item 11 — DRAFT.
+    waitlistLeave: "Odejít z čekací listiny",
+    waitlistLeftDone: "Z čekací listiny jsi odešel.",
     waitlistHint:
       "Jakmile se místo uvolní, dozvědí se to všichni ve frontě naráz — dostane ho ten, kdo si ho zabere první.",
     waitlistPosition: "Jsi #{position} ve frontě",
@@ -470,7 +473,6 @@ export const cs: StringsOverlay = {
 
     tabOverview: "Přehled",
     tabGames: "Moje zápasy",
-    tabSettings: "Nastavení",
 
     statGamesOne: "odehraný zápas",
     statGamesFew: "odehrané zápasy",
@@ -520,6 +522,8 @@ export const cs: StringsOverlay = {
     gamesPlayedLabel: "Odehrané zápasy",
     noShowsLabel: "Neúčasti",
     upcomingTitle: "Nadcházející",
+    // Round 16 item 12 — DRAFT.
+    waitlistTitle: "Čekací listina",
     pastTitle: "Už odehrané",
     pastEmpty: "Zatím nic odehraného — první zápas se objeví tady.",
     attendancePresent: "Dorazil",
@@ -648,6 +652,8 @@ export const cs: StringsOverlay = {
   },
 
   notifications: {
+    // Round 16 item 13 — DRAFT.
+    clearAll: "Smazat vše",
     // DRAFT — flagged for the standing native-review batch.
     bellLabel: "Oznámení",
     title: "Oznámení",

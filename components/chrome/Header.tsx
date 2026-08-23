@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { LanguageSwitcher } from "@/components/chrome/LanguageSwitcher";
+import { appCapabilities } from "@/lib/db/capabilities";
 import { primaryNavLinks } from "@/lib/nav/links";
 import { initials } from "@/lib/roster/initials";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
@@ -83,6 +84,8 @@ export async function Header({
   photoVersion?: string | null;
 }) {
   const t = await getStrings();
+  // Round 16 item 13 — see `lib/db/capabilities.ts`. Deduped per request.
+  const capabilities = await appCapabilities();
   const { nav } = t;
   const signedIn = nickname !== null;
   const photo = avatarUrl(
@@ -246,6 +249,8 @@ export async function Header({
               items={bell.items}
               unread={bell.unread}
               available={bell.available}
+              /* Round 16 item 13 — hidden until the migration exists. */
+              canDismiss={capabilities.dismissNotifications}
             />
           )}
           {signedIn ? (

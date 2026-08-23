@@ -207,6 +207,9 @@ export const ru: StringsOverlay = {
     onWaitlist: "Ты в очереди",
     waitlistJoined: "Ты в очереди. Напишем, как только освободится место.",
     waitlistAlready: "Ты уже в очереди на этот матч.",
+    // Round 16 item 11 — DRAFT.
+    waitlistLeave: "Уйти из листа ожидания",
+    waitlistLeftDone: "Ты вышел из листа ожидания.",
     waitlistHint:
       "Как только место освободится, об этом узнают все в очереди одновременно — место достанется тому, кто займёт его первым.",
     waitlistPosition: "Ты #{position} в очереди",
@@ -475,7 +478,6 @@ export const ru: StringsOverlay = {
 
     tabOverview: "Обзор",
     tabGames: "Мои игры",
-    tabSettings: "Настройки",
 
     statGamesOne: "сыгранная игра",
     statGamesFew: "сыгранные игры",
@@ -524,6 +526,8 @@ export const ru: StringsOverlay = {
     gamesPlayedLabel: "Сыграно игр",
     noShowsLabel: "Неявки",
     upcomingTitle: "Ближайшие",
+    // Round 16 item 12 — DRAFT.
+    waitlistTitle: "Лист ожидания",
     pastTitle: "Уже сыграно",
     pastEmpty: "Пока ничего не сыграно — первая игра появится здесь.",
     attendancePresent: "Пришёл",
@@ -652,6 +656,8 @@ export const ru: StringsOverlay = {
   },
 
   notifications: {
+    // Round 16 item 13 — DRAFT.
+    clearAll: "Очистить всё",
     // DRAFT — flagged for the standing native-review batch.
     bellLabel: "Уведомления",
     title: "Уведомления",

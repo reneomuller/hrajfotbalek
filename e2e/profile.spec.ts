@@ -178,13 +178,22 @@ test("the account page shows a photo slot and the security controls", async ({
   await expect(page.getByTestId("games-played")).toBeVisible();
 
   /*
-   * THE SECURITY CONTROLS MOVED BEHIND THE SETTINGS TAB. The identity block
-   * and the stat row render on every tab; the account controls are one tab in,
-   * which is where "Settings" means what it says. Everything below this line
-   * is the same set of assertions the flat page carried.
+   * ~~THE SECURITY CONTROLS MOVED BEHIND THE SETTINGS TAB.~~ THEY ARE BACK ON
+   * THE OVERVIEW (round 16, item 14).
+   *
+   * Ruling L's split — Overview is what you look at, Settings what you change
+   * — was clean and cost a tap on the two things people actually come here to
+   * do: fix a phone number and sign out. Three tabs for one screen's worth of
+   * content is a tab bar earning its keep on the strength of the tab bar.
+   *
+   * `?tab=settings` still RESOLVES rather than 404ing, because bookmarks
+   * exist; it lands on the overview, which is where the content is.
    */
-  await page.getByTestId("profile-tab").filter({ hasText: /settings/i }).click();
-  await page.waitForURL("**/account?tab=settings");
+  await page.goto("/account");
+  await expect(
+    page.getByTestId("profile-tab").filter({ hasText: /settings/i }),
+    "the Settings tab is back",
+  ).toHaveCount(0);
 
   /*
    * REQ-AUTH-020 — both controls are COMPACT TEXT LINKS now, stacked directly

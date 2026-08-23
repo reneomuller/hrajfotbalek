@@ -704,6 +704,24 @@ export interface Database {
         Args: Record<string, never>;
         Returns: number;
       };
+      /*
+       * Round 16. Present only once `20260823120000_round16_actions` is
+       * applied — `lib/db/capabilities.ts` reads its ABSENCE as "none of this
+       * round's actions exist" and hides every control they back.
+       */
+      app_capabilities: {
+        Args: Record<string, never>;
+        Returns: Record<string, boolean>;
+      };
+      leave_waitlist: { Args: { p_game_id: string }; Returns: boolean };
+      dismiss_all_notifications: { Args: Record<string, never>; Returns: number };
+      admin_remove_booking: { Args: { p_booking_id: string }; Returns: number };
+      admin_delete_game: { Args: { p_game_id: string }; Returns: undefined };
+      admin_delete_venue: { Args: { p_venue_id: string }; Returns: undefined };
+      cancel_game_with_reason: {
+        Args: { p_game_id: string; p_reason: string };
+        Returns: number;
+      };
       next_payment_code: {
         Args: Record<string, never>;
         Returns: number;

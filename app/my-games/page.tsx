@@ -4,7 +4,7 @@ import { PlayerHistory } from "@/components/account/PlayerHistory";
 import { ToastFromQuery } from "@/components/ToastFromQuery";
 import { splitHistory } from "@/lib/booking/history";
 import { requireCurrentPlayer } from "@/lib/auth/session";
-import { listOwnBookings } from "@/lib/booking/queries";
+import { listOwnBookings, listOwnWaitlisted } from "@/lib/booking/queries";
 import { getStrings } from "@/lib/i18n/server";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -48,7 +48,10 @@ export default async function MyGamesPage({
   // back on their fixtures rather than on the account page.
   await requireCurrentPlayer("/my-games");
 
-  const bookings = await listOwnBookings();
+  const [bookings, waitlisted] = await Promise.all([
+    listOwnBookings(),
+    listOwnWaitlisted(),
+  ]);
   const history = splitHistory(bookings);
 
   return (
@@ -81,7 +84,7 @@ export default async function MyGamesPage({
           </Link>
         </div>
       ) : (
-        <PlayerHistory history={history} />
+        <PlayerHistory history={history} waitlisted={waitlisted} />
       )}
 
       {/* A cancellation made from this page redirects back to it. */}

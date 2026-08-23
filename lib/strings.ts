@@ -396,6 +396,9 @@ export const strings = {
     onWaitlist: "You are on the waitlist",
     waitlistJoined: "You are on the waitlist. We will email you when a spot opens.",
     waitlistAlready: "You are already on the waitlist for this game.",
+    // Round 16 item 11 — the way off a list that previously only had a way on.
+    waitlistLeave: "Leave the waitlist",
+    waitlistLeftDone: "You have left the waitlist.",
     waitlistHint:
       "Everyone waiting is told at the same moment a spot opens — first to claim it gets it.",
     // Position on the list. {position} is substituted by `waitlistPositionLabel`.
@@ -941,7 +944,12 @@ export const strings = {
 
     tabOverview: "Overview",
     tabGames: "My games",
-    tabSettings: "Settings",
+    /*
+     * ~~`tabSettings`.~~ REMOVED with the tab (round 16, item 14). Deleting
+     * the key rather than leaving it is item 1's lesson applied the same
+     * night: a string that survives the thing it labelled is invisible to the
+     * coverage test and reappears the next time somebody greps for a word.
+     */
 
     /*
      * LOWER CASE, and it is not an oversight. These sit UNDER their numbers as
@@ -1015,6 +1023,8 @@ export const strings = {
     gamesPlayedLabel: "Games played",
     noShowsLabel: "No-shows",
     upcomingTitle: "Coming up",
+    // Round 16 item 12 — the queue, between what is booked and what is over.
+    waitlistTitle: "Waitlist",
     pastTitle: "Already played",
     pastEmpty: "Nothing played yet — your first game will show up here.",
     attendancePresent: "Turned up",
@@ -2085,6 +2095,8 @@ export const strings = {
   },
 
   notifications: {
+    // Round 16 item 13 — emptying the bell, distinct from marking it read.
+    clearAll: "Clear all",
     /* Round 7, item 5 — the in-app bell. Player-facing, so all three. */
     bellLabel: "Notifications",
     title: "Notifications",

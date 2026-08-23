@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Icon } from "@/components/Icon";
+import { dismissNotificationsAction } from "@/app/notifications/actions";
 import { useStrings } from "@/components/LocaleProvider";
 import { markNotificationsReadAction } from "@/app/notifications/actions";
 import type { NotificationRow } from "@/lib/notifications/queries";
@@ -33,10 +34,17 @@ import type { NotificationRow } from "@/lib/notifications/queries";
  */
 export function NotificationBell({
   items,
+  canDismiss = false,
   unread,
   available,
 }: {
   items: NotificationRow[];
+  /**
+   * Whether this database can dismiss (round 16, item 13). False hides the
+   * control — `dismiss_all_notifications` arrives with the round-16 migration
+   * and the code ships first.
+   */
+  canDismiss?: boolean;
   unread: number;
   available: boolean;
 }) {
@@ -129,9 +137,38 @@ export function NotificationBell({
               */
               className="lifted fixed right-gutter top-[68px] z-[60] max-h-[70vh] w-[min(360px,calc(100vw-2*22px))] overflow-y-auto rounded-card p-4 shadow-lift"
             >
-              <h2 className="m-0 mb-3 text-eyebrow font-semibold uppercase text-volt">
-                {t.notifications.title}
-              </h2>
+              <div className="mb-3 flex items-baseline justify-between gap-3">
+                <h2 className="m-0 text-eyebrow font-semibold uppercase text-volt">
+                  {t.notifications.title}
+                </h2>
+
+                {/*
+                  CLEAR ALL (round 16, item 13) — beside the heading, not under
+                  the list. A control that empties a list must be reachable
+                  without scrolling to the bottom of the list it empties, and
+                  this panel scrolls at `max-h-[70vh]`.
+
+                  SHOWN ONLY WITH SOMETHING TO CLEAR, and only where
+                  `dismiss_all_notifications` exists. An empty bell with a
+                  Clear all above it is a control that cannot do anything.
+
+                  NO CONFIRMATION. Nothing is destroyed — dismissal is
+                  per-player and the notifications themselves are untouched —
+                  and a dialog for a reversible tidying action is the kind of
+                  friction that teaches people to click through dialogs.
+                */}
+                {canDismiss && items.length > 0 && (
+                  <form action={dismissNotificationsAction}>
+                    <button
+                      type="submit"
+                      data-testid="notifications-clear"
+                      className="text-small text-muted underline underline-offset-4 transition-colors hover:text-bone"
+                    >
+                      {t.notifications.clearAll}
+                    </button>
+                  </form>
+                )}
+              </div>
 
               {items.length === 0 ? (
                 <p data-testid="notification-empty" className="m-0 text-small text-muted">
