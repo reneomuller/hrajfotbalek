@@ -101,17 +101,24 @@ test("the party renders as guests, last in the row and never with a photo", asyn
     /*
      * Four seats: the player, two of theirs, one of the house's.
      *
-     * SCOPED TO THE NAMED LIST. `data-guest` is on the avatar stack too — the
-     * two render the same seats and MUST agree — so an unscoped selector
-     * counts each guest twice, which is the shape of a passing test that
-     * proves half of what it claims.
+     * ~~SCOPED TO THE NAMED LIST, because `data-guest` is on the avatar stack
+     * too — the two render the same seats and MUST agree, so an unscoped
+     * selector counts each guest twice.~~
+     *
+     * THERE IS NO STACK ANY MORE (round 16, item 5). It sat directly above
+     * this list showing the same people without their names, and the
+     * "must agree" clause above was the tell: two renderings that have to be
+     * kept in step are one rendering too many. The scoping stays because it
+     * is right either way.
      */
     await expect(page.getByTestId("roster").locator("li")).toHaveCount(4);
     await expect(page.getByTestId("roster").locator('li[data-guest="true"]')).toHaveCount(3);
-    // The stack agrees with the list, seat for seat.
+
+    // And the removed stack has not come back to disagree with it.
     await expect(
-      page.locator('[data-testid="players-list"] [data-testid="avatar"][data-guest="true"]'),
-    ).toHaveCount(3);
+      page.locator('[data-testid="players-list"] [data-testid="avatar"]'),
+      "the roster card is drawing its players twice again",
+    ).toHaveCount(0);
 
     // The labels are built in the app, in the reader's language.
     const text = await page.getByTestId("roster").innerText();
