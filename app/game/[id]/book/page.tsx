@@ -9,7 +9,7 @@ import { cancellationReassurance } from "@/lib/booking/reassurance";
 import { readResumeIntent } from "@/lib/booking/resume";
 import { formatCzk, formatGameDateTime } from "@/lib/format";
 import { getGameById } from "@/lib/games/queries";
-import { policy } from "@/lib/policy";
+import { refundCutoffHours } from "@/lib/policy/refundCutoff";
 import { getStrings } from "@/lib/i18n/server";
 import { runCreateBooking } from "./actions";
 
@@ -145,13 +145,14 @@ export default async function BookPage({ params, searchParams }: BookPageProps) 
       {/*
         Reassurance before the commit, not after it: the question a player asks
         at the payment choice is what happens if they cannot make it. The window
-        comes from lib/policy.ts; cancel_booking still enforces it.
+        is `cancellation_refund_cutoff_hours()` — the constant
+        `cancel_booking` enforces, read out rather than mirrored (round 16, item 6).
       */}
       <p
         data-testid="cancellation-reassurance"
         className="mt-4 text-center text-[12px] leading-snug text-muted"
       >
-        {cancellationReassurance(policy.cancellation.refundCutoffHoursBeforeStart, t)}
+        {cancellationReassurance(await refundCutoffHours(), t)}
       </p>
     </main>
   );

@@ -8,13 +8,17 @@
  *
  * The stamp written onto `events.policy_version` must match `POLICY_VERSION`.
  */
-export const POLICY_VERSION = "v2" as const;
+export const POLICY_VERSION = "v3" as const;
 
 export const policy = {
   version: POLICY_VERSION,
 
   /**
-   * POLICY v2 (migration 40, applied 2026-08-19) SPLITS ONE WINDOW INTO TWO,
+   * POLICY v3 (migration `20260823110000`) MOVES THE REFUND CUTOFF TO EIGHT
+   * HOURS and makes it readable — see `refundCutoffHoursBeforeStart` below and
+   * `lib/policy/refundCutoff.ts`. Cancelling itself is untouched.
+   *
+   * POLICY v2 (migration 40, applied 2026-08-19) SPLIT ONE WINDOW INTO TWO,
    * and the split is the whole point of the version bump.
    *
    * Under v1 these were the same question: cancelling was permitted until
@@ -56,6 +60,24 @@ export const policy = {
      * RESTATED IN SQL as `v_cutoff_hours` inside `cancel_booking`, because SQL
      * cannot read this file. The two MUST change together; the database is the
      * authority and this is the mirror.
+     */
+    /*
+     * ~~10, and the authority is `v_cutoff_hours` inside `cancel_booking`;
+     * the two MUST change together.~~ POLICY v3 MOVES IT TO 8 — and changes
+     * what this line IS (round 16, item 6).
+     *
+     * IT IS NO LONGER WHAT THE UI RENDERS. Every surface now reads
+     * `cancellation_refund_cutoff_hours()` through
+     * `lib/policy/refundCutoff.ts`, which is the constant `cancel_booking`
+     * enforces, read out. This is the FALLBACK for a database that predates
+     * v3 and does not have that function.
+     *
+     * SO IT STAYS AT 10, DELIBERATELY, AND THAT IS NOT AN OVERSIGHT. A
+     * pre-v3 database enforces ten hours; on such a database 10 is the true
+     * answer and 8 would be the lie. The number here describes the world
+     * where the function is missing, and in that world it is right.
+     *
+     * When the last pre-v3 database is gone this constant can go with it.
      */
     refundCutoffHoursBeforeStart: 10,
     /** Cancelling returns value as wallet credit — money never leaves the system. */

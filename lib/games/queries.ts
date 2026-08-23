@@ -1,6 +1,7 @@
 import { canOfferCancel, isCancellationRefundable } from "@/lib/booking/badges";
 import { isInProgress } from "@/lib/games/duration";
 import { policy } from "@/lib/policy";
+import { refundCutoffHours } from "@/lib/policy/refundCutoff";
 import {
   createServerSupabaseClient,
   createServiceRoleSupabaseClient,
@@ -417,11 +418,7 @@ export async function getOwnActiveBooking(
       ),
     refundable:
       game != null &&
-      isCancellationRefundable(
-        game.starts_at,
-        now,
-        policy.cancellation.refundCutoffHoursBeforeStart,
-      ),
+      isCancellationRefundable(game.starts_at, now, await refundCutoffHours()),
   };
 }
 

@@ -694,6 +694,16 @@ export interface Database {
     };
 
     Functions: {
+      /*
+       * Round 16 item 6 (policy v3). Present only once
+       * `20260823110000_policy_v3_eight_hours` is applied — `refundCutoffHours`
+       * treats its absence as "this database is pre-v3" and falls back to
+       * `lib/policy.ts`, which is the correct answer there.
+       */
+      cancellation_refund_cutoff_hours: {
+        Args: Record<string, never>;
+        Returns: number;
+      };
       next_payment_code: {
         Args: Record<string, never>;
         Returns: number;

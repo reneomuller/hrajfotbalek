@@ -1,5 +1,6 @@
 import { canOfferCancel, isCancellationRefundable } from "@/lib/booking/badges";
 import { policy } from "@/lib/policy";
+import { refundCutoffHours } from "@/lib/policy/refundCutoff";
 import { createServerSupabaseClient } from "@/lib/supabase/clients";
 import type { Database } from "@/lib/types/database";
 
@@ -58,20 +59,18 @@ export async function getOwnBookingWithGame(
   if (gameError || !game) return null;
 
   const now = Date.now();
+  // Asked once per request, deduped by `cache()` — see `refundCutoffHours`.
+  const cutoff = await refundCutoffHours();
   return {
     booking,
     game,
     canCancel: decideCanCancel(booking, game, now),
-    refundable: decideRefundable(game, now),
+    refundable: decideRefundable(game, now, cutoff),
   };
 }
 
-function decideRefundable(game: GameRow, now: number): boolean {
-  return isCancellationRefundable(
-    game.starts_at,
-    now,
-    policy.cancellation.refundCutoffHoursBeforeStart,
-  );
+function decideRefundable(game: GameRow, now: number, cutoffHours: number): boolean {
+  return isCancellationRefundable(game.starts_at, now, cutoffHours);
 }
 
 function decideCanCancel(booking: BookingRow, game: GameRow, now: number): boolean {
@@ -99,6 +98,7 @@ export async function listOwnBookings(): Promise<BookingWithGame[]> {
 
   const byId = new Map((games ?? []).map((g) => [g.id, g]));
   const now = Date.now();
+  const cutoff = await refundCutoffHours();
 
   return bookings
     .map((booking) => {
@@ -108,7 +108,7 @@ export async function listOwnBookings(): Promise<BookingWithGame[]> {
             booking,
             game,
             canCancel: decideCanCancel(booking, game, now),
-            refundable: decideRefundable(game, now),
+            refundable: decideRefundable(game, now, cutoff),
           }
         : null;
     })

@@ -3,7 +3,7 @@ import { CancelBookingForm } from "@/components/CancelBookingForm";
 import { WaitlistButton } from "@/components/WaitlistButton";
 import { formatCzk, formatTime } from "@/lib/format";
 import { claimBarState, type ClaimBarFacts } from "@/lib/games/claimBar";
-import { policy } from "@/lib/policy";
+import { refundCutoffHours } from "@/lib/policy/refundCutoff";
 import { creditsLabel } from "@/lib/pass/credits";
 import { PASS_REFERENCE_PRICE_CZK } from "@/lib/pass/queries";
 import { getLocale, getStrings } from "@/lib/i18n/server";
@@ -85,6 +85,13 @@ export async function ClaimBar({
   refundable?: boolean;
   facts: ClaimBarFacts;
 }) {
+  /*
+   * THE ENFORCED NUMBER, NOT THE MIRRORED ONE (round 16, item 6). See
+   * `lib/policy/refundCutoff.ts`: reading `lib/policy.ts` here is how a screen
+   * comes to promise a refund the database refuses.
+   */
+  const cutoffHours = await refundCutoffHours();
+
   const t = await getStrings();
 
   const locale = await getLocale();
@@ -169,7 +176,7 @@ export async function ClaimBar({
           variant="bar"
           toastTo={`/game/${gameId}`}
           refundable={refundable}
-          refundCutoffHours={policy.cancellation.refundCutoffHoursBeforeStart}
+          refundCutoffHours={cutoffHours}
         />
       ) : undefined;
       break;
@@ -186,7 +193,7 @@ export async function ClaimBar({
           variant="bar"
           toastTo={`/game/${gameId}`}
           refundable={refundable}
-          refundCutoffHours={policy.cancellation.refundCutoffHoursBeforeStart}
+          refundCutoffHours={cutoffHours}
         />
       ) : undefined;
       break;

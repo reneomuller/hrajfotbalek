@@ -1,5 +1,5 @@
 import { cancellationReassurance } from "@/lib/booking/reassurance";
-import { policy } from "@/lib/policy";
+import { refundCutoffHours } from "@/lib/policy/refundCutoff";
 import { getStrings } from "@/lib/i18n/server";
 
 /**
@@ -37,6 +37,13 @@ import { getStrings } from "@/lib/i18n/server";
 const CANCELLATION_ITEM = 3;
 
 export async function FaqPanel() {
+  /*
+   * THE ENFORCED NUMBER, NOT THE MIRRORED ONE (round 16, item 6). See
+   * `lib/policy/refundCutoff.ts`: reading `lib/policy.ts` here is how a screen
+   * comes to promise a refund the database refuses.
+   */
+  const cutoff = await refundCutoffHours();
+
   const t = await getStrings();
 
   /*
@@ -45,7 +52,7 @@ export async function FaqPanel() {
    */
   const items = t.faq.items.map((item, index) =>
     index === CANCELLATION_ITEM
-      ? { q: item.q, a: cancellationReassurance(policy.cancellation.refundCutoffHoursBeforeStart, t) }
+      ? { q: item.q, a: cancellationReassurance(cutoff, t) }
       : item,
   );
 

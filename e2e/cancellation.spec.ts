@@ -7,6 +7,7 @@ import {
   walletBalance,
 } from "./helpers/scaffold.ts";
 import { policy } from "../lib/policy";
+import { LOCALE_COOKIE } from "../lib/i18n/locales";
 
 /**
  * POLICY v2 — the ten-hour refund cutoff (migration 40).
@@ -32,7 +33,23 @@ import { policy } from "../lib/policy";
  * seed tableau is unchanged afterwards.
  */
 
-const CUTOFF = policy.cancellation.refundCutoffHoursBeforeStart;
+/*
+ * THE CUTOFF IS ASKED OF THE DATABASE, not read from `lib/policy.ts`
+ * (round 16, item 6).
+ *
+ * That constant is now the FALLBACK for a pre-v3 database, so a spec reading
+ * it would be testing a number the local stack does not enforce — and would
+ * go green on the mirror while the rule underneath had moved. Asking
+ * `cancellation_refund_cutoff_hours()` means these tests follow the policy
+ * whenever it changes, which is the only way "beyond the cutoff" and "inside
+ * the cutoff" can stay true statements rather than fixed hour counts.
+ */
+let CUTOFF: number = policy.cancellation.refundCutoffHoursBeforeStart;
+
+test.beforeAll(async () => {
+  const { data, error } = await serviceClient().rpc("cancellation_refund_cutoff_hours");
+  if (!error && typeof data === "number") CUTOFF = data;
+});
 
 test("beyond the cutoff, a cancellation still credits in full", async () => {
   // Arrange — a paid spot on a game comfortably outside the window.
@@ -223,5 +240,82 @@ test("after kickoff a cancellation is refused, unchanged from v1", async () => {
   } finally {
     await destroyScratchGame(game.id);
     await setWalletTo(players.creditRich.id, 0);
+  }
+});
+
+/**
+ * THE CONTRADICTION CHECK (round 16, item 6).
+ *
+ * A refund cutoff exists in two places by nature: a constant inside
+ * `cancel_booking`, which decides, and a sentence on four screens, which
+ * promises. The v2 migration's own comment named the failure — "if the two
+ * disagree, the database is right and the UI is lying" — and the disagreement
+ * is not theoretical: it happens every time a policy migration and the deploy
+ * that matches it are not simultaneous, which is every time.
+ *
+ * v3 makes the screens READ the enforced constant, so this test does the only
+ * thing left worth doing: it takes the number the database enforces and looks
+ * for that number, spelled out, on every surface that mentions it. It is not
+ * checking a value against a value — it is checking the rendered SENTENCE
+ * against the rule.
+ *
+ * It follows any future policy change for free, which is the point: the next
+ * cutoff change should not need this test edited, only the migration.
+ */
+test("every screen that names the cutoff names the one the database enforces", async ({
+  page,
+  context,
+}) => {
+  const { data: enforced } = await serviceClient().rpc("cancellation_refund_cutoff_hours");
+  expect(typeof enforced, "the enforced cutoff is not readable").toBe("number");
+
+  await signInAs(context, players.creditRich);
+  await context.addCookies([
+    { name: LOCALE_COOKIE, value: "en", domain: "localhost", path: "/" },
+  ]);
+
+  const game = await createScratchGame({ capacity: 6, priceCzk: 200, hoursFromNow: 48 });
+
+  /*
+   * SCOPED TO THE ELEMENTS THAT CARRY THE SENTENCE, not to the page. Scanning
+   * a whole screen for hour-shaped numbers catches prices, spot counts and
+   * "1 credit = 1 game" and turns a precise check into a flaky one — and a
+   * flaky assertion about money gets muted rather than fixed.
+   */
+  try {
+    await page.goto(`/game/${game.id}/book`);
+    /*
+     * `textContent`, NOT `innerText`. The FAQ is a stack of collapsed
+     * `<details>` and `innerText` returns only what is currently visible — so
+     * the answer this test exists to read would be missing, and the check
+     * would pass on every screen by finding nothing to disagree with.
+     */
+    const onBooking = await page
+      .getByTestId("cancellation-reassurance")
+      .evaluate((el) => el.textContent ?? "");
+
+    await page.goto("/");
+    const onFaq = await page.getByTestId("faq-panel").evaluate((el) => el.textContent ?? "");
+
+    for (const [where, text] of [
+      ["the booking page", onBooking],
+      ["the home FAQ", onFaq],
+    ] as const) {
+      const stated = [...text.matchAll(/(\d+)\s*h(?:ours?)?\b/gi)].map((m) => Number(m[1]));
+
+      expect(
+        stated.length,
+        `${where} states no cutoff at all — the sentence stopped rendering`,
+      ).toBeGreaterThan(0);
+
+      for (const hours of stated) {
+        expect(
+          hours,
+          `${where} tells a player ${hours}h while cancel_booking enforces ${enforced}h`,
+        ).toBe(enforced);
+      }
+    }
+  } finally {
+    await destroyScratchGame(game.id);
   }
 });

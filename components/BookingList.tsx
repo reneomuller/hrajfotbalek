@@ -3,7 +3,7 @@ import { CancelBookingForm } from "@/components/CancelBookingForm";
 import { EmptyState } from "@/components/EmptyState";
 import { bookingBadge, type BadgeTone } from "@/lib/booking/badges";
 import type { BookingWithGame } from "@/lib/booking/queries";
-import { policy } from "@/lib/policy";
+import { refundCutoffHours } from "@/lib/policy/refundCutoff";
 import { formatCzk, formatGameDateTime } from "@/lib/format";
 import { shouldRenderQr } from "@/lib/payments/spd";
 import { getStrings } from "@/lib/i18n/server";
@@ -19,6 +19,13 @@ const TONE_CLASS: Record<BadgeTone, string> = {
 };
 
 export async function BookingList({ rows }: BookingListProps) {
+  /*
+   * THE ENFORCED NUMBER, NOT THE MIRRORED ONE (round 16, item 6). See
+   * `lib/policy/refundCutoff.ts`: reading `lib/policy.ts` here is how a screen
+   * comes to promise a refund the database refuses.
+   */
+  const cutoffHours = await refundCutoffHours();
+
   const t = await getStrings();
   if (rows.length === 0) {
     return (
@@ -99,7 +106,7 @@ export async function BookingList({ rows }: BookingListProps) {
                     bookingId={booking.id}
                     toastTo="/account"
                     refundable={refundable}
-                    refundCutoffHours={policy.cancellation.refundCutoffHoursBeforeStart}
+                    refundCutoffHours={cutoffHours}
                   />
                 )}
               </div>
