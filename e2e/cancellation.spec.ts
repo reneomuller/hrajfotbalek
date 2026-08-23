@@ -14,8 +14,12 @@ import { LOCALE_COOKIE } from "../lib/i18n/locales";
  *
  * THE RULING, in three parts, and each is a test below:
  *
- *   at or beyond 10h   cancel, full credit — exactly what v1 did
- *   inside 10h         cancel, spot freed, NO credit
+ *   at or beyond the cutoff   cancel, full credit — exactly what v1 did
+ *   inside the cutoff        cancel, spot freed, NO credit
+ *
+ * The cutoff is a NUMBER THIS FILE ASKS FOR rather than one it states — it was
+ * 10 under v2 and is 8 under v3, and a comment naming either goes stale the
+ * next time it moves. See `CUTOFF` below.
  *   after kickoff      refused, exactly what v1 did
  *
  * WHY THE SPOT STILL FREES IS THE POINT. The gate is on the money, not on the

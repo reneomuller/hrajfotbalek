@@ -12,6 +12,7 @@ import {
   listRostersByGame,
   listUpcomingGames,
 } from "@/lib/games/queries";
+import { DayHeading } from "@/components/game/DayHeading";
 import { groupByDay } from "@/lib/games/days";
 import { getLocale } from "@/lib/i18n/server";
 import { siteUrl } from "@/lib/site";
@@ -292,12 +293,14 @@ export default async function LandingPage() {
                 {groupByDay(games, ({ game }) => game.starts_at, now, t, locale).map(
                   (day) => (
                     <section key={day.key} data-testid="day-group" data-day={day.key}>
-                      <h3
-                        data-testid="day-heading"
-                        className="m-0 mb-2 text-eyebrow font-semibold uppercase text-white"
-                      >
-                        {day.label}
-                      </h3>
+                      {/*
+                        ~~An 11px uppercase eyebrow.~~ Round 14 item 4 replaced
+                        that on the games page and left this one behind, so the
+                        owner reported the same thing twice about two pages.
+                        Both read `DayHeading` now — see the component for why
+                        the duplication was the actual defect.
+                      */}
+                      <DayHeading>{day.label}</DayHeading>
                       <div className="flex flex-col gap-3">
                         {day.items.map(({ game, bookedCount }) => (
                           <GameCard

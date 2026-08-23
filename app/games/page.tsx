@@ -7,6 +7,7 @@ import { NextGameStrip } from "@/components/game/NextGameStrip";
 import { PassPanel } from "@/components/pass/PassPanel";
 import { getOwnNextBooking } from "@/lib/booking/queries";
 import { getSessionUser } from "@/lib/auth/session";
+import { DayHeading } from "@/components/game/DayHeading";
 import { buildDayTabs, groupByDay, pragueDayKey, resolveSelectedDay } from "@/lib/games/days";
 import {
   listPitchNamesByGame,
@@ -203,34 +204,14 @@ export default async function GamesPage({
         <div className="mt-6 flex flex-col gap-5" data-testid="game-list">
           {grouped.map((day) => (
             <section key={day.key} data-testid="day-group" data-day={day.key}>
-              {/* The heading carries the date as well as the relative word:
-                  "Today" alone stops meaning anything once you have scrolled
-                  past it. */}
-              {/* The one uppercase style the product has (ruling B): a small
-                  grey eyebrow, on the token rather than a loose 10px. */}
-              <h2
-                data-testid="day-heading"
-                /*
-                  WHITE, not `faint` (Section 3, item 3) — these headings are
-                  the only thing carrying the DATE.
-
-                  AND `body-lg`, NOT `eyebrow` (round 14, item 4). Every group
-                  always HAD a heading; the owner reported that days beyond
-                  today and tomorrow were missing one, and what he was reading
-                  is real: at 11px with 3px tracking, "TODAY · MON 24 AUG"
-                  still reads as a header because the word anchors it, and a
-                  bare "MON 7 SEPT" reads as a caption on the box beneath.
-
-                  So every date group now gets the SAME treatment, and it is
-                  the section language the rest of the product uses — the same
-                  `body-lg` white heading as "What's included" and "Game
-                  information". A header that only looks like one when it says
-                  "Today" is not a header.
-                */
-                className="m-0 mb-3 text-body-lg font-semibold text-white"
-              >
-                {day.label}
-              </h2>
+              {/*
+                THE DATE, ABOVE THE GROUP. "Today" alone stops meaning anything
+                once you have scrolled past it, so every heading carries the
+                date and every heading gets the same treatment — round 14
+                item 4's ruling, now living in `DayHeading` so home cannot
+                drift away from it again (round 16, item 7).
+              */}
+              <DayHeading>{day.label}</DayHeading>
               <div className="flex flex-col gap-3">
                 {day.items.map(({ game, bookedCount }) => (
                   <GameCard
