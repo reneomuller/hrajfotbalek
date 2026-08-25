@@ -309,21 +309,21 @@ test("the profile form reports an invalid nickname inline", async ({ page, conte
 
 
 /**
- * ROUND 17 ITEM 3 — the order of the overview's sections.
+ * ROUND 17 ITEMS 3 AND 5 — the order of the overview, top to bottom.
  *
  * ASSERTED AS AN ORDER, not as presence. Every one of these blocks rendered
- * before this item and every one renders after it; the only thing that changed
- * is the sequence, so a test that checked they were all there would have
- * passed against both and proved nothing.
+ * before both items and every one renders after them; the only thing that
+ * changed is the sequence, so a test that checked they were all there would
+ * have passed against every arrangement and proved nothing.
  *
  * WHY THIS ORDER. Somebody opens their profile to check or fix a fact about
- * themselves — a phone number, a position, an email. Under the previous order
- * that meant scrolling past five badge tiles, four of which are things they
- * have not done yet. The page now runs wallet -> who you are -> what you can
- * do about it -> what you have earned, which is descending order of why
- * anybody opened it.
+ * themselves — a phone number, a position, an email. Under the previous
+ * arrangement that meant scrolling past five badge tiles, four of which are
+ * things they have not done yet. The page now runs wallet -> who you are ->
+ * what you have earned -> what you can do to the account, which puts the two
+ * irreversible-ish controls at the end where nobody meets them by accident.
  */
-test("the overview runs wallet, details, account actions, badges", async ({
+test("the overview runs wallet, details, badges, then the account actions", async ({
   page,
   context,
 }) => {
@@ -334,8 +334,10 @@ test("the overview runs wallet, details, account actions, badges", async ({
     const marks: [string, Element | null][] = [
       ["wallet", document.querySelector('[data-testid="credit-balance"]')],
       ["details", document.querySelector('[data-testid="profile-details"]')],
-      ["security", document.querySelector('[data-testid="account-security"]')],
       ["badges", document.querySelector('[data-testid="badge-grid"]')],
+      ["signOut", document.querySelector('[data-testid="sign-out"]')],
+      ["password", document.querySelector('[data-testid="change-password-link"]')],
+      ["delete", document.querySelector('[data-testid="deletion-mailto"]')],
     ];
     return marks
       .filter(([, el]) => el !== null)
@@ -344,5 +346,73 @@ test("the overview runs wallet, details, account actions, badges", async ({
       .map((m) => m.name);
   });
 
-  expect(order).toEqual(["wallet", "details", "security", "badges"]);
+  expect(order).toEqual(["wallet", "details", "badges", "signOut", "password", "delete"]);
+});
+
+/**
+ * ROUND 17 ITEM 5 — and the trap it walks into.
+ *
+ * `SecurityLinks` carries a comment recording why "Change my email" left this
+ * stack: measured with `document.elementFromPoint`, the element on top of it
+ * was the NAV PILL — `fixed z-40` at the document root, floating over the last
+ * band of every page. It was visible, enabled and unclickable.
+ *
+ * Item 5 moves these two links to the very bottom of the page, which is that
+ * band's neighbourhood. So the assertion is the one that caught it the first
+ * time: `elementFromPoint` at each control's centre, with the page scrolled
+ * all the way down, because that is the only position where the pill can
+ * reach them.
+ *
+ * `toBeVisible` WOULD PASS AGAINST THE BUG. That is the whole lesson of the
+ * modal law in CLAUDE.md — a thing can be visible, enabled and permanently
+ * covered.
+ */
+test("the account actions are reachable with the page scrolled to the bottom", async ({
+  page,
+  context,
+}) => {
+  await signInAs(context, players.runner);
+  await page.goto("/account", { waitUntil: "networkidle" });
+  await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+
+  /*
+   * WAIT FOR THE SCROLL TO SETTLE. `elementFromPoint` answers null for any
+   * coordinate outside the viewport, so probing mid-scroll reports every
+   * control as "covered by nothing" — a false failure that looks exactly like
+   * the real one. Poll on the deepest control being in view instead of
+   * sleeping.
+   */
+  await expect
+    .poll(
+      async () =>
+        page.evaluate(() => {
+          const el = document.querySelector('[data-testid="deletion-mailto"]');
+          if (!el) return false;
+          const box = el.getBoundingClientRect();
+          return box.top >= 0 && box.bottom <= window.innerHeight;
+        }),
+      { timeout: 5_000, message: "the page never scrolled to the account actions" },
+    )
+    .toBe(true);
+
+  const covered = await page.evaluate(() =>
+    ["sign-out", "change-password-link", "deletion-mailto"]
+      .map((id) => {
+        const el = document.querySelector(`[data-testid="${id}"]`);
+        if (!el) return { id, on: "MISSING" };
+        const box = el.getBoundingClientRect();
+        const hit = document.elementFromPoint(
+          box.left + box.width / 2,
+          box.top + box.height / 2,
+        );
+        if (el === hit || el.contains(hit)) return null;
+        return { id, on: hit?.getAttribute("data-testid") ?? hit?.tagName ?? "nothing" };
+      })
+      .filter(Boolean),
+  );
+
+  expect(
+    covered,
+    "an account action is covered at the bottom of the page — the nav pill again",
+  ).toEqual([]);
 });

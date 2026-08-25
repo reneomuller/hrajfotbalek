@@ -267,7 +267,25 @@ export default async function AccountPage({
           </div>
 
 
+
           {/*
+            BADGES LAST — genuinely last (round 17, item 3).
+
+            The owner asked for details above and badges at the bottom, and
+            "the bottom" has to mean below the account actions too: change
+            password, delete account and sign out belong WITH the details they
+            act on, so slotting badges between the two would separate a block
+            from its own controls to satisfy the letter of the instruction.
+
+            It also reads better. The page now runs wallet -> who you are ->
+            what you can do about it -> what you have earned, which is
+            descending order of why somebody opened it.
+          */}
+          <BadgeGrid badges={badges} t={t} />
+
+          {/*
+            THE ACCOUNT ACTIONS, NOW BELOW THE BADGES (round 17, item 5).
+
             THREE LINKS, ONE STACK, ALL THE SAME WEIGHT (§3.3, REQ-AUTH-020).
 
             Change password, change email, delete account — in that order,
@@ -295,18 +313,25 @@ export default async function AccountPage({
             data-testid="account-security"
             className="mt-12 border-t border-hairline pt-6"
           >
-            <SecurityLinks />
-            <a
-              href={deletionHref}
-              data-testid="deletion-mailto"
-              className="block py-2 text-[12px] text-muted no-underline transition hover:text-bone"
-            >
-              {t.account.deleteAccount}
-            </a>
+            {/*
+              SIGN OUT LEADS THE BLOCK NOW (round 17, item 5), where it used to
+              close it.
 
-            {/* A server action, so the session cookies are cleared server-side
-                rather than merely navigated away from. */}
-            <form action={signOutAction} className="mt-6">
+              The owner asked for "Change my password" and "Delete my account"
+              at the very bottom, in that order, as quiet text links. Sign out
+              is neither of those two and is not a text link — it is the one
+              affirmative control here — so leaving it last would have put a
+              bordered button below the destructive link the item says comes
+              last.
+
+              It stays IN this block rather than moving somewhere else: round
+              16 put it here because it is an account action and belongs with
+              the account actions, and nothing about that changed.
+
+              A server action, so the session cookies are cleared server-side
+              rather than merely navigated away from.
+            */}
+            <form action={signOutAction} className="mb-4">
               <button
                 type="submit"
                 data-testid="sign-out"
@@ -315,22 +340,22 @@ export default async function AccountPage({
                 {t.auth.signOut}
               </button>
             </form>
+
+            <SecurityLinks />
+
+            {/*
+              DESTRUCTIVE LAST (round 17, item 5), and it keeps the flow it
+              had: a `mailto:` to a human, because deletion is implemented as
+              ANONYMIZATION and there is deliberately no self-serve path.
+            */}
+            <a
+              href={deletionHref}
+              data-testid="deletion-mailto"
+              className="block py-2 text-[12px] text-muted no-underline transition hover:text-bone"
+            >
+              {t.account.deleteAccount}
+            </a>
           </section>
-
-          {/*
-            BADGES LAST — genuinely last (round 17, item 3).
-
-            The owner asked for details above and badges at the bottom, and
-            "the bottom" has to mean below the account actions too: change
-            password, delete account and sign out belong WITH the details they
-            act on, so slotting badges between the two would separate a block
-            from its own controls to satisfy the letter of the instruction.
-
-            It also reads better. The page now runs wallet -> who you are ->
-            what you can do about it -> what you have earned, which is
-            descending order of why somebody opened it.
-          */}
-          <BadgeGrid badges={badges} t={t} />
         </>
       )}
 
