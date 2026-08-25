@@ -97,7 +97,7 @@ export async function NextGameStrip({
       <Link
         href={`/game/${game.id}`}
         data-testid="next-game-row"
-        className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 rounded-card bg-surface px-4 py-3 no-underline transition-colors hover:bg-surface-raised"
+        className="game-box flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 rounded-card px-4 py-3 no-underline transition-colors hover:bg-surface-raised"
       >
         <span className="flex min-w-0 items-baseline gap-2 text-base font-bold text-white">
           <span className="truncate">

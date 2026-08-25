@@ -143,6 +143,44 @@
     @apply border border-hairline-strong bg-surface-raised;
   }
 
+  /**
+   * `.game-box` — THE EDGE ON A GAME BOX (round 17, item 2).
+   *
+   * THE PROBLEM IS `.lifted`'S, ONE SURFACE ALONG. A game card sits on
+   * `surface` (#0F0F0F) against `ink` (#0A0A0A) with no stroke — five points
+   * of luminance, which is a difference a colour picker finds and a phone in
+   * daylight does not. On the games page they run down the screen as a column
+   * of text blocks rather than a stack of objects, and the owner reported them
+   * as blending into the background because they do.
+   *
+   * IT IS A REVERSAL OF RULING C, which took strokes off cards and chips, and
+   * the premise is what moved (R31). C was written when the card was a flat
+   * panel; since round 2 it carries a PHOTOGRAPH under a scrim, so its top
+   * half is whatever the venue's picture happens to be and its bottom half is
+   * near-black. A shape with a photograph in it needs a boundary more than a
+   * flat panel did, not less — the scrim ramp fades the image INTO the page,
+   * which is exactly what makes the card's own extent unreadable.
+   *
+   * THE SAME STROKE AS `.lifted`, AND DELIBERATELY THE SAME: `hairline-strong`
+   * (.14). The reasoning there holds here — .08 over these fills computes to
+   * the same invisible edge one step along. One quiet white hairline, and NOT
+   * a volt one: the card already spends its accent on the time pill and the
+   * spots figure (ruling D), and a volt border would make every row on the
+   * page shout the thing one element on it is for.
+   *
+   * NOT `.lifted` ITSELF, because the FILL must not change. The card's ground
+   * is `surface` under a photograph and a measured contrast ramp; lifting it
+   * to `surface-raised` would move the floor the scrim was measured against
+   * (`e2e/strips-redesign-card.spec.ts`) for a difference nobody can see
+   * through an image.
+   *
+   * A component-layer class so a call site can still override — same rule as
+   * `.lifted`.
+   */
+  .game-box {
+    @apply border border-hairline-strong bg-surface;
+  }
+
   /*
    * `.field` / `.field-label` — THE FORM CONTROL, WRITTEN ONCE.
    *

@@ -1560,3 +1560,50 @@ test("every game renders the same capacity bar and lineup on list and detail", a
     expect(detail!.avatars, `avatar parity ${card.href}`).toBe(card.avatars);
   }
 });
+
+
+/**
+ * ROUND 17 ITEM 2 — a game box has an edge.
+ *
+ * IT SAT ON `surface` (#0F0F0F) AGAINST `ink` (#0A0A0A) WITH NO STROKE. Five
+ * points of luminance is a difference a colour picker finds and a phone in
+ * daylight does not, so a column of cards read as a column of text blocks. It
+ * is `.lifted`'s problem one surface along, and it takes `.lifted`'s answer:
+ * `hairline-strong` at .14, because .08 over these fills computes to the same
+ * invisible edge one step further on.
+ *
+ * ASSERTED AS A COMPUTED COLOUR, not as a class name. `.game-box` is a
+ * component-layer class and any utility in the markup outranks it, so reading
+ * the class back would prove it was written rather than that it won — the same
+ * reasoning the `.lifted` assertions use.
+ *
+ * AND IT IS NOT VOLT. The card already spends its accent on the time pill and
+ * the spots figure (ruling D); a volt edge would make every row on the page
+ * shout the thing one element on it is for. That half is asserted too, because
+ * "add an outline" is exactly the instruction somebody later satisfies with
+ * the accent colour.
+ */
+test("every game box carries the quiet hairline, and not a volt one", async ({ page }) => {
+  await page.goto("/games", { waitUntil: "networkidle" });
+
+  const boxes = await page.getByTestId("game-row").evaluateAll((nodes) =>
+    nodes.map((node) => {
+      const style = getComputedStyle(node);
+      return {
+        width: style.borderTopWidth,
+        colour: style.borderTopColor,
+        style: style.borderTopStyle,
+      };
+    }),
+  );
+
+  expect(boxes.length, "no game boxes on the page to check").toBeGreaterThan(0);
+
+  for (const box of boxes) {
+    expect(box.style, "the game box has no edge").not.toBe("none");
+    expect(parseFloat(box.width), "the game box has no edge").toBeGreaterThan(0);
+    expect(box.colour, "the game box edge is not the quiet hairline").toBe(
+      "rgba(255, 255, 255, 0.14)",
+    );
+  }
+});

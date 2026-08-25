@@ -374,7 +374,7 @@ export async function GameCard({
       <div
         data-testid="game-row"
         data-past="true"
-        className="relative isolate block overflow-hidden rounded-card bg-surface px-4 py-3 opacity-45"
+        className="game-box relative isolate block overflow-hidden rounded-card px-4 py-3 opacity-45"
       >
         {body}
       </div>
@@ -386,7 +386,7 @@ export async function GameCard({
       href={`/game/${game.id}`}
       data-testid="game-row"
       data-past="false"
-      className="relative isolate block overflow-hidden rounded-card bg-surface px-4 py-3 no-underline transition-colors"
+      className="game-box relative isolate block overflow-hidden rounded-card px-4 py-3 no-underline transition-colors"
     >
       {body}
     </Link>
