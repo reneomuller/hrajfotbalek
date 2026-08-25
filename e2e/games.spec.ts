@@ -1518,12 +1518,20 @@ test("a booked game shows its avatar stack on the card AND on the detail", async
  * TWO PROPERTIES, BOTH ACROSS ALL GAMES:
  *
  *   - the dotted rule renders on BOTH surfaces, booked or empty
- *   - the avatar count on the detail equals the count on the list card
+ *   - ~~the avatar count on the detail equals the count on the list card~~
  *
- * The second is the durable answer to "avatars are missing on the detail":
- * both surfaces read `game_roster_public`, so any drift between them is a bug
- * in a prop or a conditional rather than in the data, and this fails the
- * moment they disagree.
+ * THE SECOND PROPERTY WAS RETIRED BY ROUND 16 ITEM 5, deliberately. The detail
+ * drew the same people twice — a stack beside the counter and a stack above
+ * the named roster — so "the two surfaces agree about how many faces" stopped
+ * being the right question the moment the detail stopped having faces at all.
+ *
+ * WHAT REPLACES IT IS THE PROPERTY THAT ACTUALLY MATTERED. The original note
+ * said this was "the durable answer to avatars are missing on the detail":
+ * both surfaces read `game_roster_public`, so drift between them is a bug in a
+ * prop or a conditional rather than in the data. That still holds — it is just
+ * counted on the ROSTER ROWS now, which is where the detail shows its people.
+ * A list card with three faces and a detail with an empty roster is exactly
+ * the divergence this was written to catch, and it still fails on it.
  */
 test("every game renders the same capacity bar and lineup on list and detail", async ({
   page,
@@ -1550,14 +1558,33 @@ test("every game renders the same capacity bar and lineup on list and detail", a
       const availability = document.querySelector('[data-testid="availability-card"]');
       if (!availability) return null;
       return {
-        avatars: availability.querySelectorAll('[data-testid="avatar"]').length,
+        stackAvatars: availability.querySelectorAll('[data-testid="avatar"]').length,
         bars: availability.querySelectorAll('[data-testid="capacity-segments"]').length,
+        rosterRows: document.querySelectorAll('[data-testid="roster"] li').length,
+        rosterStack: document.querySelectorAll(
+          '[data-testid="players-list"] [data-testid="avatar"]',
+        ).length,
       };
     });
 
     expect(detail, `detail card ${card.href}`).not.toBeNull();
     expect(detail!.bars, `detail bar ${card.href}`).toBe(1);
-    expect(detail!.avatars, `avatar parity ${card.href}`).toBe(card.avatars);
+
+    // No stack on either detail surface — item 5, asserted by inversion so the
+    // duplication cannot come back on one of them quietly.
+    expect(detail!.stackAvatars, `availability stack ${card.href}`).toBe(0);
+    expect(detail!.rosterStack, `roster stack ${card.href}`).toBe(0);
+
+    /*
+     * THE LINEUP STILL AGREES, counted where each surface shows it. The card
+     * caps its stack at three with a `+N` chip, so the comparison is "the
+     * detail lists at least what the card drew" rather than an equality that
+     * would fail on any game with four bookings.
+     */
+    expect(
+      detail!.rosterRows,
+      `lineup parity ${card.href}`,
+    ).toBeGreaterThanOrEqual(card.avatars);
   }
 });
 
