@@ -1,5 +1,3 @@
-import { cancellationReassurance } from "@/lib/booking/reassurance";
-import { refundCutoffHours } from "@/lib/policy/refundCutoff";
 import { getStrings } from "@/lib/i18n/server";
 
 /**
@@ -16,45 +14,43 @@ import { getStrings } from "@/lib/i18n/server";
  * supplied — nothing here generates it, and the completeness test walks every
  * key.
  *
- * ONE ANSWER IS NOT COPY: the cancellation window. It read "Cancel anytime
- * before kickoff", which is TRUE under policy v1 and is a hardcoded statement
- * of a rule that lives in `lib/policy.ts` — so a v2 policy with a cutoff would
- * move `cancel_booking`, move the booking screen's reassurance line, and leave
- * this FAQ entry quietly promising something the RPC now refuses. Stage 5
- * requires the window to come from the policy, and it does: the same helper
- * the booking flow uses, so the two sentences cannot disagree.
- */
-/**
- * Which FAQ entry states the cancellation window.
+ * ~~ONE ANSWER IS NOT COPY: the cancellation window, rebuilt from the policy
+ * so this entry cannot promise something `cancel_booking` refuses. An INDEX
+ * (`CANCELLATION_ITEM = 3`) rather than a match on the question text, because
+ * the question is translated and matching English would silently stop applying
+ * in Czech and Russian.~~
  *
- * An INDEX rather than a match on the question text, because the question is
- * translated and matching English would silently stop applying in Czech and
- * Russian — leaving those two languages with the hardcoded answer this exists
- * to remove. The i18n overlays replace `items` wholesale and in order (there
- * is a unit test asserting exactly that), so the position is stable across
- * languages in a way the wording is not.
+ * REMOVED (round 17, item 4), because it was answering a question nobody had
+ * asked since round 13 — and this is the most instructive bug of the round.
+ *
+ * THE INDEX'S REASONING WAS CORRECT AND IS EXACTLY WHAT BROKE IT. Matching on
+ * translated text would have failed in two languages; a positional index is
+ * stable across languages and silent across EDITS. Round 13 item 11 cut this
+ * list from six entries to four and deleted the cancellation question itself —
+ * "it is on the booking screen already, above the button it concerns" — and
+ * position 3, which had been "What if I can't make it?", became "Do I need to
+ * be good?".
+ *
+ * SO THE HOME PAGE HAS BEEN SHIPPING THIS SINCE ROUND 13:
+ *
+ *     Q: Do I need to be good?
+ *     A: Cancel up to 8h before kickoff for full wallet credit.
+ *
+ * AND MY OWN ROUND-16 CHECK READ IT AS CONFIRMATION. The policy-v3
+ * contradiction test scanned this panel for the enforced hour count and found
+ * one — in the wrong answer. A check that asks "is the number here" cannot
+ * tell a right number in the wrong place from a right number in the right one.
+ *
+ * Every entry is human copy now. The cancellation window is stated where round
+ * 13 said it belongs: on the booking screen, above the button it concerns, and
+ * in the cancel dialog. `cancellationReassurance` still serves both.
  */
-const CANCELLATION_ITEM = 3;
 
 export async function FaqPanel() {
-  /*
-   * THE ENFORCED NUMBER, NOT THE MIRRORED ONE (round 16, item 6). See
-   * `lib/policy/refundCutoff.ts`: reading `lib/policy.ts` here is how a screen
-   * comes to promise a refund the database refuses.
-   */
-  const cutoff = await refundCutoffHours();
-
   const t = await getStrings();
 
-  /*
-   * The cancellation answer, rebuilt from the policy rather than read from the
-   * table. Everything else in `faq.items` is human copy and is used verbatim.
-   */
-  const items = t.faq.items.map((item, index) =>
-    index === CANCELLATION_ITEM
-      ? { q: item.q, a: cancellationReassurance(cutoff, t) }
-      : item,
-  );
+  // Every entry is copy — see the note above on why one of them was not.
+  const items = t.faq.items;
 
   return (
     <div

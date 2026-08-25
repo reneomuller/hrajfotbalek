@@ -508,3 +508,38 @@ test.describe("the home page under ruling J", () => {
     expect(heroFillsScreen).toBe(false);
   });
 });
+
+
+/**
+ * ROUND 17 ITEM 4 — the rotations, rehomed.
+ *
+ * They were two bare lines on the game detail's "Practical information" card,
+ * which round 16 item 4 removed. I flagged them rather than dropping them
+ * silently, and flagging left them in the string table rendered by nothing —
+ * which is item 1's defect in miniature.
+ *
+ * THE ASSERTION IS ON THE ANSWERS, not on a key. What matters is that a reader
+ * asking "what do I bring" and a reader asking "will I actually play" both
+ * meet the fact, so it is read out of the rendered FAQ text — and out of
+ * `textContent`, because the panel is a stack of collapsed `<details>` and
+ * `innerText` returns only what is open.
+ */
+test("the FAQ carries the goalkeeper and substitute rotations", async ({ page }) => {
+  await page.goto("/", { waitUntil: "networkidle" });
+
+  const faq = await page.getByTestId("faq-panel").evaluate((el) => el.textContent ?? "");
+
+  expect(faq.toLowerCase(), "the keeper rotation is not in the FAQ").toContain(
+    "goalkeepers rotate",
+  );
+  expect(faq.toLowerCase(), "the substitute rotation is not in the FAQ").toContain(
+    "subs rotate",
+  );
+
+  /*
+   * AND IT IS NOT BACK ON THE GAME PAGE. The card was removed for saying the
+   * same things twice; putting the rotations in both places would rebuild half
+   * of it.
+   */
+  await expect(page.getByTestId("practical-info")).toHaveCount(0);
+});

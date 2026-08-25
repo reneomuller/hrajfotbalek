@@ -285,40 +285,54 @@ test("every screen that names the cutoff names the one the database enforces", a
    * a whole screen for hour-shaped numbers catches prices, spot counts and
    * "1 credit = 1 game" and turns a precise check into a flaky one — and a
    * flaky assertion about money gets muted rather than fixed.
+   *
+   * ~~THE HOME FAQ IS THE SECOND SURFACE.~~ IT IS NOT, AND BELIEVING IT WAS
+   * MADE THIS TEST WORSE THAN USELESS (round 17, item 4).
+   *
+   * `FaqPanel` rebuilt one answer from the policy, addressed by INDEX. Round
+   * 13 cut that list from six entries to four and deleted the cancellation
+   * question — so since then position 3 has been "Do I need to be good?",
+   * answered with the cancellation window. This test scanned the panel for the
+   * enforced hour count, FOUND ONE, and reported agreement.
+   *
+   * A check that asks "is the number here" cannot tell a right number in the
+   * wrong place from a right number in the right one. The substitution is
+   * gone; the FAQ is copy again; and the assertion below now runs the other
+   * way on that panel — it must state NO cutoff at all, which is what makes
+   * the substitution unable to come back unnoticed.
    */
   try {
     await page.goto(`/game/${game.id}/book`);
-    /*
-     * `textContent`, NOT `innerText`. The FAQ is a stack of collapsed
-     * `<details>` and `innerText` returns only what is currently visible — so
-     * the answer this test exists to read would be missing, and the check
-     * would pass on every screen by finding nothing to disagree with.
-     */
     const onBooking = await page
       .getByTestId("cancellation-reassurance")
       .evaluate((el) => el.textContent ?? "");
 
+    const stated = [...onBooking.matchAll(/(\d+)\s*h(?:ours?)?\b/gi)].map((m) => Number(m[1]));
+
+    expect(
+      stated.length,
+      "the booking page states no cutoff at all — the sentence stopped rendering",
+    ).toBeGreaterThan(0);
+
+    for (const hours of stated) {
+      expect(
+        hours,
+        `the booking page tells a player ${hours}h while cancel_booking enforces ${enforced}h`,
+      ).toBe(enforced);
+    }
+
+    /*
+     * `textContent`, NOT `innerText`. The FAQ is a stack of collapsed
+     * `<details>` and `innerText` returns only what is visible — so the
+     * answers this reads would be missing and the check would pass by finding
+     * nothing.
+     */
     await page.goto("/");
     const onFaq = await page.getByTestId("faq-panel").evaluate((el) => el.textContent ?? "");
-
-    for (const [where, text] of [
-      ["the booking page", onBooking],
-      ["the home FAQ", onFaq],
-    ] as const) {
-      const stated = [...text.matchAll(/(\d+)\s*h(?:ours?)?\b/gi)].map((m) => Number(m[1]));
-
-      expect(
-        stated.length,
-        `${where} states no cutoff at all — the sentence stopped rendering`,
-      ).toBeGreaterThan(0);
-
-      for (const hours of stated) {
-        expect(
-          hours,
-          `${where} tells a player ${hours}h while cancel_booking enforces ${enforced}h`,
-        ).toBe(enforced);
-      }
-    }
+    expect(
+      [...onFaq.matchAll(/(\d+)\s*h(?:ours?)?\b/gi)].map((m) => m[0]),
+      "the FAQ is stating a cancellation window again — check which answer it landed in",
+    ).toEqual([]);
   } finally {
     await destroyScratchGame(game.id);
   }

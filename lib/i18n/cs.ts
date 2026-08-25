@@ -305,8 +305,6 @@ export const cs: StringsOverlay = {
       first_aid: "Lékárnička",
     },
     practicalTitle: "Informace o zápase",
-    practicalRotatingKeepers: "Střídání brankářů",
-    practicalRotatingSubs: "Střídání náhradníků",
     practicalMeetingPoint: "Kde se sejdeme",
     practicalArrival: "Přijď 10 minut před výkopem.",
     practicalDuration: "Délka",
@@ -688,7 +686,8 @@ export const cs: StringsOverlay = {
     items: [
       {
         q: "Co si mám vzít?",
-        a: "Boty a sebe. Rozlišováky, brankářské rukavice i míče jsou zajištěny.",
+        // Round 17 item 4 — DRAFT. Střídání brankářů přesunuto sem z detailu zápasu.
+        a: "Boty a sebe. Rozlišováky, brankářské rukavice i míče jsou zajištěny — brankáři se střídají, takže vlastní nikdo nepotřebuje.",
       },
       {
         q: "Jak zaplatím?",
@@ -700,7 +699,8 @@ export const cs: StringsOverlay = {
       },
       {
         q: "Musím být dobrý?",
-        a: "Všechny úrovně jsou vítány; zápasy jsou přátelské, pokud u zápasu není uvedena konkrétní úroveň.",
+        // Round 17 item 4 — DRAFT.
+        a: "Všechny úrovně jsou vítány; zápasy jsou přátelské, pokud u zápasu není uvedena konkrétní úroveň. Brankáři i náhradníci se střídají, takže si každý pořádně zahraje.",
       },
     ],
   },

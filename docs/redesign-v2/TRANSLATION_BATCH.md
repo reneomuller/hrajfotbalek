@@ -43,6 +43,13 @@ in any language, and that is worth knowing before the review: every sentence
 interpolates `{hours}` from the policy, so the 10 → 8 move carried itself. If a
 reviewer sees a number spelled out anywhere in these three files, it is a bug.
 
+| `faq.items[0].a` / `faq.items[3].a` | …goalkeepers rotate, so nobody needs their own / Goalkeepers and subs rotate, so everyone gets a proper game | **Round 17.** Two lines rehomed from the game detail's retired card. Each half went where a reader would ask for it — the keeper rotation answers "do I need gloves", the pair answers "will I actually play". Both drafts should read as a fact about how the game runs, not as a promise about how much anyone plays |
+
+**`faq.items[3]` had the WRONG ANSWER in every language since round 13** — the
+panel substituted the cancellation window into it by index after that item was
+deleted, so Czech and Russian readers saw it too. Fixed in round 17; the copy
+now in the table is what a reviewer should read.
+
 **The public profile added no strings** (round 14, item 13). Its four blocks —
 banner, picture, stats, badges — reuse the keys the owner's own profile already
 uses, which is the point of composing it from the same three components: the

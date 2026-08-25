@@ -620,8 +620,21 @@ export const strings = {
      * existed; the rotations are new, and the meeting point is a per-game
      * field whose line is hidden when empty.
      */
-    practicalRotatingKeepers: "Rotating goalkeepers",
-    practicalRotatingSubs: "Rotating subs",
+    /*
+     * ~~`practicalRotatingKeepers` / `practicalRotatingSubs`.~~ FOLDED INTO
+     * THE FAQ (round 17, item 4) and deleted here.
+     *
+     * They outlived their card. Round 16 item 4 removed "Practical
+     * information" and I flagged these two rather than dropping them
+     * silently — but flagging left them in the table, rendered by nothing,
+     * translated in three languages. That is item 1's defect exactly: a
+     * string that survives the thing it labelled is invisible to every test
+     * and comes back the next time somebody greps for a word.
+     *
+     * They were never facts about a FIXTURE, which is why they did not belong
+     * on a game page: they describe how a kickabout is run and they are the
+     * same on every game. The FAQ is where a reader asks that.
+     */
     practicalMeetingPoint: "Meeting point",
     practicalArrival: "Arrive 10 minutes before the game",
     practicalDuration: "Duration",
@@ -1191,11 +1204,24 @@ export const strings = {
      *
      *   LEVELS — verified. `create_booking` never consults skill (§5.3,
      *   REQ-GAME-011), so a badge really is a signal and not a gate.
+     *
+     * THE ROTATIONS LANDED HERE (round 17, item 4). They were two bare lines
+     * in the game detail's "Practical information" card — "Rotating
+     * goalkeepers", "Rotating subs" — which round 16 item 4 removed as a card
+     * without rehoming its content, and which I flagged rather than dropped
+     * silently.
+     *
+     * THEY ARE NOT FACTS ABOUT A FIXTURE, which is why they never belonged on
+     * a game page: they describe how a kickabout is run, and they are the same
+     * on every game. Split across the two answers each half actually belongs
+     * to rather than bolted onto one — the keeper rotation answers "do I need
+     * gloves", the pair together answers "will I actually play". A reader
+     * asking either question meets it where they asked.
      */
     items: [
       {
         q: "What should I bring?",
-        a: "Shoes and yourself. Bibs, gloves and balls are provided.",
+        a: "Shoes and yourself. Bibs, gloves and balls are provided — goalkeepers rotate, so nobody needs their own.",
       },
       {
         q: "How do I pay?",
@@ -1207,7 +1233,7 @@ export const strings = {
       },
       {
         q: "Do I need to be good?",
-        a: "All levels welcome; games are casual unless a level badge says otherwise.",
+        a: "All levels welcome; games are casual unless a level badge says otherwise. Goalkeepers and subs rotate, so everyone gets a proper game.",
       },
     ],
   },
