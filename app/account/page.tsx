@@ -211,8 +211,6 @@ export default async function AccountPage({
             </Link>
           </div>
 
-          <BadgeGrid badges={badges} t={t} />
-
           {/*
             EVERYTHING THAT WAS UNDER "Settings" (round 16, item 14).
 
@@ -223,11 +221,18 @@ export default async function AccountPage({
             tabs for one screen's worth of content is a tab bar earning its
             keep on the strength of the tab bar.
 
-            THE ORDER IS LOOK, THEN CHANGE. The wallet, the badges and the
+            ~~THE ORDER IS LOOK, THEN CHANGE. The wallet, the badges and the
             admin door are what a player reads; the edit fields and the account
-            actions are what they act on, and they come after. Nothing about
-            either block changed — this is a move, not a redesign, which is why
-            the section comments below still read as they did.
+            actions are what they act on, and they come after.~~
+            
+            THE OWNER SWAPPED IT (round 17, item 3): details above, badges at
+            the bottom. His ordering is the better one and the reason is what
+            the page is FOR. Somebody opens their profile to check or fix a
+            fact about themselves — a phone number, a position, an email — and
+            under the old order that meant scrolling past five badge tiles,
+            four of which are things they have not done yet. Badges are the
+            reward for using the product, not the reason to open this screen,
+            so they sit where a reward sits: at the end.
           */}
           {/*
             THE PROFILE BLOCK (ruling L, §3 screen 7) — display and edit. It is
@@ -260,6 +265,7 @@ export default async function AccountPage({
               countries={countryOptions(locale)}
             />
           </div>
+
 
           {/*
             THREE LINKS, ONE STACK, ALL THE SAME WEIGHT (§3.3, REQ-AUTH-020).
@@ -310,6 +316,21 @@ export default async function AccountPage({
               </button>
             </form>
           </section>
+
+          {/*
+            BADGES LAST — genuinely last (round 17, item 3).
+
+            The owner asked for details above and badges at the bottom, and
+            "the bottom" has to mean below the account actions too: change
+            password, delete account and sign out belong WITH the details they
+            act on, so slotting badges between the two would separate a block
+            from its own controls to satisfy the letter of the instruction.
+
+            It also reads better. The page now runs wallet -> who you are ->
+            what you can do about it -> what you have earned, which is
+            descending order of why somebody opened it.
+          */}
+          <BadgeGrid badges={badges} t={t} />
         </>
       )}
 

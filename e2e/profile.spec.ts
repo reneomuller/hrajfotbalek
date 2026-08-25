@@ -306,3 +306,43 @@ test("the profile form reports an invalid nickname inline", async ({ page, conte
   await expect(page.locator("#nickname-error")).toBeVisible();
   await expect(page.locator("#nickname")).toHaveAttribute("aria-invalid", "true");
 });
+
+
+/**
+ * ROUND 17 ITEM 3 — the order of the overview's sections.
+ *
+ * ASSERTED AS AN ORDER, not as presence. Every one of these blocks rendered
+ * before this item and every one renders after it; the only thing that changed
+ * is the sequence, so a test that checked they were all there would have
+ * passed against both and proved nothing.
+ *
+ * WHY THIS ORDER. Somebody opens their profile to check or fix a fact about
+ * themselves — a phone number, a position, an email. Under the previous order
+ * that meant scrolling past five badge tiles, four of which are things they
+ * have not done yet. The page now runs wallet -> who you are -> what you can
+ * do about it -> what you have earned, which is descending order of why
+ * anybody opened it.
+ */
+test("the overview runs wallet, details, account actions, badges", async ({
+  page,
+  context,
+}) => {
+  await signInAs(context, players.runner);
+  await page.goto("/account", { waitUntil: "networkidle" });
+
+  const order = await page.evaluate(() => {
+    const marks: [string, Element | null][] = [
+      ["wallet", document.querySelector('[data-testid="credit-balance"]')],
+      ["details", document.querySelector('[data-testid="profile-details"]')],
+      ["security", document.querySelector('[data-testid="account-security"]')],
+      ["badges", document.querySelector('[data-testid="badge-grid"]')],
+    ];
+    return marks
+      .filter(([, el]) => el !== null)
+      .map(([name, el]) => ({ name, top: el!.getBoundingClientRect().top + window.scrollY }))
+      .sort((a, b) => a.top - b.top)
+      .map((m) => m.name);
+  });
+
+  expect(order).toEqual(["wallet", "details", "security", "badges"]);
+});
