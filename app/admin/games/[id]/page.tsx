@@ -426,30 +426,40 @@ export default async function AdminGamePage({
             venue={game.venue}
             needsReason={capabilities.cancelWithReason}
           />
+        </div>
+      )}
 
-          {/*
-            DELETE, BELOW CANCEL AND DELIBERATELY AFTER IT (round 16, item 18).
-
-            The two are not alternatives and the order says so. Cancelling is
-            what you do to a game with people on it — it credits everyone and
-            mails them. Deleting is for a game nobody booked: a duplicate, a
-            wrong date, a test. `admin_delete_game` refuses anything with a
-            booking on it and the message names the next step, so pressing this
-            first on a real fixture teaches the order rather than punishing it.
-          */}
-          {capabilities.adminDelete && (
-            <div className="mt-6">
-              <DeleteControl
-                action={deleteGameAction}
-                hiddenFields={{ gameId: game.id }}
-                label={strings.admin.deleteGame}
-                title={strings.admin.deleteGameConfirmTitle}
-                body={strings.admin.deleteGameConfirmBody}
-                confirmLabel={strings.admin.deleteGameConfirm}
-                testId="game-delete"
-              />
-            </div>
-          )}
+      {/*
+        DELETE IS NOT A CHILD OF CANCEL, and round 16 put it inside
+        `canCancel` — which was wrong and is the whole of round 17 item 1.
+        
+        `canCancel` is `draft | published | full`. So a PLAYED, SETTLED or
+        CANCELLED game rendered no delete control at all, while
+        `admin_delete_game` refuses on BOOKINGS and never on status: an empty
+        cancelled game, or a test fixture somebody marked played, is exactly
+        what you would want to remove and exactly what the UI never offered.
+        Measured across one game of every status before it was changed —
+        published 1, full 1, draft 1, played 0, settled 0, cancelled 0.
+        
+        The two conditions were never the same question. Cancel asks "does
+        this game still have a future"; delete asks "is there anything here to
+        lose", and only the RPC can answer that — which is why the control is
+        now offered unconditionally and the refusal names the next step.
+        
+        IT STAYS BELOW CANCEL where both render, because the order is still
+        the advice: cancelling is what you do to a game with people on it.
+      */}
+      {capabilities.adminDelete && (
+        <div className={canCancel ? "mt-6" : "mt-10 border-t border-hairline pt-6"}>
+          <DeleteControl
+            action={deleteGameAction}
+            hiddenFields={{ gameId: game.id }}
+            label={strings.admin.deleteGame}
+            title={strings.admin.deleteGameConfirmTitle}
+            body={strings.admin.deleteGameConfirmBody}
+            confirmLabel={strings.admin.deleteGameConfirm}
+            testId="game-delete"
+          />
         </div>
       )}
     </>

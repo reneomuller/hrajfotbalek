@@ -262,3 +262,85 @@ test("cancelling requires a reason, and the reason reaches the players", async (
     await destroyScratchGame(game.id);
   }
 });
+
+
+/**
+ * ROUND 17 ITEM 1 — the delete controls, which the owner could not find.
+ *
+ * THE CAPABILITY GATE WAS NEVER THE PROBLEM. Verified against production
+ * before anything was changed: all three round-16 migrations are applied,
+ * `app_capabilities()` answers 200 through PostgREST with every flag true.
+ * So the gate was open and the controls still were not there, which makes it
+ * a UI defect rather than a migration one.
+ *
+ * ROUND 16 NESTED DELETE INSIDE `canCancel`, which is `draft | published |
+ * full`. `admin_delete_game` refuses on BOOKINGS and never on status — so an
+ * empty cancelled game, or a test fixture somebody marked played, is exactly
+ * what you would want to remove and exactly what the UI never offered.
+ *
+ * ASSERTED ACROSS EVERY STATUS, because that is the shape of the bug: three
+ * of six were fine, which is how it survived a review of the one page I
+ * happened to open.
+ */
+test("delete is offered on a game of every status", async ({ page, context }) => {
+  await signInAs(context, players.organizer);
+  const admin = serviceClient();
+
+  const statuses = ["published", "full", "played", "settled", "cancelled", "draft"] as const;
+  const missing: string[] = [];
+
+  for (const status of statuses) {
+    const { data } = await admin.from("games").select("id").eq("status", status).limit(1);
+    const id = data?.[0]?.id;
+    if (!id) continue;
+
+    await page.goto(`/admin/games/${id}`, { waitUntil: "domcontentloaded" });
+    if ((await page.getByTestId("game-delete").count()) === 0) missing.push(status);
+  }
+
+  expect(
+    missing,
+    "delete is hidden on these statuses — it is gated on cancel-ability again",
+  ).toEqual([]);
+});
+
+/**
+ * ROUND 17 ITEM 1, THE OTHER HALF — the venue row did not look like a door.
+ *
+ * `marker:content-none` strips the browser's default triangle and round 13 put
+ * nothing back, so a row read as a static list item. Every control on that
+ * page — rename, map link, pitch name, photo, amenities, delete — is inside
+ * one. The delete was rendering the whole time, at y≈1756 of an expanded
+ * panel, behind a summary that did not invite a tap.
+ */
+test("a venue row says it opens, and what is inside it is reachable", async ({
+  page,
+  context,
+}) => {
+  await signInAs(context, players.organizer);
+  await page.goto("/admin/venues", { waitUntil: "networkidle" });
+
+  const marker = page.getByTestId("venue-disclosure").first();
+  await expect(marker, "the venue row gives no sign that it opens").toBeVisible();
+
+  /*
+   * IT TURNS. A static chevron is decoration; one that rotates is the state of
+   * the row, which is the part that makes it an affordance rather than an
+   * ornament. Read off the computed transform, so a class rename that breaks
+   * the rotation fails here.
+   */
+  const closed = await marker.evaluate((el) => getComputedStyle(el).transform);
+  await page.getByTestId("venue-summary").first().click();
+  await expect
+    .poll(async () => marker.evaluate((el) => getComputedStyle(el).transform), {
+      timeout: 5_000,
+      message: "the disclosure marker does not move when the row opens",
+    })
+    .not.toBe(closed);
+
+  // And the control the owner was looking for is genuinely on the page.
+  const remove = page.getByTestId("venue-delete").first();
+  await expect(remove).toBeVisible();
+  await remove.scrollIntoViewIfNeeded();
+  await expect(remove).toBeInViewport();
+});

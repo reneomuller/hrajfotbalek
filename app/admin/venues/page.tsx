@@ -97,6 +97,35 @@ export default async function AdminVenuesPage() {
                       ? strings.admin.venueHasPhoto
                       : strings.admin.venueNoPhoto}
                   </span>
+
+                  {/*
+                    A DISCLOSURE MARKER, AND ITS ABSENCE WAS A REAL BUG
+                    (round 17, item 1).
+
+                    `marker:content-none` strips the browser's default triangle
+                    — correct, because the default is a tiny grey wedge that
+                    belongs to no design — and round 13 put nothing back. So a
+                    venue row read as a static list item: name, pitch, photo
+                    state, and no signal at all that it opens.
+
+                    EVERY CONTROL ON THIS PAGE IS INSIDE ONE OF THESE. Rename,
+                    map link, pitch name, photo, amenities and (round 16)
+                    delete are all behind a row nobody could tell was a door.
+                    The owner reported the delete as missing; it was rendering
+                    the whole time, at y≈1756 of an expanded panel, behind a
+                    summary that did not invite a tap.
+
+                    `group-open:rotate-180` on the parent `<details className="group">`
+                    — a chevron that turns is the one disclosure idiom that
+                    needs no label, in any of three languages.
+                  */}
+                  <span
+                    aria-hidden
+                    data-testid="venue-disclosure"
+                    className="shrink-0 text-[12px] text-muted transition-transform group-open:rotate-180"
+                  >
+                    ▾
+                  </span>
                 </summary>
 
                 <div className="border-t border-hairline px-5 pb-5 pt-5">
