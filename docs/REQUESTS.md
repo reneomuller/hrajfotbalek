@@ -252,6 +252,11 @@ round 13 added is item 2's reversal and a re-verification of item 3.
 | 135 | **(R18-8) Telegram contact for UA/RU games** | `SHIPPED round-18`, dormant on row 136. `/api/tg/<gameId>` mirrors the WhatsApp redirect so the number never reaches page source. **`t.me/+<number>` resolves only if that number is on Telegram and findable by phone** — unverifiable from here, and the failure is silent and off-site. Proposal in §9 |
 | 136 | **Apply `20260826100000_game_language.sql`** | `BUILT-DORMANT-ON-the owner running it`. **Verified absent 2026-08-26.** Two changes in one file: the language column, and a `games_format_format` that production has been one migration behind on since 2026-08-02 — see row 137. The language dropdown is HIDDEN until it is applied (`app_capabilities().gameLanguage`), and every card falls back to `en-cs`, which is the column's own default |
 | 137 | **(R18-9) Non-standard formats and durations did not show** | `SHIPPED round-18`, half of it dormant on row 136. **TWO BUGS.** Production's `games_format_format` is still `^NvN$` because `20260802180000_format_three_way` was never applied there — so `6v6v6` was never SAVED, which is why it never showed. And `7v7v7v7` was refused by BOTH regexes, which capped at three groups. Separately, `duration_minutes` was in `GameCard`'s type, threaded from the query and drawn in the file's own ASCII sketch — and no element ever rendered it |
+| 138 | **(R19-1) The flags form the pill** | `SHIPPED round-19`. **The bug measured first:** the card's flags rendered 16x8 and the detail's 26x30.19 — two sizes, the second a 2:1 drawing forced into a nearly-square half. Both causes were the same mistake, two constructions for one thing; there is one now, with no variant. `preserveAspectRatio="slice"` rather than stretch, `flex-1` halves rather than fixed widths, and the divider is `ink` because a white hairline vanishes on the white half of the Czech and Russian flags |
+| 139 | **(R19-2) Telegram by username** | `SHIPPED round-19`, dormant on row 141. Ratifies the round-18 proposal, **corrected to username**. The phone form is REMOVED, not demoted — keeping it as a fallback would mean the product still sometimes sends players to Telegram's "user not found" page, which is the whole defect. A UA/RU game with no handle shows WhatsApp: contact is always possible, and no button goes nowhere |
+| 140 | **(R19-3) Admin numbering counts from the oldest** | `SHIPPED round-19`. The list stays newest-first; only the numbering runs the other way. The reason is stability — numbering from the top changes every game's number the moment a new one is created, which makes "the third one" a different game each week |
+| 141 | **Apply `20260826200000_organizer_telegram_handle.sql`** | `BUILT-DORMANT-ON-the owner running it`. **Verified absent 2026-08-26.** Until it is applied the Telegram username field is not rendered and every UA/RU game shows WhatsApp — which is exactly today's behaviour. It DROPS the three-argument `set_game_organizer`: two overloads differing only by a defaulted fourth argument would make `admin_create_game_v2`'s internal call ambiguous |
+| 142 | **(R19-4) Duration off the game boxes** | `SHIPPED round-19`. Round 18 was right about the bug — the prop was threaded, typed and drawn in the card's own ASCII sketch with nothing rendering it — and wrong about the fix: "so render it" skipped whether the card should carry it. It is the third number on a row that already has a kick-off time and a spots figure. Renders on the detail only; the spec asserts absence on the box |
 
 ---
 
@@ -349,6 +354,29 @@ their filter through `booking_holds_seat`. No row changes. Rollback is
 
 The `--production` flag is deliberate and cannot be replaced by an environment
 variable — see CLAUDE.md on why implicitness is what failed.
+
+### Round 19's migration (row 141)
+
+```bash
+node scripts/apply-migration.mjs \
+  supabase/migrations/20260826200000_organizer_telegram_handle.sql --production
+```
+
+Validated against local inside a transaction and rolled back. Additive except
+for one deliberate drop — see below.
+
+**IT DROPS THE THREE-ARGUMENT `set_game_organizer`.** That is not tidying:
+`admin_create_game_v2` calls it internally, and leaving both overloads would
+make that call ambiguous to Postgres — two candidates differing only by a
+defaulted fourth argument. Dropping it binds the existing call to the new
+function with the handle defaulting to null, which is exactly the behaviour it
+had.
+
+| Before it runs | After it runs |
+|---|---|
+| No Telegram username field; every UA/RU game shows WhatsApp — today's behaviour | The field appears, and a game whose organizer has a handle offers Telegram |
+
+**No deploy is needed afterwards.**
 
 ### Round 18's migration (rows 136 and 137)
 

@@ -242,3 +242,98 @@ test("an English/Czech game still offers WhatsApp", async ({ page, context }) =>
     await destroyScratchGame(game.id);
   }
 });
+
+
+/**
+ * ROUND 19 ITEM 1 — the flags ARE the pill, and both are the same size.
+ *
+ * THE BUG THIS PINS. Round 18 built two constructions for one thing: a
+ * bordered chip holding 16x8 flags on the list card, and a filled box holding
+ * 26x30.19 flags on the detail — different sizes, and the second a 2:1 drawing
+ * forced into a nearly-square half. Two treatments is what made two sizes
+ * possible, so the assertion is that the two SURFACES agree, not merely that
+ * each looks plausible.
+ */
+test("the language pill is identical on the card and the detail", async ({
+  page,
+  context,
+}) => {
+  const game = await createScratchGame({
+    capacity: 10,
+    hoursFromNow: 36,
+    format: "6v6",
+    surface: "turf",
+  });
+
+  try {
+    await context.addCookies([
+      { name: LOCALE_COOKIE, value: "en", domain: "localhost", path: "/" },
+    ]);
+    await serviceClient().from("games").update({ language: "uk-ru" }).eq("id", game.id);
+
+    /** Pill height, both flag boxes, and the badge it must match. */
+    async function measure(sel: string) {
+      return page.evaluate((sel) => {
+        const root = document.querySelector(sel)!;
+        const pill = root.querySelector('[data-testid="language-pill"]')!;
+        const flags = [...pill.querySelectorAll("svg")].map((f) => {
+          const b = f.getBoundingClientRect();
+          return { w: Math.round(b.width * 100) / 100, h: Math.round(b.height * 100) / 100 };
+        });
+        const badge = root.querySelector('[data-testid="game-format"]')!.getBoundingClientRect();
+        return {
+          pill: Math.round(pill.getBoundingClientRect().height * 100) / 100,
+          badge: Math.round(badge.height * 100) / 100,
+          flags,
+          divider: pill.querySelector('[data-testid="language-pill-divider"]') !== null,
+          radius: parseFloat(getComputedStyle(pill).borderTopLeftRadius),
+        };
+      }, sel);
+    }
+
+    await page.goto("/games", { waitUntil: "networkidle" });
+    await page
+      .locator(`[data-testid="game-row"][href="/game/${game.id}"]`)
+      .scrollIntoViewIfNeeded();
+    const onCard = await measure(`[data-testid="game-row"][href="/game/${game.id}"]`);
+
+    await page.goto(`/game/${game.id}`, { waitUntil: "networkidle" });
+    const onDetail = await measure('[data-testid="game-info-card"]');
+
+    // --- the same everywhere -----------------------------------------------
+    expect(onCard, "the card and the detail draw the language differently").toEqual(onDetail);
+
+    // --- two flags, identical dimensions -----------------------------------
+    expect(onCard.flags).toHaveLength(2);
+    expect(
+      onCard.flags[0],
+      "the two flags are different sizes — the round-18 bug",
+    ).toEqual(onCard.flags[1]);
+
+    /*
+     * NOT SQUASHED. The flags are drawn 2:1 and rendered into a box that is
+     * not that shape, so they must COVER and crop rather than stretch. A
+     * stretched flag is exactly what round 18 shipped, and it measured a
+     * perfectly consistent 26x30.19 on both halves — which is why "the two
+     * are equal" alone is not enough to catch it.
+     */
+    const drawn = await page
+      .getByTestId("game-info-card")
+      .locator('[data-testid="language-pill"] svg')
+      .first()
+      .evaluate((el) => el.getAttribute("preserveAspectRatio"));
+    expect(drawn, "the flags are being stretched to fit").toContain("slice");
+
+    // --- the pill is the flags ---------------------------------------------
+    expect(onCard.divider, "the divider between the flags is gone").toBe(true);
+    expect(onCard.radius, "the pill's corners are not rounded").toBeGreaterThan(8);
+
+    // --- and it matches the format badge it sits beside --------------------
+    expect(
+      Math.abs(onCard.pill - onCard.badge),
+      "the pill is not the same height as the format badge",
+    ).toBeLessThan(0.5);
+  } finally {
+    await destroyScratchGame(game.id);
+  }
+});
