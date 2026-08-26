@@ -242,6 +242,16 @@ round 13 added is item 2's reversal and a re-verification of item 3.
 | 125 | **(R17-3) Profile section order** | `SHIPPED round-17`. Details above, badges at the bottom — below the account actions too, since those belong with the details they act on. The page runs wallet → who you are → what you can do about it → what you have earned |
 | 126 | **(R17-4) The rotations, and the FAQ answering the wrong question** | `SHIPPED round-17`. The two rotation lines fold into the two answers each half belongs to. **And the FAQ has been shipping a mismatched answer since round 13:** "Do I need to be good?" was answered with the cancellation window, because `FaqPanel` substituted by INDEX and round 13 cut the list from six items to four. Round 16's contradiction check scanned that panel, found the hour count in the wrong answer, and reported agreement — see §8 |
 | 127 | **(R17-5) The account actions move under Badges** | `SHIPPED round-17`. Final order: wallet → details → badges → sign out → change password → delete. Sign out LEADS that block rather than closing it — it is the one affirmative control there and is not a text link, so leaving it last would have put a bordered button below the destructive link the item says comes last. Deletion keeps its `mailto:` flow, which is the whole flow: it is implemented as anonymization and there is deliberately no self-serve path. **The nav pill was the risk** — `SecurityLinks` records that "Change my email" left this stack because the pill covered it — so the spec probes `elementFromPoint` with the page scrolled to the bottom |
+| 128 | **(R18-1) Flag pair on the Telegram tile** | `SHIPPED round-18`. Drawn as SVG, not emoji: `🇺🇦` is two regional-indicator codepoints the FONT must ligature, and Windows ships no such glyphs — the owner's format would have rendered as the letters "UA / RU" for a large share of desktop visitors. The spec counts `<svg>` elements, because a text assertion passes on exactly the output the item exists to avoid |
+| 129 | **(R18-2) Game language, and the pill on the card** | `SHIPPED round-18`, dormant on row 136. `games.language` is two values, each a PAIR — deliberately not `lib/i18n`'s `Locale`, which is what you READ and comes from a cookie. Surface left the list card for the detail: two secondary pills beside the format badge is one more than a 390px row carries, and the card kept the one that decides whether somebody taps |
+| 130 | **(R18-3) The detail's Where row becomes Language** | `SHIPPED round-18`. The swap cost nothing — `GameHero` is already passed `venueDisplayName(venue, pitchName)`, so that row was the `<h1>` again eighty pixels lower. The filled pill is sized from `.badge-pill`'s own line box rather than a hardcoded 34px |
+| 131 | **(R18-4) Remove cash payment** | **`BLOCKED — NOT DONE`, and the gate is the reason.** The item's own condition was a verified end-to-end online payment on production. **No booking or top-up on production has ever carried a `stripe_session_id`** — zero, since the rail was built. The 27 `payment_confirmed` events are all from the admin confirm path. Exactly one booking ever went down the online path and it is still unconfirmed. Cash stays. See §9 |
+| 132 | **(R18-5) Admin games numbering** | `SHIPPED round-18`. A rendered row index, never stored: persisting one would mean deciding what happens on delete — renumber or leave a hole — and both are wrong for a number whose only job is to be countable on a screen. The spec asserts a contiguous 1..n, which only a rendered index can guarantee |
+| 133 | **(R18-6) "Notes from organizer"** | `SHIPPED round-18` — **a rename, and the found reality is the finding.** The note was ALREADY its own card. What it was not was legible: its label read "Game information", the same words as the fact card's heading two hundred pixels above, set as a 10px eyebrow while every neighbour carries a `body-lg` heading |
+| 134 | **(R18-7) The detail's photo crop** | `SHIPPED round-18`. Four variants rendered and compared before picking `object-[50%_30%]` at `pt-36`. Either lever alone falls short — shifting the crop inside a 53px band shows a different sliver, and a taller band still centred keeps discarding the horizon. Costs 32px of fold, spent knowingly |
+| 135 | **(R18-8) Telegram contact for UA/RU games** | `SHIPPED round-18`, dormant on row 136. `/api/tg/<gameId>` mirrors the WhatsApp redirect so the number never reaches page source. **`t.me/+<number>` resolves only if that number is on Telegram and findable by phone** — unverifiable from here, and the failure is silent and off-site. Proposal in §9 |
+| 136 | **Apply `20260826100000_game_language.sql`** | `BUILT-DORMANT-ON-the owner running it`. **Verified absent 2026-08-26.** Two changes in one file: the language column, and a `games_format_format` that production has been one migration behind on since 2026-08-02 — see row 137. The language dropdown is HIDDEN until it is applied (`app_capabilities().gameLanguage`), and every card falls back to `en-cs`, which is the column's own default |
+| 137 | **(R18-9) Non-standard formats and durations did not show** | `SHIPPED round-18`, half of it dormant on row 136. **TWO BUGS.** Production's `games_format_format` is still `^NvN$` because `20260802180000_format_three_way` was never applied there — so `6v6v6` was never SAVED, which is why it never showed. And `7v7v7v7` was refused by BOTH regexes, which capped at three groups. Separately, `duration_minutes` was in `GameCard`'s type, threaded from the query and drawn in the file's own ASCII sketch — and no element ever rendered it |
 
 ---
 
@@ -339,6 +349,31 @@ their filter through `booking_holds_seat`. No row changes. Rollback is
 
 The `--production` flag is deliberate and cannot be replaced by an environment
 variable — see CLAUDE.md on why implicitness is what failed.
+
+### Round 18's migration (rows 136 and 137)
+
+```bash
+node scripts/apply-migration.mjs \
+  supabase/migrations/20260826100000_game_language.sql --production
+```
+
+Validated against local inside a transaction and rolled back. Additive: one
+column with a default, one widened CHECK, one function, one capability flag.
+
+**IT CARRIES A BUG FIX, not only a feature.** Production's
+`games_format_format` has been `^[0-9]{1,2}v[0-9]{1,2}$` since the beginning —
+`20260802180000_format_three_way` was never applied there — so every `6v6v6` an
+organizer has typed since August 2nd was REFUSED by the database. That is the
+whole of why the owner sees non-standard formats "not updating". This migration
+catches production up and widens to four groups in one statement.
+
+| Before it runs | After it runs |
+|---|---|
+| The language dropdown is not rendered; every card shows `en-cs` flags | The dropdown appears and the pill follows the game |
+| `6v6v6` and `7v7v7v7` are rejected on save | Both save and render |
+
+**No deploy is needed afterwards.** The surface asks the database what it can
+do rather than being told by a build.
 
 ### ~~Round 16's three migrations (rows 117, 118, 119)~~ — APPLIED 2026-08-25
 
@@ -485,3 +520,59 @@ em-dash to a bullet in the fixtures and production rows still carry the old
 one.~~ **DONE, and the owner did it.** Counted on the live database on
 2026-08-23: zero venues and zero games still carry `' — '`. It came off this
 page by being checked rather than by being reported.
+
+
+---
+
+## 9. Round 18 item 4 — why cash is still there
+
+The item's own condition was that the online path be verified end to end on
+production before cash was removed. It is not verified, and the evidence is not
+ambiguous.
+
+**WHAT IS IN PLACE.** `NEXT_PUBLIC_STRIPE_PAYMENT_URL` is set;
+`STRIPE_WEBHOOK_SECRET` is set; `POST /api/stripe/webhook` answers **400** to an
+unsigned request, which is the endpoint working — it refuses what it cannot
+verify. `confirm_online_purchase` and every column it writes exist on
+production.
+
+**WHAT HAS NEVER HAPPENED.** Not one row in `bookings` or `credit_topups` has
+ever carried a `stripe_session_id`. That column is written by
+`confirm_online_purchase` and by nothing else, so its emptiness is not an
+absence of evidence — it is evidence that **no payment has ever been confirmed
+through Stripe on this product.** The 27 `payment_confirmed` events are all
+from the admin `confirm_booking` path.
+
+**THE ONE ATTEMPT, AND IT IS THE PART THAT MATTERS.** Exactly one booking has
+ever gone down the online path:
+
+| | |
+|---|---|
+| Player | Kane |
+| Game | Praha 3 • Pražačka, 2026-08-23 16:37 |
+| Chose online | 2026-08-23 15:07 |
+| `stripe_session_id` | **null** |
+| Status now | **still `reserved`** |
+
+Two readings, and this side cannot tell them apart. Either Kane abandoned
+checkout — in which case everything behaved correctly — or **Kane paid and the
+webhook never confirmed it**, in which case a real player paid 150 CZK, lost
+the seat when the thirty-minute window closed at 15:37, and the money is
+unreconciled. **The Stripe dashboard answers this in thirty seconds and nothing
+here can.**
+
+**WHY I DID NOT DRIVE ONE MYSELF.** The two available ways to produce a
+confirmation are to make a real payment — spending real money on an outward
+action nobody authorised — or to send a correctly-signed webhook, which would
+write a fabricated confirmed booking into the live product. Neither is a test.
+There are also no upcoming games on production to book.
+
+**TO OPEN THE GATE**, in order:
+
+1. Open Stripe → Payments and look for a payment around **2026-08-23 15:07**.
+   If one is there, Kane paid and there is money to reconcile — and the webhook
+   is not delivering.
+2. Stripe → Developers → Webhooks → the endpoint → **Recent deliveries**. An
+   empty list means Stripe has never called us, whatever the secret says.
+3. Once a real payment confirms — `stripe_session_id` stops being null — cash
+   can go. The removal is a small change; the verification is the item.
