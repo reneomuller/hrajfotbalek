@@ -97,11 +97,35 @@ export async function GameHero({
         the time the band emerged. The result read as a sliver of image pinched
         between the header and the title, which is what it was.
 
-        `pt-28` puts the title row 112px down: 53px of clear photograph below
-        the header before any text, which is the band p03's proportions imply
-        and R6(b) asks for. The scrim's stops move with it — see below.
+        ~~`pt-28` puts the title row 112px down: 53px of clear photograph below
+        the header before any text.~~ `pt-36` — 144px, so 85px clear (round 18,
+        item 7).
+
+        THE OWNER READ THE OLD BAND AS "cropped too aggressively at the top",
+        and both halves of that are true at once. `object-center` on a
+        landscape photograph in a 2.2:1 box throws away the top and the bottom
+        equally — and the top of a pitch photograph is where the horizon, the
+        tree line and the sky are, which is everything that makes it a PLACE
+        rather than a green texture. 53px of it was not enough to tell.
+
+        TWO LEVERS, BOTH MOVED, because either alone falls short: shifting the
+        crop up in a 53px band shows a different sliver rather than a scene,
+        and a taller band still centred keeps discarding the horizon. Four
+        variants were rendered and compared side by side before this pair was
+        picked — see the report.
+
+        `object-[50%_30%]` RATHER THAN `object-top`. Venue photographs are not
+        all the same shape, and pinning the extreme top edge gives a portrait
+        source nothing but sky. Thirty percent is the upper third, which is
+        where the horizon sits in an ordinary landscape frame and where the
+        composition rule of thirds puts it deliberately.
+
+        THE COST IS 32px OF FOLD, spent knowingly. The detail's fold ruling
+        wants the fact card started above it, and at 144px it still is.
+
+        The scrim's stops move with the band — see below.
       */
-      className="relative -mx-gutter overflow-hidden px-gutter pb-5 pt-28"
+      className="relative -mx-gutter overflow-hidden px-gutter pb-5 pt-36"
     >
       {/*
         THE BAND'S BACKGROUND, and it is `aria-hidden` scenery: the alt text
@@ -119,7 +143,7 @@ export async function GameHero({
             src={image}
             alt=""
             data-testid="hero-photo"
-            className="h-full w-full object-cover object-center"
+            className="h-full w-full object-cover object-[50%_30%]"
           />
         ) : (
           <Image
@@ -129,7 +153,7 @@ export async function GameHero({
             fill
             priority
             sizes="(max-width: 980px) 100vw, 980px"
-            className="object-cover object-center"
+            className="object-cover object-[50%_30%]"
           />
         )}
 

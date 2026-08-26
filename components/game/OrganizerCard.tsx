@@ -1,4 +1,9 @@
 import { initials } from "@/lib/roster/initials";
+import {
+  DEFAULT_GAME_LANGUAGE,
+  messagingAppFor,
+  type GameLanguage,
+} from "@/lib/games/language";
 import { getStrings } from "@/lib/i18n/server";
 
 /**
@@ -42,6 +47,7 @@ export async function OrganizerCard({
   name,
   hasPhone,
   gameId,
+  language = DEFAULT_GAME_LANGUAGE,
 }: {
   name: string;
   /**
@@ -52,6 +58,16 @@ export async function OrganizerCard({
    */
   hasPhone: boolean;
   gameId: string;
+  /**
+   * Which messaging app to offer (round 18, item 8). An English/Czech game
+   * offers WhatsApp; a Ukrainian/Russian one offers Telegram — because the
+   * point of the button is reaching a person, and the app they are on is a
+   * fact about them rather than a preference of ours.
+   *
+   * Defaults to `en-cs` so a caller that predates the column gets exactly the
+   * behaviour it had.
+   */
+  language?: GameLanguage;
 }) {
   const t = await getStrings();
 
@@ -62,7 +78,13 @@ export async function OrganizerCard({
    * Still an ordinary `<a href>`: middle-click, long-press-copy and
    * no-JavaScript all keep working, and the tap is still one tap.
    */
-  const waHref = hasPhone ? `/api/wa/${gameId}` : null;
+  /*
+   * ONE OF TWO ROUTES, chosen by the game's language. Both are ours and both
+   * 302 with the number built server-side — see `app/api/wa/[gameId]` and
+   * `app/api/tg/[gameId]`. The privacy property does not depend on which.
+   */
+  const app = messagingAppFor(language);
+  const contactHref = hasPhone ? `/api/${app === "telegram" ? "tg" : "wa"}/${gameId}` : null;
 
   return (
     <section
@@ -124,23 +146,28 @@ export async function OrganizerCard({
         WhatsApp" button with no number behind it is the dead affordance the
         redesign keeps refusing to ship.
       */}
-      {waHref && (
+      {contactHref && (
         <a
-          href={waHref}
+          href={contactHref}
           target="_blank"
           rel="noopener noreferrer"
-          data-testid="organizer-whatsapp"
-          className="mt-4 flex min-h-11 items-center justify-center gap-2 rounded-pill border-2 border-hairline-strong px-4 py-3 text-body font-bold text-bone no-underline transition-colors hover:border-whatsapp hover:text-whatsapp"
+          data-testid={app === "telegram" ? "organizer-telegram" : "organizer-whatsapp"}
+          data-app={app}
+          className={`mt-4 flex min-h-11 items-center justify-center gap-2 rounded-pill border-2 border-hairline-strong px-4 py-3 text-body font-bold text-bone no-underline transition-colors ${
+            app === "telegram"
+              ? "hover:border-telegram hover:text-telegram"
+              : "hover:border-whatsapp hover:text-whatsapp"
+          }`}
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src="/brand/whatsapp-96.png"
+            src={app === "telegram" ? "/brand/telegram-96.png" : "/brand/whatsapp-96.png"}
             alt=""
             width={20}
             height={20}
             className="h-5 w-5 shrink-0"
           />
-          {t.games.organizerWhatsApp}
+          {app === "telegram" ? t.games.organizerTelegram : t.games.organizerWhatsApp}
         </a>
       )}
     </section>

@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireAdmin } from "@/lib/auth/requireAdmin";
+import { appCapabilities } from "@/lib/db/capabilities";
 import { parseGameForm, type GameFormValues } from "@/lib/admin/gameForm";
 import type { TransitionState } from "@/lib/admin/actionState";
 import { toAdminErrorMessage } from "@/lib/admin/errors";
@@ -58,6 +59,8 @@ export async function createGameAction(
   if (!parsed.ok) return { status: "error", fieldErrors: parsed.fieldErrors };
 
   const supabase = await createServerSupabaseClient();
+  // Round 18 item 2 — deduped per request by `cache()`.
+  const capabilities = await appCapabilities();
   const values = parsed.values;
 
   let venueId = values.venueId;
@@ -104,6 +107,32 @@ export async function createGameAction(
 
   if (error) {
     return { status: "error", message: toAdminErrorMessage(error.message) };
+  }
+
+  /*
+   * THE LANGUAGE, ITS OWN CALL (round 18, item 2).
+   *
+   * NOT A PARAMETER ON THE GAME RPC. Adding one would mean restating
+   * `admin_create_game_v2` in full inside a migration, and round 13 records
+   * what that costs: retyping `set_site_setting` from memory silently changed
+   * three unrelated branches. `set_game_language` is small enough to read at a
+   * glance and touches one column.
+   *
+   * A FAILURE HERE IS NOT A FAILED SAVE. The game exists and is correct in
+   * every other respect; the language falls back to `en-cs`, which is the
+   * column's default and what every game was before this round. Reporting an
+   * error would send an organizer back to a form whose work has already
+   * landed. The commonest cause is the migration not being applied, and in
+   * that world the field was never rendered either.
+   */
+  if (capabilities.gameLanguage) {
+    const { error: languageError } = await supabase.rpc("set_game_language", {
+      p_game_id: gameId,
+      p_language: values.language,
+    });
+    if (languageError) {
+      console.error("set_game_language failed", languageError.message);
+    }
   }
 
   /*
@@ -179,6 +208,8 @@ export async function updateGameAction(
   if (!parsed.ok) return { status: "error", fieldErrors: parsed.fieldErrors };
 
   const supabase = await createServerSupabaseClient();
+  // Round 18 item 2 — deduped per request by `cache()`.
+  const capabilities = await appCapabilities();
   const values = parsed.values;
 
   let venueId = values.venueId;
@@ -219,6 +250,32 @@ export async function updateGameAction(
 
   if (error) {
     return { status: "error", message: toAdminErrorMessage(error.message) };
+  }
+
+/*
+   * THE LANGUAGE, ITS OWN CALL (round 18, item 2).
+   *
+   * NOT A PARAMETER ON THE GAME RPC. Adding one would mean restating
+   * `admin_create_game_v2` in full inside a migration, and round 13 records
+   * what that costs: retyping `set_site_setting` from memory silently changed
+   * three unrelated branches. `set_game_language` is small enough to read at a
+   * glance and touches one column.
+   *
+   * A FAILURE HERE IS NOT A FAILED SAVE. The game exists and is correct in
+   * every other respect; the language falls back to `en-cs`, which is the
+   * column's default and what every game was before this round. Reporting an
+   * error would send an organizer back to a form whose work has already
+   * landed. The commonest cause is the migration not being applied, and in
+   * that world the field was never rendered either.
+   */
+  if (capabilities.gameLanguage) {
+    const { error: languageError } = await supabase.rpc("set_game_language", {
+      p_game_id: gameId,
+      p_language: values.language,
+    });
+    if (languageError) {
+      console.error("set_game_language failed", languageError.message);
+    }
   }
 
   // CAPACITY IS A SEPARATE RPC, not part of the update above. `set_game_capacity`

@@ -21,6 +21,7 @@ import { getCurrentPlayer, getSessionUser } from "@/lib/auth/session";
 import { onlinePaymentState } from "@/lib/booking/queries";
 import { formatCzk, formatGameDateTime } from "@/lib/format";
 import { gameEndsAt } from "@/lib/games/duration";
+import { gameLanguageOf } from "@/lib/games/language";
 import {
   getGameById,
   getGameOrganizer,
@@ -256,18 +257,33 @@ export default async function GameDetailPage({ params, searchParams }: GamePageP
 
       <InfoCard game={game} venueRow={venueRow} endsAt={endsAt} />
 
-      {/* Organizer logistics. Free text; JSX escapes it, and
-          `whitespace-pre-line` keeps the admin's line breaks without
-          interpreting anything else. */}
+      {/*
+        NOTES FROM ORGANIZER (round 18, item 6) — A RENAME, NOT A SPLIT, and
+        the found reality is worth recording.
+
+        The note was ALREADY its own card outside `InfoCard`, so there was
+        nothing to separate. What it was not was legible: its label read "Game
+        information" — the same words as the fact card's own heading two
+        hundred pixels above — set as a 10px grey eyebrow while every
+        neighbouring section carries a `body-lg` white heading. So the page
+        said "Game information" twice, once over a list of facts and once over
+        a paragraph, in two different type treatments.
+
+        The heading now matches its neighbours, which is what makes the section
+        read as one.
+
+        Free text; JSX escapes it, and `whitespace-pre-line` keeps the admin's
+        line breaks without interpreting anything else.
+      */}
       {game.notes && (
         <div
           data-testid="game-notes"
           className="mt-4 rounded-card bg-surface p-5"
         >
-          <div className="text-[10px] uppercase tracking-eyebrow text-muted">
+          <h2 className="m-0 text-body-lg font-semibold text-white">
             {t.games.notesLabel}
-          </div>
-          <p className="mt-2 whitespace-pre-line text-[14px] leading-relaxed text-bone">
+          </h2>
+          <p className="mt-3 mb-0 whitespace-pre-line text-[14px] leading-relaxed text-bone">
             {game.notes}
           </p>
         </div>
@@ -388,6 +404,8 @@ export default async function GameDetailPage({ params, searchParams }: GamePageP
           name={organizer.name}
           hasPhone={Boolean(organizer.phone)}
           gameId={game.id}
+          /* Round 18 item 8 — which app the button offers follows the game. */
+          language={gameLanguageOf(game.language)}
         />
       )}
 

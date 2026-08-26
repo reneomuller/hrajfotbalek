@@ -1,3 +1,5 @@
+import { LanguagePill } from "@/components/game/LanguagePill";
+import type { GameLanguage } from "@/lib/games/language";
 import { getStrings } from "@/lib/i18n/server";
 import type { GameSurface } from "@/lib/types/database";
 
@@ -39,12 +41,31 @@ import type { GameSurface } from "@/lib/types/database";
 export async function CardBadges({
   format,
   surface,
+  language,
 }: {
   format: string | null;
+  /**
+   * Rendered only when no `language` is given (round 18, item 2).
+   *
+   * THE SURFACE PILL LEFT THE LIST CARD. It answers "what am I playing on",
+   * which is a thing you check once when you decide to come; the LANGUAGE
+   * answers "will I be able to talk to anyone", which is what somebody
+   * scanning a list of games is actually filtering on. Two secondary pills
+   * beside the format badge is one more than the row can carry at 390px, so
+   * the card takes the one that decides whether you tap.
+   *
+   * Surface is not lost — it moved to the game detail, where the fact list has
+   * room to state it in full. Round 18 item 2.
+   */
   surface: GameSurface | null;
+  /**
+   * The game's language pair. Present on the list card, absent on the detail's
+   * fact list — which is what selects between the two pills above.
+   */
+  language?: GameLanguage;
 }) {
   const t = await getStrings();
-  if (!format && !surface) return null;
+  if (!format && !surface && !language) return null;
 
   return (
     <div data-testid="card-badges" className="flex shrink-0 flex-wrap items-center gap-1">
@@ -56,13 +77,22 @@ export async function CardBadges({
           {format}
         </span>
       )}
-      {surface && (
-        <span
-          data-testid="game-surface"
-          className="badge-pill border-hairline-strong bg-surface-raised text-bone"
-        >
-          {t.games.surface[surface]}
-        </span>
+      {/*
+        ONE SECONDARY PILL, AND WHICH ONE DEPENDS ON THE SURFACE IT IS ON. The
+        list card passes `language` and gets flags; the detail's fact list
+        passes `surface` and gets the word. Never both — see the `surface` prop.
+      */}
+      {language ? (
+        <LanguagePill language={language} />
+      ) : (
+        surface && (
+          <span
+            data-testid="game-surface"
+            className="badge-pill border-hairline-strong bg-surface-raised text-bone"
+          >
+            {t.games.surface[surface]}
+          </span>
+        )
       )}
     </div>
   );

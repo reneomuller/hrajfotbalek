@@ -31,6 +31,8 @@ export interface AppCapabilities {
   adminRemoveBooking: boolean;
   adminDelete: boolean;
   cancelWithReason: boolean;
+  /** Round 18 item 2 — `games.language` and `set_game_language` exist. */
+  gameLanguage: boolean;
 }
 
 const NONE: AppCapabilities = {
@@ -39,6 +41,7 @@ const NONE: AppCapabilities = {
   adminRemoveBooking: false,
   adminDelete: false,
   cancelWithReason: false,
+  gameLanguage: false,
 };
 
 export const appCapabilities = cache(async (): Promise<AppCapabilities> => {
@@ -63,6 +66,7 @@ export const appCapabilities = cache(async (): Promise<AppCapabilities> => {
       adminRemoveBooking: read("adminRemoveBooking"),
       adminDelete: read("adminDelete"),
       cancelWithReason: read("cancelWithReason"),
+      gameLanguage: read("gameLanguage"),
     };
   } catch {
     return NONE;

@@ -5,6 +5,8 @@ import { CardBadges } from "@/components/game/CardBadges";
 import { venueDisplayName } from "@/lib/venues/displayName";
 import { SpotsLeft } from "@/components/game/SpotsLeft";
 import { formatTime } from "@/lib/format";
+import { resolveDurationMinutes } from "@/lib/games/duration";
+import { gameLanguageOf } from "@/lib/games/language";
 import { venuePhotoUrl } from "@/lib/storage/avatar";
 import { getStrings } from "@/lib/i18n/server";
 import type { RosterAvatar } from "@/lib/games/queries";
@@ -18,7 +20,15 @@ type GameRowData = Database["public"]["Tables"]["games"]["Row"];
 export type GameCardGame = Pick<
   GameRowData,
   "id" | "venue" | "starts_at" | "capacity" | "format" | "surface" | "duration_minutes"
->;
+> & {
+  /**
+   * The language pair (round 18, item 2). Optional because `games.language`
+   * arrives with round 18's migration and every card must render before the
+   * owner applies it — `gameLanguageOf` turns absence into `en-cs`, which is
+   * the column's default and what every existing game has always been.
+   */
+  language?: unknown;
+};
 
 /**
  * THE canonical game card (v1.3 §2.1, ruling E).
@@ -286,7 +296,11 @@ export async function GameCard({
         <span data-testid="card-venue" className="min-w-0 flex-1 truncate text-body-lg font-bold leading-tight text-white">
           {venueDisplayName(game.venue, pitchName)}
         </span>
-        <CardBadges format={game.format} surface={game.surface} />
+        <CardBadges
+          format={game.format}
+          surface={game.surface}
+          language={gameLanguageOf(game.language)}
+        />
       </span>
 
       <span className="relative mt-2 flex items-center justify-between gap-2">
@@ -315,6 +329,29 @@ export async function GameCard({
           className="min-w-0 shrink-0 truncate rounded-pill border-2 border-volt bg-surface-raised px-3 py-[6px] text-body-lg font-bold text-bone"
         >
           {formatTime(game.starts_at)}
+        </span>
+
+        {/*
+          THE DURATION, WHICH THIS CARD HAS NEVER RENDERED (round 18, item 9).
+
+          It was in the type, threaded from the query, and drawn in the ASCII
+          sketch at the top of this file — `20:00  60 min` — and no element
+          ever output it. The owner reported that a 90 or 120 minute game "does
+          not update on the card"; nothing updated, because nothing was there.
+          A prop a component accepts and ignores is the quietest kind of bug:
+          it type-checks, it passes review, and the sketch says it works.
+
+          `resolveDurationMinutes` rather than the raw column, so a game
+          created before `duration_minutes` existed reads the policy default
+          instead of rendering "null min" — the same helper the detail, the
+          `.ics` and the in-progress check use, which is what stops the card
+          disagreeing with the page it opens.
+        */}
+        <span data-testid="card-duration" className="shrink-0 text-small text-muted">
+          {t.games.durationShort.replace(
+            "{minutes}",
+            String(resolveDurationMinutes(game.duration_minutes)),
+          )}
         </span>
         <span data-testid="row-spots" className="shrink-0">
           <SpotsLeft bookedCount={bookedCount} capacity={game.capacity} />

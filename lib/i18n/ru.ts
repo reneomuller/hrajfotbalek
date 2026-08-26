@@ -269,6 +269,8 @@ export const ru: StringsOverlay = {
     openMapFull: "Открыть место на карте",
     organizerRole: "Организует этот матч",
     // DRAFT — flagged for the standing native-review batch.
+    // Round 18 item 8 — DRAFT.
+    organizerTelegram: "Написать в Telegram",
     organizerWhatsApp: "Написать в WhatsApp",
     organizerWhatsAppMessage: "Привет! Вопрос по игре {game}.",
     // DRAFT — flagged for the standing native-review batch.
@@ -293,6 +295,10 @@ export const ru: StringsOverlay = {
     infoFormat: "Формат",
     infoLevel: "Уровень",
     infoDuration: "Длительность",
+    // Round 18 items 9 and 3 — DRAFT.
+    durationShort: "{minutes} мин",
+    infoLanguage: "Язык",
+    infoSurface: "Покрытие",
     includedTitle: "Что входит",
     pitchAmenitiesTitle: "Инфраструктура площадки",
     amenities: {
@@ -313,7 +319,8 @@ export const ru: StringsOverlay = {
     practicalDuration: "Длительность",
     practicalDurationValue: "{minutes} минут",
 
-    notesLabel: "Информация об игре",
+    // Round 18 item 6 — DRAFT.
+    notesLabel: "Заметки от организатора",
     capacityLabel: "Вместимость",
     startsLabel: "Начало",
     venueLabel: "Где",

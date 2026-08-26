@@ -2,7 +2,9 @@ import { Icon } from "@/components/Icon";
 import { CardBadges } from "@/components/game/CardBadges";
 import { SkillBadges } from "@/components/game/SkillBadges";
 import { formatGameDate, formatTimeSpan } from "@/lib/format";
+import { LanguagePill } from "@/components/game/LanguagePill";
 import { resolveDurationMinutes } from "@/lib/games/duration";
+import { gameLanguageOf } from "@/lib/games/language";
 import { effectivePitchName, venueDisplayName } from "@/lib/venues/displayName";
 import { getStrings } from "@/lib/i18n/server";
 import type { Database } from "@/lib/types/database";
@@ -52,7 +54,11 @@ export async function InfoCard({
     | "allowed_skill_levels"
     | "duration_minutes"
     | "pitch_name"
-  >;
+  > & {
+    /** Round 18 item 3. Optional until the migration lands — see
+     *  `gameLanguageOf`, which turns absence into the column's own default. */
+    language?: unknown;
+  };
   /*
    * `pitch_name` JOINS `map_query` (round 14, item 12): the Where row names
    * the ground and its pitch, through the same `venueDisplayName` the card and
@@ -118,28 +124,24 @@ export async function InfoCard({
           </span>
         </dd>
 
-        <dt className={FACT_LABEL}>{t.games.infoWhere}</dt>
-        <dd className="m-0 text-[15px] text-white">
-          {/*
-            `effectivePitchName`, NOT the venue's alone (found while doing
-            round 16 item 20).
+        {/*
+          ~~WHERE — the venue, joined to its pitch name.~~ IT IS THE LANGUAGE
+          ROW NOW (round 18, item 3), and the swap costs nothing.
 
-            This card read `venueRow?.pitch_name` and ignored `games.pitch_name`
-            entirely, while the LIST card resolved both through
-            `listPitchNamesByGame`. So a game carrying its own pitch name
-            showed one name on the list and a different one on its detail —
-            the layout law's own principle broken by the two surfaces
-            answering the same question in two places.
+          THE ROW WAS THE `<h1>` AGAIN. `GameHero` is already passed
+          `venueDisplayName(game.venue, pitchName)` — the same string this
+          rendered, pitch name and all — so a reader met the venue in
+          display type at the top of the page and then again as a fact
+          eighty pixels below it. The map link directly under this list
+          answers the part of "where" that a name cannot.
 
-            `effectivePitchName` is the rule written down: the game's own name
-            wins, the venue's is the ground's default. Its docstring already
-            said the bulk version "must agree" with it; the detail was not
-            calling either.
-          */}
-          {venueDisplayName(
-            game.venue,
-            effectivePitchName(game.pitch_name, venueRow?.pitch_name),
-          )}
+          WHAT REPLACES IT IS THE FACT NOBODY COULD GET ANYWHERE ELSE. Which
+          languages are spoken decides whether a player can turn up alone and
+          be understood, and until this round the product never said.
+        */}
+        <dt className={FACT_LABEL}>{t.games.infoLanguage}</dt>
+        <dd className="m-0 flex items-center">
+          <LanguagePill language={gameLanguageOf(game.language)} variant="filled" />
         </dd>
 
         {/*
@@ -172,6 +174,22 @@ export async function InfoCard({
                   {t.games.subsPerTeam.replace("{count}", String(game.subs_per_team))}
                 </span>
               )}
+            </dd>
+          </>
+        )}
+
+        {/*
+          SURFACE IS A ROW OF ITS OWN HERE, because it left the list card
+          (round 18, item 2). Two secondary pills beside the format badge is
+          one more than a 390px row carries, and the card kept the one that
+          decides whether somebody taps. The fact is not lost — this list has
+          room to state it in words.
+        */}
+        {game.surface && (
+          <>
+            <dt className={FACT_LABEL}>{t.games.infoSurface}</dt>
+            <dd data-testid="game-surface-row" className="m-0 text-[15px] text-white">
+              {t.games.surface[game.surface]}
             </dd>
           </>
         )}

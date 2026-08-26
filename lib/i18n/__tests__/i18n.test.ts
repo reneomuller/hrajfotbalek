@@ -88,6 +88,14 @@ const INTENTIONALLY_UNTRANSLATED = new Set([
   // Same reasoning, round 13: a product's name is not a word.
   "landing.community.telegram",
   "landing.community.telegramUrl",
+  /*
+   * Round 18 item 9. `min` is the abbreviation for minutes in Czech as well as
+   * English — "{minutes} min" is the correct Czech, and identical to the
+   * English by coincidence of orthography rather than by omission. Russian
+   * differs ("мин") and is translated, which is what makes this exemption a
+   * statement about Czech rather than about the key.
+   */
+  "games.durationShort",
   "landing.footer.wordmarkLead",
   "landing.footer.wordmarkAccent",
   "games.rosterUnknown",

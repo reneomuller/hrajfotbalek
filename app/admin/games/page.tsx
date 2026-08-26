@@ -42,7 +42,7 @@ export default async function AdminGamesPage() {
         </p>
       ) : (
         <ul className="mt-6 list-none space-y-2 p-0">
-          {games.map((game) => {
+          {games.map((game, index) => {
             // ~~`canEdit` gated the second link.~~ There is one link now
             // (round 13, item 21) and it is available in every status: the
             // game surface it opens is where a played game is settled and a
@@ -80,6 +80,38 @@ export default async function AdminGamesPage() {
                   data-testid="admin-manage-game"
                   className="flex items-center justify-between gap-3 px-4 py-3 no-underline"
                 >
+                  {/*
+                    THE ORDINAL (round 18, item 5) — A RENDERED ROW INDEX, and
+                    that is the whole design rather than a shortcut.
+
+                    IT IS NOT STORED AND MUST NOT BE. A game has an id, and the
+                    id is a uuid nobody can say out loud; what an organizer
+                    wants on the phone is "the third one down". Persisting a
+                    number would mean deciding what happens to it when a game
+                    is deleted — renumber every row after it, or leave a hole —
+                    and both answers are wrong for something whose only job is
+                    to be countable on a screen.
+                    
+                    So it is `index + 1` of what this page is showing, which
+                    renumbers itself: delete #9 and the old #10 becomes #9,
+                    because it is the ninth row. This is the honest version of
+                    the frame's `#62` rows the audit refused to fake — those
+                    implied a stable identifier the product does not have.
+                    
+                    `tabular-nums` so 9 and 10 do not shift the venue name
+                    beside them, and `aria-hidden` because "3" read out before
+                    every row is noise: the row already announces its venue and
+                    its time.
+                  */}
+                  <span
+                    aria-hidden
+                    data-testid="admin-game-ordinal"
+                    data-ordinal={index + 1}
+                    className="w-6 shrink-0 text-right text-[13px] tabular-nums text-faint"
+                  >
+                    {index + 1}
+                  </span>
+
                   <span className="min-w-0 flex-1">
                     {/* `venue` is admin-supplied free text; JSX escapes it. */}
                     <span className="block truncate text-body font-semibold text-white">

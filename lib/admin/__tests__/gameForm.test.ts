@@ -119,15 +119,28 @@ describe("parseGameForm", () => {
     expect(bad.fieldErrors.format).toBe(strings.admin.formatInvalid);
   });
 
-  it("accepts a three-way split, and stops at three", () => {
+  it("accepts up to four sides, and stops at four", () => {
     // Eighteen players on one pitch is routinely run as 6v6v6 with the losing
     // side rotating off. Until migration 35 the only way to record that was to
     // leave the field blank, which is why so many games render no format chip.
     expect(parseGameForm(form({ ...VALID, format: "6v6v6" })).ok).toBe(true);
     expect(parseGameForm(form({ ...VALID, format: "7v7v7" })).ok).toBe(true);
-    // Not an open repeat. Four sides is not a thing anyone has asked for, and
-    // an unbounded pattern is how this becomes free text by degrees.
-    expect(parseGameForm(form({ ...VALID, format: "5v5v5v5" })).ok).toBe(false);
+
+    /*
+     * ~~Four sides is not a thing anyone has asked for.~~ THE OWNER ASKED FOR
+     * IT (round 18, item 9) — `7v7v7v7` was one of the two formats he reported
+     * as "not updating on the card". It was not updating because it was never
+     * saved: this regex refused it here, and PRODUCTION's CHECK was still the
+     * two-way-only one, so even `6v6v6` was rejected there.
+     */
+    expect(parseGameForm(form({ ...VALID, format: "7v7v7v7" })).ok).toBe(true);
+
+    /*
+     * STILL NOT AN OPEN REPEAT, and the cap is a rendering decision rather
+     * than a guess about football: the value goes into a chip on a public card
+     * exactly as typed, and `6v6v6v6v6` is a chip that eats the row.
+     */
+    expect(parseGameForm(form({ ...VALID, format: "5v5v5v5v5" })).ok).toBe(false);
     expect(parseGameForm(form({ ...VALID, format: "6v6v" })).ok).toBe(false);
   });
 
@@ -260,6 +273,7 @@ describe("parseGameForm", () => {
         durationMinutes: "75",
         subsPerTeam: "3",
         pitchName: "Pitch 2",
+        language: "uk-ru",
       }),
     );
 
@@ -275,6 +289,10 @@ describe("parseGameForm", () => {
       priceCzk: 333,
       format: "9v9",
       surface: "sand",
+      // Round 18 item 2. Carried through like every other field — and unlike
+      // them it can never be null: `gameLanguageOf` resolves an absent value
+      // to the column's own default rather than leaving a third state.
+      language: "uk-ru",
       notes: "Gate code 4417, park on the north side.",
       organizerName: "Jindra",
       organizerPhone: "+420 601 002 003",

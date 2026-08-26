@@ -401,6 +401,15 @@ export interface Database {
            * game there, including ones already played.
            */
           pitch_name: string | null;
+          /*
+           * OPTIONAL UNTIL THE MIGRATION LANDS (round 18, item 2), for the
+           * reason `players.updated_at` is: declaring it required would let
+           * `game.language` type-check while being `undefined` at run time on
+           * production. Every read goes through `gameLanguageOf`, which the
+           * `?` forces. The `?` comes off when `npm run db:types` regenerates
+           * this file after the apply.
+           */
+          language?: string;
         };
         Insert: {
           id?: string;
@@ -714,6 +723,11 @@ export interface Database {
         Returns: Record<string, boolean>;
       };
       leave_waitlist: { Args: { p_game_id: string }; Returns: boolean };
+      /* Round 18 item 2 — present only with `20260826100000_game_language`. */
+      set_game_language: {
+        Args: { p_game_id: string; p_language: string };
+        Returns: undefined;
+      };
       dismiss_all_notifications: { Args: Record<string, never>; Returns: number };
       admin_remove_booking: { Args: { p_booking_id: string }; Returns: number };
       admin_delete_game: { Args: { p_game_id: string }; Returns: undefined };

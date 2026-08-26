@@ -415,6 +415,7 @@ export default async function AdminGamePage({
             game={game}
             organizer={organizer}
             defaultOrganizerName={admin.nickname}
+            canSetLanguage={capabilities.gameLanguage}
           />
         </section>
       )}

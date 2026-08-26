@@ -1,4 +1,5 @@
 import { policy } from "@/lib/policy";
+import { gameLanguageOf, type GameLanguage } from "@/lib/games/language";
 import { strings } from "@/lib/strings";
 import type { GameSurface, SkillLevel } from "@/lib/types/database";
 
@@ -30,7 +31,23 @@ export const SURFACES: GameSurface[] = ["turf", "grass", "indoor", "sand"];
  * the losing side rotating off, and until now the only way to record that was
  * to leave the field blank.
  */
-const FORMAT_RE = /^[0-9]{1,2}v[0-9]{1,2}(v[0-9]{1,2})?$/;
+/*
+ * UP TO FOUR GROUPS (round 18, item 9).
+ *
+ * ~~`(v[0-9]{1,2})?` — two or three.~~ The owner asked for `7v7v7v7` and this
+ * refused it, which is half of why non-standard formats "did not update on the
+ * card": they were never saved. The other half was that PRODUCTION's CHECK was
+ * still the two-way-only one, so even `6v6v6` was rejected there — see the
+ * round-18 migration.
+ *
+ * CAPPED RATHER THAN UNBOUNDED, and the cap is a rendering decision: the value
+ * goes into a chip on a public card as typed, and `6v6v6v6v6v6` is a chip that
+ * eats the row. Four covers every shape anybody runs on one pitch.
+ *
+ * MIRRORS `games_format_format`. The two must change together; the database is
+ * the authority and this is what stops a doomed write leaving the browser.
+ */
+const FORMAT_RE = /^[0-9]{1,2}v[0-9]{1,2}(v[0-9]{1,2}){0,2}$/;
 
 /** Mirrors `venues_image_path_format`, minus the leading directory. */
 const IMAGE_FILE_RE = /^[A-Za-z0-9][A-Za-z0-9._-]{0,80}\.(png|jpg|jpeg|webp|avif)$/i;
@@ -80,6 +97,8 @@ export interface GameFormValues {
   priceCzk: number;
   format: string | null;
   surface: GameSurface | null;
+  /** Round 18 item 2. Always resolved — see `gameLanguageOf`. */
+  language: GameLanguage;
   notes: string | null;
   /** Required (§5). The form pre-fills the creating admin's nickname. */
   organizerName: string;
@@ -182,6 +201,14 @@ export function parseGameForm(form: FormData): GameFormResult {
    * one person who can say. Letting the save through would preserve the gap
    * for the games that already have it.
    */
+  /*
+   * THE LANGUAGE (round 18, item 2). Absent is not an error: the field is not
+   * rendered at all until the migration is applied, so a submission from that
+   * world carries nothing and must still save. `gameLanguageOf` resolves it to
+   * the column's own default, which is what those games already are.
+   */
+  const language = gameLanguageOf(text(form, "language"));
+
   const surfaceRaw = text(form, "surface");
   const surface = SURFACES.includes(surfaceRaw as GameSurface)
     ? (surfaceRaw as GameSurface)
@@ -279,6 +306,7 @@ export function parseGameForm(form: FormData): GameFormResult {
       priceCzk,
       format: format || null,
       surface,
+      language,
       notes: notes || null,
       organizerName,
       organizerPhone: organizerPhone || null,

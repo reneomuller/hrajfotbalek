@@ -266,6 +266,8 @@ export const cs: StringsOverlay = {
     openMapFull: "Otevřít místo v Mapách",
     organizerRole: "Pořádá tento zápas",
     // DRAFT — flagged for the standing native-review batch.
+    // Round 18 item 8 — DRAFT.
+    organizerTelegram: "Napsat na Telegramu",
     organizerWhatsApp: "Napsat na WhatsApp",
     organizerWhatsAppMessage: "Ahoj! Dotaz k zápasu {game}.",
     // DRAFT — flagged for the standing native-review batch.
@@ -290,6 +292,10 @@ export const cs: StringsOverlay = {
     infoFormat: "Formát",
     infoLevel: "Úroveň",
     infoDuration: "Délka",
+    // Round 18 items 9 and 3 — DRAFT.
+    durationShort: "{minutes} min",
+    infoLanguage: "Jazyk",
+    infoSurface: "Povrch",
     includedTitle: "Co je v ceně",
     pitchAmenitiesTitle: "Vybavení hřiště",
     amenities: {
@@ -310,7 +316,8 @@ export const cs: StringsOverlay = {
     practicalDuration: "Délka",
     practicalDurationValue: "{minutes} minut",
 
-    notesLabel: "Informace o zápase",
+    // Round 18 item 6 — DRAFT.
+    notesLabel: "Poznámky od organizátora",
     capacityLabel: "Kapacita",
     startsLabel: "Výkop",
     venueLabel: "Kde",

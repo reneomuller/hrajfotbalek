@@ -4,6 +4,7 @@ import {
   listVenues,
 } from "@/lib/admin/queries";
 import { requireAdmin } from "@/lib/auth/requireAdmin";
+import { appCapabilities } from "@/lib/db/capabilities";
 import { strings } from "@/lib/strings";
 import { createGameAction } from "../actions";
 
@@ -43,9 +44,10 @@ export default async function NewGamePage({
   // The admin's own nickname pre-fills the organizer field (REQ-GAME-001).
   // `requireAdmin()` is already run by the admin layout; calling it here is how
   // the page gets the player row, not a second gate.
-  const [admin, venues] = await Promise.all([
+  const [admin, venues, capabilities] = await Promise.all([
     requireAdmin(),
     listVenues(),
+    appCapabilities(),
   ]);
 
   return (
@@ -80,6 +82,7 @@ export default async function NewGamePage({
         action={createGameAction}
         venues={venues}
         defaultOrganizerName={admin.nickname}
+        canSetLanguage={capabilities.gameLanguage}
       />
     </>
   );

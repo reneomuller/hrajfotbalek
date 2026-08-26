@@ -13,6 +13,8 @@ import {
   SUBS_MIN,
   SURFACES,
 } from "@/lib/admin/gameForm";
+import { LanguagePill } from "@/components/game/LanguagePill";
+import { gameLanguageOf, type GameLanguage } from "@/lib/games/language";
 import { PASS_REFERENCE_PRICE_CZK } from "@/lib/pass/creditPrice";
 import { strings } from "@/lib/strings";
 import type { Database, GameSurface, SkillLevel } from "@/lib/types/database";
@@ -56,6 +58,7 @@ export function GameForm({
   game,
   organizer,
   defaultOrganizerName,
+  canSetLanguage = false,
 }: {
   action: (state: AdminActionState, formData: FormData) => Promise<AdminActionState>;
   venues: VenueRow[];
@@ -84,6 +87,8 @@ export function GameForm({
     allowed_skill_levels: SkillLevel[] | null;
     subs_per_team: number | null;
     pitch_name: string | null;
+    /** Round 18 item 2 — absent on a database without the migration. */
+    language?: unknown;
   };
   /**
    * The stored contact when editing. Read server-side with the service-role
@@ -97,6 +102,8 @@ export function GameForm({
    * the game.
    */
   defaultOrganizerName?: string;
+  /** Whether `games.language` exists yet (round 18, item 2). */
+  canSetLanguage?: boolean;
   /*
    * ~~`initialVenueChoice`, which pre-selected "new" for the dashboard's
    * `+ Add venue`.~~ REMOVED (round 14, item 2): there is no "new" option any
@@ -132,6 +139,9 @@ export function GameForm({
   );
   const [format, setFormat] = useState(game?.format ?? "");
   const [surface, setSurface] = useState<string>(game?.surface ?? "");
+  // Round 18 item 2 — resolved through `gameLanguageOf` so a pre-migration row
+  // (no such property) reads as the column default rather than as undefined.
+  const [language, setLanguage] = useState<GameLanguage>(gameLanguageOf(game?.language));
   const [notes, setNotes] = useState(game?.notes ?? "");
 
   const [organizerName, setOrganizerName] = useState(
@@ -330,6 +340,47 @@ export function GameForm({
           {errors.surface && <p className={ERROR}>{errors.surface}</p>}
         </div>
       </div>
+
+      {/*
+        LANGUAGE, BENEATH SURFACE (round 18, item 2).
+
+        GATED ON THE MIGRATION. `games.language` arrives with round 18's
+        migration and this form ships first, so without the column the field is
+        not rendered at all — a submission then carries no `language` and
+        `gameLanguageOf` resolves it to `en-cs`, which is exactly what every
+        existing game is. Rendering a dropdown whose value the database would
+        drop is the "Confirm is never live with a dead path behind it" rule
+        applied to a select.
+
+        THE OPTIONS ARE FLAG PAIRS, not words, which is the owner's format.
+        A native `<select>` cannot hold SVG, so the flags are drawn ABOVE it as
+        a live preview of the current value and the options carry the plain
+        text a native picker can render. The preview is what the organizer
+        checks; the option text is what the OS shows while choosing.
+      */}
+      {canSetLanguage && (
+        <div className="min-w-[160px] flex-1">
+          <label className={LABEL} htmlFor="language">
+            {strings.admin.languageLabel}
+          </label>
+
+          <div className="mt-1 flex items-center gap-3">
+            <LanguagePill language={language} variant="filled" />
+            <select
+              id="language"
+              name="language"
+              className={`${FIELD} mt-0 flex-1`}
+              value={language}
+              onChange={(event) => setLanguage(gameLanguageOf(event.target.value))}
+            >
+              <option value="en-cs">{strings.admin.languageEnCs}</option>
+              <option value="uk-ru">{strings.admin.languageUkRu}</option>
+            </select>
+          </div>
+
+          <p className={HINT}>{strings.admin.languageHint}</p>
+        </div>
+      )}
 
       {/* --- duration / substitutes ---------------------------------------------- */}
       <div className="flex flex-wrap gap-4">

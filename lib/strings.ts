@@ -505,6 +505,10 @@ export const strings = {
     // Shown under the name when there is no phone to show — a card with a face
     // and a name and then nothing reads as something that failed to load.
     organizerRole: "Runs this game",
+    /* Round 18 item 8 — the Ukrainian/Russian games' organizer button. The
+       product's name is not a word, so only the verb differs from the
+       WhatsApp label. */
+    organizerTelegram: "Message on Telegram",
     organizerWhatsApp: "Message on WhatsApp",
     /*
      * The prefilled message body (round 8, item 8). `{game}` is the venue and
@@ -586,6 +590,13 @@ export const strings = {
     // Round 16 item 4: duration joins the fixture facts, from the card that
     // used to hold it at the bottom of the page.
     infoDuration: "Duration",
+    /* Round 18 item 9 — the card's compact form, beside the kick-off time.
+       Short because it shares a row with the time pill and the spots figure. */
+    durationShort: "{minutes} min",
+    /* Round 18 item 3 — the detail's Language row. */
+    infoLanguage: "Language",
+    /* Round 18 item 2 — surface left the list card and needs a label here. */
+    infoSurface: "Surface",
     includedTitle: "What's included",
     /*
      * THE SECOND HEADING (Section 4, item 2). The column is one flat `text[]`;
@@ -640,7 +651,19 @@ export const strings = {
     practicalDuration: "Duration",
     practicalDurationValue: "{minutes} minutes",
 
-    notesLabel: "Game information",
+    /*
+     * ~~"Game information".~~ RENAMED (round 18, item 6), and the old value is
+     * why the item exists: this labels the ORGANIZER'S NOTE, and the fact card
+     * two hundred pixels above it is titled `gameInfoTitle` — also "Game
+     * information". A reader met the same heading twice on one page, once over
+     * a list of facts and once over a paragraph of free text.
+     *
+     * That is round 16 item 4's defect arriving through a different door. There
+     * the duplication was two cards of FACTS; here it is one heading used for
+     * two different kinds of thing, which is harder to see because the sections
+     * genuinely are separate.
+     */
+    notesLabel: "Notes from organizer",
     capacityLabel: "Capacity",
     startsLabel: "Kick-off",
     venueLabel: "Where",
@@ -1461,6 +1484,14 @@ export const strings = {
      */
     surfaceLabel: "Surface",
     surfaceNone: "Choose a surface",
+    /* Round 18 item 2. Admin is English by ruling R22, so the option labels
+       are English words for the pairs — the FLAGS are the format the owner
+       asked for and a native <select> cannot hold an SVG, so the pill above
+       the picker carries them and the options carry text an OS can render. */
+    languageLabel: "Language on the pitch",
+    languageEnCs: "English / Czech",
+    languageUkRu: "Ukrainian / Russian",
+    languageHint: "Shows as a flag pair on the game card, and picks which messaging app the organizer contact offers.",
     surfaceRequired: "Pick the surface — it shows on the game's card.",
     surfaceOptions: {
       turf: "Turf",
