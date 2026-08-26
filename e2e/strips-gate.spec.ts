@@ -86,7 +86,18 @@ test.describe("Gate strips", () => {
         await expect(card.getByTestId("card-venue")).toBeVisible();
         await expect(card.getByTestId("card-when")).toBeVisible();
         await expect(card.getByTestId("game-format")).toBeVisible();
-        await expect(card.getByTestId("game-surface")).toBeVisible();
+        /*
+         * ~~The surface pill.~~ THE LANGUAGE PILL (round 18, item 2). Two
+         * secondary pills beside the format badge is one more than a 390px row
+         * carries, so the card kept the one that decides whether somebody taps
+         * — which languages are spoken — and surface moved to the detail's
+         * fact list, where there is room to state it in words.
+         */
+        await expect(card.getByTestId("language-pill")).toBeVisible();
+        await expect(
+          card.getByTestId("game-surface"),
+          "the surface pill is back on the list card",
+        ).toHaveCount(0);
         await expect(card.getByTestId("capacity-segments")).toBeVisible();
         await expect(card.getByTestId("row-spots")).toBeVisible();
         await expect(card.getByTestId("avatar").first()).toBeVisible();

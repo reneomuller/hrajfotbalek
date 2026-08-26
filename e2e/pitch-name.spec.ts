@@ -73,7 +73,22 @@ test("a game that already carries a pitch name still renders it", async ({
 
   try {
     await page.goto(`/game/${game!.id}`, { waitUntil: "networkidle" });
-    await expect(page.getByTestId("game-info-card")).toContainText("Legacy Pitch 3");
+
+    /*
+     * IN THE HERO, NOT THE FACT CARD (round 18, item 3).
+     *
+     * The card's Where row became Language, and the swap was defensible
+     * precisely because `GameHero` is already passed
+     * `venueDisplayName(venue, pitchName)` — the same string, pitch name and
+     * all. This test is what makes that claim checkable rather than asserted
+     * in a comment: if the hero ever stops carrying the pitch name, the row
+     * that used to is no longer there to cover for it.
+     */
+    await expect(page.getByTestId("game-hero")).toContainText("Legacy Pitch 3");
+    await expect(
+      page.getByTestId("game-info-card"),
+      "the pitch name is being stated twice again",
+    ).not.toContainText("Legacy Pitch 3");
   } finally {
     await admin.from("games").update({ pitch_name: previous }).eq("id", game!.id);
   }

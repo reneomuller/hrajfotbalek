@@ -1057,10 +1057,20 @@ test("a venue with no photo renders name and Open map, with no empty frame", asy
     const src = await hero.getByTestId("hero-photo").getAttribute("src");
     expect(src).toContain("pitch-default");
 
-    // NOT A TALL BOX. The v1.2 hero was 280px; the band is a 44px row plus its
-    // padding. 200 is comfortably above the band and far below a hero.
+    /*
+     * NOT A TALL BOX. The v1.2 hero was 280px; the band is a title row plus its
+     * padding.
+     *
+     * ~~200~~ 240 (round 18, item 7). The band went from 176 to 208 because
+     * `object-center` in a 53px window was discarding the horizon — the part of
+     * a pitch photograph that makes it a place rather than a green texture. The
+     * ceiling moves with it and stays well under the 280px hero this exists to
+     * prevent: the assertion is "did it become a hero again", not "is it
+     * exactly this tall", and pinning it to the current value would fail on the
+     * next deliberate nudge while catching nothing.
+     */
     const bandHeight = await hero.evaluate((el) => el.getBoundingClientRect().height);
-    expect(bandHeight, "the header band grew into a hero again").toBeLessThan(200);
+    expect(bandHeight, "the header band grew into a hero again").toBeLessThan(240);
     expect(bandHeight, "the header band has no height at all").toBeGreaterThan(0);
 
     // The map link moved into the info card, which is where every other thing

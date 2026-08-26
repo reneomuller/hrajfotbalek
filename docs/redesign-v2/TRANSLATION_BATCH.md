@@ -50,6 +50,16 @@ panel substituted the cancellation window into it by index after that item was
 deleted, so Czech and Russian readers saw it too. Fixed in round 17; the copy
 now in the table is what a reviewer should read.
 
+| `games.infoLanguage` / `infoSurface` | Language / Surface | **Round 18.** Two more one-word labels in the detail's fact list. `infoSurface` is new there because the surface pill left the list card |
+| `games.durationShort` | {minutes} min | **Round 18.** The card's compact form. **Czech is exempted from the completeness check** because `min` IS the Czech abbreviation — identical to English by orthography rather than by omission, and Russian differs ("мин") and is translated, which is what makes the exemption a statement about Czech rather than about the key |
+| `games.notesLabel` | Notes from organizer | **Round 18.** It read "Game information" — the same words as the fact card's heading two hundred pixels above — in all three languages. Both drafts should read as "what the organizer wants you to know", not as a second set of facts |
+| `games.organizerTelegram` | Message on Telegram | **Round 18.** Only the verb differs from the WhatsApp label; the product's name is not a word |
+
+**The Ukrainian/Russian pair is a GAME's language, not the reader's.** A player
+reading the interface in Czech can be looking at a `uk-ru` game — the flags say
+what will be spoken on the pitch, and nothing about them follows the locale.
+Worth knowing before reviewing anything that mentions language this round.
+
 **The public profile added no strings** (round 14, item 13). Its four blocks —
 banner, picture, stats, badges — reuse the keys the owner's own profile already
 uses, which is the point of composing it from the same three components: the
