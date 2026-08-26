@@ -2,119 +2,95 @@ import { FlagCZ, FlagGB, FlagRU, FlagUA } from "@/components/flags/Flags";
 import type { GameLanguage } from "@/lib/games/language";
 
 /**
- * The two flags of a game's language, as one object (round 18, items 2 and 3).
+ * The two flags of a game's language — and the flags ARE the pill (round 19,
+ * item 1).
  *
- * TWO VARIANTS OF ONE THING, and they are one component because they must not
- * drift: the card's pill and the detail's pill say the same fact about the
- * same game two hundred pixels apart, and a reader who sees blue-and-yellow on
- * a list card must meet blue-and-yellow on the page it opens.
+ * ONE CONSTRUCTION, EVERYWHERE. Round 18 shipped two: a bordered chip holding
+ * two 16x8 flags on the list card, and a filled box holding two 26x30 flags on
+ * the detail. They were different sizes and the second was distorted — a 2:1
+ * drawing forced into a nearly-square half. This has no variants, so the card
+ * and the detail cannot disagree about what a language looks like.
  *
- *   `badge`  — the list card, beside the format badge. Outlined and quiet, the
- *              same geometry as `.badge-pill` so the two sit on one baseline.
- *   `filled` — the detail's Language row (item 3). Split half and half, edge to
- *              edge, no gap and no fill of its own: the flags ARE the pill.
+ * NO PILL CHROME. There is no border, no fill and no padding of its own: two
+ * flags side by side, a hairline between them, and the outer corners clipped
+ * to the pill radius. What the reader sees is the flags.
  *
- * THE FLAGS ARE NOT LABELLED IN WORDS anywhere in this component, and that is
- * the owner's format — "flag slash flag". On the detail the row's own `<dt>`
- * says "Language", which is what a screen reader reads; on the card the pill
- * sits in a row that already names the game. Each flag is `aria-hidden` for
- * the same reason.
+ * THE HEIGHT COMES FROM `.badge-pill`, WHICH IS WHY IT IS STILL HERE. That
+ * class's height is TEXT-driven — `text-small` at `py-[6px]` inside a 2px
+ * border computes to 34.19px — and this element has no text. So it keeps the
+ * class purely as a height scaffold: `border-transparent` and `px-0` remove
+ * everything visible, an invisible zero-width space establishes the same line
+ * box the badges get from their words, and the flags fill the border box as an
+ * absolute layer. The pill measures exactly what a badge measures because it
+ * is built the same way — no hardcoded 34.19 pinning a font metric into a
+ * class name, and no `self-stretch` that only works next to a badge.
+ *
+ * `slice` ON THE FLAGS, not stretch. Each half is about 26x34; a 2:1 drawing
+ * covers it and crops, which is the only way to keep a flag's proportions in a
+ * box that is not its shape.
+ *
+ * ARIA: every flag is hidden. On the detail the row's own `<dt>` says
+ * "Language"; on the card the pill sits in a row that already names the game.
+ * Announcing "flag of Ukraine, flag of Russia" twice down a list is noise.
  */
 const PAIRS = {
   "en-cs": [FlagGB, FlagCZ],
   "uk-ru": [FlagUA, FlagRU],
 } as const;
 
-export function LanguagePill({
-  language,
-  variant = "badge",
-}: {
-  language: GameLanguage;
-  variant?: "badge" | "filled";
-}) {
+/**
+ * The pill's outer width.
+ *
+ * `.badge-pill` carries a 2px border, and Tailwind's `box-border` means that
+ * border eats into this number — so the two halves and their divider share
+ * `PILL_WIDTH_PX - 4`. Stated as the OUTER width because that is what sits
+ * next to the format badge and what a spec measures.
+ */
+const PILL_WIDTH_PX = 57;
+
+export function LanguagePill({ language }: { language: GameLanguage }) {
   const [First, Second] = PAIRS[language];
-
-  if (variant === "filled") {
-    /*
-     * HALF AND HALF, EDGE TO EDGE. `flex` with two `flex-1` cells and the
-     * flags stretched to fill them — rather than two fixed-width SVGs with a
-     * gap — so the split lands exactly at the middle whatever the pill's
-     * width, which is what "half/half" has to mean to survive a translation
-     * widening the row.
-     */
-    return (
-      <span
-        data-testid="language-pill"
-        data-language={language}
-        data-variant="filled"
-        /*
-          THE HEIGHT COMES FROM `.badge-pill`, NOT FROM A NUMBER.
-
-          Item 3 asks for "the same height as the 6v6 and skill badges", and
-          that height is TEXT-driven: `text-small` at `py-[6px]` inside a 2px
-          border computes to 34.19px. Hardcoding 34px would pin a font metric
-          into a class name and drift the first time `text-small` moves.
-
-          So the pill keeps `.badge-pill` — its padding, its border box, its
-          radius — and an invisible zero-width space inside it establishes the
-          same line box the badges get from their text. The flags then fill the
-          border box as an absolute layer. The pill measures exactly what a
-          badge measures because it is built the same way.
-
-          `border-transparent`: this variant is FILLED, so it has the badge's
-          border BOX without a visible stroke. Dropping the border instead
-          would make it 4px shorter than its neighbours.
-        */
-        className="badge-pill relative w-[56px] overflow-hidden border-transparent px-0"
-      >
-        <span aria-hidden>&#8203;</span>
-
-        {/*
-          HALF AND HALF, EDGE TO EDGE. Two `w-1/2` cells with the flags
-          stretched to fill them — rather than two fixed-width SVGs with a gap
-          — so the split lands exactly at the middle whatever the pill's width,
-          which is what "half/half" has to mean to survive a translation
-          widening the row.
-        */}
-        <span className="absolute inset-0 flex">
-          <span className="flex w-1/2 items-stretch [&>svg]:h-full [&>svg]:w-full">
-            <First width={28} />
-          </span>
-          <span className="flex w-1/2 items-stretch [&>svg]:h-full [&>svg]:w-full">
-            <Second width={28} />
-          </span>
-        </span>
-      </span>
-    );
-  }
 
   return (
     <span
       data-testid="language-pill"
       data-language={language}
-      data-variant="badge"
-      /*
-        `.badge-pill` CARRIES THE GEOMETRY — height, radius, padding, border
-        width — written once in globals.css, which is what keeps this on the
-        same baseline as the 6v6 badge beside it. This file chooses the ink and
-        nothing else, exactly as `CardBadges` does.
-      */
-      /*
-        `self-stretch` RATHER THAN A HEIGHT. `.badge-pill`'s height is
-        TEXT-driven — `text-small` at `py-[6px]` with a 2px border computes to
-        34.19px — and this pill has no text in it, so it came out 24px and sat
-        5px above the format badge's baseline. Matching by hardcoding 34.19px
-        would pin a font metric into a class name and break the first time
-        `text-small` moves.
-
-        Stretching to the flex line instead takes the height FROM the badge
-        beside it, which is the thing it has to match. The parent is
-        `items-center`; `self-stretch` overrides that for this item only.
-      */
-      className="badge-pill inline-flex items-center gap-[3px] self-stretch border-hairline-strong bg-surface-raised px-[6px]"
+      className="badge-pill relative overflow-hidden border-transparent px-0"
+      style={{ width: PILL_WIDTH_PX }}
     >
-      <First width={16} />
-      <Second width={16} />
+      {/* Sizes the line box, so the height tracks `text-small`. */}
+      <span aria-hidden>&#8203;</span>
+
+      <span className="absolute inset-0 flex">
+        {/*
+          `flex-1`, NOT A FIXED WIDTH. Two equal shares of whatever the border
+          box leaves is a guarantee; two 26px halves inside a box that turned
+          out to be 49px wide is an arithmetic coincidence that flexbox quietly
+          corrects — which is how round 18 shipped flags at 24.05px while the
+          code said 26.
+        */}
+        <span
+          data-testid="language-pill-half"
+          className="relative flex-1 overflow-hidden"
+        >
+          <First cover className="absolute inset-0 h-full w-full" />
+        </span>
+
+        {/*
+          THE DIVIDER, AND IT IS `ink` RATHER THAN A HAIRLINE TOKEN.
+          `hairline-strong` is white at .14, which vanishes on the white half
+          of the Czech and Russian flags — the two places a divider has to
+          work. A dark line reads on all four.
+        */}
+        <span aria-hidden data-testid="language-pill-divider" className="w-px bg-ink/70" />
+
+        <span
+          data-testid="language-pill-half"
+          className="relative flex-1 overflow-hidden"
+        >
+          <Second cover className="absolute inset-0 h-full w-full" />
+        </span>
+      </span>
     </span>
   );
 }

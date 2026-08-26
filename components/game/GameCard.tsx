@@ -5,7 +5,6 @@ import { CardBadges } from "@/components/game/CardBadges";
 import { venueDisplayName } from "@/lib/venues/displayName";
 import { SpotsLeft } from "@/components/game/SpotsLeft";
 import { formatTime } from "@/lib/format";
-import { resolveDurationMinutes } from "@/lib/games/duration";
 import { gameLanguageOf } from "@/lib/games/language";
 import { venuePhotoUrl } from "@/lib/storage/avatar";
 import { getStrings } from "@/lib/i18n/server";
@@ -332,27 +331,26 @@ export async function GameCard({
         </span>
 
         {/*
-          THE DURATION, WHICH THIS CARD HAS NEVER RENDERED (round 18, item 9).
+          ~~THE DURATION, which this card had never rendered until round 18
+          item 9 put it here.~~ REMOVED (round 19, item 4).
 
-          It was in the type, threaded from the query, and drawn in the ASCII
-          sketch at the top of this file — `20:00  60 min` — and no element
-          ever output it. The owner reported that a 90 or 120 minute game "does
-          not update on the card"; nothing updated, because nothing was there.
-          A prop a component accepts and ignores is the quietest kind of bug:
-          it type-checks, it passes review, and the sketch says it works.
+          ROUND 18 WAS RIGHT ABOUT THE BUG AND WRONG ABOUT THE FIX. The prop
+          really was threaded, typed and drawn in this file's ASCII sketch with
+          nothing rendering it — but the conclusion "so render it" skipped the
+          question of whether the card should carry it at all. A grey "60 min"
+          in the middle of the box is the third number on a row that already
+          carries a kick-off time and a spots figure, and it is the one nobody
+          is scanning for: how long a game runs almost never varies, and when
+          it does it is a detail you check after deciding to come.
 
-          `resolveDurationMinutes` rather than the raw column, so a game
-          created before `duration_minutes` existed reads the policy default
-          instead of rendering "null min" — the same helper the detail, the
-          `.ics` and the in-progress check use, which is what stops the card
-          disagreeing with the page it opens.
+          IT IS NOT LOST. `duration_minutes` renders on the game DETAIL, in the
+          fact list beside When and Format, where there is room to say
+          "90 minutes" in words. The card links to it.
+
+          The `Pick<>` above still carries `duration_minutes` — `isInProgress`
+          and the `.ics` both read it — so this is a rendering decision, not a
+          data one.
         */}
-        <span data-testid="card-duration" className="shrink-0 text-small text-muted">
-          {t.games.durationShort.replace(
-            "{minutes}",
-            String(resolveDurationMinutes(game.duration_minutes)),
-          )}
-        </span>
         <span data-testid="row-spots" className="shrink-0">
           <SpotsLeft bookedCount={bookedCount} capacity={game.capacity} />
         </span>

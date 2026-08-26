@@ -28,14 +28,21 @@ test("the Telegram tile carries two drawn flags, not emoji", async ({ page }) =>
 });
 
 /**
- * ROUND 18 ITEM 5 — display ordinals on the admin games list.
+ * ROUND 18 ITEM 5 / ROUND 19 ITEM 3 — display ordinals, counted from the
+ * oldest game.
  *
  * THE PROPERTY IS THAT THEY ARE POSITIONS, not identifiers. Asserting that a
  * row "has a number" would pass against a stored column, which is the thing
- * this deliberately is not — so the assertion is that they run 1..n in DOM
- * order with no gaps, which only a rendered index can guarantee.
+ * this deliberately is not — so the assertion is that they are contiguous with
+ * no gaps, which only a rendered index can guarantee.
+ *
+ * ~~1..n down the page.~~ n..1 DOWN THE PAGE (round 19, item 3). The list is
+ * ordered newest-first and stays that way; the numbering runs the other way,
+ * so the bottom row is 1 and the count rises. Numbering from the top would
+ * change every game's number the moment a new one is created, which makes
+ * "the third one" a different game each week.
  */
-test("the admin games list numbers its rows by position", async ({ page, context }) => {
+test("the admin games list numbers its rows from the oldest", async ({ page, context }) => {
   await signInAs(context, players.organizer);
   await page.goto("/admin/games", { waitUntil: "networkidle" });
 
@@ -44,12 +51,31 @@ test("the admin games list numbers its rows by position", async ({ page, context
     .evaluateAll((nodes) => nodes.map((n) => Number(n.getAttribute("data-ordinal"))));
 
   expect(ordinals.length, "no games to number").toBeGreaterThan(0);
-  expect(ordinals, "the ordinals are not a contiguous 1..n").toEqual(
-    ordinals.map((_, i) => i + 1),
+  expect(ordinals, "the ordinals do not descend contiguously to 1").toEqual(
+    ordinals.map((_, i) => ordinals.length - i),
   );
 
+  /*
+   * AND THE OLDEST IS 1, checked against the dates rather than assumed from
+   * the order — the direction is the whole item, and a list that silently
+   * flipped to oldest-first would still produce a descending column.
+   */
+  const rows = await page.getByTestId("admin-game-row").evaluateAll((nodes) =>
+    nodes.map((n) => ({
+      ordinal: Number(
+        n.querySelector('[data-testid="admin-game-ordinal"]')?.getAttribute("data-ordinal"),
+      ),
+      when: n.getAttribute("data-starts-at"),
+    })),
+  );
+  const dated = rows.filter((r) => r.when);
+  if (dated.length > 1) {
+    const oldest = dated.reduce((a, b) => (a.when! < b.when! ? a : b));
+    expect(oldest.ordinal, "the oldest game is not numbered 1").toBe(1);
+  }
+
   // Rendered, not just in an attribute.
-  await expect(page.getByTestId("admin-game-ordinal").first()).toHaveText("1");
+  await expect(page.getByTestId("admin-game-ordinal").last()).toHaveText("1");
 });
 
 /**

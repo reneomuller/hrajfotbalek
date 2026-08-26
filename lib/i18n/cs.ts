@@ -292,8 +292,7 @@ export const cs: StringsOverlay = {
     infoFormat: "Formát",
     infoLevel: "Úroveň",
     infoDuration: "Délka",
-    // Round 18 items 9 and 3 — DRAFT.
-    durationShort: "{minutes} min",
+    // Round 18 item 3 — DRAFT.
     infoLanguage: "Jazyk",
     infoSurface: "Povrch",
     includedTitle: "Co je v ceně",

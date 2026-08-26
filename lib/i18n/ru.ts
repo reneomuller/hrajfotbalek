@@ -295,8 +295,7 @@ export const ru: StringsOverlay = {
     infoFormat: "Формат",
     infoLevel: "Уровень",
     infoDuration: "Длительность",
-    // Round 18 items 9 and 3 — DRAFT.
-    durationShort: "{minutes} мин",
+    // Round 18 item 3 — DRAFT.
     infoLanguage: "Язык",
     infoSurface: "Покрытие",
     includedTitle: "Что входит",

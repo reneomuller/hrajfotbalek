@@ -38,16 +38,39 @@ interface FlagProps {
   /** Rendered width in pixels; height follows the 2:1 ratio. */
   width?: number;
   className?: string;
+  /**
+   * Fill the box the caller sizes, cropping rather than squashing (round 19,
+   * item 1).
+   *
+   * WHY THIS EXISTS. `LanguagePill` puts each flag in half of a pill whose
+   * HEIGHT is fixed to the format badge's — so the box is roughly 26x34, and a
+   * 2:1 drawing forced into it comes out stretched. That is what shipped in
+   * round 18: the detail's flags measured 26 x 30.19, a 2:1 flag rendered
+   * nearly square, while the card's measured 16 x 8. Two treatments, two
+   * sizes, one of them distorted.
+   *
+   * `slice` is SVG's `object-fit: cover`: scale to cover the box, crop the
+   * overflow, never change the aspect ratio. A flag may lose its ends; it may
+   * not lose its proportions.
+   */
+  cover?: boolean;
 }
 
-function svgProps({ width = 18, className }: FlagProps) {
+function svgProps({ width = 18, className, cover = false }: FlagProps) {
   return {
     viewBox: "0 0 60 30",
-    width,
-    height: width / 2,
+    ...(cover
+      ? {
+          preserveAspectRatio: "xMidYMid slice" as const,
+          className: className ? `${BASE} ${className}` : BASE,
+        }
+      : {
+          width,
+          height: width / 2,
+          className: className ? `${BASE} ${className}` : BASE,
+        }),
     "aria-hidden": true as const,
     focusable: "false" as const,
-    className: className ? `${BASE} ${className}` : BASE,
   };
 }
 

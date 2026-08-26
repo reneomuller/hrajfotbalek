@@ -141,7 +141,7 @@ export async function InfoCard({
         */}
         <dt className={FACT_LABEL}>{t.games.infoLanguage}</dt>
         <dd className="m-0 flex items-center">
-          <LanguagePill language={gameLanguageOf(game.language)} variant="filled" />
+          <LanguagePill language={gameLanguageOf(game.language)} />
         </dd>
 
         {/*

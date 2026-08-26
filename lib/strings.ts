@@ -590,9 +590,14 @@ export const strings = {
     // Round 16 item 4: duration joins the fixture facts, from the card that
     // used to hold it at the bottom of the page.
     infoDuration: "Duration",
-    /* Round 18 item 9 — the card's compact form, beside the kick-off time.
-       Short because it shares a row with the time pill and the spots figure. */
-    durationShort: "{minutes} min",
+    /*
+     * ~~`durationShort` — the card's compact form.~~ REMOVED with the element
+     * it labelled (round 19, item 4). Deleted rather than left behind: a
+     * string that outlives its render site is invisible to the coverage test
+     * and comes back the next time somebody greps for a word — item 1 of round
+     * 16 cost a round to learn that, and round 18's own rotation lines cost
+     * another.
+     */
     /* Round 18 item 3 — the detail's Language row. */
     infoLanguage: "Language",
     /* Round 18 item 2 — surface left the list card and needs a label here. */

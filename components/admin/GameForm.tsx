@@ -365,7 +365,7 @@ export function GameForm({
           </label>
 
           <div className="mt-1 flex items-center gap-3">
-            <LanguagePill language={language} variant="filled" />
+            <LanguagePill language={language} />
             <select
               id="language"
               name="language"

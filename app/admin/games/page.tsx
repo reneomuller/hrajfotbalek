@@ -52,6 +52,9 @@ export default async function AdminGamesPage() {
                 key={game.id}
                 data-testid="admin-game-row"
                 data-status={game.status}
+                /* Round 19 item 3 — lets a spec check the numbering DIRECTION
+                   against the dates rather than against the row order. */
+                data-starts-at={game.starts_at}
                 /*
                   ~~A card: venue and count on one row, a detail line beneath,
                   a waitlist line beneath that, and a link row at the bottom.~~
@@ -84,6 +87,22 @@ export default async function AdminGamesPage() {
                     THE ORDINAL (round 18, item 5) — A RENDERED ROW INDEX, and
                     that is the whole design rather than a shortcut.
 
+                    COUNTED FROM THE OLDEST (round 19, item 3), which is why it
+                    is `games.length - index` rather than `index + 1`. The list
+                    is ordered newest-first and stays that way — that ordering
+                    is what an organizer needs, because the games wanting
+                    attention are the recent ones. Only the NUMBERING runs the
+                    other way, so the bottom row is 1 and the count rises up
+                    the page.
+
+                    THE REASON IS STABILITY. Numbering from the top means every
+                    game's number changes the moment a new one is created —
+                    "the third one" is a different game each week, which makes
+                    it useless for saying out loud. Numbering from the oldest
+                    means a game keeps its number for as long as nothing OLDER
+                    is deleted, and the newest always has the highest, the way
+                    an invoice number behaves.
+
                     IT IS NOT STORED AND MUST NOT BE. A game has an id, and the
                     id is a uuid nobody can say out loud; what an organizer
                     wants on the phone is "the third one down". Persisting a
@@ -106,10 +125,10 @@ export default async function AdminGamesPage() {
                   <span
                     aria-hidden
                     data-testid="admin-game-ordinal"
-                    data-ordinal={index + 1}
+                    data-ordinal={games.length - index}
                     className="w-6 shrink-0 text-right text-[13px] tabular-nums text-faint"
                   >
-                    {index + 1}
+                    {games.length - index}
                   </span>
 
                   <span className="min-w-0 flex-1">
