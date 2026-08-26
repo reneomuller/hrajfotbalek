@@ -1,0 +1,273 @@
+import { expect, test } from "@playwright/test";
+import { LOCALE_COOKIE } from "../lib/i18n/locales";
+import { players, serviceClient, signInAs } from "./helpers/session";
+import { createScratchGame, destroyScratchGame } from "./helpers/scaffold";
+
+/**
+ * ROUND 18 ITEM 9 — a non-standard format and a non-default duration, driven
+ * through the list AND the detail.
+ *
+ * THE BUG WAS TWO BUGS AND NEITHER WOULD HAVE FAILED AN EXISTING TEST.
+ *
+ *   FORMAT never reached the database. `FORMAT_RE` capped at three groups, so
+ *   `7v7v7v7` was refused before the request left the browser — and PRODUCTION
+ *   still carried the two-way-only CHECK, so even `6v6v6` was rejected there.
+ *   Every spec used `6v6`.
+ *
+ *   DURATION never reached the card. `duration_minutes` was in `GameCard`'s
+ *   type, threaded from the query and drawn in the file's own ASCII sketch —
+ *   and no element output it. Every spec asserted duration on the DETAIL,
+ *   where it worked.
+ *
+ * SO THIS DRIVES ONE GAME THROUGH BOTH SURFACES with values that are not the
+ * defaults, which is the only shape that catches a display bound to an
+ * assumption instead of to data. A fixture using `6v6` at 60 minutes agrees
+ * with a hardcoded answer.
+ */
+
+test.use({ viewport: { width: 390, height: 844 } });
+
+const FORMAT = "7v7v7v7";
+const DURATION = 120;
+
+test("a four-way, 120-minute game says so on the list and on the detail", async ({
+  page,
+  context,
+}) => {
+  const game = await createScratchGame({
+    capacity: 28,
+    hoursFromNow: 30,
+    format: FORMAT,
+    surface: "turf",
+    durationMinutes: DURATION,
+  });
+
+  try {
+    await context.addCookies([
+      { name: LOCALE_COOKIE, value: "en", domain: "localhost", path: "/" },
+    ]);
+
+    /*
+     * THE ROW MUST EXIST WITH THESE VALUES. Asserted against the database
+     * first: if the CHECK refused `7v7v7v7` the game would have no format at
+     * all, and every rendering assertion below would then be checking that
+     * nothing renders — passing for the wrong reason.
+     */
+    const admin = serviceClient();
+    const { data: row } = await admin
+      .from("games")
+      .select("format, duration_minutes")
+      .eq("id", game.id)
+      .single();
+    expect(row?.format, "the four-way format was not stored").toBe(FORMAT);
+    expect(row?.duration_minutes, "the duration was not stored").toBe(DURATION);
+
+    // --- the list card ------------------------------------------------------
+    await page.goto("/games", { waitUntil: "networkidle" });
+    const card = page.locator(`[data-testid="game-row"][href="/game/${game.id}"]`);
+    await expect(card).toHaveCount(1);
+
+    await expect(
+      card.getByTestId("game-format"),
+      "the card is showing a format that is not this game's",
+    ).toHaveText(FORMAT);
+
+    await expect(
+      card.getByTestId("card-duration"),
+      "the card is not showing this game's duration",
+    ).toContainText(String(DURATION));
+
+    // --- the detail ---------------------------------------------------------
+    await page.goto(`/game/${game.id}`, { waitUntil: "networkidle" });
+    const info = page.getByTestId("game-info-card");
+
+    await expect(info.getByTestId("game-format")).toHaveText(FORMAT);
+    await expect(info.getByTestId("game-duration")).toContainText(String(DURATION));
+
+    /*
+     * AND THE TWO SURFACES AGREE. The failure the owner reported was a card
+     * that said one thing while the page it opened said another, so the
+     * property worth pinning is not "each is right" but "they MATCH".
+     *
+     * Read by navigating rather than by fetching `/games` and parsing the
+     * HTML: the list streams through Suspense, so the first response body does
+     * not contain the rows at all — a comparison built on it reports `null`
+     * and looks exactly like a real divergence.
+     */
+    const onDetail = {
+      format: (await info.getByTestId("game-format").innerText()).trim(),
+      duration: (await info.getByTestId("game-duration").innerText()).trim(),
+    };
+
+    await page.goto("/games", { waitUntil: "networkidle" });
+    const onCard = {
+      format: (await card.getByTestId("game-format").innerText()).trim(),
+      duration: (await card.getByTestId("card-duration").innerText()).trim(),
+    };
+
+    expect(onCard.format, "list and detail disagree about the format").toBe(onDetail.format);
+    expect(onCard.duration, "the card's duration is missing").toContain(String(DURATION));
+    expect(onDetail.duration, "the detail's duration is missing").toContain(String(DURATION));
+  } finally {
+    await destroyScratchGame(game.id);
+  }
+});
+
+/**
+ * ROUND 18 ITEM 2 — the language pill on the card, and surface leaving it.
+ */
+test("the card carries the language pill where the surface pill used to be", async ({
+  page,
+  context,
+}) => {
+  const game = await createScratchGame({
+    capacity: 10,
+    hoursFromNow: 31,
+    format: "6v6",
+    surface: "turf",
+  });
+
+  try {
+    await context.addCookies([
+      { name: LOCALE_COOKIE, value: "en", domain: "localhost", path: "/" },
+    ]);
+    const admin = serviceClient();
+    await admin.from("games").update({ language: "uk-ru" }).eq("id", game.id);
+
+    await page.goto("/games", { waitUntil: "networkidle" });
+    const card = page.locator(`[data-testid="game-row"][href="/game/${game.id}"]`);
+
+    const pill = card.getByTestId("language-pill");
+    await expect(pill).toBeVisible();
+    await expect(pill).toHaveAttribute("data-language", "uk-ru");
+
+    /*
+     * TWO FLAGS, AS SVG. Asserted as elements rather than as text, because the
+     * whole reason this is not `🇺🇦 / 🇷🇺` is that emoji flags render as
+     * LETTERS on Windows — and a text assertion would pass on exactly the
+     * output the item exists to avoid.
+     */
+    await expect(pill.locator("svg")).toHaveCount(2);
+
+    // Surface left the card…
+    await expect(
+      card.getByTestId("game-surface"),
+      "the surface pill is back on the list card",
+    ).toHaveCount(0);
+
+    // …and is on the detail, in words.
+    await page.goto(`/game/${game.id}`, { waitUntil: "networkidle" });
+    await expect(page.getByTestId("game-surface-row")).toBeVisible();
+
+    /*
+     * THE PILL SITS BESIDE THE FORMAT BADGE, on one baseline. Measured rather
+     * than assumed: the item asks for it "next to the format badge", and a
+     * pill that wraps to its own line is not next to anything.
+     */
+    await page.goto("/games", { waitUntil: "networkidle" });
+    const boxes = await card.evaluate((el) => {
+      const f = el.querySelector('[data-testid="game-format"]')!.getBoundingClientRect();
+      const l = el.querySelector('[data-testid="language-pill"]')!.getBoundingClientRect();
+      return { fTop: f.top, lTop: l.top, fH: f.height, lH: l.height, gap: l.left - f.right };
+    });
+    expect(Math.abs(boxes.fTop - boxes.lTop), "the pills are on different lines").toBeLessThan(2);
+    expect(Math.abs(boxes.fH - boxes.lH), "the pills are different heights").toBeLessThan(2);
+    expect(boxes.gap, "the pills are not adjacent").toBeLessThan(12);
+  } finally {
+    await destroyScratchGame(game.id);
+  }
+});
+
+/**
+ * ROUND 18 ITEMS 3 AND 8 — the Language row, and which app the organizer
+ * button offers.
+ */
+test("a Ukrainian/Russian game shows the filled pill and offers Telegram", async ({
+  page,
+  context,
+}) => {
+  /*
+   * A FORMAT IS REQUIRED FOR THIS FIXTURE, and the reason is round 17's own
+   * improvement: the fact list omits the Format row entirely when a game has
+   * neither format nor surface, so a game without one has no badge to measure
+   * the pill against — and `getByTestId` would wait out the timeout on an
+   * element that is correctly absent.
+   */
+  const game = await createScratchGame({
+    capacity: 10,
+    hoursFromNow: 32,
+    format: "6v6",
+    surface: "turf",
+  });
+
+  try {
+    await context.addCookies([
+      { name: LOCALE_COOKIE, value: "en", domain: "localhost", path: "/" },
+    ]);
+    const admin = serviceClient();
+    await admin.from("games").update({ language: "uk-ru" }).eq("id", game.id);
+
+    await page.goto(`/game/${game.id}`, { waitUntil: "networkidle" });
+
+    const pill = page.getByTestId("game-info-card").getByTestId("language-pill");
+    await expect(pill).toHaveAttribute("data-variant", "filled");
+
+    /*
+     * HALF AND HALF, MEASURED. "A filled pill split half/half" is a geometric
+     * claim, and the only way to check it is to compare the two halves.
+     */
+    /*
+     * MEASURED ON THE TWO FLAG CELLS, not on the pill's children. The pill
+     * also contains an invisible zero-width space that gives it the badges'
+     * line box — reading `children` would compare a 0px sizer against a 52px
+     * layer and report a perfectly even split as wildly uneven.
+     */
+    const halves = await pill.evaluate((el) => {
+      const cells = [...el.querySelectorAll("svg")].map((svg) =>
+        svg.parentElement!.getBoundingClientRect(),
+      );
+      return {
+        a: cells[0]!.width,
+        b: cells[1]!.width,
+        h: el.getBoundingClientRect().height,
+      };
+    });
+    expect(Math.abs(halves.a - halves.b), "the pill is not split evenly").toBeLessThan(1.5);
+
+    // Same height as the badges it sits among (item 3).
+    const badgeHeight = await page
+      .getByTestId("game-info-card")
+      .getByTestId("game-format")
+      .evaluate((el) => el.getBoundingClientRect().height);
+    expect(Math.abs(halves.h - badgeHeight)).toBeLessThan(4);
+
+    /*
+     * AND THE ORGANIZER BUTTON FOLLOWS THE GAME. The href is OUR route, never
+     * a `t.me` link in the markup — the number must not be in page source, and
+     * asserting the href is what keeps that true.
+     */
+    const telegram = page.getByTestId("organizer-telegram");
+    if ((await telegram.count()) > 0) {
+      await expect(telegram).toHaveAttribute("href", `/api/tg/${game.id}`);
+      await expect(page.getByTestId("organizer-whatsapp")).toHaveCount(0);
+
+      /*
+       * The href is our own route; what must never appear is the NUMBER. A
+       * `t.me/+` pattern would also match the community group's invite hash,
+       * which is not a phone and not a leak.
+       */
+      const { data: contact } = await admin
+        .from("game_organizer_contacts")
+        .select("organizer_phone")
+        .eq("game_id", game.id)
+        .maybeSingle();
+      const digits = contact?.organizer_phone?.replace(/\D/g, "");
+      if (digits) {
+        const source = await page.content();
+        expect(source, "the organizer's number is in the page source").not.toContain(digits);
+      }
+    }
+  } finally {
+    await destroyScratchGame(game.id);
+  }
+});
