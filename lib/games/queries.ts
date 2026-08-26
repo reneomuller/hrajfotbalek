@@ -281,6 +281,12 @@ export interface GameOrganizer {
    * recorded" and "not yours to see" are indistinguishable to the caller.
    */
   phone: string | null;
+  /**
+   * The organizer's Telegram username, bare — no `@`, no `t.me/` (round 19,
+   * item 2). Null when they have not set one, which is the ordinary case and
+   * what sends a Ukrainian/Russian game back to the WhatsApp button.
+   */
+  telegram: string | null;
 }
 
 /**
@@ -303,10 +309,42 @@ export async function getGameOrganizer(gameId: string): Promise<GameOrganizer> {
     p_game_id: gameId,
   });
 
+  const [phone, telegram] = await Promise.all([
+    organizerWhatsAppNumber(gameId),
+    organizerTelegramHandle(gameId),
+  ]);
+
   return {
     name: nameResult.error ? null : ((nameResult.data as string | null) ?? null),
-    phone: await organizerWhatsAppNumber(gameId),
+    phone,
+    telegram,
   };
+}
+
+/**
+ * The organizer's Telegram username, or null (round 19, item 2).
+ *
+ * READ FOR EVERYONE, like the number beside it — the round-8 ruling is that
+ * the organizer is reachable by anyone looking at the game, and a handle is
+ * less sensitive than a phone: it is a name its owner published.
+ *
+ * NULL IS THE ORDINARY CASE and it is what makes the fallback work. A
+ * Ukrainian/Russian game whose organizer has no handle offers WhatsApp, so
+ * contact is always possible and no link goes nowhere.
+ *
+ * TOLERATES THE COLUMN'S ABSENCE. Before the migration the select fails and
+ * this returns null, which is the same answer as "no handle set" — so every
+ * such game shows WhatsApp, exactly as it does today.
+ */
+async function organizerTelegramHandle(gameId: string): Promise<string | null> {
+  const service = createServiceRoleSupabaseClient();
+  const { data, error } = await service
+    .from("game_organizer_contacts")
+    .select("organizer_telegram")
+    .eq("game_id", gameId)
+    .maybeSingle();
+
+  return error || !data ? null : (data.organizer_telegram ?? null);
 }
 
 /**

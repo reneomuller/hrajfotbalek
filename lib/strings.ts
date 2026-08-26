@@ -1493,6 +1493,12 @@ export const strings = {
        are English words for the pairs — the FLAGS are the format the owner
        asked for and a native <select> cannot hold an SVG, so the pill above
        the picker carries them and the options carry text an OS can render. */
+    /* Round 19 item 2. Admin is English by ruling R22. */
+    organizerTelegramLabel: "Telegram username (optional)",
+    organizerTelegramHint:
+      "With one, a Ukrainian/Russian game's contact button becomes Telegram instead of WhatsApp. Paste @name or a t.me link — either is fine.",
+    organizerTelegramInvalid:
+      "That is not a Telegram username. Five to thirty-two letters, digits or underscores, starting with a letter.",
     languageLabel: "Language on the pitch",
     languageEnCs: "English / Czech",
     languageUkRu: "Ukrainian / Russian",

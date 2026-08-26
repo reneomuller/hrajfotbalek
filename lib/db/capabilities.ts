@@ -33,6 +33,8 @@ export interface AppCapabilities {
   cancelWithReason: boolean;
   /** Round 18 item 2 — `games.language` and `set_game_language` exist. */
   gameLanguage: boolean;
+  /** Round 19 item 2 — `organizer_telegram` and its normaliser exist. */
+  organizerTelegram: boolean;
 }
 
 const NONE: AppCapabilities = {
@@ -42,6 +44,7 @@ const NONE: AppCapabilities = {
   adminDelete: false,
   cancelWithReason: false,
   gameLanguage: false,
+  organizerTelegram: false,
 };
 
 export const appCapabilities = cache(async (): Promise<AppCapabilities> => {
@@ -67,6 +70,7 @@ export const appCapabilities = cache(async (): Promise<AppCapabilities> => {
       adminDelete: read("adminDelete"),
       cancelWithReason: read("cancelWithReason"),
       gameLanguage: read("gameLanguage"),
+      organizerTelegram: read("organizerTelegram"),
     };
   } catch {
     return NONE;

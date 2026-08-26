@@ -46,6 +46,7 @@ import { getStrings } from "@/lib/i18n/server";
 export async function OrganizerCard({
   name,
   hasPhone,
+  hasTelegram = false,
   gameId,
   language = DEFAULT_GAME_LANGUAGE,
 }: {
@@ -57,6 +58,12 @@ export async function OrganizerCard({
    * here is what put them in the page source, and a boolean cannot leak.
    */
   hasPhone: boolean;
+  /**
+   * Whether a Telegram handle is recorded — NOT the handle (round 19, item 2).
+   * The card needs to know only which button to draw, and a boolean cannot
+   * leak. Same reasoning as `hasPhone` above.
+   */
+  hasTelegram?: boolean;
   gameId: string;
   /**
    * Which messaging app to offer (round 18, item 8). An English/Czech game
@@ -83,8 +90,22 @@ export async function OrganizerCard({
    * 302 with the number built server-side — see `app/api/wa/[gameId]` and
    * `app/api/tg/[gameId]`. The privacy property does not depend on which.
    */
-  const app = messagingAppFor(language);
-  const contactHref = hasPhone ? `/api/${app === "telegram" ? "tg" : "wa"}/${gameId}` : null;
+  /*
+   * TELEGRAM ONLY WHEN THERE IS A HANDLE (round 19, item 2).
+   *
+   * The language says which app this game's players are on; the handle says
+   * whether the organizer can actually be reached there. Without one, the
+   * Telegram route has nothing to redirect to — so the game falls back to
+   * WhatsApp rather than offering a button that lands on Telegram's "user not
+   * found" page.
+   *
+   * CONTACT IS ALWAYS POSSIBLE OR THE BUTTON IS ABSENT. There is no third
+   * state where it renders and goes nowhere.
+   */
+  const wantsTelegram = messagingAppFor(language) === "telegram";
+  const app = wantsTelegram && hasTelegram ? "telegram" : "whatsapp";
+  const reachable = app === "telegram" ? hasTelegram : hasPhone;
+  const contactHref = reachable ? `/api/${app === "telegram" ? "tg" : "wa"}/${gameId}` : null;
 
   return (
     <section

@@ -47,6 +47,9 @@ export const SURFACES: GameSurface[] = ["turf", "grass", "indoor", "sand"];
  * MIRRORS `games_format_format`. The two must change together; the database is
  * the authority and this is what stops a doomed write leaving the browser.
  */
+/** Telegram's own rule, mirroring `organizer_telegram_format`. */
+const TELEGRAM_HANDLE_RE = /^[A-Za-z][A-Za-z0-9_]{4,31}$/;
+
 const FORMAT_RE = /^[0-9]{1,2}v[0-9]{1,2}(v[0-9]{1,2}){0,2}$/;
 
 /** Mirrors `venues_image_path_format`, minus the leading directory. */
@@ -99,6 +102,8 @@ export interface GameFormValues {
   surface: GameSurface | null;
   /** Round 18 item 2. Always resolved — see `gameLanguageOf`. */
   language: GameLanguage;
+  /** Round 19 item 2. Bare handle, or null. */
+  organizerTelegram: string | null;
   notes: string | null;
   /** Required (§5). The form pre-fills the creating admin's nickname. */
   organizerName: string;
@@ -209,6 +214,28 @@ export function parseGameForm(form: FormData): GameFormResult {
    */
   const language = gameLanguageOf(text(form, "language"));
 
+  /*
+   * THE TELEGRAM HANDLE (round 19, item 2), normalised HERE ONLY to be
+   * validated — the stored form is `normalize_telegram_handle`'s in SQL.
+   *
+   * TWO NORMALISATIONS WOULD BE TWO RULES. This one exists so the admin sees a
+   * labelled inline error instead of a raw exception; the database's is the
+   * authority, and a hand-made RPC call skips this entirely. Same relationship
+   * every other field on this form has with its CHECK.
+   */
+  const telegramRaw = text(form, "organizerTelegram");
+  const organizerTelegram = telegramRaw
+    ? telegramRaw
+        .trim()
+        .replace(/^(https?:\/\/)?(www\.)?t\.me\//i, "")
+        .replace(/^@+/, "")
+        .trim() || null
+    : null;
+
+  if (organizerTelegram && !TELEGRAM_HANDLE_RE.test(organizerTelegram)) {
+    fieldErrors.organizerTelegram = strings.admin.organizerTelegramInvalid;
+  }
+
   const surfaceRaw = text(form, "surface");
   const surface = SURFACES.includes(surfaceRaw as GameSurface)
     ? (surfaceRaw as GameSurface)
@@ -307,6 +334,7 @@ export function parseGameForm(form: FormData): GameFormResult {
       format: format || null,
       surface,
       language,
+      organizerTelegram,
       notes: notes || null,
       organizerName,
       organizerPhone: organizerPhone || null,

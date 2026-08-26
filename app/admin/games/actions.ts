@@ -125,6 +125,33 @@ export async function createGameAction(
    * landed. The commonest cause is the migration not being applied, and in
    * that world the field was never rendered either.
    */
+
+  /*
+   * THE TELEGRAM HANDLE, ITS OWN CALL (round 19, item 2).
+   *
+   * `admin_create_game_v2` and `admin_update_game_v2` pass name and phone to
+   * `set_game_organizer` internally; adding a fourth argument to THEM would
+   * mean restating two large RPCs in a migration, which is the round-13
+   * hazard. Calling `set_game_organizer` again afterwards writes the same row
+   * — it is an upsert on `game_id` — with the handle included.
+   *
+   * A FAILURE HERE IS NOT A FAILED SAVE. The game and the organizer's name and
+   * number are already stored; only the handle is missing, and the contact
+   * button falls back to WhatsApp, which is where it was before this round.
+   * Sending an admin back to a form whose work has landed would be worse.
+   */
+  if (capabilities.organizerTelegram) {
+    const { error: telegramError } = await supabase.rpc("set_game_organizer", {
+      p_game_id: gameId,
+      p_organizer_name: values.organizerName,
+      p_organizer_phone: values.organizerPhone,
+      p_organizer_telegram: values.organizerTelegram,
+    });
+    if (telegramError) {
+      console.error("set_game_organizer (telegram) failed", telegramError.message);
+    }
+  }
+
   if (capabilities.gameLanguage) {
     const { error: languageError } = await supabase.rpc("set_game_language", {
       p_game_id: gameId,
@@ -268,6 +295,33 @@ export async function updateGameAction(
    * landed. The commonest cause is the migration not being applied, and in
    * that world the field was never rendered either.
    */
+
+  /*
+   * THE TELEGRAM HANDLE, ITS OWN CALL (round 19, item 2).
+   *
+   * `admin_create_game_v2` and `admin_update_game_v2` pass name and phone to
+   * `set_game_organizer` internally; adding a fourth argument to THEM would
+   * mean restating two large RPCs in a migration, which is the round-13
+   * hazard. Calling `set_game_organizer` again afterwards writes the same row
+   * — it is an upsert on `game_id` — with the handle included.
+   *
+   * A FAILURE HERE IS NOT A FAILED SAVE. The game and the organizer's name and
+   * number are already stored; only the handle is missing, and the contact
+   * button falls back to WhatsApp, which is where it was before this round.
+   * Sending an admin back to a form whose work has landed would be worse.
+   */
+  if (capabilities.organizerTelegram) {
+    const { error: telegramError } = await supabase.rpc("set_game_organizer", {
+      p_game_id: gameId,
+      p_organizer_name: values.organizerName,
+      p_organizer_phone: values.organizerPhone,
+      p_organizer_telegram: values.organizerTelegram,
+    });
+    if (telegramError) {
+      console.error("set_game_organizer (telegram) failed", telegramError.message);
+    }
+  }
+
   if (capabilities.gameLanguage) {
     const { error: languageError } = await supabase.rpc("set_game_language", {
       p_game_id: gameId,

@@ -416,6 +416,7 @@ export default async function AdminGamePage({
             organizer={organizer}
             defaultOrganizerName={admin.nickname}
             canSetLanguage={capabilities.gameLanguage}
+            canSetTelegram={capabilities.organizerTelegram}
           />
         </section>
       )}

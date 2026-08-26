@@ -171,6 +171,11 @@ test("the Telegram route redirects and keeps the number off the page", async ({
       .maybeSingle();
     const digits = contact?.organizer_phone?.replace(/\D/g, "") ?? null;
 
+    await admin
+      .from("game_organizer_contacts")
+      .update({ organizer_telegram: "hrajfotbal_test" })
+      .eq("game_id", game.id);
+
     await page.goto(`/game/${game.id}`, { waitUntil: "networkidle" });
     const source = await page.content();
     if (digits) {
@@ -179,7 +184,7 @@ test("the Telegram route redirects and keeps the number off the page", async ({
 
     const link = page.getByTestId("organizer-telegram");
     if ((await link.count()) === 0) {
-      test.skip(true, "this scratch game's organizer has no phone recorded");
+      test.skip(true, "this scratch game has no organizer contact row");
       return;
     }
 
@@ -193,7 +198,18 @@ test("the Telegram route redirects and keeps the number off the page", async ({
      */
     const res = await request.get(`/api/tg/${game.id}`, { maxRedirects: 0 });
     expect(res.status()).toBe(302);
-    expect(res.headers()["location"]).toMatch(/^https:\/\/t\.me\/\+\d+$/);
+    /*
+     * BY USERNAME, NOT BY PHONE (round 19, item 2). `t.me/+<digits>` resolves
+     * only if that number is on Telegram and findable by phone — unverifiable
+     * from here, and its failure is Telegram's own "user not found" page on
+     * Telegram's domain. A handle resolves because it exists. The `+` form is
+     * asserted ABSENT so the fallback cannot come back.
+     */
+    expect(res.headers()["location"]).toBe("https://t.me/hrajfotbal_test");
+    expect(
+      res.headers()["location"],
+      "the phone-based t.me fallback is back",
+    ).not.toMatch(/t\.me\/\+/);
     expect(res.headers()["cache-control"]).toContain("no-store");
   } finally {
     await destroyScratchGame(game.id);

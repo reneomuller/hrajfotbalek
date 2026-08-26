@@ -83,6 +83,7 @@ export default async function NewGamePage({
         venues={venues}
         defaultOrganizerName={admin.nickname}
         canSetLanguage={capabilities.gameLanguage}
+            canSetTelegram={capabilities.organizerTelegram}
       />
     </>
   );

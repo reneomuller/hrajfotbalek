@@ -17,26 +17,32 @@ import { getGameById, getGameOrganizer } from "@/lib/games/queries";
  * would be one endpoint with two contracts. Two files, one shape.
  *
  * ------------------------------------------------------------------------
- * WHAT THIS CANNOT PROMISE, and it is worth stating plainly rather than
- * discovering.
+ * BY USERNAME, NOT BY PHONE (round 19, item 2).
  *
- * `t.me/+<international number>` resolves ONLY if that number has a Telegram
- * account AND its owner has not switched off "find me by phone number". There
- * is no way to check either from here without the Telegram API, and no way to
- * make the destination fail gracefully — Telegram answers an unknown number
- * with its own "user not found" page, on its own domain, after the player has
- * already left this product.
+ * ~~`t.me/+<international number>`, which resolves only if that number has a
+ * Telegram account AND its owner has left "find me by phone number" on —
+ * neither checkable from here, and the failure silent and off-site.~~
  *
- * SO THE FAILURE IS SILENT AND OFF-SITE. A player on a Ukrainian/Russian game
- * whose organizer is not on Telegram taps the button and lands nowhere useful,
- * with no route back except the browser's back arrow. Nothing here can detect
- * that; see the report for the proposal.
+ * THE FALLBACK IS GONE RATHER THAN DEMOTED. Keeping the phone form for
+ * organizers without a handle would mean the product still sometimes sends a
+ * player to Telegram's "user not found" page, on Telegram's domain, with no
+ * route back — which is the entire defect. A handle resolves because it
+ * exists; it is the identifier its owner chose to be reachable by.
  *
- * NO PREFILLED MESSAGE. `t.me/+<number>` opens a chat and `?text=` is not part
+ * A GAME WITH NO HANDLE NEVER REACHES THIS ROUTE. `OrganizerCard` offers the
+ * WhatsApp button instead, so contact is always possible and no link goes
+ * nowhere. This still 404s if it is called anyway, because a route that
+ * invents a destination for a request it cannot serve is worse than one that
+ * says no.
+ *
+ * THE NUMBER IS NO LONGER INVOLVED AT ALL, which is a privacy improvement
+ * rather than a side effect: a handle is a published name and a phone is not,
+ * so the redirect that used to carry one now carries the other.
+ *
+ * NO PREFILLED MESSAGE. `t.me/<handle>` opens a chat and `?text=` is not part
  * of that form — it belongs to `t.me/share/url`, which shares a link rather
- * than messaging a person. Rather than send the player somewhere plausible
- * with the game named, this opens the chat empty and lets them type. The
- * WhatsApp route keeps its prefill because `wa.me` genuinely supports one.
+ * than messaging a person. The WhatsApp route keeps its prefill because
+ * `wa.me` genuinely supports one.
  */
 export const dynamic = "force-dynamic";
 
@@ -57,19 +63,23 @@ export async function GET(
   const organizer = await getGameOrganizer(gameId);
 
   /*
-   * DIGITS, AND THEN A `+`. `t.me/+<digits>` is the phone form; `t.me/<word>`
-   * is a username, and handing it digits with no plus would open a channel
-   * called "420…" if one exists. A leading `00` is the other way of writing
-   * `+`, so it is stripped exactly as the WhatsApp route strips it.
+   * THE HANDLE IS STORED BARE — `set_game_organizer` strips `@` and any
+   * `t.me/` prefix, and a CHECK constrains what is left to Telegram's own
+   * rule. So it is interpolated directly, and the shape below is re-asserted
+   * anyway: this builds a URL, and a value that reached the column before the
+   * constraint existed must not reach a `Location` header now.
    */
-  const digits = organizer.phone?.replace(/\D/g, "").replace(/^00/, "") ?? "";
-  if (!digits) return new NextResponse(null, { status: 404 });
+  const handle = organizer.telegram ?? "";
+  if (!/^[A-Za-z][A-Za-z0-9_]{4,31}$/.test(handle)) {
+    return new NextResponse(null, { status: 404 });
+  }
 
   /*
-   * `no-store`: a cached redirect is a cached phone number sitting in a CDN or
-   * a browser's disk cache for a game whose organizer may since have changed.
+   * `no-store`: a cached redirect is a cached contact detail sitting in a CDN
+   * or a browser's disk cache for a game whose organizer may since have
+   * changed.
    */
-  return NextResponse.redirect(`https://t.me/+${digits}`, {
+  return NextResponse.redirect(`https://t.me/${handle}`, {
     status: 302,
     headers: { "cache-control": "no-store" },
   });

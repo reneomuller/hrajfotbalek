@@ -485,6 +485,13 @@ export interface Database {
           game_id: string;
           organizer_name: string;
           organizer_phone: string | null;
+          /*
+           * OPTIONAL UNTIL `20260826200000` LANDS (round 19, item 2), for the
+           * reason `games.language` is: declaring it required would let a read
+           * type-check while being `undefined` on production. The `?` comes off
+           * when `npm run db:types` regenerates this after the apply.
+           */
+          organizer_telegram?: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -726,6 +733,23 @@ export interface Database {
       /* Round 18 item 2 — present only with `20260826100000_game_language`. */
       set_game_language: {
         Args: { p_game_id: string; p_language: string };
+        Returns: undefined;
+      };
+      /* Round 19 item 2 — present only with `20260826200000`. */
+      game_organizer_telegram: { Args: { p_game_id: string }; Returns: string | null };
+      /*
+       * Round 19 item 2. The four-argument form arrives with `20260826200000`,
+       * which DROPS the three-argument one — two overloads differing only by a
+       * defaulted argument would make the internal call from
+       * `admin_create_game_v2` ambiguous.
+       */
+      set_game_organizer: {
+        Args: {
+          p_game_id: string;
+          p_organizer_name: string;
+          p_organizer_phone: string | null;
+          p_organizer_telegram: string | null;
+        };
         Returns: undefined;
       };
       dismiss_all_notifications: { Args: Record<string, never>; Returns: number };

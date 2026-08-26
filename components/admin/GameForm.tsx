@@ -59,6 +59,7 @@ export function GameForm({
   organizer,
   defaultOrganizerName,
   canSetLanguage = false,
+  canSetTelegram = false,
 }: {
   action: (state: AdminActionState, formData: FormData) => Promise<AdminActionState>;
   venues: VenueRow[];
@@ -95,7 +96,7 @@ export function GameForm({
    * client, because `game_organizer_contacts` grants nothing to a session —
    * which is the whole point of the table (§5.1).
    */
-  organizer?: { organizer_name: string; organizer_phone: string | null } | null;
+  organizer?: { organizer_name: string; organizer_phone: string | null; organizer_telegram?: string | null } | null;
   /**
    * The creating admin's nickname (REQ-GAME-001). A default, not a lock: the
    * person filling in the form is usually but not always the person running
@@ -104,6 +105,8 @@ export function GameForm({
   defaultOrganizerName?: string;
   /** Whether `games.language` exists yet (round 18, item 2). */
   canSetLanguage?: boolean;
+  /** Whether `organizer_telegram` exists yet (round 19, item 2). */
+  canSetTelegram?: boolean;
   /*
    * ~~`initialVenueChoice`, which pre-selected "new" for the dashboard's
    * `+ Add venue`.~~ REMOVED (round 14, item 2): there is no "new" option any
@@ -142,6 +145,9 @@ export function GameForm({
   // Round 18 item 2 — resolved through `gameLanguageOf` so a pre-migration row
   // (no such property) reads as the column default rather than as undefined.
   const [language, setLanguage] = useState<GameLanguage>(gameLanguageOf(game?.language));
+  const [organizerTelegram, setOrganizerTelegram] = useState(
+    organizer?.organizer_telegram ?? "",
+  );
   const [notes, setNotes] = useState(game?.notes ?? "");
 
   const [organizerName, setOrganizerName] = useState(
@@ -494,6 +500,39 @@ export function GameForm({
           <p className={HINT}>{strings.admin.organizerPhoneHint}</p>
           {errors.organizerPhone && <p className={ERROR}>{errors.organizerPhone}</p>}
         </div>
+
+      {/*
+        TELEGRAM USERNAME (round 19, item 2), beneath the phone.
+
+        GATED ON THE MIGRATION. `organizer_telegram` arrives with
+        `20260826200000` and this form ships first — without the column a
+        submission carries a handle the RPC would drop, and a field whose value
+        is silently discarded is worse than no field.
+
+        THE HINT SAYS WHAT IT DOES, because the consequence is not guessable
+        from the label: setting it is what turns a Ukrainian/Russian game's
+        contact button from WhatsApp into Telegram.
+      */}
+      {canSetTelegram && (
+        <div>
+          <label className={LABEL} htmlFor="organizerTelegram">
+            {strings.admin.organizerTelegramLabel}
+          </label>
+          <input
+            id="organizerTelegram"
+            name="organizerTelegram"
+            className={FIELD}
+            autoComplete="off"
+            placeholder="@oliver_hf"
+            value={organizerTelegram}
+            onChange={(event) => setOrganizerTelegram(event.target.value)}
+          />
+          <p className={HINT}>{strings.admin.organizerTelegramHint}</p>
+          {errors.organizerTelegram && (
+            <p className={ERROR}>{errors.organizerTelegram}</p>
+          )}
+        </div>
+      )}
       </fieldset>
 
       {/* --- notes -------------------------------------------------------------- */}

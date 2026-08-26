@@ -403,6 +403,7 @@ export default async function GameDetailPage({ params, searchParams }: GamePageP
         <OrganizerCard
           name={organizer.name}
           hasPhone={Boolean(organizer.phone)}
+          hasTelegram={Boolean(organizer.telegram)}
           gameId={game.id}
           /* Round 18 item 8 — which app the button offers follows the game. */
           language={gameLanguageOf(game.language)}

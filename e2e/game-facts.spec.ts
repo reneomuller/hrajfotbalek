@@ -72,10 +72,23 @@ test("a four-way, 120-minute game says so on the list and on the detail", async 
       "the card is showing a format that is not this game's",
     ).toHaveText(FORMAT);
 
+    /*
+     * THE CARD DOES NOT SHOW A DURATION AT ALL (round 19, item 4), and the
+     * assertion inverts rather than moving.
+     *
+     * Round 18 put it here because the prop was threaded, typed and drawn in
+     * the card's own ASCII sketch with nothing rendering it — a real defect,
+     * and "so render it" was the wrong conclusion. A grey "60 min" is the
+     * third number on a row that already carries a kick-off time and a spots
+     * figure, and the one nobody scans for.
+     *
+     * IT IS NOT LOST, which is why the detail is asserted below in the same
+     * test: one game, both surfaces, one place the fact belongs.
+     */
     await expect(
       card.getByTestId("card-duration"),
-      "the card is not showing this game's duration",
-    ).toContainText(String(DURATION));
+      "the grey duration line is back on the game box",
+    ).toHaveCount(0);
 
     // --- the detail ---------------------------------------------------------
     await page.goto(`/game/${game.id}`, { waitUntil: "networkidle" });
@@ -98,16 +111,22 @@ test("a four-way, 120-minute game says so on the list and on the detail", async 
       format: (await info.getByTestId("game-format").innerText()).trim(),
       duration: (await info.getByTestId("game-duration").innerText()).trim(),
     };
+    expect(onDetail.duration, "the detail's duration is missing").toContain(String(DURATION));
 
     await page.goto("/games", { waitUntil: "networkidle" });
-    const onCard = {
-      format: (await card.getByTestId("game-format").innerText()).trim(),
-      duration: (await card.getByTestId("card-duration").innerText()).trim(),
-    };
+    const onCardFormat = (await card.getByTestId("game-format").innerText()).trim();
 
-    expect(onCard.format, "list and detail disagree about the format").toBe(onDetail.format);
-    expect(onCard.duration, "the card's duration is missing").toContain(String(DURATION));
-    expect(onDetail.duration, "the detail's duration is missing").toContain(String(DURATION));
+    expect(onCardFormat, "list and detail disagree about the format").toBe(onDetail.format);
+
+    /*
+     * AND THE MINUTES ARE NOWHERE IN THE BOX. Checked against the rendered
+     * TEXT, not just the testid, because "120" could come back as a bare
+     * number in some other element and still be the thing item 4 removed.
+     * `120` is also this game's capacity-free figure, so the assertion is on
+     * the minute unit rather than the digits alone.
+     */
+    const boxText = await card.innerText();
+    expect(boxText, "a duration is back on the game box").not.toMatch(/\d+\s*min/i);
   } finally {
     await destroyScratchGame(game.id);
   }
@@ -210,7 +229,14 @@ test("a Ukrainian/Russian game shows the filled pill and offers Telegram", async
     await page.goto(`/game/${game.id}`, { waitUntil: "networkidle" });
 
     const pill = page.getByTestId("game-info-card").getByTestId("language-pill");
-    await expect(pill).toHaveAttribute("data-variant", "filled");
+    await expect(pill).toHaveAttribute("data-language", "uk-ru");
+
+    /*
+     * ONE CONSTRUCTION, BOTH SURFACES (round 19, item 1). Round 18 shipped two
+     * — a bordered chip on the card and a filled box on the detail — at
+     * different sizes, the second distorted. There is no `variant` any more,
+     * and the card's flags are measured against these in `round18-surfaces`.
+     */
 
     /*
      * HALF AND HALF, MEASURED. "A filled pill split half/half" is a geometric
@@ -242,10 +268,17 @@ test("a Ukrainian/Russian game shows the filled pill and offers Telegram", async
     expect(Math.abs(halves.h - badgeHeight)).toBeLessThan(4);
 
     /*
-     * AND THE ORGANIZER BUTTON FOLLOWS THE GAME. The href is OUR route, never
-     * a `t.me` link in the markup — the number must not be in page source, and
-     * asserting the href is what keeps that true.
+     * AND THE ORGANIZER BUTTON FOLLOWS THE GAME — but only when there is a
+     * HANDLE (round 19, item 2). A Ukrainian/Russian game whose organizer has
+     * none shows WhatsApp instead, because the alternative is a button that
+     * lands on Telegram's "user not found" page with no route back.
      */
+    await admin
+      .from("game_organizer_contacts")
+      .update({ organizer_telegram: "hrajfotbal_test" })
+      .eq("game_id", game.id);
+    await page.reload({ waitUntil: "networkidle" });
+
     const telegram = page.getByTestId("organizer-telegram");
     if ((await telegram.count()) > 0) {
       await expect(telegram).toHaveAttribute("href", `/api/tg/${game.id}`);

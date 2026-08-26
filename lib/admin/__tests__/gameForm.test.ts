@@ -274,6 +274,8 @@ describe("parseGameForm", () => {
         subsPerTeam: "3",
         pitchName: "Pitch 2",
         language: "uk-ru",
+        // Round 19 item 2 — pasted the way an admin actually pastes it.
+        organizerTelegram: "https://t.me/@jindra_hf",
       }),
     );
 
@@ -293,6 +295,15 @@ describe("parseGameForm", () => {
       // them it can never be null: `gameLanguageOf` resolves an absent value
       // to the column's own default rather than leaving a third state.
       language: "uk-ru",
+      /*
+       * Round 19 item 2. NORMALISED, not carried untouched — which is the one
+       * exception this test's name allows for, and it is deliberate: an admin
+       * pastes `@name`, `t.me/name` or a full URL, and the column holds one
+       * canonical form. The database normalises too; this is what turns a
+       * malformed paste into a labelled inline error instead of a raw
+       * exception.
+       */
+      organizerTelegram: "jindra_hf",
       notes: "Gate code 4417, park on the north side.",
       organizerName: "Jindra",
       organizerPhone: "+420 601 002 003",
