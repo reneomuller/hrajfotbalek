@@ -174,7 +174,6 @@ export async function GameCard({
         scrim element covers the photo exactly. Values derived from the frames.
       */}
       <span aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden rounded-card">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
         {/*
           THE CROP IS BOTTOM-ANCHORED, NOT CENTRED (round 7, item 3).
 
@@ -195,6 +194,7 @@ export async function GameCard({
           file is a second thing to keep in step; this is the same image read
           differently by one surface.
         */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={photo}
           alt=""

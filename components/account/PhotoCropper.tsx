@@ -76,9 +76,27 @@ export function PhotoCropper({
    * AN OBJECT URL, REVOKED ON THE WAY OUT. A data URL would base64 a phone
    * photo into memory twice over; this hands the decoder the blob it already
    * has. Leaking it would pin the whole file for the life of the tab.
+   *
+   * IT STAYS AN EFFECT, AND THE LINT RULE IS SUPPRESSED WITH EVIDENCE
+   * (round 21). `react-hooks/set-state-in-effect` calls this a cascading
+   * render and it is right in general — the first paint has no image. The
+   * obvious rewrite, `useMemo(() => URL.createObjectURL(file), [file])` plus a
+   * revoke on cleanup, **BREAKS THE CROPPER**, and four specs caught it:
+   * `photo-cropper` ×2 and `profile-cover` ×2, all timing out waiting for an
+   * image that never loads.
+   *
+   * WHY: StrictMode mounts, unmounts and remounts. The simulated unmount runs
+   * the cleanup, which REVOKES the URL, and the remount re-uses the memo's
+   * cached value — a dead blob URL that no decoder will ever resolve. The
+   * lifetime of this resource has to match the mount, and only an effect knows
+   * when that is.
+   *
+   * The flash the rule warns about is one frame of an empty frame in a dialog
+   * the player just opened. A dialog that never shows the photograph is worse.
    */
   useEffect(() => {
     const next = URL.createObjectURL(file);
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- see above; the memo rewrite fails four specs
     setUrl(next);
     return () => URL.revokeObjectURL(next);
   }, [file]);
@@ -113,21 +131,32 @@ export function PhotoCropper({
     [frame, displayed.w, displayed.h],
   );
 
-  // Centre whenever the geometry changes — a new image, or a zoom that made
-  // the current offset illegal.
-  useEffect(() => {
-    if (!frame || !natural) return;
-    setOffset((current) => {
-      const centred =
-        current.x === 0 && current.y === 0
-          ? { x: (frame.w - natural.w * baseScale * zoom) / 2, y: (frame.h - natural.h * baseScale * zoom) / 2 }
-          : current;
-      return {
-        x: Math.min(0, Math.max(frame.w - natural.w * baseScale * zoom, centred.x)),
-        y: Math.min(0, Math.max(frame.h - natural.h * baseScale * zoom, centred.y)),
-      };
+  /*
+   * Centre whenever the geometry changes — a new image, or a zoom that made
+   * the current offset illegal.
+   *
+   * ADJUSTED DURING RENDER, NOT IN AN EFFECT (round 21). This is React's own
+   * pattern for state that must react to changed props: compare the geometry
+   * against the one this offset was computed for, and correct it before
+   * painting. As an effect it painted the ILLEGAL position first and the
+   * corrected one a frame later, which is visible as a jump while zooming.
+   * `setState` during render of the same component is legal and re-renders
+   * before anything reaches the screen.
+   */
+  const geometry =
+    frame && natural ? `${frame.w}x${frame.h}|${natural.w}x${natural.h}|${scale}` : null;
+  const [offsetGeometry, setOffsetGeometry] = useState<string | null>(null);
+  if (geometry && geometry !== offsetGeometry && frame && natural) {
+    setOffsetGeometry(geometry);
+    const centred =
+      offset.x === 0 && offset.y === 0
+        ? { x: (frame.w - displayed.w) / 2, y: (frame.h - displayed.h) / 2 }
+        : offset;
+    setOffset({
+      x: Math.min(0, Math.max(frame.w - displayed.w, centred.x)),
+      y: Math.min(0, Math.max(frame.h - displayed.h, centred.y)),
     });
-  }, [frame, natural, baseScale, zoom]);
+  }
 
   function onPointerDown(event: React.PointerEvent<HTMLDivElement>) {
     event.currentTarget.setPointerCapture(event.pointerId);
