@@ -115,7 +115,21 @@ export async function InfoCard({
         Grid rather than the default flow so the values line up in a column —
         an unaligned definition list reads as a paragraph.
       */}
-      <dl className="m-0 grid grid-cols-[84px_1fr] gap-x-4 gap-y-3">
+      {/*
+        `auto` WITH A FLOOR, NOT A FIXED 84px (audit F3).
+
+        The term column was `84px` and Russian does not fit in it:
+        "ДЛИТЕЛЬНОСТЬ" measures 117px against a clientWidth of 84 with
+        `overflow: visible`, so it did not clip — it DREW OVER the definition
+        beside it. On the live Russian detail the label's last characters sat
+        on top of "60 минут".
+
+        `minmax(84px, auto)` keeps the English and Czech columns exactly where
+        they were — both fit inside 84 — and lets the one language that needs
+        more take it. A fixed column that only fits two of three languages is
+        not a column, it is a bet.
+      */}
+      <dl className="m-0 grid grid-cols-[minmax(84px,auto)_1fr] gap-x-4 gap-y-3">
         <dt className={FACT_LABEL}>{t.games.infoWhen}</dt>
         <dd className="m-0 text-[15px] text-white">
           {formatGameDate(game.starts_at)}
