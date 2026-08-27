@@ -203,7 +203,7 @@ async function Avatar({
   return (
     <span
       data-testid="roster-avatar"
-      className={`flex h-[34px] w-[34px] shrink-0 items-center justify-center overflow-hidden rounded-full bg-surface-avatar text-[12px] font-bold ${
+      className={`flex h-[34px] w-[34px] shrink-0 items-center justify-center overflow-hidden rounded-pill bg-surface-avatar text-[12px] font-bold ${
         !seat.isGuest && index % 3 === 0 ? "text-volt" : seat.isGuest ? "text-muted" : "text-bone"
       }`}
     >

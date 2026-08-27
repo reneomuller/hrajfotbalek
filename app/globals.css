@@ -139,6 +139,21 @@
   }
 }
 
+/*
+ * ONE SPELLING OF "PILL" (audit F12).
+ *
+ * The product rendered TWO fully-round radii: `999px` on 511 elements
+ * (`rounded-pill`, the token) and `9999px` on 196 (`rounded-full`, Tailwind's
+ * default). They are visually identical for anything narrower than about
+ * 2000px, so nothing looked wrong — which is exactly why it spread.
+ *
+ * It matters for the same reason `text-[13px]` beside `text-small` matters: a
+ * token that half the codebase bypasses is a token nobody can change. Moving
+ * the pill radius today would move 511 elements and leave 196 behind.
+ *
+ * All 23 `rounded-full` uses are now `rounded-pill`. No pixel moves.
+ */
+
 @layer components {
   /**
    * `.lifted` — A HAIRLINE OUTLINE ON A LIFTED SURFACE, WRITTEN ONCE.

@@ -73,7 +73,7 @@ export default async function GameDetailLoading() {
           <Block className="h-[17px] w-[104px]" />
           {Array.from({ length: 3 }, (_, i) => (
             <div key={i} className="mt-3 flex items-center gap-3">
-              <Block className="h-[34px] w-[34px] rounded-full" />
+              <Block className="h-[34px] w-[34px] rounded-pill" />
               <Block className="h-[15px] w-1/2" />
             </div>
           ))}

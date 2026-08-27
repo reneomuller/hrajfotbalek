@@ -141,7 +141,7 @@ export async function Header({
             allow-list. 96px of source for a 38px box is 2.5x, which is what
             keeps it crisp on a phone.
 
-            `rounded-full` CROPS THE CORNERS. The master has no alpha — the
+            `rounded-pill` CROPS THE CORNERS. The master has no alpha — the
             roundel sits on baked-in black — and while black on `ink/[.86]` is
             nearly invisible, "nearly" is a square edge that catches the light
             on an OLED screen at exactly the angle a phone is held.
@@ -158,7 +158,7 @@ export async function Header({
             width={38}
             height={38}
             data-testid="brand-mark"
-            className="h-11 w-11 shrink-0 rounded-full"
+            className="h-11 w-11 shrink-0 rounded-pill"
           />
           {/*
             ~~THE WORDMARK ECHOES THE HERO, scaled for the header.~~
@@ -274,7 +274,7 @@ export async function Header({
                 with it and the header row's own height is unchanged — the
                 controls beside it are already 44.
               */
-              className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-full border-[1.5px] border-volt bg-surface-avatar text-small font-bold text-volt no-underline"
+              className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-pill border-[1.5px] border-volt bg-surface-avatar text-small font-bold text-volt no-underline"
             >
               {photo ? (
                 /* A plain <img>, like the roster avatars: a 34px circle from a

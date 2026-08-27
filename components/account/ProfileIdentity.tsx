@@ -131,7 +131,7 @@ export function ProfileIdentity({
         <PhotoUpload hasPhoto={Boolean(photoPath)} photoVersion={photoVersion}>
           <span
             data-testid="account-avatar"
-            className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-volt bg-surface text-2xl font-extrabold text-volt"
+            className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-pill border-2 border-volt bg-surface text-2xl font-extrabold text-volt"
           >
             {photoUrl ? (
               /* A public-bucket URL at 80px. `next/image` would proxy it

@@ -134,7 +134,7 @@ export async function AvatarRow({
           title: isYou ? `${label} — ${t.games.waitlistYou}` : label,
           "data-guest": player.isGuest ? "true" : undefined,
           "data-testid": isYou ? "avatar-you" : "avatar",
-          className: `-ml-2 flex items-center justify-center overflow-hidden rounded-full border-2 font-bold ${dim} ${
+          className: `-ml-2 flex items-center justify-center overflow-hidden rounded-pill border-2 font-bold ${dim} ${
               isYou
                 ? "border-volt bg-surface-avatar text-volt"
                 : `border-surface-raised bg-surface-avatar ${
@@ -193,7 +193,7 @@ export async function AvatarRow({
 
       {overflow > 0 && (
         <span
-          className={`-ml-2 flex items-center justify-center rounded-full border-2 border-surface-raised bg-surface-avatar text-muted ${dim}`}
+          className={`-ml-2 flex items-center justify-center rounded-pill border-2 border-surface-raised bg-surface-avatar text-muted ${dim}`}
         >
           +{overflow}
         </span>

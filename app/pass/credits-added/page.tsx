@@ -60,7 +60,7 @@ export default async function CreditsAddedPage() {
         <div className="flex items-center gap-3 rounded-card border-2 border-volt bg-volt/[.08] px-5 py-4">
           <span
             aria-hidden="true"
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-volt text-[20px] font-bold leading-none text-ink"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-pill bg-volt text-[20px] font-bold leading-none text-ink"
           >
             ✓
           </span>
