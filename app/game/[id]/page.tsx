@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import { notFound } from "next/navigation";
 import { AmenityGrid } from "@/components/game/AmenityGrid";
 import { AvailabilityCard } from "@/components/game/AvailabilityCard";
 import { GameHero } from "@/components/game/GameHero";
@@ -60,7 +60,22 @@ export async function generateMetadata({ params }: GamePageProps): Promise<Metad
   const result = await getGameById(id);
 
   if (!result) {
-    return { title: t.games.notFound, description: t.meta.description };
+    /*
+     * `notFound()` HERE, AND HERE SPECIFICALLY (audit F10).
+     *
+     * The page body calls it too, and that is not enough on its own: this
+     * route has a `loading.tsx`, so Next streams a shell as soon as the page
+     * begins rendering — and the HTTP status is committed with the first byte.
+     * A `notFound()` thrown inside the body arrives after the response has
+     * started and cannot change a 200 into a 404. Measured: the body-only
+     * version still answered 200, with "Loading…" in the markup.
+     *
+     * `generateMetadata` is AWAITED BEFORE the stream opens, so throwing from
+     * here sets the status properly. The call in the body stays as the guard
+     * for anything that reaches it another way.
+     */
+    void t;
+    notFound();
   }
 
   const { game } = result;
@@ -88,19 +103,25 @@ export default async function GameDetailPage({ params, searchParams }: GamePageP
   const result = await getGameById(id);
 
   if (!result) {
-    return (
-      <main className="relative z-10 mx-auto w-full max-w-shell px-gutter pb-16 pt-24">
-        <p className="text-small tracking-[1px] text-faint">
-          {t.games.notFound}
-        </p>
-        <Link
-          href="/games"
-          className="mt-6 inline-block text-[11px] uppercase tracking-eyebrow text-volt no-underline"
-        >
-          {t.games.backToGames}
-        </Link>
-      </main>
-    );
+    /*
+     * `notFound()`, NOT A RENDERED APOLOGY (audit F10).
+     *
+     * This branch used to RETURN a page saying "that game does not exist" —
+     * with an HTTP **200**. Measured: `GET /game/00000000-0000-4000-8000-…`
+     * answered 200 with that body, while `/player/<nobody>` and `/nope` both
+     * correctly answered 404. This route was the outlier.
+     *
+     * A 200 on a fabricated URL is a page as far as anything mechanical is
+     * concerned: a crawler indexes it, a link checker passes it, and a
+     * monitoring probe cannot tell a dead game from a live one.
+     *
+     * `notFound()` renders `app/not-found.tsx`, which already says this
+     * better — "Nothing here… or a game that has already been and gone" with
+     * a way back to the board — so the hand-rolled copy goes with the status.
+     * One not-found screen, in three languages, for every kind of missing
+     * thing.
+     */
+    notFound();
   }
 
   const { game, bookedCount, spotsLeft, hasStarted, inProgress, isCancelled } = result;
