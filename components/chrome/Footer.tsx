@@ -33,8 +33,23 @@ export async function Footer() {
   const contact = await getContactDetails(t.siteFooter.contactEmail);
   const { siteFooter } = t;
 
+  /*
+   * `min-h-11` AND `items-center`, NOT JUST TYPE (audit F17/F6).
+   *
+   * These measured 18.2px tall — the smallest interactive targets in the
+   * product, on all thirty-three pages. The 44px floor is this product's own
+   * (round 14, item 5: "below the 44px tap target floor everything else in
+   * this product respects"), and the footer was the place it had never been
+   * applied.
+   *
+   * NOTHING MOVES VISUALLY. The links keep their size, colour and weight; the
+   * hit area grows around them, and the row was already `items-center` inside
+   * `py-5`, so the taller box sits inside padding that already existed. The
+   * gap goes 4 to 5 only because two 44px targets touching is a different
+   * mis-tap.
+   */
   const linkClass =
-    "text-small text-faint no-underline transition hover:text-volt-dim";
+    "flex min-h-11 items-center text-small text-faint no-underline transition hover:text-volt-dim";
 
   return (
     <footer
@@ -64,7 +79,7 @@ export async function Footer() {
       */
       className="relative z-[2] mx-auto flex w-full max-w-shell flex-wrap items-center justify-between gap-2 border-t border-hairline px-gutter py-5"
     >
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-5">
         <Link href="/privacy" className={linkClass}>
           {siteFooter.privacy}
         </Link>
