@@ -1,0 +1,53 @@
+{
+ "adminNav": {
+  "overflowX": "auto",
+  "scrollWidth": 572,
+  "clientWidth": 390,
+  "scrollable": true,
+  "lastChipRight": 550,
+  "viewport": 390,
+  "tag": "NAV",
+  "cls": "-mx-gutter flex gap-2 overflow-x-auto px-gutter pb-1 [scrollbar-width:none] md:mx-0 md:flex-wrap md:px-0 [&::-webkit-scr"
+ },
+ "adminNavReach": {
+  "right": 368,
+  "reachable": true
+ },
+ "ruDuration": [
+  {
+   "text": "Когда",
+   "clientW": 84,
+   "scrollW": 84,
+   "overflow": "visible",
+   "wrap": "normal",
+   "ws": "normal",
+   "clipped": false,
+   "h": 43
+  },
+  {
+   "text": "Язык",
+   "clientW": 84,
+   "scrollW": 84,
+   "overflow": "visible",
+   "wrap": "normal",
+   "ws": "normal",
+   "clipped": false,
+   "h": 34
+  },
+  {
+   "text": "Длительность",
+   "clientW": 84,
+   "scrollW": 117,
+   "overflow": "visible",
+   "wrap": "normal",
+   "ws": "normal",
+   "clipped": true,
+   "h": 23
+  }
+ ],
+ "dayPicker": {
+  "overflowX": "auto",
+  "sw": 612,
+  "cw": 390
+ }
+}

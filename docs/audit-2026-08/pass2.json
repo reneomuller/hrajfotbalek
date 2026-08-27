@@ -1,0 +1,8455 @@
+{
+ "home-en": {
+  "headings": [
+   {
+    "tag": "H1",
+    "size": 44,
+    "weight": "400",
+    "transform": "uppercase",
+    "color": "rgb(255, 255, 255)",
+    "family": "Anton",
+    "tracking": "-1.5px",
+    "text": "Play football.Anytime. Anywh"
+   },
+   {
+    "tag": "H2",
+    "size": 27.3,
+    "weight": "400",
+    "transform": "uppercase",
+    "color": "rgb(255, 255, 255)",
+    "family": "Anton",
+    "tracking": "0.5px",
+    "text": "Upcoming matches"
+   },
+   {
+    "tag": "H2",
+    "size": 17,
+    "weight": "600",
+    "transform": "none",
+    "color": "rgb(255, 255, 255)",
+    "family": "Onest",
+    "tracking": "normal",
+    "text": "Tomorrow · Fri 28 Aug"
+   },
+   {
+    "tag": "H3",
+    "size": 24,
+    "weight": "400",
+    "transform": "uppercase",
+    "color": "rgb(255, 255, 255)",
+    "family": "Anton",
+    "tracking": "normal",
+    "text": "Join our community"
+   },
+   {
+    "tag": "H3",
+    "size": 11,
+    "weight": "600",
+    "transform": "uppercase",
+    "color": "rgb(200, 255, 0)",
+    "family": "Onest",
+    "tracking": "3px",
+    "text": "Player of the month"
+   },
+   {
+    "tag": "H3",
+    "size": 24,
+    "weight": "400",
+    "transform": "uppercase",
+    "color": "rgb(255, 255, 255)",
+    "family": "Anton",
+    "tracking": "normal",
+    "text": "FAQ"
+   }
+  ],
+  "overflow": [],
+  "sections": [],
+  "primary": [
+   {
+    "testid": "nav-login",
+    "text": "Sign in",
+    "h": 37.75,
+    "radius": "14px",
+    "size": 15,
+    "weight": "700",
+    "transform": "none"
+   },
+   {
+    "testid": null,
+    "text": "Find a game →",
+    "h": 53.8,
+    "radius": "999px",
+    "size": 17,
+    "weight": "800",
+    "transform": "none"
+   },
+   {
+    "testid": "next-matches-all",
+    "text": "All games →",
+    "h": 44,
+    "radius": "14px",
+    "size": 17,
+    "weight": "700",
+    "transform": "none"
+   },
+   {
+    "testid": "tab-home",
+    "text": "Home",
+    "h": 56.19,
+    "radius": "18px",
+    "size": 16,
+    "weight": "400",
+    "transform": "none"
+   }
+  ],
+  "surfaces": [
+   {
+    "testid": "nav-login",
+    "radius": 14,
+    "bg": "rgb(200, 255, 0)",
+    "border": "none",
+    "pad": "8px 14px"
+   },
+   {
+    "testid": "game-row",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "12px 16px"
+   },
+   {
+    "testid": "game-row",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "12px 16px"
+   },
+   {
+    "testid": "game-row",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "12px 16px"
+   },
+   {
+    "testid": "next-matches-all",
+    "radius": 14,
+    "bg": "rgb(200, 255, 0)",
+    "border": "none",
+    "pad": "0px 24px"
+   },
+   {
+    "testid": "community-panel",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "22px"
+   },
+   {
+    "testid": "community-whatsapp",
+    "radius": 14,
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "16px 8px"
+   },
+   {
+    "testid": "community-instagram",
+    "radius": 14,
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "16px 8px"
+   },
+   {
+    "testid": "community-telegram",
+    "radius": 14,
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "16px 8px"
+   },
+   {
+    "testid": "potm-panel",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "22px"
+   },
+   {
+    "testid": "faq-panel",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "22px"
+   },
+   {
+    "testid": "tab-home",
+    "radius": 18,
+    "bg": "rgb(200, 255, 0)",
+    "border": "none",
+    "pad": "8px 0px"
+   },
+   {
+    "testid": "tab-games",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "none",
+    "pad": "8px 0px"
+   },
+   {
+    "testid": "tab-account",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "none",
+    "pad": "8px 0px"
+   }
+  ]
+ },
+ "home-cs": {
+  "headings": [
+   {
+    "tag": "H1",
+    "size": 44,
+    "weight": "400",
+    "transform": "uppercase",
+    "color": "rgb(255, 255, 255)",
+    "family": "Anton",
+    "tracking": "-1.5px",
+    "text": "Hraj fotbal.Kdykoli. Kdekoli"
+   },
+   {
+    "tag": "H2",
+    "size": 27.3,
+    "weight": "400",
+    "transform": "uppercase",
+    "color": "rgb(255, 255, 255)",
+    "family": "Anton",
+    "tracking": "0.5px",
+    "text": "Nadcházející zápasy"
+   },
+   {
+    "tag": "H2",
+    "size": 17,
+    "weight": "600",
+    "transform": "none",
+    "color": "rgb(255, 255, 255)",
+    "family": "Onest",
+    "tracking": "normal",
+    "text": "Zítra · Pá 28. 8."
+   },
+   {
+    "tag": "H3",
+    "size": 24,
+    "weight": "400",
+    "transform": "uppercase",
+    "color": "rgb(255, 255, 255)",
+    "family": "Anton",
+    "tracking": "normal",
+    "text": "Přidej se k nám"
+   },
+   {
+    "tag": "H3",
+    "size": 11,
+    "weight": "600",
+    "transform": "uppercase",
+    "color": "rgb(200, 255, 0)",
+    "family": "Onest",
+    "tracking": "3px",
+    "text": "Hráč měsíce"
+   },
+   {
+    "tag": "H3",
+    "size": 24,
+    "weight": "400",
+    "transform": "uppercase",
+    "color": "rgb(255, 255, 255)",
+    "family": "Anton",
+    "tracking": "normal",
+    "text": "Otázky"
+   }
+  ],
+  "overflow": [],
+  "sections": [],
+  "primary": [
+   {
+    "testid": "nav-login",
+    "text": "Přihlásit se",
+    "h": 37.75,
+    "radius": "14px",
+    "size": 15,
+    "weight": "700",
+    "transform": "none"
+   },
+   {
+    "testid": null,
+    "text": "Najít zápas →",
+    "h": 53.8,
+    "radius": "999px",
+    "size": 17,
+    "weight": "800",
+    "transform": "none"
+   },
+   {
+    "testid": "next-matches-all",
+    "text": "Všechny zápasy →",
+    "h": 44,
+    "radius": "14px",
+    "size": 17,
+    "weight": "700",
+    "transform": "none"
+   },
+   {
+    "testid": "tab-home",
+    "text": "Domů",
+    "h": 56.19,
+    "radius": "18px",
+    "size": 16,
+    "weight": "400",
+    "transform": "none"
+   }
+  ],
+  "surfaces": [
+   {
+    "testid": "nav-login",
+    "radius": 14,
+    "bg": "rgb(200, 255, 0)",
+    "border": "none",
+    "pad": "8px 14px"
+   },
+   {
+    "testid": "game-row",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "12px 16px"
+   },
+   {
+    "testid": "game-row",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "12px 16px"
+   },
+   {
+    "testid": "game-row",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "12px 16px"
+   },
+   {
+    "testid": "next-matches-all",
+    "radius": 14,
+    "bg": "rgb(200, 255, 0)",
+    "border": "none",
+    "pad": "0px 24px"
+   },
+   {
+    "testid": "community-panel",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "22px"
+   },
+   {
+    "testid": "community-whatsapp",
+    "radius": 14,
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "16px 8px"
+   },
+   {
+    "testid": "community-instagram",
+    "radius": 14,
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "16px 8px"
+   },
+   {
+    "testid": "community-telegram",
+    "radius": 14,
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "16px 8px"
+   },
+   {
+    "testid": "potm-panel",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "22px"
+   },
+   {
+    "testid": "faq-panel",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "22px"
+   },
+   {
+    "testid": "tab-home",
+    "radius": 18,
+    "bg": "rgb(200, 255, 0)",
+    "border": "none",
+    "pad": "8px 0px"
+   },
+   {
+    "testid": "tab-games",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "none",
+    "pad": "8px 0px"
+   },
+   {
+    "testid": "tab-account",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "none",
+    "pad": "8px 0px"
+   }
+  ]
+ },
+ "home-ru": {
+  "headings": [
+   {
+    "tag": "H1",
+    "size": 44,
+    "weight": "400",
+    "transform": "uppercase",
+    "color": "rgb(255, 255, 255)",
+    "family": "Anton",
+    "tracking": "-1.5px",
+    "text": "Играй в футбол.Когда угодно."
+   },
+   {
+    "tag": "H2",
+    "size": 27.3,
+    "weight": "400",
+    "transform": "uppercase",
+    "color": "rgb(255, 255, 255)",
+    "family": "Anton",
+    "tracking": "0.5px",
+    "text": "Предстоящие матчи"
+   },
+   {
+    "tag": "H2",
+    "size": 17,
+    "weight": "600",
+    "transform": "none",
+    "color": "rgb(255, 255, 255)",
+    "family": "Onest",
+    "tracking": "normal",
+    "text": "Завтра · Пт, 28 авг."
+   },
+   {
+    "tag": "H3",
+    "size": 24,
+    "weight": "400",
+    "transform": "uppercase",
+    "color": "rgb(255, 255, 255)",
+    "family": "Anton",
+    "tracking": "normal",
+    "text": "Присоединяйся к нам"
+   },
+   {
+    "tag": "H3",
+    "size": 11,
+    "weight": "600",
+    "transform": "uppercase",
+    "color": "rgb(200, 255, 0)",
+    "family": "Onest",
+    "tracking": "3px",
+    "text": "Игрок месяца"
+   },
+   {
+    "tag": "H3",
+    "size": 24,
+    "weight": "400",
+    "transform": "uppercase",
+    "color": "rgb(255, 255, 255)",
+    "family": "Anton",
+    "tracking": "normal",
+    "text": "Вопросы"
+   }
+  ],
+  "overflow": [],
+  "sections": [],
+  "primary": [
+   {
+    "testid": "nav-login",
+    "text": "Войти",
+    "h": 37.75,
+    "radius": "14px",
+    "size": 15,
+    "weight": "700",
+    "transform": "none"
+   },
+   {
+    "testid": null,
+    "text": "Найти матч →",
+    "h": 53.8,
+    "radius": "999px",
+    "size": 17,
+    "weight": "800",
+    "transform": "none"
+   },
+   {
+    "testid": "next-matches-all",
+    "text": "Все матчи →",
+    "h": 44,
+    "radius": "14px",
+    "size": 17,
+    "weight": "700",
+    "transform": "none"
+   },
+   {
+    "testid": "tab-home",
+    "text": "Главная",
+    "h": 56.19,
+    "radius": "18px",
+    "size": 16,
+    "weight": "400",
+    "transform": "none"
+   }
+  ],
+  "surfaces": [
+   {
+    "testid": "nav-login",
+    "radius": 14,
+    "bg": "rgb(200, 255, 0)",
+    "border": "none",
+    "pad": "8px 14px"
+   },
+   {
+    "testid": "game-row",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "12px 16px"
+   },
+   {
+    "testid": "game-row",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "12px 16px"
+   },
+   {
+    "testid": "game-row",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "12px 16px"
+   },
+   {
+    "testid": "next-matches-all",
+    "radius": 14,
+    "bg": "rgb(200, 255, 0)",
+    "border": "none",
+    "pad": "0px 24px"
+   },
+   {
+    "testid": "community-panel",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "22px"
+   },
+   {
+    "testid": "community-whatsapp",
+    "radius": 14,
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "16px 8px"
+   },
+   {
+    "testid": "community-instagram",
+    "radius": 14,
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "16px 8px"
+   },
+   {
+    "testid": "community-telegram",
+    "radius": 14,
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "16px 8px"
+   },
+   {
+    "testid": "potm-panel",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "22px"
+   },
+   {
+    "testid": "faq-panel",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "22px"
+   },
+   {
+    "testid": "tab-home",
+    "radius": 18,
+    "bg": "rgb(200, 255, 0)",
+    "border": "none",
+    "pad": "8px 0px"
+   },
+   {
+    "testid": "tab-games",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "none",
+    "pad": "8px 0px"
+   },
+   {
+    "testid": "tab-account",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "none",
+    "pad": "8px 0px"
+   }
+  ]
+ },
+ "games-en": {
+  "headings": [
+   {
+    "tag": "H2",
+    "size": 17,
+    "weight": "600",
+    "transform": "none",
+    "color": "rgb(255, 255, 255)",
+    "family": "Onest",
+    "tracking": "normal",
+    "text": "Tomorrow · Fri 28 Aug"
+   },
+   {
+    "tag": "H2",
+    "size": 17,
+    "weight": "600",
+    "transform": "none",
+    "color": "rgb(255, 255, 255)",
+    "family": "Onest",
+    "tracking": "normal",
+    "text": "Mon 31 Aug"
+   },
+   {
+    "tag": "H2",
+    "size": 17,
+    "weight": "600",
+    "transform": "none",
+    "color": "rgb(255, 255, 255)",
+    "family": "Onest",
+    "tracking": "normal",
+    "text": "Tue 1 Sept"
+   },
+   {
+    "tag": "H2",
+    "size": 17,
+    "weight": "600",
+    "transform": "none",
+    "color": "rgb(255, 255, 255)",
+    "family": "Onest",
+    "tracking": "normal",
+    "text": "Thu 3 Sept"
+   },
+   {
+    "tag": "H2",
+    "size": 17,
+    "weight": "600",
+    "transform": "none",
+    "color": "rgb(255, 255, 255)",
+    "family": "Onest",
+    "tracking": "normal",
+    "text": "Fri 4 Sept"
+   },
+   {
+    "tag": "H2",
+    "size": 17,
+    "weight": "600",
+    "transform": "none",
+    "color": "rgb(255, 255, 255)",
+    "family": "Onest",
+    "tracking": "normal",
+    "text": "Sun 6 Sept"
+   },
+   {
+    "tag": "H2",
+    "size": 17,
+    "weight": "600",
+    "transform": "none",
+    "color": "rgb(255, 255, 255)",
+    "family": "Onest",
+    "tracking": "normal",
+    "text": "Mon 7 Sept"
+   },
+   {
+    "tag": "H2",
+    "size": 17,
+    "weight": "600",
+    "transform": "none",
+    "color": "rgb(255, 255, 255)",
+    "family": "Onest",
+    "tracking": "normal",
+    "text": "Wed 9 Sept"
+   },
+   {
+    "tag": "H2",
+    "size": 17,
+    "weight": "600",
+    "transform": "none",
+    "color": "rgb(255, 255, 255)",
+    "family": "Onest",
+    "tracking": "normal",
+    "text": "Sat 19 Sept"
+   },
+   {
+    "tag": "H2",
+    "size": 17,
+    "weight": "600",
+    "transform": "none",
+    "color": "rgb(255, 255, 255)",
+    "family": "Onest",
+    "tracking": "normal",
+    "text": "Sun 20 Sept"
+   }
+  ],
+  "overflow": [
+   {
+    "testid": "day-tab",
+    "text": "MON31",
+    "clipped": false,
+    "spills": true,
+    "over": 8,
+    "ellipsis": false
+   },
+   {
+    "testid": "day-tab",
+    "text": "TUE1",
+    "clipped": false,
+    "spills": true,
+    "over": 72,
+    "ellipsis": false
+   },
+   {
+    "testid": "span",
+    "text": "TUE",
+    "clipped": false,
+    "spills": true,
+    "over": 53,
+    "ellipsis": false
+   },
+   {
+    "testid": "span",
+    "text": "1",
+    "clipped": false,
+    "spills": true,
+    "over": 48,
+    "ellipsis": false
+   },
+   {
+    "testid": "day-tab-dot",
+    "text": "",
+    "clipped": false,
+    "spills": true,
+    "over": 46,
+    "ellipsis": false
+   },
+   {
+    "testid": "day-tab",
+    "text": "WED2",
+    "clipped": false,
+    "spills": true,
+    "over": 136,
+    "ellipsis": false
+   },
+   {
+    "testid": "span",
+    "text": "WED",
+    "clipped": false,
+    "spills": true,
+    "over": 118,
+    "ellipsis": false
+   },
+   {
+    "testid": "span",
+    "text": "2",
+    "clipped": false,
+    "spills": true,
+    "over": 113,
+    "ellipsis": false
+   },
+   {
+    "testid": "day-tab-dot",
+    "text": "",
+    "clipped": false,
+    "spills": true,
+    "over": 110,
+    "ellipsis": false
+   },
+   {
+    "testid": "day-tab",
+    "text": "THU3",
+    "clipped": false,
+    "spills": true,
+    "over": 200,
+    "ellipsis": false
+   },
+   {
+    "testid": "span",
+    "text": "THU",
+    "clipped": false,
+    "spills": true,
+    "over": 181,
+    "ellipsis": false
+   },
+   {
+    "testid": "span",
+    "text": "3",
+    "clipped": false,
+    "spills": true,
+    "over": 178,
+    "ellipsis": false
+   },
+   {
+    "testid": "day-tab-dot",
+    "text": "",
+    "clipped": false,
+    "spills": true,
+    "over": 174,
+    "ellipsis": false
+   },
+   {
+    "testid": "card-venue",
+    "text": "<script>alert(1)</script> \"Praha 2",
+    "clipped": true,
+    "spills": false,
+    "over": 83,
+    "ellipsis": true
+   }
+  ],
+  "sections": [],
+  "primary": [
+   {
+    "testid": "nav-login",
+    "text": "Sign in",
+    "h": 37.75,
+    "radius": "14px",
+    "size": 15,
+    "weight": "700",
+    "transform": "none"
+   },
+   {
+    "testid": "day-tab-all",
+    "text": "All",
+    "h": 64,
+    "radius": "14px",
+    "size": 15,
+    "weight": "600",
+    "transform": "none"
+   },
+   {
+    "testid": "tab-games",
+    "text": "Games",
+    "h": 56.19,
+    "radius": "18px",
+    "size": 16,
+    "weight": "400",
+    "transform": "none"
+   }
+  ],
+  "surfaces": [
+   {
+    "testid": "nav-login",
+    "radius": 14,
+    "bg": "rgb(200, 255, 0)",
+    "border": "none",
+    "pad": "8px 14px"
+   },
+   {
+    "testid": "day-tab-all",
+    "radius": 14,
+    "bg": "rgb(200, 255, 0)",
+    "border": "1px rgba(200, 255, 0, 0.3)",
+    "pad": "0px"
+   },
+   {
+    "testid": "day-tab",
+    "radius": 14,
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "1px rgba(255, 255, 255, 0.08)",
+    "pad": "0px"
+   },
+   {
+    "testid": "day-tab",
+    "radius": 14,
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "0px"
+   },
+   {
+    "testid": "day-tab",
+    "radius": 14,
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "1px rgba(255, 255, 255, 0.08)",
+    "pad": "0px"
+   },
+   {
+    "testid": "day-tab",
+    "radius": 14,
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "1px rgba(255, 255, 255, 0.08)",
+    "pad": "0px"
+   },
+   {
+    "testid": "day-tab",
+    "radius": 14,
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "0px"
+   },
+   {
+    "testid": "day-tab",
+    "radius": 14,
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "0px"
+   },
+   {
+    "testid": "day-tab",
+    "radius": 14,
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "1px rgba(255, 255, 255, 0.08)",
+    "pad": "0px"
+   },
+   {
+    "testid": "day-tab",
+    "radius": 14,
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "0px"
+   },
+   {
+    "testid": "pass-panel",
+    "radius": 18,
+    "bg": "rgba(200, 255, 0, 0.1)",
+    "border": "1px rgba(200, 255, 0, 0.3)",
+    "pad": "16px 20px"
+   },
+   {
+    "testid": "game-row",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "12px 16px"
+   },
+   {
+    "testid": "game-row",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "12px 16px"
+   },
+   {
+    "testid": "game-row",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "12px 16px"
+   },
+   {
+    "testid": "game-row",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "12px 16px"
+   },
+   {
+    "testid": "game-row",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "12px 16px"
+   },
+   {
+    "testid": "game-row",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "12px 16px"
+   },
+   {
+    "testid": "game-row",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "12px 16px"
+   },
+   {
+    "testid": "game-row",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "12px 16px"
+   },
+   {
+    "testid": "game-row",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "12px 16px"
+   },
+   {
+    "testid": "game-row",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "12px 16px"
+   },
+   {
+    "testid": "game-row",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "12px 16px"
+   },
+   {
+    "testid": "game-row",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "12px 16px"
+   },
+   {
+    "testid": "game-row",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "12px 16px"
+   },
+   {
+    "testid": "game-row",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "12px 16px"
+   },
+   {
+    "testid": "game-row",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "12px 16px"
+   },
+   {
+    "testid": "game-row",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "12px 16px"
+   },
+   {
+    "testid": "game-row",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "12px 16px"
+   },
+   {
+    "testid": "game-row",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "12px 16px"
+   },
+   {
+    "testid": "game-row",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "12px 16px"
+   },
+   {
+    "testid": "game-row",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "12px 16px"
+   },
+   {
+    "testid": "game-row",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "12px 16px"
+   },
+   {
+    "testid": "game-row",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "12px 16px"
+   },
+   {
+    "testid": "game-row",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "12px 16px"
+   },
+   {
+    "testid": "tab-home",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "none",
+    "pad": "8px 0px"
+   },
+   {
+    "testid": "tab-games",
+    "radius": 18,
+    "bg": "rgb(200, 255, 0)",
+    "border": "none",
+    "pad": "8px 0px"
+   },
+   {
+    "testid": "tab-account",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "none",
+    "pad": "8px 0px"
+   }
+  ]
+ },
+ "games-cs": {
+  "headings": [
+   {
+    "tag": "H2",
+    "size": 17,
+    "weight": "600",
+    "transform": "none",
+    "color": "rgb(255, 255, 255)",
+    "family": "Onest",
+    "tracking": "normal",
+    "text": "Zítra · Pá 28. 8."
+   },
+   {
+    "tag": "H2",
+    "size": 17,
+    "weight": "600",
+    "transform": "none",
+    "color": "rgb(255, 255, 255)",
+    "family": "Onest",
+    "tracking": "normal",
+    "text": "Po 31. 8."
+   },
+   {
+    "tag": "H2",
+    "size": 17,
+    "weight": "600",
+    "transform": "none",
+    "color": "rgb(255, 255, 255)",
+    "family": "Onest",
+    "tracking": "normal",
+    "text": "Út 1. 9."
+   },
+   {
+    "tag": "H2",
+    "size": 17,
+    "weight": "600",
+    "transform": "none",
+    "color": "rgb(255, 255, 255)",
+    "family": "Onest",
+    "tracking": "normal",
+    "text": "Čt 3. 9."
+   },
+   {
+    "tag": "H2",
+    "size": 17,
+    "weight": "600",
+    "transform": "none",
+    "color": "rgb(255, 255, 255)",
+    "family": "Onest",
+    "tracking": "normal",
+    "text": "Pá 4. 9."
+   },
+   {
+    "tag": "H2",
+    "size": 17,
+    "weight": "600",
+    "transform": "none",
+    "color": "rgb(255, 255, 255)",
+    "family": "Onest",
+    "tracking": "normal",
+    "text": "Ne 6. 9."
+   },
+   {
+    "tag": "H2",
+    "size": 17,
+    "weight": "600",
+    "transform": "none",
+    "color": "rgb(255, 255, 255)",
+    "family": "Onest",
+    "tracking": "normal",
+    "text": "Po 7. 9."
+   },
+   {
+    "tag": "H2",
+    "size": 17,
+    "weight": "600",
+    "transform": "none",
+    "color": "rgb(255, 255, 255)",
+    "family": "Onest",
+    "tracking": "normal",
+    "text": "St 9. 9."
+   },
+   {
+    "tag": "H2",
+    "size": 17,
+    "weight": "600",
+    "transform": "none",
+    "color": "rgb(255, 255, 255)",
+    "family": "Onest",
+    "tracking": "normal",
+    "text": "So 19. 9."
+   },
+   {
+    "tag": "H2",
+    "size": 17,
+    "weight": "600",
+    "transform": "none",
+    "color": "rgb(255, 255, 255)",
+    "family": "Onest",
+    "tracking": "normal",
+    "text": "Ne 20. 9."
+   }
+  ],
+  "overflow": [
+   {
+    "testid": "day-tab",
+    "text": "PO31",
+    "clipped": false,
+    "spills": true,
+    "over": 8,
+    "ellipsis": false
+   },
+   {
+    "testid": "day-tab",
+    "text": "ÚT1",
+    "clipped": false,
+    "spills": true,
+    "over": 72,
+    "ellipsis": false
+   },
+   {
+    "testid": "span",
+    "text": "ÚT",
+    "clipped": false,
+    "spills": true,
+    "over": 50,
+    "ellipsis": false
+   },
+   {
+    "testid": "span",
+    "text": "1",
+    "clipped": false,
+    "spills": true,
+    "over": 48,
+    "ellipsis": false
+   },
+   {
+    "testid": "day-tab-dot",
+    "text": "",
+    "clipped": false,
+    "spills": true,
+    "over": 46,
+    "ellipsis": false
+   },
+   {
+    "testid": "day-tab",
+    "text": "ST2",
+    "clipped": false,
+    "spills": true,
+    "over": 136,
+    "ellipsis": false
+   },
+   {
+    "testid": "span",
+    "text": "ST",
+    "clipped": false,
+    "spills": true,
+    "over": 113,
+    "ellipsis": false
+   },
+   {
+    "testid": "span",
+    "text": "2",
+    "clipped": false,
+    "spills": true,
+    "over": 113,
+    "ellipsis": false
+   },
+   {
+    "testid": "day-tab-dot",
+    "text": "",
+    "clipped": false,
+    "spills": true,
+    "over": 110,
+    "ellipsis": false
+   },
+   {
+    "testid": "day-tab",
+    "text": "ČT3",
+    "clipped": false,
+    "spills": true,
+    "over": 200,
+    "ellipsis": false
+   },
+   {
+    "testid": "span",
+    "text": "ČT",
+    "clipped": false,
+    "spills": true,
+    "over": 178,
+    "ellipsis": false
+   },
+   {
+    "testid": "span",
+    "text": "3",
+    "clipped": false,
+    "spills": true,
+    "over": 178,
+    "ellipsis": false
+   },
+   {
+    "testid": "day-tab-dot",
+    "text": "",
+    "clipped": false,
+    "spills": true,
+    "over": 174,
+    "ellipsis": false
+   },
+   {
+    "testid": "card-venue",
+    "text": "<script>alert(1)</script> \"Praha 2",
+    "clipped": true,
+    "spills": false,
+    "over": 83,
+    "ellipsis": true
+   }
+  ],
+  "sections": [],
+  "primary": [
+   {
+    "testid": "nav-login",
+    "text": "Přihlásit se",
+    "h": 37.75,
+    "radius": "14px",
+    "size": 15,
+    "weight": "700",
+    "transform": "none"
+   },
+   {
+    "testid": "day-tab-all",
+    "text": "Vše",
+    "h": 64,
+    "radius": "14px",
+    "size": 15,
+    "weight": "600",
+    "transform": "none"
+   },
+   {
+    "testid": "tab-games",
+    "text": "Zápasy",
+    "h": 56.19,
+    "radius": "18px",
+    "size": 16,
+    "weight": "400",
+    "transform": "none"
+   }
+  ],
+  "surfaces": [
+   {
+    "testid": "nav-login",
+    "radius": 14,
+    "bg": "rgb(200, 255, 0)",
+    "border": "none",
+    "pad": "8px 14px"
+   },
+   {
+    "testid": "day-tab-all",
+    "radius": 14,
+    "bg": "rgb(200, 255, 0)",
+    "border": "1px rgba(200, 255, 0, 0.3)",
+    "pad": "0px"
+   },
+   {
+    "testid": "day-tab",
+    "radius": 14,
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "1px rgba(255, 255, 255, 0.08)",
+    "pad": "0px"
+   },
+   {
+    "testid": "day-tab",
+    "radius": 14,
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "0px"
+   },
+   {
+    "testid": "day-tab",
+    "radius": 14,
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "1px rgba(255, 255, 255, 0.08)",
+    "pad": "0px"
+   },
+   {
+    "testid": "day-tab",
+    "radius": 14,
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "1px rgba(255, 255, 255, 0.08)",
+    "pad": "0px"
+   },
+   {
+    "testid": "day-tab",
+    "radius": 14,
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "0px"
+   },
+   {
+    "testid": "day-tab",
+    "radius": 14,
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "0px"
+   },
+   {
+    "testid": "day-tab",
+    "radius": 14,
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "1px rgba(255, 255, 255, 0.08)",
+    "pad": "0px"
+   },
+   {
+    "testid": "day-tab",
+    "radius": 14,
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "0px"
+   },
+   {
+    "testid": "pass-panel",
+    "radius": 18,
+    "bg": "rgba(200, 255, 0, 0.1)",
+    "border": "1px rgba(200, 255, 0, 0.3)",
+    "pad": "16px 20px"
+   },
+   {
+    "testid": "game-row",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "12px 16px"
+   },
+   {
+    "testid": "game-row",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "12px 16px"
+   },
+   {
+    "testid": "game-row",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "12px 16px"
+   },
+   {
+    "testid": "game-row",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "12px 16px"
+   },
+   {
+    "testid": "game-row",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "12px 16px"
+   },
+   {
+    "testid": "game-row",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "12px 16px"
+   },
+   {
+    "testid": "game-row",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "12px 16px"
+   },
+   {
+    "testid": "game-row",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "12px 16px"
+   },
+   {
+    "testid": "game-row",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "12px 16px"
+   },
+   {
+    "testid": "game-row",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "12px 16px"
+   },
+   {
+    "testid": "game-row",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "12px 16px"
+   },
+   {
+    "testid": "game-row",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "12px 16px"
+   },
+   {
+    "testid": "game-row",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "12px 16px"
+   },
+   {
+    "testid": "game-row",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "12px 16px"
+   },
+   {
+    "testid": "game-row",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "12px 16px"
+   },
+   {
+    "testid": "game-row",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "12px 16px"
+   },
+   {
+    "testid": "game-row",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "12px 16px"
+   },
+   {
+    "testid": "game-row",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "12px 16px"
+   },
+   {
+    "testid": "game-row",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "12px 16px"
+   },
+   {
+    "testid": "game-row",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "12px 16px"
+   },
+   {
+    "testid": "game-row",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "12px 16px"
+   },
+   {
+    "testid": "game-row",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "12px 16px"
+   },
+   {
+    "testid": "game-row",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "12px 16px"
+   },
+   {
+    "testid": "tab-home",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "none",
+    "pad": "8px 0px"
+   },
+   {
+    "testid": "tab-games",
+    "radius": 18,
+    "bg": "rgb(200, 255, 0)",
+    "border": "none",
+    "pad": "8px 0px"
+   },
+   {
+    "testid": "tab-account",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "none",
+    "pad": "8px 0px"
+   }
+  ]
+ },
+ "games-ru": {
+  "headings": [
+   {
+    "tag": "H2",
+    "size": 17,
+    "weight": "600",
+    "transform": "none",
+    "color": "rgb(255, 255, 255)",
+    "family": "Onest",
+    "tracking": "normal",
+    "text": "Завтра · Пт, 28 авг."
+   },
+   {
+    "tag": "H2",
+    "size": 17,
+    "weight": "600",
+    "transform": "none",
+    "color": "rgb(255, 255, 255)",
+    "family": "Onest",
+    "tracking": "normal",
+    "text": "Пн, 31 авг."
+   },
+   {
+    "tag": "H2",
+    "size": 17,
+    "weight": "600",
+    "transform": "none",
+    "color": "rgb(255, 255, 255)",
+    "family": "Onest",
+    "tracking": "normal",
+    "text": "Вт, 1 сент."
+   },
+   {
+    "tag": "H2",
+    "size": 17,
+    "weight": "600",
+    "transform": "none",
+    "color": "rgb(255, 255, 255)",
+    "family": "Onest",
+    "tracking": "normal",
+    "text": "Чт, 3 сент."
+   },
+   {
+    "tag": "H2",
+    "size": 17,
+    "weight": "600",
+    "transform": "none",
+    "color": "rgb(255, 255, 255)",
+    "family": "Onest",
+    "tracking": "normal",
+    "text": "Пт, 4 сент."
+   },
+   {
+    "tag": "H2",
+    "size": 17,
+    "weight": "600",
+    "transform": "none",
+    "color": "rgb(255, 255, 255)",
+    "family": "Onest",
+    "tracking": "normal",
+    "text": "Вс, 6 сент."
+   },
+   {
+    "tag": "H2",
+    "size": 17,
+    "weight": "600",
+    "transform": "none",
+    "color": "rgb(255, 255, 255)",
+    "family": "Onest",
+    "tracking": "normal",
+    "text": "Пн, 7 сент."
+   },
+   {
+    "tag": "H2",
+    "size": 17,
+    "weight": "600",
+    "transform": "none",
+    "color": "rgb(255, 255, 255)",
+    "family": "Onest",
+    "tracking": "normal",
+    "text": "Ср, 9 сент."
+   },
+   {
+    "tag": "H2",
+    "size": 17,
+    "weight": "600",
+    "transform": "none",
+    "color": "rgb(255, 255, 255)",
+    "family": "Onest",
+    "tracking": "normal",
+    "text": "Сб, 19 сент."
+   },
+   {
+    "tag": "H2",
+    "size": 17,
+    "weight": "600",
+    "transform": "none",
+    "color": "rgb(255, 255, 255)",
+    "family": "Onest",
+    "tracking": "normal",
+    "text": "Вс, 20 сент."
+   }
+  ],
+  "overflow": [
+   {
+    "testid": "day-tab",
+    "text": "ПН31",
+    "clipped": false,
+    "spills": true,
+    "over": 8,
+    "ellipsis": false
+   },
+   {
+    "testid": "day-tab",
+    "text": "ВТ1",
+    "clipped": false,
+    "spills": true,
+    "over": 72,
+    "ellipsis": false
+   },
+   {
+    "testid": "span",
+    "text": "ВТ",
+    "clipped": false,
+    "spills": true,
+    "over": 50,
+    "ellipsis": false
+   },
+   {
+    "testid": "span",
+    "text": "1",
+    "clipped": false,
+    "spills": true,
+    "over": 48,
+    "ellipsis": false
+   },
+   {
+    "testid": "day-tab-dot",
+    "text": "",
+    "clipped": false,
+    "spills": true,
+    "over": 46,
+    "ellipsis": false
+   },
+   {
+    "testid": "day-tab",
+    "text": "СР2",
+    "clipped": false,
+    "spills": true,
+    "over": 136,
+    "ellipsis": false
+   },
+   {
+    "testid": "span",
+    "text": "СР",
+    "clipped": false,
+    "spills": true,
+    "over": 114,
+    "ellipsis": false
+   },
+   {
+    "testid": "span",
+    "text": "2",
+    "clipped": false,
+    "spills": true,
+    "over": 113,
+    "ellipsis": false
+   },
+   {
+    "testid": "day-tab-dot",
+    "text": "",
+    "clipped": false,
+    "spills": true,
+    "over": 110,
+    "ellipsis": false
+   },
+   {
+    "testid": "day-tab",
+    "text": "ЧТ3",
+    "clipped": false,
+    "spills": true,
+    "over": 200,
+    "ellipsis": false
+   },
+   {
+    "testid": "span",
+    "text": "ЧТ",
+    "clipped": false,
+    "spills": true,
+    "over": 178,
+    "ellipsis": false
+   },
+   {
+    "testid": "span",
+    "text": "3",
+    "clipped": false,
+    "spills": true,
+    "over": 178,
+    "ellipsis": false
+   },
+   {
+    "testid": "day-tab-dot",
+    "text": "",
+    "clipped": false,
+    "spills": true,
+    "over": 174,
+    "ellipsis": false
+   },
+   {
+    "testid": "card-venue",
+    "text": "<script>alert(1)</script> \"Praha 2",
+    "clipped": true,
+    "spills": false,
+    "over": 83,
+    "ellipsis": true
+   }
+  ],
+  "sections": [],
+  "primary": [
+   {
+    "testid": "nav-login",
+    "text": "Войти",
+    "h": 37.75,
+    "radius": "14px",
+    "size": 15,
+    "weight": "700",
+    "transform": "none"
+   },
+   {
+    "testid": "day-tab-all",
+    "text": "Все",
+    "h": 64,
+    "radius": "14px",
+    "size": 15,
+    "weight": "600",
+    "transform": "none"
+   },
+   {
+    "testid": "tab-games",
+    "text": "Матчи",
+    "h": 56.19,
+    "radius": "18px",
+    "size": 16,
+    "weight": "400",
+    "transform": "none"
+   }
+  ],
+  "surfaces": [
+   {
+    "testid": "nav-login",
+    "radius": 14,
+    "bg": "rgb(200, 255, 0)",
+    "border": "none",
+    "pad": "8px 14px"
+   },
+   {
+    "testid": "day-tab-all",
+    "radius": 14,
+    "bg": "rgb(200, 255, 0)",
+    "border": "1px rgba(200, 255, 0, 0.3)",
+    "pad": "0px"
+   },
+   {
+    "testid": "day-tab",
+    "radius": 14,
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "1px rgba(255, 255, 255, 0.08)",
+    "pad": "0px"
+   },
+   {
+    "testid": "day-tab",
+    "radius": 14,
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "0px"
+   },
+   {
+    "testid": "day-tab",
+    "radius": 14,
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "1px rgba(255, 255, 255, 0.08)",
+    "pad": "0px"
+   },
+   {
+    "testid": "day-tab",
+    "radius": 14,
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "1px rgba(255, 255, 255, 0.08)",
+    "pad": "0px"
+   },
+   {
+    "testid": "day-tab",
+    "radius": 14,
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "0px"
+   },
+   {
+    "testid": "day-tab",
+    "radius": 14,
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "0px"
+   },
+   {
+    "testid": "day-tab",
+    "radius": 14,
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "1px rgba(255, 255, 255, 0.08)",
+    "pad": "0px"
+   },
+   {
+    "testid": "day-tab",
+    "radius": 14,
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "0px"
+   },
+   {
+    "testid": "pass-panel",
+    "radius": 18,
+    "bg": "rgba(200, 255, 0, 0.1)",
+    "border": "1px rgba(200, 255, 0, 0.3)",
+    "pad": "16px 20px"
+   },
+   {
+    "testid": "game-row",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "12px 16px"
+   },
+   {
+    "testid": "game-row",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "12px 16px"
+   },
+   {
+    "testid": "game-row",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "12px 16px"
+   },
+   {
+    "testid": "game-row",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "12px 16px"
+   },
+   {
+    "testid": "game-row",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "12px 16px"
+   },
+   {
+    "testid": "game-row",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "12px 16px"
+   },
+   {
+    "testid": "game-row",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "12px 16px"
+   },
+   {
+    "testid": "game-row",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "12px 16px"
+   },
+   {
+    "testid": "game-row",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "12px 16px"
+   },
+   {
+    "testid": "game-row",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "12px 16px"
+   },
+   {
+    "testid": "game-row",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "12px 16px"
+   },
+   {
+    "testid": "game-row",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "12px 16px"
+   },
+   {
+    "testid": "game-row",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "12px 16px"
+   },
+   {
+    "testid": "game-row",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "12px 16px"
+   },
+   {
+    "testid": "game-row",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "12px 16px"
+   },
+   {
+    "testid": "game-row",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "12px 16px"
+   },
+   {
+    "testid": "game-row",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "12px 16px"
+   },
+   {
+    "testid": "game-row",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "12px 16px"
+   },
+   {
+    "testid": "game-row",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "12px 16px"
+   },
+   {
+    "testid": "game-row",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "12px 16px"
+   },
+   {
+    "testid": "game-row",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "12px 16px"
+   },
+   {
+    "testid": "game-row",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "12px 16px"
+   },
+   {
+    "testid": "game-row",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "12px 16px"
+   },
+   {
+    "testid": "tab-home",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "none",
+    "pad": "8px 0px"
+   },
+   {
+    "testid": "tab-games",
+    "radius": 18,
+    "bg": "rgb(200, 255, 0)",
+    "border": "none",
+    "pad": "8px 0px"
+   },
+   {
+    "testid": "tab-account",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "none",
+    "pad": "8px 0px"
+   }
+  ]
+ },
+ "detail-en": {
+  "headings": [
+   {
+    "tag": "H1",
+    "size": 27.3,
+    "weight": "400",
+    "transform": "uppercase",
+    "color": "rgb(255, 255, 255)",
+    "family": "Anton",
+    "tracking": "0.5px",
+    "text": "E2E Scratch Pitch"
+   },
+   {
+    "tag": "H2",
+    "size": 17,
+    "weight": "600",
+    "transform": "none",
+    "color": "rgb(255, 255, 255)",
+    "family": "Onest",
+    "tracking": "normal",
+    "text": "Game information"
+   },
+   {
+    "tag": "H2",
+    "size": 17,
+    "weight": "600",
+    "transform": "none",
+    "color": "rgb(255, 255, 255)",
+    "family": "Onest",
+    "tracking": "normal",
+    "text": "What's included"
+   },
+   {
+    "tag": "H2",
+    "size": 17,
+    "weight": "600",
+    "transform": "none",
+    "color": "rgb(255, 255, 255)",
+    "family": "Onest",
+    "tracking": "normal",
+    "text": "Pitch amenities"
+   },
+   {
+    "tag": "H2",
+    "size": 10,
+    "weight": "400",
+    "transform": "uppercase",
+    "color": "rgb(255, 255, 255)",
+    "family": "Onest",
+    "tracking": "3px",
+    "text": "Players (0)"
+   }
+  ],
+  "overflow": [],
+  "sections": [],
+  "primary": [
+   {
+    "testid": "nav-login",
+    "text": "Sign in",
+    "h": 37.75,
+    "radius": "14px",
+    "size": 15,
+    "weight": "700",
+    "transform": "none"
+   },
+   {
+    "testid": "tab-games",
+    "text": "Games",
+    "h": 56.19,
+    "radius": "18px",
+    "size": 16,
+    "weight": "400",
+    "transform": "none"
+   }
+  ],
+  "surfaces": [
+   {
+    "testid": "nav-login",
+    "radius": 14,
+    "bg": "rgb(200, 255, 0)",
+    "border": "none",
+    "pad": "8px 14px"
+   },
+   {
+    "testid": "game-info-card",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "none",
+    "pad": "20px"
+   },
+   {
+    "testid": "availability-card",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "none",
+    "pad": "20px"
+   },
+   {
+    "testid": "amenity-grid",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "none",
+    "pad": "20px"
+   },
+   {
+    "testid": "pitch-amenity-grid",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "none",
+    "pad": "20px"
+   },
+   {
+    "testid": "game-organizer",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "none",
+    "pad": "20px"
+   },
+   {
+    "testid": "players-list",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "none",
+    "pad": "20px"
+   },
+   {
+    "testid": "share-whatsapp",
+    "radius": 14,
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "0px 20px"
+   },
+   {
+    "testid": "tab-home",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "none",
+    "pad": "8px 0px"
+   },
+   {
+    "testid": "tab-games",
+    "radius": 18,
+    "bg": "rgb(200, 255, 0)",
+    "border": "none",
+    "pad": "8px 0px"
+   },
+   {
+    "testid": "tab-account",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "none",
+    "pad": "8px 0px"
+   }
+  ]
+ },
+ "detail-cs": {
+  "headings": [
+   {
+    "tag": "H1",
+    "size": 27.3,
+    "weight": "400",
+    "transform": "uppercase",
+    "color": "rgb(255, 255, 255)",
+    "family": "Anton",
+    "tracking": "0.5px",
+    "text": "E2E Scratch Pitch"
+   },
+   {
+    "tag": "H2",
+    "size": 17,
+    "weight": "600",
+    "transform": "none",
+    "color": "rgb(255, 255, 255)",
+    "family": "Onest",
+    "tracking": "normal",
+    "text": "Informace o zápase"
+   },
+   {
+    "tag": "H2",
+    "size": 17,
+    "weight": "600",
+    "transform": "none",
+    "color": "rgb(255, 255, 255)",
+    "family": "Onest",
+    "tracking": "normal",
+    "text": "Co je v ceně"
+   },
+   {
+    "tag": "H2",
+    "size": 17,
+    "weight": "600",
+    "transform": "none",
+    "color": "rgb(255, 255, 255)",
+    "family": "Onest",
+    "tracking": "normal",
+    "text": "Vybavení hřiště"
+   },
+   {
+    "tag": "H2",
+    "size": 10,
+    "weight": "400",
+    "transform": "uppercase",
+    "color": "rgb(255, 255, 255)",
+    "family": "Onest",
+    "tracking": "3px",
+    "text": "Hráči (0)"
+   }
+  ],
+  "overflow": [],
+  "sections": [],
+  "primary": [
+   {
+    "testid": "nav-login",
+    "text": "Přihlásit se",
+    "h": 37.75,
+    "radius": "14px",
+    "size": 15,
+    "weight": "700",
+    "transform": "none"
+   },
+   {
+    "testid": "tab-games",
+    "text": "Zápasy",
+    "h": 56.19,
+    "radius": "18px",
+    "size": 16,
+    "weight": "400",
+    "transform": "none"
+   }
+  ],
+  "surfaces": [
+   {
+    "testid": "nav-login",
+    "radius": 14,
+    "bg": "rgb(200, 255, 0)",
+    "border": "none",
+    "pad": "8px 14px"
+   },
+   {
+    "testid": "game-info-card",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "none",
+    "pad": "20px"
+   },
+   {
+    "testid": "availability-card",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "none",
+    "pad": "20px"
+   },
+   {
+    "testid": "amenity-grid",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "none",
+    "pad": "20px"
+   },
+   {
+    "testid": "pitch-amenity-grid",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "none",
+    "pad": "20px"
+   },
+   {
+    "testid": "game-organizer",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "none",
+    "pad": "20px"
+   },
+   {
+    "testid": "players-list",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "none",
+    "pad": "20px"
+   },
+   {
+    "testid": "share-whatsapp",
+    "radius": 14,
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "0px 20px"
+   },
+   {
+    "testid": "tab-home",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "none",
+    "pad": "8px 0px"
+   },
+   {
+    "testid": "tab-games",
+    "radius": 18,
+    "bg": "rgb(200, 255, 0)",
+    "border": "none",
+    "pad": "8px 0px"
+   },
+   {
+    "testid": "tab-account",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "none",
+    "pad": "8px 0px"
+   }
+  ]
+ },
+ "detail-ru": {
+  "headings": [
+   {
+    "tag": "H1",
+    "size": 27.3,
+    "weight": "400",
+    "transform": "uppercase",
+    "color": "rgb(255, 255, 255)",
+    "family": "Anton",
+    "tracking": "0.5px",
+    "text": "E2E Scratch Pitch"
+   },
+   {
+    "tag": "H2",
+    "size": 17,
+    "weight": "600",
+    "transform": "none",
+    "color": "rgb(255, 255, 255)",
+    "family": "Onest",
+    "tracking": "normal",
+    "text": "Информация об игре"
+   },
+   {
+    "tag": "H2",
+    "size": 17,
+    "weight": "600",
+    "transform": "none",
+    "color": "rgb(255, 255, 255)",
+    "family": "Onest",
+    "tracking": "normal",
+    "text": "Что входит"
+   },
+   {
+    "tag": "H2",
+    "size": 17,
+    "weight": "600",
+    "transform": "none",
+    "color": "rgb(255, 255, 255)",
+    "family": "Onest",
+    "tracking": "normal",
+    "text": "Инфраструктура площадки"
+   },
+   {
+    "tag": "H2",
+    "size": 10,
+    "weight": "400",
+    "transform": "uppercase",
+    "color": "rgb(255, 255, 255)",
+    "family": "Onest",
+    "tracking": "3px",
+    "text": "Игроки (0)"
+   }
+  ],
+  "overflow": [
+   {
+    "testid": "dt",
+    "text": "Длительность",
+    "clipped": true,
+    "spills": false,
+    "over": 33,
+    "ellipsis": false
+   }
+  ],
+  "sections": [],
+  "primary": [
+   {
+    "testid": "nav-login",
+    "text": "Войти",
+    "h": 37.75,
+    "radius": "14px",
+    "size": 15,
+    "weight": "700",
+    "transform": "none"
+   },
+   {
+    "testid": "tab-games",
+    "text": "Матчи",
+    "h": 56.19,
+    "radius": "18px",
+    "size": 16,
+    "weight": "400",
+    "transform": "none"
+   }
+  ],
+  "surfaces": [
+   {
+    "testid": "nav-login",
+    "radius": 14,
+    "bg": "rgb(200, 255, 0)",
+    "border": "none",
+    "pad": "8px 14px"
+   },
+   {
+    "testid": "game-info-card",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "none",
+    "pad": "20px"
+   },
+   {
+    "testid": "availability-card",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "none",
+    "pad": "20px"
+   },
+   {
+    "testid": "amenity-grid",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "none",
+    "pad": "20px"
+   },
+   {
+    "testid": "pitch-amenity-grid",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "none",
+    "pad": "20px"
+   },
+   {
+    "testid": "game-organizer",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "none",
+    "pad": "20px"
+   },
+   {
+    "testid": "players-list",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "none",
+    "pad": "20px"
+   },
+   {
+    "testid": "share-whatsapp",
+    "radius": 14,
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "0px 20px"
+   },
+   {
+    "testid": "tab-home",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "none",
+    "pad": "8px 0px"
+   },
+   {
+    "testid": "tab-games",
+    "radius": 18,
+    "bg": "rgb(200, 255, 0)",
+    "border": "none",
+    "pad": "8px 0px"
+   },
+   {
+    "testid": "tab-account",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "none",
+    "pad": "8px 0px"
+   }
+  ]
+ },
+ "book-en": {
+  "headings": [
+   {
+    "tag": "H1",
+    "size": 27.3,
+    "weight": "400",
+    "transform": "uppercase",
+    "color": "rgb(255, 255, 255)",
+    "family": "Anton",
+    "tracking": "0.5px",
+    "text": "E2E Scratch Pitch"
+   },
+   {
+    "tag": "H2",
+    "size": 17,
+    "weight": "600",
+    "transform": "none",
+    "color": "rgb(255, 255, 255)",
+    "family": "Onest",
+    "tracking": "normal",
+    "text": "Game information"
+   },
+   {
+    "tag": "H2",
+    "size": 17,
+    "weight": "600",
+    "transform": "none",
+    "color": "rgb(255, 255, 255)",
+    "family": "Onest",
+    "tracking": "normal",
+    "text": "What's included"
+   },
+   {
+    "tag": "H2",
+    "size": 17,
+    "weight": "600",
+    "transform": "none",
+    "color": "rgb(255, 255, 255)",
+    "family": "Onest",
+    "tracking": "normal",
+    "text": "Pitch amenities"
+   },
+   {
+    "tag": "H2",
+    "size": 10,
+    "weight": "400",
+    "transform": "uppercase",
+    "color": "rgb(255, 255, 255)",
+    "family": "Onest",
+    "tracking": "3px",
+    "text": "Players (0)"
+   }
+  ],
+  "overflow": [],
+  "sections": [],
+  "primary": [
+   {
+    "testid": "tab-games",
+    "text": "Games",
+    "h": 56.19,
+    "radius": "18px",
+    "size": 16,
+    "weight": "400",
+    "transform": "none"
+   }
+  ],
+  "surfaces": [
+   {
+    "testid": "game-info-card",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "none",
+    "pad": "20px"
+   },
+   {
+    "testid": "availability-card",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "none",
+    "pad": "20px"
+   },
+   {
+    "testid": "amenity-grid",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "none",
+    "pad": "20px"
+   },
+   {
+    "testid": "pitch-amenity-grid",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "none",
+    "pad": "20px"
+   },
+   {
+    "testid": "game-organizer",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "none",
+    "pad": "20px"
+   },
+   {
+    "testid": "players-list",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "none",
+    "pad": "20px"
+   },
+   {
+    "testid": "share-whatsapp",
+    "radius": 14,
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "0px 20px"
+   },
+   {
+    "testid": "tab-home",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "none",
+    "pad": "8px 0px"
+   },
+   {
+    "testid": "tab-games",
+    "radius": 18,
+    "bg": "rgb(200, 255, 0)",
+    "border": "none",
+    "pad": "8px 0px"
+   },
+   {
+    "testid": "tab-account",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "none",
+    "pad": "8px 0px"
+   }
+  ]
+ },
+ "book-cs": {
+  "headings": [
+   {
+    "tag": "H1",
+    "size": 27.3,
+    "weight": "400",
+    "transform": "uppercase",
+    "color": "rgb(255, 255, 255)",
+    "family": "Anton",
+    "tracking": "0.5px",
+    "text": "E2E Scratch Pitch"
+   },
+   {
+    "tag": "H2",
+    "size": 17,
+    "weight": "600",
+    "transform": "none",
+    "color": "rgb(255, 255, 255)",
+    "family": "Onest",
+    "tracking": "normal",
+    "text": "Informace o zápase"
+   },
+   {
+    "tag": "H2",
+    "size": 17,
+    "weight": "600",
+    "transform": "none",
+    "color": "rgb(255, 255, 255)",
+    "family": "Onest",
+    "tracking": "normal",
+    "text": "Co je v ceně"
+   },
+   {
+    "tag": "H2",
+    "size": 17,
+    "weight": "600",
+    "transform": "none",
+    "color": "rgb(255, 255, 255)",
+    "family": "Onest",
+    "tracking": "normal",
+    "text": "Vybavení hřiště"
+   },
+   {
+    "tag": "H2",
+    "size": 10,
+    "weight": "400",
+    "transform": "uppercase",
+    "color": "rgb(255, 255, 255)",
+    "family": "Onest",
+    "tracking": "3px",
+    "text": "Hráči (0)"
+   }
+  ],
+  "overflow": [],
+  "sections": [],
+  "primary": [
+   {
+    "testid": "tab-games",
+    "text": "Zápasy",
+    "h": 56.19,
+    "radius": "18px",
+    "size": 16,
+    "weight": "400",
+    "transform": "none"
+   }
+  ],
+  "surfaces": [
+   {
+    "testid": "game-info-card",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "none",
+    "pad": "20px"
+   },
+   {
+    "testid": "availability-card",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "none",
+    "pad": "20px"
+   },
+   {
+    "testid": "amenity-grid",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "none",
+    "pad": "20px"
+   },
+   {
+    "testid": "pitch-amenity-grid",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "none",
+    "pad": "20px"
+   },
+   {
+    "testid": "game-organizer",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "none",
+    "pad": "20px"
+   },
+   {
+    "testid": "players-list",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "none",
+    "pad": "20px"
+   },
+   {
+    "testid": "share-whatsapp",
+    "radius": 14,
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "0px 20px"
+   },
+   {
+    "testid": "tab-home",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "none",
+    "pad": "8px 0px"
+   },
+   {
+    "testid": "tab-games",
+    "radius": 18,
+    "bg": "rgb(200, 255, 0)",
+    "border": "none",
+    "pad": "8px 0px"
+   },
+   {
+    "testid": "tab-account",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "none",
+    "pad": "8px 0px"
+   }
+  ]
+ },
+ "book-ru": {
+  "headings": [
+   {
+    "tag": "H1",
+    "size": 27.3,
+    "weight": "400",
+    "transform": "uppercase",
+    "color": "rgb(255, 255, 255)",
+    "family": "Anton",
+    "tracking": "0.5px",
+    "text": "E2E Scratch Pitch"
+   },
+   {
+    "tag": "H2",
+    "size": 17,
+    "weight": "600",
+    "transform": "none",
+    "color": "rgb(255, 255, 255)",
+    "family": "Onest",
+    "tracking": "normal",
+    "text": "Информация об игре"
+   },
+   {
+    "tag": "H2",
+    "size": 17,
+    "weight": "600",
+    "transform": "none",
+    "color": "rgb(255, 255, 255)",
+    "family": "Onest",
+    "tracking": "normal",
+    "text": "Что входит"
+   },
+   {
+    "tag": "H2",
+    "size": 17,
+    "weight": "600",
+    "transform": "none",
+    "color": "rgb(255, 255, 255)",
+    "family": "Onest",
+    "tracking": "normal",
+    "text": "Инфраструктура площадки"
+   },
+   {
+    "tag": "H2",
+    "size": 10,
+    "weight": "400",
+    "transform": "uppercase",
+    "color": "rgb(255, 255, 255)",
+    "family": "Onest",
+    "tracking": "3px",
+    "text": "Игроки (0)"
+   }
+  ],
+  "overflow": [
+   {
+    "testid": "dt",
+    "text": "Длительность",
+    "clipped": true,
+    "spills": false,
+    "over": 33,
+    "ellipsis": false
+   }
+  ],
+  "sections": [],
+  "primary": [
+   {
+    "testid": "tab-games",
+    "text": "Матчи",
+    "h": 56.19,
+    "radius": "18px",
+    "size": 16,
+    "weight": "400",
+    "transform": "none"
+   }
+  ],
+  "surfaces": [
+   {
+    "testid": "game-info-card",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "none",
+    "pad": "20px"
+   },
+   {
+    "testid": "availability-card",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "none",
+    "pad": "20px"
+   },
+   {
+    "testid": "amenity-grid",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "none",
+    "pad": "20px"
+   },
+   {
+    "testid": "pitch-amenity-grid",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "none",
+    "pad": "20px"
+   },
+   {
+    "testid": "game-organizer",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "none",
+    "pad": "20px"
+   },
+   {
+    "testid": "players-list",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "none",
+    "pad": "20px"
+   },
+   {
+    "testid": "share-whatsapp",
+    "radius": 14,
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "0px 20px"
+   },
+   {
+    "testid": "tab-home",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "none",
+    "pad": "8px 0px"
+   },
+   {
+    "testid": "tab-games",
+    "radius": 18,
+    "bg": "rgb(200, 255, 0)",
+    "border": "none",
+    "pad": "8px 0px"
+   },
+   {
+    "testid": "tab-account",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "none",
+    "pad": "8px 0px"
+   }
+  ]
+ },
+ "pass-en": {
+  "headings": [
+   {
+    "tag": "H1",
+    "size": 27.3,
+    "weight": "400",
+    "transform": "uppercase",
+    "color": "rgb(255, 255, 255)",
+    "family": "Anton",
+    "tracking": "0.5px",
+    "text": "Game pass"
+   },
+   {
+    "tag": "H2",
+    "size": 17,
+    "weight": "600",
+    "transform": "none",
+    "color": "rgb(233, 231, 224)",
+    "family": "Onest",
+    "tracking": "normal",
+    "text": "5 credits"
+   },
+   {
+    "tag": "H2",
+    "size": 17,
+    "weight": "600",
+    "transform": "none",
+    "color": "rgb(233, 231, 224)",
+    "family": "Onest",
+    "tracking": "normal",
+    "text": "8 credits"
+   },
+   {
+    "tag": "H2",
+    "size": 17,
+    "weight": "600",
+    "transform": "none",
+    "color": "rgb(233, 231, 224)",
+    "family": "Onest",
+    "tracking": "normal",
+    "text": "12 credits"
+   },
+   {
+    "tag": "H2",
+    "size": 17,
+    "weight": "600",
+    "transform": "none",
+    "color": "rgb(233, 231, 224)",
+    "family": "Onest",
+    "tracking": "normal",
+    "text": "15 credits"
+   },
+   {
+    "tag": "H2",
+    "size": 17,
+    "weight": "600",
+    "transform": "none",
+    "color": "rgb(233, 231, 224)",
+    "family": "Onest",
+    "tracking": "normal",
+    "text": "20 credits"
+   },
+   {
+    "tag": "H2",
+    "size": 24,
+    "weight": "400",
+    "transform": "uppercase",
+    "color": "rgb(255, 255, 255)",
+    "family": "Anton",
+    "tracking": "normal",
+    "text": "How it works"
+   }
+  ],
+  "overflow": [],
+  "sections": [],
+  "primary": [],
+  "surfaces": [
+   {
+    "testid": null,
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "20px"
+   },
+   {
+    "testid": "tab-home",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "none",
+    "pad": "8px 0px"
+   },
+   {
+    "testid": "tab-games",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "none",
+    "pad": "8px 0px"
+   },
+   {
+    "testid": "tab-account",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "none",
+    "pad": "8px 0px"
+   }
+  ]
+ },
+ "pass-cs": {
+  "headings": [
+   {
+    "tag": "H1",
+    "size": 27.3,
+    "weight": "400",
+    "transform": "uppercase",
+    "color": "rgb(255, 255, 255)",
+    "family": "Anton",
+    "tracking": "0.5px",
+    "text": "Herní permanentka"
+   },
+   {
+    "tag": "H2",
+    "size": 17,
+    "weight": "600",
+    "transform": "none",
+    "color": "rgb(233, 231, 224)",
+    "family": "Onest",
+    "tracking": "normal",
+    "text": "5 kreditů"
+   },
+   {
+    "tag": "H2",
+    "size": 17,
+    "weight": "600",
+    "transform": "none",
+    "color": "rgb(233, 231, 224)",
+    "family": "Onest",
+    "tracking": "normal",
+    "text": "8 kreditů"
+   },
+   {
+    "tag": "H2",
+    "size": 17,
+    "weight": "600",
+    "transform": "none",
+    "color": "rgb(233, 231, 224)",
+    "family": "Onest",
+    "tracking": "normal",
+    "text": "12 kreditů"
+   },
+   {
+    "tag": "H2",
+    "size": 17,
+    "weight": "600",
+    "transform": "none",
+    "color": "rgb(233, 231, 224)",
+    "family": "Onest",
+    "tracking": "normal",
+    "text": "15 kreditů"
+   },
+   {
+    "tag": "H2",
+    "size": 17,
+    "weight": "600",
+    "transform": "none",
+    "color": "rgb(233, 231, 224)",
+    "family": "Onest",
+    "tracking": "normal",
+    "text": "20 kreditů"
+   },
+   {
+    "tag": "H2",
+    "size": 24,
+    "weight": "400",
+    "transform": "uppercase",
+    "color": "rgb(255, 255, 255)",
+    "family": "Anton",
+    "tracking": "normal",
+    "text": "Jak to funguje"
+   }
+  ],
+  "overflow": [],
+  "sections": [],
+  "primary": [],
+  "surfaces": [
+   {
+    "testid": null,
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "20px"
+   },
+   {
+    "testid": "tab-home",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "none",
+    "pad": "8px 0px"
+   },
+   {
+    "testid": "tab-games",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "none",
+    "pad": "8px 0px"
+   },
+   {
+    "testid": "tab-account",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "none",
+    "pad": "8px 0px"
+   }
+  ]
+ },
+ "pass-ru": {
+  "headings": [
+   {
+    "tag": "H1",
+    "size": 27.3,
+    "weight": "400",
+    "transform": "uppercase",
+    "color": "rgb(255, 255, 255)",
+    "family": "Anton",
+    "tracking": "0.5px",
+    "text": "Игровой абонемент"
+   },
+   {
+    "tag": "H2",
+    "size": 17,
+    "weight": "600",
+    "transform": "none",
+    "color": "rgb(233, 231, 224)",
+    "family": "Onest",
+    "tracking": "normal",
+    "text": "5 кредитов"
+   },
+   {
+    "tag": "H2",
+    "size": 17,
+    "weight": "600",
+    "transform": "none",
+    "color": "rgb(233, 231, 224)",
+    "family": "Onest",
+    "tracking": "normal",
+    "text": "8 кредитов"
+   },
+   {
+    "tag": "H2",
+    "size": 17,
+    "weight": "600",
+    "transform": "none",
+    "color": "rgb(233, 231, 224)",
+    "family": "Onest",
+    "tracking": "normal",
+    "text": "12 кредитов"
+   },
+   {
+    "tag": "H2",
+    "size": 17,
+    "weight": "600",
+    "transform": "none",
+    "color": "rgb(233, 231, 224)",
+    "family": "Onest",
+    "tracking": "normal",
+    "text": "15 кредитов"
+   },
+   {
+    "tag": "H2",
+    "size": 17,
+    "weight": "600",
+    "transform": "none",
+    "color": "rgb(233, 231, 224)",
+    "family": "Onest",
+    "tracking": "normal",
+    "text": "20 кредитов"
+   },
+   {
+    "tag": "H2",
+    "size": 24,
+    "weight": "400",
+    "transform": "uppercase",
+    "color": "rgb(255, 255, 255)",
+    "family": "Anton",
+    "tracking": "normal",
+    "text": "Как это работает"
+   }
+  ],
+  "overflow": [],
+  "sections": [],
+  "primary": [],
+  "surfaces": [
+   {
+    "testid": null,
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "20px"
+   },
+   {
+    "testid": "tab-home",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "none",
+    "pad": "8px 0px"
+   },
+   {
+    "testid": "tab-games",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "none",
+    "pad": "8px 0px"
+   },
+   {
+    "testid": "tab-account",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "none",
+    "pad": "8px 0px"
+   }
+  ]
+ },
+ "account-en": {
+  "headings": [
+   {
+    "tag": "H1",
+    "size": 26,
+    "weight": "700",
+    "transform": "none",
+    "color": "rgb(255, 255, 255)",
+    "family": "Onest",
+    "tracking": "normal",
+    "text": "CreditRich"
+   },
+   {
+    "tag": "H2",
+    "size": 11,
+    "weight": "400",
+    "transform": "uppercase",
+    "color": "rgb(143, 184, 0)",
+    "family": "Onest",
+    "tracking": "3px",
+    "text": "Credit balance"
+   },
+   {
+    "tag": "H2",
+    "size": 17,
+    "weight": "700",
+    "transform": "uppercase",
+    "color": "rgb(255, 255, 255)",
+    "family": "Onest",
+    "tracking": "0.5px",
+    "text": "Your details"
+   },
+   {
+    "tag": "H2",
+    "size": 17,
+    "weight": "600",
+    "transform": "none",
+    "color": "rgb(255, 255, 255)",
+    "family": "Onest",
+    "tracking": "normal",
+    "text": "Badges"
+   }
+  ],
+  "overflow": [
+   {
+    "testid": "div",
+    "text": "Change coverC✎CreditRichsince Aug ",
+    "clipped": true,
+    "spills": false,
+    "over": 22,
+    "ellipsis": false
+   },
+   {
+    "testid": "photo-input-cover",
+    "text": "",
+    "clipped": true,
+    "spills": false,
+    "over": 213,
+    "ellipsis": true
+   },
+   {
+    "testid": "photo-avatar-control",
+    "text": "C✎",
+    "clipped": true,
+    "spills": false,
+    "over": 4,
+    "ellipsis": false
+   },
+   {
+    "testid": "photo-input",
+    "text": "",
+    "clipped": true,
+    "spills": false,
+    "over": 213,
+    "ellipsis": true
+   }
+  ],
+  "sections": [],
+  "primary": [
+   {
+    "testid": "tab-account",
+    "text": "Profile",
+    "h": 56.19,
+    "radius": "18px",
+    "size": 16,
+    "weight": "400",
+    "transform": "none"
+   }
+  ],
+  "surfaces": [
+   {
+    "testid": null,
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "none",
+    "pad": "20px"
+   },
+   {
+    "testid": "topup-cta",
+    "radius": 14,
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "1px rgba(200, 255, 0, 0.3)",
+    "pad": "8px 16px"
+   },
+   {
+    "testid": "profile-details",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "20px"
+   },
+   {
+    "testid": "badge",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "none",
+    "pad": "14px 12px"
+   },
+   {
+    "testid": "badge",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "none",
+    "pad": "14px 12px"
+   },
+   {
+    "testid": "badge",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "none",
+    "pad": "14px 12px"
+   },
+   {
+    "testid": "badge",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "none",
+    "pad": "14px 12px"
+   },
+   {
+    "testid": "badge",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "none",
+    "pad": "14px 12px"
+   },
+   {
+    "testid": "tab-home",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "none",
+    "pad": "8px 0px"
+   },
+   {
+    "testid": "tab-games",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "none",
+    "pad": "8px 0px"
+   },
+   {
+    "testid": "tab-account",
+    "radius": 18,
+    "bg": "rgb(200, 255, 0)",
+    "border": "none",
+    "pad": "8px 0px"
+   }
+  ]
+ },
+ "account-cs": {
+  "headings": [
+   {
+    "tag": "H1",
+    "size": 26,
+    "weight": "700",
+    "transform": "none",
+    "color": "rgb(255, 255, 255)",
+    "family": "Onest",
+    "tracking": "normal",
+    "text": "CreditRich"
+   },
+   {
+    "tag": "H2",
+    "size": 11,
+    "weight": "400",
+    "transform": "uppercase",
+    "color": "rgb(143, 184, 0)",
+    "family": "Onest",
+    "tracking": "3px",
+    "text": "Kredit"
+   },
+   {
+    "tag": "H2",
+    "size": 17,
+    "weight": "700",
+    "transform": "uppercase",
+    "color": "rgb(255, 255, 255)",
+    "family": "Onest",
+    "tracking": "0.5px",
+    "text": "Tvoje údaje"
+   },
+   {
+    "tag": "H2",
+    "size": 17,
+    "weight": "600",
+    "transform": "none",
+    "color": "rgb(255, 255, 255)",
+    "family": "Onest",
+    "tracking": "normal",
+    "text": "Odznaky"
+   }
+  ],
+  "overflow": [
+   {
+    "testid": "div",
+    "text": "Změnit pozadíC✎CreditRichod srpen ",
+    "clipped": true,
+    "spills": false,
+    "over": 22,
+    "ellipsis": false
+   },
+   {
+    "testid": "photo-input-cover",
+    "text": "",
+    "clipped": true,
+    "spills": false,
+    "over": 213,
+    "ellipsis": true
+   },
+   {
+    "testid": "photo-avatar-control",
+    "text": "C✎",
+    "clipped": true,
+    "spills": false,
+    "over": 4,
+    "ellipsis": false
+   },
+   {
+    "testid": "photo-input",
+    "text": "",
+    "clipped": true,
+    "spills": false,
+    "over": 213,
+    "ellipsis": true
+   }
+  ],
+  "sections": [],
+  "primary": [
+   {
+    "testid": "tab-account",
+    "text": "Profil",
+    "h": 56.19,
+    "radius": "18px",
+    "size": 16,
+    "weight": "400",
+    "transform": "none"
+   }
+  ],
+  "surfaces": [
+   {
+    "testid": null,
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "none",
+    "pad": "20px"
+   },
+   {
+    "testid": "topup-cta",
+    "radius": 14,
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "1px rgba(200, 255, 0, 0.3)",
+    "pad": "8px 16px"
+   },
+   {
+    "testid": "profile-details",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "20px"
+   },
+   {
+    "testid": "badge",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "none",
+    "pad": "14px 12px"
+   },
+   {
+    "testid": "badge",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "none",
+    "pad": "14px 12px"
+   },
+   {
+    "testid": "badge",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "none",
+    "pad": "14px 12px"
+   },
+   {
+    "testid": "badge",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "none",
+    "pad": "14px 12px"
+   },
+   {
+    "testid": "badge",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "none",
+    "pad": "14px 12px"
+   },
+   {
+    "testid": "tab-home",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "none",
+    "pad": "8px 0px"
+   },
+   {
+    "testid": "tab-games",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "none",
+    "pad": "8px 0px"
+   },
+   {
+    "testid": "tab-account",
+    "radius": 18,
+    "bg": "rgb(200, 255, 0)",
+    "border": "none",
+    "pad": "8px 0px"
+   }
+  ]
+ },
+ "account-ru": {
+  "headings": [
+   {
+    "tag": "H1",
+    "size": 26,
+    "weight": "700",
+    "transform": "none",
+    "color": "rgb(255, 255, 255)",
+    "family": "Onest",
+    "tracking": "normal",
+    "text": "CreditRich"
+   },
+   {
+    "tag": "H2",
+    "size": 11,
+    "weight": "400",
+    "transform": "uppercase",
+    "color": "rgb(143, 184, 0)",
+    "family": "Onest",
+    "tracking": "3px",
+    "text": "Кредит"
+   },
+   {
+    "tag": "H2",
+    "size": 17,
+    "weight": "700",
+    "transform": "uppercase",
+    "color": "rgb(255, 255, 255)",
+    "family": "Onest",
+    "tracking": "0.5px",
+    "text": "Твои данные"
+   },
+   {
+    "tag": "H2",
+    "size": 17,
+    "weight": "600",
+    "transform": "none",
+    "color": "rgb(255, 255, 255)",
+    "family": "Onest",
+    "tracking": "normal",
+    "text": "Значки"
+   }
+  ],
+  "overflow": [
+   {
+    "testid": "div",
+    "text": "Сменить обложкуC✎CreditRichс авг. ",
+    "clipped": true,
+    "spills": false,
+    "over": 22,
+    "ellipsis": false
+   },
+   {
+    "testid": "photo-input-cover",
+    "text": "",
+    "clipped": true,
+    "spills": false,
+    "over": 213,
+    "ellipsis": true
+   },
+   {
+    "testid": "photo-avatar-control",
+    "text": "C✎",
+    "clipped": true,
+    "spills": false,
+    "over": 4,
+    "ellipsis": false
+   },
+   {
+    "testid": "photo-input",
+    "text": "",
+    "clipped": true,
+    "spills": false,
+    "over": 213,
+    "ellipsis": true
+   },
+   {
+    "testid": "badge-grid",
+    "text": "Значки0 из 5Первая играСыграй одну",
+    "clipped": true,
+    "spills": false,
+    "over": 4,
+    "ellipsis": false
+   },
+   {
+    "testid": "ul",
+    "text": "Первая играСыграй одну игруЗавсегд",
+    "clipped": true,
+    "spills": false,
+    "over": 4,
+    "ellipsis": false
+   },
+   {
+    "testid": "badge",
+    "text": "ИсследовательСыграй на 3 разных пл",
+    "clipped": true,
+    "spills": false,
+    "over": 4,
+    "ellipsis": false
+   },
+   {
+    "testid": "span",
+    "text": "ИсследовательСыграй на 3 разных пл",
+    "clipped": true,
+    "spills": false,
+    "over": 16,
+    "ellipsis": false
+   },
+   {
+    "testid": "span",
+    "text": "Исследователь",
+    "clipped": true,
+    "spills": false,
+    "over": 16,
+    "ellipsis": false
+   }
+  ],
+  "sections": [],
+  "primary": [
+   {
+    "testid": "tab-account",
+    "text": "Профиль",
+    "h": 56.19,
+    "radius": "18px",
+    "size": 16,
+    "weight": "400",
+    "transform": "none"
+   }
+  ],
+  "surfaces": [
+   {
+    "testid": null,
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "none",
+    "pad": "20px"
+   },
+   {
+    "testid": "topup-cta",
+    "radius": 14,
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "1px rgba(200, 255, 0, 0.3)",
+    "pad": "8px 16px"
+   },
+   {
+    "testid": "profile-details",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "20px"
+   },
+   {
+    "testid": "badge",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "none",
+    "pad": "14px 12px"
+   },
+   {
+    "testid": "badge",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "none",
+    "pad": "14px 12px"
+   },
+   {
+    "testid": "badge",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "none",
+    "pad": "14px 12px"
+   },
+   {
+    "testid": "badge",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "none",
+    "pad": "14px 12px"
+   },
+   {
+    "testid": "badge",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "none",
+    "pad": "14px 12px"
+   },
+   {
+    "testid": "tab-home",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "none",
+    "pad": "8px 0px"
+   },
+   {
+    "testid": "tab-games",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "none",
+    "pad": "8px 0px"
+   },
+   {
+    "testid": "tab-account",
+    "radius": 18,
+    "bg": "rgb(200, 255, 0)",
+    "border": "none",
+    "pad": "8px 0px"
+   }
+  ]
+ },
+ "login-en": {
+  "headings": [
+   {
+    "tag": "H1",
+    "size": 27.3,
+    "weight": "400",
+    "transform": "uppercase",
+    "color": "rgb(255, 255, 255)",
+    "family": "Anton",
+    "tracking": "0.5px",
+    "text": "Sign in"
+   }
+  ],
+  "overflow": [],
+  "sections": [],
+  "primary": [
+   {
+    "testid": "nav-login",
+    "text": "Sign in",
+    "h": 37.75,
+    "radius": "14px",
+    "size": 15,
+    "weight": "700",
+    "transform": "none"
+   },
+   {
+    "testid": "login-submit",
+    "text": "Sign in",
+    "h": 53.8,
+    "radius": "999px",
+    "size": 17,
+    "weight": "800",
+    "transform": "uppercase"
+   }
+  ],
+  "surfaces": [
+   {
+    "testid": "nav-login",
+    "radius": 14,
+    "bg": "rgb(200, 255, 0)",
+    "border": "none",
+    "pad": "8px 14px"
+   },
+   {
+    "testid": null,
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "20px"
+   },
+   {
+    "testid": "tab-home",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "none",
+    "pad": "8px 0px"
+   },
+   {
+    "testid": "tab-games",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "none",
+    "pad": "8px 0px"
+   },
+   {
+    "testid": "tab-account",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "none",
+    "pad": "8px 0px"
+   }
+  ]
+ },
+ "login-cs": {
+  "headings": [
+   {
+    "tag": "H1",
+    "size": 27.3,
+    "weight": "400",
+    "transform": "uppercase",
+    "color": "rgb(255, 255, 255)",
+    "family": "Anton",
+    "tracking": "0.5px",
+    "text": "Přihlášení"
+   }
+  ],
+  "overflow": [],
+  "sections": [],
+  "primary": [
+   {
+    "testid": "nav-login",
+    "text": "Přihlásit se",
+    "h": 37.75,
+    "radius": "14px",
+    "size": 15,
+    "weight": "700",
+    "transform": "none"
+   },
+   {
+    "testid": "login-submit",
+    "text": "Přihlásit se",
+    "h": 53.8,
+    "radius": "999px",
+    "size": 17,
+    "weight": "800",
+    "transform": "uppercase"
+   }
+  ],
+  "surfaces": [
+   {
+    "testid": "nav-login",
+    "radius": 14,
+    "bg": "rgb(200, 255, 0)",
+    "border": "none",
+    "pad": "8px 14px"
+   },
+   {
+    "testid": null,
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "20px"
+   },
+   {
+    "testid": "tab-home",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "none",
+    "pad": "8px 0px"
+   },
+   {
+    "testid": "tab-games",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "none",
+    "pad": "8px 0px"
+   },
+   {
+    "testid": "tab-account",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "none",
+    "pad": "8px 0px"
+   }
+  ]
+ },
+ "login-ru": {
+  "headings": [
+   {
+    "tag": "H1",
+    "size": 27.3,
+    "weight": "400",
+    "transform": "uppercase",
+    "color": "rgb(255, 255, 255)",
+    "family": "Anton",
+    "tracking": "0.5px",
+    "text": "Вход"
+   }
+  ],
+  "overflow": [],
+  "sections": [],
+  "primary": [
+   {
+    "testid": "nav-login",
+    "text": "Войти",
+    "h": 37.75,
+    "radius": "14px",
+    "size": 15,
+    "weight": "700",
+    "transform": "none"
+   },
+   {
+    "testid": "login-submit",
+    "text": "Войти",
+    "h": 53.8,
+    "radius": "999px",
+    "size": 17,
+    "weight": "800",
+    "transform": "uppercase"
+   }
+  ],
+  "surfaces": [
+   {
+    "testid": "nav-login",
+    "radius": 14,
+    "bg": "rgb(200, 255, 0)",
+    "border": "none",
+    "pad": "8px 14px"
+   },
+   {
+    "testid": null,
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "20px"
+   },
+   {
+    "testid": "tab-home",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "none",
+    "pad": "8px 0px"
+   },
+   {
+    "testid": "tab-games",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "none",
+    "pad": "8px 0px"
+   },
+   {
+    "testid": "tab-account",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "none",
+    "pad": "8px 0px"
+   }
+  ]
+ },
+ "signup-en": {
+  "headings": [
+   {
+    "tag": "H1",
+    "size": 27.3,
+    "weight": "400",
+    "transform": "uppercase",
+    "color": "rgb(255, 255, 255)",
+    "family": "Anton",
+    "tracking": "0.5px",
+    "text": "Create your account"
+   }
+  ],
+  "overflow": [],
+  "sections": [],
+  "primary": [
+   {
+    "testid": "nav-login",
+    "text": "Sign in",
+    "h": 37.75,
+    "radius": "14px",
+    "size": 15,
+    "weight": "700",
+    "transform": "none"
+   },
+   {
+    "testid": "signup-submit",
+    "text": "Create my account",
+    "h": 53.8,
+    "radius": "999px",
+    "size": 17,
+    "weight": "800",
+    "transform": "uppercase"
+   }
+  ],
+  "surfaces": [
+   {
+    "testid": "nav-login",
+    "radius": 14,
+    "bg": "rgb(200, 255, 0)",
+    "border": "none",
+    "pad": "8px 14px"
+   },
+   {
+    "testid": "tab-home",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "none",
+    "pad": "8px 0px"
+   },
+   {
+    "testid": "tab-games",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "none",
+    "pad": "8px 0px"
+   },
+   {
+    "testid": "tab-account",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "none",
+    "pad": "8px 0px"
+   }
+  ]
+ },
+ "signup-cs": {
+  "headings": [
+   {
+    "tag": "H1",
+    "size": 27.3,
+    "weight": "400",
+    "transform": "uppercase",
+    "color": "rgb(255, 255, 255)",
+    "family": "Anton",
+    "tracking": "0.5px",
+    "text": "Založ si účet"
+   }
+  ],
+  "overflow": [],
+  "sections": [],
+  "primary": [
+   {
+    "testid": "nav-login",
+    "text": "Přihlásit se",
+    "h": 37.75,
+    "radius": "14px",
+    "size": 15,
+    "weight": "700",
+    "transform": "none"
+   },
+   {
+    "testid": "signup-submit",
+    "text": "Založit účet",
+    "h": 53.8,
+    "radius": "999px",
+    "size": 17,
+    "weight": "800",
+    "transform": "uppercase"
+   }
+  ],
+  "surfaces": [
+   {
+    "testid": "nav-login",
+    "radius": 14,
+    "bg": "rgb(200, 255, 0)",
+    "border": "none",
+    "pad": "8px 14px"
+   },
+   {
+    "testid": "tab-home",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "none",
+    "pad": "8px 0px"
+   },
+   {
+    "testid": "tab-games",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "none",
+    "pad": "8px 0px"
+   },
+   {
+    "testid": "tab-account",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "none",
+    "pad": "8px 0px"
+   }
+  ]
+ },
+ "signup-ru": {
+  "headings": [
+   {
+    "tag": "H1",
+    "size": 27.3,
+    "weight": "400",
+    "transform": "uppercase",
+    "color": "rgb(255, 255, 255)",
+    "family": "Anton",
+    "tracking": "0.5px",
+    "text": "Создай аккаунт"
+   }
+  ],
+  "overflow": [],
+  "sections": [],
+  "primary": [
+   {
+    "testid": "nav-login",
+    "text": "Войти",
+    "h": 37.75,
+    "radius": "14px",
+    "size": 15,
+    "weight": "700",
+    "transform": "none"
+   },
+   {
+    "testid": "signup-submit",
+    "text": "Создать аккаунт",
+    "h": 53.8,
+    "radius": "999px",
+    "size": 17,
+    "weight": "800",
+    "transform": "uppercase"
+   }
+  ],
+  "surfaces": [
+   {
+    "testid": "nav-login",
+    "radius": 14,
+    "bg": "rgb(200, 255, 0)",
+    "border": "none",
+    "pad": "8px 14px"
+   },
+   {
+    "testid": "tab-home",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "none",
+    "pad": "8px 0px"
+   },
+   {
+    "testid": "tab-games",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "none",
+    "pad": "8px 0px"
+   },
+   {
+    "testid": "tab-account",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "none",
+    "pad": "8px 0px"
+   }
+  ]
+ },
+ "admin-dash-en": {
+  "headings": [
+   {
+    "tag": "H2",
+    "size": 27.3,
+    "weight": "400",
+    "transform": "uppercase",
+    "color": "rgb(255, 255, 255)",
+    "family": "Anton",
+    "tracking": "0.5px",
+    "text": "Dashboard overview"
+   },
+   {
+    "tag": "H3",
+    "size": 17,
+    "weight": "400",
+    "transform": "uppercase",
+    "color": "rgb(255, 255, 255)",
+    "family": "Anton",
+    "tracking": "0.5px",
+    "text": "Upcoming games"
+   },
+   {
+    "tag": "H3",
+    "size": 17,
+    "weight": "400",
+    "transform": "uppercase",
+    "color": "rgb(255, 255, 255)",
+    "family": "Anton",
+    "tracking": "0.5px",
+    "text": "Quick actions"
+   }
+  ],
+  "overflow": [
+   {
+    "testid": "header",
+    "text": "GamesPlayersFinancialsVenuesDashbo",
+    "clipped": true,
+    "spills": false,
+    "over": 22,
+    "ellipsis": false
+   },
+   {
+    "testid": "div",
+    "text": "GamesPlayersFinancialsVenuesDashbo",
+    "clipped": true,
+    "spills": false,
+    "over": 22,
+    "ellipsis": false
+   },
+   {
+    "testid": "admin-nav-dashboard",
+    "text": "Dashboard",
+    "clipped": false,
+    "spills": true,
+    "over": 56,
+    "ellipsis": false
+   },
+   {
+    "testid": "admin-nav-site",
+    "text": "Home page",
+    "clipped": false,
+    "spills": true,
+    "over": 160,
+    "ellipsis": false
+   }
+  ],
+  "sections": [],
+  "primary": [],
+  "surfaces": [
+   {
+    "testid": "tile-upcoming",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "16px"
+   },
+   {
+    "testid": "tile-players",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "16px"
+   },
+   {
+    "testid": "tile-new-players",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "16px"
+   },
+   {
+    "testid": "tile-revenue",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "16px"
+   },
+   {
+    "testid": "dashboard-to-games",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "12px 16px"
+   },
+   {
+    "testid": "dashboard-to-players",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "12px 16px"
+   },
+   {
+    "testid": "tab-home",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "none",
+    "pad": "8px 0px"
+   },
+   {
+    "testid": "tab-games",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "none",
+    "pad": "8px 0px"
+   },
+   {
+    "testid": "tab-account",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "none",
+    "pad": "8px 0px"
+   }
+  ]
+ },
+ "admin-dash-cs": {
+  "headings": [
+   {
+    "tag": "H2",
+    "size": 27.3,
+    "weight": "400",
+    "transform": "uppercase",
+    "color": "rgb(255, 255, 255)",
+    "family": "Anton",
+    "tracking": "0.5px",
+    "text": "Dashboard overview"
+   },
+   {
+    "tag": "H3",
+    "size": 17,
+    "weight": "400",
+    "transform": "uppercase",
+    "color": "rgb(255, 255, 255)",
+    "family": "Anton",
+    "tracking": "0.5px",
+    "text": "Upcoming games"
+   },
+   {
+    "tag": "H3",
+    "size": 17,
+    "weight": "400",
+    "transform": "uppercase",
+    "color": "rgb(255, 255, 255)",
+    "family": "Anton",
+    "tracking": "0.5px",
+    "text": "Quick actions"
+   }
+  ],
+  "overflow": [
+   {
+    "testid": "header",
+    "text": "GamesPlayersFinancialsVenuesDashbo",
+    "clipped": true,
+    "spills": false,
+    "over": 22,
+    "ellipsis": false
+   },
+   {
+    "testid": "div",
+    "text": "GamesPlayersFinancialsVenuesDashbo",
+    "clipped": true,
+    "spills": false,
+    "over": 22,
+    "ellipsis": false
+   },
+   {
+    "testid": "admin-nav-dashboard",
+    "text": "Dashboard",
+    "clipped": false,
+    "spills": true,
+    "over": 56,
+    "ellipsis": false
+   },
+   {
+    "testid": "admin-nav-site",
+    "text": "Home page",
+    "clipped": false,
+    "spills": true,
+    "over": 160,
+    "ellipsis": false
+   }
+  ],
+  "sections": [],
+  "primary": [],
+  "surfaces": [
+   {
+    "testid": "tile-upcoming",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "16px"
+   },
+   {
+    "testid": "tile-players",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "16px"
+   },
+   {
+    "testid": "tile-new-players",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "16px"
+   },
+   {
+    "testid": "tile-revenue",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "16px"
+   },
+   {
+    "testid": "dashboard-to-games",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "12px 16px"
+   },
+   {
+    "testid": "dashboard-to-players",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "12px 16px"
+   },
+   {
+    "testid": "tab-home",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "none",
+    "pad": "8px 0px"
+   },
+   {
+    "testid": "tab-games",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "none",
+    "pad": "8px 0px"
+   },
+   {
+    "testid": "tab-account",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "none",
+    "pad": "8px 0px"
+   }
+  ]
+ },
+ "admin-dash-ru": {
+  "headings": [
+   {
+    "tag": "H2",
+    "size": 27.3,
+    "weight": "400",
+    "transform": "uppercase",
+    "color": "rgb(255, 255, 255)",
+    "family": "Anton",
+    "tracking": "0.5px",
+    "text": "Dashboard overview"
+   },
+   {
+    "tag": "H3",
+    "size": 17,
+    "weight": "400",
+    "transform": "uppercase",
+    "color": "rgb(255, 255, 255)",
+    "family": "Anton",
+    "tracking": "0.5px",
+    "text": "Upcoming games"
+   },
+   {
+    "tag": "H3",
+    "size": 17,
+    "weight": "400",
+    "transform": "uppercase",
+    "color": "rgb(255, 255, 255)",
+    "family": "Anton",
+    "tracking": "0.5px",
+    "text": "Quick actions"
+   }
+  ],
+  "overflow": [
+   {
+    "testid": "header",
+    "text": "GamesPlayersFinancialsVenuesDashbo",
+    "clipped": true,
+    "spills": false,
+    "over": 22,
+    "ellipsis": false
+   },
+   {
+    "testid": "div",
+    "text": "GamesPlayersFinancialsVenuesDashbo",
+    "clipped": true,
+    "spills": false,
+    "over": 22,
+    "ellipsis": false
+   },
+   {
+    "testid": "admin-nav-dashboard",
+    "text": "Dashboard",
+    "clipped": false,
+    "spills": true,
+    "over": 56,
+    "ellipsis": false
+   },
+   {
+    "testid": "admin-nav-site",
+    "text": "Home page",
+    "clipped": false,
+    "spills": true,
+    "over": 160,
+    "ellipsis": false
+   }
+  ],
+  "sections": [],
+  "primary": [],
+  "surfaces": [
+   {
+    "testid": "tile-upcoming",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "16px"
+   },
+   {
+    "testid": "tile-players",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "16px"
+   },
+   {
+    "testid": "tile-new-players",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "16px"
+   },
+   {
+    "testid": "tile-revenue",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "16px"
+   },
+   {
+    "testid": "dashboard-to-games",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "12px 16px"
+   },
+   {
+    "testid": "dashboard-to-players",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "12px 16px"
+   },
+   {
+    "testid": "tab-home",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "none",
+    "pad": "8px 0px"
+   },
+   {
+    "testid": "tab-games",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "none",
+    "pad": "8px 0px"
+   },
+   {
+    "testid": "tab-account",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "none",
+    "pad": "8px 0px"
+   }
+  ]
+ },
+ "admin-game-en": {
+  "headings": [
+   {
+    "tag": "H2",
+    "size": 22,
+    "weight": "700",
+    "transform": "uppercase",
+    "color": "rgb(255, 255, 255)",
+    "family": "Onest",
+    "tracking": "0.5px",
+    "text": "E2E Scratch Pitch"
+   },
+   {
+    "tag": "H3",
+    "size": 18,
+    "weight": "700",
+    "transform": "uppercase",
+    "color": "rgb(233, 231, 224)",
+    "family": "Onest",
+    "tracking": "0.5px",
+    "text": "Guests"
+   },
+   {
+    "tag": "H3",
+    "size": 18,
+    "weight": "700",
+    "transform": "uppercase",
+    "color": "rgb(233, 231, 224)",
+    "family": "Onest",
+    "tracking": "0.5px",
+    "text": "Roster"
+   },
+   {
+    "tag": "H3",
+    "size": 18,
+    "weight": "700",
+    "transform": "uppercase",
+    "color": "rgb(233, 231, 224)",
+    "family": "Onest",
+    "tracking": "0.5px",
+    "text": "From the venue"
+   },
+   {
+    "tag": "H3",
+    "size": 18,
+    "weight": "700",
+    "transform": "uppercase",
+    "color": "rgb(233, 231, 224)",
+    "family": "Onest",
+    "tracking": "0.5px",
+    "text": "Edit game"
+   }
+  ],
+  "overflow": [
+   {
+    "testid": "header",
+    "text": "GamesPlayersFinancialsVenuesDashbo",
+    "clipped": true,
+    "spills": false,
+    "over": 22,
+    "ellipsis": false
+   },
+   {
+    "testid": "div",
+    "text": "GamesPlayersFinancialsVenuesDashbo",
+    "clipped": true,
+    "spills": false,
+    "over": 22,
+    "ellipsis": false
+   },
+   {
+    "testid": "admin-nav-dashboard",
+    "text": "Dashboard",
+    "clipped": false,
+    "spills": true,
+    "over": 56,
+    "ellipsis": false
+   },
+   {
+    "testid": "admin-nav-site",
+    "text": "Home page",
+    "clipped": false,
+    "spills": true,
+    "over": 160,
+    "ellipsis": false
+   }
+  ],
+  "sections": [],
+  "primary": [
+   {
+    "testid": "guest-add",
+    "text": "Add a guest",
+    "h": 52,
+    "radius": "14px",
+    "size": 17,
+    "weight": "700",
+    "transform": "none"
+   },
+   {
+    "testid": "guest-remove",
+    "text": "Remove a guest",
+    "h": 52,
+    "radius": "14px",
+    "size": 17,
+    "weight": "700",
+    "transform": "none"
+   },
+   {
+    "testid": "game-form-submit",
+    "text": "Save changes",
+    "h": 55.8,
+    "radius": "14px",
+    "size": 17,
+    "weight": "800",
+    "transform": "uppercase"
+   }
+  ],
+  "surfaces": [
+   {
+    "testid": "export-roster",
+    "radius": 14,
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "0px 16px"
+   },
+   {
+    "testid": "tab-home",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "none",
+    "pad": "8px 0px"
+   },
+   {
+    "testid": "tab-games",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "none",
+    "pad": "8px 0px"
+   },
+   {
+    "testid": "tab-account",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "none",
+    "pad": "8px 0px"
+   }
+  ]
+ },
+ "admin-game-cs": {
+  "headings": [
+   {
+    "tag": "H2",
+    "size": 22,
+    "weight": "700",
+    "transform": "uppercase",
+    "color": "rgb(255, 255, 255)",
+    "family": "Onest",
+    "tracking": "0.5px",
+    "text": "E2E Scratch Pitch"
+   },
+   {
+    "tag": "H3",
+    "size": 18,
+    "weight": "700",
+    "transform": "uppercase",
+    "color": "rgb(233, 231, 224)",
+    "family": "Onest",
+    "tracking": "0.5px",
+    "text": "Guests"
+   },
+   {
+    "tag": "H3",
+    "size": 18,
+    "weight": "700",
+    "transform": "uppercase",
+    "color": "rgb(233, 231, 224)",
+    "family": "Onest",
+    "tracking": "0.5px",
+    "text": "Roster"
+   },
+   {
+    "tag": "H3",
+    "size": 18,
+    "weight": "700",
+    "transform": "uppercase",
+    "color": "rgb(233, 231, 224)",
+    "family": "Onest",
+    "tracking": "0.5px",
+    "text": "From the venue"
+   },
+   {
+    "tag": "H3",
+    "size": 18,
+    "weight": "700",
+    "transform": "uppercase",
+    "color": "rgb(233, 231, 224)",
+    "family": "Onest",
+    "tracking": "0.5px",
+    "text": "Edit game"
+   }
+  ],
+  "overflow": [
+   {
+    "testid": "header",
+    "text": "GamesPlayersFinancialsVenuesDashbo",
+    "clipped": true,
+    "spills": false,
+    "over": 22,
+    "ellipsis": false
+   },
+   {
+    "testid": "div",
+    "text": "GamesPlayersFinancialsVenuesDashbo",
+    "clipped": true,
+    "spills": false,
+    "over": 22,
+    "ellipsis": false
+   },
+   {
+    "testid": "admin-nav-dashboard",
+    "text": "Dashboard",
+    "clipped": false,
+    "spills": true,
+    "over": 56,
+    "ellipsis": false
+   },
+   {
+    "testid": "admin-nav-site",
+    "text": "Home page",
+    "clipped": false,
+    "spills": true,
+    "over": 160,
+    "ellipsis": false
+   }
+  ],
+  "sections": [],
+  "primary": [
+   {
+    "testid": "guest-add",
+    "text": "Add a guest",
+    "h": 52,
+    "radius": "14px",
+    "size": 17,
+    "weight": "700",
+    "transform": "none"
+   },
+   {
+    "testid": "guest-remove",
+    "text": "Remove a guest",
+    "h": 52,
+    "radius": "14px",
+    "size": 17,
+    "weight": "700",
+    "transform": "none"
+   },
+   {
+    "testid": "game-form-submit",
+    "text": "Save changes",
+    "h": 55.8,
+    "radius": "14px",
+    "size": 17,
+    "weight": "800",
+    "transform": "uppercase"
+   }
+  ],
+  "surfaces": [
+   {
+    "testid": "export-roster",
+    "radius": 14,
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "0px 16px"
+   },
+   {
+    "testid": "tab-home",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "none",
+    "pad": "8px 0px"
+   },
+   {
+    "testid": "tab-games",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "none",
+    "pad": "8px 0px"
+   },
+   {
+    "testid": "tab-account",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "none",
+    "pad": "8px 0px"
+   }
+  ]
+ },
+ "admin-game-ru": {
+  "headings": [
+   {
+    "tag": "H2",
+    "size": 22,
+    "weight": "700",
+    "transform": "uppercase",
+    "color": "rgb(255, 255, 255)",
+    "family": "Onest",
+    "tracking": "0.5px",
+    "text": "E2E Scratch Pitch"
+   },
+   {
+    "tag": "H3",
+    "size": 18,
+    "weight": "700",
+    "transform": "uppercase",
+    "color": "rgb(233, 231, 224)",
+    "family": "Onest",
+    "tracking": "0.5px",
+    "text": "Guests"
+   },
+   {
+    "tag": "H3",
+    "size": 18,
+    "weight": "700",
+    "transform": "uppercase",
+    "color": "rgb(233, 231, 224)",
+    "family": "Onest",
+    "tracking": "0.5px",
+    "text": "Roster"
+   },
+   {
+    "tag": "H3",
+    "size": 18,
+    "weight": "700",
+    "transform": "uppercase",
+    "color": "rgb(233, 231, 224)",
+    "family": "Onest",
+    "tracking": "0.5px",
+    "text": "From the venue"
+   },
+   {
+    "tag": "H3",
+    "size": 18,
+    "weight": "700",
+    "transform": "uppercase",
+    "color": "rgb(233, 231, 224)",
+    "family": "Onest",
+    "tracking": "0.5px",
+    "text": "Edit game"
+   }
+  ],
+  "overflow": [
+   {
+    "testid": "header",
+    "text": "GamesPlayersFinancialsVenuesDashbo",
+    "clipped": true,
+    "spills": false,
+    "over": 22,
+    "ellipsis": false
+   },
+   {
+    "testid": "div",
+    "text": "GamesPlayersFinancialsVenuesDashbo",
+    "clipped": true,
+    "spills": false,
+    "over": 22,
+    "ellipsis": false
+   },
+   {
+    "testid": "admin-nav-dashboard",
+    "text": "Dashboard",
+    "clipped": false,
+    "spills": true,
+    "over": 56,
+    "ellipsis": false
+   },
+   {
+    "testid": "admin-nav-site",
+    "text": "Home page",
+    "clipped": false,
+    "spills": true,
+    "over": 160,
+    "ellipsis": false
+   }
+  ],
+  "sections": [],
+  "primary": [
+   {
+    "testid": "guest-add",
+    "text": "Add a guest",
+    "h": 52,
+    "radius": "14px",
+    "size": 17,
+    "weight": "700",
+    "transform": "none"
+   },
+   {
+    "testid": "guest-remove",
+    "text": "Remove a guest",
+    "h": 52,
+    "radius": "14px",
+    "size": 17,
+    "weight": "700",
+    "transform": "none"
+   },
+   {
+    "testid": "game-form-submit",
+    "text": "Save changes",
+    "h": 55.8,
+    "radius": "14px",
+    "size": 17,
+    "weight": "800",
+    "transform": "uppercase"
+   }
+  ],
+  "surfaces": [
+   {
+    "testid": "export-roster",
+    "radius": 14,
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "0px 16px"
+   },
+   {
+    "testid": "tab-home",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "none",
+    "pad": "8px 0px"
+   },
+   {
+    "testid": "tab-games",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "none",
+    "pad": "8px 0px"
+   },
+   {
+    "testid": "tab-account",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "none",
+    "pad": "8px 0px"
+   }
+  ]
+ },
+ "admin-players-en": {
+  "headings": [
+   {
+    "tag": "H2",
+    "size": 27.3,
+    "weight": "400",
+    "transform": "uppercase",
+    "color": "rgb(255, 255, 255)",
+    "family": "Anton",
+    "tracking": "0.5px",
+    "text": "Players"
+   }
+  ],
+  "overflow": [
+   {
+    "testid": "header",
+    "text": "GamesPlayersFinancialsVenuesDashbo",
+    "clipped": true,
+    "spills": false,
+    "over": 22,
+    "ellipsis": false
+   },
+   {
+    "testid": "div",
+    "text": "GamesPlayersFinancialsVenuesDashbo",
+    "clipped": true,
+    "spills": false,
+    "over": 22,
+    "ellipsis": false
+   },
+   {
+    "testid": "admin-nav-dashboard",
+    "text": "Dashboard",
+    "clipped": false,
+    "spills": true,
+    "over": 56,
+    "ellipsis": false
+   },
+   {
+    "testid": "admin-nav-site",
+    "text": "Home page",
+    "clipped": false,
+    "spills": true,
+    "over": 160,
+    "ellipsis": false
+   },
+   {
+    "testid": "label",
+    "text": "Search players",
+    "clipped": true,
+    "spills": false,
+    "over": 111,
+    "ellipsis": false
+   },
+   {
+    "testid": "div",
+    "text": "credit-partial@seed.hrajfotbal.tes",
+    "clipped": true,
+    "spills": false,
+    "over": 52,
+    "ellipsis": true
+   },
+   {
+    "testid": "div",
+    "text": "credit-rich@seed.hrajfotbal.test  ",
+    "clipped": true,
+    "spills": false,
+    "over": 37,
+    "ellipsis": true
+   },
+   {
+    "testid": "div",
+    "text": "organizer@seed.hrajfotbal.test  · ",
+    "clipped": true,
+    "spills": false,
+    "over": 28,
+    "ellipsis": true
+   },
+   {
+    "testid": "div",
+    "text": "shadow-claimable@seed.hrajfotbal.t",
+    "clipped": true,
+    "spills": false,
+    "over": 80,
+    "ellipsis": true
+   }
+  ],
+  "sections": [],
+  "primary": [],
+  "surfaces": [
+   {
+    "testid": "export-players",
+    "radius": 14,
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "0px 16px"
+   },
+   {
+    "testid": "admin-player-row",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "12px 16px"
+   },
+   {
+    "testid": "admin-player-row",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "12px 16px"
+   },
+   {
+    "testid": "admin-player-row",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "12px 16px"
+   },
+   {
+    "testid": "admin-player-row",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "12px 16px"
+   },
+   {
+    "testid": "admin-player-row",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "12px 16px"
+   },
+   {
+    "testid": "admin-player-row",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "12px 16px"
+   },
+   {
+    "testid": "admin-player-row",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "12px 16px"
+   },
+   {
+    "testid": "tab-home",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "none",
+    "pad": "8px 0px"
+   },
+   {
+    "testid": "tab-games",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "none",
+    "pad": "8px 0px"
+   },
+   {
+    "testid": "tab-account",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "none",
+    "pad": "8px 0px"
+   }
+  ]
+ },
+ "admin-players-cs": {
+  "headings": [
+   {
+    "tag": "H2",
+    "size": 27.3,
+    "weight": "400",
+    "transform": "uppercase",
+    "color": "rgb(255, 255, 255)",
+    "family": "Anton",
+    "tracking": "0.5px",
+    "text": "Players"
+   }
+  ],
+  "overflow": [
+   {
+    "testid": "header",
+    "text": "GamesPlayersFinancialsVenuesDashbo",
+    "clipped": true,
+    "spills": false,
+    "over": 22,
+    "ellipsis": false
+   },
+   {
+    "testid": "div",
+    "text": "GamesPlayersFinancialsVenuesDashbo",
+    "clipped": true,
+    "spills": false,
+    "over": 22,
+    "ellipsis": false
+   },
+   {
+    "testid": "admin-nav-dashboard",
+    "text": "Dashboard",
+    "clipped": false,
+    "spills": true,
+    "over": 56,
+    "ellipsis": false
+   },
+   {
+    "testid": "admin-nav-site",
+    "text": "Home page",
+    "clipped": false,
+    "spills": true,
+    "over": 160,
+    "ellipsis": false
+   },
+   {
+    "testid": "label",
+    "text": "Search players",
+    "clipped": true,
+    "spills": false,
+    "over": 111,
+    "ellipsis": false
+   },
+   {
+    "testid": "div",
+    "text": "credit-partial@seed.hrajfotbal.tes",
+    "clipped": true,
+    "spills": false,
+    "over": 52,
+    "ellipsis": true
+   },
+   {
+    "testid": "div",
+    "text": "credit-rich@seed.hrajfotbal.test  ",
+    "clipped": true,
+    "spills": false,
+    "over": 37,
+    "ellipsis": true
+   },
+   {
+    "testid": "div",
+    "text": "organizer@seed.hrajfotbal.test  · ",
+    "clipped": true,
+    "spills": false,
+    "over": 28,
+    "ellipsis": true
+   },
+   {
+    "testid": "div",
+    "text": "shadow-claimable@seed.hrajfotbal.t",
+    "clipped": true,
+    "spills": false,
+    "over": 80,
+    "ellipsis": true
+   }
+  ],
+  "sections": [],
+  "primary": [],
+  "surfaces": [
+   {
+    "testid": "export-players",
+    "radius": 14,
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "0px 16px"
+   },
+   {
+    "testid": "admin-player-row",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "12px 16px"
+   },
+   {
+    "testid": "admin-player-row",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "12px 16px"
+   },
+   {
+    "testid": "admin-player-row",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "12px 16px"
+   },
+   {
+    "testid": "admin-player-row",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "12px 16px"
+   },
+   {
+    "testid": "admin-player-row",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "12px 16px"
+   },
+   {
+    "testid": "admin-player-row",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "12px 16px"
+   },
+   {
+    "testid": "admin-player-row",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "12px 16px"
+   },
+   {
+    "testid": "tab-home",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "none",
+    "pad": "8px 0px"
+   },
+   {
+    "testid": "tab-games",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "none",
+    "pad": "8px 0px"
+   },
+   {
+    "testid": "tab-account",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "none",
+    "pad": "8px 0px"
+   }
+  ]
+ },
+ "admin-players-ru": {
+  "headings": [
+   {
+    "tag": "H2",
+    "size": 27.3,
+    "weight": "400",
+    "transform": "uppercase",
+    "color": "rgb(255, 255, 255)",
+    "family": "Anton",
+    "tracking": "0.5px",
+    "text": "Players"
+   }
+  ],
+  "overflow": [
+   {
+    "testid": "header",
+    "text": "GamesPlayersFinancialsVenuesDashbo",
+    "clipped": true,
+    "spills": false,
+    "over": 22,
+    "ellipsis": false
+   },
+   {
+    "testid": "div",
+    "text": "GamesPlayersFinancialsVenuesDashbo",
+    "clipped": true,
+    "spills": false,
+    "over": 22,
+    "ellipsis": false
+   },
+   {
+    "testid": "admin-nav-dashboard",
+    "text": "Dashboard",
+    "clipped": false,
+    "spills": true,
+    "over": 56,
+    "ellipsis": false
+   },
+   {
+    "testid": "admin-nav-site",
+    "text": "Home page",
+    "clipped": false,
+    "spills": true,
+    "over": 160,
+    "ellipsis": false
+   },
+   {
+    "testid": "label",
+    "text": "Search players",
+    "clipped": true,
+    "spills": false,
+    "over": 111,
+    "ellipsis": false
+   },
+   {
+    "testid": "div",
+    "text": "credit-partial@seed.hrajfotbal.tes",
+    "clipped": true,
+    "spills": false,
+    "over": 52,
+    "ellipsis": true
+   },
+   {
+    "testid": "div",
+    "text": "credit-rich@seed.hrajfotbal.test  ",
+    "clipped": true,
+    "spills": false,
+    "over": 37,
+    "ellipsis": true
+   },
+   {
+    "testid": "div",
+    "text": "organizer@seed.hrajfotbal.test  · ",
+    "clipped": true,
+    "spills": false,
+    "over": 28,
+    "ellipsis": true
+   },
+   {
+    "testid": "div",
+    "text": "shadow-claimable@seed.hrajfotbal.t",
+    "clipped": true,
+    "spills": false,
+    "over": 80,
+    "ellipsis": true
+   }
+  ],
+  "sections": [],
+  "primary": [],
+  "surfaces": [
+   {
+    "testid": "export-players",
+    "radius": 14,
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "0px 16px"
+   },
+   {
+    "testid": "admin-player-row",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "12px 16px"
+   },
+   {
+    "testid": "admin-player-row",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "12px 16px"
+   },
+   {
+    "testid": "admin-player-row",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "12px 16px"
+   },
+   {
+    "testid": "admin-player-row",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "12px 16px"
+   },
+   {
+    "testid": "admin-player-row",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "12px 16px"
+   },
+   {
+    "testid": "admin-player-row",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "12px 16px"
+   },
+   {
+    "testid": "admin-player-row",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "12px 16px"
+   },
+   {
+    "testid": "tab-home",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "none",
+    "pad": "8px 0px"
+   },
+   {
+    "testid": "tab-games",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "none",
+    "pad": "8px 0px"
+   },
+   {
+    "testid": "tab-account",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "none",
+    "pad": "8px 0px"
+   }
+  ]
+ },
+ "admin-venues-en": {
+  "headings": [
+   {
+    "tag": "H2",
+    "size": 27.3,
+    "weight": "400",
+    "transform": "uppercase",
+    "color": "rgb(255, 255, 255)",
+    "family": "Anton",
+    "tracking": "0.5px",
+    "text": "Venues"
+   },
+   {
+    "tag": "H3",
+    "size": 17,
+    "weight": "400",
+    "transform": "uppercase",
+    "color": "rgb(255, 255, 255)",
+    "family": "Anton",
+    "tracking": "0.5px",
+    "text": "Add a venue"
+   },
+   {
+    "tag": "H4",
+    "size": 10,
+    "weight": "400",
+    "transform": "uppercase",
+    "color": "rgb(143, 184, 0)",
+    "family": "Onest",
+    "tracking": "3px",
+    "text": "Inherited by every game here"
+   },
+   {
+    "tag": "H4",
+    "size": 10,
+    "weight": "400",
+    "transform": "uppercase",
+    "color": "rgb(143, 184, 0)",
+    "family": "Onest",
+    "tracking": "3px",
+    "text": "Inherited by every game here"
+   },
+   {
+    "tag": "H4",
+    "size": 10,
+    "weight": "400",
+    "transform": "uppercase",
+    "color": "rgb(143, 184, 0)",
+    "family": "Onest",
+    "tracking": "3px",
+    "text": "Inherited by every game here"
+   },
+   {
+    "tag": "H4",
+    "size": 10,
+    "weight": "400",
+    "transform": "uppercase",
+    "color": "rgb(143, 184, 0)",
+    "family": "Onest",
+    "tracking": "3px",
+    "text": "Inherited by every game here"
+   },
+   {
+    "tag": "H4",
+    "size": 10,
+    "weight": "400",
+    "transform": "uppercase",
+    "color": "rgb(143, 184, 0)",
+    "family": "Onest",
+    "tracking": "3px",
+    "text": "Inherited by every game here"
+   },
+   {
+    "tag": "H4",
+    "size": 10,
+    "weight": "400",
+    "transform": "uppercase",
+    "color": "rgb(143, 184, 0)",
+    "family": "Onest",
+    "tracking": "3px",
+    "text": "Inherited by every game here"
+   },
+   {
+    "tag": "H4",
+    "size": 10,
+    "weight": "400",
+    "transform": "uppercase",
+    "color": "rgb(143, 184, 0)",
+    "family": "Onest",
+    "tracking": "3px",
+    "text": "Inherited by every game here"
+   },
+   {
+    "tag": "H4",
+    "size": 10,
+    "weight": "400",
+    "transform": "uppercase",
+    "color": "rgb(143, 184, 0)",
+    "family": "Onest",
+    "tracking": "3px",
+    "text": "Inherited by every game here"
+   },
+   {
+    "tag": "H4",
+    "size": 10,
+    "weight": "400",
+    "transform": "uppercase",
+    "color": "rgb(143, 184, 0)",
+    "family": "Onest",
+    "tracking": "3px",
+    "text": "Inherited by every game here"
+   },
+   {
+    "tag": "H4",
+    "size": 10,
+    "weight": "400",
+    "transform": "uppercase",
+    "color": "rgb(143, 184, 0)",
+    "family": "Onest",
+    "tracking": "3px",
+    "text": "Inherited by every game here"
+   },
+   {
+    "tag": "H4",
+    "size": 10,
+    "weight": "400",
+    "transform": "uppercase",
+    "color": "rgb(143, 184, 0)",
+    "family": "Onest",
+    "tracking": "3px",
+    "text": "Inherited by every game here"
+   }
+  ],
+  "overflow": [
+   {
+    "testid": "header",
+    "text": "GamesPlayersFinancialsVenuesDashbo",
+    "clipped": true,
+    "spills": false,
+    "over": 22,
+    "ellipsis": false
+   },
+   {
+    "testid": "div",
+    "text": "GamesPlayersFinancialsVenuesDashbo",
+    "clipped": true,
+    "spills": false,
+    "over": 22,
+    "ellipsis": false
+   },
+   {
+    "testid": "admin-nav-dashboard",
+    "text": "Dashboard",
+    "clipped": false,
+    "spills": true,
+    "over": 56,
+    "ellipsis": false
+   },
+   {
+    "testid": "admin-nav-site",
+    "text": "Home page",
+    "clipped": false,
+    "spills": true,
+    "over": 160,
+    "ellipsis": false
+   },
+   {
+    "testid": "span",
+    "text": "<script>alert(1)</script> \"Praha 2",
+    "clipped": true,
+    "spills": false,
+    "over": 65,
+    "ellipsis": true
+   },
+   {
+    "testid": "venue-name-input",
+    "text": "",
+    "clipped": true,
+    "spills": false,
+    "over": 26,
+    "ellipsis": false
+   },
+   {
+    "testid": "venue-photo-input",
+    "text": "",
+    "clipped": true,
+    "spills": false,
+    "over": 187,
+    "ellipsis": true
+   },
+   {
+    "testid": "venue-photo-input",
+    "text": "",
+    "clipped": true,
+    "spills": false,
+    "over": 187,
+    "ellipsis": true
+   },
+   {
+    "testid": "venue-photo-input",
+    "text": "",
+    "clipped": true,
+    "spills": false,
+    "over": 187,
+    "ellipsis": true
+   },
+   {
+    "testid": "venue-photo-input",
+    "text": "",
+    "clipped": true,
+    "spills": false,
+    "over": 187,
+    "ellipsis": true
+   },
+   {
+    "testid": "venue-photo-input",
+    "text": "",
+    "clipped": true,
+    "spills": false,
+    "over": 187,
+    "ellipsis": true
+   },
+   {
+    "testid": "venue-photo-input",
+    "text": "",
+    "clipped": true,
+    "spills": false,
+    "over": 187,
+    "ellipsis": true
+   },
+   {
+    "testid": "venue-photo-input",
+    "text": "",
+    "clipped": true,
+    "spills": false,
+    "over": 187,
+    "ellipsis": true
+   },
+   {
+    "testid": "venue-photo-input",
+    "text": "",
+    "clipped": true,
+    "spills": false,
+    "over": 187,
+    "ellipsis": true
+   },
+   {
+    "testid": "venue-photo-input",
+    "text": "",
+    "clipped": true,
+    "spills": false,
+    "over": 187,
+    "ellipsis": true
+   },
+   {
+    "testid": "venue-photo-input",
+    "text": "",
+    "clipped": true,
+    "spills": false,
+    "over": 187,
+    "ellipsis": true
+   },
+   {
+    "testid": "venue-photo-input",
+    "text": "",
+    "clipped": true,
+    "spills": false,
+    "over": 187,
+    "ellipsis": true
+   }
+  ],
+  "sections": [],
+  "primary": [
+   {
+    "testid": "venue-create",
+    "text": "Add venue",
+    "h": 52,
+    "radius": "14px",
+    "size": 17,
+    "weight": "700",
+    "transform": "none"
+   },
+   {
+    "testid": "venue-save",
+    "text": "Save venue",
+    "h": 52,
+    "radius": "14px",
+    "size": 17,
+    "weight": "700",
+    "transform": "none"
+   },
+   {
+    "testid": "amenities-submit",
+    "text": "Save what's provided",
+    "h": 46.5,
+    "radius": "14px",
+    "size": 15,
+    "weight": "800",
+    "transform": "uppercase"
+   },
+   {
+    "testid": "venue-save",
+    "text": "Save venue",
+    "h": 52,
+    "radius": "14px",
+    "size": 17,
+    "weight": "700",
+    "transform": "none"
+   },
+   {
+    "testid": "amenities-submit",
+    "text": "Save what's provided",
+    "h": 46.5,
+    "radius": "14px",
+    "size": 15,
+    "weight": "800",
+    "transform": "uppercase"
+   },
+   {
+    "testid": "venue-save",
+    "text": "Save venue",
+    "h": 52,
+    "radius": "14px",
+    "size": 17,
+    "weight": "700",
+    "transform": "none"
+   },
+   {
+    "testid": "amenities-submit",
+    "text": "Save what's provided",
+    "h": 46.5,
+    "radius": "14px",
+    "size": 15,
+    "weight": "800",
+    "transform": "uppercase"
+   },
+   {
+    "testid": "venue-save",
+    "text": "Save venue",
+    "h": 52,
+    "radius": "14px",
+    "size": 17,
+    "weight": "700",
+    "transform": "none"
+   },
+   {
+    "testid": "amenities-submit",
+    "text": "Save what's provided",
+    "h": 46.5,
+    "radius": "14px",
+    "size": 15,
+    "weight": "800",
+    "transform": "uppercase"
+   },
+   {
+    "testid": "venue-save",
+    "text": "Save venue",
+    "h": 52,
+    "radius": "14px",
+    "size": 17,
+    "weight": "700",
+    "transform": "none"
+   },
+   {
+    "testid": "amenities-submit",
+    "text": "Save what's provided",
+    "h": 46.5,
+    "radius": "14px",
+    "size": 15,
+    "weight": "800",
+    "transform": "uppercase"
+   },
+   {
+    "testid": "venue-save",
+    "text": "Save venue",
+    "h": 52,
+    "radius": "14px",
+    "size": 17,
+    "weight": "700",
+    "transform": "none"
+   },
+   {
+    "testid": "amenities-submit",
+    "text": "Save what's provided",
+    "h": 46.5,
+    "radius": "14px",
+    "size": 15,
+    "weight": "800",
+    "transform": "uppercase"
+   },
+   {
+    "testid": "venue-save",
+    "text": "Save venue",
+    "h": 52,
+    "radius": "14px",
+    "size": 17,
+    "weight": "700",
+    "transform": "none"
+   },
+   {
+    "testid": "amenities-submit",
+    "text": "Save what's provided",
+    "h": 46.5,
+    "radius": "14px",
+    "size": 15,
+    "weight": "800",
+    "transform": "uppercase"
+   },
+   {
+    "testid": "venue-save",
+    "text": "Save venue",
+    "h": 52,
+    "radius": "14px",
+    "size": 17,
+    "weight": "700",
+    "transform": "none"
+   },
+   {
+    "testid": "amenities-submit",
+    "text": "Save what's provided",
+    "h": 46.5,
+    "radius": "14px",
+    "size": 15,
+    "weight": "800",
+    "transform": "uppercase"
+   },
+   {
+    "testid": "venue-save",
+    "text": "Save venue",
+    "h": 52,
+    "radius": "14px",
+    "size": 17,
+    "weight": "700",
+    "transform": "none"
+   },
+   {
+    "testid": "amenities-submit",
+    "text": "Save what's provided",
+    "h": 46.5,
+    "radius": "14px",
+    "size": 15,
+    "weight": "800",
+    "transform": "uppercase"
+   },
+   {
+    "testid": "venue-save",
+    "text": "Save venue",
+    "h": 52,
+    "radius": "14px",
+    "size": 17,
+    "weight": "700",
+    "transform": "none"
+   },
+   {
+    "testid": "amenities-submit",
+    "text": "Save what's provided",
+    "h": 46.5,
+    "radius": "14px",
+    "size": 15,
+    "weight": "800",
+    "transform": "uppercase"
+   },
+   {
+    "testid": "venue-save",
+    "text": "Save venue",
+    "h": 52,
+    "radius": "14px",
+    "size": 17,
+    "weight": "700",
+    "transform": "none"
+   },
+   {
+    "testid": "amenities-submit",
+    "text": "Save what's provided",
+    "h": 46.5,
+    "radius": "14px",
+    "size": 15,
+    "weight": "800",
+    "transform": "uppercase"
+   }
+  ],
+  "surfaces": [
+   {
+    "testid": "venue-create-section",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "20px"
+   },
+   {
+    "testid": "venue-row",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "0px"
+   },
+   {
+    "testid": "venue-row",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "0px"
+   },
+   {
+    "testid": "venue-row",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "0px"
+   },
+   {
+    "testid": "venue-row",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "0px"
+   },
+   {
+    "testid": "venue-row",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "0px"
+   },
+   {
+    "testid": "venue-row",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "0px"
+   },
+   {
+    "testid": "venue-row",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "0px"
+   },
+   {
+    "testid": "venue-row",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "0px"
+   },
+   {
+    "testid": "venue-row",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "0px"
+   },
+   {
+    "testid": "venue-row",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "0px"
+   },
+   {
+    "testid": "venue-row",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "0px"
+   },
+   {
+    "testid": "tab-home",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "none",
+    "pad": "8px 0px"
+   },
+   {
+    "testid": "tab-games",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "none",
+    "pad": "8px 0px"
+   },
+   {
+    "testid": "tab-account",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "none",
+    "pad": "8px 0px"
+   }
+  ]
+ },
+ "admin-venues-cs": {
+  "headings": [
+   {
+    "tag": "H2",
+    "size": 27.3,
+    "weight": "400",
+    "transform": "uppercase",
+    "color": "rgb(255, 255, 255)",
+    "family": "Anton",
+    "tracking": "0.5px",
+    "text": "Venues"
+   },
+   {
+    "tag": "H3",
+    "size": 17,
+    "weight": "400",
+    "transform": "uppercase",
+    "color": "rgb(255, 255, 255)",
+    "family": "Anton",
+    "tracking": "0.5px",
+    "text": "Add a venue"
+   },
+   {
+    "tag": "H4",
+    "size": 10,
+    "weight": "400",
+    "transform": "uppercase",
+    "color": "rgb(143, 184, 0)",
+    "family": "Onest",
+    "tracking": "3px",
+    "text": "Inherited by every game here"
+   },
+   {
+    "tag": "H4",
+    "size": 10,
+    "weight": "400",
+    "transform": "uppercase",
+    "color": "rgb(143, 184, 0)",
+    "family": "Onest",
+    "tracking": "3px",
+    "text": "Inherited by every game here"
+   },
+   {
+    "tag": "H4",
+    "size": 10,
+    "weight": "400",
+    "transform": "uppercase",
+    "color": "rgb(143, 184, 0)",
+    "family": "Onest",
+    "tracking": "3px",
+    "text": "Inherited by every game here"
+   },
+   {
+    "tag": "H4",
+    "size": 10,
+    "weight": "400",
+    "transform": "uppercase",
+    "color": "rgb(143, 184, 0)",
+    "family": "Onest",
+    "tracking": "3px",
+    "text": "Inherited by every game here"
+   },
+   {
+    "tag": "H4",
+    "size": 10,
+    "weight": "400",
+    "transform": "uppercase",
+    "color": "rgb(143, 184, 0)",
+    "family": "Onest",
+    "tracking": "3px",
+    "text": "Inherited by every game here"
+   },
+   {
+    "tag": "H4",
+    "size": 10,
+    "weight": "400",
+    "transform": "uppercase",
+    "color": "rgb(143, 184, 0)",
+    "family": "Onest",
+    "tracking": "3px",
+    "text": "Inherited by every game here"
+   },
+   {
+    "tag": "H4",
+    "size": 10,
+    "weight": "400",
+    "transform": "uppercase",
+    "color": "rgb(143, 184, 0)",
+    "family": "Onest",
+    "tracking": "3px",
+    "text": "Inherited by every game here"
+   },
+   {
+    "tag": "H4",
+    "size": 10,
+    "weight": "400",
+    "transform": "uppercase",
+    "color": "rgb(143, 184, 0)",
+    "family": "Onest",
+    "tracking": "3px",
+    "text": "Inherited by every game here"
+   },
+   {
+    "tag": "H4",
+    "size": 10,
+    "weight": "400",
+    "transform": "uppercase",
+    "color": "rgb(143, 184, 0)",
+    "family": "Onest",
+    "tracking": "3px",
+    "text": "Inherited by every game here"
+   },
+   {
+    "tag": "H4",
+    "size": 10,
+    "weight": "400",
+    "transform": "uppercase",
+    "color": "rgb(143, 184, 0)",
+    "family": "Onest",
+    "tracking": "3px",
+    "text": "Inherited by every game here"
+   },
+   {
+    "tag": "H4",
+    "size": 10,
+    "weight": "400",
+    "transform": "uppercase",
+    "color": "rgb(143, 184, 0)",
+    "family": "Onest",
+    "tracking": "3px",
+    "text": "Inherited by every game here"
+   }
+  ],
+  "overflow": [
+   {
+    "testid": "header",
+    "text": "GamesPlayersFinancialsVenuesDashbo",
+    "clipped": true,
+    "spills": false,
+    "over": 22,
+    "ellipsis": false
+   },
+   {
+    "testid": "div",
+    "text": "GamesPlayersFinancialsVenuesDashbo",
+    "clipped": true,
+    "spills": false,
+    "over": 22,
+    "ellipsis": false
+   },
+   {
+    "testid": "admin-nav-dashboard",
+    "text": "Dashboard",
+    "clipped": false,
+    "spills": true,
+    "over": 56,
+    "ellipsis": false
+   },
+   {
+    "testid": "admin-nav-site",
+    "text": "Home page",
+    "clipped": false,
+    "spills": true,
+    "over": 160,
+    "ellipsis": false
+   },
+   {
+    "testid": "span",
+    "text": "<script>alert(1)</script> \"Praha 2",
+    "clipped": true,
+    "spills": false,
+    "over": 65,
+    "ellipsis": true
+   },
+   {
+    "testid": "venue-name-input",
+    "text": "",
+    "clipped": true,
+    "spills": false,
+    "over": 26,
+    "ellipsis": false
+   },
+   {
+    "testid": "venue-photo-input",
+    "text": "",
+    "clipped": true,
+    "spills": false,
+    "over": 187,
+    "ellipsis": true
+   },
+   {
+    "testid": "venue-photo-input",
+    "text": "",
+    "clipped": true,
+    "spills": false,
+    "over": 187,
+    "ellipsis": true
+   },
+   {
+    "testid": "venue-photo-input",
+    "text": "",
+    "clipped": true,
+    "spills": false,
+    "over": 187,
+    "ellipsis": true
+   },
+   {
+    "testid": "venue-photo-input",
+    "text": "",
+    "clipped": true,
+    "spills": false,
+    "over": 187,
+    "ellipsis": true
+   },
+   {
+    "testid": "venue-photo-input",
+    "text": "",
+    "clipped": true,
+    "spills": false,
+    "over": 187,
+    "ellipsis": true
+   },
+   {
+    "testid": "venue-photo-input",
+    "text": "",
+    "clipped": true,
+    "spills": false,
+    "over": 187,
+    "ellipsis": true
+   },
+   {
+    "testid": "venue-photo-input",
+    "text": "",
+    "clipped": true,
+    "spills": false,
+    "over": 187,
+    "ellipsis": true
+   },
+   {
+    "testid": "venue-photo-input",
+    "text": "",
+    "clipped": true,
+    "spills": false,
+    "over": 187,
+    "ellipsis": true
+   },
+   {
+    "testid": "venue-photo-input",
+    "text": "",
+    "clipped": true,
+    "spills": false,
+    "over": 187,
+    "ellipsis": true
+   },
+   {
+    "testid": "venue-photo-input",
+    "text": "",
+    "clipped": true,
+    "spills": false,
+    "over": 187,
+    "ellipsis": true
+   },
+   {
+    "testid": "venue-photo-input",
+    "text": "",
+    "clipped": true,
+    "spills": false,
+    "over": 187,
+    "ellipsis": true
+   }
+  ],
+  "sections": [],
+  "primary": [
+   {
+    "testid": "venue-create",
+    "text": "Add venue",
+    "h": 52,
+    "radius": "14px",
+    "size": 17,
+    "weight": "700",
+    "transform": "none"
+   },
+   {
+    "testid": "venue-save",
+    "text": "Save venue",
+    "h": 52,
+    "radius": "14px",
+    "size": 17,
+    "weight": "700",
+    "transform": "none"
+   },
+   {
+    "testid": "amenities-submit",
+    "text": "Save what's provided",
+    "h": 46.5,
+    "radius": "14px",
+    "size": 15,
+    "weight": "800",
+    "transform": "uppercase"
+   },
+   {
+    "testid": "venue-save",
+    "text": "Save venue",
+    "h": 52,
+    "radius": "14px",
+    "size": 17,
+    "weight": "700",
+    "transform": "none"
+   },
+   {
+    "testid": "amenities-submit",
+    "text": "Save what's provided",
+    "h": 46.5,
+    "radius": "14px",
+    "size": 15,
+    "weight": "800",
+    "transform": "uppercase"
+   },
+   {
+    "testid": "venue-save",
+    "text": "Save venue",
+    "h": 52,
+    "radius": "14px",
+    "size": 17,
+    "weight": "700",
+    "transform": "none"
+   },
+   {
+    "testid": "amenities-submit",
+    "text": "Save what's provided",
+    "h": 46.5,
+    "radius": "14px",
+    "size": 15,
+    "weight": "800",
+    "transform": "uppercase"
+   },
+   {
+    "testid": "venue-save",
+    "text": "Save venue",
+    "h": 52,
+    "radius": "14px",
+    "size": 17,
+    "weight": "700",
+    "transform": "none"
+   },
+   {
+    "testid": "amenities-submit",
+    "text": "Save what's provided",
+    "h": 46.5,
+    "radius": "14px",
+    "size": 15,
+    "weight": "800",
+    "transform": "uppercase"
+   },
+   {
+    "testid": "venue-save",
+    "text": "Save venue",
+    "h": 52,
+    "radius": "14px",
+    "size": 17,
+    "weight": "700",
+    "transform": "none"
+   },
+   {
+    "testid": "amenities-submit",
+    "text": "Save what's provided",
+    "h": 46.5,
+    "radius": "14px",
+    "size": 15,
+    "weight": "800",
+    "transform": "uppercase"
+   },
+   {
+    "testid": "venue-save",
+    "text": "Save venue",
+    "h": 52,
+    "radius": "14px",
+    "size": 17,
+    "weight": "700",
+    "transform": "none"
+   },
+   {
+    "testid": "amenities-submit",
+    "text": "Save what's provided",
+    "h": 46.5,
+    "radius": "14px",
+    "size": 15,
+    "weight": "800",
+    "transform": "uppercase"
+   },
+   {
+    "testid": "venue-save",
+    "text": "Save venue",
+    "h": 52,
+    "radius": "14px",
+    "size": 17,
+    "weight": "700",
+    "transform": "none"
+   },
+   {
+    "testid": "amenities-submit",
+    "text": "Save what's provided",
+    "h": 46.5,
+    "radius": "14px",
+    "size": 15,
+    "weight": "800",
+    "transform": "uppercase"
+   },
+   {
+    "testid": "venue-save",
+    "text": "Save venue",
+    "h": 52,
+    "radius": "14px",
+    "size": 17,
+    "weight": "700",
+    "transform": "none"
+   },
+   {
+    "testid": "amenities-submit",
+    "text": "Save what's provided",
+    "h": 46.5,
+    "radius": "14px",
+    "size": 15,
+    "weight": "800",
+    "transform": "uppercase"
+   },
+   {
+    "testid": "venue-save",
+    "text": "Save venue",
+    "h": 52,
+    "radius": "14px",
+    "size": 17,
+    "weight": "700",
+    "transform": "none"
+   },
+   {
+    "testid": "amenities-submit",
+    "text": "Save what's provided",
+    "h": 46.5,
+    "radius": "14px",
+    "size": 15,
+    "weight": "800",
+    "transform": "uppercase"
+   },
+   {
+    "testid": "venue-save",
+    "text": "Save venue",
+    "h": 52,
+    "radius": "14px",
+    "size": 17,
+    "weight": "700",
+    "transform": "none"
+   },
+   {
+    "testid": "amenities-submit",
+    "text": "Save what's provided",
+    "h": 46.5,
+    "radius": "14px",
+    "size": 15,
+    "weight": "800",
+    "transform": "uppercase"
+   },
+   {
+    "testid": "venue-save",
+    "text": "Save venue",
+    "h": 52,
+    "radius": "14px",
+    "size": 17,
+    "weight": "700",
+    "transform": "none"
+   },
+   {
+    "testid": "amenities-submit",
+    "text": "Save what's provided",
+    "h": 46.5,
+    "radius": "14px",
+    "size": 15,
+    "weight": "800",
+    "transform": "uppercase"
+   }
+  ],
+  "surfaces": [
+   {
+    "testid": "venue-create-section",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "20px"
+   },
+   {
+    "testid": "venue-row",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "0px"
+   },
+   {
+    "testid": "venue-row",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "0px"
+   },
+   {
+    "testid": "venue-row",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "0px"
+   },
+   {
+    "testid": "venue-row",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "0px"
+   },
+   {
+    "testid": "venue-row",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "0px"
+   },
+   {
+    "testid": "venue-row",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "0px"
+   },
+   {
+    "testid": "venue-row",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "0px"
+   },
+   {
+    "testid": "venue-row",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "0px"
+   },
+   {
+    "testid": "venue-row",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "0px"
+   },
+   {
+    "testid": "venue-row",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "0px"
+   },
+   {
+    "testid": "venue-row",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "0px"
+   },
+   {
+    "testid": "tab-home",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "none",
+    "pad": "8px 0px"
+   },
+   {
+    "testid": "tab-games",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "none",
+    "pad": "8px 0px"
+   },
+   {
+    "testid": "tab-account",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "none",
+    "pad": "8px 0px"
+   }
+  ]
+ },
+ "admin-venues-ru": {
+  "headings": [
+   {
+    "tag": "H2",
+    "size": 27.3,
+    "weight": "400",
+    "transform": "uppercase",
+    "color": "rgb(255, 255, 255)",
+    "family": "Anton",
+    "tracking": "0.5px",
+    "text": "Venues"
+   },
+   {
+    "tag": "H3",
+    "size": 17,
+    "weight": "400",
+    "transform": "uppercase",
+    "color": "rgb(255, 255, 255)",
+    "family": "Anton",
+    "tracking": "0.5px",
+    "text": "Add a venue"
+   },
+   {
+    "tag": "H4",
+    "size": 10,
+    "weight": "400",
+    "transform": "uppercase",
+    "color": "rgb(143, 184, 0)",
+    "family": "Onest",
+    "tracking": "3px",
+    "text": "Inherited by every game here"
+   },
+   {
+    "tag": "H4",
+    "size": 10,
+    "weight": "400",
+    "transform": "uppercase",
+    "color": "rgb(143, 184, 0)",
+    "family": "Onest",
+    "tracking": "3px",
+    "text": "Inherited by every game here"
+   },
+   {
+    "tag": "H4",
+    "size": 10,
+    "weight": "400",
+    "transform": "uppercase",
+    "color": "rgb(143, 184, 0)",
+    "family": "Onest",
+    "tracking": "3px",
+    "text": "Inherited by every game here"
+   },
+   {
+    "tag": "H4",
+    "size": 10,
+    "weight": "400",
+    "transform": "uppercase",
+    "color": "rgb(143, 184, 0)",
+    "family": "Onest",
+    "tracking": "3px",
+    "text": "Inherited by every game here"
+   },
+   {
+    "tag": "H4",
+    "size": 10,
+    "weight": "400",
+    "transform": "uppercase",
+    "color": "rgb(143, 184, 0)",
+    "family": "Onest",
+    "tracking": "3px",
+    "text": "Inherited by every game here"
+   },
+   {
+    "tag": "H4",
+    "size": 10,
+    "weight": "400",
+    "transform": "uppercase",
+    "color": "rgb(143, 184, 0)",
+    "family": "Onest",
+    "tracking": "3px",
+    "text": "Inherited by every game here"
+   },
+   {
+    "tag": "H4",
+    "size": 10,
+    "weight": "400",
+    "transform": "uppercase",
+    "color": "rgb(143, 184, 0)",
+    "family": "Onest",
+    "tracking": "3px",
+    "text": "Inherited by every game here"
+   },
+   {
+    "tag": "H4",
+    "size": 10,
+    "weight": "400",
+    "transform": "uppercase",
+    "color": "rgb(143, 184, 0)",
+    "family": "Onest",
+    "tracking": "3px",
+    "text": "Inherited by every game here"
+   },
+   {
+    "tag": "H4",
+    "size": 10,
+    "weight": "400",
+    "transform": "uppercase",
+    "color": "rgb(143, 184, 0)",
+    "family": "Onest",
+    "tracking": "3px",
+    "text": "Inherited by every game here"
+   },
+   {
+    "tag": "H4",
+    "size": 10,
+    "weight": "400",
+    "transform": "uppercase",
+    "color": "rgb(143, 184, 0)",
+    "family": "Onest",
+    "tracking": "3px",
+    "text": "Inherited by every game here"
+   },
+   {
+    "tag": "H4",
+    "size": 10,
+    "weight": "400",
+    "transform": "uppercase",
+    "color": "rgb(143, 184, 0)",
+    "family": "Onest",
+    "tracking": "3px",
+    "text": "Inherited by every game here"
+   }
+  ],
+  "overflow": [
+   {
+    "testid": "header",
+    "text": "GamesPlayersFinancialsVenuesDashbo",
+    "clipped": true,
+    "spills": false,
+    "over": 22,
+    "ellipsis": false
+   },
+   {
+    "testid": "div",
+    "text": "GamesPlayersFinancialsVenuesDashbo",
+    "clipped": true,
+    "spills": false,
+    "over": 22,
+    "ellipsis": false
+   },
+   {
+    "testid": "admin-nav-dashboard",
+    "text": "Dashboard",
+    "clipped": false,
+    "spills": true,
+    "over": 56,
+    "ellipsis": false
+   },
+   {
+    "testid": "admin-nav-site",
+    "text": "Home page",
+    "clipped": false,
+    "spills": true,
+    "over": 160,
+    "ellipsis": false
+   },
+   {
+    "testid": "span",
+    "text": "<script>alert(1)</script> \"Praha 2",
+    "clipped": true,
+    "spills": false,
+    "over": 65,
+    "ellipsis": true
+   },
+   {
+    "testid": "venue-name-input",
+    "text": "",
+    "clipped": true,
+    "spills": false,
+    "over": 26,
+    "ellipsis": false
+   },
+   {
+    "testid": "venue-photo-input",
+    "text": "",
+    "clipped": true,
+    "spills": false,
+    "over": 187,
+    "ellipsis": true
+   },
+   {
+    "testid": "venue-photo-input",
+    "text": "",
+    "clipped": true,
+    "spills": false,
+    "over": 187,
+    "ellipsis": true
+   },
+   {
+    "testid": "venue-photo-input",
+    "text": "",
+    "clipped": true,
+    "spills": false,
+    "over": 187,
+    "ellipsis": true
+   },
+   {
+    "testid": "venue-photo-input",
+    "text": "",
+    "clipped": true,
+    "spills": false,
+    "over": 187,
+    "ellipsis": true
+   },
+   {
+    "testid": "venue-photo-input",
+    "text": "",
+    "clipped": true,
+    "spills": false,
+    "over": 187,
+    "ellipsis": true
+   },
+   {
+    "testid": "venue-photo-input",
+    "text": "",
+    "clipped": true,
+    "spills": false,
+    "over": 187,
+    "ellipsis": true
+   },
+   {
+    "testid": "venue-photo-input",
+    "text": "",
+    "clipped": true,
+    "spills": false,
+    "over": 187,
+    "ellipsis": true
+   },
+   {
+    "testid": "venue-photo-input",
+    "text": "",
+    "clipped": true,
+    "spills": false,
+    "over": 187,
+    "ellipsis": true
+   },
+   {
+    "testid": "venue-photo-input",
+    "text": "",
+    "clipped": true,
+    "spills": false,
+    "over": 187,
+    "ellipsis": true
+   },
+   {
+    "testid": "venue-photo-input",
+    "text": "",
+    "clipped": true,
+    "spills": false,
+    "over": 187,
+    "ellipsis": true
+   },
+   {
+    "testid": "venue-photo-input",
+    "text": "",
+    "clipped": true,
+    "spills": false,
+    "over": 187,
+    "ellipsis": true
+   }
+  ],
+  "sections": [],
+  "primary": [
+   {
+    "testid": "venue-create",
+    "text": "Add venue",
+    "h": 52,
+    "radius": "14px",
+    "size": 17,
+    "weight": "700",
+    "transform": "none"
+   },
+   {
+    "testid": "venue-save",
+    "text": "Save venue",
+    "h": 52,
+    "radius": "14px",
+    "size": 17,
+    "weight": "700",
+    "transform": "none"
+   },
+   {
+    "testid": "amenities-submit",
+    "text": "Save what's provided",
+    "h": 46.5,
+    "radius": "14px",
+    "size": 15,
+    "weight": "800",
+    "transform": "uppercase"
+   },
+   {
+    "testid": "venue-save",
+    "text": "Save venue",
+    "h": 52,
+    "radius": "14px",
+    "size": 17,
+    "weight": "700",
+    "transform": "none"
+   },
+   {
+    "testid": "amenities-submit",
+    "text": "Save what's provided",
+    "h": 46.5,
+    "radius": "14px",
+    "size": 15,
+    "weight": "800",
+    "transform": "uppercase"
+   },
+   {
+    "testid": "venue-save",
+    "text": "Save venue",
+    "h": 52,
+    "radius": "14px",
+    "size": 17,
+    "weight": "700",
+    "transform": "none"
+   },
+   {
+    "testid": "amenities-submit",
+    "text": "Save what's provided",
+    "h": 46.5,
+    "radius": "14px",
+    "size": 15,
+    "weight": "800",
+    "transform": "uppercase"
+   },
+   {
+    "testid": "venue-save",
+    "text": "Save venue",
+    "h": 52,
+    "radius": "14px",
+    "size": 17,
+    "weight": "700",
+    "transform": "none"
+   },
+   {
+    "testid": "amenities-submit",
+    "text": "Save what's provided",
+    "h": 46.5,
+    "radius": "14px",
+    "size": 15,
+    "weight": "800",
+    "transform": "uppercase"
+   },
+   {
+    "testid": "venue-save",
+    "text": "Save venue",
+    "h": 52,
+    "radius": "14px",
+    "size": 17,
+    "weight": "700",
+    "transform": "none"
+   },
+   {
+    "testid": "amenities-submit",
+    "text": "Save what's provided",
+    "h": 46.5,
+    "radius": "14px",
+    "size": 15,
+    "weight": "800",
+    "transform": "uppercase"
+   },
+   {
+    "testid": "venue-save",
+    "text": "Save venue",
+    "h": 52,
+    "radius": "14px",
+    "size": 17,
+    "weight": "700",
+    "transform": "none"
+   },
+   {
+    "testid": "amenities-submit",
+    "text": "Save what's provided",
+    "h": 46.5,
+    "radius": "14px",
+    "size": 15,
+    "weight": "800",
+    "transform": "uppercase"
+   },
+   {
+    "testid": "venue-save",
+    "text": "Save venue",
+    "h": 52,
+    "radius": "14px",
+    "size": 17,
+    "weight": "700",
+    "transform": "none"
+   },
+   {
+    "testid": "amenities-submit",
+    "text": "Save what's provided",
+    "h": 46.5,
+    "radius": "14px",
+    "size": 15,
+    "weight": "800",
+    "transform": "uppercase"
+   },
+   {
+    "testid": "venue-save",
+    "text": "Save venue",
+    "h": 52,
+    "radius": "14px",
+    "size": 17,
+    "weight": "700",
+    "transform": "none"
+   },
+   {
+    "testid": "amenities-submit",
+    "text": "Save what's provided",
+    "h": 46.5,
+    "radius": "14px",
+    "size": 15,
+    "weight": "800",
+    "transform": "uppercase"
+   },
+   {
+    "testid": "venue-save",
+    "text": "Save venue",
+    "h": 52,
+    "radius": "14px",
+    "size": 17,
+    "weight": "700",
+    "transform": "none"
+   },
+   {
+    "testid": "amenities-submit",
+    "text": "Save what's provided",
+    "h": 46.5,
+    "radius": "14px",
+    "size": 15,
+    "weight": "800",
+    "transform": "uppercase"
+   },
+   {
+    "testid": "venue-save",
+    "text": "Save venue",
+    "h": 52,
+    "radius": "14px",
+    "size": 17,
+    "weight": "700",
+    "transform": "none"
+   },
+   {
+    "testid": "amenities-submit",
+    "text": "Save what's provided",
+    "h": 46.5,
+    "radius": "14px",
+    "size": 15,
+    "weight": "800",
+    "transform": "uppercase"
+   },
+   {
+    "testid": "venue-save",
+    "text": "Save venue",
+    "h": 52,
+    "radius": "14px",
+    "size": 17,
+    "weight": "700",
+    "transform": "none"
+   },
+   {
+    "testid": "amenities-submit",
+    "text": "Save what's provided",
+    "h": 46.5,
+    "radius": "14px",
+    "size": 15,
+    "weight": "800",
+    "transform": "uppercase"
+   }
+  ],
+  "surfaces": [
+   {
+    "testid": "venue-create-section",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "20px"
+   },
+   {
+    "testid": "venue-row",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "0px"
+   },
+   {
+    "testid": "venue-row",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "0px"
+   },
+   {
+    "testid": "venue-row",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "0px"
+   },
+   {
+    "testid": "venue-row",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "0px"
+   },
+   {
+    "testid": "venue-row",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "0px"
+   },
+   {
+    "testid": "venue-row",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "0px"
+   },
+   {
+    "testid": "venue-row",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "0px"
+   },
+   {
+    "testid": "venue-row",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "0px"
+   },
+   {
+    "testid": "venue-row",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "0px"
+   },
+   {
+    "testid": "venue-row",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "0px"
+   },
+   {
+    "testid": "venue-row",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "0px"
+   },
+   {
+    "testid": "tab-home",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "none",
+    "pad": "8px 0px"
+   },
+   {
+    "testid": "tab-games",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "none",
+    "pad": "8px 0px"
+   },
+   {
+    "testid": "tab-account",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "none",
+    "pad": "8px 0px"
+   }
+  ]
+ },
+ "admin-stats-en": {
+  "headings": [
+   {
+    "tag": "H2",
+    "size": 27.3,
+    "weight": "400",
+    "transform": "uppercase",
+    "color": "rgb(255, 255, 255)",
+    "family": "Anton",
+    "tracking": "0.5px",
+    "text": "Financials"
+   },
+   {
+    "tag": "H3",
+    "size": 24,
+    "weight": "400",
+    "transform": "uppercase",
+    "color": "rgb(255, 255, 255)",
+    "family": "Anton",
+    "tracking": "0.5px",
+    "text": "Operations"
+   }
+  ],
+  "overflow": [
+   {
+    "testid": "header",
+    "text": "GamesPlayersFinancialsVenuesDashbo",
+    "clipped": true,
+    "spills": false,
+    "over": 22,
+    "ellipsis": false
+   },
+   {
+    "testid": "div",
+    "text": "GamesPlayersFinancialsVenuesDashbo",
+    "clipped": true,
+    "spills": false,
+    "over": 22,
+    "ellipsis": false
+   },
+   {
+    "testid": "admin-nav-dashboard",
+    "text": "Dashboard",
+    "clipped": false,
+    "spills": true,
+    "over": 56,
+    "ellipsis": false
+   },
+   {
+    "testid": "admin-nav-site",
+    "text": "Home page",
+    "clipped": false,
+    "spills": true,
+    "over": 160,
+    "ellipsis": false
+   }
+  ],
+  "sections": [],
+  "primary": [
+   {
+    "testid": "period-this_month",
+    "text": "This month",
+    "h": 38.19,
+    "radius": "999px",
+    "size": 13,
+    "weight": "600",
+    "transform": "none"
+   },
+   {
+    "testid": "stat-window-week",
+    "text": "This week",
+    "h": 34.5,
+    "radius": "999px",
+    "size": 11,
+    "weight": "400",
+    "transform": "uppercase"
+   }
+  ],
+  "surfaces": [
+   {
+    "testid": "financials-revenue",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "20px"
+   },
+   {
+    "testid": "financials-settled",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "20px"
+   },
+   {
+    "testid": "financials-average",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "20px"
+   },
+   {
+    "testid": "financials-weeks",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "20px"
+   },
+   {
+    "testid": "week-bar-W1",
+    "radius": 14,
+    "bg": "rgba(200, 255, 0, 0.35)",
+    "border": "none",
+    "pad": "0px"
+   },
+   {
+    "testid": "week-bar-W2",
+    "radius": 14,
+    "bg": "rgba(200, 255, 0, 0.35)",
+    "border": "none",
+    "pad": "0px"
+   },
+   {
+    "testid": "week-bar-W3",
+    "radius": 14,
+    "bg": "rgba(200, 255, 0, 0.35)",
+    "border": "none",
+    "pad": "0px"
+   },
+   {
+    "testid": "week-bar-W4",
+    "radius": 14,
+    "bg": "rgb(200, 255, 0)",
+    "border": "none",
+    "pad": "0px"
+   },
+   {
+    "testid": "week-bar-W5",
+    "radius": 14,
+    "bg": "rgba(200, 255, 0, 0.35)",
+    "border": "none",
+    "pad": "0px"
+   },
+   {
+    "testid": "financials-outstanding",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "2px rgba(200, 255, 0, 0.3)",
+    "pad": "20px"
+   },
+   {
+    "testid": "financials-transactions",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "20px"
+   },
+   {
+    "testid": "export-transactions",
+    "radius": 14,
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "0px 16px"
+   },
+   {
+    "testid": "export-stats",
+    "radius": 14,
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "0px 16px"
+   },
+   {
+    "testid": "stat-fill-rate",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "20px"
+   },
+   {
+    "testid": "stat-revenue",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "20px"
+   },
+   {
+    "testid": "stat-no-show",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "20px"
+   },
+   {
+    "testid": "stat-new-returning",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "20px"
+   },
+   {
+    "testid": "stat-cancellations",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "20px"
+   },
+   {
+    "testid": "tab-home",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "none",
+    "pad": "8px 0px"
+   },
+   {
+    "testid": "tab-games",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "none",
+    "pad": "8px 0px"
+   },
+   {
+    "testid": "tab-account",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "none",
+    "pad": "8px 0px"
+   }
+  ]
+ },
+ "admin-stats-cs": {
+  "headings": [
+   {
+    "tag": "H2",
+    "size": 27.3,
+    "weight": "400",
+    "transform": "uppercase",
+    "color": "rgb(255, 255, 255)",
+    "family": "Anton",
+    "tracking": "0.5px",
+    "text": "Financials"
+   },
+   {
+    "tag": "H3",
+    "size": 24,
+    "weight": "400",
+    "transform": "uppercase",
+    "color": "rgb(255, 255, 255)",
+    "family": "Anton",
+    "tracking": "0.5px",
+    "text": "Operations"
+   }
+  ],
+  "overflow": [
+   {
+    "testid": "header",
+    "text": "GamesPlayersFinancialsVenuesDashbo",
+    "clipped": true,
+    "spills": false,
+    "over": 22,
+    "ellipsis": false
+   },
+   {
+    "testid": "div",
+    "text": "GamesPlayersFinancialsVenuesDashbo",
+    "clipped": true,
+    "spills": false,
+    "over": 22,
+    "ellipsis": false
+   },
+   {
+    "testid": "admin-nav-dashboard",
+    "text": "Dashboard",
+    "clipped": false,
+    "spills": true,
+    "over": 56,
+    "ellipsis": false
+   },
+   {
+    "testid": "admin-nav-site",
+    "text": "Home page",
+    "clipped": false,
+    "spills": true,
+    "over": 160,
+    "ellipsis": false
+   }
+  ],
+  "sections": [],
+  "primary": [
+   {
+    "testid": "period-this_month",
+    "text": "This month",
+    "h": 38.19,
+    "radius": "999px",
+    "size": 13,
+    "weight": "600",
+    "transform": "none"
+   },
+   {
+    "testid": "stat-window-week",
+    "text": "This week",
+    "h": 34.5,
+    "radius": "999px",
+    "size": 11,
+    "weight": "400",
+    "transform": "uppercase"
+   }
+  ],
+  "surfaces": [
+   {
+    "testid": "financials-revenue",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "20px"
+   },
+   {
+    "testid": "financials-settled",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "20px"
+   },
+   {
+    "testid": "financials-average",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "20px"
+   },
+   {
+    "testid": "financials-weeks",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "20px"
+   },
+   {
+    "testid": "week-bar-W1",
+    "radius": 14,
+    "bg": "rgba(200, 255, 0, 0.35)",
+    "border": "none",
+    "pad": "0px"
+   },
+   {
+    "testid": "week-bar-W2",
+    "radius": 14,
+    "bg": "rgba(200, 255, 0, 0.35)",
+    "border": "none",
+    "pad": "0px"
+   },
+   {
+    "testid": "week-bar-W3",
+    "radius": 14,
+    "bg": "rgba(200, 255, 0, 0.35)",
+    "border": "none",
+    "pad": "0px"
+   },
+   {
+    "testid": "week-bar-W4",
+    "radius": 14,
+    "bg": "rgb(200, 255, 0)",
+    "border": "none",
+    "pad": "0px"
+   },
+   {
+    "testid": "week-bar-W5",
+    "radius": 14,
+    "bg": "rgba(200, 255, 0, 0.35)",
+    "border": "none",
+    "pad": "0px"
+   },
+   {
+    "testid": "financials-outstanding",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "2px rgba(200, 255, 0, 0.3)",
+    "pad": "20px"
+   },
+   {
+    "testid": "financials-transactions",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "20px"
+   },
+   {
+    "testid": "export-transactions",
+    "radius": 14,
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "0px 16px"
+   },
+   {
+    "testid": "export-stats",
+    "radius": 14,
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "0px 16px"
+   },
+   {
+    "testid": "stat-fill-rate",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "20px"
+   },
+   {
+    "testid": "stat-revenue",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "20px"
+   },
+   {
+    "testid": "stat-no-show",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "20px"
+   },
+   {
+    "testid": "stat-new-returning",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "20px"
+   },
+   {
+    "testid": "stat-cancellations",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "20px"
+   },
+   {
+    "testid": "tab-home",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "none",
+    "pad": "8px 0px"
+   },
+   {
+    "testid": "tab-games",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "none",
+    "pad": "8px 0px"
+   },
+   {
+    "testid": "tab-account",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "none",
+    "pad": "8px 0px"
+   }
+  ]
+ },
+ "admin-stats-ru": {
+  "headings": [
+   {
+    "tag": "H2",
+    "size": 27.3,
+    "weight": "400",
+    "transform": "uppercase",
+    "color": "rgb(255, 255, 255)",
+    "family": "Anton",
+    "tracking": "0.5px",
+    "text": "Financials"
+   },
+   {
+    "tag": "H3",
+    "size": 24,
+    "weight": "400",
+    "transform": "uppercase",
+    "color": "rgb(255, 255, 255)",
+    "family": "Anton",
+    "tracking": "0.5px",
+    "text": "Operations"
+   }
+  ],
+  "overflow": [
+   {
+    "testid": "header",
+    "text": "GamesPlayersFinancialsVenuesDashbo",
+    "clipped": true,
+    "spills": false,
+    "over": 22,
+    "ellipsis": false
+   },
+   {
+    "testid": "div",
+    "text": "GamesPlayersFinancialsVenuesDashbo",
+    "clipped": true,
+    "spills": false,
+    "over": 22,
+    "ellipsis": false
+   },
+   {
+    "testid": "admin-nav-dashboard",
+    "text": "Dashboard",
+    "clipped": false,
+    "spills": true,
+    "over": 56,
+    "ellipsis": false
+   },
+   {
+    "testid": "admin-nav-site",
+    "text": "Home page",
+    "clipped": false,
+    "spills": true,
+    "over": 160,
+    "ellipsis": false
+   }
+  ],
+  "sections": [],
+  "primary": [
+   {
+    "testid": "period-this_month",
+    "text": "This month",
+    "h": 38.19,
+    "radius": "999px",
+    "size": 13,
+    "weight": "600",
+    "transform": "none"
+   },
+   {
+    "testid": "stat-window-week",
+    "text": "This week",
+    "h": 34.5,
+    "radius": "999px",
+    "size": 11,
+    "weight": "400",
+    "transform": "uppercase"
+   }
+  ],
+  "surfaces": [
+   {
+    "testid": "financials-revenue",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "20px"
+   },
+   {
+    "testid": "financials-settled",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "20px"
+   },
+   {
+    "testid": "financials-average",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "20px"
+   },
+   {
+    "testid": "financials-weeks",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "20px"
+   },
+   {
+    "testid": "week-bar-W1",
+    "radius": 14,
+    "bg": "rgba(200, 255, 0, 0.35)",
+    "border": "none",
+    "pad": "0px"
+   },
+   {
+    "testid": "week-bar-W2",
+    "radius": 14,
+    "bg": "rgba(200, 255, 0, 0.35)",
+    "border": "none",
+    "pad": "0px"
+   },
+   {
+    "testid": "week-bar-W3",
+    "radius": 14,
+    "bg": "rgba(200, 255, 0, 0.35)",
+    "border": "none",
+    "pad": "0px"
+   },
+   {
+    "testid": "week-bar-W4",
+    "radius": 14,
+    "bg": "rgb(200, 255, 0)",
+    "border": "none",
+    "pad": "0px"
+   },
+   {
+    "testid": "week-bar-W5",
+    "radius": 14,
+    "bg": "rgba(200, 255, 0, 0.35)",
+    "border": "none",
+    "pad": "0px"
+   },
+   {
+    "testid": "financials-outstanding",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "2px rgba(200, 255, 0, 0.3)",
+    "pad": "20px"
+   },
+   {
+    "testid": "financials-transactions",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "20px"
+   },
+   {
+    "testid": "export-transactions",
+    "radius": 14,
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "0px 16px"
+   },
+   {
+    "testid": "export-stats",
+    "radius": 14,
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "0px 16px"
+   },
+   {
+    "testid": "stat-fill-rate",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "20px"
+   },
+   {
+    "testid": "stat-revenue",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "20px"
+   },
+   {
+    "testid": "stat-no-show",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "20px"
+   },
+   {
+    "testid": "stat-new-returning",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "20px"
+   },
+   {
+    "testid": "stat-cancellations",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "1px rgba(255, 255, 255, 0.14)",
+    "pad": "20px"
+   },
+   {
+    "testid": "tab-home",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "none",
+    "pad": "8px 0px"
+   },
+   {
+    "testid": "tab-games",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "none",
+    "pad": "8px 0px"
+   },
+   {
+    "testid": "tab-account",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "none",
+    "pad": "8px 0px"
+   }
+  ]
+ },
+ "player-en": {
+  "headings": [
+   {
+    "tag": "H1",
+    "size": 26,
+    "weight": "700",
+    "transform": "none",
+    "color": "rgb(255, 255, 255)",
+    "family": "Onest",
+    "tracking": "normal",
+    "text": "RealRunner"
+   },
+   {
+    "tag": "H2",
+    "size": 17,
+    "weight": "600",
+    "transform": "none",
+    "color": "rgb(255, 255, 255)",
+    "family": "Onest",
+    "tracking": "normal",
+    "text": "Badges"
+   }
+  ],
+  "overflow": [
+   {
+    "testid": "div",
+    "text": "RRealRunner1game played1hour on pi",
+    "clipped": true,
+    "spills": false,
+    "over": 22,
+    "ellipsis": false
+   }
+  ],
+  "sections": [],
+  "primary": [],
+  "surfaces": [
+   {
+    "testid": "badge",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "none",
+    "pad": "14px 12px"
+   },
+   {
+    "testid": "badge",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "none",
+    "pad": "14px 12px"
+   },
+   {
+    "testid": "badge",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "none",
+    "pad": "14px 12px"
+   },
+   {
+    "testid": "badge",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "none",
+    "pad": "14px 12px"
+   },
+   {
+    "testid": "badge",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "none",
+    "pad": "14px 12px"
+   },
+   {
+    "testid": "tab-home",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "none",
+    "pad": "8px 0px"
+   },
+   {
+    "testid": "tab-games",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "none",
+    "pad": "8px 0px"
+   },
+   {
+    "testid": "tab-account",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "none",
+    "pad": "8px 0px"
+   }
+  ]
+ },
+ "player-cs": {
+  "headings": [
+   {
+    "tag": "H1",
+    "size": 26,
+    "weight": "700",
+    "transform": "none",
+    "color": "rgb(255, 255, 255)",
+    "family": "Onest",
+    "tracking": "normal",
+    "text": "RealRunner"
+   },
+   {
+    "tag": "H2",
+    "size": 17,
+    "weight": "600",
+    "transform": "none",
+    "color": "rgb(255, 255, 255)",
+    "family": "Onest",
+    "tracking": "normal",
+    "text": "Odznaky"
+   }
+  ],
+  "overflow": [
+   {
+    "testid": "div",
+    "text": "RRealRunner1odehraný zápas1hodina ",
+    "clipped": true,
+    "spills": false,
+    "over": 22,
+    "ellipsis": false
+   }
+  ],
+  "sections": [],
+  "primary": [],
+  "surfaces": [
+   {
+    "testid": "badge",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "none",
+    "pad": "14px 12px"
+   },
+   {
+    "testid": "badge",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "none",
+    "pad": "14px 12px"
+   },
+   {
+    "testid": "badge",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "none",
+    "pad": "14px 12px"
+   },
+   {
+    "testid": "badge",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "none",
+    "pad": "14px 12px"
+   },
+   {
+    "testid": "badge",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "none",
+    "pad": "14px 12px"
+   },
+   {
+    "testid": "tab-home",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "none",
+    "pad": "8px 0px"
+   },
+   {
+    "testid": "tab-games",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "none",
+    "pad": "8px 0px"
+   },
+   {
+    "testid": "tab-account",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "none",
+    "pad": "8px 0px"
+   }
+  ]
+ },
+ "player-ru": {
+  "headings": [
+   {
+    "tag": "H1",
+    "size": 26,
+    "weight": "700",
+    "transform": "none",
+    "color": "rgb(255, 255, 255)",
+    "family": "Onest",
+    "tracking": "normal",
+    "text": "RealRunner"
+   },
+   {
+    "tag": "H2",
+    "size": 17,
+    "weight": "600",
+    "transform": "none",
+    "color": "rgb(255, 255, 255)",
+    "family": "Onest",
+    "tracking": "normal",
+    "text": "Значки"
+   }
+  ],
+  "overflow": [
+   {
+    "testid": "div",
+    "text": "RRealRunner1сыгранная игра1час на ",
+    "clipped": true,
+    "spills": false,
+    "over": 22,
+    "ellipsis": false
+   },
+   {
+    "testid": "badge-grid",
+    "text": "Значки1 из 5Первая играСыграй одну",
+    "clipped": true,
+    "spills": false,
+    "over": 4,
+    "ellipsis": false
+   },
+   {
+    "testid": "ul",
+    "text": "Первая играСыграй одну игруЗавсегд",
+    "clipped": true,
+    "spills": false,
+    "over": 4,
+    "ellipsis": false
+   },
+   {
+    "testid": "badge",
+    "text": "ИсследовательСыграй на 3 разных пл",
+    "clipped": true,
+    "spills": false,
+    "over": 4,
+    "ellipsis": false
+   },
+   {
+    "testid": "span",
+    "text": "ИсследовательСыграй на 3 разных пл",
+    "clipped": true,
+    "spills": false,
+    "over": 16,
+    "ellipsis": false
+   },
+   {
+    "testid": "span",
+    "text": "Исследователь",
+    "clipped": true,
+    "spills": false,
+    "over": 16,
+    "ellipsis": false
+   }
+  ],
+  "sections": [],
+  "primary": [],
+  "surfaces": [
+   {
+    "testid": "badge",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "none",
+    "pad": "14px 12px"
+   },
+   {
+    "testid": "badge",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "none",
+    "pad": "14px 12px"
+   },
+   {
+    "testid": "badge",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "none",
+    "pad": "14px 12px"
+   },
+   {
+    "testid": "badge",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "none",
+    "pad": "14px 12px"
+   },
+   {
+    "testid": "badge",
+    "radius": 18,
+    "bg": "rgb(15, 15, 15)",
+    "border": "none",
+    "pad": "14px 12px"
+   },
+   {
+    "testid": "tab-home",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "none",
+    "pad": "8px 0px"
+   },
+   {
+    "testid": "tab-games",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "none",
+    "pad": "8px 0px"
+   },
+   {
+    "testid": "tab-account",
+    "radius": 18,
+    "bg": "rgb(22, 22, 22)",
+    "border": "none",
+    "pad": "8px 0px"
+   }
+  ]
+ }
+}
