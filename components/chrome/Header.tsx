@@ -158,7 +158,7 @@ export async function Header({
             width={38}
             height={38}
             data-testid="brand-mark"
-            className="h-[38px] w-[38px] shrink-0 rounded-full"
+            className="h-11 w-11 shrink-0 rounded-full"
           />
           {/*
             ~~THE WORDMARK ECHOES THE HERO, scaled for the header.~~
@@ -267,7 +267,14 @@ export async function Header({
               /* 38px, matching the brand mark at the other end of the bar — the frames
                  draw the two circles the same size, and at 34 the avatar read as
                  a smaller class of object than the logo rather than its pair. */
-              className="flex h-[38px] w-[38px] items-center justify-center overflow-hidden rounded-full border-[1.5px] border-volt bg-surface-avatar text-small font-bold text-volt no-underline"
+              /*
+                38 -> 44 (audit F15/F6). The avatar is a LINK to the profile
+                on 24 pages and measured 38px; the floor this product states
+                for everything else is 44. It is a circle, so the width moves
+                with it and the header row's own height is unchanged — the
+                controls beside it are already 44.
+              */
+              className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-full border-[1.5px] border-volt bg-surface-avatar text-small font-bold text-volt no-underline"
             >
               {photo ? (
                 /* A plain <img>, like the roster avatars: a 34px circle from a

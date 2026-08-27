@@ -164,7 +164,13 @@ export function LanguageSwitcher() {
          */
         aria-label="EN / CZ / RU"
         data-testid="locale-trigger"
-        className="flex items-center gap-1 rounded-pill border border-hairline-strong px-2 py-[6px] text-small text-bone transition hover:border-hairline-volt disabled:opacity-50"
+        /*
+          `min-h-11` — THE 44px FLOOR, IN THE CHROME (audit F15/F6).
+          Measured 32.2px on 24-33 pages. The visual size is unchanged;
+          only the hit area grows to the floor this product states for
+          everything else.
+        */
+        className="flex min-h-11 items-center gap-1 rounded-pill border border-hairline-strong px-3 py-[6px] text-small text-bone transition hover:border-hairline-volt disabled:opacity-50"
       >
         <span aria-hidden>{FLAGS[active]}</span>
         {LOCALE_LABELS[active].short}

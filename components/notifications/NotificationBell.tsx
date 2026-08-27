@@ -93,7 +93,13 @@ export function NotificationBell({
         data-unread={showDot ? "true" : "false"}
         aria-expanded={open}
         aria-label={t.notifications.bellLabel}
-        className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-hairline-strong bg-surface text-bone transition-colors hover:border-hairline-volt"
+                /*
+          `min-h-11` — THE 44px FLOOR, IN THE CHROME (audit F15/F6).
+          Measured 40px on 24-33 pages. The visual size is unchanged;
+          only the hit area grows to the floor this product states for
+          everything else.
+        */
+        className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-hairline-strong bg-surface text-bone transition-colors hover:border-hairline-volt"
       >
         <Icon name="bell" className="h-5 w-5" />
         {showDot && (
