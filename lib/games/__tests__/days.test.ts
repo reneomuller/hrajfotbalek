@@ -194,9 +194,9 @@ describe("groupByDay", () => {
 describe("resolveSelectedDay", () => {
   const tabs = [
     { key: "2026-08-03", weekday: "MON", dayOfMonth: "3", count: 1 },
-    // A zero-count tab is not something `buildDayTabs` produces any more, and
-    // is kept here on purpose: `resolveSelectedDay` is the guard against a
-    // hand-edited `?day=`, so it must still refuse one.
+    // A zero-count tab is exactly what the strip draws for a quiet day — every
+    // day is a chip since round 14 — so this is the ORDINARY case, not an
+    // edge one.
     { key: "2026-08-04", weekday: "TUE", dayOfMonth: "4", count: 0 },
     { key: "2026-08-05", weekday: "WED", dayOfMonth: "5", count: 2 },
   ];
@@ -205,12 +205,24 @@ describe("resolveSelectedDay", () => {
     expect(resolveSelectedDay("2026-08-05", tabs)).toBe("2026-08-05");
   });
 
-  it("refuses a day that is drawn but empty", () => {
-    // The strip covers a rolling fortnight so it can be a calendar; the filter
-    // still only accepts days there is something to filter to. Without this, a
-    // link shared on the day of a game and opened after it lands on an empty
-    // list instead of the whole board.
-    expect(resolveSelectedDay("2026-08-04", tabs)).toBeNull();
+  it("honours a day that is drawn but empty — the tap must do something", () => {
+    /*
+     * ~~It refused one: "the filter only accepts days there is something to
+     * filter to".~~ REVERSED (audit F1), because two recorded intentions
+     * disagreed and only one was implemented.
+     *
+     * `DayPicker` promises that "every day is a link now, including an empty
+     * one — tapping it shows the list's empty state, which is a real answer
+     * rather than a dead control". What a player actually got was the whole
+     * board with the `All` chip lit instead: a control that appears to do
+     * nothing and silently deselects itself.
+     *
+     * The stale-link case the old behaviour protected is still protected —
+     * see the test below. A tap can only name a day the strip is DRAWING; a
+     * stale link names one that has fallen out of the window, and membership
+     * in `tabs` separates the two exactly. The count never distinguished them.
+     */
+    expect(resolveSelectedDay("2026-08-04", tabs)).toBe("2026-08-04");
   });
 
   it("selects NOTHING by default — the whole list is the resting state", () => {
@@ -223,7 +235,8 @@ describe("resolveSelectedDay", () => {
   it("falls back to the whole list for a stale or junk day", () => {
     // A day shared on Friday and opened on Monday should show everything —
     // the thing the reader can act on — not a different day they did not ask
-    // for.
+    // for. THIS is what the count check was reaching for, and membership in
+    // `tabs` expresses it without also breaking the tap (audit F1).
     expect(resolveSelectedDay("2026-07-30", tabs)).toBeNull();
     expect(resolveSelectedDay("'; drop table games;--", tabs)).toBeNull();
     expect(resolveSelectedDay("", tabs)).toBeNull();
