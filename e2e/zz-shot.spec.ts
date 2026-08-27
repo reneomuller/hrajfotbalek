@@ -1,24 +1,18 @@
 import { test } from "@playwright/test";
 import { LOCALE_COOKIE } from "../lib/i18n/locales";
-import { signOut } from "./helpers/session";
+import { serviceClient, signOut } from "./helpers/session";
 test.use({ viewport: { width: 390, height: 844 } });
 test("shot", async ({ page, context }) => {
   await signOut(context);
-  await context.addCookies([{ name: LOCALE_COOKIE, value: "en", domain: "localhost", path: "/" }]);
-  await page.goto("/games", { waitUntil: "networkidle" });
-  const empty = await page.evaluate(() =>
-    [...document.querySelectorAll('[data-testid="day-tab"]')]
-      .filter((e) => e.getAttribute("data-empty") === "true")
-      .map((e) => e.getAttribute("href"))[0] ?? null);
-  if (empty) {
-    await page.goto(empty, { waitUntil: "networkidle" });
-    await page.evaluate(() => document.fonts.ready);
-    await page.screenshot({ path: process.env.SHOT!, clip: { x: 0, y: 0, width: 390, height: 460 } });
-    const r = await page.evaluate(() => ({
-      rows: document.querySelectorAll('[data-testid="game-row"]').length,
-      selected: document.querySelector('[data-testid="day-tab"][data-selected="true"]')?.getAttribute("data-day") ?? null,
-      all: document.querySelector('[data-testid="day-tab-all"]')?.getAttribute("data-selected"),
-    }));
-    console.log("SHOT " + JSON.stringify(r));
-  }
+  const admin = serviceClient();
+  const { data } = await admin.from("games").select("id").eq("status","published").limit(1).single();
+  await context.addCookies([{ name: LOCALE_COOKIE, value: process.env.LOC ?? "ru", domain: "localhost", path: "/" }]);
+  await page.goto(`/game/${data!.id}`, { waitUntil: "networkidle" });
+  await page.evaluate(() => document.fonts.ready);
+  const box = await page.getByTestId("game-info-card").boundingBox();
+  await page.screenshot({ path: process.env.SHOT!, clip: { x: 0, y: box!.y, width: 390, height: Math.min(box!.height, 260) } });
+  const r = await page.evaluate(() => [...document.querySelectorAll('[data-testid="game-info-card"] dt')].map((el) => ({
+    t: (el.textContent||"").trim(), cw: el.clientWidth, sw: el.scrollWidth, over: el.scrollWidth > el.clientWidth + 1,
+  })));
+  console.log("SHOT " + JSON.stringify(r));
 });
