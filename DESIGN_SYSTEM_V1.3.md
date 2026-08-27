@@ -1630,3 +1630,77 @@ test did not think to look, which is exactly how a profile leaks a phone number.
 | **The notify offer** | on every published game | post-publish only | Its condition was "published" rather than "just created", so a three-week-old fixture invited an announcement that it was new |
 | **Ruling C, for game boxes only** | no stroke on a card | a `hairline-strong` outline | C was written when the card was a flat panel. Since round 2 it carries a PHOTOGRAPH under a scrim whose whole job is to fade the image INTO the page — which is what makes the card's own extent unreadable. A shape with a photograph in it needs a boundary more than a flat panel did, not less. Chips keep C |
 | **The day strip** | nine cells that FIT, because "scrolling calendars hide days" | larger cells, and the row scrolls | The old rule traded size for reachability and the trade had gone bad: fitting nine across 346px left each 38px wide carrying two lines of type — below the 44px tap floor everything else respects, to protect days that were visible and unreadable. The property becomes REACHABLE rather than *fits*, which is what the rule was really protecting |
+
+---
+
+## R34 — An empty day chip FILTERS: two intentions, both honoured
+
+**RATIFIED round 21** as the resolution of the audit's one ruling challenge
+(finding F1). This is not a reversal. **Neither prior intention is overturned —
+they were never actually in conflict, and the code had implemented one while a
+comment claimed the other.**
+
+**The lineage, because R31 says a ruling records its premise:**
+
+| Where | What it said | Why |
+|---|---|---|
+| `DayPicker` (round 14, amendment A) | "EVERY DAY IS A LINK NOW, including an empty one: tapping it shows the list's empty state, which is a real answer rather than a dead control" | A chip you can press that does nothing is worse than a chip that answers "nothing on Thursday" |
+| `resolveSelectedDay` (its own docstring) | "the filter still only accepts days there is something to filter to" | "a link shared on the day of a game and opened after it would land on an empty list instead of the whole board" |
+
+Both are right. Only the second shipped, so the first was a comment describing
+behaviour the product did not have — the chip said *Today*, the URL said
+`?day=…`, and twenty-three games rendered with **All** lit up instead. The
+player got the worse half of both intentions.
+
+**THE RULING: the two cases are distinguishable, so this is a repair rather
+than a choice.** A *tap* can only name a day the strip is currently drawing. A
+*stale link* names one that has fallen out of the window. Membership in `tabs`
+separates them exactly; the **count** — which the old code tested — conflated
+them, because "this day has no games" and "this day is no longer offered" are
+different facts that happen to share a symptom.
+
+```ts
+return tabs.some((tab) => tab.key === requested) ? requested : null;
+```
+
+An empty day the strip is drawing now filters and shows the empty state, which
+is what `DayPicker` promised. A day outside the window still falls back to the
+whole board, which is what `resolveSelectedDay` was protecting. Nothing was
+traded away.
+
+**The general form, and the reason this is a ruling and not a diff:** when two
+recorded intentions appear to disagree, check whether they are answering the
+same question before overturning either. Here they were not, and the conflict
+was an artefact of testing a proxy (the count) instead of the property (is this
+day on offer).
+
+---
+
+## R35 — A missing game answers HTTP 200, and that is ACCEPTED
+
+**ACCEPTED round 21, with the cost stated.** Finding F10 split in two and only
+one half was fixable.
+
+**Fixed:** a missing game now renders `app/not-found.tsx` — the same screen,
+in three languages, that every other missing thing in the product gets —
+instead of a fourth piece of bespoke copy maintained in one route.
+
+**Accepted:** the **status stays 200**. `/game/[id]` has a `loading.tsx`, so
+Next streams a shell as soon as rendering begins and the status is committed
+with the first byte; a `notFound()` thrown afterwards cannot change it. Moving
+the call into `generateMetadata`, which is awaited before the stream opens, did
+not change it either — measured both ways in this environment, 200 with
+"Loading…" in the first response.
+
+**THE SKELETON WINS.** The choice is between a correct status code for
+crawlers and a first paint for a player on a Prague tram, and the player is the
+one this product has. A fabricated game URL is not a page anybody arrives at by
+accident; it is a page a crawler manufactures, and the screen it now gets says
+plainly that the game does not exist.
+
+**The premise, so a later round knows when to reopen it:** this holds while
+game pages are not an SEO surface. If the product ever wants games indexed —
+shared links ranking, a public fixtures list, anything where a search engine's
+opinion of a URL matters — the trade inverts and the answer is to drop
+`loading.tsx` from this route, not to fight the framework. Nothing else needs
+to change.
