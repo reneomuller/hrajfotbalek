@@ -1,7 +1,13 @@
 import { test } from "@playwright/test";
+test.use({ viewport: { width: 390, height: 844 } });
 test("shot", async ({ page }) => {
-  const res = await page.goto("/game/00000000-0000-4000-8000-000000000000", { waitUntil: "networkidle" });
-  console.log("SHOT status " + res?.status());
-  console.log("SHOT body " + (await page.locator("body").innerText()).replace(/\n/g," ").slice(0,150));
-  await page.screenshot({ path: "/tmp/audit/f10-after.png", clip: { x: 0, y: 0, width: 390, height: 420 } });
+  await page.goto("/games", { waitUntil: "networkidle" });
+  await page.keyboard.press("Tab");
+  await page.keyboard.press("Tab");
+  const r = await page.evaluate(() => {
+    const el = document.activeElement!;
+    const s = getComputedStyle(el);
+    return { tag: el.tagName, testid: el.getAttribute("data-testid"), outline: s.outlineWidth + " " + s.outlineStyle + " " + s.outlineColor, offset: s.outlineOffset };
+  });
+  console.log("SHOT " + JSON.stringify(r));
 });
