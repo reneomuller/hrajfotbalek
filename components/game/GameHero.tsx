@@ -212,7 +212,7 @@ export async function GameHero({
           href="/games"
           data-testid="game-back"
           aria-label={t.games.backToGames}
-          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-hairline-strong bg-surface-overlay text-bone no-underline transition hover:border-hairline-volt"
+          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-pill border border-hairline-strong bg-surface-overlay text-bone no-underline transition hover:border-hairline-volt"
         >
           <Icon name="arrowLeft" className="h-5 w-5" />
         </Link>

@@ -142,7 +142,7 @@ export function ConfirmingPayment({
         <span
           aria-hidden="true"
           data-testid="payment-spinner"
-          className="mb-4 block h-8 w-8 animate-spin rounded-full border-2 border-hairline border-t-volt"
+          className="mb-4 block h-8 w-8 animate-spin rounded-pill border-2 border-hairline border-t-volt"
         />
       )}
 

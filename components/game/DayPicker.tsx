@@ -207,7 +207,7 @@ export function DayPicker({
             <span
               aria-hidden
               data-testid="day-tab-dot"
-              className={`h-[3px] w-[3px] rounded-full ${
+              className={`h-[3px] w-[3px] rounded-pill ${
                 hasGames ? (isSelected ? "bg-ink" : "bg-volt") : "bg-transparent"
               }`}
             />

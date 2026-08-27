@@ -136,7 +136,7 @@ export async function OrganizerCard({
         <span
           data-testid="organizer-avatar"
           aria-hidden
-          className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border-2 border-volt bg-surface-avatar text-[15px] font-bold text-volt"
+          className="flex h-12 w-12 shrink-0 items-center justify-center rounded-pill border-2 border-volt bg-surface-avatar text-[15px] font-bold text-volt"
         >
           {initials(name, t)}
         </span>

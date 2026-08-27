@@ -86,7 +86,7 @@ function ToastBody({
       data-testid="toast"
       className="pointer-events-auto flex max-w-[420px] items-center gap-3 rounded-card bg-surface-overlay px-4 py-3"
     >
-      <span aria-hidden className="h-2 w-2 shrink-0 rounded-full bg-volt" />
+      <span aria-hidden className="h-2 w-2 shrink-0 rounded-pill bg-volt" />
       <span className="text-[13px] leading-snug text-bone">{message}</span>
       <button
         type="button"

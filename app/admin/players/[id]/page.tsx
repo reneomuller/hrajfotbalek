@@ -90,7 +90,7 @@ export default async function AdminPlayerPage({
       <div className="relative -mt-10 flex items-end gap-4">
         <span
           data-testid="admin-player-avatar"
-          className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-volt bg-surface-avatar text-2xl font-extrabold text-volt"
+          className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-pill border-2 border-volt bg-surface-avatar text-2xl font-extrabold text-volt"
         >
           {photo ? (
             /* Plain <img>, like every other avatar in this product: a public

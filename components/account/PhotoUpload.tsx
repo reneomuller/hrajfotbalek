@@ -317,7 +317,7 @@ export function PhotoUpload({
         {target === "avatar" && (
           <span
             aria-hidden
-            className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full border-2 border-surface bg-volt text-[13px] leading-none text-surface"
+            className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-pill border-2 border-surface bg-volt text-[13px] leading-none text-surface"
           >
             ✎
           </span>

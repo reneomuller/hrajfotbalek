@@ -55,7 +55,7 @@ export async function PublicIdentity({
     <section data-testid="public-identity" className="relative flex items-end gap-4">
       <span
         data-testid="public-avatar"
-        className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-volt bg-surface-avatar text-[26px] font-bold text-volt"
+        className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-pill border-2 border-volt bg-surface-avatar text-[26px] font-bold text-volt"
       >
         {photo ? (
           // eslint-disable-next-line @next/next/no-img-element

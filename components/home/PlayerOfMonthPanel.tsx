@@ -106,7 +106,7 @@ export async function PlayerOfMonthPanel({
           */}
           <span
             data-testid="potm-avatar"
-            className="flex h-[72px] w-[72px] shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-volt bg-surface-avatar text-[26px] font-bold text-volt"
+            className="flex h-[72px] w-[72px] shrink-0 items-center justify-center overflow-hidden rounded-pill border-2 border-volt bg-surface-avatar text-[26px] font-bold text-volt"
           >
             {photo ? (
               // eslint-disable-next-line @next/next/no-img-element

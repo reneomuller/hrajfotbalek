@@ -233,7 +233,7 @@ function ConfirmButton({ innerRef }: { innerRef: React.RefObject<HTMLButtonEleme
       {pending && (
         <span
           aria-hidden
-          className="h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-current border-t-transparent motion-reduce:animate-none"
+          className="h-4 w-4 shrink-0 animate-spin rounded-pill border-2 border-current border-t-transparent motion-reduce:animate-none"
         />
       )}
       {t.booking.cancelBooking}

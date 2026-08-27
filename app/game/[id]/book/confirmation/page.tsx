@@ -111,7 +111,7 @@ export default async function ConfirmationPage({
           >
             <span
               aria-hidden="true"
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-volt text-[20px] font-bold leading-none text-ink"
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-pill bg-volt text-[20px] font-bold leading-none text-ink"
             >
               ✓
             </span>

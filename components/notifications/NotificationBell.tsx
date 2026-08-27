@@ -99,14 +99,14 @@ export function NotificationBell({
           only the hit area grows to the floor this product states for
           everything else.
         */
-        className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-hairline-strong bg-surface text-bone transition-colors hover:border-hairline-volt"
+        className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-pill border border-hairline-strong bg-surface text-bone transition-colors hover:border-hairline-volt"
       >
         <Icon name="bell" className="h-5 w-5" />
         {showDot && (
           <span
             aria-hidden
             data-testid="notification-dot"
-            className="absolute right-[6px] top-[6px] h-[9px] w-[9px] rounded-full border-2 border-ink bg-volt"
+            className="absolute right-[6px] top-[6px] h-[9px] w-[9px] rounded-pill border-2 border-ink bg-volt"
           />
         )}
       </button>
