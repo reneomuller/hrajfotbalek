@@ -63,3 +63,68 @@ how the code is built:
 - **Round 16's three migrations are queued and nothing else is.** The end
   report's morning block is the authority; `docs/REQUESTS.md` §6 carries the
   same commands.
+
+---
+
+# Night of 2026-08-26 → 27 — ROUND 20, the audit night
+
+**This entry is on `audit/uiux-2026-08` and nowhere else.** The round was
+read-only for main and it stayed that way: main opened and closed at
+`5565a212c2fae3e0d2200fabcaa8dbdf04ca7208`, verified three ways in §8 of
+`docs/audit-2026-08/AUDIT_REPORT.md`. Nothing deployed, no migration applied,
+production browsed and never acted on.
+
+## What exists now
+
+`docs/audit-2026-08/` — the report, 76 captures in `screens/`, raw measurements
+in `measures.json` / `pass2.json` / `pass3.json`, before/after strips in
+`prepared/`. Eighteen findings, a consistency matrix, a benchmark section, six
+proposals, one ruling challenge, and ten prepared commits that are a shelf to
+cherry-pick from rather than a branch to merge.
+
+## The three things the night taught, in the order they hurt
+
+**A probe measures what you pointed it at, not what you meant.** F14 claimed
+the amenity checkboxes were 13px. They are — the `<input>` is. The `<label>`
+wrapping it is the hit area, it already carries `min-h-11`, and it measures 44.
+Half the finding was a false positive that survived because the number was real
+and the *element* was wrong. Re-running the same probe against labels found the
+true defect three screens away: skill checkboxes at 19.5px. **When a measured
+finding names a control, measure the thing a finger lands on.**
+
+**A comment claiming an intention is not evidence the intention shipped.** F1
+went into the report as "the code contradicts its own recorded intent", quoting
+`DayPicker`. I had not read `resolveSelectedDay`, forty lines away, which argues
+the *opposite* with a good reason — a stale shared link. Two recorded
+intentions disagreed and only one was implemented. The finding is a ruling
+challenge now, and the fix honours both by separating the cases the count
+conflated. **Read the other end of the behaviour before writing "this
+contradicts itself".**
+
+**`loading.tsx` commits the HTTP status before the page body runs.** F10's
+`notFound()` cannot change a 200 on a route that streams a skeleton — and
+neither can moving the call into `generateMetadata`, which is awaited before
+the stream opens but did not change the status here either. Measured both ways.
+The finding splits: the screen is fixed, the status needs a decision about the
+skeleton that is the owner's to make. **A status-code finding on a streaming
+route is two findings.**
+
+## What a later session should know
+
+- **The ten prepared commits are a shelf, not a queue.** Each message opens
+  with its finding ID so `git cherry-pick <sha>` explains itself in the target
+  branch. Suites were green on the branch with all ten applied (unit 620/620,
+  e2e 291/0/4 skipped, lint + `tsc` + `next build` clean) — that is a statement
+  about the ten together, so cherry-picking a subset is re-verified, not
+  assumed.
+- **The other seven findings are deliberately not prepared.** F2 (dates), F7
+  (button treatments), F8 (type scale), F9 (headings), F11 (card recipes), F16
+  (skeletons), F18 (borders) are each large, or taste-dependent, or would
+  collide with anything else in flight. Shipping them as "small isolated wins"
+  would have misrepresented what they are.
+- **F2 is the biggest single thing in the report and it wants a decision, not a
+  patch.** `DISPLAY_LOCALE = "en-GB"` is hardcoded across 29 call sites while
+  `lib/games/days.ts` localises properly four pixels away, so a Czech player
+  reads "Tue 25 Aug" beside "Út 25 srp". A `players.locale` column would fix it
+  and localise the emails as a side effect — which is a schema change, which is
+  Phase 2.
