@@ -1,14 +1,20 @@
 import { test } from "@playwright/test";
-import { players, signInAs } from "./helpers/session";
+import { players, serviceClient, signInAs } from "./helpers/session";
 test.use({ viewport: { width: 390, height: 844 } });
 test("shot", async ({ page, context }) => {
-  await signInAs(context, players.runner);
-  await page.goto("/games", { waitUntil: "networkidle" });
-  const r = await page.evaluate(() =>
-    ["locale-trigger","notification-bell","nav-account"].map((id) => {
+  await signInAs(context, players.organizer);
+  const admin = serviceClient();
+  const { data } = await admin.from("games").select("id").eq("status","published").limit(1).single();
+  await page.goto(`/admin/games/${data!.id}`, { waitUntil: "networkidle" });
+  const r = await page.evaluate(() => {
+    const out: Record<string, number|null> = {};
+    for (const id of ["skill-beginner","organizer-name","duration-minutes","venue-select","starts-at"]) {
       const e = document.querySelector(`[data-testid="${id}"]`);
-      return { id, h: e ? Math.round(e.getBoundingClientRect().height*10)/10 : null };
-    }));
+      if (!e) { out[id] = null; continue; }
+      const target = id.startsWith("skill") ? e.closest("label")! : e;
+      out[id] = Math.round(target.getBoundingClientRect().height*10)/10;
+    }
+    return out;
+  });
   console.log("SHOT " + JSON.stringify(r));
-  await page.screenshot({ path: "/tmp/audit/f15-after.png", clip: { x: 0, y: 0, width: 390, height: 110 } });
 });
