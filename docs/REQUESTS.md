@@ -257,6 +257,19 @@ round 13 added is item 2's reversal and a re-verification of item 3.
 | 140 | **(R19-3) Admin numbering counts from the oldest** | `SHIPPED round-19`. The list stays newest-first; only the numbering runs the other way. The reason is stability — numbering from the top changes every game's number the moment a new one is created, which makes "the third one" a different game each week |
 | 141 | **Apply `20260826200000_organizer_telegram_handle.sql`** | `BUILT-DORMANT-ON-the owner running it`. **Re-verified absent 2026-08-27** — probed three ways: no `games.organizer_telegram` column, no `normalize_telegram_handle` in `pg_proc`, and `set_game_organizer` still at **three** arguments. `app_capabilities()` on production returns no `organizerTelegram` key at all. Until it is applied the Telegram username field is not rendered and every UA/RU game shows WhatsApp — which is exactly today's behaviour. It DROPS the three-argument `set_game_organizer`: two overloads differing only by a defaulted fourth argument would make `admin_create_game_v2`'s internal call ambiguous |
 | 142 | **(R19-4) Duration off the game boxes** | `SHIPPED round-19`. Round 18 was right about the bug — the prop was threaded, typed and drawn in the card's own ASCII sketch with nothing rendering it — and wrong about the fix: "so render it" skipped whether the card should carry it. It is the third number on a row that already has a kick-off time and a spots figure. Renders on the detail only; the spec asserts absence on the box |
+| 143 | **(R20) The overnight UI/UX audit itself** | `SHIPPED round-20`, and it lives on `audit/uiux-2026-08` rather than here — `docs/audit-2026-08/`: the report, 76 captures, the raw measurements (`measures.json`, `pass2.json`, `pass3.json`) and before/after strips. Eighteen findings, all measured from the rendered page rather than read off a stylesheet. **Main was untouched by that round and verified three ways** — hash, reflog, and merge-base equalling main's tip. Round 21 cherry-picked the ten prepared fixes; the audit documents were deliberately left on the branch |
+| 144 | **(F1) An empty day chip filters instead of showing the whole board** | `SHIPPED round-21`. **Two recorded intentions disagreed and only one had shipped:** `DayPicker` promised an empty day shows the empty state, `resolveSelectedDay` accepted only days with games. The chip said *Today*, the URL said `?day=…`, twenty-three games rendered and **All** lit up. Fixed by testing membership in `tabs` instead of the count — a tap names a day the strip is drawing, a stale link names one that has fallen out of the window, and the count conflated them. Neither intention was traded away. R34 |
+| 145 | **(F3) The Russian duration label stopped overprinting its value** | `SHIPPED round-21`. `ДЛИТЕЛЬНОСТЬ` needs 117px and the fact grid gave it a fixed 84px column with `overflow: visible`, so it drew over `60 минут`. `grid-cols-[minmax(84px,auto)_1fr]` — the column holds its size for every other label and yields for this one. A Russian-only defect, which is why nine rounds of English screenshots never showed it |
+| 146 | **(F10) A missing game shows the product's own not-found screen** | `SHIPPED round-21`, **half of it, and the other half is ACCEPTED rather than open.** The screen is fixed: `notFound()` renders `app/not-found.tsx` in three languages instead of a fourth piece of bespoke copy. The **status stays 200** because `loading.tsx` streams the shell and commits it before anything can throw — measured through the body and through `generateMetadata`. Accepted with the premise stated: the skeleton beats a crawler's opinion while game pages are not an SEO surface. R35 |
+| 147 | **(F4) Route and global error boundaries** | `SHIPPED round-21`. Thirty routes carried **zero** `error.tsx` — a render error blanked the app, against this repo's own written rule. `app/error.tsx` and `app/global-error.tsx`, each with a description, a retry and a way out |
+| 148 | **(F5) Keyboard focus is visible** | `SHIPPED round-21`. Two `focus-visible` declarations existed product-wide; everything else fell back to a UA ring that does not read on near-black. One `:where(...)` rule — zero specificity, so any component that wants its own treatment still wins without `!important` |
+| 149 | **(F17) The footer links reach the 44px floor** | `SHIPPED round-21`. 18.2px on all 33 pages — the most-repeated instance of the product breaking its own tap-target rule |
+| 150 | **(F15) The header controls reach the 44px floor** | `SHIPPED round-21`. Language switcher, notification bell and the header's own button, all just under 44 and all on every page |
+| 151 | **(F14 + F6) The admin form controls reach the floor — and one finding was WRONG** | `SHIPPED round-21`. **The withdrawal is the useful half:** F14 first claimed the amenity checkboxes were 13px. They are — the `<input>` is. The `<label>` wrapping an input **is** the hit area, it already carried `min-h-11`, and it measures 44. The probe was pointed at the wrong element and the number was real, which is how a false positive survives. Re-measuring labels found the true defect three screens away — **skill checkboxes at 19.5px** — fixed here along with F6's admin field heights |
+| 152 | **(F12) One spelling of "pill"** | `SHIPPED round-21`. 23 files carried `rounded-full` where the token is `rounded-pill`; identical output, so no pixel moved. Two spellings of one concept is how a token quietly stops being the answer |
+| 153 | **(F13) The admin nav says it continues** | `SHIPPED round-21`. The chip row scrolls at 390px with nothing to say so — a mask-image fade at the right edge below `md`, removed above it where the row fits |
+| 154 | *Findings 2, 7, 8, 9 of the audit — the ones NOT prepared.* Dates render English everywhere; the primary action is drawn eleven ways; half of all type bypasses the scale; sixteen heading treatments | `OPEN`, and deliberately so. Each is large, taste-dependent, or both, and shipping them as "small isolated wins" would have misdescribed them. **F2 is the biggest single thing in the audit and wants a decision rather than a patch:** `DISPLAY_LOCALE = "en-GB"` is hardcoded at 29 call sites while `lib/games/days.ts` localises properly four pixels away, so a Czech player reads "Tue 25 Aug" beside "Út 25 srp". Doing it fully implies a `players.locale` column — which also unlocks localised emails, and is Phase 2 schema |
+| 155 | *Findings 11, 16, 18 of the audit — small, but not isolated.* Thirteen card recipes; two `loading.tsx` for thirty routes; borders drawn in surface colours rather than hairline tokens | `OPEN`. Each is a consolidation that touches many files at once, so it collides with anything else in flight — cheap on a quiet round, expensive on a busy one |
 
 ---
 
@@ -286,7 +299,7 @@ items physically impossible without a new frame**. It is. What remains:
 
 ## 6. Standing owner actions
 
-**Everything here was re-verified on 2026-08-21, not copied forward** — each
+**Everything here was re-verified on 2026-08-27, not copied forward** — each
 migration probed for the OBJECT it creates rather than for a filename, because
 a filename proves only that the repo has it. Row 64 came off this list as a
 result (`create_booking` is at six arguments on production); rows 48 and 57 came
@@ -378,11 +391,19 @@ had.
 
 **No deploy is needed afterwards.**
 
-### Round 18's migration (rows 136 and 137)
+### ~~Round 18's migration (rows 136 and 137)~~ — APPLIED, found 2026-08-27
+
+**THE OWNER APPLIED IT AND DID NOT REPORT IT**, which is precisely the case
+this list's re-verification rule exists for — round 20 probed instead of
+echoing and found the row had come true. Evidence, three ways: `games.language`
+exists; `public.app_capabilities()` **evaluated on production returns
+`gameLanguage: true`**, and since this migration ships its own replacement of
+that function the flag cannot read true without it; and `games_format_format`
+now reads the four-group pattern.
 
 ```bash
-node scripts/apply-migration.mjs \
-  supabase/migrations/20260826100000_game_language.sql --production
+# ~~node scripts/apply-migration.mjs \
+#   supabase/migrations/20260826100000_game_language.sql --production~~
 ```
 
 Validated against local inside a transaction and rolled back. Additive: one
