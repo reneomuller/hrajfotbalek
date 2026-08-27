@@ -91,12 +91,29 @@ from "Tomorrow · Fri 28 Aug" to "Sun 20 Sept".
 The player presses a day, the URL agrees they pressed it, and the product
 shows them three weeks of everything with a different chip highlighted.
 
-**This contradicts its own recorded intent.** `DayPicker` carries: *"EVERY DAY
-IS A LINK NOW, including an empty one (amendment A): tapping it shows the
-list's empty state, which is a real answer rather than a dead control."*
+**TWO RECORDED INTENTIONS DISAGREE — this is not one ruling being broken.**
 
-**Fix:** honour any day inside the tab window regardless of count; the list's
-empty state already exists. Evidence: `pass5.json`, `/tmp/audit/empty-day.png`.
+`DayPicker` promises: *"EVERY DAY IS A LINK NOW, including an empty one
+(amendment A): tapping it shows the list's empty state, which is a real answer
+rather than a dead control."*
+
+`resolveSelectedDay`'s own docstring says the opposite, with a reason:
+*"the filter still only accepts days there is something to filter to. Without
+this, a link shared on the day of a game and opened after it would land on an
+empty list instead of the whole board."*
+
+Both intentions are good. Only one was implemented, and the other was written
+down as though it had been. **I missed the second one on first reading and the
+finding was originally written as a simple contradiction of `DayPicker`; that
+was wrong and this is the correction.**
+
+**Fix (prepared, P-F1):** the two cases are distinguishable, so this is a
+repair rather than a choice. A tap can only name a day the strip is currently
+*drawing*; a stale link names one that has fallen out of the window. Membership
+in `tabs` separates them exactly — the count, which conflated them, never did.
+After: rows 0, the tapped day selected, `All` deselected.
+
+Evidence: `pass5.json`, `prepared/F1-empty-day.jpg`.
 
 ### F2 · Every date renders in English — breaks-trust · M
 
@@ -239,8 +256,23 @@ set in **Anton** while another 17px heading is set in **Onest**.
 game does not exist, or is not published yet."
 
 `/player/<nobody>` and `/nope` both correctly return 404. The game route is the
-outlier: it renders its own not-found body instead of calling `notFound()`, so
-every fabricated game URL is a 200 for a crawler.
+outlier: it rendered its own not-found body instead of calling `notFound()`.
+
+**THE FINDING SPLITS, and only half of it could be fixed.**
+
+*Fixed and verified (P-F10):* a missing game now renders `app/not-found.tsx` —
+the same screen, in three languages, that every other missing thing gets —
+instead of a fourth piece of bespoke copy.
+
+*Not fixed:* **the status is still 200.** This route has a `loading.tsx`, so
+Next streams a shell as soon as rendering begins and the status is committed
+with the first byte; a `notFound()` thrown afterwards cannot change it. Moving
+the call into `generateMetadata`, which is awaited before the stream opens, did
+not change it either in this environment — measured both ways, 200 with
+"Loading…" in the first response.
+
+It needs a decision that is not mine: drop the skeleton on this route to stop
+streaming, or accept that fabricated game URLs answer 200.
 
 ### F11 · Thirteen card recipes — feels-cheap · S
 
@@ -268,11 +300,19 @@ sits off-screen with nothing indicating it, on all eight admin pages.
 
 Round 17 solved exactly this shape for venue rows with a chevron.
 
-### F14 · Amenity and skill checkboxes are 13px and 16px — feels-cheap · S
+### F14 · Skill checkboxes are 19.5px — feels-cheap · S
 
-Ten amenity checkboxes on `/admin/venues` render 13px tall; three skill
-checkboxes on the game form render 16px. Both are inside labels, but the labels
-are not padded to compensate — measured, the hit area is the box.
+**Half of this finding was wrong and is withdrawn.** The first measurement read
+the `<input>`: amenities 13px, skill 16px. But a `<label>` wrapping an input
+*is* the hit area, so the label is what matters — and re-measuring found the
+amenity labels already carry `min-h-11` and measure **44px**. Nothing to fix
+there; the probe was measuring the wrong element.
+
+Measuring labels instead found the real one three screens away: the **skill**
+checkboxes on the game form have labels of **19.5px**. Same control, same
+product, two hit areas — and this was the small one.
+
+Fixed in P-F14 together with F6's form fields.
 
 ### F15 · Header controls sit just under the floor — polish · S
 
@@ -369,9 +409,32 @@ redesign.
 Each is its own commit whose message opens with the finding ID, so
 cherry-picking is mechanical. Before/after strips in `prepared/`.
 
-See the commit log of `audit/uiux-2026-08` for the list; every prepared commit
-was made after the finding it names and the full suites were run green on the
-branch afterwards.
+| Commit | Finding | What it does |
+|---|---|---|
+| `b416293` | **F1** | An empty day chip filters instead of showing the whole board |
+| `6ca0a13` | **F3** | The Russian duration label stops overprinting its value |
+| `65347af` | **F10** | A missing game shows the product's not-found screen (UI half only — see F10) |
+| `cc798d9` | **F4** | `app/error.tsx` and `app/global-error.tsx` |
+| `7042672` | **F5** | One global `:focus-visible` rule |
+| `a2a48f3` | **F17** | Footer links reach 44px |
+| `5bcbb7c` | **F15** | Header controls reach 44px |
+| `f89373e` | **F14 + F6** | Skill labels and every admin field reach 44px — and F14's amenity half withdrawn |
+| `56e6914` | **F12** | One spelling of "pill" (23 files, no pixel moves) |
+| `c6d93bf` | **F13** | A fade tells the admin nav it continues |
+
+**Ten, not fifteen.** The remaining findings — F2 (dates), F7 (button
+treatments), F8 (type scale), F9 (headings), F11 (card recipes), F16
+(skeletons), F18 (surface-colour borders) — are each either large, or
+taste-dependent, or would collide with anything else in flight. Preparing them
+as "small isolated wins" would have misrepresented what they are, so they are
+in §6 instead.
+
+**Suites on the branch, with all ten applied:** unit **620/620**, e2e **291
+passed / 0 failed / 4 skipped**, lint 0 errors, `tsc` clean, `next build`
+clean. The shelf is safe to cherry-pick from.
+
+Each commit message opens with its finding ID, so `git cherry-pick <sha>` is
+mechanical and the message explains itself in the target branch.
 
 ---
 
@@ -412,7 +475,22 @@ save, no per-render cost.
 
 ## 7. Ruling challenges
 
-**None.** Every candidate was checked against the record and none survived:
+**One, and it is F1 — though it is a contradiction to repair rather than a
+ruling to overturn.**
+
+**RULING CHALLENGE · F1 · the empty day chip.** Two recorded decisions
+disagree: `DayPicker` says an empty day is a link that shows the empty state;
+`resolveSelectedDay` says the filter accepts only days with games, to protect a
+stale shared link. The implemented behaviour follows the second and contradicts
+the first, and the player gets the worse half of both. **The case for
+reopening:** the two intentions are not actually in conflict once the cases are
+separated — a tap names a day the strip is drawing, a stale link names one that
+has fallen out of the window — so both can be honoured at once. P-F1 does that.
+If you disagree and want the fall-back-to-all behaviour kept for empty days,
+then `DayPicker`'s comment is the thing to correct instead, and the chip should
+be drawn as disabled rather than as a link.
+
+The other candidates were checked and dismissed:
 
 - The **10px eyebrow** looked like a challenge to ruling B (the product's one
   uppercase style). It is not: B governs *case*, not size, and the eyebrow
