@@ -211,19 +211,41 @@ function capitalise(value: string, locale: Locale): string {
  * whole list, which is the thing the reader can actually act on, not a
  * different day they did not ask for.
  *
- * A DAY WITH NO GAMES IS UNRECOGNISED for this purpose, even though the strip
+ * ~~A DAY WITH NO GAMES IS UNRECOGNISED for this purpose, even though the strip
  * now draws a chip for it. The strip covers a rolling fortnight so it can be a
  * calendar; the filter still only accepts days there is something to filter to.
  * Without this, a link shared on the day of a game and opened after it would
  * land on an empty list instead of the whole board — which is exactly the trap
- * the null default exists to prevent, arriving by a different route.
+ * the null default exists to prevent, arriving by a different route.~~
+ *
+ * TWO RECORDED INTENTIONS DISAGREED, and this is the repair (audit F1).
+ *
+ * The paragraph above protects a STALE SHARED LINK. `DayPicker` promises the
+ * opposite for a TAP: "every day is a link now, including an empty one —
+ * tapping it shows the list's empty state, which is a real answer rather than
+ * a dead control." Both are good intentions; only one of them was implemented,
+ * and the other was written down as though it were.
+ *
+ * WHAT THE PLAYER GOT was the worse half of both. Tapping the empty Today chip
+ * navigated to `?day=2026-08-27`, rendered all twenty-three games, and lit the
+ * `All` chip instead — a control that appears to do nothing and silently
+ * deselects itself. Measured, not inferred.
+ *
+ * THE TWO CASES ARE DISTINGUISHABLE, which is what makes this a repair rather
+ * than a choice between them. A tap can only ever name a day the strip is
+ * currently drawing; a stale link names one that has fallen out of the window.
+ * So membership in `tabs` separates them exactly, and the COUNT — which is
+ * what conflated them — is not consulted:
+ *
+ *   in the window, no games -> filter to it, show the empty state (DayPicker)
+ *   outside the window      -> null, show the whole board (the paragraph above)
  */
 export function resolveSelectedDay(
   requested: string | undefined,
   tabs: DayTab[],
 ): string | null {
   if (!requested) return null;
-  return tabs.some((tab) => tab.key === requested && tab.count > 0) ? requested : null;
+  return tabs.some((tab) => tab.key === requested) ? requested : null;
 }
 
 /**
