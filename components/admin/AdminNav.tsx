@@ -35,7 +35,31 @@ export function AdminNav() {
       hidden that a reader was counting, and the alternative is three rows of
       chrome on a 390px screen.
     */
-    <nav className="-mx-gutter flex gap-2 overflow-x-auto px-gutter pb-1 [scrollbar-width:none] md:mx-0 md:flex-wrap md:px-0 [&::-webkit-scrollbar]:hidden">
+    <nav /*
+        A FADE AT THE TRAILING EDGE (audit F13).
+
+        Measured: `scrollWidth` 572 in a `clientWidth` of 390. The row IS
+        scrollable and the last chip IS reachable — `elementFromPoint` confirms
+        it after scrolling, so this is not the round-17 venue-row bug where a
+        control could not be found at all. What it lacked was any sign that
+        182px of navigation continued past the edge, on all eight admin pages.
+
+        A MASK RATHER THAN A GRADIENT OVERLAY, because the chips scroll under
+        it: an absolutely-positioned gradient would need its own stacking
+        context, would sit on top of a chip's tap area, and would have to know
+        the page background. `mask-image` fades the element's own pixels and
+        costs no node.
+
+        IT TURNS ITSELF OFF WHERE THERE IS NOTHING TO HINT AT. Above `md` the
+        row wraps instead of scrolling, so the fade would be a permanent smudge
+        on a complete row.
+
+        The scrollbar stays hidden. A native bar on a dark row is a light-grey
+        rectangle that reads as an element rather than as an affordance, which
+        is why it was hidden in the first place — the fade says the same thing
+        in the product's own language.
+      */
+      className="-mx-gutter flex gap-2 overflow-x-auto px-gutter pb-1 [mask-image:linear-gradient(to_right,black_calc(100%-40px),transparent)] [scrollbar-width:none] md:mx-0 md:flex-wrap md:px-0 md:[mask-image:none] [&::-webkit-scrollbar]:hidden">
       {adminNavLinks().map((link) => {
         /*
          * `/admin` IS EXACT-MATCHED, for the reason `/` is in the nav pill:
