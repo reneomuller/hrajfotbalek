@@ -20,6 +20,41 @@
   }
 
   /**
+   * KEYBOARD FOCUS, ONCE, FOR EVERYTHING (audit F5).
+   *
+   * THREE FILES IN THE ENTIRE PRODUCT carried any focus styling — two
+   * `focus-visible:outline*` declarations between them. Everything else fell
+   * back to the user agent's default ring, which on `#0A0A0A` is close to
+   * invisible: a keyboard user tabbing through the claim bar, the nav, the
+   * admin forms or the day strip could not see where they were.
+   *
+   * `:focus-visible`, NOT `:focus`. The browser decides: a mouse click on a
+   * button does not draw a ring, a Tab press does. `:focus` would put an
+   * outline around every button anyone tapped, which is the reason so many
+   * products delete focus styling entirely and end up here.
+   *
+   * VOLT, because it is the product's one "this is where you are" colour, and
+   * `outline-offset` so the ring sits OUTSIDE the shape rather than eating
+   * into a 2px volt border it may be drawn on top of.
+   *
+   * `outline` RATHER THAN `box-shadow`: outline follows the element's border
+   * box through `overflow: hidden` ancestors, and half the interactive things
+   * here live inside clipped cards.
+   */
+  :where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+    outline: 2px solid theme("colors.volt");
+    outline-offset: 2px;
+    border-radius: inherit;
+  }
+
+  /*
+   * `:where()` above keeps the specificity at ZERO, so any component that
+   * needs its own focus treatment overrides this by existing rather than by
+   * fighting it — the same reasoning `.lifted` uses for living in the
+   * components layer.
+   */
+
+  /**
    * THE BOTTOM TAB BAR'S FOOTPRINT, as one number every layer can read.
    *
    * Three things need it and they must agree: the page needs bottom padding so
