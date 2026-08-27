@@ -23,8 +23,18 @@ type VenueRow = Database["public"]["Tables"]["venues"]["Row"];
 
 const INITIAL: AdminActionState = { status: "idle" };
 
+/*
+ * `min-h-11` (audit F6). Every text input, number input and datetime field on
+ * the admin forms measured 37.5px — `py-2` around 13px type. The floor this
+ * product states is 44, and an admin filling in a game on a phone is the
+ * person most likely to mis-tap: the fields sit directly above and below each
+ * other with 4px between them.
+ *
+ * `min-h-11` rather than more padding, so a field that WRAPS (a long venue
+ * name in the select) grows from its content instead of being pinned.
+ */
 const FIELD =
-  "mt-1 w-full rounded-control border border-hairline-strong bg-surface px-3 py-2 text-[13px] text-bone";
+  "mt-1 min-h-11 w-full rounded-control border border-hairline-strong bg-surface px-3 py-2 text-[13px] text-bone";
 const LABEL = "block text-[10px] uppercase tracking-eyebrow text-muted";
 const HINT = "mt-1 text-[12px] leading-snug text-muted";
 const ERROR = "mt-1 text-[12px] text-volt";
@@ -443,7 +453,16 @@ export function GameForm({
           {SKILL_LEVELS.map((level) => (
             <label
               key={level}
-              className="flex items-center gap-2 text-[13px] text-bone"
+              /*
+                `min-h-11` (audit F14). These labels measured 19.5px while the
+                amenity checkboxes on `/admin/venues` — the same control, three
+                screens away — already carried `min-h-11` and measured 44.
+                Same concept, two hit areas, and this was the small one.
+
+                The BOX stays 16px. What grows is the label wrapping it, which
+                is what a pointer actually hits.
+              */
+              className="flex min-h-11 items-center gap-2 text-[13px] text-bone"
             >
               <input
                 type="checkbox"
