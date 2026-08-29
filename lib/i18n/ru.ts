@@ -58,7 +58,6 @@ export const ru: StringsOverlay = {
     heroLine1: "Играй в футбол",
     heroLine2: "Когда угодно. Где угодно.",
     vision: "Один матч, который повторяется. Найди игру, займи место, приходи.",
-    heroCta: "Найти матч →",
     scrollHint: "↓ ЛИСТАЙ",
     steps: [
       { index: "01", title: "Найди матч", body: "Игры рядом с тобой, каждую неделю." },
@@ -375,8 +374,7 @@ export const ru: StringsOverlay = {
     payOnline: "Онлайн-оплата",
     payOnlineHint: "Безопасно через Stripe",
     payOnlineComingSoon: "Скоро",
-    payByCash: "Наличными на поле",
-    payByCashHint: "Возьми наличные. Организатор подтвердит тебя на месте.",
+    payByCashHint: "Эту бронь ты закрываешь с организатором на поле.",
     choosePayment: "Как будешь платить?",
     partyTitle: "Берёшь кого-то с собой?",
     partyHint: "Они играют как твои гости. Одна бронь, одна оплата, одна отмена.",
@@ -500,6 +498,9 @@ export const ru: StringsOverlay = {
     statVenuesOne: "площадка",
     statVenuesFew: "площадки",
     statVenuesMany: "площадок",
+    statMetOne: "встреченный игрок",
+    statMetFew: "встреченных игрока",
+    statMetMany: "встреченных игроков",
 
     badgesTitle: "Значки",
     badgesCount: "{earned} из {total}",
@@ -720,7 +721,7 @@ export const ru: StringsOverlay = {
       },
       {
         q: "Как оплатить?",
-        a: "Картой или мобильным кошельком при бронировании, кредитами с абонемента, либо наличными на поле.",
+        a: "Картой или мобильным кошельком при бронировании или кредитами с абонемента.",
       },
       {
         q: "Что если игра заполнена?",

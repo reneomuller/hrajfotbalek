@@ -65,17 +65,10 @@ export function WaitlistConvert({ gameId }: { gameId: string }) {
             </span>
           </label>
 
-          <label className="flex cursor-pointer items-start gap-3 rounded-card bg-surface p-4 has-[:checked]:border-hairline-volt">
-            <input type="radio" name="method" value="cash" className="mt-1 accent-volt" />
-            <span>
-              <span className="block text-body-lg font-semibold text-bone">
-                {t.booking.payByCash}
-              </span>
-              <span className="mt-1 block text-[13px] leading-snug text-muted">
-                {t.booking.payByCashHint}
-              </span>
-            </span>
-          </label>
+          {/* ~~Cash on the pitch.~~ REMOVED with the rest of it (round 23,
+              item 7). A converting waitlister gets the same two ways to pay as
+              anybody else — a second place offering a third option is how one
+              of them survives a removal. */}
         </div>
       </fieldset>
 

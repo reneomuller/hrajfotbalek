@@ -1,7 +1,7 @@
 import type { Locale } from "@/lib/i18n/locales";
 import { DATE_LOCALE } from "@/lib/games/days";
 import { statLabel, type StatKey } from "@/lib/profile/statLabel";
-import type { ProfileStats as Stats } from "@/lib/profile/stats";
+import { thirdStat, type ProfileStats as Stats } from "@/lib/profile/stats";
 import type { Strings } from "@/lib/strings";
 
 /**
@@ -27,10 +27,21 @@ import type { Strings } from "@/lib/strings";
  */
 export function ProfileStats({
   stats,
+  playersMet = null,
   locale,
   t,
 }: {
   stats: Stats;
+  /**
+   * THE THIRD TILE, WHEN THIS DATABASE CAN COUNT IT (round 23, item 1).
+   *
+   * `null` — the default — keeps "pitches played" exactly as it was, which is
+   * what every caller does until `20260830100000_players_met` is applied. It
+   * is a nullable rather than a boolean flag plus a number because those two
+   * can disagree, and the disagreement renders as a confident `0 players met`
+   * on the profile of a regular.
+   */
+  playersMet?: number | null;
   locale: Locale;
   t: Strings;
 }) {
@@ -38,10 +49,16 @@ export function ProfileStats({
     maximumFractionDigits: 1,
   });
 
+  /*
+   * PITCHES PLAYED IS STILL COUNTED, IT JUST STOPPED HAVING A TILE. The
+   * Explorer badge is "play at 3 different pitches" and the grid below reads
+   * `stats.venues`, so removing the number would lock a badge people have
+   * earned — the tile is a display decision and the stat is not.
+   */
   const cells: { key: StatKey; value: number }[] = [
     { key: "games", value: stats.gamesPlayed },
     { key: "hours", value: stats.hours },
-    { key: "venues", value: stats.venues },
+    thirdStat(stats, playersMet),
   ];
 
   return (

@@ -59,7 +59,6 @@ export const cs: StringsOverlay = {
     heroLine1: "Hraj fotbal",
     heroLine2: "Kdykoli. Kdekoli.",
     vision: "Jeden zápas, který se opakuje. Najdi hru, zaber si místo, přijď.",
-    heroCta: "Najít zápas →",
     scrollHint: "↓ SCROLLUJ",
     steps: [
       { index: "01", title: "Najdi zápas", body: "Zápasy kousek od tebe, každý týden." },
@@ -372,8 +371,7 @@ export const cs: StringsOverlay = {
     payOnline: "Platba online",
     payOnlineHint: "Bezpečně přes Stripe",
     payOnlineComingSoon: "Připravujeme",
-    payByCash: "Zaplatit hotově na place",
-    payByCashHint: "Vezmi hotovost. Organizátor tě potvrdí na místě.",
+    payByCashHint: "Tuhle rezervaci vyřídíš s organizátorem na place.",
     choosePayment: "Jak chceš zaplatit?",
     partyTitle: "Bereš někoho s sebou?",
     partyHint: "Hrají jako tvoji hosté. Jedna rezervace, jedna platba, jedno zrušení.",
@@ -495,6 +493,9 @@ export const cs: StringsOverlay = {
     statVenuesOne: "hřiště",
     statVenuesFew: "hřiště",
     statVenuesMany: "hřišť",
+    statMetOne: "potkaný hráč",
+    statMetFew: "potkaní hráči",
+    statMetMany: "potkaných hráčů",
 
     badgesTitle: "Odznaky",
     badgesCount: "{earned} z {total}",
@@ -704,7 +705,7 @@ export const cs: StringsOverlay = {
       },
       {
         q: "Jak zaplatím?",
-        a: "Kartou nebo mobilní peněženkou při rezervaci, kredity z permanentky, nebo hotově na hřišti.",
+        a: "Kartou nebo mobilní peněženkou při rezervaci, nebo kredity z permanentky.",
       },
       {
         q: "Co když je zápas plný?",

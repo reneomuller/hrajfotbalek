@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { profileStats } from "@/lib/profile/stats";
+import { profileStats, thirdStat } from "@/lib/profile/stats";
 import type { BookingWithGame } from "@/lib/booking/queries";
 
 /**
@@ -164,5 +164,29 @@ describe("profileStats", () => {
 
     // Assert
     expect(stats).toEqual({ gamesPlayed: 0, hours: 0, venues: 0 });
+  });
+});
+
+describe("thirdStat", () => {
+  const stats = { gamesPlayed: 9, hours: 9, venues: 4 };
+
+  it("shows pitches played while the database cannot count players met", () => {
+    // Arrange / Act
+    const cell = thirdStat(stats, null);
+
+    // Assert — this is the state PRODUCTION is in on deploy day, before the
+    // owner applies 20260830100000_players_met.
+    expect(cell).toEqual({ key: "venues", value: 4 });
+  });
+
+  it("shows players met once the database can count it", () => {
+    // Arrange / Act / Assert
+    expect(thirdStat(stats, 7)).toEqual({ key: "met", value: 7 });
+  });
+
+  it("shows a real zero rather than falling back to pitches", () => {
+    // Arrange / Act / Assert — zero is a fact about the player and null is a
+    // fact about the database; conflating them is the whole bug this guards.
+    expect(thirdStat(stats, 0)).toEqual({ key: "met", value: 0 });
   });
 });

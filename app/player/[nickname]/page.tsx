@@ -35,6 +35,12 @@ export async function generateMetadata({
  * exact scope, and the scope IS the ruling: profile picture, banner, the three
  * stats, badges. Nothing else.
  *
+ * THE THIRD STAT IS "PLAYERS MET" SINCE ROUND 23 — and it replaced "pitches
+ * played", not a wallet balance. The brief that asked for the change believed
+ * a balance was visible here; it never was. `public_player_profile` returns a
+ * fixed composite and money has never been one of its columns, which is
+ * exactly the property the composite exists to have.
+ *
  * THE ENFORCEMENT IS THE RPC, NOT THIS PAGE. `public_player_profile` returns a
  * six-column composite and there is no way to ask it for a seventh — so a
  * later edit here cannot leak a field, because the field never arrives. A page
@@ -67,6 +73,11 @@ export default async function PublicPlayerPage({
    */
   if (!profile) notFound();
 
+  /*
+   * `venues` FEEDS THE BADGES AND NO LONGER FEEDS A TILE (round 23, item 1).
+   * Explorer is "play at 3 different pitches", so the number is still needed
+   * here even though "players met" has taken its place in the row above.
+   */
   const stats = { gamesPlayed: profile.gamesPlayed, hours: profile.hours, venues: profile.venues };
   const badges = playerBadges(stats, t);
 
@@ -84,7 +95,7 @@ export default async function PublicPlayerPage({
       <div className="relative pt-[104px]">
         <ProfileCover coverPath={profile.coverPath} photoVersion={null} t={t} />
         <PublicIdentity nickname={profile.nickname} photoPath={profile.photoPath} />
-        <ProfileStats stats={stats} locale={locale} t={t} />
+        <ProfileStats stats={stats} playersMet={profile.playersMet} locale={locale} t={t} />
       </div>
 
       <BadgeGrid badges={badges} t={t} />

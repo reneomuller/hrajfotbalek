@@ -70,7 +70,6 @@ export const uk: StringsOverlay = {
     heroLine1: "Грай у футбол",
     heroLine2: "Коли завгодно. Де завгодно.",
     vision: "Один матч, що повторюється. Знайди гру, займи місце, приходь.",
-    heroCta: "Знайти матч →",
     scrollHint: "↓ ГОРТАЙ",
     steps: [
       { index: "01", title: "Знайди матч", body: "Ігри поруч із тобою, щотижня." },
@@ -374,8 +373,7 @@ export const uk: StringsOverlay = {
     payOnline: "Онлайн-оплата",
     payOnlineHint: "Безпечно через Stripe",
     payOnlineComingSoon: "Скоро",
-    payByCash: "Готівкою на полі",
-    payByCashHint: "Візьми готівку. Організатор підтвердить тебе на місці.",
+    payByCashHint: "Цю броню ти закриваєш з організатором на полі.",
     choosePayment: "Як платитимеш?",
     partyTitle: "Береш когось із собою?",
     partyHint: "Вони грають як твої гості. Одне бронювання, одна оплата, одне скасування.",
@@ -502,6 +500,9 @@ export const uk: StringsOverlay = {
     statVenuesOne: "майданчик",
     statVenuesFew: "майданчики",
     statVenuesMany: "майданчиків",
+    statMetOne: "зустрінутий гравець",
+    statMetFew: "зустрінуті гравці",
+    statMetMany: "зустрінутих гравців",
 
     badgesTitle: "Значки",
     badgesCount: "{earned} з {total}",
@@ -718,7 +719,7 @@ export const uk: StringsOverlay = {
       },
       {
         q: "Як оплатити?",
-        a: "Карткою або мобільним гаманцем під час бронювання, кредитами з абонемента, або готівкою на полі.",
+        a: "Карткою або мобільним гаманцем під час бронювання або кредитами з абонемента.",
       },
       {
         q: "Що робити, якщо гра заповнена?",

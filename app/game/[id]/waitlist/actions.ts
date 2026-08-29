@@ -77,8 +77,10 @@ export async function convertWaitlistAction(
 ): Promise<WaitlistActionState> {
   const gameId = String(formData.get("gameId") ?? "");
   const rawMethod = formData.get("method");
-  const method: ClientPaymentMethod | null =
-    rawMethod === "qr" || rawMethod === "cash" ? rawMethod : null;
+  // `qr` ONLY (round 23, item 7). Cash is gone from the form and refused
+  // here, because the form is a POST endpoint and a removed radio is not a
+  // removed option.
+  const method: ClientPaymentMethod | null = rawMethod === "qr" ? "qr" : null;
 
   if (!gameId) return { status: "error", code: "GAME_NOT_FOUND" };
   if (!method) return { status: "error", code: "INSUFFICIENT_PERMISSION" };

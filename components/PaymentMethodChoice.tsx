@@ -117,7 +117,7 @@ export function PaymentMethodChoice({
    */
   const creditCovers = creditCzk >= partyPrice;
 
-  const [choice, setChoice] = useState<"credit" | "online" | "cash" | null>(
+  const [choice, setChoice] = useState<"credit" | "online" | null>(
     // DEFAULT TO CREDIT WHEN IT COVERS THE GAME (item 11). A player who has
     // already paid for this game should not have to say so.
     creditCovers ? "credit" : null,
@@ -154,7 +154,7 @@ export function PaymentMethodChoice({
       ? describeBookingError(state.code, t)
       : null;
 
-  const optionClass = (value: "credit" | "online" | "cash", disabled: boolean) =>
+  const optionClass = (value: "credit" | "online", disabled: boolean) =>
     [
       "flex items-start gap-3 rounded-card border-2 p-4 transition-colors",
       disabled
@@ -363,26 +363,26 @@ export function PaymentMethodChoice({
             </span>
           </label>
 
-          {/* ---- cash --------------------------------------------------- */}
-          <label data-testid="pay-cash" className={optionClass("cash", false)}>
-            <input
-              type="radio"
-              name="option"
-              value="cash"
-              checked={activeChoice === "cash"}
-              onChange={() => setChoice("cash")}
-              data-testid="pay-cash-input"
-              className="mt-1 accent-volt"
-            />
-            <span className="min-w-0">
-              <span className="block text-body-lg font-semibold text-bone">
-                {t.booking.payByCash}
-              </span>
-              <span className="mt-1 block text-[13px] leading-snug text-muted">
-                {t.booking.payByCashHint}
-              </span>
-            </span>
-          </label>
+          {/*
+            ~~---- cash ----~~ REMOVED (round 23, item 7).
+
+            Round 18 asked for this and STOPPED AT ITS OWN GATE: the item said
+            remove cash only once the online rail was proven end to end on
+            production, and it was not — no `stripe_session_id` had ever
+            existed. The gate did its job and the reprieve was recorded.
+            Round 23 closes it on the owner's explicit authorization, with the
+            evidence stated rather than implied: the online rail is proven on
+            the PASS half (`cs_live_…`, confirmed by webhook in 24 seconds) and
+            has still never carried a BOOKING. The owner accepted that as
+            shared-rail proof; the remaining risk is his to take and is written
+            down here rather than left to be inferred.
+
+            THE `cash` RAIL SURVIVES THIS AND MUST. "Redeem credit" still sends
+            `cash` to `create_booking` — see `OPTION_TO_METHOD`, where the RPC
+            derives `credit` itself — and seven unpaid cash bookings exist on
+            production that the admin roster must still settle. What is gone is
+            the CHOICE, not the column.
+          */}
         </div>
       </fieldset>
 

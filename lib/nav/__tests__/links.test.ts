@@ -102,19 +102,26 @@ describe("adminNavLinks", () => {
     // two numbers on the landing page are edited from somewhere.
     // ~~Top-ups~~ left the row in round 13 item 8 with the rail it served.
     //
-    // THE ORDER IS p14's, and this assertion is the thing that holds it.
-    // Round 8 put Dashboard first on the reasoning that a landing page comes
-    // first; round 10 read the frame instead, where the four grey chips are
-    // Games, Players, Top-ups, Financials and the volt one — the current
-    // section, which on p14 IS the dashboard — is fifth, clipped at the right
-    // edge. Home page trails it because the frame has no room to draw a sixth
-    // and it has to live somewhere.
+    // DASHBOARD IS FIRST (round 23, item 5), and this assertion is the thing
+    // that holds the order.
+    //
+    // ~~THE ORDER IS p14's. Round 8 put Dashboard first on the reasoning that
+    // a landing page comes first; round 10 read the frame instead, where the
+    // four grey chips are Games, Players, Top-ups, Financials and the volt one
+    // — the current section, which on p14 IS the dashboard — is fifth, clipped
+    // at the right edge.~~
+    //
+    // The frame reading was right and it is now out of date: `p14` predates
+    // the dashboard being the daily landing (round 13 put the unsettleable
+    // payments on it, round 14 pointed the account page's admin link at it).
+    // Fifth also placed it under the F13 scroll fade at 390px — the chip for
+    // the page opened every morning was the one half out of view.
     expect(adminNavLinks()).toEqual([
+      { href: "/admin", label: strings.admin.navDashboard },
       { href: "/admin/games", label: strings.admin.navGames },
       { href: "/admin/players", label: strings.admin.navPlayers },
       { href: "/admin/stats", label: strings.admin.navStats },
       { href: "/admin/venues", label: strings.admin.venuesTitle },
-      { href: "/admin", label: strings.admin.navDashboard },
       { href: "/admin/site", label: strings.admin.navSite },
     ]);
   });

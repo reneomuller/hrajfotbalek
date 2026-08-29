@@ -24,6 +24,8 @@ import { getLocale, getStrings } from "@/lib/i18n/server";
 import { listMyBatches } from "@/lib/pass/queries";
 import { playerBadges } from "@/lib/profile/badges";
 import { profileStats } from "@/lib/profile/stats";
+import { playersMetFor } from "@/lib/profile/playersMet";
+import { appCapabilities } from "@/lib/db/capabilities";
 import { signOutAction } from "./actions";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -98,7 +100,7 @@ export default async function AccountPage({
    * The wallet reads are the two that are genuinely tab-specific, and they are
    * cheap enough not to be worth branching a `Promise.all` around.
    */
-  const [balanceCzk, batches, bookings, waitlisted] = await Promise.all([
+  const [balanceCzk, batches, bookings, waitlisted, capabilities] = await Promise.all([
     getOwnCreditBalance(),
     // The wallet broken into batches (§4.2). A single number cannot say that
     // 750 of a 900 balance runs out on the 3rd, which is the one thing a pass
@@ -107,7 +109,21 @@ export default async function AccountPage({
     listOwnBookings(),
     // Round 16 item 12 — the Waitlist subsection under My games.
     listOwnWaitlisted(),
+    appCapabilities(),
   ]);
+
+  /*
+   * PLAYERS MET (round 23, item 1) — the third tile, when the database can
+   * count it.
+   *
+   * TWO GATES, AND THEY ARE NOT REDUNDANT. `capabilities.playersMet` says the
+   * migration has landed, so the call is worth making at all; the call's own
+   * result says an answer actually arrived. Asking without the flag would fire
+   * a 404 on every profile render for as long as the migration is unapplied,
+   * and trusting the flag without checking the answer would render a confident
+   * zero if the grant were missing.
+   */
+  const playersMet = capabilities.playersMet ? await playersMetFor(player.id) : null;
 
   const stats = profileStats(bookings);
   const badges = playerBadges(stats, t);
@@ -152,7 +168,7 @@ export default async function AccountPage({
           t={t}
         />
 
-        <ProfileStats stats={stats} locale={locale} t={t} />
+        <ProfileStats stats={stats} playersMet={playersMet} locale={locale} t={t} />
       </div>
 
       <ProfileTabs selected={tab} t={t} />
@@ -199,9 +215,13 @@ export default async function AccountPage({
             arbitrary-amount chooser, because there is no cash wallet in this
             product's language.
           */}
-          <div className="mt-8 flex flex-wrap items-center gap-4">
-            <CreditBalance balanceCzk={balanceCzk} />
-            <CreditBatches batches={batches} />
+          {/*
+            `mt-6` and `gap-3`, not `mt-8` and `gap-4` (round 23, item 3). The
+            wallet lost its second heading and its second card, so the space
+            around it was sized for a block twice this tall.
+          */}
+          <div className="mt-6 flex flex-wrap items-center gap-3">
+            <CreditBalance balanceCzk={balanceCzk} batches={batches} />
             <Link
               href="/pass"
               data-testid="topup-cta"

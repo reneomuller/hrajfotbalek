@@ -84,3 +84,25 @@ export function profileStats(rows: BookingWithGame[]): ProfileStats {
     venues: venueIds.size,
   };
 }
+
+/**
+ * Which stat the THIRD tile shows (round 23, item 1).
+ *
+ * A PURE FUNCTION BECAUSE IT IS THE CAPABILITY GATE'S VISIBLE BEHAVIOUR, and
+ * the gate is the half that ships to production BEFORE the migration lands.
+ * The e2e suite can only exercise one side of it — the local database has
+ * `players_met`, production does not yet — so the side that will be live on
+ * deploy day gets tested here instead of being reasoned about.
+ *
+ * NULL IS "THIS DATABASE CANNOT COUNT IT", NEVER ZERO. See
+ * `lib/profile/playersMet.ts`: a zero would render `0 players met` under the
+ * face of someone with a hundred games, confidently, on every request.
+ */
+export function thirdStat(
+  stats: ProfileStats,
+  playersMet: number | null,
+): { key: "venues" | "met"; value: number } {
+  return playersMet === null
+    ? { key: "venues", value: stats.venues }
+    : { key: "met", value: playersMet };
+}

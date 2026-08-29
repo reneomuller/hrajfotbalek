@@ -7,6 +7,7 @@ import { dispatchEmail } from "@/lib/email/dispatch";
 import { buildSpdString, amountDueCzk, paymentIban } from "@/lib/payments/spd";
 import { createServerSupabaseClient, createServiceRoleSupabaseClient } from "@/lib/supabase/clients";
 import { getSessionUser } from "@/lib/auth/session";
+import { getOwnCreditBalance } from "@/lib/booking/queries";
 import { toBookingErrorCode, type BookingErrorCode } from "@/lib/booking/errors";
 import { buildResumeUrl } from "@/lib/booking/resume";
 import { policy } from "@/lib/policy";
@@ -32,7 +33,11 @@ export interface BookingActionState {
  * booking: both produce an UNPAID booking that the admin unpaid view can
  * settle. When Stripe is integrated this mapping is the one line that moves.
  */
-type BookingOption = "credit" | "online" | "cash";
+/**
+ * TWO OPTIONS SINCE ROUND 23 ITEM 7. `cash` left the booking flow entirely;
+ * the RAIL it maps onto did not, because "Redeem credit" still travels on it.
+ */
+type BookingOption = "credit" | "online";
 
 /**
  * `credit` MAPS TO `cash`, AND THAT NEEDS SAYING (round 8, item 11).
@@ -49,11 +54,13 @@ type BookingOption = "credit" | "online" | "cash";
 const OPTION_TO_METHOD: Record<BookingOption, ClientPaymentMethod> = {
   credit: "cash",
   online: "qr",
-  cash: "cash",
 };
 
 function isBookingOption(value: unknown): value is BookingOption {
-  return value === "credit" || value === "online" || value === "cash";
+  // `cash` is REFUSED HERE TOO, not only hidden in the UI: a form post is a
+  // POST endpoint, and an option removed from a radio group is still an
+  // option anyone can type into curl. Round 23, item 7.
+  return value === "credit" || value === "online";
 }
 
 /**
@@ -120,6 +127,36 @@ export async function createBookingAction(
   const payUrl = stripeBookingUrl();
   if (online && !payUrl) {
     return { status: "error", code: "INSUFFICIENT_PERMISSION" };
+  }
+
+  /*
+   * CREDIT IS REFUSED SERVER-SIDE WHEN THE WALLET DOES NOT COVER THE SEATS
+   * (round 23, item 7).
+   *
+   * This is the one remaining way a `cash` booking could still be created
+   * after cash left the flow, and it is not hypothetical: `credit` maps onto
+   * the `cash` RAIL, so a hand-made POST — or a stale tab from before a
+   * balance was spent — would reach `create_booking`, find no credit to
+   * apply, and leave an UNPAID booking behind on a product that no longer
+   * takes cash. The form already disables the option; this is the half a form
+   * cannot enforce.
+   *
+   * THE RPC REMAINS THE AUTHORITY on what the balance actually is. This asks
+   * the same question a moment earlier so the answer can be a product error
+   * the UI already renders, rather than an unpaid seat nobody can settle.
+   */
+  if (rawOption === "credit") {
+    const supabase = await createServerSupabaseClient();
+    const [balanceCzk, priceRow] = await Promise.all([
+      getOwnCreditBalance(),
+      supabase.from("games").select("price_czk").eq("id", gameId).maybeSingle(),
+    ]);
+    const priceCzk = priceRow.data?.price_czk ?? null;
+    // The same arithmetic `PaymentMethodChoice` does to disable the radio:
+    // seats are the player plus their guests, at one price each.
+    if (priceCzk === null || balanceCzk < priceCzk * (guests + 1)) {
+      return { status: "error", code: "CREDIT_NEGATIVE_BLOCKED" };
+    }
   }
 
   const method = OPTION_TO_METHOD[rawOption];

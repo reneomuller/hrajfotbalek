@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { createScratchGame, destroyScratchGame } from "./helpers/scaffold.ts";
+import { createScratchGame, destroyScratchGame, setWalletTo } from "./helpers/scaffold.ts";
 import { anonClient, apiClientFor, players, serviceClient, signInAs } from "./helpers/session.ts";
 import { pragueDayKey } from "../lib/games/days.ts";
 
@@ -1126,12 +1126,18 @@ test("booking and cancelling each raise their toast on the page that follows", a
 
   try {
     await signInAs(context, players.runner);
+    /*
+     * FUNDED, BECAUSE THE TOAST HAS TO SURVIVE A NAVIGATION THAT STAYS HERE
+     * (round 23, item 7). Cash left the flow; `online` redirects to a payment
+     * page and there is no next page of ours to carry a toast onto, so the
+     * credit path is the one this claim can be made about at all.
+     */
+    await setWalletTo(players.runner.id, game.priceCzk);
 
     // --- created -----------------------------------------------------------
     await page.goto(`/game/${game.id}/book`);
-    // NOTHING IS PRESELECTED since round 7 item 10 — Confirm is disabled until
-    // an option is chosen.
-    await page.getByTestId("pay-cash-input").check();
+    // Credit is preselected when it covers (round 7, item 11).
+    await expect(page.getByTestId("pay-credit-input")).toBeChecked();
     await page.getByTestId("confirm-booking").click();
     await page.waitForURL(/\/book\/confirmation/);
     await expect(page.getByTestId("toast")).toBeVisible();

@@ -3,7 +3,14 @@ import { createServerSupabaseClient } from "@/lib/supabase/clients";
 /**
  * The public profile of one player, by nickname (round 14, item 13).
  *
- * SIX FIELDS, BECAUSE THE FUNCTION RETURNS SIX. `public_player_profile` is a
+ * SEVEN FIELDS SINCE ROUND 23, and the seventh is NULLABLE HERE while it is
+ * not null in SQL: `players_met` arrives only once
+ * `20260830100000_players_met` has been applied, and before then the composite
+ * simply has six columns. `undefined` on the row therefore means "this
+ * database predates the stat", which the page renders as the old third tile
+ * rather than as a confident zero.
+ *
+ * SIX FIELDS ORIGINALLY, BECAUSE THE FUNCTION RETURNS EXACTLY WHAT IT RETURNS. `public_player_profile` is a
  * composite of exactly nickname, photo, cover and the three stats — the
  * quarantine lift's scope is enforced in SQL rather than by this module
  * choosing what to pass on. There is no wider row to accidentally spread.
@@ -18,8 +25,15 @@ export interface PublicProfile {
   photoPath: string | null;
   coverPath: string | null;
   gamesPlayed: number;
-  hours: number;
+  /**
+   * Distinct pitches. NO LONGER RENDERED as a tile (round 23) and still
+   * carried, because the Explorer badge is "play at 3 different pitches" and
+   * the badge grid is computed from these numbers.
+   */
   venues: number;
+  hours: number;
+  /** Null when this database has no `players_met` yet. Never zero for that. */
+  playersMet: number | null;
 }
 
 export async function getPublicProfile(nickname: string): Promise<PublicProfile | null> {
@@ -39,6 +53,7 @@ export async function getPublicProfile(nickname: string): Promise<PublicProfile 
     games_played: number | null;
     hours: number | string | null;
     venues: number | null;
+    players_met?: number | null;
   } | null;
 
   if (error || !row?.nickname) return null;
@@ -53,5 +68,8 @@ export async function getPublicProfile(nickname: string): Promise<PublicProfile 
     // stats block.
     hours: Number(row.hours ?? 0),
     venues: row.venues ?? 0,
+    // `?? null`, NOT `?? 0`. See the header: the column's absence is a fact
+    // about the database, and zero is a fact about the player.
+    playersMet: row.players_met ?? null,
   };
 }

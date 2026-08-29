@@ -1018,7 +1018,29 @@ export interface Database {
           games_played: number | null;
           hours: number | string | null;
           venues: number | null;
+          /**
+           * OPTIONAL IN THE TYPE, NOT NULLABLE IN SQL (round 23, item 1). The
+           * composite grows this column only when
+           * `20260830100000_players_met` is applied, and the deployed
+           * application has to compile — and run — against both shapes.
+           */
+          players_met?: number | null;
         } | null;
+      };
+      /**
+       * Distinct signed-up players who shared a PLAYED game with this one.
+       *
+       * Guests never count: a guest is a seat, not an identity (R24). An
+       * explicit `no_show` on either side removes that game; a NULL attendance
+       * does not, because it only means nobody has settled the game yet.
+       *
+       * ABSENT BEFORE `20260830100000_players_met` — PostgREST answers a
+       * missing function with a 404, which `lib/profile/playersMet.ts` reads
+       * as "this database cannot answer" rather than as zero.
+       */
+      players_met: {
+        Args: { p_player_id: string };
+        Returns: number;
       };
       set_game_guests: {
         Args: { p_game_id: string; p_count: number };

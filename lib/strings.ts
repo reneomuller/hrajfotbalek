@@ -119,7 +119,6 @@ export const strings = {
     heroLine2: "Anytime. Anywhere.",
     vision:
       "One match that repeats itself. Find a game, claim your spot, show up.",
-    heroCta: "Find a game →",
     scrollHint: "↓ SCROLL",
     steps: [
       {
@@ -772,8 +771,20 @@ export const strings = {
     payOnline: "Online payment",
     payOnlineHint: "Paid securely with Stripe",
     payOnlineComingSoon: "Coming soon",
-    payByCash: "Pay cash on the pitch",
-    payByCashHint: "Bring cash. The organizer confirms you on the day.",
+    /*
+     * ~~`payByCash` — the third payment option.~~ REMOVED (round 23, item 7).
+     * There is no cash choice anywhere in the product any more.
+     *
+     * `payByCashHint` SURVIVES AND IS NOT AN OFFER. It is the sentence shown
+     * on the confirmation of a booking that ALREADY carries
+     * `payment_method = 'cash'` — seven of them exist on production and the
+     * admin roster still settles them. Deleting it would leave those players
+     * on a screen that says nothing about how their game gets paid for.
+     *
+     * It is deliberately phrased as a description of the arrangement rather
+     * than as an instruction to choose it.
+     */
+    payByCashHint: "You are settling this one with the organizer at the pitch.",
     choosePayment: "How do you want to pay?",
     /* --- bringing people (round 11, part B) --- */
     partyTitle: "Bringing anyone?",
@@ -1046,6 +1057,15 @@ export const strings = {
     statVenuesOne: "pitch played",
     statVenuesFew: "pitches played",
     statVenuesMany: "pitches played",
+    /*
+     * PLAYERS MET (round 23, item 1) — the third tile on both profiles now,
+     * replacing "pitches played" there. `statVenues*` stays because the
+     * Explorer badge is still "play at 3 different pitches" and the badge grid
+     * still counts venues; the number simply no longer has a tile.
+     */
+    statMetOne: "player met",
+    statMetFew: "players met",
+    statMetMany: "players met",
 
     badgesTitle: "Badges",
     /** `{earned} of {total}` — the counter beside the heading. */
@@ -1283,7 +1303,7 @@ export const strings = {
       },
       {
         q: "How do I pay?",
-        a: "By card or mobile wallet when you book, with credits from a game pass, or cash at the pitch.",
+        a: "By card or mobile wallet when you book, or with credits from a game pass.",
       },
       {
         q: "What if the game is full?",

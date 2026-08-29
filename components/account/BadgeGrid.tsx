@@ -19,9 +19,24 @@ import type { Strings } from "@/lib/strings";
  *
  * THE DIFFERENCE BETWEEN THE STATES IS COLOUR AND NOTHING ELSE — same size,
  * same position, same text. Earned takes volt on the glyph and bone on the
- * name; locked drops both to `faint` and leaves the tile at `surface`. No
+ * name; locked keeps `faint` on the GLYPH and takes `muted` on the name. No
  * opacity on the whole card: fading a tile fades its requirement too, and the
  * requirement is the part a locked badge exists to show.
+ *
+ * ~~locked drops BOTH to `faint`~~ — AMENDED round 23, item 2, on a
+ * measurement rather than on taste. `faint` (#7E7E7E) on `surface` (#0F0F0F)
+ * is **4.72:1**: over the 4.5 floor by two hundredths, which is not a margin.
+ * On a profile where nothing is earned yet — which is every new player, and
+ * currently every player on production — all five names render at that ratio
+ * at once, and five identical near-floor grey blocks read as a section that
+ * failed to load rather than as a ladder. The owner reported exactly that:
+ * "badges don't render".
+ *
+ * `muted` (#9A9A9A) measures **6.81:1** and is still unmistakably secondary to
+ * `bone` at 15.6:1, so the two states stay a colour apart — which is the part
+ * of the original ruling that was load-bearing. The GLYPH stays `faint`,
+ * because that is where the earned/locked difference is now carried loudest
+ * and a locked badge should still look locked.
  *
  * `aria-hidden` on the icons, per the icon set's own rule — every glyph here
  * sits beside the name it illustrates, and announcing "clock" before "Iron
@@ -72,7 +87,7 @@ export function BadgeGrid({ badges, t }: { badges: Badge[]; t: Strings }) {
             <span className="min-w-0">
               <span
                 className={`block text-body font-semibold leading-tight ${
-                  badge.earned ? "text-bone" : "text-faint"
+                  badge.earned ? "text-bone" : "text-muted"
                 }`}
               >
                 {badge.name}

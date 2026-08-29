@@ -1,10 +1,19 @@
 import { getLocale, getStrings } from "@/lib/i18n/server";
+import { CreditBatches } from "@/components/account/CreditBatches";
+import type { CreditBatch } from "@/lib/pass/queries";
 import { creditsLabel } from "@/lib/pass/credits";
 import { PASS_REFERENCE_PRICE_CZK } from "@/lib/pass/queries";
 
 export interface CreditBalanceProps {
   /** `SUM(delta_czk)` over the player's ledger, computed server-side. */
   balanceCzk: number;
+  /**
+   * The expiring batches, rendered INSIDE this card (round 23, item 3).
+   *
+   * Defaulted so the one other caller — which has no batches to show — does
+   * not have to pass an empty array to say "none".
+   */
+  batches?: CreditBatch[];
 }
 
 /**
@@ -33,21 +42,27 @@ export interface CreditBalanceProps {
  * what a player reconciles against a bank transfer, and dropping it would make
  * a top-up impossible to check.
  */
-export async function CreditBalance({ balanceCzk }: CreditBalanceProps) {
+export async function CreditBalance({ balanceCzk, batches = [] }: CreditBalanceProps) {
   const t = await getStrings();
   const locale = await getLocale();
   const hasCredit = balanceCzk > 0;
   const credits = Math.floor(Math.max(0, balanceCzk) / PASS_REFERENCE_PRICE_CZK);
 
   return (
-    <section className="rounded-card bg-surface p-5">
+    /*
+      ONE SECTION, TIGHTER (round 23, item 3). `p-4` rather than `p-5`, a 34px
+      figure rather than 40, and the expiry list inside instead of a second
+      headed section beneath. The card is the wallet; the expiry is a footnote
+      on the number, and it now reads as one.
+    */
+    <section className="rounded-card bg-surface p-4">
       <h2 className="m-0 text-[11px] uppercase tracking-eyebrow text-volt-dim">
         {t.account.creditBalance}
       </h2>
 
       <div
         data-testid="credit-balance"
-        className="mt-2 font-display text-[40px] leading-none text-volt"
+        className="mt-1 font-display text-[34px] leading-none text-volt"
       >
         {creditsLabel(credits, locale, t)}
       </div>
@@ -55,7 +70,7 @@ export async function CreditBalance({ balanceCzk }: CreditBalanceProps) {
       {/* The equivalence, directly under the count it explains. */}
       <p
         data-testid="credit-equivalence"
-        className="mt-2 text-body font-semibold text-bone"
+        className="mt-1 text-body font-semibold text-bone"
       >
         {t.pass.creditEqualsGame}
       </p>
@@ -74,9 +89,12 @@ export async function CreditBalance({ balanceCzk }: CreditBalanceProps) {
         matched, which is the screen someone actually has open beside their
         banking app.
       */}
-      <p className="mt-3 text-[13px] leading-snug text-muted">
+      <p className="mt-2 text-[13px] leading-snug text-muted">
         {hasCredit ? t.account.creditHint : t.account.creditEmpty}
       </p>
+
+      {/* The expiry, in the card whose number it qualifies. */}
+      <CreditBatches batches={batches} />
     </section>
   );
 }

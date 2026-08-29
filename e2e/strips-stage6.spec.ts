@@ -53,7 +53,12 @@ test.describe("Stage 6 strips", () => {
         // --- 2. claim confirmation, with the insufficient-credits offer ----
         // The strip above captures the UNCHOSEN state, which is the one round 7
         // item 10 introduced — so the selection happens after the screenshot.
-        await page.getByTestId("pay-cash-input").check();
+        //
+        // ONLINE, not cash: round 23 item 7 removed cash, and this player has
+        // no credit, so online is the only option there is. The redirect it
+        // performs is why the confirmation is reached through the booking id
+        // below rather than by waiting for a URL.
+        await page.getByTestId("pay-online-input").check();
         await page.getByTestId("confirm-booking").click();
         await page.waitForURL(/\/book\/confirmation/);
         await settle();

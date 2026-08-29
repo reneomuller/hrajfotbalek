@@ -74,19 +74,33 @@ export function adminNavLinks(): NavLink[] {
   // lib/i18n/locales.ts.
   return [
     /*
-     * THE ORDER IS `p14`'s, READ OFF THE FRAME (round 10, item 1).
+     * DASHBOARD IS FIRST (round 23, item 5) — a RECORDED REVERSAL of the
+     * frame-order ruling, and the premise is what moved rather than the taste.
      *
-     * The frame shows Games, Players, Top-ups, Financials, then a fifth chip
-     * clipped at the right edge whose left border is VOLT where the other four
-     * are grey — which in this system means CURRENT, and `p14` IS the
-     * dashboard. So Dashboard is FIFTH, not first.
+     * ~~THE ORDER IS `p14`'s, READ OFF THE FRAME (round 10, item 1). The frame
+     * shows Games, Players, Top-ups, Financials, then a fifth chip clipped at
+     * the right edge whose left border is VOLT where the other four are grey —
+     * which in this system means CURRENT, and `p14` IS the dashboard. So
+     * Dashboard is FIFTH, not first. Round 8 put it first on the reasoning
+     * that a landing page comes first. That reasoning is fine and it is not
+     * what the frame does.~~
      *
-     * Round 8 put it first on the reasoning that a landing page comes first.
-     * That reasoning is fine and it is not what the frame does: on `/admin`
-     * the current chip sits at the right edge, half out of view, exactly as
-     * drawn. `Home page` follows it — the frame has no room to show a sixth,
-     * and it is the one section that has to live somewhere.
+     * The reading of the frame was correct and it is now out of date. `p14`
+     * was drawn before the dashboard became the daily landing: round 13 moved
+     * the unsettleable payments onto it, round 14 made `/admin` the
+     * destination of the account page's admin link, and the owner opens it
+     * first every day. A frame drawn against an earlier product cannot rule on
+     * a section it predates — R31: a ruling records its premise, and reversals
+     * happen when the premise moves.
+     *
+     * FIFTH ALSO PUT IT UNDER THE FADE. The row scrolls at 390px
+     * (`scrollWidth` 572 in 390), so the chip for the page the owner lands on
+     * every morning was the one half out of view behind the audit's F13 mask.
+     *
+     * The volt-current behaviour is untouched: `/admin` still matches exactly
+     * rather than by prefix, so Dashboard lights only on the dashboard.
      */
+    { href: "/admin", label: strings.admin.navDashboard },
     { href: "/admin/games", label: strings.admin.navGames },
     { href: "/admin/players", label: strings.admin.navPlayers },
     /*
@@ -101,7 +115,6 @@ export function adminNavLinks(): NavLink[] {
     // Venues joined in round 13 item 24, after Financials so p14's four
     // leading chips keep the order the frame draws.
     { href: "/admin/venues", label: strings.admin.venuesTitle },
-    { href: "/admin", label: strings.admin.navDashboard },
     { href: "/admin/site", label: strings.admin.navSite },
   ];
 }

@@ -21,12 +21,18 @@ import { strings, type Strings } from "@/lib/strings";
  * `{n}` to substitute.
  */
 
-export type StatKey = "games" | "hours" | "venues";
+export type StatKey = "games" | "hours" | "venues" | "met";
 
 const FORMS: Record<StatKey, { one: keyof Strings["profile"]; few: keyof Strings["profile"]; many: keyof Strings["profile"] }> = {
   games: { one: "statGamesOne", few: "statGamesFew", many: "statGamesMany" },
   hours: { one: "statHoursOne", few: "statHoursFew", many: "statHoursMany" },
   venues: { one: "statVenuesOne", few: "statVenuesFew", many: "statVenuesMany" },
+  /*
+   * PLAYERS MET (round 23). Counted people, so it takes the same three forms
+   * as everything else here — and Czech's 2-4 form is the one an English
+   * speaker would never guess: `2 potkaní hráči`, not `2 potkaných hráčů`.
+   */
+  met: { one: "statMetOne", few: "statMetFew", many: "statMetMany" },
 };
 
 export function statLabel(

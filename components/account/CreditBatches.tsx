@@ -20,6 +20,20 @@ import { creditsLabel } from "@/lib/pass/credits";
  * varies — that is exactly why the wallet is denominated in CZK — so this is a
  * mental model, not a promise.
  */
+/*
+ * A LIST, NOT A SECTION, SINCE ROUND 23 ITEM 3.
+ *
+ * ~~`<section className="mt-6">` with a "Your credit" heading of its own.~~ It
+ * sat under the Credit balance card and said the same noun again: the card
+ * above already carries the eyebrow CREDIT BALANCE and a 40px figure, and then
+ * a second heading announced "Your credit" over one chip reading "5 credits
+ * remaining · expires 29 Sept". Two headings, one fact, 136px of page.
+ *
+ * The heading is gone and the list moved INSIDE the balance card, where the
+ * expiry is what it always was: a footnote on the number above it, not a
+ * section of its own. `t.pass.batchesTitle` is now unused by this component
+ * and stays in the string table — it is still the pass page's own heading.
+ */
 export async function CreditBatches({ batches }: { batches: CreditBatch[] }) {
   const t = await getStrings();
   const locale = await getLocale();
@@ -27,17 +41,13 @@ export async function CreditBatches({ batches }: { batches: CreditBatch[] }) {
   if (batches.length === 0) return null;
 
   return (
-    <section className="mt-6" data-testid="credit-batches">
-      <h3 className="m-0 text-[15px] font-bold uppercase tracking-wide text-bone">
-        {t.pass.batchesTitle}
-      </h3>
-
-      <ul className="mt-3 flex list-none flex-col gap-2 p-0">
+    <div data-testid="credit-batches">
+      <ul className="m-0 mt-3 flex list-none flex-col gap-1.5 p-0">
         {batches.map((batch) => (
           <li
             key={batch.batchId}
             data-testid="credit-batch"
-            className="flex flex-wrap items-baseline justify-between gap-3 rounded-card bg-surface px-4 py-3"
+            className="flex flex-wrap items-baseline justify-between gap-3 rounded-control bg-surface-raised px-3 py-2"
           >
             {/*
               ~~"600 CZK left · expires 20 Oct", with "≈ 4 games" beside it.~~
@@ -48,7 +58,7 @@ export async function CreditBatches({ batches }: { batches: CreditBatch[] }) {
               then the chip beside it translated the crowns BACK into games, so
               the row said the same thing twice in two units.
             */}
-            <span className="text-[13px] text-bone">
+            <span className="text-small text-bone">
               {t.pass.batchesExpiring
                 .replace("{credits}", creditsLabel(gamesEquivalent(batch.remainingCzk), locale, t))
                 .replace("{date}", formatDate(batch.expiresAt))}
@@ -56,6 +66,6 @@ export async function CreditBatches({ batches }: { batches: CreditBatch[] }) {
           </li>
         ))}
       </ul>
-    </section>
+    </div>
   );
 }

@@ -1,7 +1,7 @@
 import { mkdir } from "node:fs/promises";
 import path from "node:path";
 import { expect, test } from "@playwright/test";
-import { createScratchGame, destroyScratchGame, resetWallet } from "./helpers/scaffold.ts";
+import { createScratchGame, destroyScratchGame, resetWallet, setWalletTo } from "./helpers/scaffold.ts";
 import { apiClientFor, players, serviceClient, signInAs } from "./helpers/session.ts";
 import { pragueDayKey } from "../lib/games/days.ts";
 
@@ -161,10 +161,11 @@ test("the reworked header, the venue fallback, the share pair and a toast", asyn
 
     // Signed in: the avatar entry, and a toast landed by the redirect.
     await signInAs(context, players.runner);
+    // Funded so the booking completes on this origin: cash left the flow in
+    // round 23 item 7 and `online` redirects to a payment page.
+    await setWalletTo(players.runner.id, game.priceCzk);
     await page.goto(`/game/${game.id}/book`, { waitUntil: "networkidle" });
-    // Nothing is preselected since round 7 item 10 — Confirm stays disabled
-    // until an option is chosen.
-    await page.getByTestId("pay-cash-input").check();
+    await page.getByTestId("pay-credit-input").check();
     await page.getByTestId("confirm-booking").click();
     await page.waitForURL(/\/book\/confirmation/);
     await expect(page.getByTestId("toast")).toBeVisible();

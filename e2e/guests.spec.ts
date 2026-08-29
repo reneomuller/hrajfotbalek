@@ -34,6 +34,14 @@ test("a player brings two guests: one booking, one price, three seats", async ({
   const game = await createScratchGame({ capacity: 8, priceCzk: PRICE });
   try {
     await clearActiveBookings("runner");
+    /*
+     * FUNDED FOR THE WHOLE PARTY (round 23, item 7). Cash left the booking
+     * flow, and the only remaining option that finishes on this origin is
+     * "Redeem credit" — `online` redirects to a payment page. Three seats at
+     * PRICE is the smallest wallet that makes the option selectable, which is
+     * `creditCovers` in `PaymentMethodChoice`.
+     */
+    await setWalletTo(players.runner.id, PRICE * 3);
     await signInAs(context, players.runner);
     await context.addCookies([
       { name: LOCALE_COOKIE, value: "en", domain: "localhost", path: "/" },
@@ -50,7 +58,7 @@ test("a player brings two guests: one booking, one price, three seats", async ({
     await expect(page.getByTestId("party-summary")).toContainText("3 spots");
     await expect(page.getByTestId("party-summary")).toContainText("450");
 
-    await page.getByTestId("pay-cash-input").check();
+    await page.getByTestId("pay-credit-input").check();
     await page.getByTestId("confirm-booking").click();
     await page.waitForURL(/\/book\/confirmation/);
 
@@ -81,6 +89,14 @@ test("the party renders as guests, last in the row and never with a photo", asyn
   const game = await createScratchGame({ capacity: 8, priceCzk: PRICE });
   try {
     await clearActiveBookings("runner");
+    /*
+     * FUNDED FOR THE WHOLE PARTY (round 23, item 7). Cash left the booking
+     * flow, and the only remaining option that finishes on this origin is
+     * "Redeem credit" — `online` redirects to a payment page. Three seats at
+     * PRICE is the smallest wallet that makes the option selectable, which is
+     * `creditCovers` in `PaymentMethodChoice`.
+     */
+    await setWalletTo(players.runner.id, PRICE * 3);
     await signInAs(context, players.runner);
     await context.addCookies([
       { name: LOCALE_COOKIE, value: "en", domain: "localhost", path: "/" },
@@ -88,7 +104,7 @@ test("the party renders as guests, last in the row and never with a photo", asyn
 
     await page.goto(`/game/${game.id}/book`, { waitUntil: "networkidle" });
     await page.getByTestId("party-2").click();
-    await page.getByTestId("pay-cash-input").check();
+    await page.getByTestId("pay-credit-input").check();
     await page.getByTestId("confirm-booking").click();
     await page.waitForURL(/\/book\/confirmation/);
 
@@ -158,6 +174,14 @@ test("credits are offered only when the wallet covers the whole party", async ({
   const game = await createScratchGame({ capacity: 8, priceCzk: PRICE });
   try {
     await clearActiveBookings("runner");
+    /*
+     * FUNDED FOR THE WHOLE PARTY (round 23, item 7). Cash left the booking
+     * flow, and the only remaining option that finishes on this origin is
+     * "Redeem credit" — `online` redirects to a payment page. Three seats at
+     * PRICE is the smallest wallet that makes the option selectable, which is
+     * `creditCovers` in `PaymentMethodChoice`.
+     */
+    await setWalletTo(players.runner.id, PRICE * 3);
     await signInAs(context, players.runner);
     await context.addCookies([
       { name: LOCALE_COOKIE, value: "en", domain: "localhost", path: "/" },
@@ -223,6 +247,14 @@ test("the party control stops at the seats the pitch has left", async ({ page, c
   const game = await createScratchGame({ capacity: 3, priceCzk: PRICE });
   try {
     await clearActiveBookings("runner");
+    /*
+     * FUNDED FOR THE WHOLE PARTY (round 23, item 7). Cash left the booking
+     * flow, and the only remaining option that finishes on this origin is
+     * "Redeem credit" — `online` redirects to a payment page. Three seats at
+     * PRICE is the smallest wallet that makes the option selectable, which is
+     * `creditCovers` in `PaymentMethodChoice`.
+     */
+    await setWalletTo(players.runner.id, PRICE * 3);
     await signInAs(context, players.runner);
     await context.addCookies([
       { name: LOCALE_COOKIE, value: "en", domain: "localhost", path: "/" },
@@ -244,6 +276,14 @@ test("cancelling a party releases every one of its seats", async ({ page, contex
   const game = await createScratchGame({ capacity: 8, priceCzk: PRICE });
   try {
     await clearActiveBookings("runner");
+    /*
+     * FUNDED FOR THE WHOLE PARTY (round 23, item 7). Cash left the booking
+     * flow, and the only remaining option that finishes on this origin is
+     * "Redeem credit" — `online` redirects to a payment page. Three seats at
+     * PRICE is the smallest wallet that makes the option selectable, which is
+     * `creditCovers` in `PaymentMethodChoice`.
+     */
+    await setWalletTo(players.runner.id, PRICE * 3);
     await signInAs(context, players.runner);
     await context.addCookies([
       { name: LOCALE_COOKIE, value: "en", domain: "localhost", path: "/" },
@@ -251,7 +291,7 @@ test("cancelling a party releases every one of its seats", async ({ page, contex
 
     await page.goto(`/game/${game.id}/book`, { waitUntil: "networkidle" });
     await page.getByTestId("party-2").click();
-    await page.getByTestId("pay-cash-input").check();
+    await page.getByTestId("pay-credit-input").check();
     await page.getByTestId("confirm-booking").click();
     await page.waitForURL(/\/book\/confirmation/);
 

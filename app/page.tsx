@@ -171,20 +171,22 @@ export default async function LandingPage() {
             */}
 
             {/*
-              Primary CTA — the games list, not an in-page anchor.
+              ~~Primary CTA — "Find a game", a volt capsule under the slogan.~~
+              REMOVED (round 23, item 4).
 
-              `rounded-pill`, NOT `rounded-control` (p01). The frame draws this
-              as a full capsule sized to its label, and ruling A's radius table
-              already carries `pill` for exactly that. It was a 14px rounded
-              rectangle, which reads as a form button rather than as the page's
-              one action.
+              THE PAGE HAD TWO BUTTONS TO THE SAME PLACE. This one sent the
+              reader to `/games` before showing them a single game, and the
+              "All games" button under the upcoming list sent them to `/games`
+              after showing them three. With the list now directly beneath the
+              hero, the first button asked somebody to leave a page they had
+              not started reading.
+
+              ITS CLOTHING SURVIVES IT. The surviving button takes this one's
+              exact treatment — `rounded-pill`, `text-cta`, `font-extrabold`,
+              `px-[26px] py-[15px]` — because the frame's one action is a full
+              capsule sized to its label, and that was always the better
+              drawing of it. What changed is which label wears it.
             */}
-            <Link
-              href="/games"
-              className="mt-6 inline-flex min-h-11 items-center gap-[9px] rounded-pill bg-volt px-[26px] py-[15px] text-cta font-extrabold tracking-wide text-surface no-underline"
-            >
-              {landing.heroCta}
-            </Link>
 
           </div>
 
@@ -221,32 +223,6 @@ export default async function LandingPage() {
             digit. The visible numerals are `aria-hidden`; the list marker is
             suppressed because they are drawn.
           */}
-          <ol
-            data-testid="how-it-works"
-            className="lifted m-0 mt-[26px] list-none rounded-card p-0"
-          >
-            {landing.steps.map((step) => (
-              <li
-                key={step.index}
-                className="flex items-start gap-4 border-b border-hairline px-[18px] py-[15px] text-left last:border-b-0"
-              >
-                <div
-                  aria-hidden
-                  className="font-display text-[26px] leading-none text-volt"
-                >
-                  {step.index}
-                </div>
-                <div>
-                  <div className="text-[18px] font-bold tracking-[.3px]">
-                    {step.title}
-                  </div>
-                  <div className="mt-[3px] text-[13px] leading-[1.45] text-muted">
-                    {step.body}
-                  </div>
-                </div>
-              </li>
-            ))}
-          </ol>
         </section>
 
         {/*
@@ -349,16 +325,70 @@ export default async function LandingPage() {
               none. A visitor who arrives on an empty week should still be
               able to reach the board.
             */}
+            {/*
+              THE PAGE'S ONE ACTION, IN THE HERO BUTTON'S CLOTHES (round 23,
+              item 4). It inherits the removed "Find a game" pill's dimensions
+              and treatment exactly — `rounded-pill`, `text-cta`,
+              `font-extrabold`, `px-[26px] py-[15px]`, `text-surface` on volt —
+              and keeps its own label. A capsule sized to its label is what the
+              frame draws for the one thing it wants pressed, and there is now
+              only one such thing on this page.
+
+              IT STILL RENDERS AT ZERO, which ruling J requires: a visitor who
+              arrives on an empty week must still be able to reach the board.
+            */}
             <div className="mt-5 flex justify-center">
               <Link
                 href="/games"
                 data-testid="next-matches-all"
-                className="inline-flex min-h-11 items-center justify-center rounded-control bg-volt px-6 text-body-lg font-bold text-ink no-underline transition-colors hover:bg-volt-dim"
+                className="inline-flex min-h-11 items-center gap-[9px] rounded-pill bg-volt px-[26px] py-[15px] text-cta font-extrabold tracking-wide text-surface no-underline transition-colors hover:bg-volt-dim"
               >
                 {landing.nextMatchesAll}
               </Link>
             </div>
           </section>
+
+          {/*
+            HOW IT WORKS — NOW *UNDER* THE GAMES (round 23, item 4).
+
+            ~~Part of the hero's rhythm, closing the first screen.~~ Reversed
+            on the owner's instruction, and the reasoning is about what the
+            page is FOR: somebody arriving from a WhatsApp link wants to know
+            whether there is a game on Thursday, and the answer was three
+            scrolls down behind an explanation of a product they had already
+            decided to look at. Open the site, see the games lined up; scroll
+            to learn how it works.
+
+            The strip itself is untouched — same panel, same divided rows, same
+            Anton numerals. Only its position moved, and nothing else on the
+            page reordered.
+          */}
+          <ol
+            data-testid="how-it-works"
+            className="lifted m-0 mt-[26px] list-none rounded-card p-0"
+          >
+            {landing.steps.map((step) => (
+              <li
+                key={step.index}
+                className="flex items-start gap-4 border-b border-hairline px-[18px] py-[15px] text-left last:border-b-0"
+              >
+                <div
+                  aria-hidden
+                  className="font-display text-[26px] leading-none text-volt"
+                >
+                  {step.index}
+                </div>
+                <div>
+                  <div className="text-[18px] font-bold tracking-[.3px]">
+                    {step.title}
+                  </div>
+                  <div className="mt-[3px] text-[13px] leading-[1.45] text-muted">
+                    {step.body}
+                  </div>
+                </div>
+              </li>
+            ))}
+          </ol>
 
           {/*
             COMMUNITY (now carrying the numbers) beside PLAYER OF THE MONTH,

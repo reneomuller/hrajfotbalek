@@ -27,20 +27,29 @@ test.afterEach(async () => {
 });
 
 /*
- * ROUND 7 ITEM 10 CHANGED WHAT THIS FLOW OFFERS, not how fast it is.
+ * ROUND 23 ITEM 7 CHANGED WHAT THIS FLOW OFFERS, not how fast it is.
  *
- * The UI's two options are now ONLINE and CASH; QR is retired from the
- * booking screens and survives as the rail online books onto (ruling R3).
- * With `NEXT_PUBLIC_STRIPE_PAYMENT_URL` unset — the state this suite runs in
- * and the state production ships in — cash is the selectable option, so that
- * is what the timing criterion is measured through.
+ * ~~The UI's two options are ONLINE and CASH, and with
+ * `NEXT_PUBLIC_STRIPE_PAYMENT_URL` unset cash is the selectable one, so that
+ * is what the timing criterion is measured through.~~
  *
- * The QR SCREEN keeps its own coverage further down, driven through the rail
- * rather than through a control the UI no longer has.
+ * CASH IS GONE. The two options are REDEEM CREDIT and ONLINE, and the
+ * difference matters to this test: online LEAVES THE SITE. A player with no
+ * credit now finishes their booking on Stripe, so the sixty-second criterion
+ * can only be measured end to end on the path that stays here — which is also
+ * the path the product now wants people on.
+ *
+ * So this measures the CREDIT path, and the online path is asserted
+ * separately by where it sends you. The suite gained
+ * `NEXT_PUBLIC_STRIPE_PAYMENT_URL` this round for the same reason: without it
+ * the environment could produce no unpaid booking through the UI at all, which
+ * is not the product that ships.
  */
 test("book to a confirmed spot in under 60 seconds", async ({ page, context }) => {
   await signInAs(context, players.runner);
-  await setWalletTo(players.runner.id, 0);
+  // Funded to exactly the price: the credit option is the one that completes
+  // on this origin, and one game's worth is the smallest wallet that does.
+  await setWalletTo(players.runner.id, game.priceCzk);
 
   // The clock starts where the player's does: on the game page, having decided
   // to play. Sixty seconds is the criterion, and it is measured against the
@@ -50,10 +59,14 @@ test("book to a confirmed spot in under 60 seconds", async ({ page, context }) =
   await page.goto(`/game/${game.id}`);
   await page.getByTestId("book-cta").click();
 
-  // NOTHING IS PRESELECTED (item 10), so the choice is part of the measured
-  // flow rather than a default the player never sees.
-  await expect(page.getByTestId("confirm-booking")).toBeDisabled();
-  await page.getByTestId("pay-cash-input").check();
+  /*
+   * CREDIT IS PRESELECTED WHEN IT COVERS THE GAME (round 7, item 11) — "a
+   * player who has already paid for this game should not have to say so" —
+   * and this wallet covers it exactly, so the flow is one tap. The OTHER half
+   * of that rule, that nothing is preselected when the wallet does not cover,
+   * is asserted in `games.spec.ts` where the player has no credit.
+   */
+  await expect(page.getByTestId("pay-credit-input")).toBeChecked();
   await page.getByTestId("confirm-booking").click();
 
   await expect(page.getByTestId("confirmation")).toBeVisible();
@@ -61,15 +74,10 @@ test("book to a confirmed spot in under 60 seconds", async ({ page, context }) =
   const elapsedSeconds = (Date.now() - started) / 1000;
   expect(elapsedSeconds).toBeLessThan(60);
 
-  // NO QR ON A CASH BOOKING, which is item 10's visible half: the player
-  // chose to pay on the pitch and a code asking them to transfer money would
-  // be a second, contradictory instruction. The QR renderer's own assertions
-  // moved to the rail test at the bottom of this file.
+  // NO QR ON A CREDIT BOOKING: it is paid, and a code asking for money would
+  // be a request for something the player does not owe. The QR renderer's own
+  // assertions live in the rail test at the bottom of this file.
   await expect(page.getByTestId("qr-payment")).toHaveCount(0);
-  // `fallback-account` is part of the QR block and goes with it. What must
-  // survive is the AMOUNT — the player still owes it, they are just handing it
-  // over on the pitch.
-  await expect(page.getByTestId("amount-due")).toContainText(String(game.priceCzk));
 });
 
 test("full credit confirms instantly and shows no QR", async ({ page, context }) => {
@@ -78,7 +86,7 @@ test("full credit confirms instantly and shows no QR", async ({ page, context })
   await setWalletTo(players.creditRich.id, game.priceCzk + 250);
 
   await page.goto(`/game/${game.id}/book`);
-  await page.getByTestId("pay-cash-input").check();
+  await page.getByTestId("pay-credit-input").check();
   await page.getByTestId("confirm-booking").click();
 
   await expect(page.getByTestId("confirmation")).toBeVisible();
@@ -113,17 +121,34 @@ test("partial credit reduces the amount due and still asks for the rest", async 
   await signInAs(context, players.creditPartial);
   await setWalletTo(players.creditPartial.id, credit);
 
-  await page.goto(`/game/${game.id}/book`);
-  await page.getByTestId("pay-cash-input").check();
-  await page.getByTestId("confirm-booking").click();
+  /*
+   * DRIVEN THROUGH THE RAIL, NOT THROUGH THE FORM (round 23, item 7) — the
+   * same shape the QR test below has used since round 13, and for the same
+   * reason.
+   *
+   * A partially-covered booking is UNPAID, and with cash gone the form's only
+   * unpaid route is `online`, which redirects to Stripe and never renders the
+   * confirmation. The claim here is not "a player can reach this screen by
+   * clicking"; it is "a booking that owes money says what it owes", which is
+   * what the legacy cash bookings and every returning online payer need to be
+   * true.
+   */
+  const partial = await apiClientFor(players.creditPartial);
+  const { data: partialBooking, error: partialError } = await partial.rpc("create_booking", {
+    p_game_id: game.id,
+    p_payment_method: "qr",
+  });
+  expect(partialError).toBeNull();
+  await page.goto(
+    `/game/${game.id}/book/confirmation?booking=${(partialBooking as unknown as { id: string }).id}`,
+  );
 
   await expect(page.getByTestId("confirmation")).toBeVisible();
 
   /*
-   * THE AMOUNT IS THE SUBJECT, not the instrument. This test was named for
-   * the QR screen because QR was the only way to owe money; round 7 item 10
-   * makes cash the offered option and the arithmetic is identical. 200 priced,
-   * 50 covered, 150 due.
+   * THE AMOUNT IS THE SUBJECT, not the instrument. 200 priced, 50 covered,
+   * 150 due — and that arithmetic is `create_booking`'s, unchanged by which
+   * rail the remainder travels on.
    */
   const due = game.priceCzk - credit;
   await expect(page.getByTestId("amount-due")).toContainText(String(due));
@@ -137,7 +162,7 @@ test("partial credit reduces the amount due and still asks for the rest", async 
     .single();
 
   expect(data?.status).toBe("reserved");
-  expect(data?.payment_method).toBe("cash");
+  expect(data?.payment_method).toBe("qr");
   expect(data?.credit_applied_czk).toBe(credit);
   expect(await walletBalance(players.creditPartial.id)).toBe(0);
 });
@@ -211,9 +236,13 @@ test("the QR rail still books and still renders, with no UI offering it", async 
     // the rail lives, the UI does not expose it.
     await page.goto(`/game/${railGame.id}/book`);
     await expect(page.getByTestId("pay-online")).toBeVisible();
-    await expect(page.getByTestId("pay-cash")).toBeVisible();
+    // ~~`pay-cash` is visible.~~ ROUND 23 ITEM 7: it does not exist. The
+    // assertion inverts rather than disappearing — this is the spec that fails
+    // if anyone draws the option again.
+    await expect(page.getByTestId("pay-cash")).toHaveCount(0);
     const body = (await page.locator("form").innerText()).toLowerCase();
     expect(body, "the booking form still names QR").not.toContain("qr");
+    expect(body, "the booking form still offers cash").not.toContain("cash");
   } finally {
     await destroyScratchGame(railGame.id);
   }
@@ -221,12 +250,19 @@ test("the QR rail still books and still renders, with no UI offering it", async 
 
 test("a cancelled booking returns its value as wallet credit", async ({ page, context }) => {
   await signInAs(context, players.runner);
+  /*
+   * THE RAIL AGAIN (round 23, item 7). This test is about what CANCELLING
+   * returns, and it needs a booking somebody paid for. Cash used to be the way
+   * to make an unpaid one through the form; with it gone the form's unpaid
+   * route leaves the origin, so the booking is created directly and confirmed
+   * below exactly as it was.
+   */
   await setWalletTo(players.runner.id, 0);
-
-  await page.goto(`/game/${game.id}/book`);
-  await page.getByTestId("pay-cash-input").check();
-  await page.getByTestId("confirm-booking").click();
-  await expect(page.getByTestId("confirmation")).toBeVisible();
+  const runnerClient = await apiClientFor(players.runner);
+  await runnerClient.rpc("create_booking", {
+    p_game_id: game.id,
+    p_payment_method: "qr",
+  });
 
   // Confirm the payment as the organizer would, so there is real value to
   // return — cancelling an unpaid hold correctly returns nothing.
@@ -311,10 +347,20 @@ test("a booking the wallet cannot cover offers credits AND still takes payment",
     await setWalletTo(players.runner.id, 0);
     await signInAs(context, players.runner);
 
-    await page.goto(`/game/${game.id}/book`);
-    await page.getByTestId("pay-cash-input").check();
-    await page.getByTestId("confirm-booking").click();
-    await page.waitForURL(/\/book\/confirmation/);
+    /*
+     * THE OFFER LIVES ON THE CONFIRMATION OF AN UNPAID BOOKING, and round 23
+     * item 7 took away the form's way of making one on this origin. Created
+     * through the rail so the SCREEN is still the thing under test — the claim
+     * is about what an unpaid booking is told, not about which radio made it.
+     */
+    const runnerClient = await apiClientFor(players.runner);
+    const { data: unpaid } = await runnerClient.rpc("create_booking", {
+      p_game_id: game.id,
+      p_payment_method: "qr",
+    });
+    await page.goto(
+      `/game/${game.id}/book/confirmation?booking=${(unpaid as unknown as { id: string }).id}`,
+    );
 
     const offer = page.getByTestId("not-enough-credits");
     await expect(offer).toBeVisible();
