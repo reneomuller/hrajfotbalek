@@ -219,7 +219,27 @@ const config: Config = {
        * work to undo.
        */
       fontFamily: {
-        display: ["var(--font-anton)", "sans-serif"],
+        /*
+         * THE FALLBACK IS THE BODY FACE, AND IT WAS NOT (round 22, item 5c).
+         *
+         * Anton ships no Cyrillic, so every display line in Russian — and now
+         * in Ukrainian — is drawn by whatever comes next in this stack. The
+         * hero's own comment in `app/page.tsx` has said since round 13 that it
+         * "sets in the body face"; the stack said `sans-serif`, which is
+         * whatever the phone happens to have. A Cyrillic hero was therefore
+         * rendering in a system font with system metrics, one step away from
+         * the product's typography, and no screenshot review would name it
+         * because it looks like a font rather than like a bug.
+         *
+         * Onest carries `cyrillic` and `cyrillic-ext` (see `app/layout.tsx`),
+         * which is the whole reason it was chosen, so it can do this job. The
+         * generic stays last for the case where neither loads.
+         *
+         * LATIN IS UNAFFECTED: Anton has those glyphs and wins for them. Per
+         * character, not per element — which is what makes one stack correct
+         * for four languages.
+         */
+        display: ["var(--font-anton)", "var(--font-onest)", "sans-serif"],
         sans: ["var(--font-onest)", "system-ui", "sans-serif"],
         mono: ["var(--font-jetbrains-mono)", "monospace"],
       },
