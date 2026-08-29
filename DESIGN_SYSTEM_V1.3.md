@@ -1802,3 +1802,121 @@ a finished phrase.** `booking.partySummary` is `{spots} · {total}` and
 agreed with its number by the time the sentence sees it. Those strings are
 identical in all four languages and are exempt from the completeness walk, with
 the reason recorded beside the exemption.
+
+---
+
+## R38 — "Players met" is the third stat, and no balance was ever public
+
+**RECORDED round 23, item 1.** The third tile on both the player's own profile
+and the public one counts **distinct signed-up players who shared a game that
+has already been played**. Guests never count — a guest is a seat, not an
+identity (R24) — an explicit `no_show` on either side removes that game, and a
+NULL attendance does not, because it only means nobody has settled yet.
+
+**ONE DEFINITION, IN SQL, CALLED FROM TWO SURFACES.** `players_met` is the only
+place the rule is written; the public profile reaches it through
+`public_player_profile` and the owner's own page through the RPC directly. The
+failure this avoids is the one `games_played` already avoids: a number under
+your own face and a different number under the same face on a public page,
+neither wrong enough to explain.
+
+### The premise that was wrong, and why it is recorded here
+
+The brief said this replaced **"Wallet" as the third stat on the public
+profile — a balance was publicly visible, which dies with this.**
+
+**No balance has ever been on that page.** `public_player_profile` has returned
+nickname, photo, cover and three stats since round 14, and the third has always
+been `venues`. The composite return type is the reason there was never a
+seventh column to leak — which is the property round 14 built it for, and it
+held.
+
+What "players met" replaced is **"Pitches played", on both pages.** The
+distinction is worth the paragraph because the next person to fear a public
+balance will come looking, and the answer they need is "it was never there",
+not "it was removed".
+
+`venues` is still computed and still returned: the Explorer badge is "play at 3
+different pitches", so dropping the number to match the UI would silently lock a
+badge people have earned. **A tile is a display decision; a stat is not.**
+
+---
+
+## R39 — A locked badge is legible, not merely present
+
+**AMENDED round 23, item 2, on a measurement.** `BadgeGrid`'s original ruling
+put both the glyph and the name of a locked badge at `faint`. `faint`
+(#7E7E7E) on `surface` (#0F0F0F) measures **4.72:1** — over the 4.5 floor by two
+hundredths, which is not a margin.
+
+On a profile where nothing is earned yet — every new player, and **currently
+every player on production**, see R41 — all five names render at that ratio at
+once. Five identical near-floor grey blocks in a column read as a section that
+failed to load, which is exactly how it was reported.
+
+**The name takes `muted` (6.81:1); the glyph stays `faint`.** The part of the
+original ruling that was load-bearing survives — the two states differ by
+colour and nothing else, same size, same position, same text — and a locked
+badge still looks locked, because the difference is now carried by the icon.
+
+**THE ASSERTION IS DECODED PIXELS, NOT `toBeVisible()`**, which passed
+throughout the whole investigation. This is the third time that distinction has
+mattered on this surface: round 16's cover painting over the identity row, the
+audit's F3 overprint, and now a contrast floor.
+
+---
+
+## R40 — Dashboard is the first admin chip (the p14 frame order is REVERSED)
+
+**REVERSED round 23, item 5.** Round 10 read the order off `p14`: four grey
+chips — Games, Players, Top-ups, Financials — and a fifth clipped at the right
+edge whose border is volt, which in this system means current, and `p14` IS the
+dashboard. So Dashboard was fifth. Round 8 had put it first and was overruled.
+
+**The reading was right. It is out of date.** `p14` was drawn before the
+dashboard became the daily landing: round 13 moved the unsettleable payments
+onto it, round 14 made `/admin` the destination of the account page's admin
+link, and the owner opens it first every morning. **A frame drawn against an
+earlier product cannot rule on a section it predates** — R31 exactly: a ruling
+records its premise, and reversals happen when the premise moves.
+
+**And fifth put it under the fade.** The chip row scrolls at 390px
+(`scrollWidth` 572 in 390), so after the audit's F13 mask shipped, the chip for
+the page opened every day was the one half out of view behind it.
+
+Volt-current behaviour is untouched: `/admin` matches exactly rather than by
+prefix, so Dashboard lights only on the dashboard — which is round 8's other
+bug and stays fixed.
+
+---
+
+## R41 — Cash is REMOVED, and the gate never opened on its own terms
+
+**REVERSED round 23, item 7, closing the round-18 reprieve.** The lineage is
+the ruling here, because the outcome on its own would misrepresent how it was
+reached.
+
+| Round | What happened |
+|---|---|
+| 18 | The item said: remove cash **only** once an online payment is verified end to end on production. Checked: no booking or top-up had ever carried a `stripe_session_id`. **Refused to ship**, reported the blocker. |
+| 23, item 6 | The owner reported a real 5-pass purchase. Verified on production: `cs_live_a1ca8…`, confirmed by the webhook in 24 seconds with `confirmed_by` NULL, +750 CZK on the ledger at the same instant. The gate recorded as OPEN. |
+| 23, item 7 | Cash removed on the owner's explicit authorization. |
+
+**THE GATE'S OWN TERMS WERE NEVER MET, AND ARE NOT BEING PRETENDED TO BE.**
+Round 18 asked for a proven online **booking**. Zero bookings on production have
+ever carried a `stripe_session_id` — then or now. What is proven is the
+**shared rail**: the same Payment Link mechanism, the same webhook endpoint,
+the same `confirm_online_purchase`, exercised by the pass half. The owner
+accepted that as sufficient and the residual risk — that the booking half has a
+defect the pass half does not exercise — is his, taken knowingly.
+
+**WHAT IS REMOVED IS THE CHOICE, NOT THE COLUMN.** `payment_method = 'cash'`
+survives and must: "Redeem credit" maps onto that rail, and seven unpaid cash
+bookings exist on production that the admin roster has to keep settling.
+Removing an option must never strand the people who already took it.
+
+**AND THE LAST BACK DOOR CLOSED WITH IT.** `credit` chosen against a wallet
+that does not cover would have produced an unpaid `cash` booking on a product
+that no longer takes cash — a form disables the radio, and a form is not an
+enforcement. The action refuses it server-side, as does the waitlist
+conversion.
