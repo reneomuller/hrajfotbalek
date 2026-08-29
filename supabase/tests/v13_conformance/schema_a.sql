@@ -166,10 +166,16 @@ select pg_temp.ok(pg_temp.col('games', 'subs_per_team') = 'nullable',
   'games.subs_per_team exists and is nullable',
   pg_temp.col('games', 'subs_per_team'));
 
+-- UP TO TWO EXTRA SIDES SINCE ROUND 18, not one. `20260826100000_game_language`
+-- widened this to `{0,2}` so a four-way rotation (`7v7v7v7`) saves, and
+-- `FORMAT_RE` moved with it in the same commit. THIS ASSERTION DID NOT, and it
+-- has been red ever since — unseen, because the SQL suites were not run
+-- between rounds 18 and 22. The assertion was doing its job; it was the third
+-- copy of the rule and nobody knew there was a third copy (round 22).
 select pg_temp.ok(
   pg_temp.chk('games', 'games_format_format')
-    = 'CHECK (((format IS NULL) OR (format ~ ''^[0-9]{1,2}v[0-9]{1,2}(v[0-9]{1,2})?$''::text)))',
-  'games.format CHECK admits an optional third side',
+    = 'CHECK (((format IS NULL) OR (format ~ ''^[0-9]{1,2}v[0-9]{1,2}(v[0-9]{1,2}){0,2}$''::text)))',
+  'games.format CHECK admits up to two extra sides',
   pg_temp.chk('games', 'games_format_format'));
 
 -- =============================================================================
@@ -232,7 +238,7 @@ select pg_temp.ok(
 -- 4. The app-side format regex mirrors the CHECK
 --
 -- `FORMAT_RE` in lib/admin/gameForm.ts is
---     /^[0-9]{1,2}v[0-9]{1,2}(v[0-9]{1,2})?$/
+--     /^[0-9]{1,2}v[0-9]{1,2}(v[0-9]{1,2}){0,2}$/
 -- and the CHECK asserted in §2 carries the identical pattern. They are two
 -- copies of one rule, and the failure mode of drift is one-sided and quiet:
 -- a form that is STRICTER than the CHECK simply refuses formats the database
@@ -242,7 +248,7 @@ select pg_temp.ok(
 -- =============================================================================
 
 select pg_temp.ok(
-  pg_temp.chk('games', 'games_format_format') like '%^[0-9]{1,2}v[0-9]{1,2}(v[0-9]{1,2})?$%',
+  pg_temp.chk('games', 'games_format_format') like '%^[0-9]{1,2}v[0-9]{1,2}(v[0-9]{1,2}){0,2}$%',
   'the CHECK pattern is byte-identical to FORMAT_RE in lib/admin/gameForm.ts');
 
 -- =============================================================================
