@@ -3,6 +3,7 @@ import { mkdirSync } from "node:fs";
 import path from "node:path";
 import { PNG } from "pngjs";
 import { LOCALE_COOKIE } from "../lib/i18n/locales";
+import { createScratchGame, destroyScratchGame } from "./helpers/scaffold";
 
 /**
  * REDESIGN v2, ROUND 2 — the list card over the pitch photo.
@@ -22,6 +23,9 @@ import { LOCALE_COOKIE } from "../lib/i18n/locales";
  */
 
 const OUT = path.resolve(process.cwd(), "docs/redesign-v2/strips/card");
+
+/** The disposable venue every scratch game sits at — `helpers/scaffold.ts`. */
+const SCRATCH_VENUE = "E2E Scratch Pitch";
 
 /**
  * Mean luminance of the card's title band, from the RENDERED pixels.
@@ -117,6 +121,11 @@ test("the card over the photo — scrim, outline and inert cue", async ({
     { name: LOCALE_COOKIE, value: "en", domain: "localhost", path: "/" },
   ]);
 
+  // Soon enough to lead the board, far enough out that no policy sweep
+  // touches it.
+  const game = await createScratchGame({ capacity: 12, priceCzk: 150, hoursFromNow: 48 });
+
+  try {
   await page.goto("/games", { waitUntil: "networkidle" });
   await page.evaluate(() => document.fonts.ready);
   await page.addStyleTag({
@@ -124,7 +133,34 @@ test("the card over the photo — scrim, outline and inert cue", async ({
       "nextjs-portal,[data-nextjs-toast],#__next-build-watcher{display:none !important}",
   });
 
-  const card = page.getByTestId("game-row").first();
+  /*
+   * A DISPOSABLE GAME WITH AN EMPTY ROSTER, NOT WHICHEVER CARD IS FIRST
+   * (round 22). The diagnosis took three wrong guesses, so it is written down.
+   *
+   * IT WAS FAILING BEFORE THIS ROUND TOUCHED ANYTHING — reproduced at the
+   * round-21 tip — which is why it is fixed here rather than reverted.
+   *
+   * The first two guesses were wrong. It is not the font stack (reverting it
+   * changed nothing) and it is not a brighter venue cover (forcing the card to
+   * one showing `pitch-default.jpg` still measured 16).
+   *
+   * WHAT IT ACTUALLY IS: the 0.72-0.9 band contains the AVATAR ROW, and this
+   * function only excludes volt, white and amber pixels. A grey avatar is
+   * neither, so every booked player adds mid-grey pixels to a mean that is
+   * supposed to be measuring a photograph. The seed builds its board relative
+   * to now, so which game leads — and how many faces it carries — changes with
+   * the calendar. On 2026-08-27 the leader carried few enough to pass; two
+   * days later it did not. The scrim never moved.
+   *
+   * So the card is now BUILT rather than found: default photo, nobody booked,
+   * created and destroyed by this spec. The band then contains the photograph
+   * and the card surface and nothing else, which is what every number in this
+   * file was measured against.
+   */
+  const card = page
+    .getByTestId("game-row")
+    .filter({ hasText: SCRATCH_VENUE })
+    .first();
   await expect(card).toBeVisible();
 
   // --- the photo actually LOADED ------------------------------------------
@@ -259,6 +295,9 @@ test("the card over the photo — scrim, outline and inert cue", async ({
 
   await card.screenshot({ path: path.join(OUT, "01-card-over-photo.png") });
   await page.screenshot({ path: path.join(OUT, "02-games-list.png"), fullPage: true });
+  } finally {
+    await destroyScratchGame(game.id);
+  }
 });
 
 test("a past card drops the cue and stays untappable", async ({ page, context }) => {
