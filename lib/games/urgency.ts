@@ -1,3 +1,5 @@
+import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/locales";
+import { pluralise } from "@/lib/i18n/plural";
 import { strings, type Strings } from "@/lib/strings";
 
 /**
@@ -97,9 +99,26 @@ export function urgencyLabel(urgency: Urgency, t: Strings = strings): string {
 export function spotsLeftLabel(
   bookedCount: number,
   capacity: number,
+  locale: Locale = DEFAULT_LOCALE,
   t: Strings = strings,
 ): string {
   const left = Math.max(0, Math.trunc(capacity) - Math.trunc(bookedCount));
   if (left === 0) return t.games.full;
-  return `${left} ${left === 1 ? t.games.spotLeft : t.games.spotsLeft}`;
+  /*
+   * THE COUNT PICKS THE FORM, AND CLDR PICKS WHICH COUNT MEANS WHICH FORM
+   * (round 22). This was `left === 1 ? spotLeft : spotsLeft` — an English
+   * two-form rule applied to four languages, three of which have a 2-4 form.
+   * "3 volných míst" and "3 місць вільно" were both the 5+ form, and three
+   * free spots is squarely inside the range this row spends most of its life
+   * in.
+   */
+  return pluralise(
+    {
+      one: t.games.spotsLeftOne,
+      few: t.games.spotsLeftFew,
+      many: t.games.spotsLeftMany,
+    },
+    left,
+    locale,
+  );
 }

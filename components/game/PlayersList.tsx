@@ -4,7 +4,9 @@ import { sortRoster, toRosterAvatar, type RosterAvatar } from "@/lib/games/queri
 import { guestLabel, isAnonymousGuest } from "@/lib/roster/guests";
 import { initials } from "@/lib/roster/initials";
 import { avatarUrl } from "@/lib/storage/avatar";
-import { getStrings } from "@/lib/i18n/server";
+import { getLocale, getStrings } from "@/lib/i18n/server";
+import { pluralise } from "@/lib/i18n/plural";
+import type { Locale } from "@/lib/i18n/locales";
 import type { Strings } from "@/lib/strings";
 import type { Database } from "@/lib/types/database";
 
@@ -54,6 +56,7 @@ export interface PlayersListProps {
  */
 export async function PlayersList({ rows, supabaseUrl }: PlayersListProps) {
   const t = await getStrings();
+  const locale = await getLocale();
 
   // Sorted HERE and passed down, so the stack and the named list beneath it
   // agree about the order — and so the `+N` chip swallows the same tail in
@@ -154,7 +157,7 @@ export async function PlayersList({ rows, supabaseUrl }: PlayersListProps) {
                   data-count={rows[i]?.games_played ?? 0}
                   className="shrink-0 text-[12px] text-muted"
                 >
-                  {gamesPlayedLabel(rows[i]?.games_played ?? 0, t)}
+                  {gamesPlayedLabel(rows[i]?.games_played ?? 0, locale, t)}
                 </span>
               )}
             </li>
@@ -174,10 +177,23 @@ export async function PlayersList({ rows, supabaseUrl }: PlayersListProps) {
  * and reads as a welcome. The singular exists because "1 games" is the kind of
  * slip a reader notices and nothing else on the page recovers from.
  */
-function gamesPlayedLabel(count: number, t: Strings): string {
+function gamesPlayedLabel(count: number, locale: Locale, t: Strings): string {
   if (count <= 0) return t.games.gamesPlayedNone;
-  if (count === 1) return t.games.gamePlayedOne;
-  return t.games.gamesPlayed.replace("{count}", String(count));
+  /*
+   * `count === 1` decided this until round 22, which is right in English and
+   * wrong from two upwards in the other three languages — Czech, Russian and
+   * Ukrainian each take a 2-4 form, and a roster is full of players on their
+   * second and third game.
+   */
+  return pluralise(
+    {
+      one: t.games.gamesPlayedOne,
+      few: t.games.gamesPlayedFew,
+      many: t.games.gamesPlayedMany,
+    },
+    count,
+    locale,
+  );
 }
 
 /**

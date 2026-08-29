@@ -1,4 +1,5 @@
-import { getStrings } from "@/lib/i18n/server";
+import { getLocale, getStrings } from "@/lib/i18n/server";
+import { pluralise } from "@/lib/i18n/plural";
 import type { GameSurface } from "@/lib/types/database";
 
 /**
@@ -54,7 +55,15 @@ export async function FormatChips({
           data-testid="game-subs"
           className={` ${text} uppercase tracking-[1px] text-muted`}
         >
-          {t.games.subsPerTeam.replace("{count}", String(subsPerTeam))}
+          {pluralise(
+            {
+              one: t.games.subsPerTeamOne,
+              few: t.games.subsPerTeamFew,
+              many: t.games.subsPerTeamMany,
+            },
+            subsPerTeam,
+            await getLocale(),
+          )}
         </span>
       )}
       {surface && (

@@ -5,7 +5,8 @@ import { createBookingAction, type BookingActionState } from "@/app/game/[id]/bo
 import { FormError } from "@/components/form/FormError";
 import { PendingButton } from "@/components/form/PendingButton";
 import { describeBookingError } from "@/lib/booking/errors";
-import { useStrings } from "@/components/LocaleProvider";
+import { useLocale, useStrings } from "@/components/LocaleProvider";
+import { pluralise } from "@/lib/i18n/plural";
 import Link from "next/link";
 import { formatCzk } from "@/lib/format";
 import { policy } from "@/lib/policy";
@@ -67,6 +68,7 @@ export function PaymentMethodChoice({
   spotsLeft,
 }: PaymentMethodChoiceProps) {
   const t = useStrings();
+  const locale = useLocale();
   const [state, formAction] = useActionState(createBookingAction, INITIAL);
 
   /*
@@ -212,8 +214,26 @@ export function PaymentMethodChoice({
 
           {guests > 0 && (
             <p data-testid="party-summary" className="mt-3 text-[13px] text-bone">
+              {/*
+                `{spots}` ARRIVES AS A FINISHED PHRASE (round 22) — "3 spots",
+                "3 місця" — already agreeing with its own number, so this
+                sentence does not have to. It was `{seats} spots`, which put a
+                count next to a fixed noun and rendered "2 míst" and "2 місць"
+                in the middle of a party the product caps at four.
+              */}
               {t.booking.partySummary
-                .replace("{seats}", String(seats))
+                .replace(
+                  "{spots}",
+                  pluralise(
+                    {
+                      one: t.booking.partySeatsOne,
+                      few: t.booking.partySeatsFew,
+                      many: t.booking.partySeatsMany,
+                    },
+                    seats,
+                    locale,
+                  ),
+                )
                 .replace("{total}", formatCzk(partyPrice))}
             </p>
           )}

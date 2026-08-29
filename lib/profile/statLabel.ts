@@ -1,4 +1,5 @@
 import type { Locale } from "@/lib/i18n/locales";
+import { pluralForm } from "@/lib/i18n/plural";
 import { strings, type Strings } from "@/lib/strings";
 
 /**
@@ -10,19 +11,14 @@ import { strings, type Strings } from "@/lib/strings";
  * one. The number and the noun are separate elements here (big figure, small
  * caption) so the template carries no `{n}`; only the noun changes.
  *
- * THE CATEGORIES COME FROM `Intl.PluralRules`, for the reasons
- * `lib/pass/credits.ts` sets out at length and which are not restated: English
- * would survive `n === 1`, Czech and Russian have three forms with boundaries
- * an English speaker guesses wrong, and CLDR already knows all of them. The
- * same three-way collapse is used here — `one`, `few`, everything else — so the
- * two helpers cannot disagree about which form a number takes.
+ * THE FORM COMES FROM `lib/i18n/plural.ts` — shared with `creditsLabel` since
+ * round 22, so the two helpers cannot disagree about which form a number
+ * takes. The decimal soft edge (hours carries one) is documented there.
  *
- * DECIMALS ARE THE KNOWN SOFT EDGE, and it is flagged rather than hidden. Hours
- * carries one decimal, and CLDR routes a fractional Czech or Russian quantity
- * to a category (`many`) that this collapse folds into the 5+ form. "3,3 hodin"
- * is understandable and is not what a Czech speaker writes — it is on the
- * standing native-review batch with the rest of the CS/RU drafts. English is
- * unaffected: every fraction is `other` there, which is the plural it wants.
+ * IT PICKS A WHOLE STRING RATHER THAN SUBSTITUTING INTO ONE, which is why this
+ * calls `pluralForm` and not `pluralise`: the number is a 34px figure in its
+ * own element and only the noun beneath it changes, so the template carries no
+ * `{n}` to substitute.
  */
 
 export type StatKey = "games" | "hours" | "venues";
@@ -39,11 +35,5 @@ export function statLabel(
   locale: Locale,
   t: Strings = strings,
 ): string {
-  const category = new Intl.PluralRules(locale).select(count);
-  const forms = FORMS[key];
-
-  const form =
-    category === "one" ? forms.one : category === "few" ? forms.few : forms.many;
-
-  return t.profile[form] as string;
+  return t.profile[FORMS[key][pluralForm(count, locale)]] as string;
 }

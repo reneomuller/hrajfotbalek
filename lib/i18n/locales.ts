@@ -25,7 +25,7 @@
  *   - Anything about money. See `lib/i18n/README` note in `resolve.ts`.
  */
 
-export const LOCALES = ["en", "cs", "ru"] as const;
+export const LOCALES = ["en", "cs", "ru", "uk"] as const;
 
 export type Locale = (typeof LOCALES)[number];
 
@@ -86,6 +86,7 @@ export const LOCALE_LABELS: Record<Locale, { short: string; full: string }> = {
   en: { short: "EN", full: "English" },
   cs: { short: "CZ", full: "Čeština" },
   ru: { short: "RU", full: "Русский" },
+  uk: { short: "UA", full: "Українська" },
 };
 
 export function isLocale(value: unknown): value is Locale {

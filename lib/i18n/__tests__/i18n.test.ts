@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { cs } from "@/lib/i18n/cs";
 import { ru } from "@/lib/i18n/ru";
+import { uk } from "@/lib/i18n/uk";
 import { resolveStrings } from "@/lib/i18n/resolve";
 import {
   DEFAULT_LOCALE,
@@ -97,6 +98,15 @@ const INTENTIONALLY_UNTRANSLATED = new Set([
   // its `{n}` placeholder counts as a letter to that regex, which is the
   // regex being conservative rather than wrong.
   "booking.partyPlus",
+  /*
+   * `{spots} · {total}` — round 22. Both halves arrive as finished phrases:
+   * `{spots}` is already pluralised by `lib/i18n/plural.ts` and `{total}` is
+   * money, which is Czech everywhere. What is left is a middot, and it lands
+   * here rather than being skipped by the punctuation rule for the same reason
+   * `partyPlus` does — the letters inside the placeholder names count as
+   * letters to that regex.
+   */
+  "booking.partySummary",
   // The admin panel is English; this is the label of its door.
   "nav.admin",
   "nav.cta",
@@ -149,9 +159,14 @@ function flatten(value: unknown, prefix = ""): Map<string, string> {
 }
 
 describe("locale detection", () => {
-  it("accepts exactly the three supported codes", () => {
-    expect(LOCALES).toEqual(["en", "cs", "ru"]);
+  it("accepts exactly the four supported codes", () => {
+    expect(LOCALES).toEqual(["en", "cs", "ru", "uk"]);
     expect(isLocale("cs")).toBe(true);
+    expect(isLocale("uk")).toBe(true);
+    // `ua` is the country code, not the language code, and it is the mistake
+    // anyone reaching for Ukrainian makes first — including the flag emoji
+    // beside it in the switcher, which IS 🇺🇦.
+    expect(isLocale("ua")).toBe(false);
     expect(isLocale("sk")).toBe(false);
     expect(isLocale(undefined)).toBe(false);
   });
@@ -160,6 +175,8 @@ describe("locale detection", () => {
     expect(localeFromAcceptLanguage("cs-CZ,cs;q=0.9,en;q=0.8")).toBe("cs");
     expect(localeFromAcceptLanguage("ru-RU,ru;q=0.9")).toBe("ru");
     expect(localeFromAcceptLanguage("en-GB,en;q=0.9")).toBe("en");
+    // A Ukrainian phone in Prague, which is the arrival this round is for.
+    expect(localeFromAcceptLanguage("uk-UA,uk;q=0.9,en;q=0.7")).toBe("uk");
   });
 
   it("skips unsupported languages rather than giving up at the first one", () => {
@@ -197,6 +214,10 @@ describe("resolveStrings", () => {
     // field is a payment that arrives unmatched.
     expect(resolveStrings("cs").payment.variableSymbol).toContain("VS");
     expect(resolveStrings("ru").payment.variableSymbol).toContain("VS");
+    expect(resolveStrings("uk").payment.variableSymbol).toContain("VS");
+    for (const locale of LOCALES) {
+      expect(resolveStrings(locale).booking.payByQr).toContain("QR");
+    }
     expect(resolveStrings("en").payment.variableSymbol).toMatch(/Variable symbol|VS/);
   });
 
@@ -226,9 +247,19 @@ describe("resolveStrings", () => {
   });
 });
 
+/*
+ * EVERY OVERLAY, NOT A LIST THAT HAS TO BE REMEMBERED (round 22).
+ *
+ * Ukrainian was added as a fourth language and this table is where a new one
+ * either gets checked or silently does not. It stays a literal rather than
+ * being derived from `LOCALES` because `en` has no overlay to check and
+ * `resolveStrings("en")` returns the table itself — a derived list would have
+ * to special-case that, and the special case is the thing that rots.
+ */
 describe.each([
   ["cs", cs],
   ["ru", ru],
+  ["uk", uk],
 ] as const)("%s translation completeness", (locale, overlay) => {
   const english = flatten(strings);
   const translated = flatten(resolveStrings(locale));

@@ -42,6 +42,7 @@ const FLAGS: Record<Locale, string> = {
   en: "🇬🇧",
   cs: "🇨🇿",
   ru: "🇷🇺",
+  uk: "🇺🇦",
 };
 
 export function LanguageSwitcher() {
@@ -59,8 +60,8 @@ export function LanguageSwitcher() {
   }, []);
 
   // Opening moves focus onto the CURRENT language rather than the first one:
-  // the list is three items, and starting on the active one means the arrow
-  // keys move relative to where you are instead of relative to the top.
+  // the list is short, and starting on the active one means the arrow keys
+  // move relative to where you are instead of relative to the top.
   useEffect(() => {
     if (!open) return;
     const index = LOCALES.indexOf(active);
@@ -161,8 +162,13 @@ export function LanguageSwitcher() {
          * label is right here: the person who needs this control is the one who
          * cannot read the language the page is currently in, so a label in that
          * language is the one label guaranteed not to help.
+         *
+         * FOUR CODES SINCE ROUND 22, and this is the ceiling for the spelt-out
+         * form — a fifth language wants a generic label (a globe, or the word
+         * "Language" in each) rather than a longer list of codes nobody reads
+         * to the end.
          */
-        aria-label="EN / CZ / RU"
+        aria-label="EN / CZ / RU / UA"
         data-testid="locale-trigger"
         /*
           `min-h-11` — THE 44px FLOOR, IN THE CHROME (audit F15/F6).
@@ -182,12 +188,14 @@ export function LanguageSwitcher() {
       {open && (
         <ul
           role="listbox"
-          aria-label="EN / CZ / RU"
+          aria-label="EN / CZ / RU / UA"
           data-testid="locale-menu"
           className="absolute right-0 top-[calc(100%+6px)] z-40 m-0 min-w-[150px] list-none rounded-card bg-surface-raised p-1 shadow-lift"
         >
-          {/* EN → CZ → RU, the order the contract names, English first because
-              it is the only one all three groups read. */}
+          {/* EN → CZ → RU → UA, the order `LOCALES` declares. English first
+              because it is the only one every group reads; Ukrainian last
+              because it is the newest and moving an existing row would move
+              a target people have already learned. */}
           {LOCALES.map((locale, index) => {
             const isActive = locale === active;
             return (

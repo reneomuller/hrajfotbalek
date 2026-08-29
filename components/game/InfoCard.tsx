@@ -6,7 +6,8 @@ import { LanguagePill } from "@/components/game/LanguagePill";
 import { resolveDurationMinutes } from "@/lib/games/duration";
 import { gameLanguageOf } from "@/lib/games/language";
 import { effectivePitchName, venueDisplayName } from "@/lib/venues/displayName";
-import { getStrings } from "@/lib/i18n/server";
+import { getLocale, getStrings } from "@/lib/i18n/server";
+import { pluralise } from "@/lib/i18n/plural";
 import type { Database } from "@/lib/types/database";
 
 type VenueRow = Database["public"]["Tables"]["venues"]["Row"];
@@ -68,6 +69,7 @@ export async function InfoCard({
   endsAt: Date;
 }) {
   const t = await getStrings();
+  const locale = await getLocale();
 
   const mapHref = `https://maps.google.com/?q=${encodeURIComponent(
     venueRow?.map_query || game.venue,
@@ -185,7 +187,15 @@ export async function InfoCard({
               <CardBadges format={game.format} surface={game.surface} />
               {game.subs_per_team !== null && (
                 <span data-testid="game-subs" className="text-small text-muted">
-                  {t.games.subsPerTeam.replace("{count}", String(game.subs_per_team))}
+                  {pluralise(
+                    {
+                      one: t.games.subsPerTeamOne,
+                      few: t.games.subsPerTeamFew,
+                      many: t.games.subsPerTeamMany,
+                    },
+                    game.subs_per_team,
+                    locale,
+                  )}
                 </span>
               )}
             </dd>

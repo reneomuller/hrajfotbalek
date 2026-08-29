@@ -371,8 +371,20 @@ export const strings = {
     emptyTitle: "No games scheduled",
     emptyBody: "New games go up every week.",
     emptyCta: "Join the WhatsApp group",
-    spotsLeft: "spots left",
-    spotLeft: "spot left",
+    /*
+     * "3 spots left" — ONE PHRASE PER FORM, not a number glued to a noun
+     * (round 22).
+     *
+     * It was `spotLeft` / `spotsLeft` chosen by `left === 1` and rendered as
+     * `${left} ${label}`, which is an English two-form rule applied to four
+     * languages. Czech, Russian and Ukrainian each have a 2–4 form, so three
+     * free spots read "3 volných míst" and "3 місць вільно" — the 5+ form,
+     * wrong in the middle of the range this product sits in most of the time.
+     * The count now picks the form through CLDR (`lib/i18n/plural.ts`).
+     */
+    spotsLeftOne: "{n} spot left",
+    spotsLeftFew: "{n} spots left",
+    spotsLeftMany: "{n} spots left",
     full: "Full",
     /*
      * The canonical card's duration (v1.3 §2.1) — `60 min` beside the
@@ -487,7 +499,9 @@ export const strings = {
     // "2 subs per team" — renders beside the format when the organizer set it,
     // and nothing at all when they did not (§5.3a). It describes how the game
     // is run; it constrains no booking.
-    subsPerTeam: "{count} subs per team",
+    subsPerTeamOne: "{n} sub per team",
+    subsPerTeamFew: "{n} subs per team",
+    subsPerTeamMany: "{n} subs per team",
     // Level badges. Rendered ONLY on a restricted game — an all-levels game
     // carries no badge anywhere, which is what makes a badge mean something.
     skillLevel: {
@@ -571,8 +585,9 @@ export const strings = {
      * because "1 games" is the kind of thing a reader notices and nothing else
      * on the page recovers from.
      */
-    gamesPlayed: "{count} games",
-    gamePlayedOne: "1 game",
+    gamesPlayedOne: "{n} game",
+    gamesPlayedFew: "{n} games",
+    gamesPlayedMany: "{n} games",
     gamesPlayedNone: "First game",
 
     // --- what's included (v1.2 §5.7) ----------------------------------------
@@ -767,8 +782,23 @@ export const strings = {
     partyJustMe: "Just me",
     /** `+1`, `+2`, `+3`. The plus is part of the label, as the control reads. */
     partyPlus: "+{n}",
-    /** Under the group, once a party is chosen. */
-    partySummary: "{seats} spots · {total}",
+    /*
+     * The seats a party takes, as a countable phrase (round 22). Separate from
+     * `games.spotsLeftOne` and friends because that one says "left" and this
+     * one does not — the same noun in two sentences.
+     */
+    partySeatsOne: "{n} spot",
+    partySeatsFew: "{n} spots",
+    partySeatsMany: "{n} spots",
+    /**
+     * Under the group, once a party is chosen.
+     *
+     * `{spots}` arrives as a FINISHED phrase — "3 spots", already agreeing
+     * with its number — so this sentence must not agree with the count itself.
+     * Which is why it is the same string in every language and is exempt from
+     * the completeness walk, exactly like `partyPlus` above it.
+     */
+    partySummary: "{spots} · {total}",
     /**
      * Shown when the pitch has less room than the ceiling allows, so the
      * missing buttons are explained rather than simply absent.
@@ -2141,6 +2171,13 @@ export const strings = {
     /** On the 12-credit tier only. */
     tierMostPopular: "Most popular",
     // The honest framing of what is actually stored.
+    /*
+     * UNUSED, AND FOUND SO IN ROUND 22 while converting the count strings to
+     * CLDR plurals: nothing renders `pass.equivalence`. It is left exactly as
+     * it was — including its English two-form assumption — because a dead key
+     * is a copy decision to take deliberately rather than a plural bug to fix
+     * on a screen nobody sees. Reported rather than removed.
+     */
     equivalence: "≈ {count} games",
     howItWorks: "How it works",
     /*

@@ -7,6 +7,7 @@ import {
   spotsTone,
   urgencyLabel,
 } from "@/lib/games/urgency";
+import { resolveStrings } from "@/lib/i18n/resolve";
 import { strings } from "@/lib/strings";
 
 describe("lastFewThreshold", () => {
@@ -102,16 +103,56 @@ describe("gameUrgency", () => {
 
 describe("spotsLeftLabel", () => {
   it("uses the singular on the last spot", () => {
-    expect(spotsLeftLabel(11, 12)).toBe(`1 ${strings.games.spotLeft}`);
+    expect(spotsLeftLabel(11, 12)).toBe("1 spot left");
   });
 
   it("uses the plural above one", () => {
-    expect(spotsLeftLabel(9, 12)).toBe(`3 ${strings.games.spotsLeft}`);
+    expect(spotsLeftLabel(9, 12)).toBe("3 spots left");
   });
 
   it("says full rather than '0 spots left'", () => {
     expect(spotsLeftLabel(12, 12)).toBe(strings.games.full);
     expect(spotsLeftLabel(13, 12)).toBe(strings.games.full);
+  });
+
+  /*
+   * THE 2-4 FORM, WHICH IS THE ONE THE OLD RULE GOT WRONG (round 22).
+   *
+   * `left === 1 ? spotLeft : spotsLeft` is an English two-form rule, and it
+   * rendered the 5+ form for three free spots in every Slavic language. Three
+   * free spots is not an edge case on this row — it is the state a filling
+   * game spends its last day in.
+   */
+  it.each([
+    ["cs", 1, "1 volné místo"],
+    ["cs", 3, "3 volná místa"],
+    ["cs", 5, "5 volných míst"],
+    ["ru", 1, "1 место свободно"],
+    ["ru", 3, "3 места свободно"],
+    ["ru", 5, "5 мест свободно"],
+    ["uk", 1, "1 місце вільне"],
+    ["uk", 3, "3 місця вільні"],
+    ["uk", 5, "5 місць вільно"],
+  ] as const)("renders %s at %i as its own form", (locale, left, expected) => {
+    // Arrange
+    const capacity = 12;
+    const t = resolveStrings(locale);
+
+    // Act
+    const label = spotsLeftLabel(capacity - left, capacity, locale, t);
+
+    // Assert
+    expect(label).toBe(expected);
+  });
+
+  it("puts the Ukrainian teens in the many bucket, not the 2-4 one", () => {
+    // Arrange / Act / Assert — 12 ends in 2 and is NOT "12 місця вільні".
+    const t = resolveStrings("uk");
+    expect(spotsLeftLabel(0, 12, "uk", t)).toBe("12 місць вільно");
+    expect(spotsLeftLabel(2, 22, "uk", t)).toBe("20 місць вільно");
+    // …and 22 goes back into the 2-4 bucket, which is the pair that proves
+    // CLDR is deciding rather than a modulus.
+    expect(spotsLeftLabel(0, 22, "uk", t)).toBe("22 місця вільні");
   });
 });
 

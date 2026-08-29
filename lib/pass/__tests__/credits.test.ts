@@ -18,17 +18,23 @@ import { resolveStrings } from "@/lib/i18n/resolve";
 const en = resolveStrings("en");
 const cs = resolveStrings("cs");
 const ru = resolveStrings("ru");
+const uk = resolveStrings("uk");
 
 describe("creditsLabel", () => {
   it("uses the singular at one, in every language", () => {
     expect(creditsLabel(1, "en", en)).toBe("1 credit");
     expect(creditsLabel(1, "cs", cs)).toBe("1 kredit");
     expect(creditsLabel(1, "ru", ru)).toBe("1 кредит");
+    expect(creditsLabel(1, "uk", uk)).toBe("1 кредит");
   });
 
   it("uses the 2–4 form where the language has one", () => {
     expect(creditsLabel(3, "cs", cs)).toBe("3 kredity");
     expect(creditsLabel(3, "ru", ru)).toBe("3 кредита");
+    // Ukrainian's 2-4 form is `кредити`, NOT Russian's `кредита` — the two
+    // languages take the same SHAPE and different words, which is the reason
+    // the Ukrainian overlay was translated from English rather than from ru.ts.
+    expect(creditsLabel(3, "uk", uk)).toBe("3 кредити");
     // English has no such form; it simply pluralises.
     expect(creditsLabel(3, "en", en)).toBe("3 credits");
   });
@@ -39,8 +45,19 @@ describe("creditsLabel", () => {
     for (const n of [5, 8, 12, 15, 20]) {
       expect(creditsLabel(n, "cs", cs)).toBe(`${n} kreditů`);
       expect(creditsLabel(n, "ru", ru)).toBe(`${n} кредитов`);
+      expect(creditsLabel(n, "uk", uk)).toBe(`${n} кредитів`);
       expect(creditsLabel(n, "en", en)).toBe(`${n} credits`);
     }
+  });
+
+  it("puts the Ukrainian teens in the many bucket, and 22 back in the 2–4 one", () => {
+    // The same trap as Russian, checked separately because nothing in the code
+    // assumes the two languages agree.
+    expect(creditsLabel(12, "uk", uk)).toBe("12 кредитів");
+    expect(creditsLabel(14, "uk", uk)).toBe("14 кредитів");
+    expect(creditsLabel(22, "uk", uk)).toBe("22 кредити");
+    // 21 takes the SINGULAR, which is why the singular string carries `{n}`.
+    expect(creditsLabel(21, "uk", uk)).toBe("21 кредит");
   });
 
   it("puts the Russian teens in the many bucket, not the 2–4 one", () => {
@@ -64,5 +81,6 @@ describe("creditsLabel", () => {
     expect(creditsLabel(0, "en", en)).toBe("0 credits");
     expect(creditsLabel(0, "cs", cs)).toBe("0 kreditů");
     expect(creditsLabel(0, "ru", ru)).toBe("0 кредитов");
+    expect(creditsLabel(0, "uk", uk)).toBe("0 кредитів");
   });
 });

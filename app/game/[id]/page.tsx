@@ -33,7 +33,7 @@ import {
 import { gameEventSchema } from "@/lib/games/schemaOrg";
 import { spotsLeftLabel } from "@/lib/games/urgency";
 import { siteUrl } from "@/lib/site";
-import { getStrings } from "@/lib/i18n/server";
+import { getLocale, getStrings } from "@/lib/i18n/server";
 
 // The primary surface players land on from a shared WhatsApp link. It must
 // render completely for a visitor with no session, so nothing here is gated.
@@ -82,7 +82,12 @@ export async function generateMetadata({ params }: GamePageProps): Promise<Metad
   const title = `${game.venue} — ${formatGameDateTime(game.starts_at)}`;
   // Same ladder the page renders, so the WhatsApp preview and the page it
   // links to never disagree about how urgent the game is.
-  const description = `${spotsLeftLabel(result.bookedCount, game.capacity, t)} · ${formatCzk(
+  const description = `${spotsLeftLabel(
+    result.bookedCount,
+    game.capacity,
+    await getLocale(),
+    t,
+  )} · ${formatCzk(
     game.price_czk,
   )}`;
 

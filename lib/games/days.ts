@@ -157,7 +157,7 @@ function weekdayLabel(key: string, locale: Locale): string {
 }
 
 /**
- * The BCP-47 tag each of the product's three languages formats DATES with.
+ * The BCP-47 tag each of the product's four languages formats DATES with.
  *
  * `en` maps to `en-GB`, not to bare `en`. Bare `en` resolves to US
  * conventions, which puts the month first — `Mon, Aug 3` — and the games are
@@ -175,6 +175,19 @@ export const DATE_LOCALE: Record<Locale, string> = {
   en: "en-GB",
   cs: "cs",
   ru: "ru",
+  /*
+   * `uk`, bare, for the same reason `cs` and `ru` are bare: Ukrainian has one
+   * region and no second convention to disagree with.
+   *
+   * THIS IS THE EXISTING RENDERING AND NOT A FORK (round 22, scope guard b).
+   * The day strip localises properly through this map; the rest of the product
+   * formats through a hardcoded `en-GB` (audit finding F2, ledger row 154), so
+   * a Ukrainian page shows "Пт 29 серп" on the strip and "Fri 29 Aug" three
+   * lines below it. That is the SAME defect Czech and Russian already carry,
+   * and it is fixed once, for all four languages, in the `players.locale`
+   * round — not forked here into a fourth special case.
+   */
+  uk: "uk",
 };
 
 /**

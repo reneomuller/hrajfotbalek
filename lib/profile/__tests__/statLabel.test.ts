@@ -12,6 +12,7 @@ import { resolveStrings } from "@/lib/i18n/resolve";
 
 const en = resolveStrings("en");
 const cs = resolveStrings("cs");
+const uk = resolveStrings("uk");
 
 describe("statLabel", () => {
   it("uses the singular at one and the plural at zero and two, in English", () => {
@@ -44,15 +45,46 @@ describe("statLabel", () => {
     expect(many).toBe("odehraných zápasů");
   });
 
+  it("takes all three Ukrainian forms at their CLDR boundaries", () => {
+    /*
+     * 1 / 2-4 / 5+, tested at the same three numbers as Czech above so the two
+     * languages can be compared line by line — and tested at all, because
+     * `Intl.PluralRules("uk")` is what decides and nothing in this repo
+     * asserts that it agrees with Russian.
+     */
+
+    // Arrange / Act
+    const one = statLabel("games", 1, "uk", uk);
+    const few = statLabel("games", 3, "uk", uk);
+    const many = statLabel("games", 5, "uk", uk);
+
+    // Assert
+    expect(one).toBe("зіграна гра");
+    expect(few).toBe("зіграні ігри");
+    expect(many).toBe("зіграних ігор");
+  });
+
+  it("pluralises every Ukrainian stat, not only the first", () => {
+    // Arrange / Act / Assert
+    expect(statLabel("hours", 1, "uk", uk)).toBe("година на полі");
+    expect(statLabel("hours", 3, "uk", uk)).toBe("години на полі");
+    expect(statLabel("hours", 5, "uk", uk)).toBe("годин на полі");
+    expect(statLabel("venues", 1, "uk", uk)).toBe("майданчик");
+    expect(statLabel("venues", 3, "uk", uk)).toBe("майданчики");
+    expect(statLabel("venues", 5, "uk", uk)).toBe("майданчиків");
+  });
+
   it("does not fall back to English for a translated locale", () => {
     // The overlay merge renders English for a missing key rather than a blank,
     // which means a forgotten Czech form is invisible unless something checks.
 
     // Arrange / Act / Assert
     for (const count of [0, 1, 2, 5, 11, 21]) {
-      expect(statLabel("games", count, "cs", cs)).not.toContain("played");
-      expect(statLabel("hours", count, "cs", cs)).not.toContain("pitch");
-      expect(statLabel("venues", count, "cs", cs)).not.toContain("pitch");
+      for (const [locale, t] of [["cs", cs], ["uk", uk]] as const) {
+        expect(statLabel("games", count, locale, t)).not.toContain("played");
+        expect(statLabel("hours", count, locale, t)).not.toContain("pitch");
+        expect(statLabel("venues", count, locale, t)).not.toContain("pitch");
+      }
     }
   });
 });

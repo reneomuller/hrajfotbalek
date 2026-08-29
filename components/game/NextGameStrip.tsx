@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { formatGameDateTime } from "@/lib/format";
-import { getStrings } from "@/lib/i18n/server";
+import { spotsLeftLabel } from "@/lib/games/urgency";
+import { getLocale, getStrings } from "@/lib/i18n/server";
 import type { GameCardGame } from "@/components/game/GameCard";
 
 /**
@@ -58,6 +59,7 @@ export async function NextGameStrip({
   pitchName?: string | null;
 }) {
   const t = await getStrings();
+  const locale = await getLocale();
   const spotsLeft = Math.max(0, game.capacity - bookedCount);
 
   return (
@@ -126,9 +128,13 @@ export async function NextGameStrip({
             spotsLeft === 0 ? "text-white/40" : "text-volt"
           }`}
         >
-          {spotsLeft === 0
-            ? t.games.full
-            : `${spotsLeft} ${spotsLeft === 1 ? t.games.spotLeft : t.games.spotsLeft}`}
+          {/*
+            THE SHARED LABEL, NOT A SECOND COPY OF THE RULE (round 22). This
+            row built the phrase inline — number, space, one of two nouns —
+            which is the same English two-form assumption `spotsLeftLabel`
+            carried, in a second place where nobody would think to fix it.
+          */}
+          {spotsLeftLabel(bookedCount, game.capacity, locale, t)}
         </span>
       </Link>
     </section>

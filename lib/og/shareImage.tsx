@@ -2,6 +2,7 @@ import { ImageResponse } from "next/og";
 import { OG_MARK_DATA_URI } from "@/lib/og/mark";
 import tailwindConfig from "@/tailwind.config";
 import { formatCzk, formatGameDateTime } from "@/lib/format";
+import { pluralise } from "@/lib/i18n/plural";
 import { strings } from "@/lib/strings";
 
 /**
@@ -152,11 +153,22 @@ export function renderShareImage({
               fontWeight: 700,
             }}
           >
+            {/*
+              ENGLISH, EXPLICITLY. This card is rendered for a link preview,
+              which no locale cookie reaches — `strings` is the English table
+              and "en" is the language its plurals must agree with.
+            */}
             {isFull
               ? strings.games.full
-              : `${spotsLeft} ${
-                  spotsLeft === 1 ? strings.games.spotLeft : strings.games.spotsLeft
-                }`}
+              : pluralise(
+                  {
+                    one: strings.games.spotsLeftOne,
+                    few: strings.games.spotsLeftFew,
+                    many: strings.games.spotsLeftMany,
+                  },
+                  spotsLeft,
+                  "en",
+                )}
           </div>
           <div style={{ color: COLORS.muted, fontSize: 34 }}>
             {formatCzk(priceCzk)}

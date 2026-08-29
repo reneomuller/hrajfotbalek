@@ -1,13 +1,14 @@
 import { strings, type Strings } from "@/lib/strings";
 import { cs } from "@/lib/i18n/cs";
 import { ru } from "@/lib/i18n/ru";
+import { uk } from "@/lib/i18n/uk";
 import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/locales";
 
 /**
  * Merging a translation overlay onto the English table.
  *
- * THE OVERLAY IS PARTIAL BY DESIGN. Czech and Russian supply the player-facing
- * keys and nothing else — the admin section, the email templates and the
+ * THE OVERLAY IS PARTIAL BY DESIGN. Czech, Russian and Ukrainian supply the
+ * player-facing keys and nothing else — the admin section, the email templates and the
  * privacy copy stay English, and they stay English by simply not appearing in
  * the overlay rather than by being duplicated three times. A key that has no
  * translation resolves to English, so adding a new string to `lib/strings.ts`
@@ -15,7 +16,7 @@ import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/locales";
  * English until someone translates it. That is the right failure.
  *
  * MONEY IS NOT TRANSLATED. Amounts stay CZK, the QR stays a Czech SPD payment
- * string, and the variable symbol stays a variable symbol — in all three
+ * string, and the variable symbol stays a variable symbol — in all four
  * languages. That is not an oversight: the player is going to open a Czech
  * banking app, and the words on this screen have to match the words on that
  * one. A "reference number" in an English UI that appears as "VS" in the bank
@@ -77,6 +78,7 @@ const OVERLAYS: Record<Locale, StringsOverlay | null> = {
   en: null,
   cs,
   ru,
+  uk,
 };
 
 /**

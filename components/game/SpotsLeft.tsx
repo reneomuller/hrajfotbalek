@@ -1,5 +1,5 @@
 import { spotsLeftLabel, spotsTone, type SpotsTone } from "@/lib/games/urgency";
-import { getStrings } from "@/lib/i18n/server";
+import { getLocale, getStrings } from "@/lib/i18n/server";
 
 /**
  * "4 spots left", in the colour the count earns (v1.2 §5.5).
@@ -99,7 +99,9 @@ export async function SpotsLeft({
           : "text-body-lg font-bold"
       } ${TONE_TEXT[tone]}`}
     >
-      {tone === "full" ? t.games.full : spotsLeftLabel(bookedCount, capacity, t)}
+      {tone === "full"
+        ? t.games.full
+        : spotsLeftLabel(bookedCount, capacity, await getLocale(), t)}
     </span>
   );
 }
