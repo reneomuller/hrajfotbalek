@@ -1704,3 +1704,101 @@ shared links ranking, a public fixtures list, anything where a search engine's
 opinion of a URL matters — the trade inverts and the answer is to drop
 `loading.tsx` from this route, not to fight the framework. Nothing else needs
 to change.
+
+---
+
+## R36 — Ukrainian is a fourth UI language, and three things it is NOT
+
+**RECORDED round 22.** `uk` joins `en`/`cs`/`ru` in `LOCALES`, with a full
+overlay of all 513 player-facing keys, its own CLDR plurals, and the switcher
+row that goes with it. The Czech default and the resolution ladder above it are
+untouched: an explicit cookie still wins, then `Accept-Language`, then Czech.
+
+The interesting part of this ruling is the boundaries, because each of the
+three is a place where a later round could reasonably widen the change and
+should not.
+
+### (a) The GAME LANGUAGE field gains no third option
+
+`games.language` is `en-cs | uk-ru` and stays exactly that. **It is a different
+concept wearing a similar name:** the UI locale is what the *reader* wants the
+screen in; the game language is what is *spoken on the pitch*, and it is a
+property of the fixture, chosen by the organizer, that decides which flags the
+card draws and which messaging app the organizer button opens.
+
+Adding `uk` there would say a game is conducted in Ukrainian and Ukrainian
+only, which is not a thing this crew does — the `uk-ru` pairing exists because
+those two groups play together and understand each other. A player reading the
+site in Ukrainian is not a game being played in Ukrainian, and the day someone
+conflates them, the flags on the card start lying about who can turn up.
+
+### (b) Dates stay on the existing rendering, defect included
+
+The day strip localises properly (`DATE_LOCALE`, which gains `uk: "uk"` because
+that is the existing mechanism). Everything else formats through a hardcoded
+`en-GB` — audit finding **F2**, ledger row 154 — so a Ukrainian page shows
+`Пт, 29 вер.` on the strip and `Fri 29 Aug` three lines below it.
+
+**That is the same defect Czech and Russian already carry**, and it is
+deliberately not forked here. F2's real fix is one change at 29 call sites plus
+a `players.locale` column, and doing a Ukrainian-only version of it now would
+mean the product had four date behaviours instead of two — with the fourth one
+being the *good* one, which is the shape that never gets consolidated because
+the pressure to fix the rest just dropped.
+
+### (c) The Anton rule covers Ukrainian identically, and it was not true for
+### Russian either
+
+Anton ships no Cyrillic, so a Ukrainian display line falls through the `display`
+stack exactly as a Russian one does. **Checking that this round found that the
+stack fell to the generic `sans-serif`, not to the body face the hero's own
+comment has claimed since round 13.** Every Cyrillic display line in the
+product has been rendering in a system font.
+
+`display` is now `[Anton, Onest, sans-serif]`. Anton stays first so no Latin
+display line moves; Onest carries `cyrillic` and `cyrillic-ext`, which is the
+reason it was chosen as the body face in the first place. The fallback is per
+CHARACTER, so a mixed line — `140 CZK за матч` — sets its money figure in Anton
+and its tail in Onest, which is the correct behaviour and now a consistent one.
+
+The sentence-boundary break rule is unchanged and now asserted for Ukrainian:
+every sentence in the hero fits one row, so a greedy breaker can only split
+between sentences. "ГРАЙ У ФУТБОЛ. / КОЛИ ЗАВГОДНО. / ДЕ ЗАВГОДНО."
+
+---
+
+## R37 — A count and its noun agree, and CLDR decides — in every language
+
+**RECORDED round 22**, and it is a bug fix in Czech and Russian rather than
+only a Ukrainian addition.
+
+Four surfaces picked their noun with `n === 1`:
+
+| Surface | Rendered | Should read |
+|---|---|---|
+| Spots left, list and detail | `3 volných míst` · `3 місць вільно` | `3 volná místa` · `3 місця вільні` |
+| Games played, roster | `2 zápasů` | `2 zápasy` |
+| Subs per team | `1 náhradníci na tým` | `1 náhradník na tým` |
+| Party seats, booking | `2 míst` | `2 místa` |
+
+**`n === 1` is an English rule.** Czech, Russian and Ukrainian each have a
+2–4 form, and three of those four numbers sit squarely inside the range the
+surface spends most of its life in — a filling game's last day is exactly when
+it says "3 spots left".
+
+**THE RULE: any string where a number and a noun appear together resolves its
+form through `lib/i18n/plural.ts`, which asks `Intl.PluralRules`.** Never
+`n === 1`, never `n % 10`. A hand-rolled modulus renders `22 кредити`
+correctly and `12 кредити` wrongly, and it reads as fluent to anyone reviewing
+the code in English.
+
+The singular template carries `{n}` rather than a literal `1`, because 21 takes
+the singular in Russian and Ukrainian — a 21-credit wallet must not render
+"1 кредит".
+
+**Where a sentence contains a count it cannot agree with, the count arrives as
+a finished phrase.** `booking.partySummary` is `{spots} · {total}` and
+`pass.creditsAddedCount` is `Тепер у тебе {credits}.` — the noun has already
+agreed with its number by the time the sentence sees it. Those strings are
+identical in all four languages and are exempt from the completeness walk, with
+the reason recorded beside the exemption.
