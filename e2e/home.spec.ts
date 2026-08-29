@@ -464,10 +464,18 @@ test.describe("the home page under ruling J", () => {
         ),
     );
 
+    /*
+     * THE GAMES COME FIRST SINCE ROUND 23 ITEM 4. ~~how-it-works, then the
+     * games.~~ Reversed on the owner's instruction: somebody arriving from a
+     * shared link wants to know whether there is a game on Thursday, and the
+     * answer was three scrolls down behind an explanation of a product they
+     * had already decided to look at. Ruling J's ORDER of everything below —
+     * community, Player of the Month, FAQ — is untouched.
+     */
     expect(order).toEqual([
-      "how-it-works",
       "next-matches",
       "next-matches-all",
+      "how-it-works",
       "community-panel",
       "potm-panel",
       "faq-panel",
@@ -483,21 +491,29 @@ test.describe("the home page under ruling J", () => {
     await expect(page.getByTestId("equipment-line")).toHaveCount(0);
   });
 
-  test("clears the three steps above the fold", async ({ page }) => {
+  test("clears the GAMES above the fold", async ({ page }) => {
     /*
-     * THE POINT OF THE HERO SHORTENING, and the reason it is asserted as a
-     * fold clearance rather than as a percentage: ruling J asks for ">=25%"
-     * in order that the steps be visible without scrolling. The percentage is
-     * the means. Measured against the previous hero it is 26.7% on this
-     * viewport and 32.1% on desktop, but that ratio is font- and
-     * copy-dependent, and what must stay true is this.
+     * THE ASSERTION INVERTS RATHER THAN DISAPPEARING (round 23, item 4).
+     *
+     * ~~The three steps clear the fold.~~ Ruling J asked for a shortened hero
+     * "in order that the steps be visible without scrolling", and the steps
+     * were what sat there. Item 4 moved the games into that position, so the
+     * PROPERTY the shortening was protecting — that the first screen ends on
+     * something worth reading rather than on a scroll hint — now applies to
+     * the games.
+     *
+     * It is the stronger version of the same claim: the steps explained the
+     * product, the games ARE the product.
      */
     await page.goto("/");
     await page.evaluate(() => document.fonts.ready);
 
-    const steps = (await page.getByTestId("how-it-works").boundingBox())!;
+    const games = (await page.getByTestId("next-matches").boundingBox())!;
     const viewport = page.viewportSize()!;
-    expect(steps.y + steps.height).toBeLessThanOrEqual(viewport.height);
+    expect(
+      games.y,
+      "the games do not begin above the fold",
+    ).toBeLessThan(viewport.height);
 
     // And the hero no longer forces a full screen of its own.
     const heroFillsScreen = await page.evaluate(

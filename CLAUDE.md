@@ -188,15 +188,23 @@ answers a missing function with a 404.
 | `20260802190000_pass_tiers_from_five` | Applied, verified |
 | `20260802210000_venue_amenities` | Applied 2026-08-10 |
 
-**Outstanding, and it is DDL — round 12's, and the code needs it.** The
-deployed application calls `create_booking` with `p_online`, which
-production's five-argument version does not accept. Booking breaks if the code
-ships first, so this lands before the deploy, not after:
+**~~Outstanding, and it is DDL — round 12's~~ — APPLIED and verified
+2026-08-21.** `create_booking` is at six arguments on production.
+
+**Outstanding, and it is round 23's — but NOTHING BREAKS WITHOUT IT.** The
+opposite of the round-12 case above, deliberately: the deployed code asks
+`app_capabilities()` whether the database can count "players met" and renders
+the old third tile when the answer is no. Applying it turns the new tile on
+with no deploy.
 
 ```
 node scripts/apply-migration.mjs \
-  supabase/migrations/20260821200000_online_payment_pending.sql --production
+  supabase/migrations/20260830100000_players_met.sql --production
 ```
+
+It will read **zero for everyone** until somebody marks games played — 25
+games on production have kicked off and are still `published` (ledger row 165).
+The number will be honest; it will just be zero.
 
 **Round 11's is applied and verified** (guests and parties), as is round 9's
 cover-key migration — both re-checked against the live catalog on 2026-08-20

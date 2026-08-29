@@ -51,16 +51,26 @@ test.describe("Stage 6 strips", () => {
         await page.screenshot({ path: path.join(OUT, `01-payment-choice-${locale}.png`) });
 
         // --- 2. claim confirmation, with the insufficient-credits offer ----
-        // The strip above captures the UNCHOSEN state, which is the one round 7
-        // item 10 introduced — so the selection happens after the screenshot.
-        //
-        // ONLINE, not cash: round 23 item 7 removed cash, and this player has
-        // no credit, so online is the only option there is. The redirect it
-        // performs is why the confirmation is reached through the booking id
-        // below rather than by waiting for a URL.
-        await page.getByTestId("pay-online-input").check();
-        await page.getByTestId("confirm-booking").click();
-        await page.waitForURL(/\/book\/confirmation/);
+        /*
+         * The strip above captures the UNCHOSEN state, which is the one round 7
+         * item 10 introduced — so the booking happens after the screenshot.
+         *
+         * THROUGH THE RAIL, NOT THE FORM (round 23, item 7). This player has
+         * no credit on purpose — the offer being photographed is the one shown
+         * to somebody who cannot pay with credit — and with cash gone the
+         * form's only remaining route for them is `online`, which redirects to
+         * a payment page and never renders the confirmation. The booking is
+         * created directly so the SCREEN is still what gets photographed.
+         */
+        const claimant = await apiClientFor(players.runner);
+        const { data: claimed } = await claimant.rpc("create_booking", {
+          p_game_id: open.id,
+          p_payment_method: "qr",
+        });
+        await page.goto(
+          `/game/${open.id}/book/confirmation?booking=${(claimed as unknown as { id: string }).id}`,
+          { waitUntil: "networkidle" },
+        );
         await settle();
         await expect(page.getByTestId("confirmation")).toBeVisible();
         await page.screenshot({

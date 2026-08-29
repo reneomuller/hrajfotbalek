@@ -56,11 +56,20 @@ test.describe("item 3 — the rebuilt profile", () => {
     // always present because `players.created_at` is NOT NULL.
     await expect(page.getByTestId("profile-meta")).toContainText(/since \w+ \d{4}/i);
 
-    // The three-up row, all three rendered — the owner's instruction was to
-    // drop any stat that was not derivable and say which. None were.
-    for (const key of ["games", "venues", "hours"]) {
+    /*
+     * THE THREE-UP ROW, ALL THREE RENDERED. The THIRD one is now "players met"
+     * where the database can count it and "pitches played" where it cannot
+     * (round 23, item 1) — this suite's database has the migration applied, so
+     * it is `met` here and would be `venues` on production until the owner
+     * runs it. Asserted as "three tiles, whichever third", because the tile
+     * that renders is a fact about the database and not about this page.
+     */
+    for (const key of ["games", "hours"]) {
       await expect(page.getByTestId(`profile-stat-${key}`)).toBeVisible();
     }
+    await expect(
+      page.locator('[data-testid="profile-stat-met"], [data-testid="profile-stat-venues"]'),
+    ).toHaveCount(1);
     // A number, not a blank or a dash. `runner` has history, so games > 0.
     const gamesPlayed = await page
       .getByTestId("profile-stat-games-value")

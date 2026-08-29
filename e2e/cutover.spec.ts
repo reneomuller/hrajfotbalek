@@ -27,7 +27,13 @@ test("the football namespace serves the home page, the list and a game", async (
 
   try {
     await page.goto("/football");
-    await expect(page.getByRole("link", { name: /find a game/i }).first()).toBeVisible();
+    /*
+     * ~~"Find a game", the hero's pill.~~ REMOVED in round 23 item 4, so the
+     * landing page's own proof-of-life is the games section it now leads with
+     * — which is a better one: the old assertion passed on a page whose games
+     * had failed to load.
+     */
+    await expect(page.getByTestId("next-matches-all")).toBeVisible();
 
     await page.goto("/football/games");
     await expect(page.getByRole("heading", { name: /upcoming games/i })).toBeVisible();

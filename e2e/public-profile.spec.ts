@@ -105,7 +105,7 @@ test("a guest, a shadow and a stranger all 404 the same way", async ({ page }) =
   }
 });
 
-test("the RPC is anon-callable and returns only the six columns", async () => {
+test("the RPC is anon-callable and returns only the stats columns", async () => {
   const { anonClient } = await import("./helpers/session");
   const anon = anonClient();
 
@@ -115,10 +115,16 @@ test("the RPC is anon-callable and returns only the six columns", async () => {
   expect(error).toBeNull();
 
   /*
-   * THE COMPOSITE IS THE BOUNDARY. Six keys, exactly — so a later edit to the
-   * page cannot leak a field, because the field never arrives from the
-   * database. Enumerated rather than spot-checked for the same reason the
-   * roster view's column list is.
+   * THE COMPOSITE IS THE BOUNDARY. Seven keys since round 23 item 1, and the
+   * ENUMERATION is the point rather than the count — a later edit to the page
+   * cannot leak a field, because the field never arrives from the database.
+   *
+   * `players_met` joined; nothing left. `venues` stays even though no tile
+   * renders it, because the Explorer badge is "play at 3 different pitches".
+   *
+   * AND MONEY IS STILL NOT ON THE LIST. The brief that added `players_met`
+   * believed a wallet balance was visible on this page; it never was, and this
+   * assertion is the reason it never can be.
    */
   expect(Object.keys(data as object).sort()).toEqual([
     "cover_path",
@@ -126,6 +132,7 @@ test("the RPC is anon-callable and returns only the six columns", async () => {
     "hours",
     "nickname",
     "photo_path",
+    "players_met",
     "venues",
   ]);
 });
