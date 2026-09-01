@@ -203,20 +203,26 @@ export async function InfoCard({
         )}
 
         {/*
-          SURFACE IS A ROW OF ITS OWN HERE, because it left the list card
+          ~~SURFACE IS A ROW OF ITS OWN HERE, because it left the list card
           (round 18, item 2). Two secondary pills beside the format badge is
           one more than a 390px row carries, and the card kept the one that
           decides whether somebody taps. The fact is not lost — this list has
-          room to state it in words.
+          room to state it in words.~~
+
+          REMOVED (round 24, item 7). The reasoning above was about the LIST
+          CARD and it is still right there — the surface pill is gone from the
+          card and belongs gone. What it did not notice is that the DETAIL
+          already says it twice: `CardBadges` in the Format row above renders
+          the surface as its own badge, in the same translated word, and then
+          this row said it again four pixels lower.
+
+          VERIFIED BEFORE REMOVING, in both shapes the card can take: a game
+          with a format renders `6v6` + `Turf` in the Format row, and a game
+          with NO format still renders `Grass` there — `CardBadges` draws the
+          surface whenever it has one, and the row's own condition already
+          fires on `surface` alone. So nothing is lost in either case, which is
+          the only question worth asking before deleting a fact.
         */}
-        {game.surface && (
-          <>
-            <dt className={FACT_LABEL}>{t.games.infoSurface}</dt>
-            <dd data-testid="game-surface-row" className="m-0 text-[15px] text-white">
-              {t.games.surface[game.surface]}
-            </dd>
-          </>
-        )}
 
         {game.allowed_skill_levels && (
           <>

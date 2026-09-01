@@ -1,4 +1,5 @@
 import { createServerSupabaseClient } from "@/lib/supabase/clients";
+import { isNotificationKind, type NotificationKind } from "@/lib/types/database";
 
 /**
  * The bell's data (round 7, item 5).
@@ -23,6 +24,13 @@ export interface NotificationRow {
   id: string;
   title: string;
   body: string;
+  /**
+   * The translation handle, when the product wrote this one (round 24, item
+   * 2). Null for an admin broadcast, and null on any database that predates
+   * `20260901110000_player_notifications` — in both cases `title`/`body` are
+   * the message, which is what they have always been.
+   */
+  kind: NotificationKind | null;
   createdAt: string;
   isRead: boolean;
 }
@@ -63,6 +71,7 @@ export async function getBellState(limit = 20): Promise<BellState> {
     id: string;
     title: string;
     body: string;
+    kind?: string | null;
     created_at: string;
     is_read: boolean;
   }[];
@@ -72,6 +81,13 @@ export async function getBellState(limit = 20): Promise<BellState> {
       id: row.id,
       title: row.title,
       body: row.body,
+      /*
+       * NARROWED, NOT CAST. A kind this build does not know about — a newer
+       * database, or a value someone added to the CHECK without adding the
+       * copy — falls back to `title`/`body` rather than rendering a blank
+       * notification, which is the failure a cast would produce silently.
+       */
+      kind: isNotificationKind(row.kind) ? row.kind : null,
       createdAt: row.created_at,
       isRead: row.is_read,
     })),

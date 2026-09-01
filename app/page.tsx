@@ -109,7 +109,18 @@ export default async function LandingPage() {
         {/* `pt-24` matches `/games` and the frames: p01 leaves ~40px between
             the header's hairline and the headline's cap line, and `pt-20`
             left 21. */}
-        <section className="flex flex-col pb-10 pt-24 text-center">
+        {/*
+          `pb-4`, NOT `pb-10` (round 24, item 4). Together with the `pt-nav`
+          below it, the distance from the slogan to the first game roughly
+          halves — 104px of stacked padding becomes 48.
+
+          IT IS TWO PADDINGS, WHICH IS WHY ONE OF THEM LOOKED FINE. This
+          section's bottom and the games block's top were each defensible
+          alone; the space between them is their sum, and nothing named it. The
+          hero also lost its own CTA in round 23, so `pb-10` was sized for a
+          button that is no longer there.
+        */}
+        <section className="flex flex-col pb-4 pt-24 text-center">
           <div className="flex flex-col items-center justify-center">
             {/*
               THE SLOGAN IS THE HERO, AND IT TRANSLATES (round 13, item 2).
@@ -236,20 +247,34 @@ export default async function LandingPage() {
           as a page. With the hero sized to its content there is nothing left
           to pad against — the sections simply follow one another.
         */}
-        <div id="next-match" className="flex flex-col pt-nav">
+        {/*
+          `pt-8`, NOT `pt-nav` (round 24, item 4). `nav` is 64px and names the
+          height of the tab bar — it was borrowed here as a round number, and
+          the games do not sit under the nav.
+        */}
+        <div id="next-match" className="flex flex-col pt-8">
           <section className="pb-3 pt-[10px]">
             <div className="mb-[14px] flex items-baseline gap-3">
               <div className="text-[10px] tracking-eyebrow text-volt-dim">
                 {landing.nextMatchEyebrow}
               </div>
               {/*
-                UPPERCASE AND `page-title` (p01), which makes this heading the
-                twin of `/games`'s `UPCOMING GAMES` rather than a smaller
-                sentence-case cousin. Both frames draw the same 32px Anton
-                caps, and the two headings name the same content on two
-                surfaces.
+                `text-community-title`, NOT `text-page-title` (round 24, item 3).
+
+                ~~The twin of `/games`'s UPCOMING GAMES — both frames draw the
+                same 32px Anton caps, and the two headings name the same
+                content on two surfaces.~~ That reasoning compared this heading
+                to one on ANOTHER PAGE, where nothing sits beside it. Round 23
+                moved the games section up the home page, and it now shares a
+                column with JOIN OUR COMMUNITY and QUESTIONS — which are
+                `community-title`. Three headings on one page at two sizes read
+                as one of them being a mistake.
+
+                The `/games` heading is untouched: it is still a page title on a
+                page it titles. This one stopped being that when it stopped
+                being alone.
               */}
-              <h2 className="m-0 font-display text-page-title uppercase tracking-wide text-white">
+              <h2 className="m-0 font-display text-community-title uppercase tracking-wide text-white">
                 {landing.nextMatchesLabel}
               </h2>
             </div>

@@ -105,6 +105,71 @@ export default async function AdminGamePage({
         {strings.games.backToGames}
       </Link>
 
+      {/*
+        AN UNMISTAKABLE PUBLISHED STATE (round 24, item 5), and it is the
+        SIBLING of the booking confirmation rather than a new idea: the same
+        volt panel, the same 2px border, the same tick in a volt disc, the same
+        display face. A player who pays and an organizer who publishes are both
+        being told "the thing you just did worked", and the product should say
+        it the same way twice.
+      */}
+      {/*
+        NOT A TOAST, WHICH THE ITEM ASKS FOR EXPLICITLY AND CLAUDE.md AGREES
+        WITH. A toast is rendered from a client result and can be unmounted by
+        the revalidation that follows the action — the codebase has a rule
+        about exactly this ("client-state success markers do not survive
+        `revalidatePath`"). This is server-rendered from the URL the redirect
+        landed on, so it is still there when the page settles, and it survives
+        a refresh.
+
+        IT RIDES `?created=1`, which already existed for the notify offer and
+        already means "you arrived here by publishing this". No new parameter,
+        and the two things that should appear together do.
+      */}
+      {justCreated && game.status !== "cancelled" && (
+        <div
+          data-testid="game-published"
+          className="mt-4 flex flex-wrap items-center gap-3 rounded-card border-2 border-volt bg-volt/[.08] px-5 py-4"
+        >
+          <span
+            aria-hidden="true"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-pill bg-volt text-[20px] font-bold leading-none text-ink"
+          >
+            ✓
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block font-display text-title uppercase leading-none tracking-wide text-volt">
+              {strings.admin.gamePublishedTitle}
+            </span>
+            <span className="mt-1 block text-[13px] leading-snug text-bone">
+              {strings.admin.gamePublishedBody}
+            </span>
+          </span>
+
+          {/*
+            TWO WAYS OUT, because there are exactly two things anyone does
+            next: look at what the players will see, or make another game.
+            Both at the 44px floor.
+          */}
+          <span className="flex flex-wrap items-center gap-2">
+            <Link
+              href={`/game/${game.id}`}
+              data-testid="published-view-game"
+              className="inline-flex min-h-11 items-center rounded-control bg-volt px-4 text-[13px] font-bold uppercase tracking-wide text-ink no-underline"
+            >
+              {strings.admin.gamePublishedViewGame}
+            </Link>
+            <Link
+              href="/admin/games"
+              data-testid="published-back-to-admin"
+              className="inline-flex min-h-11 items-center rounded-control border border-hairline-strong px-4 text-[13px] font-bold uppercase tracking-wide text-bone no-underline"
+            >
+              {strings.admin.gamePublishedBackToAdmin}
+            </Link>
+          </span>
+        </div>
+      )}
+
       <div className="mt-4 flex flex-wrap items-baseline justify-between gap-3">
         {/* Free text, escaped by JSX. */}
         <h2 className="m-0 text-[22px] font-bold uppercase tracking-wide text-white">

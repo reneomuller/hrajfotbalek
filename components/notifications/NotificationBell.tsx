@@ -188,9 +188,21 @@ export function NotificationBell({
                       data-testid="notification-item"
                       className="border-b border-hairline py-3 last:border-b-0 last:pb-0"
                     >
-                      <div className="text-body font-semibold text-white">{item.title}</div>
+                      {/*
+                        THE READER'S LANGUAGE, NOT THE WRITER'S (round 24,
+                        item 2). A notification the PRODUCT wrote carries a
+                        `kind` and its copy comes out of the string table here,
+                        so the same row reads Czech to a Czech reader and
+                        Ukrainian to a Ukrainian one. A notification an ADMIN
+                        wrote carries no kind and renders exactly as typed —
+                        a human chose those words in a language they meant,
+                        and translating them was never on offer.
+                      */}
+                      <div className="text-body font-semibold text-white">
+                        {item.kind ? t.notifications.kinds[item.kind].title : item.title}
+                      </div>
                       <p className="m-0 mt-1 text-small leading-snug text-muted">
-                        {item.body}
+                        {item.kind ? t.notifications.kinds[item.kind].body : item.body}
                       </p>
                     </li>
                   ))}

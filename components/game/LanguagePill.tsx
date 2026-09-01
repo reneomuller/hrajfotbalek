@@ -2,32 +2,42 @@ import { FlagCZ, FlagGB, FlagRU, FlagUA } from "@/components/flags/Flags";
 import type { GameLanguage } from "@/lib/games/language";
 
 /**
- * The two flags of a game's language — and the flags ARE the pill (round 19,
- * item 1).
+ * The two flags of a game's language — TWO CIRCLES, side by side (round 24,
+ * item 6).
  *
- * ONE CONSTRUCTION, EVERYWHERE. Round 18 shipped two: a bordered chip holding
- * two 16x8 flags on the list card, and a filled box holding two 26x30 flags on
- * the detail. They were different sizes and the second was distorted — a 2:1
- * drawing forced into a nearly-square half. This has no variants, so the card
- * and the detail cannot disagree about what a language looks like.
+ * THE THIRD CONSTRUCTION, AND THE LINEAGE IS THE POINT:
  *
- * NO PILL CHROME. There is no border, no fill and no padding of its own: two
- * flags side by side, a hairline between them, and the outer corners clipped
- * to the pill radius. What the reader sees is the flags.
+ *   ROUND 18 — two of them at once. A bordered chip holding two 16×8 flags on
+ *     the list card, and a filled box holding two 26×30 flags on the detail.
+ *     Different sizes, and the second distorted: a 2:1 drawing forced into a
+ *     nearly-square half.
  *
- * THE HEIGHT COMES FROM `.badge-pill`, WHICH IS WHY IT IS STILL HERE. That
- * class's height is TEXT-driven — `text-small` at `py-[6px]` inside a 2px
- * border computes to 34.19px — and this element has no text. So it keeps the
- * class purely as a height scaffold: `border-transparent` and `px-0` remove
- * everything visible, an invisible zero-width space establishes the same line
- * box the badges get from their words, and the flags fill the border box as an
- * absolute layer. The pill measures exactly what a badge measures because it
- * is built the same way — no hardcoded 34.19 pinning a font metric into a
- * class name, and no `self-stretch` that only works next to a badge.
+ *   ROUND 19 — one split pill. The flags WERE the pill: two halves of a single
+ *     capsule with a hairline between them, `slice`-cropped, the height taken
+ *     from `.badge-pill` so it matched the badges beside it. It fixed the
+ *     distortion and the disagreement, and the shape it produced was a capsule
+ *     cut down the middle — which reads as one object showing two states
+ *     rather than as two languages.
  *
- * `slice` ON THE FLAGS, not stretch. Each half is about 26x34; a 2:1 drawing
- * covers it and crops, which is the only way to keep a flag's proportions in a
- * box that is not its shape.
+ *   ROUND 24 — two circles. Two languages are two things, and two marks say so
+ *     where a divided one does not. It is also the shape a flag wants: a
+ *     roundel is how every scoreboard in the world draws one.
+ *
+ * THE HEIGHT DOES NOT MOVE, and that is the constraint that made this a
+ * redraw rather than a redesign. `.badge-pill` computes to 34.19px from
+ * `text-small` at `py-[6px]` inside a 2px border, and the pill borrowed that
+ * class purely as a height scaffold. The circles keep the same number by
+ * measuring it once — `CIRCLE_PX` — so the row beside the format badge is
+ * unchanged and no caller has to know anything moved.
+ *
+ * BOTH CIRCLES ARE IDENTICAL AND THE SIZE IS PINNED IN CODE, because round
+ * 18's bug was two flags that were meant to match and did not. A square box
+ * with a 50% radius cannot drift into an oval, and `shrink-0` stops a flex
+ * parent from squeezing one of them.
+ *
+ * `slice` ON THE FLAGS, not stretch: a 2:1 drawing covers a square and crops,
+ * which is the only way to keep a flag's proportions in a box that is not its
+ * shape. The crop is centred, so every flag shows its middle band.
  *
  * ARIA: every flag is hidden. On the detail the row's own `<dt>` says
  * "Language"; on the card the pill sits in a row that already names the game.
@@ -39,14 +49,20 @@ const PAIRS = {
 } as const;
 
 /**
- * The pill's outer width.
+ * One circle's diameter, and the height of the whole control.
  *
- * `.badge-pill` carries a 2px border, and Tailwind's `box-border` means that
- * border eats into this number — so the two halves and their divider share
- * `PILL_WIDTH_PX - 4`. Stated as the OUTER width because that is what sits
- * next to the format badge and what a spec measures.
+ * 34px is `.badge-pill`'s computed height (34.19px, rounded down so a circle
+ * never out-measures the badge it sits beside). Pinned as a number rather than
+ * inherited from the class, because the class's height comes from a FONT
+ * METRIC and this element has no text — round 19 solved that with an
+ * invisible zero-width space, which worked and left the control's size
+ * depending on a character nobody could see.
  */
-const PILL_WIDTH_PX = 57;
+const CIRCLE_PX = 34;
+
+/** The space between them. Narrow enough to read as a pair, wide enough to
+ *  read as two. */
+const GAP_PX = 4;
 
 export function LanguagePill({ language }: { language: GameLanguage }) {
   const [First, Second] = PAIRS[language];
@@ -55,42 +71,31 @@ export function LanguagePill({ language }: { language: GameLanguage }) {
     <span
       data-testid="language-pill"
       data-language={language}
-      className="badge-pill relative overflow-hidden border-transparent px-0"
-      style={{ width: PILL_WIDTH_PX }}
+      className="inline-flex items-center"
+      style={{ gap: GAP_PX }}
     >
-      {/* Sizes the line box, so the height tracks `text-small`. */}
-      <span aria-hidden>&#8203;</span>
-
-      <span className="absolute inset-0 flex">
-        {/*
-          `flex-1`, NOT A FIXED WIDTH. Two equal shares of whatever the border
-          box leaves is a guarantee; two 26px halves inside a box that turned
-          out to be 49px wide is an arithmetic coincidence that flexbox quietly
-          corrects — which is how round 18 shipped flags at 24.05px while the
-          code said 26.
-        */}
+      {[First, Second].map((Flag, index) => (
         <span
+          key={index}
           data-testid="language-pill-half"
-          className="relative flex-1 overflow-hidden"
-        >
-          <First cover className="absolute inset-0 h-full w-full" />
-        </span>
+          /*
+            `overflow-hidden` plus `rounded-full` is what makes the crop
+            circular: the flag is a rectangle filling the box, and the box
+            clips it. A border-radius on the SVG itself would not clip its
+            children.
 
-        {/*
-          THE DIVIDER, AND IT IS `ink` RATHER THAN A HAIRLINE TOKEN.
-          `hairline-strong` is white at .14, which vanishes on the white half
-          of the Czech and Russian flags — the two places a divider has to
-          work. A dark line reads on all four.
-        */}
-        <span aria-hidden data-testid="language-pill-divider" className="w-px bg-ink/70" />
-
-        <span
-          data-testid="language-pill-half"
-          className="relative flex-1 overflow-hidden"
+            A HAIRLINE RING, and it is `ink` rather than a hairline token for
+            round 19's reason: `hairline-strong` is white at .14 and vanishes
+            on the white band of the Czech and Russian flags, which are two of
+            the four this has to work on. A dark ring reads on all four and
+            separates the circle from a photograph behind it.
+          */
+          className="relative shrink-0 overflow-hidden rounded-full ring-1 ring-inset ring-ink/70"
+          style={{ width: CIRCLE_PX, height: CIRCLE_PX }}
         >
-          <Second cover className="absolute inset-0 h-full w-full" />
+          <Flag cover className="absolute inset-0 h-full w-full" />
         </span>
-      </span>
+      ))}
     </span>
   );
 }

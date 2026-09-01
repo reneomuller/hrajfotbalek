@@ -1439,6 +1439,18 @@ export const strings = {
     notifyBodyRequired: "A message is required.",
     /* Drafts offered after an admin action. `{name}` and `{when}` are filled
        from the row that was just written. */
+    /*
+     * THE PUBLISH CONFIRMATION (round 24, item 5) — the admin sibling of
+     * `booking.bookingConfirmed`.
+     *
+     * ENGLISH ONLY, and that is the standing law rather than an omission: the
+     * admin panel is one person's surface and `lib/i18n/__tests__` actively
+     * forbids translating outside the player-facing sections.
+     */
+    gamePublishedTitle: "GAME PUBLISHED",
+    gamePublishedBody: "It is on the board and bookable now.",
+    gamePublishedViewGame: "View game",
+    gamePublishedBackToAdmin: "Back to games",
     notifyDraftGameTitle: "New game published",
     notifyDraftGameBody: "{name} — {when}. Claim your spot.",
     notifyDraftVenueTitle: "A new pitch has been added",
@@ -2274,6 +2286,34 @@ export const strings = {
     bellLabel: "Notifications",
     title: "Notifications",
     empty: "Nothing yet.",
+    /*
+     * COPY THE PRODUCT WROTE, keyed by `notifications.kind` (round 24, item 2).
+     *
+     * These are the notifications with no human author, so they are the only
+     * ones that CAN be translated — an admin broadcast is free text somebody
+     * typed in the language they meant. The bell picks the reader's language
+     * at render time, which is how a per-player message works without a
+     * `players.locale` column.
+     *
+     * FIRM BUT FAIR, AND THAT IS THE WHOLE BRIEF FOR THE WORDING. A no-show
+     * costs somebody else a game: the person on the waitlist who was never
+     * called up. The message says that and says what to do instead. It does
+     * not threaten a consequence the product cannot deliver — there is no ban,
+     * no strike count, no fee — because a warning that bluffs is one a regular
+     * learns to ignore.
+     */
+    kinds: {
+      no_show_warning: {
+        title: "You were marked as a no-show",
+        body:
+          "You had a spot and did not turn up, so nobody on the waitlist got it. " +
+          "Cancel in advance next time — the spot goes straight back to them.",
+      },
+      no_show_cleared: {
+        title: "That no-show was removed",
+        body: "The organizer corrected the roster. Nothing is held against you.",
+      },
+    },
   },
 
   common: {

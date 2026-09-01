@@ -54,11 +54,37 @@ export type ClientPaymentMethod = Extract<PaymentMethod, "qr" | "cash">;
 
 export type AttendanceStatus = "present" | "no_show";
 
+/**
+ * The generated notifications the bell renders in the READER's language.
+ *
+ * A stored sentence can only be in one language and this product has four, so
+ * a system-written notification carries a KIND instead and the copy comes out
+ * of the string table at read time (round 24, item 2). `title`/`body` remain
+ * the literal text of an admin broadcast, which a human wrote in the language
+ * they meant.
+ */
+export const NOTIFICATION_KINDS = ["no_show_warning", "no_show_cleared"] as const;
+
+export type NotificationKind = (typeof NOTIFICATION_KINDS)[number];
+
+export function isNotificationKind(value: unknown): value is NotificationKind {
+  return (
+    typeof value === "string" &&
+    (NOTIFICATION_KINDS as readonly string[]).includes(value)
+  );
+}
+
 /** One row of `my_notifications` (round 7, item 5). */
 export interface NotificationRow {
   id: string;
   title: string;
   body: string;
+  /**
+   * OPTIONAL IN THE TYPE, because the column arrives with
+   * `20260901110000_player_notifications` and the deployed application has to
+   * run against both shapes. Unknown or absent means "render title and body".
+   */
+  kind?: string | null;
   created_at: string;
   is_read: boolean;
 }
@@ -1041,6 +1067,35 @@ export interface Database {
       players_met: {
         Args: { p_player_id: string };
         Returns: number;
+      };
+      /**
+       * Advances kicked-off games to `played` after duration + a buffer.
+       *
+       * ABSENT before `20260901100000_advance_played_games`, which is why the
+       * cron route asks `app_capabilities().playedSweep` before calling it.
+       * Returns how many games it moved. It refuses to commit if the credit
+       * ledger or any live booking changed while it ran.
+       */
+      advance_played_games: {
+        Args: { p_buffer_minutes?: number };
+        Returns: number;
+      };
+      /**
+       * One addressed notification. Admin or service role only.
+       *
+       * ABSENT before `20260901110000_player_notifications`. `p_kind` is the
+       * translation handle the bell renders from; `p_title`/`p_body` are the
+       * English fallback stored alongside it.
+       */
+      notify_player: {
+        Args: {
+          p_player_id: string;
+          p_title: string;
+          p_body: string;
+          p_kind?: string | null;
+          p_booking_id?: string | null;
+        };
+        Returns: string;
       };
       set_game_guests: {
         Args: { p_game_id: string; p_count: number };

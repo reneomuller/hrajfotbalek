@@ -174,9 +174,20 @@ test("the card carries the language pill where the surface pill used to be", asy
       "the surface pill is back on the list card",
     ).toHaveCount(0);
 
-    // …and is on the detail, in words.
+    /*
+     * …and is on the detail — IN THE FORMAT ROW, not in a row of its own
+     * (round 24, item 7). The standalone `Surface` row said the same
+     * translated word four pixels below the badge that already said it. The
+     * assertion inverts rather than disappearing: the fact must still be on
+     * the page, and the duplicate must not.
+     */
     await page.goto(`/game/${game.id}`, { waitUntil: "networkidle" });
-    await expect(page.getByTestId("game-surface-row")).toBeVisible();
+    const info = page.getByTestId("game-info-card");
+    await expect(info.getByTestId("game-surface")).toBeVisible();
+    await expect(
+      page.getByTestId("game-surface-row"),
+      "the duplicate Surface row is back",
+    ).toHaveCount(0);
 
     /*
      * THE PILL SITS BESIDE THE FORMAT BADGE, on one baseline. Measured rather
@@ -232,21 +243,13 @@ test("a Ukrainian/Russian game shows the filled pill and offers Telegram", async
     await expect(pill).toHaveAttribute("data-language", "uk-ru");
 
     /*
-     * ONE CONSTRUCTION, BOTH SURFACES (round 19, item 1). Round 18 shipped two
-     * — a bordered chip on the card and a filled box on the detail — at
-     * different sizes, the second distorted. There is no `variant` any more,
-     * and the card's flags are measured against these in `round18-surfaces`.
-     */
-
-    /*
-     * HALF AND HALF, MEASURED. "A filled pill split half/half" is a geometric
-     * claim, and the only way to check it is to compare the two halves.
-     */
-    /*
-     * MEASURED ON THE TWO FLAG CELLS, not on the pill's children. The pill
-     * also contains an invisible zero-width space that gives it the badges'
-     * line box — reading `children` would compare a 0px sizer against a 52px
-     * layer and report a perfectly even split as wildly uneven.
+     * ONE CONSTRUCTION, BOTH SURFACES (round 19, item 1) — still true, and now
+     * TWO CIRCLES rather than one split capsule (round 24, item 6).
+     *
+     * TWO CIRCLES, IDENTICAL, MEASURED. "Both circles identical size,
+     * spec-pinned" is a geometric claim and the only way to check it is to
+     * measure both — round 18's bug was two flags meant to match that did not,
+     * and it shipped because nothing compared them.
      */
     const halves = await pill.evaluate((el) => {
       const cells = [...el.querySelectorAll("svg")].map((svg) =>
@@ -255,10 +258,20 @@ test("a Ukrainian/Russian game shows the filled pill and offers Telegram", async
       return {
         a: cells[0]!.width,
         b: cells[1]!.width,
+        aH: cells[0]!.height,
+        bH: cells[1]!.height,
+        radius: parseFloat(getComputedStyle(cells[0]!.width ? (el.querySelector("svg")!.parentElement as HTMLElement) : el).borderTopLeftRadius),
         h: el.getBoundingClientRect().height,
       };
     });
-    expect(Math.abs(halves.a - halves.b), "the pill is not split evenly").toBeLessThan(1.5);
+    expect(Math.abs(halves.a - halves.b), "the two circles are different widths").toBeLessThan(1.5);
+    expect(Math.abs(halves.aH - halves.bH), "the two circles are different heights").toBeLessThan(1.5);
+    // ROUND. A square with a 50% radius, so the radius is half the side —
+    // which is what separates "two circles" from "two small squares".
+    expect(Math.abs(halves.a - halves.aH), "a circle is not square").toBeLessThan(1.5);
+    expect(halves.radius, "the flags are not clipped to circles").toBeGreaterThanOrEqual(
+      halves.a / 2 - 1,
+    );
 
     // Same height as the badges it sits among (item 3).
     const badgeHeight = await page

@@ -679,6 +679,18 @@ export const cs: StringsOverlay = {
     bellLabel: "Oznámení",
     title: "Oznámení",
     empty: "Zatím nic.",
+    kinds: {
+      no_show_warning: {
+        title: "Byl jsi označen jako neúčast",
+        body:
+          "Měl jsi místo a nedorazil jsi, takže ho nikdo z čekací listiny nedostal. " +
+          "Příště zruš rezervaci předem — místo se jim hned vrátí.",
+      },
+      no_show_cleared: {
+        title: "Neúčast byla zrušena",
+        body: "Organizátor opravil soupisku. Nic se ti nepočítá.",
+      },
+    },
   },
 
   common: {

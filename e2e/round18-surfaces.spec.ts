@@ -285,8 +285,21 @@ test("the language pill is identical on the card and the detail", async ({
           pill: Math.round(pill.getBoundingClientRect().height * 100) / 100,
           badge: Math.round(badge.height * 100) / 100,
           flags,
-          divider: pill.querySelector('[data-testid="language-pill-divider"]') !== null,
-          radius: parseFloat(getComputedStyle(pill).borderTopLeftRadius),
+          /*
+             ~~`divider`~~ — the split capsule's hairline. Round 24 item 6
+             replaced it with two separate circles, so there is nothing between
+             them to measure; what replaced the claim is `circles` below.
+          */
+          circles: [...pill.querySelectorAll('[data-testid="language-pill-half"]')].map(
+            (c) => {
+              const b = c.getBoundingClientRect();
+              return {
+                w: Math.round(b.width * 100) / 100,
+                h: Math.round(b.height * 100) / 100,
+                radius: parseFloat(getComputedStyle(c).borderTopLeftRadius),
+              };
+            },
+          ),
         };
       }, sel);
     }
@@ -324,15 +337,39 @@ test("the language pill is identical on the card and the detail", async ({
       .evaluate((el) => el.getAttribute("preserveAspectRatio"));
     expect(drawn, "the flags are being stretched to fit").toContain("slice");
 
-    // --- the pill is the flags ---------------------------------------------
-    expect(onCard.divider, "the divider between the flags is gone").toBe(true);
-    expect(onCard.radius, "the pill's corners are not rounded").toBeGreaterThan(8);
+    /*
+     * --- TWO CIRCLES, NOT ONE SPLIT CAPSULE (round 24, item 6) -------------
+     *
+     * The assertion inverts rather than disappearing. Round 19's claim was
+     * "one pill, one divider, rounded ends"; this round's is "two marks, each
+     * round, both the same" — two languages are two things, and the divided
+     * capsule read as one object showing two states.
+     */
+    expect(onCard.circles, "there are not exactly two circles").toHaveLength(2);
+    expect(
+      onCard.circles[0],
+      "the two circles are not identical — the round-18 bug, in a new shape",
+    ).toEqual(onCard.circles[1]);
+    for (const circle of onCard.circles) {
+      expect(Math.abs(circle.w - circle.h), "a circle is not square").toBeLessThan(0.5);
+      expect(
+        circle.radius,
+        "the flags are not clipped to circles",
+      ).toBeGreaterThanOrEqual(circle.w / 2 - 0.5);
+    }
 
-    // --- and it matches the format badge it sits beside --------------------
+    /*
+     * --- AND THE HEIGHT DID NOT MOVE ---------------------------------------
+     *
+     * The constraint that made item 6 a redraw rather than a redesign: "same
+     * vertical dimensions as the current pill". The badge beside it is the
+     * fixed point, so measuring against the badge measures both claims at
+     * once.
+     */
     expect(
       Math.abs(onCard.pill - onCard.badge),
-      "the pill is not the same height as the format badge",
-    ).toBeLessThan(0.5);
+      "the language mark is no longer the same height as the format badge",
+    ).toBeLessThan(1);
   } finally {
     await destroyScratchGame(game.id);
   }
