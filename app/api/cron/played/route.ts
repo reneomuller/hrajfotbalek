@@ -22,11 +22,18 @@ export const dynamic = "force-dynamic";
  * if either moved. A later round that hangs money off `mark_game_played` will
  * fail this sweep loudly rather than pay people quietly.
  *
- * HOURLY, WHERE THE OTHER FOUR ARE DAILY. The threshold is kickoff + duration
- * + a two-hour buffer, and the buffer is for the GAME rather than for the
- * schedule — so a daily sweep would leave a Tuesday-evening game `published`
- * until Wednesday morning, and a player checking their profile after the match
- * would see the same zero this item exists to remove.
+ * ~~HOURLY.~~ DAILY AT 05:30, AND THE PLAN DECIDED THAT RATHER THAN THE
+ * DESIGN. Hourly was written, and Vercel refused the deploy: "Hobby accounts
+ * are limited to daily cron jobs." So the schedule is the one the account
+ * allows, placed after the other four sweeps so a booking expired or nudged
+ * that morning is already resolved before games advance past it.
+ *
+ * WHAT IT COSTS, STATED RATHER THAN GLOSSED: a game that kicks off at 20:00
+ * reads `published` for about nine hours afterwards, and a player who opens
+ * their profile that night still sees the old number. The buffer is for the
+ * GAME (a fixture that runs long, or one whose `duration_minutes` is null and
+ * is assumed to be an hour when it was ninety); this latency is for the plan,
+ * and it is one line to remove on Pro.
  *
  * IDEMPOTENT BY CONSTRUCTION. `mark_game_played` refuses any status other than
  * `published`/`full`, so a second run in the same window selects the same rows
