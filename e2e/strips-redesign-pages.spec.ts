@@ -183,9 +183,21 @@ test("the games and home headings are set at the frames' size", async ({ page, c
 
   /*
    * ~~["games", "/games", "h1"]~~ — the games heading was removed in round 13
-   * item 16. Home's `h2` carries the same token and is the one that remains.
+   * item 16. ~~Home's `h2` carries the same token and is the one that
+   * remains.~~
+   *
+   * HOME'S HEADING LEFT THE TOKEN TOO (round 24, item 3). "Upcoming matches"
+   * is `community-title` now, because round 23 moved the games up the page and
+   * it came to sit beside JOIN OUR COMMUNITY and FAQ — three headings in one
+   * column at two sizes read as one of them being a mistake. Its new size is
+   * asserted in `round24.spec.ts`, against its neighbours, which is the claim
+   * that actually matters there.
+   *
+   * SO THIS FOLLOWS THE TOKEN RATHER THAN THE PAGE. R28's 27.3px still governs
+   * nine headings; `/pass` is the player-facing one, and it is the one that
+   * would silently drift if somebody edited the clamp.
    */
-  for (const [where, url, selector] of [["home", "/", "h2"]] as const) {
+  for (const [where, url, selector] of [["pass", "/pass", "h1"]] as const) {
     await page.goto(url, { waitUntil: "networkidle" });
     await settle(page);
     const size = await page

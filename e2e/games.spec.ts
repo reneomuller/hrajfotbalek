@@ -1240,9 +1240,24 @@ test("the detail carries arrival and duration, with equipment in the venue grid"
       const out: string[] = [];
       list.querySelectorAll("dt").forEach((term) => {
         const value = term.nextElementSibling;
-        if (!value || value.tagName !== "DD" || (value.textContent ?? "").trim() === "") {
-          out.push((term.textContent ?? "").trim());
-        }
+        /*
+         * A DEFINITION CAN BE DRAWN RATHER THAN WRITTEN (round 24, item 6).
+         *
+         * This read `textContent` alone, which was right while every value was
+         * a word — and the Language row's value is two flags. It passed
+         * anyway until this round because round 19's split pill carried an
+         * invisible zero-width space to size its line box, so the row had
+         * "text" nobody could see. The circles have none, and the check
+         * started calling a rendered flag an empty definition.
+         *
+         * An element child IS a value; a `<dd>` with neither text nor children
+         * is the "Meeting point: —" problem this exists to catch.
+         */
+        const empty =
+          !value ||
+          value.tagName !== "DD" ||
+          ((value.textContent ?? "").trim() === "" && value.children.length === 0);
+        if (empty) out.push((term.textContent ?? "").trim());
       });
       return out;
     });
