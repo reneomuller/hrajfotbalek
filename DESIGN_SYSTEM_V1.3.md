@@ -1920,3 +1920,115 @@ that does not cover would have produced an unpaid `cash` booking on a product
 that no longer takes cash — a form disables the radio, and a form is not an
 enforcement. The action refuses it server-side, as does the waitlist
 conversion.
+
+---
+
+## R42 — A game becomes PLAYED by the clock, and by nothing else
+
+**RECORDED round 24, item 1.** A game advances to `played` at kickoff +
+duration + a two-hour buffer, swept hourly. Ledger row 165 is why: nothing
+called `mark_game_played` except an admin on the attendance screen, so 28 games
+sat kicked-off and `published` — the oldest by a month — and every derived
+number in the product read zero for every player, with the code correct in each
+case.
+
+**THE BUFFER IS FOR THE GAME, NOT FOR THE SCHEDULE.** A fixture that runs long,
+or one whose `duration_minutes` is null and is therefore assumed to be an hour
+when it was ninety minutes, must not be marked finished while people are still
+on the pitch.
+
+### What auto-advancing touches, read before it was built
+
+This is the round-14 lesson applied on purpose: a state transition is never
+only a state transition.
+
+| Function | Gated on game status? | Consequence |
+|---|---|---|
+| `confirm_booking` | **No** — checks the booking only | **The one that mattered.** Gated, auto-advance would have stranded every unpaid hold and made `settle_game` permanently impossible, because settling refuses while any `reserved` booking remains |
+| `mark_attendance` | **No** | Attendance stays markable and re-markable afterwards, which the item requires and which needed no work |
+| `cancel_booking` | `published`/`full` **and** `starts_at > now()` | Untouched: the clock closed that door hours before the sweep can fire |
+| `settle_game` | requires `played` | Now reachable automatically — and still refuses while holds remain, and still moves no money |
+| `cancel_game` | `draft`/`published`/`full` | **The one behaviour that changes.** See below |
+
+**`cancel_game` CLOSES, AND IT IS REPORTED RATHER THAN WORKED AROUND.** Bulk-
+cancelling a game that already happened and crediting everyone on it — possible
+today on all 28 stale games — stops being possible about two hours after
+kickoff. Cancelling a game that has already been played is arguably not a thing
+the product should offer, and the per-player remedy survives untouched in
+`admin_remove_booking`. If the owner wants the bulk remedy back it is one status
+added to one list; that is a decision, not a bug. Ledger row 176.
+
+### Nothing money-shaped fires, and the sweep proves it rather than saying it
+
+**SETTLING REMAINS AN EXPLICIT ADMIN ACT.** The sweep does not call
+`settle_game`, does not mark attendance and does not touch the ledger.
+
+That is a claim that decays — `mark_game_played` moves no money *today*, and a
+later round could hang a trigger off it without ever reading this file. So the
+sweep **measures**: it counts `credit_ledger` rows and live bookings before and
+after its loop and aborts the whole transaction if either moved. A future
+coupling between played-state and money fails the cron loudly instead of paying
+people quietly.
+
+---
+
+## R43 — A notification can be addressed, and it speaks the reader's language
+
+**RECORDED round 24, item 2**, closing ledger row 89 after twelve rounds. The
+bell's store gained `recipient_id`, `booking_id` and `kind` — all nullable, so
+**every existing row keeps meaning exactly what it meant**: NULL recipient is a
+broadcast, which is what all of them are.
+
+**`kind` IS THE INTERESTING ONE.** There is no `players.locale` — the reader's
+language is a cookie, a fact about a browser rather than about a person — so a
+stored sentence can only ever be in one language and this product has four. A
+kind is a translation handle: the row stores English for legibility in psql,
+and the bell renders the reader's own copy from `lib/strings.ts` at read time.
+The same row is Czech to a Czech reader and Ukrainian to a Ukrainian one.
+
+**AN ADMIN BROADCAST KEEPS ITS OWN WORDS.** It has no kind, so `title`/`body`
+render literally — a human chose those words in a language they meant, and
+translating them was never on offer.
+
+### The no-show warning, and what it deliberately does not say
+
+Marking a player absent writes **one** addressed notification. Re-marking writes
+nothing: only transitions speak, or an organizer tidying a roster fills somebody's
+bell with the same sentence five times.
+
+**REVERSING DELETES IT.** The warning is removed and a correction takes its
+place — a retraction that leaves the accusation in the list is not a retraction,
+and a player who already read the first one has no way to know it was withdrawn.
+
+**FIRM BUT FAIR MEANS NAMING THE COST, NOT THREATENING ONE.** The copy says a
+spot went unused and somebody on the waitlist did not get it, and says what to
+do instead. It threatens no ban, no strike count and no fee, because the product
+has none of those — and a warning that bluffs is one a regular learns to ignore.
+
+**NO EMAIL, and not by omission.** Email has no per-player language either, and
+a no-show warning is precisely the message that must not arrive in the wrong
+one.
+
+---
+
+## R44 — The language pair is TWO CIRCLES (the third construction)
+
+**REDRAWN round 24, item 6.** The lineage matters because this is the third
+answer to the same question:
+
+| Round | Construction | Why it moved |
+|---|---|---|
+| 18 | Two at once — a bordered chip with 16×8 flags on the card, a filled box with 26×30 flags on the detail | Different sizes, and the second **distorted**: a 2:1 drawing forced into a nearly-square half |
+| 19 | One split capsule — the flags WERE the pill, halves divided by a hairline, height borrowed from `.badge-pill` | Fixed the distortion and the disagreement. The shape it produced was a capsule cut down the middle, which reads as **one object showing two states** |
+| 24 | Two separate circles | Two languages are two things, and two marks say so. It is also the shape a flag wants — a roundel is how every scoreboard draws one |
+
+**THE HEIGHT DOES NOT MOVE**, which is what made this a redraw rather than a
+redesign: the circles are pinned to 34px, `.badge-pill`'s computed height, and
+the spec asserts the mark against the format badge beside it. Round 19 got that
+height from an invisible zero-width space sizing a line box; the diameter is a
+number now, because a control's size should not depend on a character nobody
+can see.
+
+**BOTH CIRCLES ARE MEASURED AGAINST EACH OTHER**, in both specs. Round 18's bug
+was two flags that were meant to match and did not, and it shipped because
+nothing compared them.
