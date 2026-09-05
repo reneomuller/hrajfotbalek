@@ -210,6 +210,18 @@ test("a payment that lands after the game filled is credited in full, not seated
     const admin = serviceClient();
     await setWalletTo(players.creditRich.id, 0);
 
+    /*
+     * COUNTED BEFORE, NOT ASSERTED ABSOLUTELY. Notifications are not torn down
+     * by `destroyScratchGame` — nothing deletes a message somebody was sent —
+     * so a second run of this suite finds the first run's warning still there.
+     * The claim is "this payment produced one", which is a delta.
+     */
+    const { count: toldBefore } = await admin
+      .from("notifications")
+      .select("id", { count: "exact", head: true })
+      .eq("recipient_id", players.creditRich.id)
+      .eq("kind", "checkout_game_full");
+
     await openCheckout(players.runner, game.id, `cs_${RUN}_won`, 150);
     await openCheckout(players.creditRich, game.id, `cs_${RUN}_lost`, 150);
 
@@ -233,12 +245,15 @@ test("a payment that lands after the game filled is credited in full, not seated
     expect(balance, "the loser of the race was not credited in full").toBe(150);
 
     // THEY ARE TOLD, and the admin has an entry to look at.
-    const { data: told } = await admin
+    const { count: toldAfter } = await admin
       .from("notifications")
-      .select("kind")
+      .select("id", { count: "exact", head: true })
       .eq("recipient_id", players.creditRich.id)
       .eq("kind", "checkout_game_full");
-    expect((told ?? []) as unknown[], "the credited player was not told").toHaveLength(1);
+    expect(
+      (toldAfter ?? 0) - (toldBefore ?? 0),
+      "the credited player was not told exactly once",
+    ).toBe(1);
 
     const { data: attention } = await admin
       .from("checkout_sessions")
