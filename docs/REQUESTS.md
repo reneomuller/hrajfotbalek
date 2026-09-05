@@ -298,13 +298,18 @@ round 13 added is item 2's reversal and a re-verification of item 3.
 | 181 | **(R24-7) The duplicate Surface row is gone** | `SHIPPED round-24`. The game detail said the surface twice, four pixels apart: `CardBadges` renders it as a badge in the Format row, and a standalone `Surface` row said the same translated word underneath. **Verified before removing, in both shapes the card takes** — with a format (`6v6` + `Turf`) and without (`Grass` alone) — because the only question worth asking before deleting a fact is whether it survives somewhere else. The assertion inverts rather than disappearing: the badge must be present and the row must not |
 | 182 | **(R25-1) An unpaid seat is never a named participant** | `SHIPPED round-25`, **dormant on row 186**. Reproduced on production data before anything was written: `booking_holds_seat()` decides whether a seat COUNTS, and `game_roster_public` was using it to decide whose NAME to publish — two different questions, one predicate, and only one answer was right. For thirty minutes an abandoner's nickname and photograph sat on a public page indistinguishable from somebody who had paid. `booking_is_named()` is the question that was missing. The seat still counts, the row says `Awaiting payment`, and nothing on it identifies anybody — not the name, not the photo, and **not the games-played chip**, which rendered `First game` beside the anonymous seat until a strip caught it. R45 |
 | 183 | *The half of row 182 nobody had looked for.* **An abandoned checkout never expired, and blocked settling forever** | `SHIPPED round-25`, dormant on row 186. The seat frees itself on the clock because the predicate is time-based; the ROW stayed `reserved` — nothing transitions it, because the expiry sweep works on `expires_at`, which is set by the NUDGE, and a booking abandoned in its first thirty minutes is never nudged. **Production carried one for thirteen days**, on a game since played, and `settle_game` refuses while any reserved booking remains. `expire_pending_online_payments()` rides the existing expiry cron |
-| 184 | *Found while reading row 183.* **Eight games on production cannot be settled** | `OPEN`, and it is data rather than code. Each has at least one `reserved` booking — mostly legacy cash holds from before round 23, plus the abandoned checkout row 183 describes. `settle_game` correctly refuses them. The remedy per game is an admin resolving each hold (`confirm_booking` if it was paid on the pitch, `admin_remove_booking` if it was not), and row 183 stops the set growing |
+| 184 | *Found while reading row 183.* **Games that cannot be settled** | `OPEN`, **and the cleanup is written and handed over** — `docs/ops/round26-unsettleable-games.sql` (round 26, item 2). **Seven games, eleven `reserved` holds, 1,780 CZK, oldest 2026-08-01** — seven `cash` and four `qr`. Down from eight games: row 183's sweep expired the abandoned checkout that blocked the eighth. **Not one of the eleven has wallet credit applied** — checked on production, every `credit_applied_czk` is 0 — so removing a hold costs those players nothing and issues no credit, which is what makes this a tidy-up rather than a money decision. **It is not one decision, which is why it is not one script:** each row is either "they paid on the pitch and nobody pressed the button" (`confirm_booking`) or "they never paid" (`admin_remove_booking`), and only the owner knows which. **Round 26 stops the set growing** — pay-first creates no unpaid booking at all |
 | 185 | **(R25-2) Embedded Stripe Checkout, both flows** | `SHIPPED round-25`, **dormant on row 187** (the two keys). Server-side Checkout Sessions with `ui_mode: 'embedded'`, rendered inside our own page shell — the player never leaves the origin. **The amount is computed server-side from the row that already exists**, which deletes the set-the-quantity-yourself instruction as a CONSTRAINT rather than as copy: quantity is always 1 and the line is the whole party price, so there is no field a buyer can edit downwards. Pass tiers price from `pass_tiers` through `begin_pass_purchase`, so a tier needs no per-tier link at all. **The webhook needed no changes and remains the sole settler** — an embedded session emits the same `checkout.session.completed` with the same `client_reference_id`, and the embedded UI reporting success is never treated as confirmation. R46 |
-| 186 | **Apply `20260905100000_pending_seat_is_anonymous.sql`** | `BUILT-DORMANT-ON-the owner running it`. Validated rolled back; the verification block builds a checkout in progress, asserts nobody is named while the seat still counts, ages the stamp past the window, asserts the seat and the roster row both vanish, then runs the sweep and asserts the row reached `expired`. **Until it is applied the roster keeps naming abandoners for thirty minutes** — the deployed code selects `is_pending` and treats its absence as false, so nothing breaks, but nothing is fixed either. This is the one migration this round where late application has a live cost |
+| 186 | **Apply `20260905100000_pending_seat_is_anonymous.sql`** | **`SHIPPED`, and the OWNER applied it.** Probed 2026-09-06: `app_capabilities()` returns `pendingSeatAnonymous`, the roster projects `is_pending`, and **the sweep did its work** — the two lingering pending bookings, including the thirteen-day one, are now `expired`. **It has since been superseded by row 193**: round 26 removed the state it was anonymising, so the column is always false and the cleanup script drops it. It was right for the eight days it ran. ~~`BUILT-DORMANT-ON-the owner running it`.~~ |
 | 187 | **Set `STRIPE_SECRET_KEY` and `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` in Vercel** | `BUILT-DORMANT-ON-the owner pasting two keys and setting the branding`. Both, or neither: `embeddedCheckoutEnabled()` requires the pair, because a publishable key without a secret is a form that cannot create a session and a secret without a publishable key is a session nothing can render. Until then **the link flow keeps working exactly as today** — there is never a dead payment path. Steps and branding notes in §6 |
 | 188 | *Queued by row 185, not done.* **Retire the link-based payment flow** | `OPEN`, and deliberately staged. `NEXT_PUBLIC_STRIPE_PAYMENT_URL` and `NEXT_PUBLIC_STRIPE_PASS_URLS` are **marked for retirement, not deleted**: they are the fallback that keeps the product sellable until embedded is verified live on production with a real payment. The order is the owner's — verify embedded, then remove the variables, then delete `lib/payments/stripeLinks.ts` and the six Payment Links in the Stripe dashboard |
 | 189 | **(R25-3) The FAQ is the owner's four, verbatim** | `SHIPPED round-25`. Supplied finished, in his order, and not edited — the only work was checking the code still says what they say, which it does: the waitlist really does email everyone at once and settle the race on `create_booking`'s capacity check; a level badge really is a signal and not a gate; cash really is gone. EN plus CS/RU/UK drafts to the batch (row 160). The substitute rotation leaves with the rewrite and the keeper rotation survives in the owner's own words; `home.spec` narrows to what is still claimed rather than pinning copy he replaced |
 | 190 | **(R25-4) The community panel takes the Game Pass banner's treatment** | `SHIPPED round-25`. Its literal classes — `border-hairline-volt` on `bg-volt/[.10]` — asserted against the banner itself so the two cannot drift into two spellings of one accent. The three social logos step 44px → 55px, a 25% increase and the only content change the item allowed. **A recorded reversal of the round-3 panel ruling**, whose premise was that this panel is "not a call to action": every tile in it is a link out, and since round 23 removed the hero's button it is the only invitation on the page |
+| 191 | **HOTFIX 2026-09-05 — `ui_mode` renamed, and the type system could not tell us** | `SHIPPED`. API version 2026-08-26 renamed `embedded` to `embedded_page` (and `hosted` to `hosted_page`); `stripeClient()` pins that exact version, so the first real session creation answered `StripeInvalidRequestError` on `param: ui_mode` (`req_TfPOXMxZR56DAE`) and every checkout 500'd. **It compiled because the SDK's union ends in `OtherString`**, which widens it to `string` — deliberate, so a newer API value does not fail an older SDK's build, and the cost is that `tsc` cannot tell a valid value from a typo on the one field where being wrong takes payments offline. **The client half was checked and unchanged**: `@stripe/react-stripe-js@6` still takes `options.clientSecret`. **The missing check is now a test** — `uiMode.test.ts` reads the union out of the installed `.d.ts` and asserts our literal is a member, verified red-green. Nothing in four suites had ever called `sessions.create`, which is how a one-word error shipped green |
+| 192 | **(R26-1) PAY FIRST — the booking is created by the payment** | `SHIPPED round-26`, **dormant on row 194**. The owner's ruling: no booking row exists until money has arrived. The Stripe session carries game, player and party size; the webhook creates the booking under the game's advisory lock. **The race is designed in two layers** — ACTIVE EXPIRY as the primary defence (a game that fills kills every other open form at Stripe, from all three rails: webhook, credit redemption, admin house guests) and the CREDIT PATH as the same-instant residual (full amount as credit, notification in the player's own language, admin needs-attention entry). **Seat counts never decrement for shoppers**, not as a rule but as a consequence: there is no row to count. R47 |
+| 193 | *The machinery pay-first made dead.* **Pending states, the thirty-minute predicate, the online expiry sweep, `AwaitingPaymentPanel`, the anonymity rendering** | `SHIPPED round-26` (code), **`OPEN` for the schema** — `docs/ops/round26-schema-cleanup.sql`, validated rolled back, handed over. It accounts for row 186 being APPLIED: the roster view is recreated at seven columns and `booking_is_named` dropped. **Two things are deliberately KEPT**: `payment_pending_at`, the only record that a legacy booking came through the old rail — dropping a column to tidy is how an audit trail disappears — and `online_payment_window()`, because the pay-first rollback restores a `booking_holds_seat` body that calls it, and a rollback that fails on a missing function is not a rollback |
+| 194 | **Apply `20260906100000_pay_first_booking.sql`** | `BUILT-DORMANT-ON-the owner running it`. Validated rolled back; the verification block builds a capacity-ONE game with two open checkouts, proves neither takes a seat, settles the first to `booked`, checks active expiry names the second, settles the second anyway and proves it was `credited` in full, told, queued for attention, and that **the game was not oversold** — then checks a redelivered webhook is a no-op. **Until it is applied the online option keeps the old shape**: `settle_checkout_session` does not exist, so the webhook falls through to `confirm_online_purchase` exactly as before, and `/payment/checkout` cannot register a session. **The deploy is safe either way; the two shapes must not be half-applied for long**, because the new checkout page creates no booking and the old webhook path expects one |
+| 195 | *Recorded with row 192.* **`cancel_game` and the admin rails are untouched** | `SHIPPED round-26`. Cash-legacy bookings, admin-created bookings and every existing `reserved` row keep working exactly as they did — `booking_holds_seat` still counts them, the roster still names them, and the admin still settles them. Pay-first changes how an ONLINE booking comes into existence and nothing else |
 
 ---
 
@@ -334,7 +339,7 @@ items physically impossible without a new frame**. It is. What remains:
 
 ## 6. Standing owner actions
 
-**Everything here was re-verified on 2026-09-05, not copied forward** — each
+**Everything here was re-verified on 2026-09-06, not copied forward** — each
 migration probed for the OBJECT it creates rather than for a filename, because
 a filename proves only that the repo has it. Row 64 came off this list as a
 result (`create_booking` is at six arguments on production); rows 48 and 57 came
@@ -403,7 +408,39 @@ their filter through `booking_holds_seat`. No row changes. Rollback is
 The `--production` flag is deliberate and cannot be replaced by an environment
 variable — see CLAUDE.md on why implicitness is what failed.
 
-### Round 25's migration (row 186) — THE UNPAID SEAT
+### Round 26's migration (row 194) — PAY FIRST
+
+```bash
+node scripts/apply-migration.mjs \
+  supabase/migrations/20260906100000_pay_first_booking.sql --production
+```
+
+**APPLY THIS PROMPTLY AFTER THE DEPLOY.** It is the one migration this project
+has produced where the two halves should not sit apart for long — not because
+anything breaks, but because the shapes disagree:
+
+| | Before it runs | After it runs |
+|---|---|---|
+| Choosing "Online payment" | opens a checkout that cannot be registered | registers, and the webhook books it |
+| The webhook | falls through to `confirm_online_purchase`, which looks for a booking that pay-first never created | creates the booking |
+
+So in the gap, an online payment arrives with nothing to settle and lands in
+the logs as `unknown`. The money is not lost — it is in Stripe, and applying
+the migration then redelivering the event from the Stripe dashboard settles it
+— but it is a manual step nobody wants. **Apply it, then take one payment as
+the check.**
+
+#### Then the cleanup, when you are ready — not urgent
+
+```bash
+psql "$SUPABASE_DB_URL" -f docs/ops/round26-schema-cleanup.sql
+```
+
+Removes the round-25 anonymity column and the pending machinery. Everything it
+touches is already inert. It **keeps** `payment_pending_at` and
+`online_payment_window()`, for reasons stated in the file.
+
+### ~~Round 25's migration (row 186)~~ — APPLIED by the owner
 
 ```bash
 node scripts/apply-migration.mjs \

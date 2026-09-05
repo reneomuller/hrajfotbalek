@@ -2125,3 +2125,75 @@ link flow continues unchanged. The UI gate asks "is there anywhere to pay"
 rather than naming a rail, so neither configuration can produce a dead payment
 path. The link variables are **marked for retirement, not removed**: they stay
 until embedded is verified live with a real payment on production.
+
+---
+
+## R47 — PAY FIRST: the booking is created by the payment
+
+**RULED by the owner, round 26, item 1.** No booking row exists until money has
+arrived. The Stripe session carries the game, the player and the party size;
+the **webhook** creates the booking, under the game's advisory lock, at the
+instant the money lands.
+
+### The lineage — holds, and everything that grew out of them
+
+| Round | Shape | What it cost |
+|---|---|---|
+| 12 | Online booking created `reserved` + `payment_pending_at`, seat held 30 minutes, webhook confirms | An unpaid person occupied a seat |
+| 25 | That seat's NAME hidden on the roster | A patch on a symptom; the seat was still held, still lingering, still blocking `settle_game` |
+| 26 | **No booking until payment** | The cause is gone, and every patch with it |
+
+Three separate defects — a name published on a public roster, a row that never
+expired and blocked settlement for thirteen days, a count that went down for a
+shopper — were **one cause wearing three costumes**. Each had been fixed
+separately; none of the fixes could have been the last one, because the thing
+producing them was still there.
+
+### The race, designed in two layers
+
+**PRIMARY — ACTIVE EXPIRY.** The moment a game reaches capacity by *any* rail,
+every other open checkout for that game is expired at Stripe. A later payer's
+form dies as "session expired" **before their card is charged**. This is the
+case the design optimises for and the one that will actually happen.
+
+Three rails can fill a game, and all three call it. That list *is* the
+correctness argument:
+
+- the Stripe webhook, after it creates a booking
+- `createBookingAction`, after a credit redemption
+- the admin's house-guest action
+
+A rail that forgets to call it corrupts nothing — it just leaves somebody to be
+credited instead of stopped. **That is the chosen degradation**, and it is why
+the register lives in our database rather than being asked of Stripe: answering
+"which sessions are open for this game" has to happen inside the transaction
+that filled it, and a network call under an advisory lock is how a lock becomes
+an outage.
+
+**RESIDUAL — THE CREDIT PATH.** Two people can complete inside one lock window.
+The lock serialises them; the second finds no seat and receives:
+
+- the **full amount as credit** — ruling O's refund-in-kind, the only refund
+  path this product has, and **unexpiring**, because putting a clock on it
+  would make our race the player's problem
+- a **notification in their own language** (`checkout_game_full`), explaining
+  what happened and where the money went
+- an entry in the admin's **needs-attention queue**, so a human knows
+
+**Nothing is oversold**, ever: the seat check and the booking insert are the
+same statement under the same lock.
+
+### What falls out for free
+
+**SEAT COUNTS NEVER DECREMENT FOR SHOPPERS** — not enforced anywhere, simply
+true: there is no row to count until there is money.
+
+**`booking_holds_seat` IS GENUINELY IMMUTABLE AGAIN.** Its thirty-minute clause
+read `now()`, so a seat count could change between two reads in one request.
+The clause is gone with the state it described.
+
+### What is untouched, deliberately
+
+Cash-legacy bookings, admin-created bookings, and every existing `reserved` row
+keep working exactly as before — counted, named, settleable. Pay-first changes
+how an **online** booking comes into existence and nothing else.
