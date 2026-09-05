@@ -60,6 +60,17 @@ export function stripeClient(): Stripe | null {
   });
 }
 
+/**
+ * The `ui_mode` this product creates sessions with.
+ *
+ * EXPORTED SO A TEST CAN READ IT. `lib/payments/__tests__/uiMode.test.ts`
+ * checks this literal against the union the INSTALLED SDK declares — which is
+ * the check that was missing when `embedded` reached production and 500'd
+ * every checkout. The SDK's union ends in `OtherString`, so the compiler
+ * cannot do it; a test reading the `.d.ts` can.
+ */
+export const CHECKOUT_UI_MODE = "embedded_page";
+
 /** CZK has a hundred haléřů and Stripe counts in the minor unit. */
 export function czkToMinorUnits(amountCzk: number): number {
   return Math.round(amountCzk * 100);
@@ -109,7 +120,31 @@ export async function createEmbeddedSession(
   if (!stripe) return null;
 
   const session = await stripe.checkout.sessions.create({
-    ui_mode: "embedded",
+    /*
+     * `embedded_page`, NOT `embedded` — AND THE TYPE SYSTEM COULD NOT CATCH IT.
+     *
+     * API version 2026-08-26 renamed the value (`embedded` -> `embedded_page`,
+     * and `hosted` -> `hosted_page` with it). The pinned version in
+     * `stripeClient()` IS that version, so the first real session creation on
+     * production answered `StripeInvalidRequestError` on `param: ui_mode`
+     * (`req_TfPOXMxZR56DAE`) and the checkout page 500'd.
+     *
+     * IT COMPILED BECAUSE THE UNION HAS AN ESCAPE HATCH. The SDK types this as
+     * `'elements' | 'embedded_page' | 'form' | 'hosted_page' | OtherString` —
+     * that last member widens the union to `string`, so `tsc` accepted a value
+     * Stripe rejects. A closed union would have failed the build; this one
+     * cannot, which is why the local check that matters here is the SDK's own
+     * `.d.ts` rather than the compiler.
+     *
+     * THE CLIENT HALF IS UNCHANGED, checked against the installed packages
+     * rather than assumed: `@stripe/react-stripe-js@6`'s
+     * `EmbeddedCheckoutProvider` still takes `options.clientSecret`, and
+     * `@stripe/stripe-js@9`'s embedded-checkout options still accept it. The
+     * SDK's own doc comment says the same — "For `ui_mode: embedded_page`, the
+     * client secret is to be used when initializing Stripe.js embedded
+     * checkout". Nothing speculative was changed alongside the rename.
+     */
+    ui_mode: CHECKOUT_UI_MODE,
     mode: "payment",
     client_reference_id: input.reference,
     customer_email: input.customerEmail ?? undefined,
