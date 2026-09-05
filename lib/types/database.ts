@@ -1170,6 +1170,15 @@ export interface Database {
        * What the return page waits on. Own-row: it filters on
        * `current_player_id()` rather than trusting the session id in the URL.
        */
+      /**
+       * The caller's most recent checkout, for a return with no cookie of ours
+       * — the different-device case. Never an expired one: nothing came of
+       * those, and adopting one would confirm a payment nobody made.
+       */
+      recent_checkout: {
+        Args: { p_within_minutes?: number };
+        Returns: string | null;
+      };
       checkout_outcome: {
         Args: { p_stripe_session_id: string };
         Returns: {

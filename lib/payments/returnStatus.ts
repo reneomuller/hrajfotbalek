@@ -219,6 +219,22 @@ export async function findRecentPendingPurchase(
   const supabase = await createServerSupabaseClient();
   const since = new Date(now - RECOVERY_WINDOW_MINUTES * 60 * 1000).toISOString();
 
+  /*
+   * THE REGISTER FIRST (round 26, item 1). Under pay-first the thing that
+   * exists when somebody returns is a checkout, not a booking — and it exists
+   * whether the webhook has landed or not, which is exactly what a return page
+   * needs to find.
+   *
+   * The booking search below stays for legacy rows: a payment started before
+   * this round is still in flight for as long as an hour.
+   */
+  const { data: recentCheckout } = await supabase.rpc("recent_checkout", {
+    p_within_minutes: RECOVERY_WINDOW_MINUTES,
+  });
+  if (typeof recentCheckout === "string" && recentCheckout) {
+    return { kind: "booking", id: recentCheckout };
+  }
+
   const [bookings, topups] = await Promise.all([
     supabase
       .from("bookings")

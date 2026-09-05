@@ -2,7 +2,7 @@ import { expect, test, type BrowserContext } from "@playwright/test";
 import { createHmac } from "node:crypto";
 import { LOCALE_COOKIE } from "../lib/i18n/locales";
 import { PENDING_PURCHASE_COOKIE } from "../lib/payments/pendingPurchase";
-import { apiClientFor, players, signInAs, signOut } from "./helpers/session";
+import { apiClientFor, players, signInAs, signOut, serviceClient } from "./helpers/session";
 import {
   clearActiveBookings,
   createScratchGame,
@@ -95,6 +95,39 @@ function signedEvent(sessionId: string, reference: string, amountMinor: number) 
  * Link and a redirect off-site, which tests Stripe's hosting rather than this
  * page. So the browser is placed where the redirect would have left it.
  */
+/**
+ * PAY FIRST: A BOOKING RETURN IS KEYED BY THE STRIPE SESSION (round 26).
+ *
+ * The stash used to hold a booking id, because the booking existed before the
+ * payment. It does not any more — the webhook creates it — so what the return
+ * page waits on is the register row, and its key is the session id Stripe
+ * issued. These helpers put the product's own two steps in one place.
+ */
+async function openCheckout(
+  who: (typeof players)[keyof typeof players],
+  gameId: string,
+  sessionId: string,
+  amountCzk: number,
+) {
+  const client = await apiClientFor(who);
+  const { error } = await client.rpc("open_checkout", {
+    p_game_id: gameId,
+    p_guest_count: 0,
+    p_stripe_session_id: sessionId,
+    p_amount_czk: amountCzk,
+  });
+  expect(error, `open_checkout: ${error?.message}`).toBeNull();
+}
+
+async function settleCheckout(sessionId: string, amountCzk: number) {
+  const { data, error } = await serviceClient().rpc("settle_checkout_session", {
+    p_stripe_session_id: sessionId,
+    p_amount_czk: amountCzk,
+  });
+  expect(error, `settle_checkout_session: ${error?.message}`).toBeNull();
+  return data as string;
+}
+
 async function stash(context: BrowserContext, kind: "booking" | "pass", id: string) {
   await context.addCookies([
     {
@@ -127,19 +160,13 @@ test.describe("the Stripe return page", () => {
       await inEnglish(context);
 
       /*
-       * Booked as the player through the RPC: `create_booking` takes identity
-       * from `auth.uid()`, and the page's Online option is disabled without a
-       * Payment Link configured. What is under test starts after the redirect.
+       * PAY FIRST: nothing is booked yet, and that is the point. The register
+       * row is what `/payment/checkout` writes when it puts the form on
+       * screen; the booking arrives with the webhook.
        */
-      const asRunner = await apiClientFor(players.runner);
-      const { data } = await asRunner.rpc("create_booking", {
-        p_game_id: game.id,
-        p_payment_method: "qr",
-        p_guest_count: 0,
-        p_online: true,
-      });
-      const bookingId = (data as { id: string }).id;
-      await stash(context, "booking", bookingId);
+      const sessionId = `cs_r26_book_${RUN}`;
+      await openCheckout(players.runner, game.id, sessionId, PRICE);
+      await stash(context, "booking", sessionId);
 
       // --- the browser gets back first -----------------------------------
       await page.goto("/payment/return", { waitUntil: "networkidle" });
@@ -158,17 +185,17 @@ test.describe("the Stripe return page", () => {
       expect(early, "the wait claims the booking is confirmed").not.toContain("confirmed");
 
       // --- and now the webhook, late, as it is in life --------------------
-      const { payload, header } = signedEvent(`cs_r15_book_${RUN}`, bookingId, PRICE * 100);
+      const { payload, header } = signedEvent(sessionId, game.id, PRICE * 100);
       const res = await request.post("/api/stripe/webhook", {
         headers: { "stripe-signature": header, "content-type": "application/json" },
         data: payload,
       });
       expect(res.status()).toBe(200);
-      expect((await res.json()).outcome).toBe("confirmed");
+      expect((await res.json()).outcome).toBe("booked");
 
       // --- the page notices, on its own, and goes -------------------------
       await page.waitForURL(
-        new RegExp(`/game/${game.id}/book/confirmation\\?booking=${bookingId}`),
+        new RegExp(`/game/${game.id}/book/confirmation\\?booking=`),
         { timeout: 15_000 },
       );
       await expect(page.getByTestId("booking-confirmed")).toBeVisible();
@@ -263,24 +290,23 @@ test.describe("the Stripe return page", () => {
       await signInAs(context, players.runner);
       await inEnglish(context);
 
-      const asRunner = await apiClientFor(players.runner);
-      const { data } = await asRunner.rpc("create_booking", {
-        p_game_id: game.id,
-        p_payment_method: "qr",
-        p_guest_count: 0,
-        p_online: true,
-      });
-      const bookingId = (data as { id: string }).id;
+      /*
+       * PAY FIRST: the REGISTER is what a returning player is found by, and it
+       * exists whether the webhook has landed or not — which is exactly what a
+       * different-device return needs (round 26, item 1).
+       */
+      const sessionId = `cs_r26_early_${RUN}`;
+      await openCheckout(players.runner, game.id, sessionId, PRICE);
 
-      // THE WEBHOOK FIRST, this time — and it clears `payment_pending_at`.
-      const { payload, header } = signedEvent(`cs_r15_early_${RUN}`, bookingId, PRICE * 100);
+      // THE WEBHOOK FIRST, this time — the booking is already made.
+      const { payload, header } = signedEvent(sessionId, game.id, PRICE * 100);
       const res = await request.post("/api/stripe/webhook", {
         headers: { "stripe-signature": header, "content-type": "application/json" },
         data: payload,
       });
-      expect((await res.json()).outcome).toBe("confirmed");
+      expect((await res.json()).outcome).toBe("booked");
 
-      // No stash, and nothing pending left to find.
+      // No stash: the recovery lookup has to find the checkout on its own.
       await page.goto("/payment/return");
 
       await page.waitForURL(new RegExp(`/game/${game.id}/book/confirmation`));
@@ -384,14 +410,13 @@ test("after a minute it stops implying it is imminent, and says what is true", a
     await signInAs(context, players.runner);
     await inEnglish(context);
 
-    const asRunner = await apiClientFor(players.runner);
-    const { data } = await asRunner.rpc("create_booking", {
-      p_game_id: game.id,
-      p_payment_method: "qr",
-      p_guest_count: 0,
-      p_online: true,
-    });
-    await stash(context, "booking", (data as { id: string }).id);
+    /*
+     * A CHECKOUT THAT NOBODY HAS PAID FOR YET — the only way to hold this page
+     * in its waiting state now that a booking arrives with the money.
+     */
+    const sessionId = `cs_r26_slow_${RUN}`;
+    await openCheckout(players.runner, game.id, sessionId, PRICE);
+    await stash(context, "booking", sessionId);
 
     await page.clock.install();
     await page.goto("/payment/return", { waitUntil: "networkidle" });

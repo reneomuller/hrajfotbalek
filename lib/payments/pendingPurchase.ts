@@ -60,6 +60,21 @@ export function encodePendingPurchase(purchase: PendingPurchase): string {
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
+/**
+ * A Stripe Checkout Session id: `cs_live_…`, `cs_test_…`.
+ *
+ * PAY FIRST PUT A NON-UUID IN THIS COOKIE (round 26, item 1). A booking used
+ * to exist before the payment, so the stash held a uuid; now the booking is
+ * created BY the payment and the only identifier that exists when the form
+ * opens is Stripe's session id.
+ *
+ * THE VALIDATION IS THE POINT OF THE FUNCTION, so it is widened rather than
+ * dropped: this value is fed to a database lookup and to a URL builder, and
+ * the character class here is exactly what Stripe issues — no slash, no colon,
+ * nothing that changes the meaning of either.
+ */
+const STRIPE_SESSION_RE = /^cs_[A-Za-z0-9_]{8,255}$/;
+
 function isPurchaseKind(value: string): value is PurchaseKind {
   return value === "booking" || value === "pass";
 }
@@ -70,9 +85,13 @@ function isPurchaseKind(value: string): value is PurchaseKind {
  * IT VALIDATES THE ID SHAPE, which is not ceremony. The value comes back off
  * a cookie; `httpOnly` means a browser will not let a page script edit it,
  * and that is a promise made by the browser rather than by us. Whatever
- * arrives is fed to a database lookup, so it is checked here — a non-uuid
+ * arrives is fed to a database lookup, so it is checked here — a malformed id
  * reaches PostgREST as a failed cast, and a value with a slash in it would
  * reach a URL builder.
+ *
+ * A BOOKING'S ID MAY BE A STRIPE SESSION SINCE ROUND 26. The uuid form is
+ * still accepted for it, because a legacy stash written before that round can
+ * still be in somebody's browser.
  */
 export function parsePendingPurchase(
   raw: string | undefined | null,
@@ -85,7 +104,14 @@ export function parsePendingPurchase(
   const [kind, id] = parts;
   if (!kind || !id) return null;
   if (!isPurchaseKind(kind)) return null;
-  if (!UUID_RE.test(id)) return null;
+  /*
+   * A PASS is still keyed by our own `credit_topups` uuid — that row exists
+   * before the payment and always has. A BOOKING is keyed by the Stripe
+   * session, because under pay-first nothing of ours exists yet.
+   */
+  const looksRight =
+    kind === "pass" ? UUID_RE.test(id) : UUID_RE.test(id) || STRIPE_SESSION_RE.test(id);
+  if (!looksRight) return null;
 
   return { kind, id };
 }

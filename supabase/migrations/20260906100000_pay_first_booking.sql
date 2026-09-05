@@ -358,6 +358,38 @@ revoke execute on function public.checkout_outcome(text) from public;
 grant execute on function public.checkout_outcome(text) to authenticated, service_role;
 
 -- -----------------------------------------------------------------------------
+-- 4c. recent_checkout — the different-device return
+--
+-- A player who pays on a phone whose banking app opens its own browser comes
+-- back with none of our cookies. Round 15 solved that by searching for their
+-- most recent purchase that "went to Stripe"; under pay-first there is no
+-- booking row to find, so the search moves to the register.
+--
+-- SAME WINDOW, SAME CAUTION: only the caller's own rows, newest first, and only
+-- ones that have not been expired — an expired checkout is one nothing came of,
+-- and adopting it would send somebody to a confirmation for a payment they
+-- never made.
+-- -----------------------------------------------------------------------------
+create or replace function public.recent_checkout(p_within_minutes integer default 60)
+returns text
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select cs.stripe_session_id
+    from public.checkout_sessions cs
+   where cs.player_id = public.current_player_id()
+     and cs.status in ('open', 'booked', 'credited')
+     and cs.created_at >= now() - make_interval(mins => greatest(1, coalesce(p_within_minutes, 60)))
+   order by cs.created_at desc
+   limit 1;
+$$;
+
+revoke execute on function public.recent_checkout(integer) from public;
+grant execute on function public.recent_checkout(integer) to authenticated, service_role;
+
+-- -----------------------------------------------------------------------------
 -- 5. The pending machinery goes
 --
 -- `booking_holds_seat` loses its thirty-minute clause: a booking is now either

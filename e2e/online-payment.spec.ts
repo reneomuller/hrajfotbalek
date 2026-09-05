@@ -57,7 +57,20 @@ function signedEvent(sessionId: string, bookingId: string, amountMinor: number) 
  */
 test.skip(!SECRET, "STRIPE_WEBHOOK_SECRET is not set for the test run");
 
-test("an online booking holds its seats, then stops, without a sweep", async ({
+/*
+ * ~~"an online booking holds its seats, then stops, without a sweep"~~
+ * INVERTED (round 26, item 1).
+ *
+ * That test pinned the thirty-minute hold: a pending booking held its party's
+ * seats and then silently stopped. Pay-first deleted the state — the webhook
+ * creates the booking, already paid — so what remains is the LEGACY rail, and
+ * the property worth asserting is the opposite one.
+ *
+ * A legacy hold keeps its seats. It is a real arrangement from before this
+ * round, and a clock taking it away is the defect round 25 spent a migration
+ * cleaning up after. The pay-first path has its own tests in `round26.spec.ts`.
+ */
+test("a legacy online hold keeps its seats, and nothing awaits payment", async ({
   page,
   context,
 }) => {
@@ -70,15 +83,6 @@ test("an online booking holds its seats, then stops, without a sweep", async ({
     ]);
 
     const admin = serviceClient();
-    /*
-     * BOOKED AS THE PLAYER, not with the service key. `create_booking` takes
-     * identity from `auth.uid()` and refuses a caller with no player row —
-     * which is the RPC being right, and the reason this uses a real session.
-     *
-     * Through the RPC rather than the page: the page's online option is
-     * disabled without `NEXT_PUBLIC_STRIPE_PAYMENT_URL`, and this test is
-     * about what happens AFTER the redirect, not about the button.
-     */
     const asRunner = await apiClientFor(players.runner);
     const { data: booking } = await asRunner.rpc("create_booking", {
       p_game_id: game.id,
@@ -91,27 +95,24 @@ test("an online booking holds its seats, then stops, without a sweep", async ({
     const seats = async () =>
       (await admin.rpc("game_seats_taken", { p_game_id: game.id })).data;
 
-    expect(await seats(), "a fresh pending holds its party's seats").toBe(2);
+    expect(await seats(), "a legacy hold does not hold its party's seats").toBe(2);
 
-    /*
-     * The back arrow, in effect: nothing else happens, and time passes.
-     *
-     * NOT THROUGH THE SERVICE CLIENT. `service_role` holds no UPDATE on
-     * `bookings` and the write would report success while changing nothing —
-     * the trap CLAUDE.md records from the last time this suite faked an
-     * elapsed window.
-     */
+    // Age the stamp past what used to be the window.
     await expireOnlinePayment((booking as { id: string }).id);
 
-    expect(await seats(), "a stale pending holds nothing").toBe(0);
+    expect(
+      await seats(),
+      "a clock took a legacy hold's seats away — the round-25 defect, returned",
+    ).toBe(2);
 
-    // And the owner is told so, with a way forward.
+    /*
+     * AND NOTHING AWAITS PAYMENT. The panel described a state pay-first cannot
+     * produce; the booking panel that survived is the one that was always
+     * true.
+     */
     await page.goto(`/game/${game.id}`, { waitUntil: "networkidle" });
-    const panel = page.getByTestId("awaiting-payment");
-    await expect(panel).toBeVisible();
-    await expect(panel).toHaveAttribute("data-payment-state", "expired");
-    // The "spot held" panel must NOT also be on the page saying the opposite.
-    await expect(page.getByTestId("your-booking")).toHaveCount(0);
+    await expect(page.getByTestId("awaiting-payment")).toHaveCount(0);
+    await expect(page.getByTestId("your-booking")).toBeVisible();
   } finally {
     await clearActiveBookings("runner");
     await destroyScratchGame(game.id);
