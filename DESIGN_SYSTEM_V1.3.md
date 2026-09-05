@@ -2032,3 +2032,96 @@ can see.
 **BOTH CIRCLES ARE MEASURED AGAINST EACH OTHER**, in both specs. Round 18's bug
 was two flags that were meant to match and did not, and it shipped because
 nothing compared them.
+
+---
+
+## R45 — Holding a seat and publishing a name are different questions
+
+**RECORDED round 25, item 1**, and the defect is the cleanest example this
+codebase has produced of one predicate answering two questions.
+
+`booking_holds_seat(status, payment_pending_at)` returns true for a `reserved`
+booking whose checkout began less than thirty minutes ago. That is **right**: a
+player typing a card number must not lose their spot to a race, and the window
+is the design.
+
+`game_roster_public` used the same function to decide **whose name to publish**.
+So from the moment somebody tapped "Online payment", their nickname and
+photograph appeared on the public roster — and stayed for thirty minutes if
+they closed the tab, indistinguishable from a player who had paid.
+
+**THE MISSING QUESTION IS NOW A FUNCTION.** `booking_is_named()` answers "may we
+publish who is in this seat", and the two can no longer be conflated by
+somebody reaching for the nearest predicate that looked close enough.
+
+| | Seat counts | Name published |
+|---|---|---|
+| `confirmed` | yes | yes |
+| `reserved`, no `payment_pending_at` (legacy cash, admin-created) | yes | yes |
+| `reserved`, checkout in progress | yes | **no** |
+| past the window | no | no |
+
+**THE SCOPE IS DELIBERATE.** A `reserved` booking with no pending stamp keeps
+its name: those are holds an organizer arranged personally, the organizer knows
+who is coming, and the roster is how everyone else finds out. Cash left the
+booking flow in round 23, so that set only shrinks.
+
+**AND NOTHING ELSE ON THE ROW MAY IDENTIFY THEM EITHER.** The seat renders as
+"Awaiting payment" with the silhouette — and the games-played chip is
+suppressed, because the view returns 0 for a pending row and it rendered "First
+game" beside an anonymous seat. A *wrong* fact about a *real* player, on the one
+row whose whole purpose is to say nothing about them. A strip caught that, not
+an assertion.
+
+### The half nobody had looked for
+
+The seat frees itself on the clock. **The row never moved.** Nothing transitions
+an abandoned checkout to `expired`: the expiry sweep works on `expires_at`,
+which is set by the *nudge*, and a booking abandoned in its first thirty minutes
+is never nudged.
+
+Production carried one for **thirteen days**, on a game that has since been
+played — and `settle_game` refuses while any `reserved` booking remains, so that
+game could never be settled. Eight games are currently blocked this way.
+
+---
+
+## R46 — Embedded Checkout, and the amount is ours
+
+**RECORDED round 25, item 2.** Payments move from Stripe Payment Links to
+server-created Checkout Sessions with `ui_mode: "embedded"`, rendered inside
+this product's own page.
+
+**THE AMOUNT IS THE POINT, NOT THE FRAME.** A Payment Link has one price and no
+idea how many seats are being bought, so a party of three had to be *told* to
+set the quantity themselves — and could type 1. The session is now created from
+the booking that already exists: **quantity is always 1 and the line is the
+whole party price**, so there is no field a buyer can edit downwards. The
+instruction is deleted as a constraint rather than as copy.
+
+**THE WEBHOOK NEEDED NO CHANGES AND REMAINS THE SOLE SETTLER.** An embedded
+session emits the same `checkout.session.completed` with the same
+`client_reference_id`. **The embedded UI reporting success is never treated as
+confirmation** — the return page polls the database, and the database moves only
+when the webhook says so. That separation is why a browser closed mid-payment
+loses nothing.
+
+### What Stripe's branding allows, and what it does not
+
+**Ours:** the page shell, the heading, the amount in the display face, the
+volt-hairline panel, and the fact that the player never leaves the origin.
+
+**Stripe's:** everything inside the iframe. No CSS of ours crosses that
+boundary, there is no `appearance` object for Checkout (that is Payment Element,
+a different product), and there is no dark theme. Colour, logo and font come
+from **Settings → Branding** in the dashboard, once, for every session. **The
+fields will be on white**, and a volt-on-black frame around a light form is the
+honest expectation rather than a compromise to be engineered away.
+
+### Gated, and the fallback is not deleted
+
+`STRIPE_SECRET_KEY` **and** `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` — both, or the
+link flow continues unchanged. The UI gate asks "is there anywhere to pay"
+rather than naming a rail, so neither configuration can produce a dead payment
+path. The link variables are **marked for retirement, not removed**: they stay
+until embedded is verified live with a real payment on production.

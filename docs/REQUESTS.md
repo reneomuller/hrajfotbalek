@@ -283,19 +283,28 @@ round 13 added is item 2's reversal and a re-verification of item 3.
 | 166 | **(R23-3) The wallet section, compacted** | `SHIPPED round-23`. It was two headed sections saying one thing — a `CREDIT BALANCE` eyebrow over a 40px figure, then a second heading reading "Your credit" over one chip. The heading is gone, the expiry moved INSIDE the balance card where it is a footnote on the number above it, and the box and its surrounding gaps came down with it. **Measured: 300px → 186px**, a 38% shorter section. Strips: `docs/v23/strips/credit-before.png`, `credit-after.png` |
 | 167 | **(R23-4) The games move above how-it-works, and the hero's pill is REMOVED** | `SHIPPED round-23`. Open the site, see the games lined up; scroll to learn how it works. **The page had two buttons to the same place** and the first one asked somebody to leave a page they had not started reading — so "Find a game" is gone entirely and "All games" inherits its exact clothing (`rounded-pill`, `text-cta`, `font-extrabold`, `px-[26px] py-[15px]`). Asserted by position AND by there being exactly one link to `/games` in the page's own content. `landing.heroCta` was removed from all four language tables rather than left as dead copy. Nothing else on the page reordered |
 | 168 | **(R23-5) Dashboard is the first admin chip** | `SHIPPED round-23`, **a recorded reversal of the p14 frame-order ruling**. The round-10 reading of the frame was correct and is out of date: `p14` predates the dashboard being the daily landing — round 13 put the unsettleable payments on it, round 14 pointed the account page's admin link at it. R31's rule applies exactly: a ruling records its premise, and the premise moved. **Fifth also put it under the audit's F13 scroll fade** at 390px, so the chip for the page opened every morning was the one half out of view. Volt-current behaviour untouched: `/admin` still matches exactly, so Dashboard lights only on the dashboard. R40 |
-| 169 | **Apply `20260830100000_players_met.sql`** | `BUILT-DORMANT-ON-the owner running it`. Validated against local inside a transaction and rolled back; its verification block **exercises** the definition rather than reading `pg_proc` — it borrows two real players and a guest, gives them a disposable game, checks the guest does not count and that a no-show on either side removes it, then undoes the whole thing by raising inside an `exception` block (which rolls back what triggers wrote too, where a hand-written `delete` list would not). **It builds no players**, because `players.auth_user_id` is a foreign key into `auth.users` and inventing signed-up players means writing rows into the auth schema. Until it is applied both profiles keep rendering "pitches played" — `thirdStat` is unit-tested on exactly that path, because it is the one the e2e suite cannot reach |
+| 169 | **Apply `20260830100000_players_met.sql`** | **`SHIPPED`, and the OWNER applied it.** **Probed on production 2026-09-05, not taken on report:** `app_capabilities()` returns `playersMet`, `playedSweep` and `playerNotifications` all true; `players_met`, `advance_played_games` and `notify_player` are all in `pg_proc`; `notifications` carries `recipient_id`, `booking_id` and `kind`. **And the number is alive:** `public_player_profile('oliver')` returns 12 games played and 3 players met, where every figure read zero a week ago. ~~`BUILT-DORMANT-ON-the owner running it`.~~ |
 | 170 | **(R23-7) Cash removed from the booking flow** | `SHIPPED round-23` — see row 131 for the gate's lineage. Gone from the booking form AND the waitlist conversion, refused server-side in both, because a removed radio is not a removed option. **The FAQ named cash in all four languages** until this round, which the item believed was already fixed. **The RAIL survives and must:** "Redeem credit" travels on it and **seven unpaid cash bookings on production** must stay settleable — asserted end to end, roster row to `confirmed`. What closed is the last way a NEW one could appear: `credit` with a wallet that does not cover would have created an unpaid booking on a product that no longer takes cash |
 | 171 | *Consequence of row 170, recorded because it changes what the suite can test.* The E2E environment gained `NEXT_PUBLIC_STRIPE_PAYMENT_URL` | `SHIPPED round-23`. With cash gone, the only booking route that finishes on this origin is credit — `online` redirects to a payment page — so without the variable the suite could produce **no unpaid booking through the UI at all**, which is not the product that ships. Twelve call sites moved: the ones that need a completed booking fund a wallet and pay by credit; the ones that need an UNPAID booking drive the rail directly, which is the shape `booking.spec.ts` has used for QR since round 13 |
 | 172 | **(R24-1) Games advance to PLAYED on a schedule** | `SHIPPED round-24`, **dormant on row 174**. Kickoff + duration + a two-hour buffer, hourly — the other four crons are daily, and a daily sweep would leave a Tuesday-evening game `published` until Wednesday morning, which is the same zero the item exists to remove. **THE READING CAME FIRST AND CHANGED THE BUILD:** `confirm_booking` has no game-status gate, which is why auto-advance does not strand unpaid holds and make `settle_game` impossible; `mark_attendance` has none either, so attendance stays editable; `cancel_booking` already refuses past kickoff. Settling stays an explicit admin act. R42 |
 | 173 | **(R24-2) A no-show warns the player, in their own language** | `SHIPPED round-24`, **dormant on row 175**. Marking a player absent writes ONE addressed notification; re-marking writes nothing (only transitions speak); reversing **deletes** the warning and leaves a correction, because a retraction that leaves the accusation in the list is not a retraction. Firm but fair and it names no consequence the product cannot deliver — there is no ban, no strike count, no fee, and a warning that bluffs is one a regular learns to ignore. EN/CS/RU/UK, drafts to the batch (row 160). R43 |
-| 174 | **Apply `20260901100000_advance_played_games.sql`** | `BUILT-DORMANT-ON-the owner running it`. Validated against local inside a transaction and rolled back; the verification block **exercises** the sweep — it impersonates the service role via `request.jwt.claims`, builds one stale game and one still inside its buffer, checks that exactly the first advances and that nothing settles, then undoes all of it by raising inside an `exception` block. **Applying it advances the 28 stale games on the next hourly run**, which is the point and is also the one thing to know before running it: `cancel_game` stops accepting them at that moment (row 176) |
-| 175 | **Apply `20260901110000_player_notifications.sql`** | `BUILT-DORMANT-ON-the owner running it`. Validated rolled back, exercising the whole cycle: one warning, no duplicate on a re-mark, replaced on reversal, and **existing broadcast rows counted before and after to prove they were untouched**. Before it is applied the bell renders exactly as today — `my_notifications` still returns four columns and the fallback path reads `title`/`body`, which is what an admin broadcast has always been |
-| 176 | *Consequence of row 172, and the owner's to rule on.* **`cancel_game` will stop accepting a game that has already been played** | `OPEN`. It requires `draft`/`published`/`full`, so bulk-cancelling a past game and crediting everyone on it — available today on all 28 stale games — closes about two hours after kickoff once the sweep runs. **Not worked around, because cancelling a game that has already happened is arguably not a thing the product should offer**, and the per-player remedy survives: `admin_remove_booking` credits a confirmed booking and has no game-status gate. If the bulk remedy is wanted back it is one status added to one list |
+| 174 | **Apply `20260901100000_advance_played_games.sql`** | **`SHIPPED`, and the OWNER applied it.** **The sweep has run and the backlog is gone:** 33 games are `played`, 3 `settled`, and **zero games remain kicked-off-but-published** — the 28 stale ones the round-24 report counted were all advanced, without the hand-run backfill, exactly as predicted. The daily 05:30 schedule is doing the work. ~~`BUILT-DORMANT`.~~ |
+| 175 | **Apply `20260901110000_player_notifications.sql`** | **`SHIPPED`, and the OWNER applied it.** The addressed bell is live and **has already fired once in anger**: one `no_show_warning` notification exists on production, against three `attendance_marked` events. Broadcast rows are untouched, which is what the nullable recipient guaranteed. ~~`BUILT-DORMANT`.~~ |
+| 176 | *Consequence of row 172.* **`cancel_game` no longer accepts a game that has already been played** | **`CLOSED round-25` — the owner's ruling: it stays shut.** Bulk-cancelling a game that has already happened is not a thing the product should offer, and the per-player remedy is sufficient: `admin_remove_booking` credits a confirmed booking and has no game-status gate. Recorded rather than deleted, so a later round meeting the closed door finds the decision instead of re-litigating it |
 | 177 | **(R24-3) The upcoming-games heading joins its neighbours** | `SHIPPED round-24`. `community-title`, not `page-title`. The old reasoning compared it to `/games`'s heading — another page, where nothing sits beside it; round 23 moved the games up the home page and it now shares a column with JOIN OUR COMMUNITY and FAQ. Three headings on one page at two sizes read as one of them being a mistake. `/games` is untouched |
 | 178 | **(R24-4) The hero-to-games gap halves** | `SHIPPED round-24`. 104px of stacked padding becomes 48. **It was TWO paddings, which is why neither looked wrong alone** — `pb-10` on the hero and `pt-nav` on the games block, each defensible, and nothing named their sum. The hero also lost its own CTA in round 23, so its bottom padding was sized for a button that is no longer there |
 | 179 | **(R24-5) An unmistakable published state** | `SHIPPED round-24`. The admin sibling of the booking confirmation: same volt panel, same 2px border, same tick in a volt disc, same display face — a player who pays and an organizer who publishes are both being told the thing they just did worked. **Server-rendered from `?created=1`, not a toast**, which is what the item asked for and what CLAUDE.md's rule requires (a client-state success marker does not survive `revalidatePath`); the spec reloads the page to prove it. English, per the admin-is-English law |
 | 180 | **(R24-6) The flag pair becomes two circles** | `SHIPPED round-24`, the **third** flag construction and the lineage is recorded in the component: round 18 shipped two different constructions at once (one distorted), round 19 unified them into a split capsule, round 24 separates them. Two languages are two things, and a divided capsule reads as one object showing two states. **Same vertical dimension** — pinned to the badge it sits beside and asserted against it — and both circles measured against each other, because round 18's bug was two flags meant to match that did not. R44 |
 | 181 | **(R24-7) The duplicate Surface row is gone** | `SHIPPED round-24`. The game detail said the surface twice, four pixels apart: `CardBadges` renders it as a badge in the Format row, and a standalone `Surface` row said the same translated word underneath. **Verified before removing, in both shapes the card takes** — with a format (`6v6` + `Turf`) and without (`Grass` alone) — because the only question worth asking before deleting a fact is whether it survives somewhere else. The assertion inverts rather than disappearing: the badge must be present and the row must not |
+| 182 | **(R25-1) An unpaid seat is never a named participant** | `SHIPPED round-25`, **dormant on row 186**. Reproduced on production data before anything was written: `booking_holds_seat()` decides whether a seat COUNTS, and `game_roster_public` was using it to decide whose NAME to publish — two different questions, one predicate, and only one answer was right. For thirty minutes an abandoner's nickname and photograph sat on a public page indistinguishable from somebody who had paid. `booking_is_named()` is the question that was missing. The seat still counts, the row says `Awaiting payment`, and nothing on it identifies anybody — not the name, not the photo, and **not the games-played chip**, which rendered `First game` beside the anonymous seat until a strip caught it. R45 |
+| 183 | *The half of row 182 nobody had looked for.* **An abandoned checkout never expired, and blocked settling forever** | `SHIPPED round-25`, dormant on row 186. The seat frees itself on the clock because the predicate is time-based; the ROW stayed `reserved` — nothing transitions it, because the expiry sweep works on `expires_at`, which is set by the NUDGE, and a booking abandoned in its first thirty minutes is never nudged. **Production carried one for thirteen days**, on a game since played, and `settle_game` refuses while any reserved booking remains. `expire_pending_online_payments()` rides the existing expiry cron |
+| 184 | *Found while reading row 183.* **Eight games on production cannot be settled** | `OPEN`, and it is data rather than code. Each has at least one `reserved` booking — mostly legacy cash holds from before round 23, plus the abandoned checkout row 183 describes. `settle_game` correctly refuses them. The remedy per game is an admin resolving each hold (`confirm_booking` if it was paid on the pitch, `admin_remove_booking` if it was not), and row 183 stops the set growing |
+| 185 | **(R25-2) Embedded Stripe Checkout, both flows** | `SHIPPED round-25`, **dormant on row 187** (the two keys). Server-side Checkout Sessions with `ui_mode: 'embedded'`, rendered inside our own page shell — the player never leaves the origin. **The amount is computed server-side from the row that already exists**, which deletes the set-the-quantity-yourself instruction as a CONSTRAINT rather than as copy: quantity is always 1 and the line is the whole party price, so there is no field a buyer can edit downwards. Pass tiers price from `pass_tiers` through `begin_pass_purchase`, so a tier needs no per-tier link at all. **The webhook needed no changes and remains the sole settler** — an embedded session emits the same `checkout.session.completed` with the same `client_reference_id`, and the embedded UI reporting success is never treated as confirmation. R46 |
+| 186 | **Apply `20260905100000_pending_seat_is_anonymous.sql`** | `BUILT-DORMANT-ON-the owner running it`. Validated rolled back; the verification block builds a checkout in progress, asserts nobody is named while the seat still counts, ages the stamp past the window, asserts the seat and the roster row both vanish, then runs the sweep and asserts the row reached `expired`. **Until it is applied the roster keeps naming abandoners for thirty minutes** — the deployed code selects `is_pending` and treats its absence as false, so nothing breaks, but nothing is fixed either. This is the one migration this round where late application has a live cost |
+| 187 | **Set `STRIPE_SECRET_KEY` and `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` in Vercel** | `BUILT-DORMANT-ON-the owner pasting two keys and setting the branding`. Both, or neither: `embeddedCheckoutEnabled()` requires the pair, because a publishable key without a secret is a form that cannot create a session and a secret without a publishable key is a session nothing can render. Until then **the link flow keeps working exactly as today** — there is never a dead payment path. Steps and branding notes in §6 |
+| 188 | *Queued by row 185, not done.* **Retire the link-based payment flow** | `OPEN`, and deliberately staged. `NEXT_PUBLIC_STRIPE_PAYMENT_URL` and `NEXT_PUBLIC_STRIPE_PASS_URLS` are **marked for retirement, not deleted**: they are the fallback that keeps the product sellable until embedded is verified live on production with a real payment. The order is the owner's — verify embedded, then remove the variables, then delete `lib/payments/stripeLinks.ts` and the six Payment Links in the Stripe dashboard |
+| 189 | **(R25-3) The FAQ is the owner's four, verbatim** | `SHIPPED round-25`. Supplied finished, in his order, and not edited — the only work was checking the code still says what they say, which it does: the waitlist really does email everyone at once and settle the race on `create_booking`'s capacity check; a level badge really is a signal and not a gate; cash really is gone. EN plus CS/RU/UK drafts to the batch (row 160). The substitute rotation leaves with the rewrite and the keeper rotation survives in the owner's own words; `home.spec` narrows to what is still claimed rather than pinning copy he replaced |
+| 190 | **(R25-4) The community panel takes the Game Pass banner's treatment** | `SHIPPED round-25`. Its literal classes — `border-hairline-volt` on `bg-volt/[.10]` — asserted against the banner itself so the two cannot drift into two spellings of one accent. The three social logos step 44px → 55px, a 25% increase and the only content change the item allowed. **A recorded reversal of the round-3 panel ruling**, whose premise was that this panel is "not a call to action": every tile in it is a link out, and since round 23 removed the hero's button it is the only invitation on the page |
 
 ---
 
@@ -325,7 +334,7 @@ items physically impossible without a new frame**. It is. What remains:
 
 ## 6. Standing owner actions
 
-**Everything here was re-verified on 2026-09-01, not copied forward** — each
+**Everything here was re-verified on 2026-09-05, not copied forward** — each
 migration probed for the OBJECT it creates rather than for a filename, because
 a filename proves only that the repo has it. Row 64 came off this list as a
 result (`create_booking` is at six arguments on production); rows 48 and 57 came
@@ -394,9 +403,58 @@ their filter through `booking_holds_seat`. No row changes. Rollback is
 The `--production` flag is deliberate and cannot be replaced by an environment
 variable — see CLAUDE.md on why implicitness is what failed.
 
-### Round 24's two migrations (rows 174 and 175)
+### Round 25's migration (row 186) — THE UNPAID SEAT
 
-**Neither is required for the deployed code to be safe**, which was checked
+```bash
+node scripts/apply-migration.mjs \
+  supabase/migrations/20260905100000_pending_seat_is_anonymous.sql --production
+```
+
+**THIS IS THE ONE WHERE BEING LATE HAS A LIVE COST.** Nothing breaks without
+it — the deployed code selects `is_pending` and reads its absence as false —
+but until it runs, a player who opens the payment page and closes the tab is
+published by name on the public roster for thirty minutes, and every abandoned
+checkout adds another `reserved` row that blocks its game from ever settling.
+
+### Round 25's two Stripe keys (row 187) — EMBEDDED CHECKOUT
+
+**Both, or neither.** `embeddedCheckoutEnabled()` requires the pair; until then
+the Payment Link flow keeps working exactly as it does today.
+
+1. **Stripe dashboard → Developers → API keys.** Copy the **Secret key**
+   (`sk_live_…`) and the **Publishable key** (`pk_live_…`). Live mode, not test
+   — the pass rail already took a real payment on live keys.
+2. **Vercel → Settings → Environment Variables → Production:**
+   - `STRIPE_SECRET_KEY` = `sk_live_…` — server-only, **never** prefixed
+     `NEXT_PUBLIC_`. It can create charges.
+   - `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` = `pk_live_…` — this one is meant to
+     be in the browser.
+3. **Redeploy.** Both are read at request time, but `NEXT_PUBLIC_` values are
+   inlined at BUILD time, so the publishable key needs a new build to appear.
+4. **Stripe dashboard → Settings → Branding.** This is the only control over
+   what the embedded form looks like inside its frame:
+   - **Brand colour** — set it to the volt `#C8FF00` if you want the buttons to
+     match; the contrast against white is poor, so `#0F0F0F` on the button with
+     volt as the accent reads better.
+   - **Logo** and **icon** — the roundel.
+   - **Font** — one of Stripe's list; Onest is not on it.
+
+**WHAT STRIPE'S BRANDING DOES NOT ALLOW, stated plainly because somebody will
+try:** the form is an iframe and no CSS of ours crosses that boundary. There is
+no dark theme for Checkout and no `appearance` object (that is Payment Element,
+a different product). **The fields will be on white.** The page around it — the
+shell, the heading, the amount in our own display face, the volt-hairline panel
+— is entirely ours, and that is the whole of what embedding buys: the player
+does not leave, and the amount is ours to compute.
+
+### ~~Round 24's two migrations (rows 174 and 175)~~ — APPLIED by the owner
+
+Verified 2026-09-05 by probing the objects: all three functions exist, all
+three capability flags read true, and the played sweep has cleared the entire
+backlog — **zero kicked-off-but-published games remain**, where 28 sat a week
+ago. The hand-run backfill was never needed, exactly as the round-24 note said.
+
+~~**Neither is required for the deployed code to be safe**, which was checked
 rather than assumed: `app_capabilities()` reports both features as absent until
 they land, the cron route answers `available: false` instead of throwing, and
 the bell falls back to the stored title and body.
@@ -465,7 +523,7 @@ E2E suite cannot reach — the local database has the function applied.
 | `public_player_profile` returns six columns | Seven |
 
 **No deploy is needed afterwards.** The surface asks the database what it can
-do rather than being told by a build.
+do rather than being told by a build.~~
 
 **AND IT WILL READ ZERO FOR EVERYONE UNTIL ROW 165 IS DEALT WITH.** 25 games
 have kicked off and are still `published`; nothing marks a game played
