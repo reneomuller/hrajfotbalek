@@ -106,7 +106,19 @@ test("the home panels use the neutral edge, not the accent", async ({ page, cont
   await page.goto("/", { waitUntil: "networkidle" });
   await settle(page);
 
-  for (const id of ["community-panel", "potm-panel", "faq-panel", "how-it-works"]) {
+  /*
+   * ~~`community-panel`~~ LEFT THIS LIST IN ROUND 25, ITEM 4, and it is a
+   * recorded reversal rather than a hole in the guard.
+   *
+   * The rule below is right and stands for the panels that remain: a volt edge
+   * on furniture spends the accent. The premise it rested on for THIS panel —
+   * that it is "not a call to action" — is what moved. Every one of its three
+   * tiles is a link out, and since round 23 removed the hero's own button it
+   * is the only invitation on the page. It now wears the Game Pass banner's
+   * literal treatment, asserted against that banner in `round25.spec.ts` so
+   * the two cannot drift into two spellings of one accent.
+   */
+  for (const id of ["potm-panel", "faq-panel", "how-it-works"]) {
     const panel = page.getByTestId(id);
     await expect(panel, id).toBeVisible();
     const edge = await panel.evaluate((el) => {
