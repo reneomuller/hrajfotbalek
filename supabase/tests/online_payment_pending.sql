@@ -156,9 +156,22 @@ select pg_temp.age_out(
   pg_temp.bid('97770000-0000-0000-0000-000000000001',
               '7aaa0000-0000-0000-0000-00000000000a'));
 
+/*
+ * ~~past the window it stops holding them, with no sweep and no cron~~
+ * INVERTED (round 26, item 1).
+ *
+ * The thirty-minute hold was round 12's answer to "an online booking must not
+ * keep seats forever". Pay-first answers it by never creating the booking:
+ * money arrives first, and what this suite ages is now a LEGACY row from
+ * before that change.
+ *
+ * A legacy hold must keep its seats. It is a real arrangement between an
+ * organizer and a player, and a clock taking it away is what round 25 spent a
+ * migration cleaning up after.
+ */
 select pg_temp.ok(
-  public.game_seats_taken('97770000-0000-0000-0000-000000000001') = 0,
-  'past the window it stops holding them, with no sweep and no cron');
+  public.game_seats_taken('97770000-0000-0000-0000-000000000001') = 2,
+  'a legacy hold keeps its seats however old its stamp is');
 
 select pg_temp.ok(
   pg_temp.booking_status(
@@ -169,8 +182,8 @@ select pg_temp.ok(
 set role anon;
 select pg_temp.ok(
   (select count(*) from public.game_roster_public
-    where game_id = '97770000-0000-0000-0000-000000000001') = 0,
-  'the roster stops showing a stale pending''s seats too');
+    where game_id = '97770000-0000-0000-0000-000000000001') = 2,
+  'and the roster keeps showing them, named, as it always did');
 reset role;
 
 -- =============================================================================

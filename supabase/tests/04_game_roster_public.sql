@@ -192,11 +192,26 @@ select pg_temp.ok(
   and not public.booking_holds_seat('expired',   null),
   'booking_holds_seat admits exactly the two active statuses');
 
+/*
+ * THE ASSERTION INVERTS (round 26, item 1). It used to be "a reserved booking
+ * stops holding its seat once its payment window closes" — the thirty-minute
+ * hold that pay-first deleted.
+ *
+ * Under pay-first no unpaid booking exists to have a window: the webhook
+ * creates the booking, already paid. The legacy rows that still CARRY a stamp
+ * are cash and QR holds from before this round, and their seats must NOT be
+ * taken away by a clock — they are real holds an organizer arranged.
+ *
+ * SO THE PROPERTY IS NOW THE OPPOSITE, AND IT IS THE STRONGER ONE:
+ * `booking_holds_seat` ignores the stamp entirely, which also makes it
+ * genuinely IMMUTABLE again — a seat count can no longer change between two
+ * reads in the same request.
+ */
 select pg_temp.ok(
   public.booking_holds_seat('reserved', now())
-  and not public.booking_holds_seat(
-        'reserved', now() - public.online_payment_window() - interval '1 second'),
-  'a reserved booking stops holding its seat once its payment window closes');
+  and public.booking_holds_seat(
+        'reserved', now() - interval '30 days'),
+  'a payment stamp no longer takes a seat away, however old it is');
 
 select pg_temp.ok(
   public.booking_holds_seat(
