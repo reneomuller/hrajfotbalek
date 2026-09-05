@@ -82,13 +82,19 @@ set local role anon;
 --
 -- The withholding assertion below is UNCHANGED and is the one that matters:
 -- player_id, email and phone did not cross and are not going to.
+-- EIGHT SINCE ROUND 25, and the list is restated in full rather than patched:
+-- the point of enumerating is that a new column has to be TYPED here by
+-- somebody who looked at it. `is_pending` is a boolean saying the seat belongs
+-- to a checkout in progress; it identifies nobody, and the row it appears on
+-- has every naming column null. The withholding assertion below is unchanged
+-- and is still the one that matters.
 select pg_temp.ok(
   (select array_agg(column_name::text order by column_name)
      from information_schema.columns
     where table_schema = 'public' and table_name = 'game_roster_public')
   = array['game_id', 'games_played', 'guest_index', 'guest_of', 'is_guest',
-          'nickname', 'photo_path'],
-  'the view projects EXACTLY those seven columns and no eighth',
+          'is_pending', 'nickname', 'photo_path'],
+  'the view projects EXACTLY those eight columns and no ninth',
   (select string_agg(column_name, ', ' order by column_name)
      from information_schema.columns
     where table_schema = 'public' and table_name = 'game_roster_public'));

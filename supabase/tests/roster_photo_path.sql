@@ -126,14 +126,18 @@ select pg_temp.ok_call(
 -- this one — a nickname the holder's own row already publishes for the same
 -- game — and `guest_index` numbers it. No player_id, no email, no phone, no
 -- booking status, which the three assertions above still prove directly.
+-- EIGHT SINCE ROUND 25. `is_pending` is a fact about a SEAT in the same sense
+-- as the three above it: it says the seat belongs to a checkout in progress,
+-- and every naming column on such a row is null. Restated in full rather than
+-- appended, so a new column cannot arrive without somebody typing it here.
 select pg_temp.ok(
   (select array_agg(attname::text order by attnum)
      from pg_attribute
     where attrelid = 'public.game_roster_public'::regclass
       and attnum > 0 and not attisdropped)
     = array['game_id', 'nickname', 'photo_path', 'games_played',
-            'is_guest', 'guest_of', 'guest_index'],
-  'the view projects exactly these seven columns and no eighth');
+            'is_guest', 'guest_of', 'guest_index', 'is_pending'],
+  'the view projects exactly these eight columns and no ninth');
 
 -- =============================================================================
 -- The status filter, which the widening must not have disturbed
