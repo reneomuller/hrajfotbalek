@@ -91,7 +91,23 @@ export function PaymentMethodChoice({
    * passed from the server so the enabled/disabled state and the redirect
    * cannot disagree — the action reads the same variable.
    */
-  const onlineReady = Boolean(process.env.NEXT_PUBLIC_STRIPE_PAYMENT_URL);
+  /*
+   * EITHER RAIL COUNTS (round 25, item 2). The option is live when there is
+   * somewhere to pay — the embedded form, which needs the PUBLISHABLE key in
+   * the browser, or the Payment Link. `NEXT_PUBLIC_` on both, because this is
+   * a client component and a server-only variable reads as undefined here,
+   * which would disable the option on a perfectly working configuration.
+   *
+   * THE SERVER CHECKS THE PAIR. This sees only the publishable half; the
+   * booking action calls `embeddedCheckoutEnabled()`, which also requires the
+   * secret. A browser with one key and a server with neither is not a state
+   * anyone can reach by configuring things in order, and the action refuses it
+   * anyway.
+   */
+  const onlineReady = Boolean(
+    process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ||
+      process.env.NEXT_PUBLIC_STRIPE_PAYMENT_URL,
+  );
 
   /*
    * THE WALLET COVERS THIS GAME, or it does not. One boolean decides three

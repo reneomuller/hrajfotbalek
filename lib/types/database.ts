@@ -717,6 +717,15 @@ export interface Database {
           guest_of: string | null;
           /** 1-based position among that owner's guests, or among the house guests. */
           guest_index: number | null;
+          /**
+           * A seat held by a CHECKOUT IN PROGRESS (round 25, item 1).
+           *
+           * Every naming column is null on such a row — nickname, photo,
+           * `guest_of` — and `games_played` is 0. The seat counts so capacity
+           * stays honest; the person does not exist as far as this view is
+           * concerned until the webhook confirms their payment.
+           */
+          is_pending: boolean;
         };
         Relationships: [];
       };
@@ -1078,6 +1087,19 @@ export interface Database {
        */
       advance_played_games: {
         Args: { p_buffer_minutes?: number };
+        Returns: number;
+      };
+      /**
+       * Transitions abandoned checkouts from `reserved` to `expired` once
+       * their thirty minutes are up (round 25, item 1).
+       *
+       * The SEAT was already free — `booking_holds_seat` is time-based — but
+       * the row lingered forever and blocked `settle_game`. ABSENT before
+       * `20260905100000_pending_seat_is_anonymous`, which is why the expiry
+       * cron asks `app_capabilities().pendingSeatAnonymous` first.
+       */
+      expire_pending_online_payments: {
+        Args: Record<string, never>;
         Returns: number;
       };
       /**

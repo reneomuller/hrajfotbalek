@@ -540,7 +540,7 @@ test.describe("the home page under ruling J", () => {
  * `textContent`, because the panel is a stack of collapsed `<details>` and
  * `innerText` returns only what is open.
  */
-test("the FAQ carries the goalkeeper and substitute rotations", async ({ page }) => {
+test("the FAQ carries the goalkeeper rotation", async ({ page }) => {
   await page.goto("/", { waitUntil: "networkidle" });
 
   const faq = await page.getByTestId("faq-panel").evaluate((el) => el.textContent ?? "");
@@ -548,9 +548,15 @@ test("the FAQ carries the goalkeeper and substitute rotations", async ({ page })
   expect(faq.toLowerCase(), "the keeper rotation is not in the FAQ").toContain(
     "goalkeepers rotate",
   );
-  expect(faq.toLowerCase(), "the substitute rotation is not in the FAQ").toContain(
-    "subs rotate",
-  );
+
+  /*
+   * ~~AND THE SUBSTITUTE ROTATION.~~ The owner's round-25 texts drop it. Round
+   * 17 put both halves here because the "practical information" card was
+   * removed without rehoming its content; the keeper half answers a question
+   * somebody asks ("do I need gloves") and survives in the owner's own words,
+   * the sub half answered nothing anybody asked. The assertion shrinks to what
+   * is still claimed rather than pinning copy the owner replaced.
+   */
 
   /*
    * AND IT IS NOT BACK ON THE GAME PAGE. The card was removed for saying the

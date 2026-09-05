@@ -59,7 +59,27 @@ export async function CommunityPanel({
         `rounded-[20px]` was also an arbitrary radius two pixels off ruling A's
         `card`.
       */
-      className="lifted flex min-w-[270px] flex-1 flex-col rounded-card p-[22px]"
+      /*
+        THE GAME PASS BANNER'S TREATMENT (round 25, item 4).
+
+        ~~`.lifted` — `hairline-strong` on `surface-raised`, the neutral panel
+        edge sampled off p01, on the reasoning that "a volt edge on a panel
+        that is not selected, not focused and not a call to action spends the
+        accent on furniture".~~
+
+        THE OWNER OVERRULES THAT FOR THIS PANEL, and the premise it rested on
+        is the part that moved: this IS a call to action. Every one of its
+        three tiles is a link out to a place the product wants people to go,
+        and it is the only invitation on the page now that the hero's own
+        button is gone (round 23, item 4). The Game Pass banner is the
+        product's existing drawing of exactly that — an outlined panel with a
+        semi-transparent volt wash — so this borrows it rather than inventing a
+        third treatment.
+
+        `border-hairline-volt bg-volt/[.10]` are the banner's own values, not
+        approximations of them: one accent, drawn the same way twice.
+      */
+      className="flex min-w-[270px] flex-1 flex-col rounded-card border border-hairline-volt bg-volt/[.10] p-[22px]"
     >
       {/* Uppercase, as p01 draws it — §1.4 marks the display steps "Upper". */}
       <h3
@@ -71,6 +91,14 @@ export async function CommunityPanel({
       <p className="mb-4 max-w-[320px] text-[13px] leading-relaxed text-muted">
         {community.body}
       </p>
+
+      {/*
+        THE LOGOS ARE 55px, NOT 44 (round 25, item 4) — a 25% step, and the
+        only content change the item allows. The source files are 96px, so the
+        larger draw is still downscaling and gains no softness. `h-11 w-11`
+        was the 44px tap floor doing double duty as a size; the floor is
+        unaffected by growing past it.
+      */}
 
       {/*
         THE NUMBERS MOVED IN HERE (Section 2, item 8), and the standalone stats
@@ -198,7 +226,7 @@ export async function CommunityPanel({
           className="flex min-w-0 flex-1 basis-0 flex-col items-center justify-center gap-2 rounded-control border border-hairline-strong px-2 py-4 text-center text-[13px] font-bold tracking-wide text-bone no-underline transition hover:border-whatsapp"
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/brand/whatsapp-96.png" alt="" width={44} height={44} className="h-11 w-11" />
+          <img src="/brand/whatsapp-96.png" alt="" width={55} height={55} className="h-[55px] w-[55px]" />
           {community.whatsapp}
         </a>
         <a
@@ -209,7 +237,7 @@ export async function CommunityPanel({
           className="flex min-w-0 flex-1 basis-0 flex-col items-center justify-center gap-2 rounded-control border border-hairline-strong px-2 py-4 text-center text-[13px] font-bold tracking-wide text-bone no-underline transition hover:border-instagram"
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/brand/instagram-96.png" alt="" width={44} height={44} className="h-11 w-11 rounded-[10px]" />
+          <img src="/brand/instagram-96.png" alt="" width={55} height={55} className="h-[55px] w-[55px] rounded-[10px]" />
           {community.instagram}
         </a>
         {/*
@@ -229,7 +257,7 @@ export async function CommunityPanel({
           className="flex min-w-0 flex-1 basis-0 flex-col items-center justify-center gap-2 rounded-control border border-hairline-strong px-2 py-4 text-center text-[13px] font-bold tracking-wide text-bone no-underline transition hover:border-telegram"
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/brand/telegram-96.png" alt="" width={44} height={44} className="h-11 w-11" />
+          <img src="/brand/telegram-96.png" alt="" width={55} height={55} className="h-[55px] w-[55px]" />
           {community.telegram}
 
           {/*

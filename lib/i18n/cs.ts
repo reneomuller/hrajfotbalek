@@ -223,6 +223,7 @@ export const cs: StringsOverlay = {
     waitlistSeeGame: "Zobrazit zápas",
     rosterTitle: "Sestava",
     rosterEmpty: "Zatím si nikdo nezabral místo",
+    seatAwaitingPayment: "Čeká na platbu",
     cancelled: "Tenhle zápas byl zrušený.",
     notFound: "Takový zápas neexistuje, nebo ještě není zveřejněný.",
     backToGames: "← Všechny zápasy",
@@ -438,6 +439,9 @@ export const cs: StringsOverlay = {
 
     // Round 15, item 1 — DRAFT, for the native-review batch.
     returnTitle: "Potvrzujeme platbu",
+    checkoutTitle: "Zaplať své místo",
+    checkoutSeats: "{seats} míst(a) na tomto zápase",
+    checkoutCredits: "{credits} kreditů do peněženky",
     confirmingTitle: "Potvrzujeme tvoji platbu…",
     confirmingBody:
       "Stripe má tvoji platbu. Čekáme, až k nám dorazí potvrzení — obvykle to trvá pár vteřin.",
@@ -711,22 +715,20 @@ export const cs: StringsOverlay = {
     title: "Otázky",
     items: [
       {
-        q: "Co si mám vzít?",
-        // Round 17 item 4 — DRAFT. Střídání brankářů přesunuto sem z detailu zápasu.
-        a: "Boty a sebe. Rozlišováky, brankářské rukavice i míče jsou zajištěny — brankáři se střídají, takže vlastní nikdo nepotřebuje.",
-      },
-      {
-        q: "Jak zaplatím?",
-        a: "Kartou nebo mobilní peněženkou při rezervaci, nebo kredity z permanentky.",
+        q: "Co si mám vzít s sebou?",
+        a: "Stačí kopačky nebo botasky a chuť hrát. Rozlišováky, míče a rukavice zajišťujeme my. Brankáři se střídají, takže si nikdo nemusí vozit vlastní rukavice.",
       },
       {
         q: "Co když je zápas plný?",
-        a: "Přidej se na čekací listinu. Jakmile se místo uvolní, pošleme e-mail všem na ní — a místo dostane ten, kdo si ho vezme první.",
+        a: "Přidej se na čekací listinu. Jakmile se místo uvolní, dostanou e-mail všichni na listině a místo získá ten, kdo si ho zabere první.",
       },
       {
-        q: "Musím být dobrý?",
-        // Round 17 item 4 — DRAFT.
-        a: "Všechny úrovně jsou vítány; zápasy jsou přátelské, pokud u zápasu není uvedena konkrétní úroveň. Brankáři i náhradníci se střídají, takže si každý pořádně zahraje.",
+        q: "Jak zaplatím?",
+        a: "Zaplať bezpečně kartou nebo mobilní peněženkou při rezervaci, nebo použij kredity z permanentky.",
+      },
+      {
+        q: "Musím umět dobře hrát?",
+        a: "Vůbec ne. Vítáme všechny úrovně. Zápasy jsou přátelské, pokud odznak úrovně neříká jinak.",
       },
     ],
   },

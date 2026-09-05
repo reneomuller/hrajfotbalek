@@ -1,5 +1,6 @@
 import { BuyPassButton } from "@/components/pass/BuyPassButton";
 import { stripePassUrl } from "@/lib/payments/stripeLinks";
+import { embeddedCheckoutEnabled } from "@/lib/payments/embeddedCheckout";
 import { formatCzk } from "@/lib/format";
 import { MOST_POPULAR_GAMES, PASS_REFERENCE_PRICE_CZK } from "@/lib/pass/queries";
 import type { PassTier } from "@/lib/pass/queries";
@@ -196,7 +197,11 @@ export async function PassTierCard({
           games={tier.games}
           label={t.pass.tierPurchase}
           signedIn={signedIn}
-          configured={stripePassUrl(tier.games) !== null}
+          // Sellable through EITHER rail: the embedded form prices the tier
+          // from `pass_tiers`, so it needs no per-tier link (round 25, item 2).
+          configured={
+            embeddedCheckoutEnabled() || stripePassUrl(tier.games) !== null
+          }
           variant="quiet"
         />
       </div>

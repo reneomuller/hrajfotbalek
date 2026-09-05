@@ -122,7 +122,7 @@ export async function PlayersList({ rows, supabaseUrl }: PlayersListProps) {
                 alone: a 34px circle is a small tap area, and the two are one
                 object to a reader.
               */}
-              {seat.isGuest || !seat.nickname ? (
+              {seat.isGuest || seat.isPending || !seat.nickname ? (
                 <>
                   <Avatar seat={seat} supabaseUrl={supabaseUrl} index={i} />
                   <span className="min-w-0 flex-1 truncate text-[15px] text-muted">
@@ -151,7 +151,16 @@ export async function PlayersList({ rows, supabaseUrl }: PlayersListProps) {
                 guest, so printing it would put the same welcome on every one
                 of them.
               */}
-              {!seat.isGuest && typeof rows[i]?.games_played === "number" && (
+              {/*
+                NOR FOR A PENDING SEAT (round 25, item 1), and this one is
+                worse than the guest case it borrows from: the view returns 0
+                for a checkout in progress, so the chip read "First game"
+                beside an anonymous row — a WRONG fact about a REAL player,
+                published on the one row that is meant to say nothing about
+                them. Caught in the strip rather than in an assertion, which is
+                what the strips are for.
+              */}
+              {!seat.isGuest && !seat.isPending && typeof rows[i]?.games_played === "number" && (
                 <span
                   data-testid="player-games-played"
                   data-count={rows[i]?.games_played ?? 0}

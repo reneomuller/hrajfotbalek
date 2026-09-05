@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { getSessionUser } from "@/lib/auth/session";
 import { rememberPendingPurchase } from "@/lib/payments/pendingPurchaseCookie";
 import { stripePassUrl, withStripeParams } from "@/lib/payments/stripeLinks";
+import { embeddedCheckoutEnabled } from "@/lib/payments/embeddedCheckout";
 import { toBookingErrorCode, type BookingErrorCode } from "@/lib/booking/errors";
 import { createServerSupabaseClient } from "@/lib/supabase/clients";
 
@@ -55,8 +56,19 @@ export async function buyPassAction(
    * tier that can be sold, and the button says "Coming soon" rather than
    * selling it wrong.
    */
+  /*
+   * EMBEDDED FIRST, THE LINK AS FALLBACK (round 25, item 2).
+   *
+   * The link check below stays exactly as it was — resolve before writing, so
+   * an unsellable tier leaves no `pending` row behind. What changes is that a
+   * tier is also sellable when the Stripe KEYS are set, because then the price
+   * comes from `pass_tiers` through `begin_pass_purchase` and no per-tier link
+   * has to exist at all. That is the end of six links needing six URLs pasted
+   * into an env var.
+   */
+  const embedded = embeddedCheckoutEnabled();
   const link = stripePassUrl(games);
-  if (!link) {
+  if (!embedded && !link) {
     return { status: "error", code: "PASS_NOT_CONFIGURED" };
   }
 
@@ -80,7 +92,14 @@ export async function buyPassAction(
    * only thread from a line in the Stripe dashboard back to this row, and it
    * is what `confirm_online_purchase` dispatches on.
    */
-  const stamped = withStripeParams(link, {
+  const purchaseId = (data as { id: string }).id;
+
+  if (embedded) {
+    await rememberPendingPurchase({ kind: "pass", id: purchaseId });
+    redirect(`/payment/checkout?pass=${purchaseId}`);
+  }
+
+  const stamped = withStripeParams(link!, {
     reference: (data as { id: string }).id,
     email: user.email ?? null,
   });

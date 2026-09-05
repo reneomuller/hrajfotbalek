@@ -13,6 +13,7 @@ import { buildResumeUrl } from "@/lib/booking/resume";
 import { policy } from "@/lib/policy";
 import { rememberPendingPurchase } from "@/lib/payments/pendingPurchaseCookie";
 import { stripeBookingUrl, withStripeParams } from "@/lib/payments/stripeLinks";
+import { embeddedCheckoutEnabled } from "@/lib/payments/embeddedCheckout";
 import type { BookingResult, ClientPaymentMethod } from "@/lib/types/database";
 
 export interface BookingActionState {
@@ -124,8 +125,16 @@ export async function createBookingAction(
    * bypassed.
    */
   const online = rawOption === "online";
+  /*
+   * TWO RAILS, AND THE GATE IS "IS THERE ANYWHERE TO PAY" RATHER THAN "WHICH
+   * ONE" (round 25, item 2). Embedded checkout is preferred when both Stripe
+   * keys are set; the Payment Link is the fallback and keeps working
+   * unchanged until then. Either counts as a live path — what must never
+   * happen is Confirm being live with NEITHER behind it.
+   */
+  const embedded = embeddedCheckoutEnabled();
   const payUrl = stripeBookingUrl();
-  if (online && !payUrl) {
+  if (online && !embedded && !payUrl) {
     return { status: "error", code: "INSUFFICIENT_PERMISSION" };
   }
 
@@ -183,6 +192,18 @@ export async function createBookingAction(
    * where they settle it. Booking after payment would mean taking money for a
    * spot that a race may already have given away.
    */
+  if (online && embedded) {
+    /*
+     * THE PLAYER NEVER LEAVES. `/payment/checkout` computes the exact amount
+     * from this booking — party size included — and renders Stripe's form
+     * inside our own page. The cookie is still written, because the RETURN is
+     * unchanged: `/payment/return` is where Stripe sends them back, and it
+     * still has to know what was being bought.
+     */
+    await rememberPendingPurchase({ kind: "booking", id: bookingId });
+    redirect(`/payment/checkout?booking=${bookingId}`);
+  }
+
   if (online && payUrl) {
     /*
      * STAMPED WITH THE BOOKING ID AND THE PAYER (item 16). Reconciliation is

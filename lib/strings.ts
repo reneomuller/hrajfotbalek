@@ -438,6 +438,15 @@ export const strings = {
     waitlistSeeGame: "See the game",
     rosterTitle: "Lineup",
     rosterEmpty: "Nobody has claimed a spot yet",
+    /*
+     * A SEAT HELD BY A CHECKOUT IN PROGRESS (round 25, item 1).
+     *
+     * It replaces a nickname on the public roster, so it has to say enough to
+     * stop a reader wondering and not enough to identify anybody: no name, no
+     * photograph, no games-played figure. "Somebody is paying for this seat
+     * right now, or has just walked away from it" in two words.
+     */
+    seatAwaitingPayment: "Awaiting payment",
     cancelled: "This game was cancelled.",
     notFound: "That game does not exist, or is not published yet.",
     backToGames: "← All games",
@@ -943,6 +952,10 @@ export const strings = {
      * not the payment's, which is the only thing this screen actually knows.
      */
     returnTitle: "Confirming your payment",
+    /* Round 25, item 2 — the embedded checkout's own page. */
+    checkoutTitle: "Pay for your spot",
+    checkoutSeats: "{seats} spot(s) at this game",
+    checkoutCredits: "{credits} credits for your wallet",
     confirmingTitle: "Confirming your payment…",
     confirmingBody:
       "Stripe has your payment. We are waiting for the confirmation to reach us — this usually takes a few seconds.",
@@ -1254,64 +1267,53 @@ export const strings = {
     // convention at a glance rather than read as a word.
     title: "FAQ",
     /*
-     * THE OWNER'S FOUR (round 13, item 11), replacing six.
+     * THE OWNER'S EXACT FOUR (round 25, item 3), REPLACING THE ROUND-13 SET.
      *
-     * ~~"When should I show up?" (10 minutes before kickoff) and "What if I
-     * can't make it?" (cancel anytime for full wallet credit)~~ are gone —
-     * the second is on the booking screen already, above the button it
-     * concerns, which is where a cancellation policy is actually read.
+     * SUPPLIED VERBATIM AND NOT EDITED. Every previous version of these
+     * answers was written here and then checked against the code; this one
+     * arrived finished, in this order, and the only work was making sure the
+     * code still says what they say. It does:
      *
-     * EVERY ANSWER HERE WAS CHECKED AGAINST THE CODE BEFORE IT SHIPPED, which
-     * is the point of the item rather than a courtesy:
+     *   BOOTS AND BIBS — `games.amenities` covers bibs, balls and gloves, and
+     *   the keeper rotation is the same fact round 17 moved into this panel.
+     *   VERIFIED.
      *
-     *   PAYMENT — rewritten. It said "scan the QR from your banking app",
-     *   which item 6 retired. Card, wallet, credits and cash are what the
-     *   booking screen actually offers.
+     *   THE WAITLIST — `notify_waitlist` stamps every entry and emits
+     *   `waitlist_notified` in one transaction, and `notifyWaitlistForGame`
+     *   mails everyone it returns, from both paths that free a spot. "Notified
+     *   by email" is still literally true and still the honest word: the bell
+     *   does not carry it (row 89's consumer is not built). "The first person
+     *   to claim it gets the spot" is `create_booking`'s capacity check, not a
+     *   reservation. VERIFIED.
      *
-     *   THE WAITLIST — VERIFIED TRUE. `notify_waitlist` stamps every entry and
-     *   emits `waitlist_notified` in one transaction, and
-     *   `notifyWaitlistForGame` mails everyone it returns. It is driven from
-     *   BOTH paths that can free a spot: a player cancelling
-     *   (`app/account/actions.ts`) and the expiry sweep
-     *   (`app/api/cron/expiry/route.ts`). The answer says EMAIL rather than
-     *   "we'll let you know", because the bell does not carry it — see the
-     *   gap recorded in docs/REQUESTS.md — and it says everyone is told at
-     *   once, because the race is settled by `create_booking`'s capacity
-     *   check and a reader who thinks they have been offered a reserved spot
-     *   has been misled.
+     *   PAYMENT — card, mobile wallet, or credits. Cash left the flow in round
+     *   23 and this text no longer mentions it, which the previous version
+     *   did until round 23 corrected it. VERIFIED.
      *
-     *   LEVELS — verified. `create_booking` never consults skill (§5.3,
-     *   REQ-GAME-011), so a badge really is a signal and not a gate.
+     *   LEVELS — `create_booking` never consults skill (§5.3, REQ-GAME-011),
+     *   so a badge is a signal and not a gate. VERIFIED.
      *
-     * THE ROTATIONS LANDED HERE (round 17, item 4). They were two bare lines
-     * in the game detail's "Practical information" card — "Rotating
-     * goalkeepers", "Rotating subs" — which round 16 item 4 removed as a card
-     * without rehoming its content, and which I flagged rather than dropped
-     * silently.
-     *
-     * THEY ARE NOT FACTS ABOUT A FIXTURE, which is why they never belonged on
-     * a game page: they describe how a kickabout is run, and they are the same
-     * on every game. Split across the two answers each half actually belongs
-     * to rather than bolted onto one — the keeper rotation answers "do I need
-     * gloves", the pair together answers "will I actually play". A reader
-     * asking either question meets it where they asked.
+     * WHAT LEFT WITH THE REWRITE: the substitute rotation, which round 17 put
+     * in the "do I need to be good" answer. The owner's text drops it and the
+     * keeper rotation survives in the first answer, which is the half that
+     * answers a question somebody actually asks.
      */
     items: [
       {
         q: "What should I bring?",
-        a: "Shoes and yourself. Bibs, gloves and balls are provided — goalkeepers rotate, so nobody needs their own.",
-      },
-      {
-        q: "How do I pay?",
-        a: "By card or mobile wallet when you book, or with credits from a game pass.",
+        a: "Just bring your boots or trainers and be ready to play. Bibs, balls and gloves are provided. Goalkeepers rotate, so no one needs to bring their own gloves.",
       },
       {
         q: "What if the game is full?",
-        a: "Join the waitlist. Everyone on it is emailed the moment a spot opens, and the first to claim it takes it.",
+        a: "Join the waitlist. If a spot opens up, everyone on the list will be notified by email, and the first person to claim it gets the spot.",
+      },
+      {
+        q: "How do I pay?",
+        a: "Pay securely by card or mobile wallet when you book, or use credits from your game pass.",
       },
       {
         q: "Do I need to be good?",
-        a: "All levels welcome; games are casual unless a level badge says otherwise. Goalkeepers and subs rotate, so everyone gets a proper game.",
+        a: "Not at all. All skill levels are welcome. Games are casual unless a level badge says otherwise.",
       },
     ],
   },
