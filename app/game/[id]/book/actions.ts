@@ -14,6 +14,7 @@ import { policy } from "@/lib/policy";
 import { rememberPendingPurchase } from "@/lib/payments/pendingPurchaseCookie";
 import { stripeBookingUrl, withStripeParams } from "@/lib/payments/stripeLinks";
 import { embeddedCheckoutEnabled } from "@/lib/payments/embeddedCheckout";
+import { expireOpenCheckouts } from "@/lib/payments/activeExpiry";
 import type { BookingResult, ClientPaymentMethod } from "@/lib/types/database";
 
 export interface BookingActionState {
@@ -168,6 +169,22 @@ export async function createBookingAction(
     }
   }
 
+  /*
+   * PAY FIRST: THE ONLINE PATH CREATES NO BOOKING (round 26, item 1).
+   *
+   * ~~`create_booking(p_online: true)` first, then Stripe, then the webhook
+   * confirms.~~ That held a seat for somebody who had not paid, and every
+   * defect of the last three rounds grew out of it — a name on the roster, a
+   * row that never expired, a count that went down for a shopper.
+   *
+   * Now the party size travels to `/payment/checkout` in the URL and the
+   * WEBHOOK creates the booking, once money has arrived, under the game's
+   * lock. Nothing below this line runs for an online booking.
+   */
+  if (rawOption === "online" && embedded) {
+    redirect(`/payment/checkout?game=${gameId}&guests=${guests}`);
+  }
+
   const method = OPTION_TO_METHOD[rawOption];
 
   // No pre-auth soft hold: an unauthenticated caller is sent to authenticate
@@ -187,23 +204,23 @@ export async function createBookingAction(
   if (typeof bookingId !== "string") return bookingId;
 
   /*
+   * ACTIVE EXPIRY, RAIL 2 (round 26, item 1). A credit redemption can take the
+   * last seat, and somebody else may have a payment form open for this game
+   * right now. Killing their session at Stripe is what stops their money
+   * moving at all — the credit fallback in `settle_checkout_session` is for
+   * the same-instant residual this cannot reach in time.
+   *
+   * AFTER the booking, never before: the seat has to be gone before the
+   * question "is this game full" has the right answer.
+   */
+  await expireOpenCheckouts(gameId);
+
+  /*
    * THE BOOKING EXISTS BEFORE THE PLAYER LEAVES, which is the right order.
    * The spot is held the moment `create_booking` returns; the payment page is
    * where they settle it. Booking after payment would mean taking money for a
    * spot that a race may already have given away.
    */
-  if (online && embedded) {
-    /*
-     * THE PLAYER NEVER LEAVES. `/payment/checkout` computes the exact amount
-     * from this booking — party size included — and renders Stripe's form
-     * inside our own page. The cookie is still written, because the RETURN is
-     * unchanged: `/payment/return` is where Stripe sends them back, and it
-     * still has to know what was being bought.
-     */
-    await rememberPendingPurchase({ kind: "booking", id: bookingId });
-    redirect(`/payment/checkout?booking=${bookingId}`);
-  }
-
   if (online && payUrl) {
     /*
      * STAMPED WITH THE BOOKING ID AND THE PAYER (item 16). Reconciliation is

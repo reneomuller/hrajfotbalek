@@ -232,7 +232,6 @@ export const uk: StringsOverlay = {
     waitlistSeeGame: "Відкрити матч",
     rosterTitle: "Склад",
     rosterEmpty: "Поки ніхто не зайняв місце",
-    seatAwaitingPayment: "Очікує оплати",
     cancelled: "Цей матч скасовано.",
     notFound: "Такого матчу немає або він ще не опублікований.",
     backToGames: "← Усі матчі",

@@ -211,15 +211,6 @@ export interface RosterAvatar {
   guestOf: string | null;
   /** 1-based, among that owner's guests or among the house guests. */
   guestIndex: number | null;
-  /**
-   * A seat held by a checkout in progress (round 25, item 1).
-   *
-   * OPTIONAL, because the column arrives with
-   * `20260905100000_pending_seat_is_anonymous` and the deployed application
-   * has to run against both shapes. Absent reads as false, which is the
-   * pre-migration behaviour exactly: every seat that exists is a named one.
-   */
-  isPending?: boolean;
 }
 
 /**
@@ -236,6 +227,14 @@ export function toRosterAvatar(row: {
   is_guest: boolean;
   guest_of: string | null;
   guest_index: number | null;
+  /*
+   * ~~`is_pending`~~ — round 25's anonymous checkout seat. Pay-first removed
+   * the state (round 26, item 1); the COLUMN is still projected by the view so
+   * the deployed application does not break the moment the migration lands,
+   * and it is dropped by the cleanup script the owner runs. Accepted and
+   * ignored here rather than removed from the select, so neither order of
+   * those two events breaks anything.
+   */
   is_pending?: boolean | null;
 }): RosterAvatar {
   return {
@@ -244,7 +243,6 @@ export function toRosterAvatar(row: {
     isGuest: row.is_guest,
     guestOf: row.guest_of,
     guestIndex: row.guest_index,
-    isPending: Boolean(row.is_pending),
   };
 }
 
@@ -263,7 +261,6 @@ export function plainAvatar(nickname: string): RosterAvatar {
     isGuest: false,
     guestOf: null,
     guestIndex: null,
-    isPending: false,
   };
 }
 

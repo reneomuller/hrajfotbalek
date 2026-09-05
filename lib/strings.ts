@@ -438,15 +438,6 @@ export const strings = {
     waitlistSeeGame: "See the game",
     rosterTitle: "Lineup",
     rosterEmpty: "Nobody has claimed a spot yet",
-    /*
-     * A SEAT HELD BY A CHECKOUT IN PROGRESS (round 25, item 1).
-     *
-     * It replaces a nickname on the public roster, so it has to say enough to
-     * stop a reader wondering and not enough to identify anybody: no name, no
-     * photograph, no games-played figure. "Somebody is paying for this seat
-     * right now, or has just walked away from it" in two words.
-     */
-    seatAwaitingPayment: "Awaiting payment",
     cancelled: "This game was cancelled.",
     notFound: "That game does not exist, or is not published yet.",
     backToGames: "← All games",

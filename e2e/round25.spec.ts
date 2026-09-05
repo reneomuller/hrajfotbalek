@@ -7,7 +7,6 @@ import { apiClientFor, players, serviceClient, signInAs } from "./helpers/sessio
 import {
   createScratchGame,
   destroyScratchGame,
-  expireOnlinePayment,
   setWalletTo,
 } from "./helpers/scaffold";
 
@@ -29,218 +28,16 @@ async function settle(page: import("@playwright/test").Page) {
   });
 }
 
-/**
- * A booking that went to a payment page and was abandoned.
- *
- * THROUGH THE REAL PATH: `create_booking` with `p_online` is what stamps
- * `payment_pending_at`, and it is the stamp — not the row — that this whole
- * item is about. Building the row by hand would test a state the product
- * cannot produce.
- */
-async function abandonedCheckout(game: { id: string }, who = players.runner) {
-  await setWalletTo(who.id, 0);
-  const client = await apiClientFor(who);
-  const { data, error } = await client.rpc("create_booking", {
-    p_game_id: game.id,
-    p_payment_method: "qr",
-    p_guest_count: 0,
-    p_online: true,
-  });
-  expect(error, `create_booking(online): ${error?.message}`).toBeNull();
-  const booking = data as unknown as { id: string; status: string };
-  expect(booking.status, "an online booking should start reserved").toBe("reserved");
-  return booking;
-}
-
 /* ============================================================================
- * ITEM 1 — an unpaid seat is never a named participant
+ * ITEM 1 — ~~an unpaid seat is never a named participant~~
+ *
+ * SUPERSEDED BY ROUND 26's PAY-FIRST ARCHITECTURE, and the tests moved rather
+ * than being deleted: `e2e/round26.spec.ts` asserts the stronger property that
+ * replaced them. Round 25 made an unpaid seat anonymous; round 26 removed the
+ * unpaid seat. The one assertion that still belongs to this round — that a
+ * PAID booking is still named, i.e. the anonymity fix was not too wide — moved
+ * with them, because under pay-first it is the only kind of booking there is.
  * ========================================================================== */
-
-test("an abandoned checkout holds a seat and names nobody", async ({ page, context }) => {
-  mkdirSync(OUT, { recursive: true });
-  const game = await createScratchGame({ capacity: 8, priceCzk: 150 });
-
-  try {
-    const booking = await abandonedCheckout(game);
-    const admin = serviceClient();
-
-    // THE SEAT IS HELD, which is the design and stays. A race must not sell
-    // the same spot twice while somebody is typing a card number.
-    const { data: seats } = await admin.rpc("game_seats_taken", { p_game_id: game.id });
-    expect(seats, "the checkout stopped holding its seat").toBe(1);
-
-    /*
-     * AND NOBODY IS NAMED. This is the defect: the roster used
-     * `booking_holds_seat` to decide whose NAME to publish, so for thirty
-     * minutes an abandoner's nickname and photograph sat on a public page,
-     * indistinguishable from somebody who had paid.
-     */
-    const { data: roster } = await admin
-      .from("game_roster_public")
-      .select("nickname, is_pending")
-      .eq("game_id", game.id);
-    const rows = (roster ?? []) as { nickname: string | null; is_pending: boolean }[];
-    expect(rows).toHaveLength(1);
-    expect(rows[0]!.nickname, "the abandoner is named on the public roster").toBeNull();
-    expect(rows[0]!.is_pending).toBe(true);
-
-    // AS A SIGNED-OUT VISITOR SEES IT — the page, not the view.
-    await context.clearCookies();
-    await context.addCookies([
-      { name: LOCALE_COOKIE, value: "en", domain: "localhost", path: "/" },
-    ]);
-    await page.goto(`/game/${game.id}`, { waitUntil: "networkidle" });
-    await settle(page);
-
-    const players_ = page.getByTestId("players-list");
-    await expect(players_).toContainText(strings.games.seatAwaitingPayment);
-    await expect(
-      players_,
-      "the abandoner's nickname is on the game page",
-    ).not.toContainText(players.runner.nickname);
-    await expect(page.getByTestId("roster-player-link")).toHaveCount(0);
-    /*
-     * AND NO GAMES-PLAYED CHIP. The view returns 0 for a pending row, which
-     * rendered "First game" beside the anonymous seat — a wrong fact about a
-     * real player, on the row that exists to say nothing about them.
-     */
-    await expect(page.getByTestId("player-games-played")).toHaveCount(0);
-
-    await players_.screenshot({ path: path.join(OUT, "01-pending-seat.png") });
-
-    /*
-     * THE OWNER'S OWN VIEW STILL SAYS WHAT IS HAPPENING, which is the other
-     * half of the standard: anonymous to everyone else, explicit to them.
-     */
-    await signInAs(context, players.runner);
-    await page.goto(`/game/${game.id}`, { waitUntil: "networkidle" });
-    await settle(page);
-    await expect(page.getByTestId("awaiting-payment")).toBeVisible();
-
-    void booking;
-  } finally {
-    await destroyScratchGame(game.id);
-  }
-});
-
-test("past thirty minutes the seat frees itself and the sweep expires the row", async () => {
-  const game = await createScratchGame({ capacity: 8, priceCzk: 150 });
-
-  try {
-    const booking = await abandonedCheckout(game);
-    const admin = serviceClient();
-
-    /*
-     * THE CLOCK, MOVED ON THE ROW RATHER THAN ON THE MACHINE — through the
-     * OWNER CONNECTION, which is the whole reason `expireOnlinePayment`
-     * exists. `service_role` has no UPDATE on `bookings`, so a PostgREST
-     * `.update()` here reports success and changes nothing; the first version
-     * of this test did exactly that and failed on the assertion after it,
-     * which is the documented trap working as designed.
-     */
-    await expireOnlinePayment(booking.id);
-
-    // The SEAT goes immediately: `booking_holds_seat` is time-based.
-    const { data: seats } = await admin.rpc("game_seats_taken", { p_game_id: game.id });
-    expect(seats, "an abandoned checkout still holds its seat past the window").toBe(0);
-
-    const { data: roster } = await admin
-      .from("game_roster_public")
-      .select("nickname")
-      .eq("game_id", game.id);
-    expect(roster ?? [], "an abandoned checkout still has a roster row").toHaveLength(0);
-
-    /*
-     * THE ROW IS THE HALF NOBODY HAD LOOKED FOR. It stayed `reserved` forever
-     * — production carried one for thirteen days — and `settle_game` refuses
-     * while any reserved booking remains, so its game could never be settled.
-     */
-    const { data: before } = await admin
-      .from("bookings")
-      .select("status")
-      .eq("id", booking.id)
-      .single();
-    expect((before as { status: string }).status).toBe("reserved");
-
-    const { data: swept, error } = await admin.rpc("expire_pending_online_payments");
-    expect(error, `expire_pending_online_payments: ${error?.message}`).toBeNull();
-    expect(swept as number).toBeGreaterThanOrEqual(1);
-
-    const { data: after } = await admin
-      .from("bookings")
-      .select("status")
-      .eq("id", booking.id)
-      .single();
-    expect(
-      (after as { status: string }).status,
-      "the abandoned booking survived the sweep",
-    ).toBe("expired");
-  } finally {
-    await destroyScratchGame(game.id);
-  }
-});
-
-test("a paid booking is still named — the fix is scoped to pending checkouts", async () => {
-  const game = await createScratchGame({ capacity: 8, priceCzk: 150 });
-
-  try {
-    // Credit covers it, so `create_booking` confirms on the spot.
-    await setWalletTo(players.creditRich.id, 150);
-    const client = await apiClientFor(players.creditRich);
-    await client.rpc("create_booking", { p_game_id: game.id, p_payment_method: "cash" });
-
-    const { data: roster } = await serviceClient()
-      .from("game_roster_public")
-      .select("nickname, is_pending")
-      .eq("game_id", game.id);
-    const rows = (roster ?? []) as { nickname: string | null; is_pending: boolean }[];
-
-    expect(rows).toHaveLength(1);
-    expect(
-      rows[0]!.nickname,
-      "a confirmed player lost their name — the fix is too wide",
-    ).toBe(players.creditRich.nickname);
-    expect(rows[0]!.is_pending).toBe(false);
-  } finally {
-    await destroyScratchGame(game.id);
-  }
-});
-
-test("a party's guest seats go anonymous with the checkout that holds them", async () => {
-  const game = await createScratchGame({ capacity: 8, priceCzk: 150 });
-
-  try {
-    await setWalletTo(players.runner.id, 0);
-    const client = await apiClientFor(players.runner);
-    const { error } = await client.rpc("create_booking", {
-      p_game_id: game.id,
-      p_payment_method: "qr",
-      p_guest_count: 2,
-      p_online: true,
-    });
-    expect(error).toBeNull();
-
-    const { data: roster } = await serviceClient()
-      .from("game_roster_public")
-      .select("nickname, guest_of, is_pending")
-      .eq("game_id", game.id);
-    const rows = (roster ?? []) as {
-      nickname: string | null;
-      guest_of: string | null;
-      is_pending: boolean;
-    }[];
-
-    // Three seats — the player and two guests — and not one of them names
-    // anybody. A guest row carrying `guest_of` would leak the owner.
-    expect(rows).toHaveLength(3);
-    for (const row of rows) {
-      expect(row.nickname).toBeNull();
-      expect(row.guest_of, "a guest row still names the player who brought it").toBeNull();
-    }
-  } finally {
-    await destroyScratchGame(game.id);
-  }
-});
 
 /* ============================================================================
  * ITEM 2 — embedded checkout, gated
@@ -278,26 +75,26 @@ test("the online option stays live and the flow never dead-ends", async ({
   }
 });
 
-test("the checkout page refuses a booking that is not yours", async ({ page, context }) => {
+test("the checkout page refuses a game it cannot sell", async ({ page, context }) => {
   const game = await createScratchGame({ capacity: 8, priceCzk: 150 });
 
   try {
-    const booking = await abandonedCheckout(game, players.runner);
-
-    // Somebody else's id in the URL.
-    await signInAs(context, players.creditRich);
-    const response = await page.goto(`/payment/checkout?booking=${booking.id}`);
-
     /*
-     * 404 OR A REDIRECT AWAY — never the form. Without the keys this page
-     * redirects to /games before it reads anything, which is also correct;
-     * what must never happen is a Stripe session created for a stranger's
-     * booking.
+     * ~~Somebody else's BOOKING id in the URL.~~ Under pay-first there is no
+     * booking to borrow (round 26, item 1) — the URL carries a GAME and a
+     * party size, both public. So the thing worth asserting changed with the
+     * architecture: the page must refuse to open a form for a game that cannot
+     * be sold, which is checked before a Stripe session is created.
      */
-    expect(page.url(), "somebody else's checkout rendered").not.toContain(
-      "/payment/checkout",
-    );
-    void response;
+    await signInAs(context, players.creditRich);
+    await serviceClient().rpc("cancel_game", { p_game_id: game.id });
+
+    await page.goto(`/payment/checkout?game=${game.id}&guests=0`);
+
+    expect(
+      page.url(),
+      "a checkout opened for a cancelled game",
+    ).not.toContain("/payment/checkout");
   } finally {
     await destroyScratchGame(game.id);
   }

@@ -223,7 +223,6 @@ export const cs: StringsOverlay = {
     waitlistSeeGame: "Zobrazit zápas",
     rosterTitle: "Sestava",
     rosterEmpty: "Zatím si nikdo nezabral místo",
-    seatAwaitingPayment: "Čeká na platbu",
     cancelled: "Tenhle zápas byl zrušený.",
     notFound: "Takový zápas neexistuje, nebo ještě není zveřejněný.",
     backToGames: "← Všechny zápasy",

@@ -226,7 +226,6 @@ export const ru: StringsOverlay = {
     waitlistSeeGame: "Открыть матч",
     rosterTitle: "Состав",
     rosterEmpty: "Пока никто не занял место",
-    seatAwaitingPayment: "Ожидает оплаты",
     cancelled: "Этот матч отменён.",
     notFound: "Такого матча нет или он ещё не опубликован.",
     backToGames: "← Все матчи",

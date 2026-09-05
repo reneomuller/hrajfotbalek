@@ -23,13 +23,6 @@ import type { RosterAvatar } from "@/lib/games/queries";
  * per language with `{name}` and `{n}` in it.
  */
 export function guestLabel(seat: RosterAvatar, t: Strings = strings): string {
-  /*
-   * A SEAT HELD BY A CHECKOUT IN PROGRESS (round 25, item 1) — first, because
-   * it is neither a guest nor a named player and both of the branches below
-   * would mislabel it. It says what it is; it never says who.
-   */
-  if (seat.isPending) return t.games.seatAwaitingPayment;
-
   if (!seat.isGuest) return seat.nickname ?? t.games.rosterUnknown;
   if (seat.nickname) return seat.nickname;
 
@@ -66,6 +59,5 @@ export function firstName(nickname: string): string {
  * badges on the card.
  */
 export function isAnonymousGuest(seat: RosterAvatar): boolean {
-  // A pending seat draws the silhouette too: there is no person to monogram.
-  return (seat.isGuest || Boolean(seat.isPending)) && !seat.nickname;
+  return seat.isGuest && !seat.nickname;
 }

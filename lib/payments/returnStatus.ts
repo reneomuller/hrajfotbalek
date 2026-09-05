@@ -1,4 +1,3 @@
-import { onlinePaymentState } from "@/lib/booking/queries";
 import {
   purchaseDestination,
   type PendingPurchase,
@@ -59,40 +58,76 @@ export async function readPurchaseStatus(
     : readPassStatus(purchase);
 }
 
+/**
+ * PAY FIRST: THE ID IS A STRIPE SESSION, AND THE OUTCOME MAY BE EITHER OF TWO
+ * THINGS (round 26, item 1).
+ *
+ * ~~Read the booking row the checkout created and watch it turn confirmed.~~
+ * There is no booking row until the webhook makes one. So this waits for an
+ * OUTCOME TO EXIST, and there are two legitimate ones:
+ *
+ *   BOOKED   — a seat was there. The success screen is the booking's own
+ *              confirmation.
+ *   CREDITED — the game filled while they were paying. The money is in their
+ *              wallet in full, they have been told by notification, and the
+ *              right ending is the wallet, not a booking that does not exist.
+ *
+ * Anything else is still `pending`: the register row exists (we created it
+ * when the form opened) and the webhook has not decided yet.
+ */
 async function readBookingStatus(
   purchase: PendingPurchase,
 ): Promise<PurchaseStatus | null> {
   const supabase = await createServerSupabaseClient();
-  const { data, error } = await supabase
-    .from("bookings")
-    .select("id, game_id, status, payment_pending_at, payment_attention_at")
-    .eq("id", purchase.id)
-    .maybeSingle();
+
+  /*
+   * THROUGH AN RPC, BECAUSE THE REGISTER IS CLOSED TO CLIENTS. RLS on
+   * `checkout_sessions` denies everything and there is no policy to relax —
+   * the table names who is trying to buy what.
+   */
+  const { data, error } = await supabase.rpc("checkout_outcome", {
+    p_stripe_session_id: purchase.id,
+  });
 
   // No row means "not yours, or not real" — the same answer, deliberately.
-  // Distinguishing them would tell a caller whether a booking id exists.
-  if (error || !data) return null;
+  const rows = (data ?? []) as {
+    status: string;
+    game_id: string;
+    booking_id: string | null;
+  }[];
+  const outcome = rows[0];
+  if (error || !outcome) return null;
 
-  const fallbackHref = `/game/${data.game_id}`;
+  const fallbackHref = `/game/${outcome.game_id}`;
 
-  if (data.status === "confirmed") {
+  if (outcome.status === "booked" && outcome.booking_id) {
     return {
       state: "confirmed",
-      href: purchaseDestination(purchase, { gameId: data.game_id }),
+      href: `/game/${outcome.game_id}/book/confirmation?booking=${outcome.booking_id}`,
       fallbackHref,
     };
   }
 
-  const online = onlinePaymentState(data);
-  if (online === "waiting") return { state: "pending", href: null, fallbackHref };
+  /*
+   * CREDITED IS AN ENDING, NOT AN ERROR, and it gets its own screen rather
+   * than the game page: the player paid, holds the value, and needs to be told
+   * where it went. `/account` is the wallet.
+   */
+  if (outcome.status === "credited") {
+    return { state: "elsewhere", href: "/account", fallbackHref };
+  }
 
   /*
-   * `none` REACHES HERE TOO, and it is not an error. A booking that is
-   * `reserved` with no `payment_pending_at` is one the player is paying for
-   * some other way; a `cancelled` one is settled and gone. Both belong on the
-   * game page rather than on a spinner that will never stop.
+   * EXPIRED reaches here when active expiry killed the form before the card
+   * was charged — the intended outcome of a game filling, and the one where
+   * nothing happened at all. The game page says the game is full, which is the
+   * whole story.
    */
-  return { state: "elsewhere", href: fallbackHref, fallbackHref };
+  if (outcome.status === "expired") {
+    return { state: "elsewhere", href: fallbackHref, fallbackHref };
+  }
+
+  return { state: "pending", href: null, fallbackHref };
 }
 
 async function readPassStatus(

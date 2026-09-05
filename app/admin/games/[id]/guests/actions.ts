@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { expireOpenCheckouts } from "@/lib/payments/activeExpiry";
 import { requireAdmin } from "@/lib/auth/requireAdmin";
 import { toAdminErrorMessage } from "@/lib/admin/errors";
 import { strings } from "@/lib/strings";
@@ -60,6 +61,13 @@ export async function setGuestsAction(
         : toAdminErrorMessage(error.message),
     };
   }
+
+  /*
+   * ACTIVE EXPIRY, RAIL 3 (round 26, item 1). House guests take real seats, so
+   * an admin holding two of them can fill a game while somebody has a payment
+   * form open. Killing that session at Stripe stops their money moving.
+   */
+  await expireOpenCheckouts(gameId);
 
   revalidatePath(`/admin/games/${gameId}`);
   revalidatePath(`/game/${gameId}`);

@@ -86,12 +86,24 @@ export interface CheckoutLine {
 
 export interface EmbeddedSessionInput {
   line: CheckoutLine;
-  /** The booking id or the top-up id — what the webhook dispatches on. */
+  /**
+   * For a PASS, the top-up id the webhook dispatches on. For a GAME under
+   * pay-first there is no row of ours yet, so this is the game id — carried
+   * for the Stripe dashboard's legibility rather than for dispatch, which
+   * happens on the session id itself.
+   */
   reference: string;
   kind: "booking" | "pass";
   customerEmail: string | null;
   /** Absolute, and it must be: Stripe redirects the top-level browser here. */
   returnUrl: string;
+  /**
+   * PAY FIRST (round 26, item 1) — what the webhook needs to CREATE a booking,
+   * because none exists yet. Present only for a game checkout.
+   */
+  gameId?: string;
+  playerId?: string;
+  guestCount?: number;
 }
 
 /**
@@ -148,9 +160,25 @@ export async function createEmbeddedSession(
     mode: "payment",
     client_reference_id: input.reference,
     customer_email: input.customerEmail ?? undefined,
+    /*
+     * THE METADATA IS THE BOOKING, WAITING TO HAPPEN. Under pay-first nothing
+     * exists in our database when this session is created, so everything the
+     * webhook needs to build the booking travels here — and travels back
+     * signed, on an event we verify.
+     *
+     * `settle_checkout_session` reads none of it: it keys off the session id,
+     * which is the one identifier Stripe guarantees and nobody can edit. These
+     * are for a HUMAN reading the Stripe dashboard, and for the day somebody
+     * has to reconcile a payment by hand.
+     */
     metadata: {
       kind: input.kind,
       reference: input.reference,
+      ...(input.gameId ? { game_id: input.gameId } : {}),
+      ...(input.playerId ? { player_id: input.playerId } : {}),
+      ...(input.guestCount !== undefined
+        ? { guest_count: String(input.guestCount) }
+        : {}),
     },
     line_items: [
       {

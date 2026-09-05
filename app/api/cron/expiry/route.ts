@@ -80,35 +80,19 @@ export async function GET(request: Request) {
   }
 
   /*
-   * ABANDONED CHECKOUTS (round 25, item 1).
+   * ~~ABANDONED CHECKOUTS (round 25, item 1)~~ — REMOVED with the state itself
+   * (round 26, item 1).
    *
-   * A booking sent to a payment page and never paid for is `reserved` with a
-   * `payment_pending_at`, and its SEAT frees itself thirty minutes later
-   * because `booking_holds_seat` is time-based. The ROW never moved: nothing
-   * transitioned it, because this sweep works on `expires_at`, which is set by
-   * the NUDGE — and a booking abandoned in its first half hour is never
-   * nudged.
+   * That sweep existed because an online booking was created BEFORE payment
+   * and lingered `reserved` forever when the payer walked away. Under pay-first
+   * no such row is ever created: the webhook makes the booking, already paid.
+   * There is nothing left to expire, so the sweep is gone rather than left
+   * running over a set that is now always empty.
    *
-   * Production carried one for thirteen days, on a game that has since been
-   * played and can therefore never be settled: `settle_game` refuses while any
-   * `reserved` booking remains.
-   *
-   * IT RIDES THIS ROUTE rather than getting its own: it is the same job on a
-   * different clock, and one sweep that expires everything expirable is easier
-   * to reason about than two. Gated, so a database without the function is a
-   * no-op rather than a 500.
+   * `expire_pending_online_payments` stays in the database until the owner
+   * runs the cleanup script — it is harmless and it still resolves the legacy
+   * rows that predate this round.
    */
-  let staleCheckouts = 0;
-  const { data: capabilities } = await supabase.rpc("app_capabilities");
-  if ((capabilities as Record<string, boolean> | null)?.pendingSeatAnonymous) {
-    const { data: swept, error: sweepError } = await supabase.rpc(
-      "expire_pending_online_payments",
-    );
-    if (sweepError) {
-      return NextResponse.json({ error: sweepError.message }, { status: 500 });
-    }
-    staleCheckouts = swept ?? 0;
-  }
 
   // A released spot is the whole point of expiring a booking: tell everyone
   // still waiting, all at once.
@@ -122,7 +106,6 @@ export async function GET(request: Request) {
     expired: expired.length,
     skipped: failed.length,
     expiryEmails: emails,
-    staleCheckouts,
     gamesReleased: releasedGames.size,
     waitlistNotified: notified,
   });

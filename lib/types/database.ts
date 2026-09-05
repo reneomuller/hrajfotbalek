@@ -667,6 +667,37 @@ export interface Database {
         Update: never;
         Relationships: [];
       };
+      /**
+       * Open Stripe checkouts (round 26, item 1).
+       *
+       * IT HOLDS NO SEAT AND IS COUNTED BY NOTHING. Under pay-first a booking
+       * exists only once money has arrived, so this register's whole job is to
+       * let a game that fills ACTIVELY EXPIRE the forms still open on other
+       * people's screens — which is what stops a later payer's money moving at
+       * all.
+       *
+       * RLS DENIES EVERYTHING: there is no policy, and every access is through
+       * a SECURITY DEFINER function. It names who is trying to buy what.
+       */
+      checkout_sessions: {
+        Row: {
+          id: string;
+          stripe_session_id: string;
+          game_id: string;
+          player_id: string;
+          guest_count: number;
+          amount_czk: number;
+          status: "open" | "booked" | "credited" | "expired";
+          booking_id: string | null;
+          attention_at: string | null;
+          attention_reason: string | null;
+          created_at: string;
+          settled_at: string | null;
+        };
+        Insert: never;
+        Update: never;
+        Relationships: [];
+      };
     };
 
     Views: {
@@ -1101,6 +1132,51 @@ export interface Database {
       expire_pending_online_payments: {
         Args: Record<string, never>;
         Returns: number;
+      };
+      /**
+       * PAY FIRST (round 26, item 1). Registers a Stripe checkout that is on
+       * somebody's screen. It holds NO seat and is counted by nothing — the
+       * booking is created by the webhook, once money has arrived.
+       */
+      open_checkout: {
+        Args: {
+          p_game_id: string;
+          p_guest_count: number;
+          p_stripe_session_id: string;
+          p_amount_czk: number;
+        };
+        Returns: string;
+      };
+      /**
+       * Where the booking is born. Under the game's advisory lock: a seat is
+       * still there → `booked`; the game filled first → the money becomes
+       * credit in full and the answer is `credited`. `already` on redelivery,
+       * `unknown` for a session this product did not open.
+       */
+      settle_checkout_session: {
+        Args: { p_stripe_session_id: string; p_amount_czk: number };
+        Returns: string;
+      };
+      /** Open checkouts for a game that can no longer honour them. */
+      checkouts_to_expire: {
+        Args: { p_game_id: string };
+        Returns: { stripe_session_id: string }[];
+      };
+      mark_checkout_expired: {
+        Args: { p_stripe_session_id: string };
+        Returns: boolean;
+      };
+      /**
+       * What the return page waits on. Own-row: it filters on
+       * `current_player_id()` rather than trusting the session id in the URL.
+       */
+      checkout_outcome: {
+        Args: { p_stripe_session_id: string };
+        Returns: {
+          status: "open" | "booked" | "credited" | "expired";
+          game_id: string;
+          booking_id: string | null;
+        }[];
       };
       /**
        * One addressed notification. Admin or service role only.

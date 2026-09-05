@@ -5,6 +5,7 @@ import {
   verifyStripeSignature,
 } from "@/lib/payments/stripeWebhook";
 import { createServiceRoleSupabaseClient } from "@/lib/supabase/clients";
+import { expireOpenCheckouts } from "@/lib/payments/activeExpiry";
 
 export const dynamic = "force-dynamic";
 
@@ -99,10 +100,59 @@ export async function POST(request: Request) {
    * act on a stale answer, and neither read would be under the lock the
    * settling function then takes.
    */
+  const amountCzk = minorUnitsToCzk(session.amountTotal);
+
+  /*
+   * PAY FIRST: A BOOKING SESSION IS SETTLED BY CREATING THE BOOKING
+   * (round 26, item 1).
+   *
+   * `settle_checkout_session` is tried FIRST and answers `unknown` for
+   * anything it does not recognise, so the order costs nothing: a session this
+   * product opened is a game checkout with no booking behind it yet, and
+   * everything else — pass purchases, and any legacy Payment Link still in
+   * flight — falls through to `confirm_online_purchase` exactly as before.
+   *
+   * TWO CALLS, NOT A DISPATCH IN SQL, because they are two different shapes:
+   * one is keyed by the STRIPE session id (there is no reference of ours to
+   * carry yet) and the other by our own `client_reference_id`.
+   */
+  const settled = await supabase.rpc("settle_checkout_session", {
+    p_stripe_session_id: session.id,
+    p_amount_czk: amountCzk,
+  });
+
+  if (!settled.error && typeof settled.data === "string" && settled.data !== "unknown") {
+    /*
+     * A SEAT WAS TAKEN, SO EVERY OTHER FORM FOR THIS GAME MAY NOW BE DEAD.
+     * Expiring them is what stops the next payer's money moving at all — the
+     * credit path this one may just have taken is the fallback, not the plan.
+     */
+    if (settled.data === "booked") {
+      const { data: row } = await supabase
+        .from("checkout_sessions")
+        .select("game_id")
+        .eq("stripe_session_id", session.id)
+        .maybeSingle();
+      const gameId = (row as { game_id: string } | null)?.game_id;
+      if (gameId) await expireOpenCheckouts(gameId);
+    }
+
+    if (settled.data === "credited") {
+      // Money arrived for a seat that no longer existed. It became credit and
+      // the player was told; this line is what a person greps for.
+      console.error("stripe webhook: game full at payment, credited in full", {
+        session: session.id,
+        amountCzk,
+      });
+    }
+
+    return NextResponse.json({ ok: true, outcome: settled.data });
+  }
+
   const { data, error } = await supabase.rpc("confirm_online_purchase", {
     p_reference: session.clientReferenceId,
     p_session_id: session.id,
-    p_amount_czk: minorUnitsToCzk(session.amountTotal),
+    p_amount_czk: amountCzk,
   });
 
   if (error) {

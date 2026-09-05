@@ -8,10 +8,11 @@ import {
   createEmbeddedSession,
   embeddedCheckoutEnabled,
 } from "@/lib/payments/embeddedCheckout";
-import { amountDueCzk } from "@/lib/payments/spd";
 import { siteUrl } from "@/lib/site";
 import { createServerSupabaseClient } from "@/lib/supabase/clients";
 import { formatCzk } from "@/lib/format";
+import { policy } from "@/lib/policy";
+import { rememberPendingPurchase } from "@/lib/payments/pendingPurchaseCookie";
 
 export const dynamic = "force-dynamic";
 
@@ -50,10 +51,15 @@ export default async function CheckoutPage({
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const query = searchParams ? await searchParams : {};
-  const bookingId = typeof query.booking === "string" ? query.booking : null;
+  const gameId = typeof query.game === "string" ? query.game : null;
   const passId = typeof query.pass === "string" ? query.pass : null;
+  const rawGuests = Number(query.guests);
+  const guests =
+    Number.isInteger(rawGuests) && rawGuests > 0
+      ? Math.min(rawGuests, policy.booking.maxPartyGuests)
+      : 0;
 
-  if (!bookingId && !passId) notFound();
+  if (!gameId && !passId) notFound();
 
   const [t, player] = await Promise.all([getStrings(), requireCurrentPlayer()]);
 
@@ -64,7 +70,7 @@ export default async function CheckoutPage({
    * tier.
    */
   if (!embeddedCheckoutEnabled()) {
-    redirect(bookingId ? "/games" : "/pass");
+    redirect(gameId ? "/games" : "/pass");
   }
 
   const supabase = await createServerSupabaseClient();
@@ -75,59 +81,52 @@ export default async function CheckoutPage({
   let reference: string;
   let backHref: string;
 
-  if (bookingId) {
-    const { data } = await supabase
-      .from("bookings")
-      .select("id, player_id, status, price_czk, credit_applied_czk, guest_count, game_id")
-      .eq("id", bookingId)
-      .maybeSingle();
-
-    const booking = data as
-      | {
-          id: string;
-          player_id: string;
-          status: string;
-          price_czk: number;
-          credit_applied_czk: number;
-          guest_count: number;
-          game_id: string;
-        }
-      | null;
-
-    // Own-row RLS already scopes this read; the explicit check is the second
-    // layer and the one that survives somebody widening a policy.
-    if (!booking || booking.player_id !== player.id) notFound();
-
-    /*
-     * ONLY AN OPEN BOOKING HAS ANYTHING TO PAY. A confirmed one is done, and a
-     * cancelled or expired one must never be payable — taking money for a seat
-     * that was released is the worst failure this page could have.
-     */
-    if (booking.status !== "reserved") redirect(`/game/${booking.game_id}`);
-
-    const due = amountDueCzk(booking.price_czk, booking.credit_applied_czk);
-    if (due <= 0) redirect(`/game/${booking.game_id}/book/confirmation?booking=${booking.id}`);
-
+  if (gameId) {
     const { data: gameRow } = await supabase
       .from("games")
-      .select("venue")
-      .eq("id", booking.game_id)
+      .select("id, venue, status, price_czk, capacity")
+      .eq("id", gameId)
       .maybeSingle();
 
-    const seats = 1 + (booking.guest_count ?? 0);
+    const game = gameRow as
+      | { id: string; venue: string; status: string; price_czk: number; capacity: number }
+      | null;
+
+    if (!game) notFound();
+
+    /*
+     * THE GAME MUST STILL BE TAKING BOOKINGS, checked before a session is
+     * created rather than after money moves. This is not the enforcement —
+     * `settle_checkout_session` decides under the game's lock and credits
+     * anybody it cannot seat — it is the courtesy of not opening a form that
+     * is already doomed.
+     */
+    if (game.status !== "published" && game.status !== "full") {
+      redirect(`/game/${game.id}`);
+    }
+
+    const { data: taken } = await supabase.rpc("game_seats_taken", {
+      p_game_id: game.id,
+    });
+    const seats = 1 + guests;
+    if ((taken ?? 0) + seats > game.capacity) {
+      redirect(`/game/${game.id}`);
+    }
+
+    /*
+     * THE WHOLE PARTY PRICE, COMPUTED HERE. No wallet credit is applied to an
+     * online payment — credit is its own option on the booking form, and
+     * mixing the two would mean the webhook had to reconstruct which half was
+     * which from an amount.
+     */
     line = {
-      name: (gameRow as { venue: string } | null)?.venue ?? t.payment.checkoutTitle,
-      /*
-       * THE SEAT COUNT IS IN THE DESCRIPTION, NOT IN A QUANTITY FIELD. It is
-       * what the buyer needs to see to know the number is right, and it cannot
-       * be edited into something cheaper.
-       */
+      name: game.venue,
       description: t.payment.checkoutSeats.replace("{seats}", String(seats)),
-      amountCzk: due,
+      amountCzk: game.price_czk * seats,
     };
-    reference = booking.id;
-    backHref = `/game/${booking.game_id}`;
-  } else {
+    reference = game.id;
+    backHref = `/game/${game.id}`;
+    } else {
     const { data } = await supabase
       .from("credit_topups")
       .select("id, player_id, status, amount_czk, pass_games")
@@ -169,13 +168,33 @@ export default async function CheckoutPage({
   const session = await createEmbeddedSession({
     line,
     reference,
-    kind: bookingId ? "booking" : "pass",
+    kind: gameId ? "booking" : "pass",
     customerEmail: player.email ?? null,
     returnUrl,
+    ...(gameId ? { gameId, guestCount: guests, playerId: player.id } : {}),
   });
 
   // Stripe refused, or the key was pulled between the gate above and here.
   if (!session) redirect(backHref);
+
+  /*
+   * REGISTERED, SO THE GAME CAN KILL IT. If this game fills while the form is
+   * on screen, `expireOpenCheckouts` expires this session at Stripe and the
+   * card is refused before any money moves — which is the primary defence, and
+   * the reason the register exists at all.
+   *
+   * REGISTERED AFTER THE SESSION EXISTS, never before: a row naming a session
+   * id Stripe never issued would be a row active expiry could not kill.
+   */
+  if (gameId) {
+    await supabase.rpc("open_checkout", {
+      p_game_id: gameId,
+      p_guest_count: guests,
+      p_stripe_session_id: session.sessionId,
+      p_amount_czk: line.amountCzk,
+    });
+    await rememberPendingPurchase({ kind: "booking", id: session.sessionId });
+  }
 
   return (
     <main className="relative z-10 mx-auto w-full max-w-shell px-gutter pb-16 pt-24">
