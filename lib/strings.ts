@@ -438,6 +438,32 @@ export const strings = {
     waitlistSeeGame: "See the game",
     rosterTitle: "Lineup",
     rosterEmpty: "Nobody has claimed a spot yet",
+    /*
+     * ADD GUESTS AFTER BOOKING (round 27, item 2).
+     *
+     * THE COPY NEVER PROMISES THE SEAT. "Add" is what the player asks for;
+     * whether it happens is decided under the game's lock after the money
+     * moves, and the two error strings below are the honest endings when it
+     * does not. A panel that said "your guests are added" before the webhook
+     * had spoken would be the pending state round 26 deleted, wearing copy.
+     */
+    addGuests: {
+      title: "Bringing someone?",
+      body: "Add guests to your spot. They join the lineup as yours once the payment lands.",
+      /** The picker: `+1`, `+2`, `+3`, capped by what actually fits. */
+      pick: "+{n}",
+      /** `{amount} for 2 guests` — the whole guest-only price, never a unit. */
+      cost: "{amount} for {n}",
+      guestOne: "1 guest",
+      guestMany: "{n} guests",
+      payCredit: "Pay from wallet",
+      payOnline: "Pay online",
+      /* The wallet button says what it will cost so nobody spends blind. */
+      creditAfter: "{amount} left after",
+      notEnoughCredit: "Not enough credit for that many",
+      capacityFull: "Those spots have just gone",
+      failed: "That did not work. Try again.",
+    },
     cancelled: "This game was cancelled.",
     notFound: "That game does not exist, or is not published yet.",
     backToGames: "← All games",

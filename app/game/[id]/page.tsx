@@ -6,6 +6,7 @@ import { GameHero } from "@/components/game/GameHero";
 import { InfoCard } from "@/components/game/InfoCard";
 import { OrganizerCard } from "@/components/game/OrganizerCard";
 import { PlayersList } from "@/components/game/PlayersList";
+import { AddGuestsPanel } from "@/components/game/AddGuestsPanel";
 import { ClaimBar } from "@/components/game/ClaimBar";
 import { ShareButton } from "@/components/game/ShareButton";
 import { effectivePitchName, venueDisplayName } from "@/lib/venues/displayName";
@@ -30,6 +31,10 @@ import {
 } from "@/lib/games/queries";
 import { gameEventSchema } from "@/lib/games/schemaOrg";
 import { spotsLeftLabel } from "@/lib/games/urgency";
+import { appCapabilities } from "@/lib/db/capabilities";
+import { getOwnCreditBalance } from "@/lib/booking/queries";
+import { embeddedCheckoutEnabled } from "@/lib/payments/embeddedCheckout";
+import { createServerSupabaseClient } from "@/lib/supabase/clients";
 import { siteUrl } from "@/lib/site";
 import { getLocale, getStrings } from "@/lib/i18n/server";
 
@@ -154,6 +159,30 @@ export default async function GameDetailPage({ params, searchParams }: GamePageP
   // nickname match against the public roster would be display-grade and would
   // hand anyone "their" booking by choosing the right nickname.
   const ownBooking = await getOwnActiveBooking(game.id);
+
+  /*
+   * ADD GUESTS AFTER BOOKING (round 27, item 2) — resolved on the server, and
+   * only for the one person it can apply to.
+   *
+   * THREE GATES, AND THE CHEAPEST ONE IS FIRST. No booking means no panel and
+   * no queries; without the migration `can_add_guests` does not exist, so the
+   * capability flag is asked before the RPC rather than letting PostgREST's
+   * 404 stand in for an answer. What is left is a single RPC and a balance
+   * read for the player who might actually use it.
+   */
+  const capabilities = await appCapabilities();
+  const canAddGuests =
+    ownBooking && capabilities.addGuestsAfterBooking
+      ? await (async () => {
+          const supabase = await createServerSupabaseClient();
+          const { data } = await supabase.rpc("can_add_guests", {
+            p_booking_id: ownBooking.booking.id,
+          });
+          return typeof data === "number" ? data : 0;
+        })()
+      : 0;
+
+  const addGuestsCredit = canAddGuests > 0 ? await getOwnCreditBalance() : 0;
 
   const endsAt = gameEndsAt(game.starts_at, game.duration_minutes);
   const isFull = spotsLeft === 0;
@@ -419,6 +448,30 @@ export default async function GameDetailPage({ params, searchParams }: GamePageP
       )}
 
       <PlayersList rows={roster} supabaseUrl={supabaseUrl} />
+
+      {/*
+        ADD GUESTS — BETWEEN THE LINEUP AND THE SHARE BOX (round 27, item 2).
+
+        The placement is the owner's and it is also the right read: somebody
+        looking at the lineup and thinking "I should bring Tomáš" is exactly
+        who this is for, and the control belongs where that thought happens
+        rather than at the bottom of the page.
+
+        IT RENDERS FOR ONE PERSON AND OTHERWISE NOT AT ALL — no empty state, no
+        disabled card. `canAddGuests` is zero for everybody without a paid
+        booking on this game, for a full pitch, for a game that has kicked off,
+        and on a database without the migration.
+      */}
+      {ownBooking && canAddGuests > 0 && (
+        <AddGuestsPanel
+          gameId={game.id}
+          bookingId={ownBooking.booking.id}
+          canAdd={canAddGuests}
+          priceCzk={game.price_czk}
+          creditCzk={addGuestsCredit}
+          embeddedCheckout={embeddedCheckoutEnabled()}
+        />
+      )}
 
       {/* The queue, in public. Rendered whenever the game is full or anyone is
           already waiting — an empty panel on a half-full game would be noise. */}

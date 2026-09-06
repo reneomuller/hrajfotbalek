@@ -94,6 +94,7 @@ async function readBookingStatus(
     status: string;
     game_id: string;
     booking_id: string | null;
+    kind?: string;
   }[];
   const outcome = rows[0];
   if (error || !outcome) return null;
@@ -101,6 +102,25 @@ async function readBookingStatus(
   const fallbackHref = `/game/${outcome.game_id}`;
 
   if (outcome.status === "booked" && outcome.booking_id) {
+    /*
+     * ADDED GUESTS END ON THE ROSTER, NOT ON A CONFIRMATION SCREEN
+     * (round 27, item 2).
+     *
+     * The confirmation page is about a booking coming into existence — its
+     * calendar link, its variable symbol, its "you are in". None of that is
+     * what just happened: the player was already in, and what changed is that
+     * two more names appeared under theirs. The game page shows exactly that,
+     * and showing them a screen they have seen before, unchanged except for a
+     * number, would read as if nothing had happened.
+     *
+     * `kind` is optional on the row because a database without round 27's
+     * migration does not project it — and its absence correctly means
+     * "booking", which is the only kind that existed then.
+     */
+    if (outcome.kind === "add_guests") {
+      return { state: "confirmed", href: `/game/${outcome.game_id}`, fallbackHref };
+    }
+
     return {
       state: "confirmed",
       href: `/game/${outcome.game_id}/book/confirmation?booking=${outcome.booking_id}`,

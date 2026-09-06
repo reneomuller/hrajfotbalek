@@ -37,6 +37,16 @@ export interface AppCapabilities {
   playersMet: boolean;
   /** Round 19 item 2 — `organizer_telegram` and its normaliser exist. */
   organizerTelegram: boolean;
+  /**
+   * Round 27 item 2 — `can_add_guests`, `add_guests_with_credit` and the
+   * register's `kind` column exist.
+   *
+   * FALSE IS THE OLD SHAPE, NOT A BROKEN ONE: the panel simply does not
+   * render, and a player adds guests the way they always did, by booking the
+   * party up front. This is the capability gate the round-23 tile established
+   * and the reason the deploy is safe ahead of the migration.
+   */
+  addGuestsAfterBooking: boolean;
 }
 
 const NONE: AppCapabilities = {
@@ -48,6 +58,7 @@ const NONE: AppCapabilities = {
   gameLanguage: false,
   playersMet: false,
   organizerTelegram: false,
+  addGuestsAfterBooking: false,
 };
 
 export const appCapabilities = cache(async (): Promise<AppCapabilities> => {
@@ -75,6 +86,7 @@ export const appCapabilities = cache(async (): Promise<AppCapabilities> => {
       gameLanguage: read("gameLanguage"),
       playersMet: read("playersMet"),
       organizerTelegram: read("organizerTelegram"),
+      addGuestsAfterBooking: read("addGuestsAfterBooking"),
     };
   } catch {
     return NONE;

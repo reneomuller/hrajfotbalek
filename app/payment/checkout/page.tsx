@@ -53,13 +53,23 @@ export default async function CheckoutPage({
   const query = searchParams ? await searchParams : {};
   const gameId = typeof query.game === "string" ? query.game : null;
   const passId = typeof query.pass === "string" ? query.pass : null;
+  /*
+   * ADD GUESTS TO AN EXISTING BOOKING (round 27, item 2) — a THIRD kind of
+   * thing this page can sell, and it is deliberately its own parameter rather
+   * than a mode on `game`. The amount is guest-only and the settler must
+   * extend a row rather than create one; conflating the two behind one
+   * parameter is how a page ends up charging a player twice for their own
+   * seat.
+   */
+  const addGuestsBookingId =
+    typeof query.addGuests === "string" ? query.addGuests : null;
   const rawGuests = Number(query.guests);
   const guests =
     Number.isInteger(rawGuests) && rawGuests > 0
       ? Math.min(rawGuests, policy.booking.maxPartyGuests)
       : 0;
 
-  if (!gameId && !passId) notFound();
+  if (!gameId && !passId && !addGuestsBookingId) notFound();
 
   const [t, player] = await Promise.all([getStrings(), requireCurrentPlayer()]);
 
@@ -70,7 +80,7 @@ export default async function CheckoutPage({
    * tier.
    */
   if (!embeddedCheckoutEnabled()) {
-    redirect(gameId ? "/games" : "/pass");
+    redirect(gameId || addGuestsBookingId ? "/games" : "/pass");
   }
 
   const supabase = await createServerSupabaseClient();
@@ -81,7 +91,51 @@ export default async function CheckoutPage({
   let reference: string;
   let backHref: string;
 
-  if (gameId) {
+  if (addGuestsBookingId) {
+    /*
+     * THE BOOKING IS READ THROUGH THE RPC, NOT THE TABLE. `can_add_guests`
+     * already answers ownership, paid-ness, kick-off and capacity in one
+     * `SECURITY DEFINER` call — reimplementing that ladder here would be a
+     * second definition of "may this happen", able to disagree with the one
+     * the writers use.
+     */
+    const { data: room } = await supabase.rpc("can_add_guests", {
+      p_booking_id: addGuestsBookingId,
+    });
+    const allowed = typeof room === "number" ? room : 0;
+
+    const { data: bookingRow } = await supabase
+      .from("bookings")
+      .select("id, game_id")
+      .eq("id", addGuestsBookingId)
+      .maybeSingle();
+    const booking = bookingRow as { id: string; game_id: string } | null;
+
+    if (!booking) notFound();
+    if (guests < 1 || guests > allowed) redirect(`/game/${booking.game_id}`);
+
+    const { data: gameRow } = await supabase
+      .from("games")
+      .select("id, venue, price_czk")
+      .eq("id", booking.game_id)
+      .maybeSingle();
+    const game = gameRow as
+      | { id: string; venue: string; price_czk: number }
+      | null;
+    if (!game) notFound();
+
+    /*
+     * GUEST-ONLY. The player's own seat is already paid for; `partyAmountCzk`
+     * would add it back and bill them twice.
+     */
+    line = {
+      name: game.venue,
+      description: t.payment.checkoutSeats.replace("{seats}", String(guests)),
+      amountCzk: game.price_czk * guests,
+    };
+    reference = booking.id;
+    backHref = `/game/${game.id}`;
+  } else if (gameId) {
     const { data: gameRow } = await supabase
       .from("games")
       .select("id, venue, status, price_czk, capacity")
@@ -168,7 +222,7 @@ export default async function CheckoutPage({
   const session = await createEmbeddedSession({
     line,
     reference,
-    kind: gameId ? "booking" : "pass",
+    kind: gameId || addGuestsBookingId ? "booking" : "pass",
     customerEmail: player.email ?? null,
     returnUrl,
     ...(gameId ? { gameId, guestCount: guests, playerId: player.id } : {}),
@@ -186,13 +240,20 @@ export default async function CheckoutPage({
    * REGISTERED AFTER THE SESSION EXISTS, never before: a row naming a session
    * id Stripe never issued would be a row active expiry could not kill.
    */
-  if (gameId) {
-    const { error: registerError } = await supabase.rpc("open_checkout", {
-      p_game_id: gameId,
-      p_guest_count: guests,
-      p_stripe_session_id: session.sessionId,
-      p_amount_czk: line.amountCzk,
-    });
+  if (gameId || addGuestsBookingId) {
+    const { error: registerError } = addGuestsBookingId
+      ? await supabase.rpc("open_add_guests_checkout", {
+          p_booking_id: addGuestsBookingId,
+          p_guest_count: guests,
+          p_stripe_session_id: session.sessionId,
+          p_amount_czk: line.amountCzk,
+        })
+      : await supabase.rpc("open_checkout", {
+          p_game_id: gameId!,
+          p_guest_count: guests,
+          p_stripe_session_id: session.sessionId,
+          p_amount_czk: line.amountCzk,
+        });
 
     /*
      * A SESSION THAT COULD NOT BE REGISTERED MUST NOT BE PAID (round 27,

@@ -1148,6 +1148,35 @@ export interface Database {
         Returns: string;
       };
       /**
+       * ROUND 27, ITEM 2 — how many further guests this booking may add right
+       * now, bounded by free seats AND by the party ceiling counted across
+       * guests it already holds. Zero for a booking that is not the caller's,
+       * not confirmed, or on a game that has kicked off.
+       */
+      can_add_guests: {
+        Args: { p_booking_id: string };
+        Returns: number;
+      };
+      /**
+       * The wallet rail, atomic: balance, seats and the increment all inside
+       * one transaction under the player and game locks. Raises
+       * `CAPACITY_FULL` or `CREDIT_NEGATIVE_BLOCKED` rather than half-doing it.
+       */
+      add_guests_with_credit: {
+        Args: { p_booking_id: string; p_guest_count: number };
+        Returns: string;
+      };
+      /** The register entry for the online add-guest rail. */
+      open_add_guests_checkout: {
+        Args: {
+          p_booking_id: string;
+          p_guest_count: number;
+          p_stripe_session_id: string;
+          p_amount_czk: number;
+        };
+        Returns: string;
+      };
+      /**
        * Where the booking is born. Under the game's advisory lock: a seat is
        * still there → `booked`; the game filled first → the money becomes
        * credit in full and the answer is `credited`. `already` on redelivery,
@@ -1182,9 +1211,11 @@ export interface Database {
       checkout_outcome: {
         Args: { p_stripe_session_id: string };
         Returns: {
-          status: "open" | "booked" | "credited" | "expired";
+          status: string;
           game_id: string;
           booking_id: string | null;
+          /** Round 27 item 2 — `booking` or `add_guests`, so the return page routes. */
+          kind: string;
         }[];
       };
       /**
