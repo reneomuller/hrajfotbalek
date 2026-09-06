@@ -12,7 +12,7 @@ import { siteUrl } from "@/lib/site";
 import { createServerSupabaseClient } from "@/lib/supabase/clients";
 import { formatCzk } from "@/lib/format";
 import { policy } from "@/lib/policy";
-import { rememberPendingPurchase } from "@/lib/payments/pendingPurchaseCookie";
+import { partyAmountCzk } from "@/lib/payments/partyAmount";
 
 export const dynamic = "force-dynamic";
 
@@ -122,7 +122,7 @@ export default async function CheckoutPage({
     line = {
       name: game.venue,
       description: t.payment.checkoutSeats.replace("{seats}", String(seats)),
-      amountCzk: game.price_czk * seats,
+      amountCzk: partyAmountCzk(game.price_czk, guests),
     };
     reference = game.id;
     backHref = `/game/${game.id}`;
@@ -187,14 +187,51 @@ export default async function CheckoutPage({
    * id Stripe never issued would be a row active expiry could not kill.
    */
   if (gameId) {
-    await supabase.rpc("open_checkout", {
+    const { error: registerError } = await supabase.rpc("open_checkout", {
       p_game_id: gameId,
       p_guest_count: guests,
       p_stripe_session_id: session.sessionId,
       p_amount_czk: line.amountCzk,
     });
-    await rememberPendingPurchase({ kind: "booking", id: session.sessionId });
+
+    /*
+     * A SESSION THAT COULD NOT BE REGISTERED MUST NOT BE PAID (round 27,
+     * item 1). The register is what active expiry reads and what the webhook
+     * settles on; a form rendered without it is a form whose payment lands as
+     * `unknown`. Sending the player back is worse than a dead end only if you
+     * think a checkout that cannot be settled is better.
+     */
+    if (registerError) {
+      console.error("checkout: could not register session", {
+        session: session.sessionId,
+        message: registerError.message,
+      });
+      redirect(backHref);
+    }
   }
+
+  /*
+   * ~~AND THE STASH IS WRITTEN HERE.~~ IT IS NOT, AND IT NEVER COULD BE
+   * (round 27, item 1 — the outage).
+   *
+   * `rememberPendingPurchase` sets a cookie, and **a Server Component may not
+   * set a cookie** — Next throws `Cookies can only be modified in a Server
+   * Action or Route Handler`. `pendingPurchaseCookie.ts` says so in its own
+   * doc comment, and round 26 moved the call here anyway: under pay-first the
+   * id worth stashing is the STRIPE SESSION id, which only exists at this
+   * point, and this point is a render.
+   *
+   * IT 500'd EVERY SINGLE-GAME CHECKOUT ON PRODUCTION while the PASS rail kept
+   * working perfectly — same keys, same embedded machinery, but the pass
+   * stash is written by `app/pass/actions.ts`, which is a Server Action and
+   * therefore allowed. Two `cs_live_` sessions were created and registered
+   * before the throw, which is exactly how far the path gets.
+   *
+   * THE STASH IS NOT REPLACED, IT IS UNNECESSARY. Stripe substitutes the
+   * session id into `return_url`, so `/payment/return` is handed the exact
+   * identifier by Stripe itself — better than a cookie, which cannot survive
+   * a different browser. The register is the recovery for everything else.
+   */
 
   return (
     <main className="relative z-10 mx-auto w-full max-w-shell px-gutter pb-16 pt-24">

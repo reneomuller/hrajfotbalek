@@ -5,9 +5,11 @@ import { ConfirmingPayment } from "@/components/payment/ConfirmingPayment";
 import { requireCurrentPlayer } from "@/lib/auth/session";
 import { getStrings } from "@/lib/i18n/server";
 import { readPendingPurchase } from "@/lib/payments/pendingPurchaseCookie";
+import type { PendingPurchase } from "@/lib/payments/pendingPurchase";
 import {
   findRecentPendingPurchase,
   readPurchaseStatus,
+  type PurchaseStatus,
 } from "@/lib/payments/returnStatus";
 
 export const dynamic = "force-dynamic";
@@ -31,9 +33,22 @@ export async function generateMetadata(): Promise<Metadata> {
  * payment; it carries nothing about which booking or which tier was bought.
  * Three ways to find out, in order of how much they can be trusted:
  *
+ *   0. THE SESSION ID STRIPE PUT IN THE URL (round 27, item 1). `return_url`
+ *      carries `{CHECKOUT_SESSION_ID}` and Stripe substitutes it on the
+ *      redirect, so for an EMBEDDED checkout the exact identifier arrives
+ *      without a cookie, without a database guess, and across any browser.
+ *      **It is not trusted because it is in a URL** — `checkout_outcome`
+ *      answers no row for a session that is not this player's, so a forged id
+ *      reads exactly like a session that does not exist.
+ *
+ *      It is first because it is the only source that is both exact AND
+ *      survives paying on one device and returning on another.
+ *
  *   1. THE STASH — a cookie written by the server action that minted the id,
  *      in the same request that built the Stripe URL. Exact, and it cannot be
  *      missed, because there was never a client moment in which to miss it.
+ *      **Only the PASS rail writes it now**; the game rail cannot, because
+ *      its id is minted during a render. See `payment/checkout/page.tsx`.
  *   2. THE RECOVERY LOOKUP — this player's most recent purchase that actually
  *      went to Stripe, within the hour. For a return in a different browser
  *      or on a different device, where no cookie of ours exists. A guess, and
@@ -55,13 +70,68 @@ export async function generateMetadata(): Promise<Metadata> {
  * where a refresh means "look up my last payment again" rather than "show me
  * my booking".
  */
-export default async function PaymentReturnPage() {
+export default async function PaymentReturnPage({
+  searchParams,
+}: {
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
+}) {
   const t = await getStrings();
 
   await requireCurrentPlayer("/payment/return");
 
+  const query = searchParams ? await searchParams : {};
+  const sessionId = typeof query.session_id === "string" ? query.session_id : null;
+
+  /*
+   * STRIPE'S OWN ANSWER FIRST. `cs_` is Stripe's prefix for a Checkout
+   * Session; anything else in that parameter is somebody typing, and it is
+   * cheaper to ignore it than to ask the database about it. The ownership
+   * check is still `checkout_outcome`'s — this only avoids a pointless round
+   * trip.
+   */
+  const fromStripe =
+    sessionId && sessionId.startsWith("cs_")
+      ? ({ kind: "booking", id: sessionId } as const)
+      : null;
+
+  /*
+   * THE CANDIDATES ARE TRIED IN ORDER AND THE FIRST ONE THE DATABASE
+   * RECOGNISES WINS — which is not the same as taking the first that EXISTS,
+   * and the difference is the pass rail.
+   *
+   * BOTH RAILS RETURN THROUGH THIS URL WITH A `session_id`, because both build
+   * `return_url` the same way. A pass session is not in the checkout register,
+   * so asking `checkout_outcome` about it answers no row — and reading that as
+   * "nothing to show" would strand every pass buyer on a spinner. Instead an
+   * unrecognised candidate simply loses to the next one, and the pass cookie
+   * behind it answers correctly.
+   */
+  const candidates: PendingPurchase[] = [];
+  if (fromStripe) candidates.push(fromStripe);
+
   const stashed = await readPendingPurchase();
-  const purchase = stashed ?? (await findRecentPendingPurchase());
+  if (stashed && stashed.id !== fromStripe?.id) candidates.push(stashed);
+
+  let purchase: PendingPurchase | null = null;
+  let status: PurchaseStatus | null = null;
+
+  for (const candidate of candidates) {
+    const resolved = await readPurchaseStatus(candidate);
+    if (resolved) {
+      purchase = candidate;
+      status = resolved;
+      break;
+    }
+  }
+
+  // The guess, and only once the exact answers have all declined.
+  if (!purchase) {
+    const recovered = await findRecentPendingPurchase();
+    if (recovered) {
+      purchase = recovered;
+      status = await readPurchaseStatus(recovered);
+    }
+  }
 
   if (!purchase) {
     return (
@@ -96,8 +166,6 @@ export default async function PaymentReturnPage() {
    * payment…" for one frame before jumping is a worse screen than never
    * showing it.
    */
-  const status = await readPurchaseStatus(purchase);
-
   if (status && status.state !== "pending" && status.href) {
     redirect(status.href);
   }

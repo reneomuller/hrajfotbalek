@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { BookingError } from "@/components/BookingError";
 import { PaymentMethodChoice } from "@/components/PaymentMethodChoice";
 import { getOwnCreditBalance } from "@/lib/booking/queries";
+import { embeddedCheckoutEnabled } from "@/lib/payments/embeddedCheckout";
 import { getSessionUser } from "@/lib/auth/session";
 import { cancellationReassurance } from "@/lib/booking/reassurance";
 import { readResumeIntent } from "@/lib/booking/resume";
@@ -139,6 +140,12 @@ export default async function BookPage({ params, searchParams }: BookPageProps) 
             control offers `spotsLeft - 1` guests.
           */
           spotsLeft={spotsLeft}
+          /*
+            WHICH ONLINE RAIL IS LIVE (round 27, item 1) — it decides whether
+            the "set the quantity" instruction is shown, and that sentence is
+            true of exactly one of the two rails.
+          */
+          embeddedCheckout={embeddedCheckoutEnabled()}
         />
       </div>
 

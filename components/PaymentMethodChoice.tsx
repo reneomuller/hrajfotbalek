@@ -28,6 +28,21 @@ export interface PaymentMethodChoiceProps {
    * that refusal is the one that is correct.
    */
   spotsLeft: number;
+  /**
+   * Whether the EMBEDDED form is the live rail (round 27, item 1).
+   *
+   * It decides one sentence: the "set the quantity to N" instruction. That
+   * instruction is TRUE for a Payment Link, whose quantity the buyer really
+   * does have to change, and FALSE for embedded checkout, where the whole
+   * party price is one line of `quantity: 1` computed on our server. Rendering
+   * it on the embedded rail tells a player to look for a control that is not
+   * there.
+   *
+   * Resolved on the SERVER, because `embeddedCheckoutEnabled()` needs the
+   * secret key as well as the publishable one and a browser may only see one
+   * of them.
+   */
+  embeddedCheckout: boolean;
 }
 
 const INITIAL: BookingActionState = { status: "idle" };
@@ -66,6 +81,7 @@ export function PaymentMethodChoice({
   priceCzk,
   creditCzk,
   spotsLeft,
+  embeddedCheckout,
 }: PaymentMethodChoiceProps) {
   const t = useStrings();
   const locale = useLocale();
@@ -368,7 +384,7 @@ export function PaymentMethodChoice({
                 already right and the sentence would be an instruction to do
                 nothing.
               */}
-              {seats > 1 && (
+              {seats > 1 && !embeddedCheckout && (
                 <span
                   data-testid="party-online-quantity"
                   className="mt-2 block text-[13px] font-semibold leading-snug text-volt"
