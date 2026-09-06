@@ -3,10 +3,8 @@
 import { useActionState, useState } from "react";
 import { useStrings } from "@/components/LocaleProvider";
 import { formatCzk } from "@/lib/format";
-import {
-  addGuestsAction,
-  ADD_GUESTS_INITIAL,
-} from "@/app/game/[id]/add-guests/actions";
+import { addGuestsAction } from "@/app/game/[id]/add-guests/actions";
+import { ADD_GUESTS_INITIAL } from "@/lib/booking/addGuests";
 
 /**
  * ADD GUESTS TO A SPOT YOU HAVE ALREADY PAID FOR (round 27, item 2).

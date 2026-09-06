@@ -154,13 +154,29 @@ export function ProfileCover({
         `pointer-events-auto` because the layer itself is `pointer-events-none`
         — a full-bleed backdrop over the identity row would otherwise eat every
         tap meant for the content on top of it.
+
+        ~~`top-2`~~ IS NOW `top-[104px]`, AND THE CONTROL DID NOT MOVE
+        (round 27, item 3). `top-2` was 8px below the cover's top edge, and the
+        cover's top edge used to be the shell's `pt-24`. Making the banner
+        full-bleed moved that edge 96px up to the page's own top — so `top-2`
+        put this control at y=8, UNDERNEATH the fixed header, which is `z-30`
+        and opaque. It was visible in a screenshot and unreachable in fact.
+
+        `profile-cover.spec.ts` caught it the way this project catches every
+        stacking bug: `document.elementFromPoint` at the control's centre
+        returned the header rather than the button. Reading the CSS would not
+        have shown it, because nothing about `top-2` is wrong — what changed
+        was what `top` is relative to.
+
+        96 + 8 = 104 puts it back at the exact page coordinate it has occupied
+        since round 14, clear of the header by ~37px.
       */}
       {showControl && (
         <PhotoUpload
           target="cover"
           hasPhoto={Boolean(coverUrl)}
           photoVersion={photoVersion}
-          className="pointer-events-auto absolute right-gutter top-2"
+          className="pointer-events-auto absolute right-gutter top-[104px]"
         >
           {/*
             VOLT, AND IT READS AS AN ACTION (round 14, item 3).

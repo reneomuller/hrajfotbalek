@@ -7,6 +7,7 @@ import { requireCurrentPlayer } from "@/lib/auth/session";
 import { embeddedCheckoutEnabled } from "@/lib/payments/embeddedCheckout";
 import { expireOpenCheckouts } from "@/lib/payments/activeExpiry";
 import { policy } from "@/lib/policy";
+import type { AddGuestsState } from "@/lib/booking/addGuests";
 
 /**
  * ADD GUESTS TO A BOOKING THAT IS ALREADY PAID (round 27, item 2).
@@ -28,14 +29,6 @@ import { policy } from "@/lib/policy";
  * is the surface; the functions are the authority, and a curl that skips this
  * file reaches exactly the same refusals.
  */
-
-export interface AddGuestsState {
-  status: "idle" | "error";
-  /** A product error code the panel maps to copy, never a raw message. */
-  code?: "CAPACITY_FULL" | "CREDIT_NEGATIVE_BLOCKED" | "FAILED";
-}
-
-const INITIAL: AddGuestsState = { status: "idle" };
 
 export async function addGuestsAction(
   _prev: AddGuestsState,
@@ -119,5 +112,3 @@ export async function addGuestsAction(
 
   redirect(`/payment/checkout?addGuests=${bookingId}&guests=${guests}`);
 }
-
-export { INITIAL as ADD_GUESTS_INITIAL };
