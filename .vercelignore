@@ -1,0 +1,15 @@
+# Round 27 — what Vercel does not need, and why the deploy kept aborting.
+#
+# The upload was 330MB and died twice mid-flight at ~250MB. Almost all of it is
+# PNG evidence that no build step reads: `docs/` is 204MB of strips and
+# `screenshots/` is 154MB. They are referenced ONLY in source comments, never
+# imported, never opened at build or request time — the OG card and the PWA
+# icons read `tailwind.config.ts`, not these directories.
+#
+# They stay in git, which is where the round-to-round visual record belongs.
+# They simply do not need to travel to the build machine.
+docs
+screenshots
+test-results
+e2e
+playwright.config.ts
