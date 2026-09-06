@@ -1,6 +1,4 @@
 import { expect, test } from "@playwright/test";
-import { mkdirSync } from "node:fs";
-import path from "node:path";
 import { PNG } from "pngjs";
 import { players, serviceClient, signInAs } from "./helpers/session";
 
@@ -144,9 +142,6 @@ test("REPLACING a banner changes what is on the screen", async ({ page, context 
   const admin = serviceClient();
   await admin.from("players").update({ cover_path: null }).eq("id", players.runner.id);
 
-  const OUT = path.resolve(process.cwd(), "docs/v16/strips/banner");
-  mkdirSync(OUT, { recursive: true });
-
   /** The middle pixel of the band, as rendered — under the scrim, so a pure
    *  colour arrives darkened and is compared by which channels dominate. */
   async function bandCentre(): Promise<[number, number, number]> {
@@ -194,8 +189,7 @@ test("REPLACING a banner changes what is on the screen", async ({ page, context 
         message: "the first banner never appeared",
       })
       .toBe(true);
-    await page.screenshot({ path: path.join(OUT, "01-first-upload.png") });
-
+    
     const first = await bandCentre();
     expect(first[0], "magenta: red should lead").toBeGreaterThan(first[1]);
     expect(first[2], "magenta: blue should lead green").toBeGreaterThan(first[1]);
@@ -217,8 +211,7 @@ test("REPLACING a banner changes what is on the screen", async ({ page, context 
       )
       .toBe(true);
 
-    await page.screenshot({ path: path.join(OUT, "02-after-replacement.png") });
-
+    
     // And it survives a reload, which rules out a purely client-side illusion.
     await page.reload({ waitUntil: "networkidle" });
     const [r, g, b] = await bandCentre();

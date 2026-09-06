@@ -1,5 +1,4 @@
 import { expect, test } from "@playwright/test";
-import { mkdirSync } from "node:fs";
 import path from "node:path";
 import { LOCALE_COOKIE } from "../lib/i18n/locales";
 import { apiClientFor, players, serviceClient, signInAs } from "./helpers/session";
@@ -10,8 +9,6 @@ import { createScratchGame, destroyScratchGame, setWalletTo } from "./helpers/sc
  *
  * `docs/v24/strips/`.
  */
-
-const OUT = path.resolve(process.cwd(), "docs/v24/strips");
 
 test.use({ viewport: { width: 390, height: 844 } });
 
@@ -235,7 +232,6 @@ test("a no-show reaches that player's bell and nobody else's", async ({
   page,
   context,
 }) => {
-  mkdirSync(OUT, { recursive: true });
   const game = await playedGameWithBookings([players.runner]);
 
   try {
@@ -258,8 +254,7 @@ test("a no-show reaches that player's bell and nobody else's", async ({
     const panel = page.getByTestId("notification-panel");
     await expect(panel).toBeVisible();
     await expect(panel, "the warning is not in the bell").toContainText(/no-show/i);
-    await page.screenshot({ path: path.join(OUT, "01-no-show-warning.png") });
-
+    
     /*
      * AND NOT IN ANYBODY ELSE'S. The whole point of the recipient column: a
      * broadcast store showed one player's warning to everyone, which is worse
@@ -364,7 +359,6 @@ test("publishing a game lands on an unmistakable confirmed state", async ({
   page,
   context,
 }) => {
-  mkdirSync(OUT, { recursive: true });
   await signInAs(context, players.organizer);
 
   await page.goto("/admin/games/new", { waitUntil: "networkidle" });
@@ -406,8 +400,7 @@ test("publishing a game lands on an unmistakable confirmed state", async ({
     "/admin/games",
   );
 
-  await published.screenshot({ path: path.join(OUT, "02-game-published.png") });
-
+  
   // Clean up the game this test created.
   const href = await page.getByTestId("published-view-game").getAttribute("href");
   const created = href!.split("/").pop()!;
@@ -421,7 +414,6 @@ test("publishing a game lands on an unmistakable confirmed state", async ({
 test("the home page's three headings are one size, and the hero gap halved", async ({
   page,
 }) => {
-  mkdirSync(OUT, { recursive: true });
   await page.goto("/", { waitUntil: "networkidle" });
   await settle(page);
 
@@ -470,5 +462,4 @@ test("the home page's three headings are one size, and the hero gap halved", asy
   });
   expect(gap, `the hero-to-games gap is ${gap}px`).toBeLessThan(60);
 
-  await page.screenshot({ path: path.join(OUT, "03-home-headings.png"), fullPage: true });
-});
+  });

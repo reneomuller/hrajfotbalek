@@ -1,6 +1,4 @@
 import { expect, test } from "@playwright/test";
-import { mkdirSync } from "node:fs";
-import path from "node:path";
 import { players, signInAs } from "./helpers/session.ts";
 
 /**
@@ -21,11 +19,9 @@ import { players, signInAs } from "./helpers/session.ts";
  * supported preference, so step 3 decides.
  */
 
-const OUT = path.resolve(process.cwd(), "docs/v13/strips/section1");
 
 test.describe("Section 1 strips", () => {
   test("the desktop header, signed out and as an admin", async ({ browser }) => {
-    mkdirSync(OUT, { recursive: true });
 
     const context = await browser.newContext({
       viewport: { width: 1280, height: 900 },
@@ -39,27 +35,20 @@ test.describe("Section 1 strips", () => {
     await expect(page.getByTestId("nav-games")).toBeVisible();
     await expect(page.getByTestId("nav-home")).toHaveCount(0);
     await expect(page.getByTestId("nav-profile")).toHaveCount(0);
-    await page.locator("header").screenshot({
-      path: path.join(OUT, "header-desktop-signed-out.png"),
-    });
-
+    
     // An admin sees the door, and the avatar replaces the sign-in button.
     await signInAs(context, players.organizer);
     await page.goto("/games", { waitUntil: "networkidle" });
     await page.evaluate(() => document.fonts.ready);
     await expect(page.getByTestId("nav-admin")).toBeVisible();
     await expect(page.getByTestId("nav-account")).toHaveAttribute("href", "/account");
-    await page.locator("header").screenshot({
-      path: path.join(OUT, "header-desktop-admin.png"),
-    });
-
+    
     await context.close();
   });
 
   test("a visitor with no stored choice and no supported preference gets Czech", async ({
     browser,
   }) => {
-    mkdirSync(OUT, { recursive: true });
 
     const context = await browser.newContext({
       viewport: { width: 390, height: 900 },
@@ -92,8 +81,7 @@ test.describe("Section 1 strips", () => {
       content:
         "nextjs-portal,[data-nextjs-toast],#__next-build-watcher{display:none !important}",
     });
-    await page.screenshot({ path: path.join(OUT, "czech-default-390.png") });
-
+    
     await context.close();
   });
 });

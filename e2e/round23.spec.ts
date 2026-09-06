@@ -1,5 +1,4 @@
 import { expect, test } from "@playwright/test";
-import { mkdirSync } from "node:fs";
 import path from "node:path";
 import { PNG } from "pngjs";
 import { LOCALE_COOKIE } from "../lib/i18n/locales";
@@ -11,8 +10,6 @@ import { createScratchGame, destroyScratchGame, setWalletTo } from "./helpers/sc
  *
  * `docs/v23/strips/`.
  */
-
-const OUT = path.resolve(process.cwd(), "docs/v23/strips");
 
 test.use({ viewport: { width: 390, height: 844 } });
 
@@ -77,12 +74,7 @@ test("the third tile counts players met, and a guest is not a person", async ({
     // AND THE TILE IT REPLACED IS GONE from the row. Pitches played is still
     // COUNTED — the Explorer badge needs it — it simply has no tile.
     await expect(page.getByTestId("profile-stat-venues")).toHaveCount(0);
-
-    mkdirSync(OUT, { recursive: true });
-    await page
-      .getByTestId("profile-stats")
-      .screenshot({ path: path.join(OUT, "01-players-met-own.png") });
-
+    
     // THE PUBLIC PROFILE AGREES, because both read one SQL definition. A
     // number under your own face and a different number under the same face on
     // a public page is the failure this shares a function to avoid.
@@ -96,11 +88,7 @@ test("the third tile counts players met, and a guest is not a person", async ({
     expect(body, "the public profile names money").not.toContain("czk");
     expect(body, "the public profile names credit").not.toContain("credit");
 
-    await page.screenshot({
-      path: path.join(OUT, "02-players-met-public.png"),
-      fullPage: true,
-    });
-  } finally {
+      } finally {
     await destroyScratchGame(game.id);
   }
 });
@@ -178,7 +166,6 @@ test("a no-show on either side removes that game from the count", async ({
  * `toBeVisible()`, which passed throughout.
  */
 test("the public profile's badges are painted, locked ones included", async ({ page }) => {
-  mkdirSync(OUT, { recursive: true });
 
   await page.goto(`/player/${players.creditRich.nickname}`, { waitUntil: "networkidle" });
   await settle(page);
@@ -222,15 +209,13 @@ test("the public profile's badges are painted, locked ones included", async ({ p
   expect(peak, "nothing on the badge is brighter than its own tile").toBeGreaterThan(120);
   expect(bright, "the badge has almost no lit pixels on it").toBeGreaterThan(150);
 
-  await grid.screenshot({ path: path.join(OUT, "03-public-badges.png") });
-});
+  });
 
 /* ============================================================================
  * ITEM 4 — the homepage order
  * ========================================================================== */
 
 test("the games come before the how-it-works box, behind one pill", async ({ page }) => {
-  mkdirSync(OUT, { recursive: true });
   await page.goto("/", { waitUntil: "networkidle" });
   await settle(page);
 
@@ -283,8 +268,7 @@ test("the games come before the how-it-works box, behind one pill", async ({ pag
   expect(Number(pill.weight)).toBeGreaterThanOrEqual(800);
   expect(pill.paddingLeft).toBe("26px");
 
-  await page.screenshot({ path: path.join(OUT, "04-home-order.png"), fullPage: true });
-});
+  });
 
 /* ============================================================================
  * ITEM 5 — the admin chip row
@@ -294,7 +278,6 @@ test("dashboard is the first admin chip, and only it lights on /admin", async ({
   page,
   context,
 }) => {
-  mkdirSync(OUT, { recursive: true });
   await signInAs(context, players.organizer);
 
   await page.goto("/admin", { waitUntil: "networkidle" });
@@ -317,10 +300,7 @@ test("dashboard is the first admin chip, and only it lights on /admin", async ({
   expect(chips.filter((c) => c.current === "page")).toHaveLength(1);
   expect(chips.find((c) => c.current === "page")?.id).toBe("admin-nav-dashboard");
 
-  await page.locator('[data-testid="admin-nav-dashboard"]').first().screenshot({
-    path: path.join(OUT, "05-admin-chip.png"),
-  });
-
+  
   // …and it does NOT light on another admin page.
   await page.goto("/admin/games", { waitUntil: "networkidle" });
   await expect(page.locator('[data-testid="admin-nav-dashboard"]')).not.toHaveAttribute(

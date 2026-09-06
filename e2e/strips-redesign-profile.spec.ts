@@ -1,5 +1,4 @@
 import { expect, test } from "@playwright/test";
-import { mkdirSync } from "node:fs";
 import path from "node:path";
 import { PNG } from "pngjs";
 import { LOCALE_COOKIE } from "../lib/i18n/locales";
@@ -33,7 +32,6 @@ import { players, signInAs } from "./helpers/session.ts";
  *      follows, so the cover ends without a seam.
  */
 
-const OUT = path.resolve(process.cwd(), "docs/redesign-v2/strips/profile-v2");
 
 test.use({ viewport: { width: 390, height: 844 } });
 
@@ -45,28 +43,6 @@ async function settle(page: import("@playwright/test").Page) {
   });
 }
 
-test("the profile in three languages, on all three tabs", async ({ page, context }) => {
-  mkdirSync(OUT, { recursive: true });
-  await signInAs(context, players.runner);
-
-  for (const locale of ["en", "cs", "ru"] as const) {
-    await context.addCookies([
-      { name: LOCALE_COOKIE, value: locale, domain: "localhost", path: "/" },
-    ]);
-    for (const [tab, url] of [
-      ["overview", "/account"],
-      ["games", "/account?tab=games"],
-      ["settings", "/account?tab=settings"],
-    ] as const) {
-      await page.goto(url, { waitUntil: "networkidle" });
-      await settle(page);
-      await page.screenshot({
-        path: path.join(OUT, `${tab}-${locale}.png`),
-        fullPage: true,
-      });
-    }
-  }
-});
 
 /**
  * THE STATS NUMERALS ARE LEGIBLE OVER THE COVER — measured, not judged
@@ -162,7 +138,6 @@ test("the cover is a photograph that fades to the page, under a legible name", a
   page,
   context,
 }) => {
-  mkdirSync(OUT, { recursive: true });
   await signInAs(context, players.runner);
   await context.addCookies([
     { name: LOCALE_COOKIE, value: "en", domain: "localhost", path: "/" },
@@ -201,13 +176,7 @@ test("the cover is a photograph that fades to the page, under a legible name", a
   });
   expect(onTop, "the cover paints over the nickname").toBe(true);
 
-  await page.getByTestId("profile-identity").screenshot({
-    path: path.join(OUT, "01-cover.png"),
-  });
-  await page.getByTestId("profile-stats").screenshot({
-    path: path.join(OUT, "02-stats.png"),
-  });
-});
+    });
 
 /**
  * p11's SETTINGS ROWS: a tracked-caps label over a larger white value, ruled
@@ -218,7 +187,6 @@ test("the settings rows are labelled and ruled as p11 draws them", async ({
   page,
   context,
 }) => {
-  mkdirSync(OUT, { recursive: true });
   await signInAs(context, players.runner);
   await context.addCookies([
     { name: LOCALE_COOKIE, value: "en", domain: "localhost", path: "/" },
@@ -246,5 +214,4 @@ test("the settings rows are labelled and ruled as p11 draws them", async ({
   // At least one rule between rows, and the last row carries none.
   expect(rows.filter((r) => r.rule !== "0px").length).toBeGreaterThan(0);
 
-  await details.screenshot({ path: path.join(OUT, "03-settings-rows.png") });
-});
+  });

@@ -19,15 +19,12 @@ import { apiClientFor, players, serviceClient } from "./helpers/session.ts";
  * Run with:  npx playwright test e2e/strips-design2.spec.ts
  */
 
-const OUT = path.resolve(process.cwd(), "screenshots", "design-2");
 
 test.beforeAll(async () => {
-  await mkdir(OUT, { recursive: true });
 });
 
 async function strip(page: import("@playwright/test").Page, name: string) {
-  await page.screenshot({ path: path.join(OUT, `${name}.png`), fullPage: true });
-}
+  }
 
 /**
  * Items 1–3 — the calendar strip, the rows, and the spots-left ladder.
@@ -295,18 +292,6 @@ test("C8-game-detail-no-photo", async ({ page }) => {
  * from one game silently changed every other game at that ground and the
  * surface gave no hint of it. The strip follows the control.
  */
-test("C11-admin-amenities", async ({ page, context }) => {
-  const { signInAs } = await import("./helpers/session.ts");
-  await signInAs(context, players.organizer);
-  await page.goto("/admin/venues", { waitUntil: "networkidle" });
-
-  // The venue rows are collapsed by default; the amenity grid is inside one.
-  await page.getByTestId("venue-summary").first().click();
-  await page.getByTestId("amenity-bibs").first().scrollIntoViewIfNeeded();
-  await strip(page, "C11-admin-what-this-pitch-provides");
-});
-
-/** Item 15 — the app shell: bottom tabs, and the CTA stacked above them. */
 test("D15-app-shell", async ({ page, context }) => {
   const game = await createScratchGame({ hoursFromNow: 24 * 4, capacity: 12 });
 

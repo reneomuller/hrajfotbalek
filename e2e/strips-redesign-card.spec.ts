@@ -1,5 +1,4 @@
 import { expect, test } from "@playwright/test";
-import { mkdirSync } from "node:fs";
 import path from "node:path";
 import { PNG } from "pngjs";
 import { LOCALE_COOKIE } from "../lib/i18n/locales";
@@ -22,7 +21,6 @@ import { createScratchGame, destroyScratchGame } from "./helpers/scaffold";
  * fails when someone does.
  */
 
-const OUT = path.resolve(process.cwd(), "docs/redesign-v2/strips/card");
 
 /** The disposable venue every scratch game sits at — `helpers/scaffold.ts`. */
 const SCRATCH_VENUE = "E2E Scratch Pitch";
@@ -116,7 +114,6 @@ test("the card over the photo — scrim, outline and inert cue", async ({
   page,
   context,
 }) => {
-  mkdirSync(OUT, { recursive: true });
   await context.addCookies([
     { name: LOCALE_COOKIE, value: "en", domain: "localhost", path: "/" },
   ]);
@@ -293,15 +290,12 @@ test("the card over the photo — scrim, outline and inert cue", async ({
   );
   expect(anchors, "the card is not an anchor, or it nests one").toBe(0);
 
-  await card.screenshot({ path: path.join(OUT, "01-card-over-photo.png") });
-  await page.screenshot({ path: path.join(OUT, "02-games-list.png"), fullPage: true });
-  } finally {
+      } finally {
     await destroyScratchGame(game.id);
   }
 });
 
 test("a past card drops the cue and stays untappable", async ({ page, context }) => {
-  mkdirSync(OUT, { recursive: true });
   await context.addCookies([
     { name: LOCALE_COOKIE, value: "en", domain: "localhost", path: "/" },
   ]);
@@ -316,5 +310,4 @@ test("a past card drops the cue and stays untappable", async ({ page, context })
 
   // A call to action on a card that cannot be tapped is a lie about the card.
   await expect(past.getByTestId("card-join-cue")).toHaveCount(0);
-  await past.screenshot({ path: path.join(OUT, "03-card-past.png") });
-});
+  });

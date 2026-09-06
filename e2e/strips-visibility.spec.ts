@@ -1,5 +1,4 @@
 import { expect, test } from "@playwright/test";
-import { mkdirSync } from "node:fs";
 import path from "node:path";
 import { LOCALE_COOKIE } from "../lib/i18n/locales";
 
@@ -19,13 +18,11 @@ import { LOCALE_COOKIE } from "../lib/i18n/locales";
  * of state; the assertion is what makes it evidence of the ruling.
  */
 
-const OUT = path.resolve(process.cwd(), "docs/v13/strips/visibility");
 
 test.describe("visibility round strips", () => {
   test.use({ viewport: { width: 390, height: 900 } });
 
   test("calendar, lifted surfaces and the mark — en", async ({ page, context }) => {
-    mkdirSync(OUT, { recursive: true });
     await context.addCookies([
       { name: LOCALE_COOKIE, value: "en", domain: "localhost", path: "/" },
     ]);
@@ -101,8 +98,7 @@ test.describe("visibility round strips", () => {
       expect(boxes[i].left - boxes[i - 1].right).toBeCloseTo(8, 0);
     }
 
-    await picker.screenshot({ path: path.join(OUT, "01-calendar-full-width.png") });
-
+    
     // --- item 2: the lifted surface, on all three surfaces ------------------
     // The pills on a list card. Asserted on the COMPUTED values rather than on
     // the class name: `.lifted` is a component-layer class and a utility in the
@@ -138,10 +134,7 @@ test.describe("visibility round strips", () => {
     // NO GLOW is half the ruling and the half most likely to creep back.
     expect(pillStyle.shadow).toBe("none");
 
-    await page.getByTestId("game-row").first().screenshot({
-      path: path.join(OUT, "02-list-card-pills.png"),
-    });
-
+    
     // The pass tier cards.
     await page.goto("/pass", { waitUntil: "networkidle" });
     await settle();
@@ -149,8 +142,7 @@ test.describe("visibility round strips", () => {
     await expect(tier).toBeVisible();
     const tierBg = await tier.evaluate((el) => getComputedStyle(el).backgroundColor);
     expect(tierBg).toBe("rgb(22, 22, 22)");
-    await tier.screenshot({ path: path.join(OUT, "03-pass-tier-card.png") });
-
+    
     /*
       Home's steps.
 
@@ -170,8 +162,7 @@ test.describe("visibility round strips", () => {
     await steps.scrollIntoViewIfNeeded();
     const stepBg = await steps.evaluate((el) => getComputedStyle(el).backgroundColor);
     expect(stepBg).toBe("rgb(22, 22, 22)");
-    await steps.screenshot({ path: path.join(OUT, "04-home-step-cards.png") });
-
+    
     // --- item 4: the mark in the header -------------------------------------
     // That it LOADED, not merely that the element exists — a 404 on the src
     // renders as an empty box of exactly the right size, which a screenshot
@@ -183,8 +174,5 @@ test.describe("visibility round strips", () => {
     );
     expect(loaded, "the header mark did not load").toBeGreaterThan(0);
 
-    await page.getByTestId("site-header").screenshot({
-      path: path.join(OUT, "05-header-mark.png"),
-    });
-  });
+      });
 });

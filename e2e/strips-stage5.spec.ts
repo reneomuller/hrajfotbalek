@@ -1,5 +1,4 @@
 import { expect, test } from "@playwright/test";
-import { mkdirSync } from "node:fs";
 import path from "node:path";
 import { LOCALE_COOKIE } from "../lib/i18n/locales";
 
@@ -24,7 +23,6 @@ import { LOCALE_COOKIE } from "../lib/i18n/locales";
  * the image, which is an artefact of the capture rather than of the product.
  */
 
-const OUT = path.resolve(process.cwd(), "docs/v13/strips/home");
 
 const VIEWPORTS = [
   { id: "390", width: 390, height: 900 },
@@ -35,7 +33,6 @@ test.describe("Stage 5 strips — home", () => {
   for (const viewport of VIEWPORTS) {
     for (const locale of ["en", "cs"] as const) {
       test(`home at ${viewport.id} — ${locale}`, async ({ browser }) => {
-        mkdirSync(OUT, { recursive: true });
 
         const context = await browser.newContext({
           viewport: { width: viewport.width, height: viewport.height },
@@ -58,21 +55,12 @@ test.describe("Stage 5 strips — home", () => {
             "nextjs-portal,[data-nextjs-toast],#__next-build-watcher{display:none !important}",
         });
 
-        // The fold, with the chrome where it really is — this is the shot that
-        // shows whether the three steps clear it.
-        await page.screenshot({
-          path: path.join(OUT, `${viewport.id}-${locale}-fold.png`),
-        });
-
+        
         await page.addStyleTag({
           content:
             '[data-testid="nav-pill"],[data-testid="site-header"]{visibility:hidden !important}',
         });
-        await page.screenshot({
-          path: path.join(OUT, `${viewport.id}-${locale}.png`),
-          fullPage: true,
-        });
-
+        
         await context.close();
       });
     }

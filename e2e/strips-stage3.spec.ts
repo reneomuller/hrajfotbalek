@@ -1,5 +1,4 @@
 import { expect, test } from "@playwright/test";
-import { mkdirSync } from "node:fs";
 import path from "node:path";
 import { LOCALE_COOKIE } from "../lib/i18n/locales";
 import { players, signInAs } from "./helpers/session.ts";
@@ -22,7 +21,6 @@ import { players, signInAs } from "./helpers/session.ts";
  * suite reads the seed tableau and must not leave it changed.
  */
 
-const OUT = path.resolve(process.cwd(), "docs/v13/strips/profile");
 
 const VIEWPORTS = [
   { id: "390", width: 390, height: 900 },
@@ -33,7 +31,6 @@ test.describe("Stage 3 strips — profile", () => {
   for (const viewport of VIEWPORTS) {
     for (const locale of ["en", "cs"] as const) {
       test(`profile at ${viewport.id} — ${locale}`, async ({ browser }) => {
-        mkdirSync(OUT, { recursive: true });
 
         const context = await browser.newContext({
           viewport: { width: viewport.width, height: viewport.height },
@@ -54,8 +51,7 @@ test.describe("Stage 3 strips — profile", () => {
 
         const block = page.getByTestId("profile-details");
         await expect(block).toBeVisible();
-        await block.screenshot({ path: path.join(OUT, `${viewport.id}-${locale}-display.png`) });
-
+        
         // --- edit mode, with every chip selected (§2.8's required state) ---
         await page.getByTestId("edit-details").click();
         for (const code of ["gk", "def", "mid", "att"]) {
@@ -74,8 +70,7 @@ test.describe("Stage 3 strips — profile", () => {
          */
         await page.waitForTimeout(400);
         await page.evaluate(() => document.fonts.ready);
-        await block.screenshot({ path: path.join(OUT, `${viewport.id}-${locale}-edit.png`) });
-
+        
         // Leave the row as it was found.
         await page.getByTestId("cancel-edit").click();
         await context.close();

@@ -1,5 +1,4 @@
 import { expect, test } from "@playwright/test";
-import { mkdirSync } from "node:fs";
 import path from "node:path";
 import { LOCALE_COOKIE } from "../lib/i18n/locales";
 import { createScratchGame, destroyScratchGame } from "./helpers/scaffold.ts";
@@ -18,7 +17,6 @@ import { pragueDayKey } from "../lib/games/days.ts";
  * visible in the `All` view without scrolling any strip.
  */
 
-const OUT = path.resolve(process.cwd(), "docs/v13/strips/day-filter");
 
 test.describe("Day filter strips", () => {
   test.use({ viewport: { width: 390, height: 900 } });
@@ -27,7 +25,6 @@ test.describe("Day filter strips", () => {
     page,
     context,
   }) => {
-    mkdirSync(OUT, { recursive: true });
 
     // Weeks out: outside any fixed window the removed strip could have drawn.
     const distant = await createScratchGame({ hoursFromNow: 24 * 26 });
@@ -64,11 +61,7 @@ test.describe("Day filter strips", () => {
           page.locator(`[data-testid="game-row"][href="/game/${distant.id}"]`),
           `${locale}: the far-future game must be in All`,
         ).toBeVisible();
-        await page.screenshot({
-          path: path.join(OUT, `all-390-${locale}.png`),
-          fullPage: true,
-        });
-
+        
         /*
           --- one day selected ---------------------------------------------
 
@@ -87,11 +80,7 @@ test.describe("Day filter strips", () => {
         await expect(
           page.locator(`[data-testid="game-row"][href="/game/${distant.id}"]`),
         ).toHaveCount(0);
-        await page.screenshot({
-          path: path.join(OUT, `day-390-${locale}.png`),
-          fullPage: true,
-        });
-      }
+              }
     } finally {
       await destroyScratchGame(distant.id);
       await destroyScratchGame(soon.id);

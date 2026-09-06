@@ -1,5 +1,4 @@
 import { expect, test } from "@playwright/test";
-import { mkdirSync } from "node:fs";
 import path from "node:path";
 import { PNG } from "pngjs";
 import { LOCALE_COOKIE } from "../lib/i18n/locales";
@@ -36,7 +35,6 @@ import { createScratchGame, destroyScratchGame } from "./helpers/scaffold";
  * rests on a screenshot: every property is asserted from the DOM. The images
  * are for the report.
  */
-const OUT = path.resolve(process.cwd(), "docs/v22/strips/uk");
 
 test.use({ viewport: { width: 390, height: 844 } });
 
@@ -146,7 +144,6 @@ test.describe("Ukrainian at 390px", () => {
     page,
     context,
   }) => {
-    mkdirSync(OUT, { recursive: true });
     await signInAs(context, players.runner);
     const game = await createScratchGame({
         capacity: 12,
@@ -173,11 +170,7 @@ test.describe("Ukrainian at 390px", () => {
       for (const surface of surfaces) {
         await page.goto(surface.url, { waitUntil: "networkidle" });
         await settle(page);
-        await page.screenshot({
-          path: path.join(OUT, `${surface.name}.png`),
-          fullPage: true,
-        });
-
+        
         for (const hit of await clipped(page, "body")) {
           failures.push(`${surface.name}: "${hit.text}" is ${hit.over}px over its box`);
         }
@@ -204,7 +197,6 @@ test.describe("Ukrainian at 390px", () => {
     page,
     context,
   }) => {
-    mkdirSync(OUT, { recursive: true });
     await signInAs(context, players.runner);
     const game = await createScratchGame({
         capacity: 12,
@@ -220,8 +212,7 @@ test.describe("Ukrainian at 390px", () => {
     try {
       await page.goto(`/game/${game.id}/book`, { waitUntil: "networkidle" });
       await settle(page);
-      await page.screenshot({ path: path.join(OUT, "06-booking.png"), fullPage: true });
-
+      
       const failures = await clipped(page, "body");
       expect(failures, JSON.stringify(failures)).toEqual([]);
 

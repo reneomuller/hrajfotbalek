@@ -1,5 +1,4 @@
 import { expect, test } from "@playwright/test";
-import { mkdirSync } from "node:fs";
 import path from "node:path";
 import { LOCALE_COOKIE } from "../lib/i18n/locales";
 import { createScratchGame, destroyScratchGame } from "./helpers/scaffold.ts";
@@ -23,13 +22,11 @@ import { apiClientFor, players } from "./helpers/session.ts";
  * a strip that could not answer the question it was taken for.
  */
 
-const OUT = path.resolve(process.cwd(), "docs/v13/strips/layout-law");
 
 test.describe("Layout law strips", () => {
   test.use({ viewport: { width: 390, height: 900 } });
 
   test("list cards and detail at 390px — en", async ({ page, context }) => {
-    mkdirSync(OUT, { recursive: true });
 
     await context.addCookies([
       { name: LOCALE_COOKIE, value: "en", domain: "localhost", path: "/" },
@@ -64,30 +61,20 @@ test.describe("Layout law strips", () => {
       await expect(card.getByTestId("row-spots")).toBeVisible();
       await expect(card.getByTestId("card-price")).toHaveCount(0);
       await card.scrollIntoViewIfNeeded();
-      await card.screenshot({ path: path.join(OUT, "01-games-card.png") });
-
+      
       // --- 2. the home card, which must be identical ----------------------
       await page.goto("/", { waitUntil: "networkidle" });
       await settle();
       const homeCard = page.getByTestId("next-matches").getByTestId("game-row").first();
       await expect(homeCard.getByTestId("card-price")).toHaveCount(0);
       await homeCard.scrollIntoViewIfNeeded();
-      await homeCard.screenshot({ path: path.join(OUT, "02-home-card.png") });
-
+      
       // --- 3. the detail: its card, and the claim bar ----------------------
       await page.goto(`/game/${game.id}`, { waitUntil: "networkidle" });
       await settle();
       await expect(page.getByTestId("claim-bar")).toBeVisible();
-      await page.getByTestId("availability-card").screenshot({
-        path: path.join(OUT, "03-detail-card.png"),
-      });
-      await page.getByTestId("claim-bar").screenshot({
-        path: path.join(OUT, "04-detail-claim-bar.png"),
-      });
-
-      // The fold, so the bar is seen where it actually sits.
-      await page.screenshot({ path: path.join(OUT, "05-detail-fold.png") });
-    } finally {
+            
+          } finally {
       await destroyScratchGame(game.id);
     }
   });

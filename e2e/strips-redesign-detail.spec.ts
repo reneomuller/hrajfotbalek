@@ -1,5 +1,4 @@
 import { expect, test } from "@playwright/test";
-import { mkdirSync } from "node:fs";
 import path from "node:path";
 import { LOCALE_COOKIE } from "../lib/i18n/locales";
 import { createScratchGame, destroyScratchGame } from "./helpers/scaffold.ts";
@@ -29,8 +28,6 @@ import { createScratchGame, destroyScratchGame } from "./helpers/scaffold.ts";
  * it immediately and should find the reason next to the code.
  */
 
-const OUT = path.resolve(process.cwd(), "docs/redesign-v2/strips/detail");
-
 test.use({ viewport: { width: 390, height: 844 } });
 
 async function settle(page: import("@playwright/test").Page) {
@@ -45,7 +42,6 @@ test("the header band carries the pitch and fades out above the first box", asyn
   page,
   context,
 }) => {
-  mkdirSync(OUT, { recursive: true });
   await context.addCookies([
     { name: LOCALE_COOKIE, value: "en", domain: "localhost", path: "/" },
   ]);
@@ -105,9 +101,7 @@ test("the header band carries the pitch and fades out above the first box", asyn
       "the first content box overlaps the photographed band",
     ).toBeGreaterThanOrEqual(geom.bandBottom - 1);
 
-    await hero.screenshot({ path: path.join(OUT, "01-header-band.png") });
-    await page.screenshot({ path: path.join(OUT, "02-fold.png") });
-  } finally {
+          } finally {
     await destroyScratchGame(game.id);
   }
 });
@@ -168,7 +162,6 @@ test("the counter and the price are Anton; the list figure is not", async ({
   page,
   context,
 }) => {
-  mkdirSync(OUT, { recursive: true });
   await context.addCookies([
     { name: LOCALE_COOKIE, value: "en", domain: "localhost", path: "/" },
   ]);
@@ -195,11 +188,7 @@ test("the counter and the price are Anton; the list figure is not", async ({
     expect(faces.counter!.size).toBeGreaterThanOrEqual(36);
     expect(faces.price!.family, "the claim bar price is not Anton").toContain("Anton");
 
-    await page.getByTestId("availability-card").screenshot({
-      path: path.join(OUT, "03-availability.png"),
-    });
-    await page.getByTestId("claim-bar").screenshot({ path: path.join(OUT, "04-claim-bar.png") });
-
+        
     // The LIST figure stays on the body face — R5's forbidden half.
     await page.goto("/games", { waitUntil: "networkidle" });
     await settle(page);
@@ -211,28 +200,6 @@ test("the counter and the price are Anton; the list figure is not", async ({
     expect(rowFigure, "Anton leaked onto the list card's body-size figure").not.toContain(
       "Anton",
     );
-  } finally {
-    await destroyScratchGame(game.id);
-  }
-});
-
-test("the detail in three languages", async ({ page, context }) => {
-  mkdirSync(OUT, { recursive: true });
-  const game = await createScratchGame({ capacity: 12, hoursFromNow: 48 });
-
-  try {
-    for (const locale of ["en", "cs", "ru"] as const) {
-      await context.clearCookies();
-      await context.addCookies([
-        { name: LOCALE_COOKIE, value: locale, domain: "localhost", path: "/" },
-      ]);
-      await page.goto(`/game/${game.id}`, { waitUntil: "networkidle" });
-      await settle(page);
-      await page.screenshot({
-        path: path.join(OUT, `05-detail-${locale}.png`),
-        fullPage: true,
-      });
-    }
   } finally {
     await destroyScratchGame(game.id);
   }

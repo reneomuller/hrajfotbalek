@@ -1,5 +1,4 @@
 import { expect, test } from "@playwright/test";
-import { mkdirSync } from "node:fs";
 import path from "node:path";
 import { LOCALE_COOKIE } from "../lib/i18n/locales";
 import { createScratchGame, destroyScratchGame } from "./helpers/scaffold.ts";
@@ -18,13 +17,11 @@ import { pragueDayKey } from "../lib/games/days.ts";
  * format, a part-filled bar and a lineup. The seeded games each miss one.
  */
 
-const OUT = path.resolve(process.cwd(), "docs/v13/strips/gate");
 
 test.describe("Gate strips", () => {
   test.use({ viewport: { width: 390, height: 900 } });
 
   test("tab row and one card — en + cs", async ({ page, context }) => {
-    mkdirSync(OUT, { recursive: true });
 
     const game = await createScratchGame({
       hoursFromNow: 24 * 3,
@@ -77,10 +74,7 @@ test.describe("Gate strips", () => {
           "data-selected",
           "true",
         );
-        await page.getByTestId("day-picker").screenshot({
-          path: path.join(OUT, `tabs-all-${locale}.png`),
-        });
-
+        
         // --- the card, with every line of the anatomy present ---------------
         const card = page.locator(`[data-testid="game-row"][href="/game/${game.id}"]`);
         await expect(card.getByTestId("card-venue")).toBeVisible();
@@ -102,35 +96,27 @@ test.describe("Gate strips", () => {
         await expect(card.getByTestId("row-spots")).toBeVisible();
         await expect(card.getByTestId("avatar").first()).toBeVisible();
         await card.scrollIntoViewIfNeeded();
-        await card.screenshot({ path: path.join(OUT, `card-${locale}.png`) });
-
+        
         // --- the HOME list card, which must be the same object -------------
         await page.goto("/", { waitUntil: "networkidle" });
         await settle();
         const homeCard = page.getByTestId("next-matches").getByTestId("game-row").first();
         await expect(homeCard.getByTestId("card-when")).toBeVisible();
         await homeCard.scrollIntoViewIfNeeded();
-        await homeCard.screenshot({ path: path.join(OUT, `home-card-${locale}.png`) });
-
+        
         // --- the GAME CARD's time span, which is a span and not a start ----
         await page.goto(`/game/${game.id}`, { waitUntil: "networkidle" });
         await settle();
         const span = page.getByTestId("game-time-span");
         await expect(span).toContainText(/\d{2}:\d{2}.\d{2}:\d{2}/);
-        await page.getByTestId("game-info-card").screenshot({
-          path: path.join(OUT, `game-card-span-${locale}.png`),
-        });
-
+        
         // --- the row with a day selected -----------------------------------
         await page.goto(`/games?day=${day}`, { waitUntil: "networkidle" });
         await settle();
         await expect(
           page.locator(`[data-testid="day-tab"][data-day="${day}"]`),
         ).toHaveAttribute("data-selected", "true");
-        await page.getByTestId("day-picker").screenshot({
-          path: path.join(OUT, `tabs-day-${locale}.png`),
-        });
-      }
+              }
     } finally {
       await destroyScratchGame(game.id);
     }

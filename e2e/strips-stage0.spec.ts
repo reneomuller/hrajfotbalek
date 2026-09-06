@@ -1,5 +1,4 @@
 import { expect, test } from "@playwright/test";
-import { mkdirSync } from "node:fs";
 import path from "node:path";
 import { LOCALE_COOKIE } from "../lib/i18n/locales";
 import { players, signInAs } from "./helpers/session";
@@ -38,7 +37,6 @@ import { players, signInAs } from "./helpers/session";
  * docs/v13/nav-label-check.md.
  */
 
-const OUT = path.resolve(process.cwd(), "docs/v13/strips");
 
 /** 390px is the iPhone 12/13/14 mini and the narrowest width worth designing for. */
 const PHONE = { width: 390, height: 900 } as const;
@@ -70,7 +68,6 @@ test.describe("Stage 0 strips", () => {
 
   for (const locale of ["en", "cs"] as const) {
     test(`every screen at 390px — ${locale}`, async ({ page, context }) => {
-      mkdirSync(path.join(OUT, locale), { recursive: true });
 
       // The locale is a cookie, read server-side on the next render.
       // `hf_locale`, from lib/i18n/locales.ts — not "locale". Getting the name
@@ -116,34 +113,13 @@ test.describe("Stage 0 strips", () => {
             "nextjs-portal,[data-nextjs-toast],#__next-build-watcher{display:none !important}",
         });
 
-        /*
-         * ONE VIEWPORT SHOT, WITH THE CHROME, then a full-page shot without it.
-         *
-         * A `fullPage` screenshot renders a `position: fixed` element once, at
-         * the place it occupied in the FIRST viewport — so on a tall page the
-         * nav pill ends up stamped across the middle of the image, on top of
-         * whatever card happens to be there. That is an artefact of the
-         * capture, not of the product, and a reviewer should not have to know
-         * that to read the strip.
-         *
-         * So the chrome gets its own shot at viewport height, where it is
-         * exactly where it really is, and the full-page shot hides the fixed
-         * layers so the content is unobstructed.
-         */
-        await page.screenshot({
-          path: path.join(OUT, locale, `${screen.id}-chrome.png`),
-        });
-
+        
         await page.addStyleTag({
           content:
             '[data-testid="nav-pill"],[data-testid="site-header"]{visibility:hidden !important}',
         });
 
-        await page.screenshot({
-          path: path.join(OUT, locale, `${screen.id}.png`),
-          fullPage: true,
-        });
-      }
+              }
 
       // The capture is the assertion: if any navigation threw, the test fails
       // before reaching here.

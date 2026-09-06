@@ -1,5 +1,4 @@
 import { expect, test } from "@playwright/test";
-import { mkdirSync } from "node:fs";
 import path from "node:path";
 import { LOCALE_COOKIE } from "../lib/i18n/locales";
 import { strings } from "../lib/strings";
@@ -16,7 +15,6 @@ import {
  * `docs/v25/strips/`.
  */
 
-const OUT = path.resolve(process.cwd(), "docs/v25/strips");
 
 test.use({ viewport: { width: 390, height: 844 } });
 
@@ -108,7 +106,6 @@ test("the FAQ renders the owner's four questions and answers, in order", async (
   page,
   context,
 }) => {
-  mkdirSync(OUT, { recursive: true });
   await context.addCookies([
     { name: LOCALE_COOKIE, value: "en", domain: "localhost", path: "/" },
   ]);
@@ -154,14 +151,12 @@ test("the FAQ renders the owner's four questions and answers, in order", async (
     "Not at all. All skill levels are welcome. Games are casual unless a level badge says otherwise.",
   );
 
-  await page.getByTestId("faq-panel").screenshot({ path: path.join(OUT, "02-faq.png") });
-});
+  });
 
 test("the community panel wears the Game Pass banner's treatment", async ({
   page,
   context,
 }) => {
-  mkdirSync(OUT, { recursive: true });
   await context.addCookies([
     { name: LOCALE_COOKIE, value: "en", domain: "localhost", path: "/" },
   ]);
@@ -203,5 +198,4 @@ test("the community panel wears the Game Pass banner's treatment", async ({
   expect(sizes, `logo widths ${sizes.join(", ")}`).toHaveLength(3);
   for (const size of sizes) expect(size).toBe(55);
 
-  await panel.screenshot({ path: path.join(OUT, "03-community.png") });
-});
+  });

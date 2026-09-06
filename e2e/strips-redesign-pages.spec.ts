@@ -1,5 +1,4 @@
 import { expect, test } from "@playwright/test";
-import { mkdirSync } from "node:fs";
 import path from "node:path";
 import { LOCALE_COOKIE } from "../lib/i18n/locales";
 
@@ -25,8 +24,6 @@ import { LOCALE_COOKIE } from "../lib/i18n/locales";
  * that produces.
  */
 
-const OUT = path.resolve(process.cwd(), "docs/redesign-v2/strips/pages");
-
 test.use({ viewport: { width: 390, height: 844 } });
 
 async function settle(page: import("@playwright/test").Page) {
@@ -37,27 +34,7 @@ async function settle(page: import("@playwright/test").Page) {
   });
 }
 
-test("home and games, in three languages", async ({ page, context }) => {
-  mkdirSync(OUT, { recursive: true });
-
-  for (const locale of ["en", "cs", "ru"] as const) {
-    await context.clearCookies();
-    await context.addCookies([
-      { name: LOCALE_COOKIE, value: locale, domain: "localhost", path: "/" },
-    ]);
-
-    await page.goto("/", { waitUntil: "networkidle" });
-    await settle(page);
-    await page.screenshot({ path: path.join(OUT, `01-home-${locale}.png`), fullPage: true });
-
-    await page.goto("/games", { waitUntil: "networkidle" });
-    await settle(page);
-    await page.screenshot({ path: path.join(OUT, `02-games-${locale}.png`), fullPage: true });
-  }
-});
-
 test("the hero is the slogan and the CTA is a capsule", async ({ page, context }) => {
-  mkdirSync(OUT, { recursive: true });
   await context.addCookies([
     { name: LOCALE_COOKIE, value: "en", domain: "localhost", path: "/" },
   ]);
@@ -84,8 +61,7 @@ test("the hero is the slogan and the CTA is a capsule", async ({ page, context }
   });
   expect(capsule.radius).toBeCloseTo(capsule.h / 2, 0);
 
-  await page.locator("section").first().screenshot({ path: path.join(OUT, "03-hero.png") });
-});
+  });
 
 /**
  * THE THREE PANELS WEAR THE NEUTRAL EDGE (p01).
@@ -99,7 +75,6 @@ test("the hero is the slogan and the CTA is a capsule", async ({ page, context }
  * with the token.
  */
 test("the home panels use the neutral edge, not the accent", async ({ page, context }) => {
-  mkdirSync(OUT, { recursive: true });
   await context.addCookies([
     { name: LOCALE_COOKIE, value: "en", domain: "localhost", path: "/" },
   ]);
@@ -137,11 +112,7 @@ test("the home panels use the neutral edge, not the accent", async ({ page, cont
     expect(edge.width, `${id} lost its edge entirely`).not.toBe("0px");
   }
 
-  await page.getByTestId("community-panel").screenshot({
-    path: path.join(OUT, "04-community.png"),
-  });
-  await page.getByTestId("potm-panel").screenshot({ path: path.join(OUT, "05-potm.png") });
-});
+    });
 
 /**
  * HOW IT WORKS IS ONE ORDERED LIST, NOT THREE CARDS.
@@ -152,7 +123,6 @@ test("the home panels use the neutral edge, not the accent", async ({ page, cont
  * waves through.
  */
 test("how it works is one ordered list of three divided rows", async ({ page, context }) => {
-  mkdirSync(OUT, { recursive: true });
   await context.addCookies([
     { name: LOCALE_COOKIE, value: "en", domain: "localhost", path: "/" },
   ]);
@@ -170,8 +140,7 @@ test("how it works is one ordered list of three divided rows", async ({ page, co
     .evaluate((el) => getComputedStyle(el).borderBottomWidth);
   expect(lastRule).toBe("0px");
 
-  await steps.screenshot({ path: path.join(OUT, "06-how-it-works.png") });
-});
+  });
 
 /**
  * THE PAGE HEADING IS THE FRAMES' STEP.

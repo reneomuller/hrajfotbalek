@@ -1,6 +1,4 @@
 import { expect, test } from "@playwright/test";
-import { mkdirSync } from "node:fs";
-import path from "node:path";
 import { players, signInAs } from "./helpers/session";
 
 /**
@@ -20,7 +18,6 @@ import { players, signInAs } from "./helpers/session";
  * put in an admin list. Both are recorded in `docs/REQUESTS.md`.
  */
 
-const OUT = path.resolve(process.cwd(), "docs/redesign-v2/strips/admin");
 
 /** Measured off p14.png, in CSS pixels from the top of the viewport. */
 const P14 = {
@@ -47,7 +44,6 @@ test.beforeEach(async ({ context }) => {
 });
 
 test("the dashboard matches p14's geometry", async ({ page }) => {
-  mkdirSync(OUT, { recursive: true });
   await page.goto("/admin", { waitUntil: "networkidle" });
   await page.evaluate(() => document.fonts.ready);
   await page.addStyleTag({
@@ -94,8 +90,7 @@ test("the dashboard matches p14's geometry", async ({ page }) => {
   expect(Math.abs(second.y - first.y - P14.rowPitch), `row pitch ${second.y - first.y}`).toBeLessThan(TOLERANCE);
   expect(Math.abs(first.y - P14.rowPanelTop)).toBeLessThan(TOLERANCE + 2);
 
-  await page.screenshot({ path: path.join(OUT, "01-dashboard.png"), fullPage: true });
-});
+  });
 
 /*
  * THE TYPE STEPS, WHICH ARE WHAT DRIFTED. `p14`'s caps measure 23.4 for the

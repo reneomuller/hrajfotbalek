@@ -1,5 +1,4 @@
 import { expect, test } from "@playwright/test";
-import { mkdirSync } from "node:fs";
 import path from "node:path";
 import { LOCALE_COOKIE } from "../lib/i18n/locales";
 import { players, signInAs } from "./helpers/session.ts";
@@ -24,13 +23,11 @@ import { players, signInAs } from "./helpers/session.ts";
  * the seed tableau is the same afterwards.
  */
 
-const OUT = path.resolve(process.cwd(), "docs/v13/strips/profile");
 
 test.describe("item 3 — the rebuilt profile", () => {
   test.use({ viewport: { width: 390, height: 1400 } });
 
   test("identity, stats, tabs and badges — en", async ({ page, context }) => {
-    mkdirSync(OUT, { recursive: true });
     await context.addCookies([
       { name: LOCALE_COOKIE, value: "en", domain: "localhost", path: "/" },
     ]);
@@ -108,17 +105,7 @@ test.describe("item 3 — the rebuilt profile", () => {
         '[data-testid="nav-pill"],[data-testid="site-header"]{visibility:hidden !important}',
     });
 
-    await page.screenshot({ path: path.join(OUT, "01-overview.png"), fullPage: true });
-    await page.getByTestId("profile-identity").screenshot({
-      path: path.join(OUT, "02-identity.png"),
-    });
-    await page.getByTestId("profile-stats").screenshot({
-      path: path.join(OUT, "03-stats.png"),
-    });
-    await page.getByTestId("badge-grid").screenshot({
-      path: path.join(OUT, "04-badges.png"),
-    });
-
+                
     // --- the other two tabs -------------------------------------------------
     await page.goto("/account?tab=games", { waitUntil: "networkidle" });
     await settle();
@@ -129,8 +116,7 @@ test.describe("item 3 — the rebuilt profile", () => {
       content:
         '[data-testid="nav-pill"],[data-testid="site-header"]{visibility:hidden !important}',
     });
-    await page.screenshot({ path: path.join(OUT, "05-tab-games.png"), fullPage: true });
-
+    
     await page.goto("/account?tab=settings", { waitUntil: "networkidle" });
     await settle();
     await expect(page.getByTestId("profile-details")).toBeVisible();
@@ -139,11 +125,7 @@ test.describe("item 3 — the rebuilt profile", () => {
       content:
         '[data-testid="nav-pill"],[data-testid="site-header"]{visibility:hidden !important}',
     });
-    await page.screenshot({
-      path: path.join(OUT, "06-tab-settings.png"),
-      fullPage: true,
-    });
-  });
+      });
 
   /**
    * THE EMPTY PROFILE, which is the state a new arrival actually sees.
@@ -160,7 +142,6 @@ test.describe("item 3 — the rebuilt profile", () => {
    * zeroes are a fact about games played rather than about a new account.
    */
   test("a profile with no history at all — en", async ({ page, context }) => {
-    mkdirSync(OUT, { recursive: true });
     await context.addCookies([
       { name: LOCALE_COOKIE, value: "en", domain: "localhost", path: "/" },
     ]);
@@ -182,6 +163,5 @@ test.describe("item 3 — the rebuilt profile", () => {
       content:
         '[data-testid="nav-pill"],[data-testid="site-header"]{visibility:hidden !important}',
     });
-    await page.screenshot({ path: path.join(OUT, "07-empty.png"), fullPage: true });
-  });
+      });
 });

@@ -1,5 +1,4 @@
 import { expect, test } from "@playwright/test";
-import { mkdirSync } from "node:fs";
 import path from "node:path";
 import { LOCALE_COOKIE } from "../lib/i18n/locales";
 import { createScratchGame, destroyScratchGame } from "./helpers/scaffold.ts";
@@ -23,13 +22,11 @@ import { execAsOwner } from "./helpers/clock.ts";
  * mutated.
  */
 
-const OUT = path.resolve(process.cwd(), "docs/v13/strips/section4");
 
 test.describe("Section 4 strips — the game card", () => {
   test.use({ viewport: { width: 390, height: 900 } });
 
   test("full page with contact unlocked — en + cs", async ({ page, context }) => {
-    mkdirSync(OUT, { recursive: true });
 
     const admin = serviceClient();
     const game = await createScratchGame({
@@ -106,11 +103,7 @@ test.describe("Section 4 strips — the game card", () => {
         await page.addStyleTag({
           content: '[data-testid="site-header"]{visibility:hidden !important}',
         });
-        await page.screenshot({
-          path: path.join(OUT, `game-card-390-${locale}.png`),
-          fullPage: true,
-        });
-      }
+              }
     } finally {
       // Leave the shared scratch venue as it was found.
       await execAsOwner("update public.venues set pitch_name = null where id = $1", [

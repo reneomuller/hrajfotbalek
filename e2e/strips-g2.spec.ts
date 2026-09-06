@@ -25,15 +25,12 @@ import { pragueDayKey } from "../lib/games/days.ts";
  * Run with:  npx playwright test e2e/strips-g2.spec.ts
  */
 
-const OUT = path.resolve(process.cwd(), "screenshots", "g2");
 
 test.beforeAll(async () => {
-  await mkdir(OUT, { recursive: true });
 });
 
 async function strip(page: import("@playwright/test").Page, name: string) {
-  await page.screenshot({ path: path.join(OUT, `${name}.png`), fullPage: true });
-}
+  }
 
 // --- Phase 13 ----------------------------------------------------------------
 

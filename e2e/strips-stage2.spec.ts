@@ -1,8 +1,12 @@
 import { expect, test } from "@playwright/test";
-import { mkdirSync } from "node:fs";
 import path from "node:path";
 import { LOCALE_COOKIE } from "../lib/i18n/locales";
-import { createScratchGame, destroyScratchGame } from "./helpers/scaffold.ts";
+import {
+  createScratchGame,
+  destroyScratchGame,
+  setWalletTo,
+  walletBalance,
+} from "./helpers/scaffold.ts";
 import { apiClientFor, players, signInAs } from "./helpers/session.ts";
 import { moveKickoff } from "./helpers/clock.ts";
 
@@ -27,14 +31,12 @@ import { moveKickoff } from "./helpers/clock.ts";
  * read, never mutated.
  */
 
-const OUT = path.resolve(process.cwd(), "docs/v13/strips/detail");
 const PHONE = { width: 390, height: 900 } as const;
 
 test.describe("Stage 2 strips — the claim bar", () => {
   test.use({ viewport: PHONE });
 
   test("every claim-bar state at 390px", async ({ page, context }) => {
-    mkdirSync(OUT, { recursive: true });
 
     async function strip(name: string, expectState: string) {
       // Fonts loaded, or the strip records fallback metrics and every line
@@ -51,11 +53,11 @@ test.describe("Stage 2 strips — the claim bar", () => {
       // Scrolled to the bottom, which is where the bar is read from — and
       // where the page must still clear it.
       await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
-      await page.screenshot({ path: path.join(OUT, `${name}.png`) });
-    }
+          }
 
     // --- 1. open, signed out ------------------------------------------------
     const open = await createScratchGame({ hoursFromNow: 24 * 4, capacity: 12 });
+    const walletBefore = await walletBalance(players.runner.id);
     try {
       await page.goto(`/game/${open.id}`, { waitUntil: "networkidle" });
       await strip("01-open-signed-out", "open-signed-out");
@@ -68,6 +70,20 @@ test.describe("Stage 2 strips — the claim bar", () => {
       // --- 3. holding, unpaid ----------------------------------------------
       // A cash booking is `reserved` until an admin confirms it, so it is the
       // cheapest way to reach the unpaid state honestly.
+      //
+      // THE WALLET IS EMPTIED FIRST, AND THAT IS NOT HOUSEKEEPING (round 27).
+      // `create_booking` on the cash rail spends whatever credit the player
+      // has, and a wallet that COVERS the game pays it outright — the booking
+      // is born `confirmed` and this bar reads `holding-paid`. The spec had
+      // always relied on the runner being too poor to afford a 200 CZK game,
+      // which was true only because of where this file happened to fall in the
+      // run order. Deleting two other spec files was enough to break it, and
+      // the failure said `holding-paid` on a test about being unpaid.
+      //
+      // CLAUDE.md's rule about specs that depend on how often they have been
+      // run applies to how often OTHER specs have run too.
+      await setWalletTo(players.runner.id, 0);
+
       const runner = await apiClientFor(players.runner);
       const { error } = await runner.rpc("create_booking", {
         p_game_id: open.id,
@@ -91,6 +107,7 @@ test.describe("Stage 2 strips — the claim bar", () => {
       ]);
     } finally {
       await destroyScratchGame(open.id);
+      await setWalletTo(players.runner.id, walletBefore);
     }
 
     // --- 5. full, and 6. waiting -------------------------------------------

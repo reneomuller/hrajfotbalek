@@ -1,5 +1,4 @@
 import { expect, test } from "@playwright/test";
-import { mkdirSync } from "node:fs";
 import path from "node:path";
 import { LOCALE_COOKIE } from "../lib/i18n/locales";
 
@@ -24,8 +23,6 @@ import { LOCALE_COOKIE } from "../lib/i18n/locales";
  * a lifted panel around each field stack, `eyebrow` labels, capsule controls.
  */
 
-const OUT = path.resolve(process.cwd(), "docs/redesign-v2/strips/auth");
-
 test.use({ viewport: { width: 390, height: 844 } });
 
 async function settle(page: import("@playwright/test").Page) {
@@ -36,39 +33,6 @@ async function settle(page: import("@playwright/test").Page) {
   });
 }
 
-test("login and signup, in three languages", async ({ page, context }) => {
-  mkdirSync(OUT, { recursive: true });
-
-  for (const locale of ["en", "cs", "ru"] as const) {
-    await context.clearCookies();
-    await context.addCookies([
-      { name: LOCALE_COOKIE, value: locale, domain: "localhost", path: "/" },
-    ]);
-
-    await page.goto("/login", { waitUntil: "networkidle" });
-    await settle(page);
-    await page.screenshot({ path: path.join(OUT, `01-login-${locale}.png`), fullPage: true });
-
-    await page.goto("/signup", { waitUntil: "networkidle" });
-    await settle(page);
-    await page.screenshot({ path: path.join(OUT, `02-signup-${locale}.png`), fullPage: true });
-  }
-});
-
-/*
- * THE GOOGLE CONTROL IS GATED, NOT ABSENT (round 7, item 1).
- *
- * Round 5 shipped no Google button at all, because there was no Google OAuth
- * behind it and a button that cannot sign anyone in is worse than no button
- * (ruling R15). Round 7 builds the flow and puts the control behind
- * `NEXT_PUBLIC_GOOGLE_AUTH`, which is the same ruling honoured differently:
- * the code ships, the control appears when three dashboards agree.
- *
- * SO THE ASSERTION FOLLOWS THE FLAG rather than asserting absence. Under the
- * suite's environment the flag is unset, so the guarantee round 5 made still
- * holds and is still checked — and the test now also fails if someone renders
- * the button unconditionally, which is the actual regression to fear.
- */
 test("the Google control appears only when its flag is set", async ({ page, context }) => {
   await context.addCookies([
     { name: LOCALE_COOKIE, value: "en", domain: "localhost", path: "/" },
@@ -97,7 +61,6 @@ test("the recovery path is a small link to a working two-step", async ({
   page,
   context,
 }) => {
-  mkdirSync(OUT, { recursive: true });
   await context.addCookies([
     { name: LOCALE_COOKIE, value: "en", domain: "localhost", path: "/" },
   ]);
@@ -138,8 +101,7 @@ test("the recovery path is a small link to a working two-step", async ({
   });
   expect(sameForm, "the recovery field and its button are not one form").toBe(true);
 
-  await page.screenshot({ path: path.join(OUT, "04-reset.png"), fullPage: true });
-});
+  });
 
 /**
  * THE CARD LANGUAGE, AND THE LABELS THAT LOST THEIR MONO FACE.
@@ -153,7 +115,6 @@ test("the auth forms use the product's panel and label treatment", async ({
   page,
   context,
 }) => {
-  mkdirSync(OUT, { recursive: true });
   await context.addCookies([
     { name: LOCALE_COOKIE, value: "en", domain: "localhost", path: "/" },
   ]);

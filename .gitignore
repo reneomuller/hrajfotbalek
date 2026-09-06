@@ -63,3 +63,13 @@ screenshots/
 # specific home directory. Never committed; the rules and skills beside it are.
 .claude/settings.local.json
 .mcp.json
+
+# ---------------------------------------------------------------------------
+# STRIPS AND SCREENSHOTS ARE NEVER COMMITTED (round 27, the owner's standing
+# rule). Nothing generates them any more; these lines exist so that a spec or
+# a script that starts to cannot quietly put them back under version control.
+# ---------------------------------------------------------------------------
+docs/**/strips/
+screenshots/
+test-results/
+playwright-report/

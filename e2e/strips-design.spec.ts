@@ -1,5 +1,4 @@
 import { mkdir } from "node:fs/promises";
-import path from "node:path";
 import { expect, test } from "@playwright/test";
 import { createScratchGame, destroyScratchGame } from "./helpers/scaffold.ts";
 import { players, serviceClient, signInAs } from "./helpers/session.ts";
@@ -17,15 +16,12 @@ import { players, serviceClient, signInAs } from "./helpers/session.ts";
  * Run with:  npx playwright test e2e/strips-design.spec.ts
  */
 
-const OUT = path.resolve(process.cwd(), "screenshots", "design-1");
 
 test.beforeAll(async () => {
-  await mkdir(OUT, { recursive: true });
 });
 
 async function strip(page: import("@playwright/test").Page, name: string) {
-  await page.screenshot({ path: path.join(OUT, `${name}.png`), fullPage: true });
-}
+  }
 
 /** Item 1 — the home page: no stat windows, 01/02/03 back in the hero. */
 test("01-home", async ({ page }) => {

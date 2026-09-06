@@ -1,6 +1,4 @@
 import { expect, test } from "@playwright/test";
-import { mkdirSync } from "node:fs";
-import path from "node:path";
 import { players, serviceClient, signInAs } from "./helpers/session.ts";
 
 /**
@@ -18,7 +16,6 @@ import { players, serviceClient, signInAs } from "./helpers/session.ts";
  * skipped by anything that is not one and this action is a POST endpoint.
  */
 
-const OUT = path.resolve(process.cwd(), "docs/redesign-v2/strips/admin");
 
 test.use({ viewport: { width: 390, height: 844 } });
 
@@ -37,7 +34,6 @@ test("the player page carries the profile shape, contact and the actions panel",
   page,
   context,
 }) => {
-  mkdirSync(OUT, { recursive: true });
   await signInAs(context, players.organizer);
   const id = await anyPlayerId();
 
@@ -68,8 +64,7 @@ test("the player page carries the profile shape, contact and the actions panel",
   await expect(panel.getByTestId("grant-amount")).toBeVisible();
   await expect(panel.getByTestId("grant-note")).toBeVisible();
 
-  await page.screenshot({ path: path.join(OUT, "01-player-detail.png"), fullPage: true });
-});
+  });
 
 test("a credit grant without a note is refused on the server", async ({ page, context }) => {
   await signInAs(context, players.organizer);

@@ -1,5 +1,4 @@
 import { expect, test } from "@playwright/test";
-import { mkdirSync } from "node:fs";
 import path from "node:path";
 import { LOCALE_COOKIE } from "../lib/i18n/locales";
 
@@ -14,13 +13,11 @@ import { LOCALE_COOKIE } from "../lib/i18n/locales";
  * unshown.
  */
 
-const OUT = path.resolve(process.cwd(), "docs/v13/strips/section3");
 
 test.describe("Section 3 strips", () => {
   test.use({ viewport: { width: 390, height: 900 } });
 
   test("games page and home — en", async ({ page, context }) => {
-    mkdirSync(OUT, { recursive: true });
     await context.addCookies([
       { name: LOCALE_COOKIE, value: "en", domain: "localhost", path: "/" },
     ]);
@@ -46,20 +43,12 @@ test.describe("Section 3 strips", () => {
     await expect(cells.nth(1)).toContainText("Tmrw");
     await expect(page.getByTestId("card-when").first()).toHaveText(/^\d{2}:\d{2}$/);
 
-    // The calendar row and the pass panel, close up — items 1 and 2.
-    await page.getByTestId("day-picker").screenshot({
-      path: path.join(OUT, "01-calendar-row.png"),
-    });
-    await page.getByTestId("pass-panel").screenshot({
-      path: path.join(OUT, "02-pass-panel.png"),
-    });
-
+        
     await page.addStyleTag({
       content:
         '[data-testid="nav-pill"],[data-testid="site-header"]{visibility:hidden !important}',
     });
-    await page.screenshot({ path: path.join(OUT, "03-games-page.png"), fullPage: true });
-
+    
     // --- home ---------------------------------------------------------------
     await page.goto("/", { waitUntil: "networkidle" });
     await settle();
@@ -68,6 +57,5 @@ test.describe("Section 3 strips", () => {
       content:
         '[data-testid="nav-pill"],[data-testid="site-header"]{visibility:hidden !important}',
     });
-    await page.screenshot({ path: path.join(OUT, "04-home.png"), fullPage: true });
-  });
+      });
 });
