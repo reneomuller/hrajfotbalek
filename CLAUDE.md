@@ -191,28 +191,33 @@ answers a missing function with a 404.
 **~~Outstanding, and it is DDL — round 12's~~ — APPLIED and verified
 2026-08-21.** `create_booking` is at six arguments on production.
 
-**Outstanding, and it is round 23's — but NOTHING BREAKS WITHOUT IT.** The
-opposite of the round-12 case above, deliberately: the deployed code asks
-`app_capabilities()` whether the database can count "players met" and renders
-the old third tile when the answer is no. Applying it turns the new tile on
-with no deploy.
+**~~Outstanding, and it is round 23's — but NOTHING BREAKS WITHOUT IT.~~ —
+APPLIED and verified 2026-09-06**, by probing the objects rather than the
+filename: `players_met` and `public_player_profile` are both in `pg_proc` and
+`app_capabilities()` returns `playersMet: true`, so the new tile is on.
 
 ```
 node scripts/apply-migration.mjs \
   supabase/migrations/20260830100000_players_met.sql --production
 ```
 
-It will read **zero for everyone** until somebody marks games played — 25
+~~It will read **zero for everyone** until somebody marks games played — 25
 games on production have kicked off and are still `published` (ledger row 165).
-The number will be honest; it will just be zero.
+The number will be honest; it will just be zero.~~ **AND IT NO LONGER READS
+ZERO.** The played sweep cleared the backlog: **zero** kicked-off-but-published
+games remain and 33 are `played`, so of sixteen players sampled on 2026-09-06
+six carry a non-zero count, the highest being 3.
 
 **Round 11's is applied and verified** (guests and parties), as is round 9's
 cover-key migration — both re-checked against the live catalog on 2026-08-20
 rather than carried forward on last round's word.
 
-**Outstanding, and it is DATA rather than DDL** — the venue separator moved
-from an em-dash to a bullet in the fixtures, and production rows still carry
-the old one. Owner runs this; it needs no migration file:
+**~~Outstanding, and it is DATA rather than DDL~~ — DONE, verified
+2026-09-06.** The venue separator moved from an em-dash to a bullet in the
+fixtures and production has followed: **zero** rows carry the em-dash, and 7
+venues plus 33 games carry the bullet. The statements are kept because they are
+the shape any later fixtures-versus-production drift takes, not because
+anything is owed:
 
 ```
 update public.venues set name = replace(name, ' — ', ' • ') where name like '% — %';
