@@ -115,6 +115,36 @@ call out of the plan and the privilege check never ran — the probe reported
 success where a direct call was denied. `count(_p::text)` forces evaluation.
 Wrapping the cast in a subquery is *not* enough; the pruning moves up a level.
 
+**A Server Component may not set a cookie, and the payment page learned it the
+expensive way.** `cookies().set()` throws `Cookies can only be modified in a
+Server Action or Route Handler` — so a cookie write belongs in an action or a
+route, never in a render. Round 26 moved `rememberPendingPurchase` into
+`/payment/checkout`, which is a page, because under pay-first the id worth
+stashing is the Stripe SESSION id and that only exists after the session is
+created — during the render. **Every single-game checkout 500'd on production
+while the pass rail worked perfectly**, because the pass stash is written by
+`app/pass/actions.ts`, a Server Action. `pendingPurchaseCookie.ts` states the
+rule in its own doc comment; the code that broke it was written the same day.
+The fix deleted the stash rather than relocating it: Stripe substitutes the
+session id into `return_url`, so the return page is handed the exact identifier
+by Stripe itself.
+
+**When a runtime failure has no log, look in the database for how far the
+request got.** `vercel logs` carries only a few minutes and held nothing but
+cron. Two `cs_live_` rows sat in `checkout_sessions` at status `open` — created
+and registered, then nothing — which pinned the throw to the line after
+`open_checkout` without reproducing anything.
+
+**Not using a column is not the same as not selecting it.** Round 26 stopped
+READING `is_pending` and left both roster selects asking for it, then handed
+over a cleanup script that drops it. Running that script would have made
+PostgREST error on both reads — and both call sites answer an error with
+`return []`, so **every lineup on the site would have rendered empty**,
+silently. Same family as the missing-GRANT trap: a read that returns empty
+looks like missing data, not like a missing column. **A column drop and the
+selects that name it must ship in one change**, and the order is then DEPLOY
+FIRST, THEN MIGRATE — the opposite of an additive migration.
+
 **Client-state success markers do not survive `revalidatePath`.** Anything
 rendered from a `useActionState` result (`confirm-result`, `settle-done`,
 `game-form-saved`) can be unmounted by the re-render before it can be observed.
