@@ -19,6 +19,27 @@ import type { Strings } from "@/lib/strings";
  * top of it keeps the page gutter — the thing that makes it read as a cover
  * rather than as a wide card.
  *
+ * AND `-top-24` SO IT REACHES THE PAGE'S OWN TOP (round 27, item 3).
+ *
+ * ~~`top-0`~~ was the top of the `relative` wrapper, which begins BELOW the
+ * shell's `pt-24` — so the photograph started 96px down and the strip above it
+ * was flat page ground with the fixed header floating over it. The banner read
+ * as a wide card that happened to be near the top rather than as the page's
+ * own surface.
+ *
+ * The offset is exactly the shell's top padding and the height absorbs it
+ * (245 + 96 = 341), so **the bottom edge does not move**: the ramp still lands
+ * on flat ground exactly where the tab row begins, and nothing below the cover
+ * shifts by a pixel. Only the top changes.
+ *
+ * IT NOW RUNS UNDER THE HEADER, WHICH IS WHY NO SCRIM WAS ADDED FOR IT. The
+ * header is `bg-ink/[.86]` with `backdrop-blur-md` — a heavier scrim than
+ * anything this file draws — so the photograph reads as a suggestion behind
+ * the chrome and the header's own text keeps the contrast it was designed
+ * with. Adding a third gradient to protect text that is already on 86% ink
+ * would be dimming the whole cover to rescue a row that does not need it,
+ * which is the mistake round 2 made on the list card.
+ *
  * THE SCRIM IS TWO LAYERS, AND THE SECOND ONE IS MEASURED. The ramp carries
  * the photograph down to the page's own ground, as R6(b) requires. The stats
  * band gets a SECOND, LOCAL scrim because the first is not enough there: at
@@ -75,7 +96,7 @@ export function ProfileCover({
   return (
     <div
       data-testid="profile-cover"
-      className="pointer-events-none absolute inset-x-0 top-0 -mx-gutter h-[245px] overflow-hidden"
+      className="pointer-events-none absolute inset-x-0 -top-24 -mx-gutter h-[341px] overflow-hidden"
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
@@ -109,12 +130,19 @@ export function ProfileCover({
         2 made on the list card and round 7 had to undo.
 
         Positioned in PERCENTAGES of the cover so it tracks the band if the
-        heights change: the stats occupy roughly 73%–92% of the 272px.
+        heights change — which is exactly why this number MOVED when the cover
+        grew upward (round 27, item 3). The band itself did not move: it is the
+        same pixels under the same numerals. But the box is 341px instead of
+        245px and starts 96px higher, so the percentage that names the same
+        line is 68% -> 77% (166.6px + 96px, over 341px). Leaving it at 68%
+        would have started the darkening 30px early, in the middle of the
+        identity row, which is a visible band across the photograph and not a
+        contrast fix.
       */}
       <span
         aria-hidden
         data-testid="profile-stats-scrim"
-        className="absolute inset-x-0 bottom-0 top-[68%] bg-gradient-to-b from-transparent via-ink/[.55] to-ink"
+        className="absolute inset-x-0 bottom-0 top-[77%] bg-gradient-to-b from-transparent via-ink/[.55] to-ink"
       />
 
       {/*

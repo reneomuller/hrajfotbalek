@@ -1071,7 +1071,18 @@ export const strings = {
     statMetFew: "players met",
     statMetMany: "players met",
 
-    badgesTitle: "Badges",
+    /*
+     * "ACCOMPLISHMENTS", NOT "BADGES" (round 27, item 5) — the owner's word,
+     * verbatim.
+     *
+     * THE KEY WAS RENAMED WITH THE VALUE, deliberately. A key called
+     * `badgesTitle` rendering "Accomplishments" is the drift that makes a
+     * later session grep for the wrong word and conclude the rename never
+     * happened. The BADGES THEMSELVES keep their key and their name — a
+     * badge is still the object; "Accomplishments" is what the section of
+     * them is called.
+     */
+    accomplishmentsTitle: "Accomplishments",
     /** `{earned} of {total}` — the counter beside the heading. */
     badgesCount: "{earned} of {total}",
 

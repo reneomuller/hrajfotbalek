@@ -316,14 +316,27 @@ test("the profile form reports an invalid nickname inline", async ({ page, conte
  * changed is the sequence, so a test that checked they were all there would
  * have passed against every arrangement and proved nothing.
  *
- * WHY THIS ORDER. Somebody opens their profile to check or fix a fact about
+ * ~~WHY THIS ORDER. Somebody opens their profile to check or fix a fact about
  * themselves — a phone number, a position, an email. Under the previous
  * arrangement that meant scrolling past five badge tiles, four of which are
- * things they have not done yet. The page now runs wallet -> who you are ->
- * what you have earned -> what you can do to the account, which puts the two
- * irreversible-ish controls at the end where nobody meets them by accident.
+ * things they have not done yet.~~
+ *
+ * REVERSED IN ROUND 27, ITEM 4 — the SECOND flip of these two sections, and
+ * the assertion inverts with it rather than being deleted. Round 10 had
+ * accomplishments above the details; round 17 put the details first on the
+ * argument quoted above; round 27 puts accomplishments back on top on the
+ * owner's instruction. The argument is not refuted — a person fixing their
+ * phone number does scroll further now — and the owner has weighed it.
+ *
+ * WHAT DID NOT MOVE, and is the half of round 17 that still holds: the three
+ * account actions stay at the very bottom, directly under the details they act
+ * on, so the two irreversible-ish controls are still where nobody meets them
+ * by accident. Only the two content sections traded places.
+ *
+ * The page now runs wallet -> what you have earned -> who you are -> what you
+ * can do to the account.
  */
-test("the overview runs wallet, details, badges, then the account actions", async ({
+test("the overview runs wallet, accomplishments, details, then the account actions", async ({
   page,
   context,
 }) => {
@@ -333,8 +346,8 @@ test("the overview runs wallet, details, badges, then the account actions", asyn
   const order = await page.evaluate(() => {
     const marks: [string, Element | null][] = [
       ["wallet", document.querySelector('[data-testid="credit-balance"]')],
-      ["details", document.querySelector('[data-testid="profile-details"]')],
       ["badges", document.querySelector('[data-testid="badge-grid"]')],
+      ["details", document.querySelector('[data-testid="profile-details"]')],
       ["signOut", document.querySelector('[data-testid="sign-out"]')],
       ["password", document.querySelector('[data-testid="change-password-link"]')],
       ["delete", document.querySelector('[data-testid="deletion-mailto"]')],
@@ -346,7 +359,7 @@ test("the overview runs wallet, details, badges, then the account actions", asyn
       .map((m) => m.name);
   });
 
-  expect(order).toEqual(["wallet", "details", "badges", "signOut", "password", "delete"]);
+  expect(order).toEqual(["wallet", "badges", "details", "signOut", "password", "delete"]);
 });
 
 /**

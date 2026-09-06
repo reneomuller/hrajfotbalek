@@ -507,7 +507,8 @@ export const uk: StringsOverlay = {
     statMetFew: "зустрінуті гравці",
     statMetMany: "зустрінутих гравців",
 
-    badgesTitle: "Значки",
+    // DRAFT — flagged for the standing native-review batch.
+    accomplishmentsTitle: "Досягнення",
     badgesCount: "{earned} з {total}",
 
     badges: {

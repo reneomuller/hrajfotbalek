@@ -500,7 +500,8 @@ export const cs: StringsOverlay = {
     statMetFew: "potkaní hráči",
     statMetMany: "potkaných hráčů",
 
-    badgesTitle: "Odznaky",
+    // DRAFT — flagged for the standing native-review batch.
+    accomplishmentsTitle: "Úspěchy",
     badgesCount: "{earned} z {total}",
 
     badges: {

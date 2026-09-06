@@ -261,14 +261,43 @@ export default async function AccountPage({
             change the six facts the product knows about you.
           */}
           {/*
+            ACCOMPLISHMENTS ABOVE THE DETAILS — AND THIS IS THE SECOND FLIP OF
+            THESE TWO SECTIONS (round 27, item 4).
+
+            LINEAGE, because a reversal that does not carry one gets reversed
+            again by the next person who reads only the current file:
+
+              ROUND 10 shipped badges above details.
+              ROUND 17 (item 3) moved badges BELOW the details AND below the
+                account actions, on the owner's instruction "details above,
+                badges at the bottom", with the reasoning that "the bottom" had
+                to mean below the account actions too — otherwise a block would
+                be separated from its own controls.
+              ROUND 27 (item 4) puts them back above the details, on the
+                owner's instruction. Round 17's reasoning is not refuted and
+                does not need to be: it was an argument about where "the
+                bottom" ends, and the owner has now asked for a different
+                order rather than a different reading of the same one.
+
+            WHAT SURVIVES ROUND 17 UNCHANGED is the part that was never about
+            sequence: the password, email and delete links stay at the VERY
+            bottom, still directly under the details they act on. Only the two
+            content sections traded places; the controls did not move.
+
+            The page now runs wallet -> who you are -> what you have earned ->
+            your details -> the account actions on them.
+          */}
+          <BadgeGrid badges={badges} t={t} />
+
+          {/*
             A HEADING, WHICH IT DID NOT NEED AS A TAB AND DOES NOW.
 
             Under Settings this block WAS the screen, so it explained itself.
-            On the overview it follows the badge grid, and a reader scrolling
-            past meets a card that opens with "DISPLAY NAME" and no statement
-            of what they are looking at. The other two blocks on this tab —
-            the wallet and the badges — both announce themselves; this is the
-            one that stopped doing so when it moved.
+            On the overview it follows the accomplishments grid, and a reader
+            scrolling past meets a card that opens with "DISPLAY NAME" and no
+            statement of what they are looking at. The other two blocks on this
+            tab — the wallet and the accomplishments — both announce
+            themselves; this is the one that stopped doing so when it moved.
           */}
           <h2 className="mt-12 mb-0 text-[17px] font-bold uppercase tracking-wide text-white">
             {t.profile.detailsTitle}
@@ -286,25 +315,12 @@ export default async function AccountPage({
             />
           </div>
 
-
-
           {/*
-            BADGES LAST — genuinely last (round 17, item 3).
-
-            The owner asked for details above and badges at the bottom, and
-            "the bottom" has to mean below the account actions too: change
-            password, delete account and sign out belong WITH the details they
-            act on, so slotting badges between the two would separate a block
-            from its own controls to satisfy the letter of the instruction.
-
-            It also reads better. The page now runs wallet -> who you are ->
-            what you can do about it -> what you have earned, which is
-            descending order of why somebody opened it.
-          */}
-          <BadgeGrid badges={badges} t={t} />
-
-          {/*
-            THE ACCOUNT ACTIONS, NOW BELOW THE BADGES (round 17, item 5).
+            THE ACCOUNT ACTIONS, AT THE VERY BOTTOM (round 17, item 5; the
+            neighbour above them changed in round 27, item 4, and they did
+            not). They sit directly under the details they act on, which is
+            the property round 17 was protecting and the section swap
+            preserved.
 
             THREE LINKS, ONE STACK, ALL THE SAME WEIGHT (§3.3, REQ-AUTH-020).
 

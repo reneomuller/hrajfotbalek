@@ -505,7 +505,8 @@ export const ru: StringsOverlay = {
     statMetFew: "встреченных игрока",
     statMetMany: "встреченных игроков",
 
-    badgesTitle: "Значки",
+    // DRAFT — flagged for the standing native-review batch.
+    accomplishmentsTitle: "Достижения",
     badgesCount: "{earned} из {total}",
 
     badges: {

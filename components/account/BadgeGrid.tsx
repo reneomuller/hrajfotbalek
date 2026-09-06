@@ -49,7 +49,7 @@ export function BadgeGrid({ badges, t }: { badges: Badge[]; t: Strings }) {
     <section data-testid="badge-grid" className="mt-8">
       <div className="flex items-baseline justify-between gap-3">
         <h2 className="m-0 text-body-lg font-semibold text-white">
-          {t.profile.badgesTitle}
+          {t.profile.accomplishmentsTitle}
         </h2>
         <span data-testid="badge-count" className="text-small text-muted">
           {t.profile.badgesCount
