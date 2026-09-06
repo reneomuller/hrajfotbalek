@@ -107,11 +107,12 @@ test("the anonymous roster exposes a nickname and a photo path, and nothing else
        * player_id, no email, no phone, no booking status.
        */
       /*
-       * WIDENED AGAIN IN ROUND 25, by one column, for the opposite reason to
-       * every previous widening: `is_pending` exists to make the view publish
-       * LESS. It marks a seat held by a checkout in progress, and every naming
-       * column on such a row is null — the fix was that the roster had been
-       * publishing those names for thirty minutes at a time.
+       * ~~WIDENED AGAIN IN ROUND 25~~ — and NARROWED BACK in round 27, item 6b.
+       * `is_pending` existed to make the view publish LESS about a seat held by
+       * a checkout in progress. Pay-first deleted that state, so the column was
+       * permanently false and the cleanup migration drops it. The property this
+       * test exists for is untouched: no player_id, no email, no phone, no
+       * booking status.
        */
       expect(keys).toEqual([
         "game_id",
@@ -119,7 +120,6 @@ test("the anonymous roster exposes a nickname and a photo path, and nothing else
         "guest_index",
         "guest_of",
         "is_guest",
-        "is_pending",
         "nickname",
         "photo_path",
       ]);

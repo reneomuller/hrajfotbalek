@@ -227,7 +227,6 @@ export const cs: StringsOverlay = {
     addGuests: {
       title: "Bereš někoho s sebou?",
       body: "Přidej si hosty ke svému místu. Do sestavy se přidají, jakmile dorazí platba.",
-      pick: "+{n}",
       cost: "{amount} za {n}",
       guestOne: "1 host",
       guestMany: "{n} hostů",

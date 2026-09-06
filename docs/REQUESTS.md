@@ -307,9 +307,19 @@ round 13 added is item 2's reversal and a re-verification of item 3.
 | 190 | **(R25-4) The community panel takes the Game Pass banner's treatment** | `SHIPPED round-25`. Its literal classes — `border-hairline-volt` on `bg-volt/[.10]` — asserted against the banner itself so the two cannot drift into two spellings of one accent. The three social logos step 44px → 55px, a 25% increase and the only content change the item allowed. **A recorded reversal of the round-3 panel ruling**, whose premise was that this panel is "not a call to action": every tile in it is a link out, and since round 23 removed the hero's button it is the only invitation on the page |
 | 191 | **HOTFIX 2026-09-05 — `ui_mode` renamed, and the type system could not tell us** | `SHIPPED`. API version 2026-08-26 renamed `embedded` to `embedded_page` (and `hosted` to `hosted_page`); `stripeClient()` pins that exact version, so the first real session creation answered `StripeInvalidRequestError` on `param: ui_mode` (`req_TfPOXMxZR56DAE`) and every checkout 500'd. **It compiled because the SDK's union ends in `OtherString`**, which widens it to `string` — deliberate, so a newer API value does not fail an older SDK's build, and the cost is that `tsc` cannot tell a valid value from a typo on the one field where being wrong takes payments offline. **The client half was checked and unchanged**: `@stripe/react-stripe-js@6` still takes `options.clientSecret`. **The missing check is now a test** — `uiMode.test.ts` reads the union out of the installed `.d.ts` and asserts our literal is a member, verified red-green. Nothing in four suites had ever called `sessions.create`, which is how a one-word error shipped green |
 | 192 | **(R26-1) PAY FIRST — the booking is created by the payment** | `SHIPPED round-26`, **dormant on row 194**. The owner's ruling: no booking row exists until money has arrived. The Stripe session carries game, player and party size; the webhook creates the booking under the game's advisory lock. **The race is designed in two layers** — ACTIVE EXPIRY as the primary defence (a game that fills kills every other open form at Stripe, from all three rails: webhook, credit redemption, admin house guests) and the CREDIT PATH as the same-instant residual (full amount as credit, notification in the player's own language, admin needs-attention entry). **Seat counts never decrement for shoppers**, not as a rule but as a consequence: there is no row to count. R47 |
-| 193 | *The machinery pay-first made dead.* **Pending states, the thirty-minute predicate, the online expiry sweep, `AwaitingPaymentPanel`, the anonymity rendering** | `SHIPPED round-26` (code), **`OPEN` for the schema** — `docs/ops/round26-schema-cleanup.sql`, validated rolled back, handed over. It accounts for row 186 being APPLIED: the roster view is recreated at seven columns and `booking_is_named` dropped. **Two things are deliberately KEPT**: `payment_pending_at`, the only record that a legacy booking came through the old rail — dropping a column to tidy is how an audit trail disappears — and `online_payment_window()`, because the pay-first rollback restores a `booking_holds_seat` body that calls it, and a rollback that fails on a missing function is not a rollback |
+| 193 | *The machinery pay-first made dead.* **Pending states, the thirty-minute predicate, the online expiry sweep, `AwaitingPaymentPanel`, the anonymity rendering** | **`SHIPPED round-26` (code) and `SHIPPED round-27` (schema)** — ~~`OPEN` for the schema~~. It ships as a MIGRATION (`20260907110000`) paired with the two roster selects, four column-boundary suites and one dead action, because pasting the ops script would have emptied every lineup on the site — see row 204. ~~`docs/ops/round26-schema-cleanup.sql`, validated rolled back, handed over.~~ It accounts for row 186 being APPLIED: the roster view is recreated at seven columns and `booking_is_named` dropped. **Two things are deliberately KEPT**: `payment_pending_at`, the only record that a legacy booking came through the old rail — dropping a column to tidy is how an audit trail disappears — and `online_payment_window()`, because the pay-first rollback restores a `booking_holds_seat` body that calls it, and a rollback that fails on a missing function is not a rollback |
 | 194 | **Apply `20260906100000_pay_first_booking.sql`** | **`SHIPPED`, and it is APPLIED** — probed on 2026-09-06 rather than carried forward: `checkout_sessions` exists, and `open_checkout`, `settle_checkout_session`, `checkouts_to_expire`, `mark_checkout_expired`, `checkout_outcome` and `recent_checkout` are all in `pg_proc`, with `app_capabilities()` returning `payFirstCheckout: true`. **The event-catalog trap was handled in the same migration** — `notifications_kind_catalog` reads `no_show_warning, no_show_cleared, checkout_game_full` on production, which is the CHECK CLAUDE.md records as already missed once. **The half-applied gap below never opened for long and is now closed**: schema and code agree, and `3470e7b` is the live deployment (Ready, aliased, verified by its `githubCommitSha`). ~~`BUILT-DORMANT-ON-the owner running it`.~~ Validated rolled back; the verification block builds a capacity-ONE game with two open checkouts, proves neither takes a seat, settles the first to `booked`, checks active expiry names the second, settles the second anyway and proves it was `credited` in full, told, queued for attention, and that **the game was not oversold** — then checks a redelivered webhook is a no-op. **Until it is applied the online option keeps the old shape**: `settle_checkout_session` does not exist, so the webhook falls through to `confirm_online_purchase` exactly as before, and `/payment/checkout` cannot register a session. **The deploy is safe either way; the two shapes must not be half-applied for long**, because the new checkout page creates no booking and the old webhook path expects one |
 | 195 | *Recorded with row 192.* **`cancel_game` and the admin rails are untouched** | `SHIPPED round-26`. Cash-legacy bookings, admin-created bookings and every existing `reserved` row keep working exactly as they did — `booking_holds_seat` still counts them, the roster still names them, and the admin still settles them. Pay-first changes how an ONLINE booking comes into existence and nothing else |
+| 196 | **(R27-1) OUTAGE — a Server Component may not set a cookie** | `SHIPPED round-27`. Single-game embedded checkout 500'd on production while the PASS rail worked perfectly, and that contrast was the whole diagnosis: same keys, same embedded machinery, different session-creation path. `rememberPendingPurchase` sets a cookie and Next refuses that in a render — **`pendingPurchaseCookie.ts` says so in its own doc comment** — but under pay-first the id worth stashing is the STRIPE SESSION id, which only exists after the session is created, which happens during a render. The pass stash is written by a Server Action and was never affected. **The evidence was in the register, not a log**: two `cs_live_` sessions, both `open`, created and registered before the throw — exactly how far the path gets. **The stash was not replaced, it was deleted**: Stripe substitutes the session id into `return_url`, so the return page is handed the exact identifier by Stripe itself, which also survives paying on a phone and returning on a laptop. The return page now takes the first candidate **the DATABASE recognises**, not the first that exists — both rails come back carrying a `session_id` and a pass session is not in the register, so reading its absence as "nothing to show" would have stranded every pass buyer on a spinner |
+| 197 | *Found while fixing row 196.* **The "set the quantity on Stripe's page" instruction was still rendering** | `SHIPPED round-27`. True of a Payment Link, whose quantity the buyer really must change; FALSE of the embedded form, where the whole party price is one line of `quantity: 1` computed server-side. It now renders only on the link rail. An instruction to look for a control that is not there is worse than no instruction. Also fixed alongside: a session that could not be REGISTERED no longer renders a form, because that is a checkout whose payment lands as `unknown` |
+| 198 | **(R27-1b) The owner's credit rule, as a spec rather than a trust** | `SHIPPED round-27`. **Choosing Online payment moves ZERO credit** — the wallet moves only on an explicit Redeem-credit. Asserted where money actually moves, `settle_checkout_session`, for a lone booking and for a party of two, with the wallet at 1,000 CZK both times and `credit_applied_czk` 0 on the resulting row. The party arithmetic left `/payment/checkout` for `lib/payments/partyAmount.ts` **so it could be asserted at all** — reaching it through the product needs a Stripe secret key no test environment has. price × (1 + guests), capped at the policy ceiling, garbage-in books the player alone; the `+2` case is named |
+| 199 | **(R27-2) Add guests after booking** | `SHIPPED round-27`, **dormant on row 203**. A player with a paid booking picks +1/+2/+3 between the lineup and the share box, and pays the GUEST-ONLY amount by wallet (atomic, one transaction) or by embedded checkout (a second `kind` on the register carrying the target booking). **The architecture is round 26's, re-used rather than re-invented**: no seat is held by an intention, the webhook adds the guests under the game's advisory lock, and a game that fills first credits in full with a notification and an admin needs-attention entry. **Active expiry needed no change at all** — an add-guest session carries `game_id` like any other, so `checkouts_to_expire` already kills it. `<Name>'s Guest N` numbering continues for free, because guests are `guest_count` expanded by `generate_series` and the count simply got bigger. One arithmetic branch in the settler is the only difference between the kinds: a booking wants the player plus guests, an add-guest payment wants only the guests — getting that wrong bills somebody twice for their own seat. R48 |
+| 200 | **(R27-3) The profile banner is full-bleed to the page's own top** | `SHIPPED round-27`. `top-0` was the top of a wrapper that begins BELOW the shell's `pt-24`, so the photograph started 96px down with flat ground above it and the fixed header floating over that — a wide card near the top rather than the page's surface. `-top-24` with the height absorbing the offset means **the bottom edge does not move**: the ramp still lands where the tab row begins and nothing below shifts. **No scrim was added for the header** and that is a decision: it is `bg-ink/[.86]` with `backdrop-blur-md`, heavier than anything the cover draws. The stats scrim DID move, 68% → 77%, because it is a percentage of a box that grew — leaving it would have started the darkening 30px early, a visible band across the identity row |
+| 201 | **(R27-4) Accomplishments above the details — the SECOND flip of these two sections** | `SHIPPED round-27`, and **recorded with lineage because an unrecorded reversal gets reversed again**. Round 10 had accomplishments on top; **round 17 item 3 put details first** on the owner's "details above, badges at the bottom" and the argument that somebody fixing a phone number should not scroll past five tiles, four of them unearned; round 27 puts them back, on the owner's instruction. **Round 17's argument is not refuted** — the owner has weighed it. The half of round 17 that still holds is untouched: password, email and delete stay at the VERY bottom, directly under the details they act on. `profile.spec.ts` inverts rather than being deleted — an order test that survives a reordering was never testing anything |
+| 202 | **(R27-5) "Badges" becomes "Accomplishments"** | `SHIPPED round-27`, the owner's word verbatim. **The KEY was renamed with the value** — `badgesTitle` rendering "Accomplishments" is the drift that makes a later session grep for the wrong word and conclude the rename never landed. The badges themselves keep their names: a badge is still the object, "Accomplishments" is what the section of them is called. One component carries the heading, so the public profile got it for free. CS/RU/UK drafted to row 160's batch. Admin unaffected, English-only law |
+| 203 | **Apply round 27's two migrations** | `BUILT-DORMANT-ON-the owner running them`, **in this order, and the ORDER MATTERS DIFFERENTLY THAN LAST ROUND**. `20260907100000_add_guests_after_booking` is capability-gated — false is the OLD SHAPE, not a broken one, so it can be late with no cost. `20260907110000_pending_machinery_cleanup` is the opposite of round 26's case: **DEPLOY FIRST, THEN MIGRATE**, because it drops `is_pending` from the roster view and only the newly deployed code has stopped asking for it. Both validated rolled back against the local stack; the add-guests verification block is a real drill on a capacity-THREE pitch that exercises both endings |
+| 204 | *The reason row 193 could not just be pasted.* **Round 26's cleanup script would have emptied every lineup on the site** | `SHIPPED round-27` (item 6b) — **and this is the round's most serious finding.** `lib/games/queries.ts` still SELECTed `is_pending` in both roster reads: round 26 stopped USING the column and never stopped ASKING for it. Dropping it under the deployed code makes PostgREST error on both selects, and both call sites read `if (error || !data) return []` — so **every lineup would have rendered EMPTY, silently, with no error page and nothing in a log**. That is the exact failure class CLAUDE.md names about grants: a read that returns empty looks like missing data, not like a missing column. The drop, the two selects, four column-boundary suites and one dead server action now move in ONE commit, as a migration in the history rather than an ops script outside it. ~~`docs/ops/round26-schema-cleanup.sql`~~ deleted |
+| 205 | *Found while writing row 204.* **`app/game/[id]/pay/actions.ts` was unreachable dead code** | `SHIPPED round-27`, deleted. The retry-payment action lost its only caller when round 26 removed `AwaitingPaymentPanel`, and round 26's cleanup would have dropped `retry_online_payment` beneath it — turning dead code into a 404 on a live path if anything ever linked to it again. Its SQL assertions are not replaced and that is the honest outcome: there is no successor behaviour to point them at, because a booking that has not been paid for no longer exists. What remains is one assertion that the function is gone |
 
 ---
 
@@ -411,6 +421,71 @@ their filter through `booking_holds_seat`. No row changes. Rollback is
 The `--production` flag is deliberate and cannot be replaced by an environment
 variable — see CLAUDE.md on why implicitness is what failed.
 
+### Round 27's two migrations (row 203) — AND THE ORDER IS NOT LAST ROUND'S
+
+```bash
+node scripts/apply-migration.mjs \
+  supabase/migrations/20260907100000_add_guests_after_booking.sql --production
+
+node scripts/apply-migration.mjs \
+  supabase/migrations/20260907110000_pending_machinery_cleanup.sql --production
+```
+
+**The first is capability-gated and can be late with no cost.** Until it runs,
+`app_capabilities().addGuestsAfterBooking` is false, the panel does not render,
+and a player books their party up front exactly as before. That is the OLD
+SHAPE, not a broken one.
+
+**The second is DEPLOY FIRST, THEN MIGRATE — the opposite of round 26's.** It
+drops `is_pending` from `game_roster_public`, and only the code deployed this
+round has stopped asking for that column. Running it against the PREVIOUS
+deploy makes PostgREST error on both roster reads, and both call sites answer
+an error with an empty list — so every lineup on the site would render empty,
+silently. Round 26 handed this over as a script to paste; that is why it is a
+migration now, and why it is last.
+
+#### Then take one real payment — the drive, updated for the fixed flow
+
+Row 196 fixed the outage that made this impossible. Nothing has yet been proven
+by a payment: `checkout_sessions` holds two `open` rows and no `booked` one.
+
+1. Sign in and open a published game with a free spot. Claim a spot → **Online
+   payment**. Add a guest if you want the party math tested.
+2. You land on `/payment/checkout?game=…&guests=…` — **our page shell with
+   Stripe's form embedded; the URL never leaves our domain.** The line reads
+   the venue, the seats, and **price × (1 + guests)**. There is no editable
+   quantity, and no sentence telling you to change one.
+3. **Before paying, open the game page in another tab.** Your name is NOT on
+   the lineup and the spots-left count has NOT dropped. That is the whole of
+   pay-first in one observation.
+4. Pay. Stripe returns you to `/payment/return`, which polls briefly and then
+   forwards you to **"Booking confirmed"** on a booking id that did not exist
+   before you paid — the webhook created it.
+5. Back on the game page: your name on the lineup, the count down, and — once
+   row 203's first migration is applied — an **Add guests** panel between the
+   lineup and the share box. Pick `+1`, pay from the wallet, and the guest
+   appears as "<your name>'s Guest 1" with the count down by one more.
+
+What proves it rather than looks like it:
+
+```sql
+select kind, status, count(*) from public.checkout_sessions group by 1, 2;
+```
+
+One `booking`/`booked` row from step 4, and if you did step 5 online, one
+`add_guests`/`booked`. The register is otherwise empty, so anything there is
+from this drive.
+
+**If it stalls on "confirming":** the webhook did not land. Redeliver
+`checkout.session.completed` from the Stripe dashboard. The money is never
+lost — it is in Stripe, and redelivery settles it.
+
+**Row 188 stays staged until this drive reports confirmed.** Retiring the link
+flow is the round AFTER a real payment has gone through embedded, in the
+owner's own order: verify, then remove `NEXT_PUBLIC_STRIPE_PAYMENT_URL` and
+`NEXT_PUBLIC_STRIPE_PASS_URLS`, then delete `lib/payments/stripeLinks.ts` and
+the six Payment Links.
+
 ### ~~Round 26's migration (row 194)~~ — APPLIED, and the deploy is live
 
 ```bash
@@ -440,15 +515,13 @@ expect: our own page shell around Stripe's form, NO roster row and NO decrement
 of the spot count before paying, then "Booking confirmed" on a booking the
 webhook created, and exactly one `checkout_sessions` row at status `booked`.
 
-#### Then the cleanup, when you are ready — not urgent
+#### ~~Then the cleanup, when you are ready — not urgent~~ — IT IS A MIGRATION NOW
 
-```bash
-psql "$SUPABASE_DB_URL" -f docs/ops/round26-schema-cleanup.sql
-```
-
-Removes the round-25 anonymity column and the pending machinery. Everything it
-touches is already inert. It **keeps** `payment_pending_at` and
-`online_payment_window()`, for reasons stated in the file.
+~~`psql "$SUPABASE_DB_URL" -f docs/ops/round26-schema-cleanup.sql`~~ — the
+script is deleted. It was never safe to paste: the deployed code still selected
+the column it drops (row 204). It ships as `20260907110000` above, paired with
+the code that stopped asking. It still **keeps** `payment_pending_at` and
+`online_payment_window()`, for the reasons stated in the migration.
 
 ### ~~Round 25's migration (row 186)~~ — APPLIED by the owner
 

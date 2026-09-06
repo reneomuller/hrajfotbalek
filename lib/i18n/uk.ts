@@ -236,7 +236,6 @@ export const uk: StringsOverlay = {
     addGuests: {
       title: "Береш когось із собою?",
       body: "Додай гостей до свого місця. Вони з'являться у складі, щойно надійде оплата.",
-      pick: "+{n}",
       cost: "{amount} за {n}",
       guestOne: "1 гість",
       guestMany: "{n} гостей",

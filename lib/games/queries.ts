@@ -228,14 +228,22 @@ export function toRosterAvatar(row: {
   guest_of: string | null;
   guest_index: number | null;
   /*
-   * ~~`is_pending`~~ — round 25's anonymous checkout seat. Pay-first removed
-   * the state (round 26, item 1); the COLUMN is still projected by the view so
-   * the deployed application does not break the moment the migration lands,
-   * and it is dropped by the cleanup script the owner runs. Accepted and
-   * ignored here rather than removed from the select, so neither order of
-   * those two events breaks anything.
+   * ~~`is_pending`~~ — round 25's anonymous checkout seat, GONE (round 27,
+   * item 6b), field and select together.
+   *
+   * ~~"Accepted and ignored here rather than removed from the select, so
+   * neither order of those two events breaks anything."~~ THAT WAS WRONG, and
+   * it is the reason round 26's cleanup was never safe to paste. Round 26
+   * stopped USING the column and kept ASKING for it; dropping it from the view
+   * would have made PostgREST error on both roster selects, and both call
+   * sites read `if (error || !data) return []` — so every lineup on the site
+   * would have rendered EMPTY, silently.
+   *
+   * THE ORDER IS NOW DEPLOY FIRST, THEN MIGRATE, which is the opposite of
+   * round 26's migration and worth saying out loud: this code no longer asks
+   * for the column, so it is correct against a view that still has it; the old
+   * code is NOT correct against a view that has lost it.
    */
-  is_pending?: boolean | null;
 }): RosterAvatar {
   return {
     nickname: row.nickname,
@@ -522,7 +530,7 @@ export async function getRoster(gameId: string): Promise<RosterRow[]> {
   // is a public interface whether or not any component reads from it.
   const { data, error } = await supabase
     .from("game_roster_public")
-    .select("game_id, nickname, photo_path, games_played, is_guest, guest_of, guest_index, is_pending")
+    .select("game_id, nickname, photo_path, games_played, is_guest, guest_of, guest_index")
     .eq("game_id", gameId);
 
   if (error || !data) return [];
@@ -611,7 +619,7 @@ export async function listRostersByGame(
   const supabase = await createServerSupabaseClient();
   const { data, error } = await supabase
     .from("game_roster_public")
-    .select("game_id, nickname, photo_path, is_guest, guest_of, guest_index, is_pending")
+    .select("game_id, nickname, photo_path, is_guest, guest_of, guest_index")
     .in("game_id", gameIds);
 
   if (error || !data) return rosters;

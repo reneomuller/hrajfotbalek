@@ -66,6 +66,15 @@ const PLAYER_FACING = [
  * is deliberately short and every entry is a decision, not an omission.
  */
 const INTENTIONALLY_UNTRANSLATED = new Set([
+  /*
+   * `+1`, `+2`, `+3` — the add-guest picker (round 27, item 2). The only
+   * letter in it is the `{n}` placeholder's own name, which is why the
+   * punctuation-only escape hatch below does not catch it: a numeral with a
+   * plus sign in front reads identically in all four languages, and shipping
+   * three copies of "+{n}" would put a string into the native-review batch
+   * that has nothing in it to review.
+   */
+  "games.addGuests.pick",
   // Money. `formatCzk()` renders CZK in every language, and the amount has to
   // match what the Czech banking app shows.
   "common.czk",

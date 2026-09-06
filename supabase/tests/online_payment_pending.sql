@@ -319,37 +319,25 @@ reset role;
 -- retry
 -- =============================================================================
 
--- The pitch is full (2 + 2 of 4). A retry cannot re-hold what is gone.
-select pg_temp.age_out(
-  pg_temp.bid('97770000-0000-0000-0000-000000000001',
-              '7bbb0000-0000-0000-0000-00000000000b'));
-
-select pg_temp.act_as('70000000-0000-0000-0000-000000000072');
-
--- ...but with its own seats released the game has room again, so this one CAN.
+-- ~~A retry re-holds the seats when the room is still there, and cannot be
+-- run against somebody else's booking.~~ REMOVED (round 27, item 6b).
+--
+-- `retry_online_payment` is DROPPED by the cleanup migration. It re-held the
+-- seats of a booking whose thirty-minute payment window had lapsed — a repair
+-- for a state pay-first no longer creates, reached from a panel round 26
+-- deleted, through a server action that had been unreachable dead code ever
+-- since and is deleted in the same commit.
+--
+-- THE ASSERTION IS NOT REPLACED, AND THAT IS THE HONEST OUTCOME: there is no
+-- successor behaviour to point it at. What used to be tested here — that a
+-- lapsed booking cannot silently re-take a seat somebody else has since
+-- claimed — is now structural rather than enforced, because a booking that has
+-- not been paid for does not exist. `20260907110000` asserts the function is
+-- gone, which is the only claim left to make about it.
 select pg_temp.ok(
-  public.retry_online_payment(
-    pg_temp.bid('97770000-0000-0000-0000-000000000001',
-                '7bbb0000-0000-0000-0000-00000000000b')) = true,
-  'a retry re-holds the seats when the room is still there');
-
-reset role;
-
-select pg_temp.ok(
-  public.game_seats_taken('97770000-0000-0000-0000-000000000001') = 4,
-  'and the game is full again');
-
--- Somebody else's booking is not retryable.
-select pg_temp.act_as('70000000-0000-0000-0000-000000000071');
-
-select pg_temp.ok_probe(
-  $$select public.retry_online_payment(
-      pg_temp.bid('97770000-0000-0000-0000-000000000001',
-                  '7bbb0000-0000-0000-0000-00000000000b'))$$,
-  'raise:INSUFFICIENT_PERMISSION',
-  'a player cannot retry somebody else''s payment');
-
-reset role;
+  not exists (select 1 from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+               where n.nspname = 'public' and p.proname = 'retry_online_payment'),
+  'the retry repair is gone, along with the state it repaired');
 
 -- =============================================================================
 -- results
