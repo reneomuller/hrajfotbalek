@@ -183,6 +183,42 @@ export default defineConfig({
   use: {
     baseURL: process.env.PLAYWRIGHT_BASE_URL ?? "http://localhost:3000",
     trace: "on-first-retry",
+    /*
+     * EVERY SPEC RUNS AS A RETURNING VISITOR (round 28, item 1).
+     *
+     * The consent sheet is `fixed bottom-0` and opens for anybody with no
+     * stored answer — which, in a fresh browser context, is every single spec.
+     * It covered the nav pill and the claim bar, and TWELVE specs failed on it:
+     * "the pill is on top everywhere", "the account actions are reachable with
+     * the page scrolled to the bottom", "an admin reaches the panel in two taps
+     * from the nav pill", three waitlist specs on a covered claim bar. None of
+     * them is about cookies.
+     *
+     * SEEDING THE ANSWER IS THE HONEST FIX, not widening those assertions. A
+     * suite whose every spec must first dismiss a banner is testing the banner
+     * two hundred times and the product once, and the assertions it broke are
+     * the stacking invariants this project has already been bitten by twice.
+     * `round28-consent.spec.ts` clears this cookie itself and is where the
+     * sheet's own behaviour is checked.
+     *
+     * `necessary`, NOT `all` — the more restrictive answer, so nothing in the
+     * suite can come to depend on consent having been granted.
+     */
+    storageState: {
+      cookies: [
+        {
+          name: "hf-consent",
+          value: "necessary",
+          domain: "localhost",
+          path: "/",
+          expires: -1,
+          httpOnly: false,
+          secure: false,
+          sameSite: "Lax" as const,
+        },
+      ],
+      origins: [],
+    },
   },
   projects: [
     {

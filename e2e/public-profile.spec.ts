@@ -105,7 +105,7 @@ test("a guest, a shadow and a stranger all 404 the same way", async ({ page }) =
   }
 });
 
-test("the RPC is anon-callable and returns only the stats columns", async () => {
+test("the RPC is anon-callable and returns only what round 28 allows", async () => {
   const { anonClient } = await import("./helpers/session");
   const anon = anonClient();
 
@@ -115,26 +115,50 @@ test("the RPC is anon-callable and returns only the stats columns", async () => 
   expect(error).toBeNull();
 
   /*
-   * THE COMPOSITE IS THE BOUNDARY. Seven keys since round 23 item 1, and the
-   * ENUMERATION is the point rather than the count — a later edit to the page
-   * cannot leak a field, because the field never arrives from the database.
+   * THE COMPOSITE IS THE BOUNDARY. ~~Seven keys since round 23 item 1~~ — TEN
+   * SINCE ROUND 28 ITEM 4, and the ENUMERATION is still the point rather than
+   * the count: a later edit to the page cannot leak a field, because the field
+   * never arrives from the database.
    *
-   * `players_met` joined; nothing left. `venues` stays even though no tile
-   * renders it, because the Explorer badge is "play at 3 different pitches".
+   * THE THREE THAT JOINED ARE THE OWNER'S AMENDMENT to round 14's scope, and
+   * they are all football rather than identity — what country a player picked,
+   * where they like to play, and how they rate themselves. The RULING that
+   * bounds this list is unchanged, which is why the assertion below still
+   * matters: round 14 said contact details do not cross, and they still do
+   * not.
+   *
+   * `venues` stays even though no tile renders it, because the Explorer badge
+   * is "play at 3 different pitches".
    *
    * AND MONEY IS STILL NOT ON THE LIST. The brief that added `players_met`
    * believed a wallet balance was visible on this page; it never was, and this
-   * assertion is the reason it never can be.
+   * assertion is the reason it never can be. Neither is `email`, `phone`,
+   * `auth_user_id` or `created_at`.
    */
   expect(Object.keys(data as object).sort()).toEqual([
+    "country",
     "cover_path",
     "games_played",
     "hours",
     "nickname",
     "photo_path",
     "players_met",
+    "positions",
+    "skill_level",
     "venues",
   ]);
+
+  /*
+   * STATED AS AN ABSENCE TOO, because an enumeration only catches a field that
+   * arrives — and the failure everybody fears here is a future widening that
+   * looks reasonable in a migration and publishes a phone number.
+   */
+  for (const forbidden of ["email", "phone", "auth_user_id", "id", "created_at"]) {
+    expect(
+      Object.keys(data as object),
+      `${forbidden} crossed the public boundary`,
+    ).not.toContain(forbidden);
+  }
 });
 
 
