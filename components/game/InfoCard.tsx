@@ -134,9 +134,9 @@ export async function InfoCard({
       <dl className="m-0 grid grid-cols-[minmax(84px,auto)_1fr] gap-x-4 gap-y-3">
         <dt className={FACT_LABEL}>{t.games.infoWhen}</dt>
         <dd className="m-0 text-[15px] text-white">
-          {formatGameDate(game.starts_at)}
+          {formatGameDate(game.starts_at, locale)}
           <span data-testid="game-time-span" className="mt-[2px] block text-small text-muted">
-            {formatTimeSpan(game.starts_at, endsAt)}
+            {formatTimeSpan(game.starts_at, endsAt, locale)}
           </span>
         </dd>
 

@@ -71,6 +71,37 @@ export function stripeClient(): Stripe | null {
  */
 export const CHECKOUT_UI_MODE = "embedded_page";
 
+/**
+ * THE ONLY PAYMENT METHODS THIS PRODUCT OFFERS (round 28, item 2).
+ *
+ * `card` AND NOTHING ELSE — which is not the same as "one button". Apple Pay
+ * and Google Pay are surfaced by Stripe as wallet presentations OF the card
+ * method, so pinning to `card` still gives a phone its native wallet sheet
+ * automatically, per device, with no extra entry here. Adding `apple_pay` or
+ * `google_pay` to this array is not how they are enabled and Stripe rejects
+ * them as method types.
+ *
+ * WHAT THIS EXCLUDES, DELIBERATELY AND BY NAME: `link` and `klarna`.
+ *
+ *   LINK is Stripe's own saved-card wallet. It prompts for an email, remembers
+ *   the card against a Stripe-side identity, and puts a second account
+ *   relationship between this product and its player — for a 150 CZK football
+ *   booking that is a checkout step that buys nobody anything.
+ *
+ *   KLARNA is pay-later credit. Financing a pickup football game is not a
+ *   thing this product will offer, and a "3 interest-free payments" option on
+ *   a 150 CZK line is the kind of thing that reads as a mistake because it is
+ *   one.
+ *
+ * PINNING HERE IS NECESSARY AND NOT SUFFICIENT. Passing `payment_method_types`
+ * makes Stripe use exactly this list for the sessions WE create, which is the
+ * half that lives in code. The account-level toggles still govern what the
+ * dashboard offers elsewhere, and Link in particular has its own switch — see
+ * `docs/REQUESTS.md` §6 for the owner's exact steps. Both halves, or a future
+ * session created somewhere else re-inherits the defaults.
+ */
+export const CHECKOUT_PAYMENT_METHOD_TYPES = ["card"] as const;
+
 /** CZK has a hundred haléřů and Stripe counts in the minor unit. */
 export function czkToMinorUnits(amountCzk: number): number {
   return Math.round(amountCzk * 100);
@@ -158,6 +189,14 @@ export async function createEmbeddedSession(
      */
     ui_mode: CHECKOUT_UI_MODE,
     mode: "payment",
+    /*
+     * EXPLICIT, NOT AUTOMATIC. Omitting this hands the decision to the
+     * account's "automatic payment methods" setting, which is a dashboard
+     * checkbox that can turn Link or Klarna on for every session this product
+     * creates without a deploy. The list is in the code so the answer cannot
+     * change underneath us.
+     */
+    payment_method_types: [...CHECKOUT_PAYMENT_METHOD_TYPES],
     client_reference_id: input.reference,
     customer_email: input.customerEmail ?? undefined,
     /*

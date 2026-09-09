@@ -115,7 +115,7 @@ export async function NextGameStrip({
             →
           </span>
         </span>
-        <span className="text-xs text-white/50">{formatGameDateTime(game.starts_at)}</span>
+        <span className="text-xs text-white/50">{formatGameDateTime(game.starts_at, locale)}</span>
         {/*
           THE STATUS, in the eyebrow the played rows use for attendance. For a
           game already booked, how full it is is the only thing that can still

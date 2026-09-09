@@ -1,4 +1,4 @@
-import { DISPLAY_TIME_ZONE } from "@/lib/format";
+import { DATE_LOCALE, DISPLAY_TIME_ZONE } from "@/lib/format";
 import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/locales";
 import { strings, type Strings } from "@/lib/strings";
 
@@ -171,24 +171,16 @@ function weekdayLabel(key: string, locale: Locale): string {
  * so a month named on a profile and a month named on a fixture list cannot
  * disagree — which they would the first time someone reached for bare `en`.
  */
-export const DATE_LOCALE: Record<Locale, string> = {
-  en: "en-GB",
-  cs: "cs",
-  ru: "ru",
-  /*
-   * `uk`, bare, for the same reason `cs` and `ru` are bare: Ukrainian has one
-   * region and no second convention to disagree with.
-   *
-   * THIS IS THE EXISTING RENDERING AND NOT A FORK (round 22, scope guard b).
-   * The day strip localises properly through this map; the rest of the product
-   * formats through a hardcoded `en-GB` (audit finding F2, ledger row 154), so
-   * a Ukrainian page shows "Пт 29 серп" on the strip and "Fri 29 Aug" three
-   * lines below it. That is the SAME defect Czech and Russian already carry,
-   * and it is fixed once, for all four languages, in the `players.locale`
-   * round — not forked here into a fourth special case.
-   */
-  uk: "uk",
-};
+/*
+ * ~~`DATE_LOCALE` lived here.~~ IT MOVED TO `lib/format.ts` (round 28, item 9),
+ * which is where the rest of the product's date rendering already was. Two
+ * copies of "which BCP-47 tag does this language format dates with" is exactly
+ * the fork that produced the defect the map was written to describe: the strip
+ * localising correctly while the line under it did not.
+ *
+ * Re-exported so existing importers are unaffected.
+ */
+export { DATE_LOCALE };
 
 /**
  * First letter upper-cased, the rest left alone.

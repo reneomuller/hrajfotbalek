@@ -138,6 +138,8 @@ export default async function GameDetailPage({ params, searchParams }: GamePageP
   // `AvatarRow` so the component stays renderable in isolation; absent, every
   // avatar falls back to initials, which is the correct degradation.
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
+  // The active UI language, for the dates this page renders (round 28, item 9).
+  const locale = await getLocale();
   const venueRow = await getVenue(game.venue_id);
   /*
    * This game's pitch, falling back to the venue's default (migration 41).
@@ -514,7 +516,7 @@ export default async function GameDetailPage({ params, searchParams }: GamePageP
       <div className="mt-4">
         <ShareButton
           venue={game.venue}
-          when={formatGameDateTime(game.starts_at)}
+          when={formatGameDateTime(game.starts_at, locale)}
           url={shareUrl}
         />
       </div>

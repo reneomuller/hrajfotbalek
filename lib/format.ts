@@ -9,7 +9,41 @@
  */
 
 export const DISPLAY_TIME_ZONE = "Europe/Prague";
-const DISPLAY_LOCALE = "en-GB";
+
+/**
+ * THE ONE PLACE A LANGUAGE BECOMES A DATE CONVENTION (round 28, item 9).
+ *
+ * ~~`const DISPLAY_LOCALE = "en-GB"`~~ was hardcoded here and read by every
+ * function below, which is audit finding F2 (ledger row 154): a Czech player
+ * read `Út 25 srp` on the day strip — which localises properly — and
+ * `Tue 25 Aug` four pixels underneath it, from this file.
+ *
+ * `en` MAPS TO `en-GB`, NOT TO BARE `en`. Bare `en` resolves to US
+ * conventions and puts the month first — `Aug 3` — and the games are in
+ * Prague, where every reader of the English UI reads European dates on
+ * everything else on their phone. Czech, Russian and Ukrainian are bare tags:
+ * each has one region and no second convention to disagree with.
+ *
+ * THE PARAMETER IS OPTIONAL AND DEFAULTS TO ENGLISH, deliberately. This round
+ * localises the surfaces the owner named — the games list's WHEN headers and
+ * the game detail — and there are more call sites than that. A required
+ * parameter would have forced a mechanical edit of all of them in one commit,
+ * which is how a display change becomes a diff nobody can review. The
+ * remainder is ledger row 208, listed rather than half-done in silence.
+ */
+export const DATE_LOCALE = {
+  en: "en-GB",
+  cs: "cs",
+  ru: "ru",
+  uk: "uk",
+} as const satisfies Record<string, string>;
+
+/** A UI language, or a BCP-47 tag already resolved. */
+export type DateLocale = keyof typeof DATE_LOCALE;
+
+function tagFor(locale?: DateLocale): string {
+  return locale ? DATE_LOCALE[locale] : DATE_LOCALE.en;
+}
 
 function toDate(value: Date | string | number): Date {
   const date = value instanceof Date ? value : new Date(value);
@@ -20,8 +54,8 @@ function toDate(value: Date | string | number): Date {
 }
 
 /** e.g. "Thu 18:30" — the primary game-time rendering. */
-export function formatGameTime(value: Date | string | number): string {
-  const parts = new Intl.DateTimeFormat(DISPLAY_LOCALE, {
+export function formatGameTime(value: Date | string | number, locale?: DateLocale): string {
+  const parts = new Intl.DateTimeFormat(tagFor(locale), {
     timeZone: DISPLAY_TIME_ZONE,
     weekday: "short",
     hour: "2-digit",
@@ -36,8 +70,8 @@ export function formatGameTime(value: Date | string | number): string {
 }
 
 /** e.g. "Thu 3 Jul 18:30" — used where the date is not implied by context. */
-export function formatGameDateTime(value: Date | string | number): string {
-  const parts = new Intl.DateTimeFormat(DISPLAY_LOCALE, {
+export function formatGameDateTime(value: Date | string | number, locale?: DateLocale): string {
+  const parts = new Intl.DateTimeFormat(tagFor(locale), {
     timeZone: DISPLAY_TIME_ZONE,
     weekday: "short",
     day: "numeric",
@@ -68,16 +102,18 @@ export function formatGameDateTime(value: Date | string | number): string {
 export function formatGameTimeSpan(
   startsAt: Date | string | number,
   endsAt: Date | string | number,
+  locale?: DateLocale,
 ): string {
-  return `${formatGameDateTime(startsAt)}–${formatTime(endsAt)}`;
+  return `${formatGameDateTime(startsAt, locale)}–${formatTime(endsAt, locale)}`;
 }
 
 /** e.g. "19:30–20:30" — the span alone, where the date is already implied. */
 export function formatTimeSpan(
   startsAt: Date | string | number,
   endsAt: Date | string | number,
+  locale?: DateLocale,
 ): string {
-  return `${formatTime(startsAt)}–${formatTime(endsAt)}`;
+  return `${formatTime(startsAt, locale)}–${formatTime(endsAt, locale)}`;
 }
 
 /**
@@ -88,8 +124,8 @@ export function formatTimeSpan(
  * Distinct from `formatDate`, which carries the year and drops the weekday
  * because it is used on receipts and ledger rows, where the opposite is true.
  */
-export function formatGameDate(value: Date | string | number): string {
-  const parts = new Intl.DateTimeFormat(DISPLAY_LOCALE, {
+export function formatGameDate(value: Date | string | number, locale?: DateLocale): string {
+  const parts = new Intl.DateTimeFormat(tagFor(locale), {
     timeZone: DISPLAY_TIME_ZONE,
     weekday: "short",
     day: "numeric",
@@ -103,8 +139,8 @@ export function formatGameDate(value: Date | string | number): string {
 }
 
 /** e.g. "3 Jul 2026" — date only. */
-export function formatDate(value: Date | string | number): string {
-  return new Intl.DateTimeFormat(DISPLAY_LOCALE, {
+export function formatDate(value: Date | string | number, locale?: DateLocale): string {
+  return new Intl.DateTimeFormat(tagFor(locale), {
     timeZone: DISPLAY_TIME_ZONE,
     day: "numeric",
     month: "short",
@@ -113,8 +149,8 @@ export function formatDate(value: Date | string | number): string {
 }
 
 /** e.g. "18:30" — time only, 24h. */
-export function formatTime(value: Date | string | number): string {
-  return new Intl.DateTimeFormat(DISPLAY_LOCALE, {
+export function formatTime(value: Date | string | number, locale?: DateLocale): string {
+  return new Intl.DateTimeFormat(tagFor(locale), {
     timeZone: DISPLAY_TIME_ZONE,
     hour: "2-digit",
     minute: "2-digit",
@@ -124,5 +160,11 @@ export function formatTime(value: Date | string | number): string {
 
 /** Money is rendered as whole crowns — the schema stores integer CZK. */
 export function formatCzk(amountCzk: number): string {
-  return `${Math.round(amountCzk).toLocaleString(DISPLAY_LOCALE)} CZK`;
+  /*
+   * MONEY DOES NOT FOLLOW THE UI LANGUAGE, and that is CLAUDE.md's rule rather
+   * than an oversight: the player is about to open a Czech banking app and the
+   * figure has to match what it shows. `en-GB` grouping is what every previous
+   * round rendered and what the QR payment line carries.
+   */
+  return `${Math.round(amountCzk).toLocaleString(DATE_LOCALE.en)} CZK`;
 }
