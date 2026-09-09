@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import { useStrings } from "@/components/LocaleProvider";
 import {
@@ -24,12 +24,10 @@ export const CONSENT_REOPEN_EVENT = "hf:consent-reopen";
  * on equal terms. See `CancelBookingForm` for the worked example and the
  * `elementFromPoint` diagnosis that found it.
  *
- * IT RENDERS AFTER MOUNT AND NEVER ON THE SERVER, which is not a hydration
- * dodge but the correct reading of the state: whether to ask depends on a
- * cookie in THIS browser, and a server render that guessed would flash the
- * banner at somebody who answered months ago. `mounted` gates the portal —
- * `document` does not exist during SSR — and the cookie read happens in the
- * same effect.
+ * IT NEVER RENDERS ON THE SERVER, which is not a hydration dodge but the
+ * correct reading of the state: whether to ask depends on a cookie in THIS
+ * browser, and a server render that guessed would flash the banner at somebody
+ * who answered months ago. The server snapshot below is what enforces it.
  *
  * A BOTTOM SHEET ON MOBILE AND A BOTTOM SHEET ON DESKTOP, deliberately the
  * same: it is the one shape that never covers the thing being read, and the
@@ -38,30 +36,67 @@ export const CONSENT_REOPEN_EVENT = "hf:consent-reopen";
  * It sits ABOVE the claim bar, because until it is answered it is the only
  * thing on screen that should take a tap.
  */
+/*
+ * THE STORED CHOICE IS BROWSER STATE, READ WITH THE API FOR BROWSER STATE.
+ *
+ * The obvious shape — `useEffect(() => setOpen(readCookie()))` — is a
+ * synchronous `setState` inside an effect, which cascades a second render on
+ * every mount and which this project's lint rule refuses. It is also the wrong
+ * tool: nothing is being SYNCHRONISED here, a value is being READ from outside
+ * React, and `useSyncExternalStore` is exactly that with a server snapshot
+ * built in.
+ *
+ * `"unknown"` IS THE SERVER'S ANSWER AND IS NOT A CHOICE. It has to be
+ * distinct from `null`: null means "this reader has not answered and we should
+ * ask", and rendering that during SSR would call `createPortal` where there is
+ * no `document`. The server says "unknown", renders nothing, and the client
+ * replaces it on hydration.
+ */
+type StoredChoice = ConsentChoice | null | "unknown";
+
+let listeners: (() => void)[] = [];
+
+function subscribe(onChange: () => void) {
+  listeners = [...listeners, onChange];
+  return () => {
+    listeners = listeners.filter((l) => l !== onChange);
+  };
+}
+
+/** Re-read after we write, so the sheet closes without a second source of truth. */
+function notifyConsentChanged() {
+  for (const l of listeners) l();
+}
+
+function getSnapshot(): StoredChoice {
+  return readConsentFrom(document.cookie);
+}
+
+function getServerSnapshot(): StoredChoice {
+  return "unknown";
+}
+
 export function CookieConsent() {
   const t = useStrings();
-  const [mounted, setMounted] = useState(false);
-  const [open, setOpen] = useState(false);
+  const stored = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+  const [reopened, setReopened] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
-    // No stored answer means ask. A stored answer means stay quiet until the
-    // reader asks for it back from the footer.
-    setOpen(readConsentFrom(document.cookie) === null);
-  }, []);
-
-  useEffect(() => {
-    const reopen = () => setOpen(true);
+    const reopen = () => setReopened(true);
     window.addEventListener(CONSENT_REOPEN_EVENT, reopen);
     return () => window.removeEventListener(CONSENT_REOPEN_EVENT, reopen);
   }, []);
 
   const choose = useCallback((choice: ConsentChoice) => {
     document.cookie = consentCookieValue(choice);
-    setOpen(false);
+    setReopened(false);
+    notifyConsentChanged();
   }, []);
 
-  if (!mounted || !open) return null;
+  // Never on the server; otherwise ask when unanswered, or when asked back.
+  const open = stored !== "unknown" && (stored === null || reopened);
+
+  if (!open) return null;
 
   return createPortal(
     /*
