@@ -55,6 +55,25 @@ async function playedGameWithBookings(
       p_payment_method: "cash",
     });
     expect(error, `create_booking for ${player.nickname}: ${error?.message}`).toBeNull();
+
+    /*
+     * THE FIXTURE'S PRECONDITION, ASSERTED (round 29). Every test built on this
+     * helper depends on the booking being an UNPAID hold — that is what keeps
+     * the game at `played` now that the sweep settles anything clean. The
+     * wallet is set to 150 against a 200 CZK game, so credit covers part and
+     * the row stays `reserved`; if either number ever moves, this fails HERE
+     * with the reason rather than three tests later on a status mismatch that
+     * looks like the sweep misbehaving.
+     */
+    const { data: made } = await serviceClient()
+      .from("bookings")
+      .select("status")
+      .eq("id", (data as unknown as { id: string }).id)
+      .single();
+    expect(
+      (made as { status: string } | null)?.status,
+      `the fixture booking for ${player.nickname} was paid outright — the wallet covers the game`,
+    ).toBe("reserved");
     (game as unknown as { bookings: string[] }).bookings ??= [];
     (game as unknown as { bookings: string[] }).bookings.push(
       (data as unknown as { id: string }).id,
