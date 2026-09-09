@@ -365,7 +365,11 @@ test("every action in the catalog writes its event row", async () => {
     }
     expect(await eventsFor()).toContain("attendance_marked");
 
-    await organizer.rpc("settle_game", { p_game_id: game.id });
+    /*
+     * ~~`settle_game`~~ IS GONE (round 29). `game_settled` is now emitted by
+     * the sweep, so the event is provoked the way production provokes it.
+     */
+    await serviceClient().rpc("advance_played_games", { p_buffer_minutes: 0 });
     expect(await eventsFor()).toContain("game_settled");
   } finally {
     await destroyScratchGame(game.id);

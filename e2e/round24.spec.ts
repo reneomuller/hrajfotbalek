@@ -105,7 +105,13 @@ test("a game past kickoff + duration + buffer advances; one inside it does not",
   try {
     await sweep();
 
-    expect(await statusOf(due.id), "the due game did not advance").toBe("played");
+    /*
+     * ~~`.toBe("played")`~~ — ROUND 29 TAKES IT FURTHER IN THE SAME RUN. This
+     * game has no bookings at all, so nothing holds it open and the sweep
+     * closes it the moment it advances it. What round 24 asserted — that a due
+     * game ADVANCES — is still what is being asserted; the terminus moved.
+     */
+    expect(await statusOf(due.id), "the due game did not advance").toBe("settled");
     expect(
       await statusOf(early.id),
       "a game still inside its buffer was advanced",
@@ -135,12 +141,24 @@ test("the sweep settles nothing and moves no money", async () => {
     expect(await statusOf(game.id)).toBe("played");
 
     /*
-     * SETTLING REMAINS AN EXPLICIT ADMIN ACT. `settle_game` is the next
-     * transition and the sweep must not have taken it — a settled game is one
-     * an organizer has said is finished with, and the sweep knows nothing
-     * about whether anybody paid on the pitch.
+     * ~~SETTLING REMAINS AN EXPLICIT ADMIN ACT.~~ REVERSED IN ROUND 29, and
+     * the assertion inverts rather than disappearing.
+     *
+     * Round 24's reasoning was that the sweep "knows nothing about whether
+     * anybody paid on the pitch". That was true of CASH. Cash left the flow in
+     * round 23 and pay-first (round 26) means a rostered player has paid
+     * before the row exists — so there is no longer a judgement to make, and
+     * the premise expired rather than the reasoning being wrong.
+     *
+     * THIS GAME STAYS `played`, and that is the TRIPWIRE doing its job rather
+     * than the old guard: the fixture carries a `reserved` hold, which is the
+     * one thing that still stops a close. The clean-game case is asserted in
+     * `round29.spec.ts`.
      */
-    expect(await statusOf(game.id), "the sweep settled the game").not.toBe("settled");
+    expect(
+      await statusOf(game.id),
+      "a game with an unpaid hold was settled anyway",
+    ).toBe("played");
 
     // The booking is untouched: still reserved, still owing, still settleable.
     const { data: after } = await admin

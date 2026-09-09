@@ -242,8 +242,13 @@ test("attendance drives the game to settled with no reserved booking left", asyn
   // never registered and settle was still correctly blocked.
   await expect(outstanding).toHaveCount(0);
 
-  await page.goto(`/admin/games/${game.id}/attendance`);
-  await page.getByTestId("settle-game").click();
+  /*
+   * ~~`settle-game`~~ IS GONE (round 29). The sweep closes the game instead,
+   * so the spec drives the sweep — which is what production does — rather
+   * than a button that no longer exists.
+   */
+  await serviceClient().rpc("advance_played_games", { p_buffer_minutes: 0 });
+  await page.goto(`/admin/games/${game.id}`);
 
   /*
    * ASSERTED ON THE STATUS CHIP, which the SERVER renders from `game.status`.
@@ -387,7 +392,8 @@ test("the whole admin lifecycle fits inside five minutes", async ({ page, contex
       .filter({ hasText: players.runner.nickname })
       .getByTestId("mark-present")
       .click();
-    await page.getByTestId("settle-game").click();
+    await serviceClient().rpc("advance_played_games", { p_buffer_minutes: 0 });
+    await page.reload({ waitUntil: "networkidle" });
     await expect(page.getByTestId("admin-game-status")).toHaveText(
       strings.admin.status.settled,
     );

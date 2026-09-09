@@ -72,40 +72,17 @@ export async function markPlayedAction(
   return { status: "saved" };
 }
 
-/**
- * Close the books.
+/*
+ * ~~`settleGameAction` — close the books.~~ REMOVED (round 29).
  *
- * THE UNPAID-RESERVATION BLOCK IS IN `settle_game`, not here. This action's job
- * on refusal is to name the bookings, which is the part a UI is better at than
- * a raise — the RPC counts them under the game lock, and this reads them back
- * afterwards for the message. A check performed only here would hold until the
- * next caller of `settle_game` from anywhere else.
+ * Settling is no longer an act. The daily sweep takes a game from `published`
+ * to `played` to `settled` in one run, and `settle_game` is dropped from the
+ * database — so there is nothing for an action to call and no button to call
+ * it from. See `20260909120000_auto_settle.sql` for the reversal's lineage.
+ *
+ * WHAT THIS ACTION DID THAT IS NOT LOST: on refusal it named the unpaid
+ * bookings, which a raise cannot. The sweep keeps that information — it
+ * reports `skipped` and the game ids, and the cron route logs them — and the
+ * admin game page still lists the outstanding names on a `played` game that
+ * has not closed.
  */
-export async function settleGameAction(
-  _prevState: AttendanceState,
-  formData: FormData,
-): Promise<AttendanceState> {
-  await requireAdmin();
-
-  const gameId = String(formData.get("gameId") ?? "");
-  if (!gameId) return { status: "error", message: toAdminErrorMessage("GAME_NOT_FOUND") };
-
-  const supabase = await createServerSupabaseClient();
-  const { error } = await supabase.rpc("settle_game", { p_game_id: gameId });
-
-  if (error) {
-    if (error.message.includes("RESERVED_BOOKINGS_REMAIN")) {
-      const { unpaidBookings, listGameBookings } = await import("@/lib/admin/queries");
-      const outstanding = unpaidBookings(await listGameBookings(gameId)).map(
-        (booking) => booking.nickname,
-      );
-      return { status: "blocked", outstanding };
-    }
-    return { status: "error", message: toAdminErrorMessage(error.message) };
-  }
-
-  revalidatePath(`/admin/games/${gameId}/attendance`);
-  revalidatePath(`/admin/games/${gameId}`);
-  revalidatePath("/admin/games");
-  return { status: "saved" };
-}

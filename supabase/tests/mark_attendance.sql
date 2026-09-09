@@ -194,26 +194,44 @@ select pg_temp.ok(
 update public.bookings set status = 'reserved'
  where id = '77770000-0000-0000-0000-00000000e222';
 
+/*
+ * ~~THE SETTLE GUARD.~~ THE SWEEP'S TRIPWIRE (round 29).
+ *
+ * `settle_game` is dropped — settling is no longer an act. The check it
+ * carried survives inside `advance_played_games`, where it SKIPS a game rather
+ * than refusing a call, so these assertions move from "the call raised" to
+ * "the sweep left it alone and said so".
+ */
+/*
+ * AGED EXPLICITLY BEFORE THE SWEEP. The sweep closes a game only once
+ * kick-off + duration + buffer is PAST, and these fixtures sit within an hour
+ * of now with a null duration (read as 60 minutes) — which lands exactly on
+ * the boundary and makes the assertion depend on how long the suite took to
+ * get here. Pushed back six hours so it does not.
+ */
+update public.games set starts_at = now() - interval '6 hours'
+ where id in ('88880000-0000-0000-0000-00000000e111',
+              '88880000-0000-0000-0000-00000000e222');
+
 select pg_temp.act_as('a0000000-0000-0000-0000-00000000ad11');
-select pg_temp.ok_call(
-  $q$select public.settle_game('88880000-0000-0000-0000-00000000e111')$q$,
-  'raise:RESERVED_BOOKINGS_REMAIN',
-  'settle is refused while an unpaid reservation remains');
+select public.advance_played_games(0);
 reset role;
 
 select pg_temp.ok(
   (select status = 'played' from public.games
     where id = '88880000-0000-0000-0000-00000000e111'),
-  'the refused settle left the game played, not half-settled');
+  'the sweep left a game with an unpaid hold at played, not half-settled');
 
 -- Resolve it the way the admin panel does — a cash confirm on the pitch.
 select pg_temp.act_as('a0000000-0000-0000-0000-00000000ad11');
 select public.confirm_booking('77770000-0000-0000-0000-00000000e222');
-select pg_temp.ok_call(
-  $q$select public.settle_game('88880000-0000-0000-0000-00000000e111')$q$,
-  'settled',
-  'settle succeeds once nothing is reserved');
+select public.advance_played_games(0);
 reset role;
+
+select pg_temp.ok(
+  (select status = 'settled' from public.games
+    where id = '88880000-0000-0000-0000-00000000e111'),
+  'a later sweep closes it once nothing is reserved');
 
 select pg_temp.ok(
   (select count(*) from public.bookings
@@ -238,11 +256,19 @@ select pg_temp.ok_call(
   $q$select public.mark_game_played('88880000-0000-0000-0000-00000000e222')$q$,
   'played',
   'an under-capacity published game can be marked played directly');
-select pg_temp.ok_call(
-  $q$select public.settle_game('88880000-0000-0000-0000-00000000e222')$q$,
-  'settled',
-  'and then settled, with no bookings on it at all');
 reset role;
+
+update public.games set starts_at = now() - interval '6 hours'
+ where id = '88880000-0000-0000-0000-00000000e222';
+
+select pg_temp.act_as('a0000000-0000-0000-0000-00000000ad11');
+select public.advance_played_games(0);
+reset role;
+
+select pg_temp.ok(
+  (select status = 'settled' from public.games
+    where id = '88880000-0000-0000-0000-00000000e222'),
+  'and the sweep then settles it, with no bookings on it at all');
 
 -- =============================================================================
 

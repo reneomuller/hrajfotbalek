@@ -364,18 +364,41 @@ select pg_temp.ok(
   (select public.mark_game_played('96660000-0000-0000-0000-000000000006')) = 'played',
   'an under-capacity published game can go straight to played');
 
+/*
+ * ~~`settle_game`~~ IS GONE (round 29) — the sweep closes a played game, so
+ * these assert the sweep. The idempotence check below is the same property the
+ * old `INVALID_TRANSITION` probe was making: a second run must not re-settle
+ * or re-emit, which the sweep gets by only ever looking at `played` rows.
+ */
+reset role;
+
+/*
+ * AGED EXPLICITLY BEFORE THE SWEEP. The sweep closes a game only once
+ * kick-off + duration + buffer is PAST, and these fixtures sit within an hour
+ * of now with a null duration (read as 60 minutes) — which lands exactly on
+ * the boundary and makes the assertion depend on how long the suite took to
+ * get here. Pushed back six hours so it does not.
+ */
+update public.games set starts_at = now() - interval '6 hours'
+ where id = '96660000-0000-0000-0000-000000000006';
+
+select pg_temp.act_as('d0000000-0000-0000-0000-0000000000d1');
+select public.advance_played_games(0);
+
 select pg_temp.ok(
-  (select public.settle_game('96660000-0000-0000-0000-000000000006')) = 'settled',
-  'played -> settled succeeds');
+  (select status = 'settled' from public.games
+    where id = '96660000-0000-0000-0000-000000000006'),
+  'played -> settled succeeds, driven by the sweep');
 
 select pg_temp.ok(
   pg_temp.ev_count('game_settled', '96660000-0000-0000-0000-000000000006') = 1,
-  'settle_game emits game_settled');
+  'the sweep emits game_settled');
 
-select pg_temp.ok_probe(
-  $q$select public.settle_game('96660000-0000-0000-0000-000000000006')$q$,
-  'raise:INVALID_TRANSITION',
-  'settling an already-settled game is rejected');
+select public.advance_played_games(0);
+
+select pg_temp.ok(
+  pg_temp.ev_count('game_settled', '96660000-0000-0000-0000-000000000006') = 1,
+  'a second sweep does not settle an already-settled game twice');
 reset role;
 
 -- --- published <-> full is derived, and `full` can also be played ------------

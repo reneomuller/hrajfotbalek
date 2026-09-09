@@ -6,7 +6,6 @@ import { appCapabilities } from "@/lib/db/capabilities";
 import { CancelGameButton } from "@/components/admin/CancelGameButton";
 import { ConfirmPaymentRow } from "@/components/admin/ConfirmPaymentRow";
 import { GameForm } from "@/components/admin/GameForm";
-import { SettleButton } from "@/components/admin/SettleButton";
 import { TransitionButton } from "@/components/admin/TransitionButton";
 import { ExportCsvLink } from "@/components/admin/ExportCsvLink";
 import { requireAdmin } from "@/lib/auth/requireAdmin";
@@ -389,26 +388,32 @@ export default async function AdminGamePage({
           />
         )}
 
-        {canSettle && (
-          <>
-            {pending.length > 0 && (
-              <div
-                data-testid="settle-outstanding"
-                className="mb-4 rounded-card border border-hairline-strong p-4"
-              >
-                <p className="m-0 text-[13px] text-bone">{strings.admin.settleBlocked}</p>
-                <ul className="mt-2 list-none p-0 text-[12px] text-volt">
-                  {pending.map((booking) => (
-                    <li key={booking.id}>{booking.nickname}</li>
-                  ))}
-                </ul>
-                <p className="mt-2 text-[12px] text-muted">
-                  {strings.admin.settleBlockedHint}
-                </p>
-              </div>
-            )}
-            <SettleButton gameId={game.id} />
-          </>
+        {/*
+          ~~THE SETTLE BUTTON.~~ GONE (round 29). The sweep closes a game the
+          same night it is played, so there is nothing here to press — and
+          `settle_game` no longer exists to be pressed.
+
+          THE OUTSTANDING LIST STAYS, and it now means something sharper than
+          it did. A `played` game still showing names is one the sweep TRIED to
+          close and SKIPPED, because a `reserved` hold is on it. Under pay-first
+          that should never happen outside an admin-created booking, so this
+          box appearing at all is news — the same news the cron logs.
+        */}
+        {canSettle && pending.length > 0 && (
+          <div
+            data-testid="settle-outstanding"
+            className="mb-4 rounded-card border border-hairline-strong p-4"
+          >
+            <p className="m-0 text-[13px] text-bone">{strings.admin.settleBlocked}</p>
+            <ul className="mt-2 list-none p-0 text-[12px] text-volt">
+              {pending.map((booking) => (
+                <li key={booking.id}>{booking.nickname}</li>
+              ))}
+            </ul>
+            <p className="mt-2 text-[12px] text-muted">
+              {strings.admin.settleBlockedHint}
+            </p>
+          </div>
         )}
 
         {game.status === "settled" && (

@@ -1912,13 +1912,17 @@ export const strings = {
     markNoShow: "No-show",
     attendanceUnmarked: "Not marked",
     markPlayed: "Mark as played",
-    settleGame: "Settle the game",
+    /*
+     * ~~`settleGame: "Settle the game"`~~ REMOVED (round 29) — there is no
+     * button. `settleBlocked` and `settleBlockedHint` SURVIVE and now describe
+     * a sweep that skipped rather than a button that refused.
+     */
     settled: "Settled",
     // The hard block: an unpaid hold surviving into `settled` is a debt with
     // no surface left to raise it.
-    settleBlocked: "Settle is blocked — these bookings are still unpaid:",
+    settleBlocked: "The nightly sweep could not close this game — these bookings are still unpaid:",
     settleBlockedHint:
-      "Take payment (✓ Paid on the game page) or cancel the booking, then settle.",
+      "Take payment (✓ Paid on the game page) or cancel the booking. The sweep closes it on its next run — there is nothing to press.",
 
     // --- reconciliation ------------------------------------------------------
 /* Round 16 item 17 — releasing a seat from the roster. Admin is English by

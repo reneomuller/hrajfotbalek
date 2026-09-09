@@ -79,5 +79,36 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  return NextResponse.json({ available: true, advanced: data ?? 0 });
+  /*
+   * THE SWEEP RETURNS A SHAPE NOW, NOT A COUNT (round 29). It settles as well
+   * as advances, and the number that matters most is `skipped` — games that
+   * kicked off, could not be closed because a `reserved` hold is still on
+   * them, and are therefore waiting for a person.
+   *
+   * A NON-EMPTY SKIP LIST IS NEWS AND IS LOGGED AS SUCH. Under pay-first no
+   * rostered player can be unpaid, so the only path that still produces one is
+   * an admin creating a booking by hand. It is not an error — the rest of the
+   * sweep did its job — but nobody would ever look for it in a 200 response
+   * body, so it goes where an operator greps.
+   */
+  const result = (data ?? {}) as {
+    advanced?: number;
+    settled?: number;
+    skipped?: number;
+    skippedGameIds?: string[];
+  };
+
+  if ((result.skipped ?? 0) > 0) {
+    console.error("played sweep: games could not be settled — unpaid holds remain", {
+      skipped: result.skipped,
+      games: result.skippedGameIds ?? [],
+    });
+  }
+
+  return NextResponse.json({
+    available: true,
+    advanced: result.advanced ?? 0,
+    settled: result.settled ?? 0,
+    skipped: result.skipped ?? 0,
+  });
 }

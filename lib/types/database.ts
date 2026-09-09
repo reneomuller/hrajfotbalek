@@ -954,7 +954,6 @@ export interface Database {
 
       publish_game: { Args: { p_game_id: string }; Returns: GameStatus };
       mark_game_played: { Args: { p_game_id: string }; Returns: GameStatus };
-      settle_game: { Args: { p_game_id: string }; Returns: GameStatus };
       /** Returns the number of bookings cancelled by the fan-out. */
       cancel_game: { Args: { p_game_id: string }; Returns: number };
 
@@ -1113,12 +1112,22 @@ export interface Database {
        *
        * ABSENT before `20260901100000_advance_played_games`, which is why the
        * cron route asks `app_capabilities().playedSweep` before calling it.
-       * Returns how many games it moved. It refuses to commit if the credit
-       * ledger or any live booking changed while it ran.
+       * It refuses to commit if the credit ledger or any live booking changed
+       * while it ran — an invariant round 24 built to enforce "the sweep never
+       * settles", which round 29 kept precisely because the sweep now DOES.
+       *
+       * ~~Returns how many games it moved.~~ Round 29 returns a SHAPE, because
+       * one integer cannot carry `skipped`: games that kicked off and could
+       * not close because a `reserved` hold is still on them.
        */
       advance_played_games: {
         Args: { p_buffer_minutes?: number };
-        Returns: number;
+        Returns: {
+          advanced: number;
+          settled: number;
+          skipped: number;
+          skippedGameIds: string[];
+        };
       };
       /**
        * Transitions abandoned checkouts from `reserved` to `expired` once

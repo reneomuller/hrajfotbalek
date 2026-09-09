@@ -490,7 +490,16 @@ async function seed(): Promise<void> {
     );
     check(`mark played ${game.venue}`, (await admin.rpc("mark_game_played", { p_game_id: game.id })).error);
   }
-  check("settle game", (await admin.rpc("settle_game", { p_game_id: games.settled.id })).error);
+  /*
+   * ~~`settle_game`~~ IS GONE (round 29). The seed's "settled" fixture is now
+   * produced the way production produces one: a direct status write, because
+   * the sweep only closes games whose kick-off is past the buffer and the seed
+   * builds this one deliberately in the past.
+   */
+  check(
+    "settle game",
+    (await admin.from("games").update({ status: "settled" }).eq("id", games.settled.id)).error,
+  );
 
   // Bookings require a future kickoff, so these games were created in the
   // future, booked, and are only now moved into the past. starts_at is not a
