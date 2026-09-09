@@ -45,6 +45,30 @@ export const strings = {
     admin: "Admin",
   },
 
+  /*
+   * COOKIE CONSENT (round 28, item 1).
+   *
+   * THE COPY SAYS WHAT IS TRUE AND NOT WHAT A TEMPLATE SAYS. This product sets
+   * auth, locale and a payment-return stash — all strictly necessary — and no
+   * analytics of any kind. So the body does not talk about "categories of
+   * cookies" or "our partners", because there are none. It states the position
+   * and the promise: what the site needs to work, and we ask before anything
+   * else.
+   *
+   * "ONLY NECESSARY" IS AN HONEST BUTTON EVEN THOUGH IT CURRENTLY CHANGES
+   * NOTHING. It records a refusal that `consentAllows` will enforce the day
+   * something needs enforcing, which is the point of building the gate before
+   * the thing it gates.
+   */
+  consent: {
+    title: "Cookies",
+    body: "We use only what the site needs to work — signing you in, remembering your language, and finishing a payment. We will ask before anything else.",
+    acceptAll: "Accept all",
+    onlyNecessary: "Only necessary",
+    /** The footer link that brings the choice back. */
+    settings: "Cookie settings",
+  },
+
   siteFooter: {
     privacy: "Privacy",
     terms: "Terms",

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ContactDialog } from "@/components/chrome/ContactDialog";
+import { CookieSettingsLink } from "@/components/consent/CookieSettingsLink";
 import { getContactDetails } from "@/lib/home/queries";
 import { getStrings } from "@/lib/i18n/server";
 
@@ -97,7 +98,16 @@ export async function Footer() {
         */}
         <ContactDialog emails={contact.emails} phones={contact.phones} />
       </div>
-      <div className="text-small text-faint">{siteFooter.copyright}</div>
+      {/*
+        THE COPYRIGHT AND THE WAY BACK TO THE COOKIE CHOICE, on one line
+        (round 28, item 1). The consent sheet hides itself once answered, so
+        without this there is no route back to it — and "I pressed the wrong
+        one" is the first thing anybody says about a consent banner.
+      */}
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-small text-faint">
+        <span>{siteFooter.copyright}</span>
+        <CookieSettingsLink />
+      </div>
     </footer>
   );
 }

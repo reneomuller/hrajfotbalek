@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { BadgeGrid } from "@/components/account/BadgeGrid";
+import { PublicFacts } from "@/components/profile/PublicFacts";
 import { ProfileCover } from "@/components/account/ProfileCover";
 import { ProfileStats } from "@/components/account/ProfileStats";
 import { PublicIdentity } from "@/components/player/PublicIdentity";
@@ -97,6 +98,21 @@ export default async function PublicPlayerPage({
         <PublicIdentity nickname={profile.nickname} photoPath={profile.photoPath} />
         <ProfileStats stats={stats} playersMet={profile.playersMet} locale={locale} t={t} />
       </div>
+
+      {/*
+        COUNTRY, POSITION AND LEVEL — round 28 item 4, the owner's amendment to
+        round 14's scope. Above the accomplishments because it answers the
+        question the roster tap asked ("who is this") while the grid answers a
+        slower one ("what have they done"). Renders nothing at all when the
+        player has set none of the three.
+      */}
+      <PublicFacts
+        country={profile.country}
+        skillLevel={profile.skillLevel}
+        positions={profile.positions}
+        locale={locale}
+        t={t}
+      />
 
       <BadgeGrid badges={badges} t={t} />
     </main>

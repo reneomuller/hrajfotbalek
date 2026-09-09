@@ -38,6 +38,15 @@ export const ru: StringsOverlay = {
     home: "Hraj Fotbal — на главную",
   },
 
+  // DRAFT — flagged for the standing native-review batch.
+  consent: {
+    title: "Файлы cookie",
+    body: "Мы используем только то, что нужно сайту для работы — вход, запоминание языка и завершение оплаты. Обо всём остальном спросим заранее.",
+    acceptAll: "Принять все",
+    onlyNecessary: "Только необходимые",
+    settings: "Настройки cookies",
+  },
+
   siteFooter: {
     privacy: "Приватность",
     terms: "Условия",

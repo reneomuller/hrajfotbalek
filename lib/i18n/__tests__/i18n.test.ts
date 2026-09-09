@@ -38,6 +38,13 @@ const PLAYER_FACING = [
    * translated and simply unlisted.
    */
   "profile",
+  /*
+   * The cookie sheet (round 28, item 1). Listed the moment it was translated,
+   * which is the lesson the `profile` note above records: a section that ships
+   * in four languages and is not named here is walked by neither half of this
+   * suite — nothing checks it is complete, and nothing notices when it is not.
+   */
+  "consent",
   "errors",
   "common",
   // Contract §6, delivered 2026-08-01. Czech is Oliver's; Russian is a flagged

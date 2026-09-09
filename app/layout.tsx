@@ -5,6 +5,7 @@ import { LocaleProvider } from "@/components/LocaleProvider";
 import { SessionProvider } from "@/components/SessionProvider";
 import { SiteBackground } from "@/components/SiteBackground";
 import { Footer } from "@/components/chrome/Footer";
+import { CookieConsent } from "@/components/consent/CookieConsent";
 import { Header } from "@/components/chrome/Header";
 import { photoVersionFor } from "@/lib/storage/avatar";
 import { EMPTY_BELL, getBellState } from "@/lib/notifications/queries";
@@ -200,6 +201,13 @@ export default async function RootLayout({
             >
               {children}
               <Footer />
+              {/*
+                THE CONSENT SHEET, mounted once at the root and portalled to
+                `document.body` from there. It renders nothing until it has
+                read this browser's cookie, so it costs an unanswered reader
+                one effect and everybody else nothing.
+              */}
+              <CookieConsent />
             </div>
 
             {/* Phone widths only. On a desktop this would be a phone

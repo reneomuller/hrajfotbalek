@@ -51,6 +51,15 @@ export const uk: StringsOverlay = {
     home: "Hraj Fotbal — на головну",
   },
 
+  // DRAFT — flagged for the standing native-review batch.
+  consent: {
+    title: "Файли cookie",
+    body: "Ми використовуємо лише те, що потрібно сайту для роботи — вхід, запам'ятовування мови та завершення оплати. Про решту запитаємо заздалегідь.",
+    acceptAll: "Прийняти всі",
+    onlyNecessary: "Лише необхідні",
+    settings: "Налаштування cookies",
+  },
+
   siteFooter: {
     privacy: "Приватність",
     terms: "Умови",

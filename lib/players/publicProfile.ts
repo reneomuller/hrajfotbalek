@@ -34,6 +34,21 @@ export interface PublicProfile {
   hours: number;
   /** Null when this database has no `players_met` yet. Never zero for that. */
   playersMet: number | null;
+  /*
+   * ROUND 28, ITEM 4 — the owner's amendment to round 14's scope.
+   *
+   * ALL THREE ARE NULLABLE OR EMPTY BY DESIGN, and the page renders NOTHING
+   * for an unset one. There is no "Not set" row and no placeholder flag: a
+   * public profile saying a player has declined to state their level is worse
+   * than a public profile that simply does not mention it.
+   *
+   * `undefined` (rather than null) additionally means the database predates
+   * `20260909100000` — same convention as `playersMet` above, and the same
+   * reason: the column's absence is a fact about the database, not the player.
+   */
+  country: string | null;
+  skillLevel: string | null;
+  positions: string[];
 }
 
 export async function getPublicProfile(nickname: string): Promise<PublicProfile | null> {
@@ -54,6 +69,9 @@ export async function getPublicProfile(nickname: string): Promise<PublicProfile 
     hours: number | string | null;
     venues: number | null;
     players_met?: number | null;
+    country?: string | null;
+    skill_level?: string | null;
+    positions?: string[] | null;
   } | null;
 
   if (error || !row?.nickname) return null;
@@ -71,5 +89,8 @@ export async function getPublicProfile(nickname: string): Promise<PublicProfile 
     // `?? null`, NOT `?? 0`. See the header: the column's absence is a fact
     // about the database, and zero is a fact about the player.
     playersMet: row.players_met ?? null,
+    country: row.country ?? null,
+    skillLevel: row.skill_level ?? null,
+    positions: row.positions ?? [],
   };
 }

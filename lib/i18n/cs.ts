@@ -39,6 +39,15 @@ export const cs: StringsOverlay = {
     home: "Hraj Fotbal — domů",
   },
 
+  // DRAFT — flagged for the standing native-review batch.
+  consent: {
+    title: "Soubory cookie",
+    body: "Používáme jen to, co web potřebuje k fungování — přihlášení, zapamatování jazyka a dokončení platby. Na cokoli dalšího se nejdřív zeptáme.",
+    acceptAll: "Přijmout vše",
+    onlyNecessary: "Jen nezbytné",
+    settings: "Nastavení cookies",
+  },
+
   siteFooter: {
     privacy: "Soukromí",
     terms: "Podmínky",
