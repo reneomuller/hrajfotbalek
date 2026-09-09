@@ -1882,6 +1882,15 @@ export const strings = {
     removeCreditDone: "Removed. Balance is now {balance}.",
     removeCreditDoneBare: "Removed.",
     removeCreditCancel: "Cancel",
+    /* Round 28, item 7 — the games list's sort. Admin, English only. */
+    sortLabel: "Sort by",
+    sortKeys: {
+      date: "Date",
+      venue: "Venue",
+      filled: "Filled",
+      unpaid: "Unpaid",
+      status: "Status",
+    },
     adminConfirmGrant:
       "Give this player the full admin panel — games, payments, players and rights?",
     adminConfirmRevoke: "Take away this player's admin rights?",

@@ -3,6 +3,7 @@ import { listAllGames } from "@/lib/admin/queries";
 import { formatCzk, formatGameDateTime } from "@/lib/format";
 import { ExportCsvLink } from "@/components/admin/ExportCsvLink";
 import { strings } from "@/lib/strings";
+import { GAME_SORTS, parseGameSort, sortGames } from "@/lib/admin/gameSort";
 
 export const metadata = { title: strings.admin.gamesTitle };
 
@@ -15,8 +16,20 @@ export const dynamic = "force-dynamic";
  * RLS policy hides drafts from every `authenticated` session, admins included,
  * and it is not widened for admins on purpose.
  */
-export default async function AdminGamesPage() {
-  const games = await listAllGames();
+export default async function AdminGamesPage({
+  searchParams,
+}: {
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  const query = searchParams ? await searchParams : {};
+  /*
+   * THE SORT IS IN THE URL, not in component state (round 28, item 7). It
+   * makes an ordering shareable and bookmarkable, it survives the back button,
+   * and it keeps this page a server component — a `useState` sort would mean
+   * shipping the whole list to the browser to reorder it there.
+   */
+  const sort = parseGameSort(query.sort);
+  const games = sortGames(await listAllGames(), sort);
 
   return (
     <>
@@ -35,6 +48,41 @@ export default async function AdminGamesPage() {
           </Link>
         </div>
       </div>
+
+      {/*
+        THE SORT CONTROL — links, not a select (round 28, item 7).
+
+        A `<select>` needs JavaScript to navigate on change, which would make
+        this page a client component to move a list it already has. Five links
+        are five URLs an admin can bookmark, share, or reach with the back
+        button, and the CURRENT one is stated rather than implied: "sort choice
+        visible" was the ask, and a control that does not say what it is doing
+        is why somebody sorts twice.
+      */}
+      <nav
+        aria-label={strings.admin.sortLabel}
+        data-testid="games-sort"
+        className="mt-5 flex flex-wrap items-center gap-x-3 gap-y-2"
+      >
+        <span className="text-[10px] uppercase tracking-eyebrow text-muted">
+          {strings.admin.sortLabel}
+        </span>
+        {GAME_SORTS.map((key) => (
+          <Link
+            key={key}
+            href={key === "date" ? "/admin/games" : `/admin/games?sort=${key}`}
+            data-testid={`games-sort-${key}`}
+            aria-current={sort === key ? "true" : undefined}
+            className={
+              sort === key
+                ? "rounded-pill border border-volt bg-volt/[.10] px-3 py-1 text-[11px] uppercase tracking-eyebrow text-volt no-underline"
+                : "rounded-pill border border-hairline px-3 py-1 text-[11px] uppercase tracking-eyebrow text-muted no-underline"
+            }
+          >
+            {strings.admin.sortKeys[key]}
+          </Link>
+        ))}
+      </nav>
 
       {games.length === 0 ? (
         <p className="mt-8 text-[12px] tracking-[1px] text-faint">

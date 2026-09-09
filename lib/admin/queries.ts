@@ -31,6 +31,16 @@ export interface AdminGameRow extends GameRow {
   activeCount: number;
   /** Unconverted waitlist rows. The expansion-trigger sensor (REQ-UI-018). */
   waitlistCount: number;
+  /**
+   * Seats held but not paid for — `reserved` bookings (round 28, item 7).
+   *
+   * A SUBSET OF `activeCount`, NOT A SEPARATE POPULATION. Both count rows that
+   * hold a seat; this one counts the ones that still owe money, which is what
+   * "what do I have to chase before this game" means and what the list can now
+   * sort by. Under pay-first an online booking is born `confirmed`, so a
+   * non-zero here is a cash-rail or legacy hold.
+   */
+  unpaidCount: number;
 }
 
 /** Every game, newest kick-off first, including drafts and cancelled ones. */
@@ -59,15 +69,17 @@ export async function listAllGames(
   if (error || !games) return [];
 
   const ids = games.map((g) => g.id);
-  const [active, waiting] = await Promise.all([
+  const [active, waiting, unpaid] = await Promise.all([
     countActiveBookings(ids),
     countWaitlist(ids),
+    countUnpaidBookings(ids),
   ]);
 
   return games.map((game) => ({
     ...game,
     activeCount: active.get(game.id) ?? 0,
     waitlistCount: waiting.get(game.id) ?? 0,
+    unpaidCount: unpaid.get(game.id) ?? 0,
   }));
 }
 
@@ -83,15 +95,17 @@ export async function getAdminGame(id: string): Promise<AdminGameRow | null> {
 
   if (error || !game) return null;
 
-  const [active, waiting] = await Promise.all([
+  const [active, waiting, unpaid] = await Promise.all([
     countActiveBookings([game.id]),
     countWaitlist([game.id]),
+    countUnpaidBookings([game.id]),
   ]);
 
   return {
     ...game,
     activeCount: active.get(game.id) ?? 0,
     waitlistCount: waiting.get(game.id) ?? 0,
+    unpaidCount: unpaid.get(game.id) ?? 0,
   };
 }
 
@@ -328,6 +342,31 @@ async function countActiveBookings(gameIds: string[]): Promise<Map<string, numbe
     .select("game_id")
     .in("game_id", gameIds)
     .in("status", ["reserved", "confirmed"]);
+
+  for (const row of data ?? []) {
+    counts.set(row.game_id, (counts.get(row.game_id) ?? 0) + 1);
+  }
+  return counts;
+}
+
+/**
+ * Seats held but unpaid, per game (round 28, item 7).
+ *
+ * `reserved` ONLY. It is deliberately the same status test `settle_game` uses
+ * to decide whether a game can be settled at all, so the number this list
+ * sorts by is the number that actually blocks the close-out — see ledger row
+ * 184, which is that set having been allowed to accumulate unseen.
+ */
+async function countUnpaidBookings(gameIds: string[]): Promise<Map<string, number>> {
+  const counts = new Map<string, number>();
+  if (gameIds.length === 0) return counts;
+
+  const service = createServiceRoleSupabaseClient();
+  const { data } = await service
+    .from("bookings")
+    .select("game_id")
+    .in("game_id", gameIds)
+    .eq("status", "reserved");
 
   for (const row of data ?? []) {
     counts.set(row.game_id, (counts.get(row.game_id) ?? 0) + 1);
