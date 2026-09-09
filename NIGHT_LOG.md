@@ -7,6 +7,75 @@ way that nobody asked about.
 
 ---
 
+## Round 28 — 2026-09-09
+
+Twelve items. **Nine shipped, two found already shipped and verified, two not
+attempted** — the window ran out before the venue pair could be done properly.
+
+| # | Item | Outcome |
+|---|---|---|
+| 1 | Cookie consent | **SHIPPED** — EN/CS/RU/UK, portalled, revisitable |
+| 2 | Stripe card-only | **SHIPPED** (code half); dashboard half is row 216 |
+| 3 | Roster clickability | **ALREADY SHIPPED** — verified, no code changed |
+| 4 | Public profile scope | **SHIPPED** + migration; flag set is partial (row 212) |
+| 5 | Admin player actions | **PARTIAL** — (b) and (c) done; (a) not done |
+| 6 | Admin players list slimmed | **SHIPPED** |
+| 7 | Admin games sorting | **SHIPPED** |
+| 8 | Venue Google-Maps link | **NOT ATTEMPTED** — window |
+| 9 | Date localization | **SHIPPED** for the named surfaces; sweep is row 209 |
+| 10 | Crop uploader for venues | **NOT ATTEMPTED** — window |
+| 11 | Venue photo full-bleed | **ALREADY SHIPPED** — verified, no code changed |
+| 12 | Ledger | **SHIPPED** — rows 206-218 |
+
+### Two items were already true
+
+Item 3's roster links have existed since round 14 and are asserted by
+`public-profile.spec.ts`. Item 11's venue photo already reaches y=0, because
+the game detail's `<main>` carries no top padding at all. Both were reported as
+found rather than reimplemented — writing a second implementation of something
+that works is how a codebase grows two of everything.
+
+### What item 5 did not get
+
+**(a) — edit/remove banner, photo and name from the admin player page.** The
+photo removal already exists (`RemovePhotoButton`); the banner and the name do
+not. This needed storage-rule changes for admin paths, which is the part that
+wanted care rather than speed, and it is the piece most likely to be got
+subtly wrong under time pressure. Not started rather than half-started.
+
+### The two the round did not reach
+
+Items 8 and 10, and both for the same reason: they are real work with real
+edges. Resolving a `maps.app.goo.gl` link means a server-side redirect follow
+with a timeout, a URL allow-list so the resolver cannot be pointed at an
+internal host, and a parse that **says so plainly instead of guessing** — the
+item's own instruction and the part that makes it more than a fetch. A
+half-resolved link that silently stores the wrong pitch is worse than no link.
+
+### Things worth knowing
+
+**The note for a credit movement had been in the wrong table since round 7.**
+`grant_credit` wrote it into the event stream, not the ledger row — so the
+explanation and the money were joinable only by player and timestamp. Found
+while adding removal, fixed in the same migration.
+
+**A verification block failed and blamed the function it was testing.** The
+probe read back "the most recent ledger row" with `order by created_at desc
+limit 1`, and `now()` is TRANSACTION time — every row in one `DO` block shares
+a timestamp, so `limit 1` picked an arbitrary one. Keyed on the amount instead.
+Worth remembering for every future verification block in this repo.
+
+**`create or replace` cannot drop a parameter default.** Restating
+`grant_credit` without its three defaults failed with "cannot remove parameter
+defaults from existing function". The defaults are part of the signature.
+
+### Suites
+
+Unit 679/679 · SQL 33/33 · lint 0 errors · tsc clean. E2E and the deployment id
+are in the round's final commit.
+
+---
+
 ## Round 27 — 2026-09-06
 
 Six items plus close-out. All six attempted; five shipped whole, one shipped
