@@ -1,6 +1,4 @@
 import Link from "next/link";
-import { AdminRightsButton } from "@/components/admin/AdminRightsButton";
-import { GrantCreditForm } from "@/components/admin/GrantCreditForm";
 import { requireAdmin } from "@/lib/auth/requireAdmin";
 import { listPlayers } from "@/lib/admin/queries";
 import { filterPlayers } from "@/lib/admin/playerSearch";
@@ -228,25 +226,44 @@ export default async function AdminPlayersPage({
                 </div>
               </div>
 
-              {/* THE CONTROLS, on their own full-width line below everything
-                  they act on — so nothing tappable sits between two things
-                  being read. */}
+              {/*
+                ONE CONTROL, AND IT IS A DOOR (round 28, item 6).
+
+                ~~`AdminRightsButton` and `GrantCreditForm`, inline on every
+                row.~~ Both moved to the player's own page, which is now the
+                actions surface (item 5). What is left here is the link that
+                takes you there.
+
+                WHY THE LIST STOPPED BEING A CONTROL PANEL. It answers "who is
+                here and what do they owe" — a scanning question, asked over
+                two hundred rows. Every row carrying a promote button and a
+                credit form meant two hundred forms in one document, an admin
+                granting credit to the row above the one they meant, and the
+                two most consequential acts in the panel — making somebody an
+                admin, moving money — sitting one mis-tap apart on a phone.
+
+                The identity, the balance and the contact stay, because those
+                are what the scan is for.
+              */}
               <div className="flex w-full flex-wrap items-center gap-x-5 gap-y-2 border-t border-hairline pt-3">
-                {player.id === acting.id ? (
+                <Link
+                  href={`/admin/players/${player.id}`}
+                  data-testid="admin-player-edit"
+                  className="text-[11px] uppercase tracking-eyebrow text-volt no-underline"
+                >
+                  {strings.admin.editProfileLink}
+                </Link>
+                {player.id === acting.id && (
                   /* The acting admin's own row. Stated rather than left blank:
-                     an admin who finds no button where every other row has one
-                     will otherwise assume the panel is broken. */
+                     an admin who finds no note where every other row has one
+                     will otherwise wonder whether the panel is broken. */
                   <span
                     data-testid="admin-rights-self"
                     className="text-[10px] uppercase tracking-eyebrow text-faint"
                   >
                     {strings.admin.adminSelfNote}
                   </span>
-                ) : (
-                  <AdminRightsButton playerId={player.id} isAdmin={player.isAdmin} />
                 )}
-
-                <GrantCreditForm playerId={player.id} />
               </div>
             </li>
           ))}

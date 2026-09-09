@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { PlayerAttendanceRow } from "@/components/admin/PlayerAttendanceRow";
 import { AdminRightsButton } from "@/components/admin/AdminRightsButton";
 import { GrantCreditForm } from "@/components/admin/GrantCreditForm";
+import { RemoveCreditForm } from "@/components/admin/RemoveCreditForm";
 import { RemovePhotoButton } from "@/components/admin/RemovePhotoButton";
 import { requireAdmin } from "@/lib/auth/requireAdmin";
 import { getAdminPlayer } from "@/lib/admin/queries";
@@ -226,8 +227,18 @@ export default async function AdminPlayerPage({
           <AdminRightsButton playerId={player.id} isAdmin={player.is_admin} />
         </div>
 
-        <div className="pt-4">
+        {/*
+          THE WALLET, BOTH DIRECTIONS (round 28, item 5b). Side by side and
+          alike, because they are one act with a sign — but only the removal
+          arms itself before it will submit, and only the removal insists on a
+          note. The balance travels to the remove form for CONTEXT; the floor
+          that stops a wallet going negative is `grant_credit`'s, under the
+          player's advisory lock, where two concurrent removals can be made to
+          agree.
+        */}
+        <div className="flex flex-wrap items-start gap-x-5 gap-y-3 pt-4">
           <GrantCreditForm playerId={player.id} />
+          <RemoveCreditForm playerId={player.id} balanceCzk={balanceCzk} />
         </div>
 
         {player.photo_path && (

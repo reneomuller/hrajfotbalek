@@ -1863,6 +1863,25 @@ export const strings = {
     makeAdmin: "Make admin",
     revokeAdmin: "Revoke admin",
     adminSelfNote: "You cannot change your own admin rights.",
+    /*
+     * ROUND 28, ITEM 6 — the players list's only remaining action.
+     *
+     * "Edit profile" rather than "View" or "Open": the page it leads to is now
+     * where every act on a player happens — banner, photo, name, credits,
+     * admin rights — so the label names the reason to go rather than the
+     * mechanics of going. Admin is English-only (the standing law), so this
+     * key is never translated.
+     */
+    editProfileLink: "Edit profile",
+    /* Round 28, item 5b — taking credit back out. Admin, English only. */
+    removeCredit: "Remove credit",
+    removeCreditAmount: "Amount to remove (CZK)",
+    removeCreditNote: "Why (required)",
+    removeCreditBalance: "Balance now: {balance}",
+    removeCreditConfirm: "Yes, remove it",
+    removeCreditDone: "Removed. Balance is now {balance}.",
+    removeCreditDoneBare: "Removed.",
+    removeCreditCancel: "Cancel",
     adminConfirmGrant:
       "Give this player the full admin panel — games, payments, players and rights?",
     adminConfirmRevoke: "Take away this player's admin rights?",

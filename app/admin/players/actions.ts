@@ -72,6 +72,70 @@ export async function grantCreditAction(
   return { status: "granted", balanceCzk: (data as number | null) ?? undefined };
 }
 
+/**
+ * REMOVE credit from a wallet (round 28, item 5b).
+ *
+ * THE SAME RPC, WITH THE SIGN FLIPPED — not a second write path. `grant_credit`
+ * already takes a signed delta, already floors the balance at zero under the
+ * player's advisory lock, and already refuses `redemption`. A separate
+ * remove-credit function would be a second implementation of "may this wallet
+ * absorb this movement", able to disagree with the first.
+ *
+ * `adjustment`, NOT `admin_grant`. The reason column is what a later reader
+ * sorts by, and calling a removal a grant makes the ledger lie in the one
+ * place it is consulted.
+ *
+ * THE NOTE IS REQUIRED AND THE FORM IS NOT WHERE THAT IS DECIDED. Taking money
+ * out of somebody's wallet is the most consequential thing in this panel, and
+ * `required` on an input is skipped by anything that is not a browser. Round 7
+ * made the same call for grants; this is the case that needed it more.
+ *
+ * THE FLOOR IS THE RPC'S. This action does not read the balance and then
+ * decide — a check here would be a snapshot, and two admins removing credit at
+ * once would each see enough. `CREDIT_NEGATIVE_BLOCKED` comes back from under
+ * the lock and is rendered as the product error it is.
+ */
+export async function removeCreditAction(
+  _prevState: GrantCreditState,
+  formData: FormData,
+): Promise<GrantCreditState> {
+  await requireAdmin();
+
+  const playerId = String(formData.get("playerId") ?? "");
+  const amount = Number(String(formData.get("amount") ?? "").trim());
+  const note = String(formData.get("note") ?? "").trim() || null;
+
+  if (!playerId) return { status: "error", message: toAdminErrorMessage("PLAYER_NOT_FOUND") };
+
+  /*
+   * THE FORM ASKS FOR A POSITIVE NUMBER TO REMOVE, so a negative one here is a
+   * hand-made POST or a confused admin — and silently negating it would remove
+   * money on a form that reads "remove 50" when the field said "-50". Refused
+   * rather than interpreted.
+   */
+  if (!Number.isInteger(amount) || amount <= 0) {
+    return { status: "error", message: toAdminErrorMessage("INVALID_CREDIT_DELTA") };
+  }
+  if (note === null || note.length < 3) {
+    return { status: "error", message: strings.admin.grantNoteRequired };
+  }
+
+  const supabase = await createServerSupabaseClient();
+  const { data, error } = await supabase.rpc("grant_credit", {
+    p_player_id: playerId,
+    p_delta_czk: -amount,
+    p_reason: "adjustment",
+    p_unmatched_payment: false,
+    p_note: note,
+  });
+
+  if (error) return { status: "error", message: toAdminErrorMessage(error.message) };
+
+  revalidatePath("/admin/players");
+  revalidatePath(`/admin/players/${playerId}`);
+  return { status: "granted", balanceCzk: (data as number | null) ?? undefined };
+}
+
 export interface AdminRightsState {
   status: "idle" | "changed" | "error";
   /** The flag as it stands after the change, straight from the RPC. */
