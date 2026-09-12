@@ -47,14 +47,20 @@ describe("format", () => {
   });
 
   it("renders a full date-time for surfaces without date context", () => {
-    expect(formatGameDateTime("2026-07-16T16:30:00Z")).toBe("Thu 16 Jul 18:30");
+    /*
+     * ~~"Thu 16 Jul 18:30"~~ — FULL NAMES SINCE ROUND 30, item 3. The
+     * abbreviations were the defect: a Czech reader got `ne 13 9`, which is
+     * not a date anybody reads. The assertion inverts rather than relaxing —
+     * the exact string is still pinned, it is just the right one now.
+     */
+    expect(formatGameDateTime("2026-07-16T16:30:00Z")).toBe("Thursday 16 July 18:30");
   });
 
   it("renders a time SPAN for the card and the detail page", () => {
     // REQ-GAME-007. The contract's own shape: kick-off plus the end time.
     expect(
       formatGameTimeSpan("2026-07-16T16:30:00Z", "2026-07-16T17:30:00Z"),
-    ).toBe("Thu 16 Jul 18:30–19:30");
+    ).toBe("Thursday 16 July 18:30–19:30");
   });
 
   it("uses an en dash in the span, not a hyphen", () => {

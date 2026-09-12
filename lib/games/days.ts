@@ -308,12 +308,20 @@ function dayHeading(
   locale: Locale,
 ): string {
   const date = new Date(`${key}T12:00:00Z`);
+  /*
+   * FULL NAMES SINCE ROUND 30. `short` rendered `ne 13 9` for a Czech reader —
+   * the owner's own example of the failure — and the abbreviations degrade
+   * worst in exactly the languages that need them most. One `format()` call
+   * rather than glued parts, so each language keeps its own punctuation: the
+   * Czech dot after the day, the Russian and Ukrainian comma. See
+   * `lib/format.ts`, which now does the same thing for the same reason.
+   */
   const full = capitalise(
     new Intl.DateTimeFormat(DATE_LOCALE[locale], {
       timeZone: DISPLAY_TIME_ZONE,
-      weekday: "short",
+      weekday: "long",
       day: "numeric",
-      month: "short",
+      month: "long",
     }).format(date),
     locale,
   );

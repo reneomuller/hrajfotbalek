@@ -77,3 +77,51 @@ describe("formatGameDateTime", () => {
     }
   });
 });
+
+/*
+ * ROUND 30, ITEM 3 — FULL day and month names, in every language, at a fixed
+ * date. These are the owner's own acceptance strings, asserted verbatim.
+ *
+ * PINNED EXACTLY, unlike the round-28 assertions above which deliberately test
+ * only weekday-and-month presence. The punctuation IS the requirement here —
+ * the Czech dot after the day, the Russian and Ukrainian comma — and a test
+ * that tolerates it drifting is not testing the thing that was asked for. If a
+ * Node upgrade moves ICU's composition, this SHOULD fail and be looked at.
+ */
+describe("full-name game dates (round 30, item 3)", () => {
+  // Sunday 13 September 2026, 18:30 in Prague.
+  const SUNDAY = "2026-09-13T16:30:00.000Z";
+
+  it("renders English as 'Sunday 13 September'", () => {
+    expect(formatGameDate(SUNDAY, "en")).toBe("Sunday 13 September");
+  });
+
+  it("renders Czech as 'Neděle 13. září' — WITH the dot", () => {
+    expect(formatGameDate(SUNDAY, "cs")).toBe("Neděle 13. září");
+  });
+
+  it("renders Russian with full names, genitive month and a comma", () => {
+    expect(formatGameDate(SUNDAY, "ru")).toBe("Воскресенье, 13 сентября");
+  });
+
+  it("renders Ukrainian with full names, genitive month and a comma", () => {
+    expect(formatGameDate(SUNDAY, "uk")).toBe("Неділя, 13 вересня");
+  });
+
+  it("never renders an abbreviated stub — 'ne 13 9' is the failure", () => {
+    /*
+     * THE OWNER'S OWN EXAMPLE OF THE BUG. Asserted as an absence across all
+     * four languages so no future switch back to `short` can pass quietly.
+     */
+    for (const locale of ["en", "cs", "ru", "uk"] as const) {
+      const rendered = formatGameDate(SUNDAY, locale);
+      expect(rendered.length, `${locale} looks abbreviated: ${rendered}`).toBeGreaterThan(12);
+      expect(rendered, `${locale} contains a numeric month`).not.toMatch(/\b9\b(?!\s*[.,])/);
+    }
+  });
+
+  it("keeps the 24-hour clock beside the full date", () => {
+    expect(formatGameDateTime(SUNDAY, "en")).toBe("Sunday 13 September 18:30");
+    expect(formatGameDateTime(SUNDAY, "cs")).toBe("Neděle 13. září 18:30");
+  });
+});

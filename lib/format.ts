@@ -45,6 +45,20 @@ function tagFor(locale?: DateLocale): string {
   return locale ? DATE_LOCALE[locale] : DATE_LOCALE.en;
 }
 
+/**
+ * First letter upper-cased, in the locale's own casing rules.
+ *
+ * CZECH AND THE TWO CYRILLIC LANGUAGES DO NOT CAPITALISE WEEKDAYS in running
+ * prose, and Intl correctly returns `neděle`. These strings are not prose —
+ * they are a heading and a fact row, where the product capitalises — and the
+ * owner asked for `Neděle` by name. `toLocaleUpperCase` rather than
+ * `toUpperCase` because Turkish dotted-i exists and costs nothing to respect.
+ */
+function capitaliseIn(value: string, locale?: DateLocale): string {
+  if (!value) return value;
+  return value.charAt(0).toLocaleUpperCase(tagFor(locale)) + value.slice(1);
+}
+
 function toDate(value: Date | string | number): Date {
   const date = value instanceof Date ? value : new Date(value);
   if (Number.isNaN(date.getTime())) {
@@ -71,20 +85,17 @@ export function formatGameTime(value: Date | string | number, locale?: DateLocal
 
 /** e.g. "Thu 3 Jul 18:30" — used where the date is not implied by context. */
 export function formatGameDateTime(value: Date | string | number, locale?: DateLocale): string {
-  const parts = new Intl.DateTimeFormat(tagFor(locale), {
-    timeZone: DISPLAY_TIME_ZONE,
-    weekday: "short",
-    day: "numeric",
-    month: "short",
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-  }).formatToParts(toDate(value));
-
-  const get = (type: Intl.DateTimeFormatPartTypes) =>
-    parts.find((p) => p.type === type)?.value ?? "";
-
-  return `${get("weekday")} ${get("day")} ${get("month")} ${get("hour")}:${get("minute")}`;
+  /*
+   * THE DATE IS INTL'S AND THE TIME IS OURS, joined with a space.
+   *
+   * Asking Intl for weekday+day+month+time in one call gets the punctuation
+   * right but also drags in each locale's date-time connector — Czech inserts
+   * ` v `, Russian ` в ` — and the product's own convention everywhere else is
+   * a bare `18:30` after the date. So the DATE half goes through
+   * `formatGameDate`, which owns the per-language punctuation, and the clock
+   * is appended in the 24-hour form this product has always used.
+   */
+  return `${formatGameDate(value, locale)} ${formatTime(value, locale)}`;
 }
 
 /**
@@ -117,25 +128,41 @@ export function formatTimeSpan(
 }
 
 /**
- * e.g. "Thu 3 Jul" — the game's DAY, with no time and no year.
+ * e.g. "Sunday 13 September" — the game's DAY, with no time and no year.
  *
- * The weekday is the part a player reads first — "which evening is this" — and
- * the year is noise on a page that only ever shows games in the next few weeks.
- * Distinct from `formatDate`, which carries the year and drops the weekday
- * because it is used on receipts and ledger rows, where the opposite is true.
+ * FULL NAMES SINCE ROUND 30, on the owner's instruction and after `ne 13 9`
+ * was what a Czech reader actually got. `short` gave three-letter stubs that
+ * abbreviate badly outside English — Czech `ne`, Russian `вс` — and a date a
+ * reader has to decode is not a date.
+ *
+ * THE PUNCTUATION IS INTL'S, NOT OURS, and that is the whole reason this is
+ * one `format()` call rather than parts glued with spaces. Each language
+ * composes a weekday-day-month differently and getting it wrong is exactly the
+ * kind of thing a non-native reader notices first:
+ *
+ *   en  Sunday 13 September          (no comma)
+ *   cs  neděle 13. září              (the dot after the day is REQUIRED)
+ *   ru  воскресенье, 13 сентября     (comma, and the month is genitive)
+ *   uk  неділя, 13 вересня           (comma, genitive)
+ *
+ * Hand-assembling `${weekday} ${day} ${month}` produces `neděle 13 září` and
+ * `воскресенье 13 сентября` — both wrong, both plausible-looking. The ICU data
+ * already knows; ask it for the whole string.
+ *
+ * The year is noise on a page that only ever shows games in the next few
+ * weeks. `formatDate` is the opposite trade — year, no weekday — because it is
+ * used on receipts and ledger rows.
  */
 export function formatGameDate(value: Date | string | number, locale?: DateLocale): string {
-  const parts = new Intl.DateTimeFormat(tagFor(locale), {
-    timeZone: DISPLAY_TIME_ZONE,
-    weekday: "short",
-    day: "numeric",
-    month: "short",
-  }).formatToParts(toDate(value));
-
-  const get = (type: Intl.DateTimeFormatPartTypes) =>
-    parts.find((p) => p.type === type)?.value ?? "";
-
-  return `${get("weekday")} ${get("day")} ${get("month")}`;
+  return capitaliseIn(
+    new Intl.DateTimeFormat(tagFor(locale), {
+      timeZone: DISPLAY_TIME_ZONE,
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+    }).format(toDate(value)),
+    locale,
+  );
 }
 
 /** e.g. "3 Jul 2026" — date only. */

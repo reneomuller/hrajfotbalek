@@ -1735,6 +1735,11 @@ export const strings = {
     photoRemoved: "Photo removed",
     photoRemoveConfirm:
       "Remove this player's photo? The image is deleted from storage and cannot be recovered.",
+    /* Round 30, item 2 — the banner's twin. Admin, English only. */
+    coverRemove: "Remove banner",
+    coverRemoved: "Banner removed",
+    coverRemoveConfirm:
+      "Remove this player's banner? The image is deleted from storage and cannot be recovered.",
     siteSettingUnknownKey: "That setting does not exist.",
 
     /* --- guests (round 11, part A) -------------------------------------------

@@ -5,6 +5,7 @@ import { AdminRightsButton } from "@/components/admin/AdminRightsButton";
 import { GrantCreditForm } from "@/components/admin/GrantCreditForm";
 import { RemoveCreditForm } from "@/components/admin/RemoveCreditForm";
 import { RemovePhotoButton } from "@/components/admin/RemovePhotoButton";
+import { RemoveCoverButton } from "@/components/admin/RemoveCoverButton";
 import { requireAdmin } from "@/lib/auth/requireAdmin";
 import { getAdminPlayer } from "@/lib/admin/queries";
 import { formatCzk } from "@/lib/format";
@@ -236,14 +237,29 @@ export default async function AdminPlayerPage({
           player's advisory lock, where two concurrent removals can be made to
           agree.
         */}
-        <div className="flex flex-wrap items-start gap-x-5 gap-y-3 pt-4">
+        {/*
+          CENTRED BETWEEN THEIR DIVIDERS (round 30, item 2). The two wallet
+          controls are one pair — the same act with a sign — and left-aligning
+          them put the pair against one edge of a band that runs the full width,
+          which reads as two unrelated buttons that happen to be adjacent.
+          `justify-center` on the row and `items-start` retained so an OPEN form
+          grows downward without dragging its sibling's baseline with it.
+        */}
+        <div className="flex flex-wrap items-start justify-center gap-x-5 gap-y-3 py-4">
           <GrantCreditForm playerId={player.id} />
           <RemoveCreditForm playerId={player.id} balanceCzk={balanceCzk} />
         </div>
 
-        {player.photo_path && (
-          <div className="border-t border-hairline pt-4">
-            <RemovePhotoButton playerId={player.id} />
+        {/*
+          THE TWO IMAGES, SIDE BY SIDE (round 30, item 2). Each renders only
+          when there is something to remove, so a player with a photo and no
+          banner sees one button rather than one enabled and one dead. They
+          share a divider because they are one kind of act.
+        */}
+        {(player.photo_path || player.cover_path) && (
+          <div className="flex flex-wrap items-center gap-3 border-t border-hairline pt-4">
+            {player.photo_path && <RemovePhotoButton playerId={player.id} />}
+            {player.cover_path && <RemoveCoverButton playerId={player.id} />}
           </div>
         )}
       </section>

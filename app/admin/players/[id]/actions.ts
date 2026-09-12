@@ -27,6 +27,52 @@ export interface PlayerAdminState {
 }
 
 /**
+ * Admin moderation of a player's BANNER (round 30, item 2).
+ *
+ * ITS SIBLING'S SHAPE, DELIBERATELY. `removePhotoAction` below does the same
+ * three things in the same order — RPC clears the row and returns the path,
+ * the service-role client deletes the object, a storage failure is logged and
+ * never thrown — and the two reading alike is the point: they are one act
+ * against two columns, and a reader comparing them should find nothing to
+ * compare.
+ *
+ * THE OBJECT DELETE IS BEST-EFFORT, for the same reason as the avatar's: the
+ * REFERENCE is already gone, which is the half that matters for moderation,
+ * and a surviving object in the bucket is unreachable from the product.
+ */
+export async function removeCoverAction(
+  _prev: PlayerAdminState,
+  formData: FormData,
+): Promise<PlayerAdminState> {
+  await requireAdmin();
+
+  const playerId = String(formData.get("playerId") ?? "");
+  if (!playerId) return { status: "error", message: toAdminErrorMessage("PLAYER_NOT_FOUND") };
+
+  const supabase = await createServerSupabaseClient();
+  const { data: path, error } = await supabase.rpc("remove_profile_cover", {
+    p_player_id: playerId,
+  });
+
+  if (error) return { status: "error", message: toAdminErrorMessage(error.message) };
+
+  if (typeof path === "string" && path.length > 0) {
+    const service = createServiceRoleSupabaseClient();
+    const { error: storageError } = await service.storage
+      .from(PROFILE_PHOTOS_BUCKET)
+      .remove([path]);
+
+    if (storageError) {
+      console.error("profile cover object removal failed", storageError.message);
+    }
+  }
+
+  revalidatePath(`/admin/players/${playerId}`);
+  revalidatePath("/admin/players");
+  return { status: "done" };
+}
+
+/**
  * Removes a player's profile photo (REQ-PROF-005).
  *
  * DEFERRED FROM PHASE 7 AND LANDING HERE. The RPC shipped in migration 24 with

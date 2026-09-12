@@ -1366,6 +1366,13 @@ export interface Database {
       };
 
       /** Admin-only moderation. Returns the path the caller must delete. */
+      /**
+       * Round 30 item 2 — the ADMIN's banner removal, subject named
+       * explicitly. Not `clear_cover_photo()`, which takes no argument and
+       * clears the CALLER's own. Returns the storage path to delete, or null
+       * when there was nothing to remove.
+       */
+      remove_profile_cover: { Args: { p_player_id: string }; Returns: string | null };
       remove_profile_photo: {
         Args: { p_player_id: string };
         Returns: string | null;
