@@ -60,26 +60,33 @@ export async function CommunityPanel({
         `card`.
       */
       /*
-        THE GAME PASS BANNER'S TREATMENT (round 25, item 4).
+        ~~THE GAME PASS BANNER'S TREATMENT (round 25, item 4)~~ — REVERSED
+        (round 30, item 8), which makes this a reversal of a reversal. The
+        lineage, because two flips without one is how a third happens:
 
-        ~~`.lifted` — `hairline-strong` on `surface-raised`, the neutral panel
-        edge sampled off p01, on the reasoning that "a volt edge on a panel
-        that is not selected, not focused and not a call to action spends the
-        accent on furniture".~~
+          REDESIGN v2 ROUND 3 replaced `rounded-[20px] border-hairline-volt
+            bg-surface` with `.lifted rounded-card` — the neutral panel edge
+            sampled off p01 — on the reasoning that "a volt edge on a panel
+            that is not selected, not focused and not a call to action spends
+            the accent on furniture".
+          ROUND 25 (item 4) overruled that premise: this IS a call to action,
+            every tile is a link out, and it was the only invitation left on
+            the page once round 23 removed the hero's button. It borrowed the
+            Game Pass banner's `border-hairline-volt bg-volt/[.10]`.
+          ROUND 30 (item 8) — THE OWNER'S RULING: visual consistency wins.
 
-        THE OWNER OVERRULES THAT FOR THIS PANEL, and the premise it rested on
-        is the part that moved: this IS a call to action. Every one of its
-        three tiles is a link out to a place the product wants people to go,
-        and it is the only invitation on the page now that the hero's own
-        button is gone (round 23, item 4). The Game Pass banner is the
-        product's existing drawing of exactly that — an outlined panel with a
-        semi-transparent volt wash — so this borrows it rather than inventing a
-        third treatment.
+        ROUND 25'S ARGUMENT IS NOT REFUTED and does not need to be. It was a
+        claim about what this panel DOES; the owner's is a claim about how the
+        page should READ, and a page whose three side-by-side panels are drawn
+        two different ways reads as a mistake before it reads as emphasis. The
+        accent is spent elsewhere.
 
-        `border-hairline-volt bg-volt/[.10]` are the banner's own values, not
-        approximations of them: one accent, drawn the same way twice.
+        `.lifted` is the tokenized treatment globals.css already writes once
+        for exactly this job — `hairline-strong` on `surface-raised` — so this
+        is the same edge `FaqPanel` and `PlayerOfMonthPanel` carry, not a
+        third spelling of it. Content and logos are untouched.
       */
-      className="flex min-w-[270px] flex-1 flex-col rounded-card border border-hairline-volt bg-volt/[.10] p-[22px]"
+      className="lifted flex min-w-[270px] flex-1 flex-col rounded-card p-[22px]"
     >
       {/* Uppercase, as p01 draws it — §1.4 marks the display steps "Upper". */}
       <h3

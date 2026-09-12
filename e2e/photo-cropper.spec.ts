@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { COVER_HEIGHT_PX, COVER_WIDTH_PX } from "../lib/storage/avatar";
 import { PNG } from "pngjs";
 import { LOCALE_COOKIE } from "../lib/i18n/locales";
 import { players, serviceClient, signInAs } from "./helpers/session";
@@ -80,12 +81,20 @@ test("a tall photo is framed by the player, not by the middle of the file", asyn
     await expect(cropper, "choosing a file no longer opens the cropper").toBeVisible();
 
     /*
-     * THE FRAME IS THE OUTPUT'S ASPECT, exactly — 3:1 for the cover. A preview
-     * at any other shape is a preview of something else, and the whole value
-     * of a cropper is that what you see is what is stored.
+     * THE FRAME IS THE OUTPUT'S ASPECT, exactly. A preview at any other shape
+     * is a preview of something else, and the whole value of a cropper is that
+     * what you see is what is stored.
+     *
+     * ~~`toBeCloseTo(3, 1)`~~ — DERIVED FROM THE CONSTANT SINCE ROUND 30,
+     * item 7, and that is the fix rather than a new number. A literal here is
+     * a second place the aspect is written down, and it was the one that went
+     * stale: the banner stopped being 3:1 when round 28 made it full-bleed,
+     * this spec kept asserting 3, and the frame went on promising a shape the
+     * page did not render. `crop-frames.spec.ts` ties the constant to what the
+     * browser actually paints; this ties the frame to the constant.
      */
     const frame = await page.getByTestId("photo-cropper-frame").boundingBox();
-    expect(frame!.width / frame!.height).toBeCloseTo(3, 1);
+    expect(frame!.width / frame!.height).toBeCloseTo(COVER_WIDTH_PX / COVER_HEIGHT_PX, 1);
 
     /*
      * DRAG THE IMAGE DOWN, which moves the FRAME up the photograph: the top

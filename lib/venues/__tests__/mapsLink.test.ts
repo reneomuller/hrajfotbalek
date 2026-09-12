@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import {
   isMapsUrl,
+  parseCoordinatePair,
   isShortMapsUrl,
   parseMapsUrl,
   resolveMapsShareLink,
@@ -224,5 +225,58 @@ describe("resolveMapsShareLink", () => {
 
     expect(out).toEqual({ ok: false, reason: "unparseable" });
     expect(fetchImpl.mock.calls.length).toBeLessThanOrEqual(5);
+  });
+});
+
+/*
+ * ROUND 30, ITEM 6 — a pasted coordinate pair.
+ *
+ * This is what Google Maps puts on the clipboard on a long-press or a
+ * right-click, and it is the most precise input the field can receive. No
+ * network, no ambiguity — but the DETECTION has to be strict, because the near
+ * miss is a real address.
+ */
+describe("parseCoordinatePair", () => {
+  it("accepts the shape Maps copies, with and without the space", () => {
+    expect(parseCoordinatePair("50.0755, 14.4378")).toEqual({ lat: 50.0755, lng: 14.4378 });
+    expect(parseCoordinatePair("50.0755,14.4378")).toEqual({ lat: 50.0755, lng: 14.4378 });
+    expect(parseCoordinatePair("  50.0755 , 14.4378  ")).toEqual({ lat: 50.0755, lng: 14.4378 });
+  });
+
+  it("accepts a southern or western hemisphere", () => {
+    /*
+     * Prague is positive/positive, and hard-coding that is the kind of thing
+     * that works until the first fixture abroad.
+     */
+    expect(parseCoordinatePair("-33.8688, 151.2093")).toEqual({ lat: -33.8688, lng: 151.2093 });
+    expect(parseCoordinatePair("51.5074, -0.1278")).toEqual({ lat: 51.5074, lng: -0.1278 });
+  });
+
+  it("REFUSES A POSTCODE-SHAPED PLACE NAME — the reason a decimal point is required", () => {
+    /*
+     * `Praha 3, 130 00` is two comma-separated numbers too. A looser pattern
+     * would silently turn an address into a pin in the Atlantic, which is
+     * exactly the class of failure this field already had once.
+     */
+    for (const name of ["Praha 3, 130 00", "50, 14", "Sportovní hala, 3", "1,2"]) {
+      expect(parseCoordinatePair(name), `${name} was read as coordinates`).toBeNull();
+    }
+  });
+
+  it("refuses out-of-range and null-island pairs, like the URL parser does", () => {
+    expect(parseCoordinatePair("91.5000, 14.4378")).toBeNull();
+    expect(parseCoordinatePair("50.0755, 181.0001")).toBeNull();
+    expect(parseCoordinatePair("0.0, 0.0")).toBeNull();
+  });
+
+  it("refuses a place name and a URL, which take the other two paths", () => {
+    expect(parseCoordinatePair("Praha 3 Pražačka")).toBeNull();
+    expect(parseCoordinatePair("https://maps.app.goo.gl/AbCdEf123")).toBeNull();
+  });
+
+  it("round-trips through toMapQuery into what a resolved link stores", () => {
+    // One stored format, whichever way the location arrived.
+    const pair = parseCoordinatePair("50.0755, 14.4378")!;
+    expect(toMapQuery(pair)).toBe("50.0755,14.4378");
   });
 });

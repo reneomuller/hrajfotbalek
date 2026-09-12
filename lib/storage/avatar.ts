@@ -32,25 +32,46 @@ export const AVATAR_SIDE_PX = 512;
  * player sees at upload time what the page will show, rather than discovering
  * that `object-cover` took the middle of their photograph.
  */
+/*
+ * THE CROP FRAME IS THE RENDERED BAND'S ASPECT, MEASURED (round 30, item 7).
+ *
+ * ~~1200x400, a 3:1 strip.~~ The banner has not rendered at 3:1 since round 9
+ * and has never rendered at 3:1 since round 28 made it full-bleed: measured at
+ * the canonical 390px viewport it is **390x341, or 1.144:1**. A 3:1 crop
+ * dropped into a 1.14:1 box under `object-cover` has its SIDES cut off — so a
+ * player framed their banner carefully and the page showed the middle third of
+ * what they framed. That is the exact surprise cropping this constant exists
+ * to prevent, and it was the constant causing it.
+ *
+ * 1200 x 1049 is 1.1439; the band is 1.1437. `e2e/crop-frames.spec.ts` pins
+ * the two together so they cannot drift apart again.
+ *
+ * THE ASPECT IS VIEWPORT-DEPENDENT AND 390 IS THE REFERENCE, stated because it
+ * is the honest limit of "exactly match": the band's HEIGHT is fixed and its
+ * width is the shell's, so a desktop reader sees a wider box. The product is
+ * mobile-first, every spec runs at 390, and matching there is matching where
+ * the photograph is actually looked at.
+ */
 export const COVER_WIDTH_PX = 1200;
-export const COVER_HEIGHT_PX = 400;
+export const COVER_HEIGHT_PX = 1049;
 
 /**
  * The venue photograph's output (round 30, item 1).
  *
- * 16:9, NOT THE COVER'S 3:1. The banner is a thin strip behind a name; a pitch
- * photograph is a scene, and 3:1 would slice the goalposts off the top and
- * bottom of almost every phone photo taken at a football ground. The hero band
- * it lands in renders at roughly 1.9:1 and `object-cover` takes the middle, so
- * a 16:9 crop loses a sliver at the sides rather than the thing being
- * photographed.
+ * ~~16:9.~~ **1.875:1, WHICH IS WHAT THE BAND ACTUALLY RENDERS** (round 30,
+ * item 7) — measured at the canonical 390px viewport as 390x208. 16:9 was
+ * close enough to look right and wrong enough to crop: a frame taller than its
+ * surface means `object-cover` quietly takes a slice off the top and bottom of
+ * whatever was composed in it.
  *
- * THE CROP FRAME IS THIS ASPECT, exactly — which is the point of cropping in
- * the browser at all: the organizer standing at the pitch sees what the page
- * will show instead of discovering later that the middle was taken.
+ * THE CROP FRAME IS THE SURFACE'S ASPECT, EXACTLY, which is the entire point
+ * of cropping in the browser: the organizer standing at the pitch sees what
+ * the page will show rather than discovering later that the middle was taken.
+ * `e2e/crop-frames.spec.ts` measures the rendered band and fails if these
+ * numbers and it ever disagree.
  */
-export const VENUE_WIDTH_PX = 1600;
-export const VENUE_HEIGHT_PX = 900;
+export const VENUE_WIDTH_PX = 1500;
+export const VENUE_HEIGHT_PX = 800;
 
 export function extensionForMimeType(mimeType: string): string | null {
   return ACCEPTED_IMAGE_TYPES[mimeType] ?? null;

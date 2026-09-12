@@ -153,49 +153,52 @@ test("the FAQ renders the owner's four questions and answers, in order", async (
 
   });
 
-test("the community panel wears the Game Pass banner's treatment", async ({
+test("the community panel wears its NEIGHBOURS' treatment, not the banner's", async ({
   page,
   context,
 }) => {
+  /*
+   * ~~"the community panel wears the Game Pass banner's treatment"~~ —
+   * REVERSED in round 30, item 8, and the assertion inverts rather than being
+   * deleted. Round 25's argument — this is the only invitation left on the
+   * page, so it earns the accent — is NOT refuted; the owner ruled that visual
+   * consistency wins, and a page whose three side-by-side panels are drawn two
+   * ways reads as a mistake before it reads as emphasis.
+   *
+   * ASSERTED AGAINST A SIBLING rather than a literal colour, for exactly the
+   * reason round 25 asserted against the banner: the CLAIM is that these
+   * panels are drawn the same way, and a pinned rgba string would keep passing
+   * while the two silently diverged on some other property.
+   */
   await context.addCookies([
     { name: LOCALE_COOKIE, value: "en", domain: "localhost", path: "/" },
   ]);
   await page.goto("/", { waitUntil: "networkidle" });
   await settle(page);
 
-  const panel = page.getByTestId("community-panel");
-  const style = await panel.evaluate((el) => {
-    const s = getComputedStyle(el);
-    return { border: s.borderTopColor, background: s.backgroundColor, width: s.borderTopWidth };
-  });
+  const read = async (testId: string) =>
+    page.getByTestId(testId).evaluate((el) => {
+      const s = getComputedStyle(el);
+      return { border: s.borderTopColor, background: s.backgroundColor };
+    });
 
-  /*
-   * VOLT ON A VOLT WASH, which is the Game Pass banner's own treatment rather
-   * than an approximation of it — `border-hairline-volt` and `bg-volt/[.10]`
-   * are the banner's literal classes. Asserted as "the accent is present"
-   * rather than as an exact rgba string, because the token's alpha is a
-   * design decision that may move and the CLAIM is that this panel and that
-   * banner are drawn the same way.
-   */
-  expect(style.border, `border ${style.border}`).toMatch(/200,\s*255,\s*0/);
-  expect(style.background, `background ${style.background}`).toMatch(/200,\s*255,\s*0/);
-  expect(parseFloat(style.width)).toBeGreaterThan(0);
+  const panel = await read("community-panel");
+  const sibling = await read("faq-panel");
 
-  // …and the same treatment the pass banner has, read off the pass banner.
-  await page.goto("/games", { waitUntil: "networkidle" });
-  const banner = await page.getByTestId("pass-panel").evaluate((el) => {
-    const s = getComputedStyle(el);
-    return { border: s.borderTopColor, background: s.backgroundColor };
-  });
-  expect(style.border).toBe(banner.border);
-  expect(style.background).toBe(banner.background);
+  // NO VOLT. The accent is spent elsewhere on this page now.
+  expect(panel.border, `border ${panel.border}`).not.toMatch(/200,\s*255,\s*0/);
+  expect(panel.background, `background ${panel.background}`).not.toMatch(/200,\s*255,\s*0/);
 
-  // THE LOGOS, 25% LARGER: 44px was the old size, so 55 is the new one.
-  await page.goto("/", { waitUntil: "networkidle" });
-  const sizes = await panel.evaluate((el) =>
-    [...el.querySelectorAll("img")].map((img) => Math.round(img.getBoundingClientRect().width)),
-  );
+  // And drawn exactly as the panel beside it is.
+  expect(panel.border).toBe(sibling.border);
+  expect(panel.background).toBe(sibling.background);
+
+  // THE LOGOS ARE UNCHANGED — round 25's other half stands.
+  const sizes = await page
+    .getByTestId("community-panel")
+    .evaluate((el) =>
+      [...el.querySelectorAll("img")].map((img) => Math.round(img.getBoundingClientRect().width)),
+    );
   expect(sizes, `logo widths ${sizes.join(", ")}`).toHaveLength(3);
   for (const size of sizes) expect(size).toBe(55);
-
-  });
+});

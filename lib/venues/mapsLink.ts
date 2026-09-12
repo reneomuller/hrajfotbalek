@@ -202,6 +202,35 @@ function decodeHtml(value: string): string {
     .replace(/\\u0026/gi, "&");
 }
 
+/**
+ * A bare coordinate pair, pasted straight in (round 30, item 6).
+ *
+ * WHAT GOOGLE MAPS PUTS ON THE CLIPBOARD when you long-press a spot on the
+ * phone, or right-click one on the desktop, is exactly this: `50.0755, 14.4378`
+ * — two decimal numbers and a comma. It is the most precise thing a person can
+ * hand us and it needs no network at all, so it is tried before anything else.
+ *
+ * DETECTION IS BY SHAPE, and the shape is deliberately strict. A DECIMAL POINT
+ * IS REQUIRED in both halves, which is what keeps this from swallowing real
+ * place names: a venue called `Praha 3, 130 00` is two comma-separated numbers
+ * too, and a looser pattern would silently turn a postcode into a pin in the
+ * Atlantic. Whole-number coordinates are vanishingly rare in a share and a
+ * place name is the safer reading of them.
+ *
+ * NORTH-EAST ONLY IS NOT ASSUMED. Prague is positive/positive, but a minus
+ * sign is accepted on either half — hard-coding the hemisphere is the kind of
+ * thing that works until the first tour fixture.
+ */
+const COORDINATE_PAIR = /^\s*(-?\d{1,3}\.\d+)\s*,\s*(-?\d{1,3}\.\d+)\s*$/;
+
+export function parseCoordinatePair(value: string): Coordinates | null {
+  const match = value.match(COORDINATE_PAIR);
+  if (!match) return null;
+
+  const coords = { lat: Number(match[1]), lng: Number(match[2]) };
+  return validCoordinates(coords) ? coords : null;
+}
+
 export type ResolveOutcome =
   | { ok: true; mapQuery: string; from: "coordinates" | "place" }
   | { ok: false; reason: "not-a-link" | "unreachable" | "unparseable" };

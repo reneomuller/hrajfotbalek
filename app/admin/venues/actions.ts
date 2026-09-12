@@ -2,7 +2,12 @@
 
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/auth/requireAdmin";
-import { isMapsUrl, resolveMapsShareLink } from "@/lib/venues/mapsLink";
+import {
+  isMapsUrl,
+  parseCoordinatePair,
+  resolveMapsShareLink,
+  toMapQuery,
+} from "@/lib/venues/mapsLink";
 import { toAdminErrorMessage } from "@/lib/admin/errors";
 import type { DeleteState } from "@/app/admin/games/[id]/actions";
 import { createServerSupabaseClient } from "@/lib/supabase/clients";
@@ -27,6 +32,17 @@ async function resolveMapField(
 ): Promise<{ ok: true; value: string | null } | { ok: false; message: string }> {
   const value = raw.trim();
   if (!value) return { ok: true, value: null };
+
+  /*
+   * COORDINATES FIRST, AND WITHOUT A NETWORK (round 30, item 6). This is what
+   * Maps copies on a long-press, it is the most precise thing anybody can hand
+   * us, and it needs no round trip — so it is tried before the link path and
+   * before search. Normalised through `toMapQuery` so a pasted pair and a
+   * resolved link are stored in exactly one format.
+   */
+  const pasted = parseCoordinatePair(value);
+  if (pasted) return { ok: true, value: toMapQuery(pasted) };
+
   if (!isMapsUrl(value)) return { ok: true, value };
 
   const outcome = await resolveMapsShareLink(value);
