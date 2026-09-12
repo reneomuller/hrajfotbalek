@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Icon } from "@/components/Icon";
 import { getStrings } from "@/lib/i18n/server";
+import { venueAddressLine } from "@/lib/venues/mapsHref";
 import { venuePhotoUrl } from "@/lib/storage/avatar";
 import type { Database } from "@/lib/types/database";
 
@@ -76,10 +77,17 @@ export async function GameHero({
    * from the name, because a venue whose map query IS its name would otherwise
    * print the same words twice at two sizes.
    */
-  const address =
-    venueRow?.map_query && venueRow.map_query.trim() !== venue.trim()
-      ? venueRow.map_query
-      : null;
+  /*
+   * `venueAddressLine` DECIDES, not this component (round 31, item 1). The
+   * old expression printed whatever was in `map_query` — which after round 30
+   * meant a coordinate pair, and for two production rows meant a raw
+   * `https://maps.app.goo.gl/…` URL, both shown to players as though they were
+   * streets. Coordinates and URLs are not addresses; the pin is on the button.
+   */
+  const address = venueAddressLine({
+    name: venueRow?.name ?? venue,
+    mapQuery: venueRow?.map_query ?? null,
+  });
 
   return (
     <header

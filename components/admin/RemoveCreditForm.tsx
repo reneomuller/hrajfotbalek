@@ -3,6 +3,7 @@
 import { useActionState, useState } from "react";
 import { removeCreditAction, type GrantCreditState } from "@/app/admin/players/actions";
 import { formatCzk } from "@/lib/format";
+import { adminWallet } from "@/lib/admin/credits";
 import { strings } from "@/lib/strings";
 
 const INITIAL: GrantCreditState = { status: "idle" };
@@ -40,6 +41,7 @@ export function RemoveCreditForm({
   balanceCzk: number;
 }) {
   const [state, formAction] = useActionState(removeCreditAction, INITIAL);
+  const wallet = adminWallet(balanceCzk);
   const [open, setOpen] = useState(false);
   const [confirming, setConfirming] = useState(false);
 
@@ -61,7 +63,21 @@ export function RemoveCreditForm({
       <input type="hidden" name="playerId" value={playerId} />
 
       <p className="m-0 text-[10px] uppercase tracking-eyebrow text-muted">
-        {strings.admin.removeCreditBalance.replace("{balance}", formatCzk(balanceCzk))}
+        {/*
+          THE BALANCE IS SHOWN IN CREDITS (round 31, item 3) — the same unit
+          the field below takes and the player reads. The exact crowns follow
+          only when the balance does not divide cleanly, which on production
+          today is three wallets out of four.
+        */}
+        {strings.admin.removeCreditBalance.replace(
+          "{balance}",
+          `${wallet.credits} credits`,
+        )}
+        {wallet.remainderCzk !== null && (
+          <span className="ml-2 normal-case tracking-normal text-faint">
+            {strings.admin.walletExactCzk.replace("{czk}", formatCzk(wallet.remainderCzk))}
+          </span>
+        )}
       </p>
 
       <div className="flex flex-wrap items-end gap-3">
@@ -105,7 +121,7 @@ export function RemoveCreditForm({
           {typeof state.balanceCzk === "number"
             ? strings.admin.removeCreditDone.replace(
                 "{balance}",
-                formatCzk(state.balanceCzk),
+                `${adminWallet(state.balanceCzk).credits} credits`,
               )
             : strings.admin.removeCreditDoneBare}
         </p>

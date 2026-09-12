@@ -9,6 +9,7 @@ import { RemoveCoverButton } from "@/components/admin/RemoveCoverButton";
 import { requireAdmin } from "@/lib/auth/requireAdmin";
 import { getAdminPlayer } from "@/lib/admin/queries";
 import { formatCzk } from "@/lib/format";
+import { adminWallet } from "@/lib/admin/credits";
 import { initials } from "@/lib/roster/initials";
 import { avatarUrl } from "@/lib/storage/avatar";
 import { strings } from "@/lib/strings";
@@ -154,8 +155,32 @@ export default async function AdminPlayerPage({
             data-testid="admin-player-balance"
             className="font-display text-[30px] leading-none text-volt"
           >
-            {formatCzk(balanceCzk)}
+            {/*
+              THE WALLET READS IN CREDITS, EXACTLY AS THE PLAYER SEES IT
+              (round 31, item 3). It said crowns while the player's own account
+              page said credits — one wallet, two units, and the organizer
+              doing the division by hand to check they matched.
+            */}
+            {adminWallet(balanceCzk).credits}
           </div>
+          {adminWallet(balanceCzk).remainderCzk !== null && (
+            /*
+              THE RAGGED CASE, HANDLED RATHER THAN ROUNDED. The count above is
+              a FLOOR, so when a balance does not divide into whole credits the
+              difference is real money and has to be visible — three of four
+              production wallets are in this state, left by arbitrary-CZK
+              grants made before the credits ruling existed.
+            */
+            <div
+              data-testid="admin-player-balance-exact"
+              className="mt-1 text-[11px] leading-tight text-faint"
+            >
+              {strings.admin.walletExactCzk.replace(
+                "{czk}",
+                formatCzk(adminWallet(balanceCzk).remainderCzk!),
+              )}
+            </div>
+          )}
           <div className="mt-[6px] text-eyebrow font-semibold uppercase leading-tight text-muted">
             {strings.admin.playerBalance}
           </div>

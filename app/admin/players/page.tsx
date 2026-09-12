@@ -5,8 +5,8 @@ import { filterPlayers } from "@/lib/admin/playerSearch";
 import { initials } from "@/lib/roster/initials";
 import { ExportCsvLink } from "@/components/admin/ExportCsvLink";
 import { strings } from "@/lib/strings";
+import { creditsFromCzk } from "@/lib/admin/credits";
 import { creditsLabel } from "@/lib/pass/credits";
-import { PASS_REFERENCE_PRICE_CZK } from "@/lib/pass/queries";
 
 /**
  * A wallet balance as whole credits (round 14, item 9).
@@ -21,9 +21,12 @@ import { PASS_REFERENCE_PRICE_CZK } from "@/lib/pass/queries";
  * asking for the reader's locale here would give a Czech plural rule over
  * English words.
  */
-function creditsFor(balanceCzk: number): number {
-  return Math.floor(Math.max(0, balanceCzk) / PASS_REFERENCE_PRICE_CZK);
-}
+/*
+ * ~~A LOCAL `creditsFor`.~~ It is `creditsFromCzk` in `lib/admin/credits.ts`
+ * since round 31, item 3 — this file had its own copy of the division, which
+ * is the second place the credits rule was written down and would have been
+ * the one left behind on the day the rate moves.
+ */
 
 export const metadata = { title: strings.admin.playersTitle };
 
@@ -215,10 +218,10 @@ export default async function AdminPlayersPage({
                   <span
                     data-testid="player-balance"
                     data-balance={player.balanceCzk}
-                    data-credits={creditsFor(player.balanceCzk)}
+                    data-credits={creditsFromCzk(player.balanceCzk)}
                     className="font-semibold text-volt"
                   >
-                    {creditsLabel(creditsFor(player.balanceCzk), "en", strings)}
+                    {creditsLabel(creditsFromCzk(player.balanceCzk), "en", strings)}
                   </span>
                   <span className="text-muted">
                     {strings.admin.bookingsLabel} {player.bookingCount}

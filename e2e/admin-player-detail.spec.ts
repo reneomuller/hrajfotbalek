@@ -83,7 +83,8 @@ test("a credit grant without a note is refused on the server", async ({ page, co
 
   await page.goto(`/admin/players/${id}`, { waitUntil: "networkidle" });
   await page.getByTestId("grant-credit-open").click();
-  await page.getByTestId("grant-amount").fill("150");
+  // CREDITS since round 31, item 3 — the field takes whole games, not crowns.
+  await page.getByTestId("grant-amount").fill("1");
 
   // Defeat the browser gate so the submission actually reaches the action —
   // the point is that the SERVER refuses, not that the attribute exists.
@@ -111,7 +112,12 @@ test("a credit grant with a note writes a ledger row carrying it", async ({
 
   await page.goto(`/admin/players/${id}`, { waitUntil: "networkidle" });
   await page.getByTestId("grant-credit-open").click();
-  await page.getByTestId("grant-amount").fill("50");
+  /*
+   * TWO CREDITS, WHICH MUST LAND AS 300 CZK — the owner's own acceptance
+   * numbers for round 31 item 3. The field speaks credits; the ledger keeps
+   * crowns, and this is the assertion that ties the two rates together.
+   */
+  await page.getByTestId("grant-amount").fill("2");
   await page.getByTestId("grant-note").fill(note);
   await page.getByTestId("grant-submit").click();
 
@@ -123,7 +129,7 @@ test("a credit grant with a note writes a ledger row carrying it", async ({
         .from("credit_ledger")
         .select("delta_czk,reason")
         .eq("player_id", id)
-        .eq("delta_czk", 50)
+        .eq("delta_czk", 300)
         .eq("reason", "admin_grant");
       return (data ?? []).length;
     })

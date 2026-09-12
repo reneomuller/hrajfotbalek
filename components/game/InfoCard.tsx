@@ -2,6 +2,7 @@ import { Icon } from "@/components/Icon";
 import { CardBadges } from "@/components/game/CardBadges";
 import { SkillBadges } from "@/components/game/SkillBadges";
 import { formatGameDate, formatTimeSpan } from "@/lib/format";
+import { venueMapsHref } from "@/lib/venues/mapsHref";
 import { LanguagePill } from "@/components/game/LanguagePill";
 import { resolveDurationMinutes } from "@/lib/games/duration";
 import { gameLanguageOf } from "@/lib/games/language";
@@ -65,15 +66,23 @@ export async function InfoCard({
    * the ground and its pitch, through the same `venueDisplayName` the card and
    * the hero use, so three surfaces cannot spell one place three ways.
    */
-  venueRow: Pick<VenueRow, "map_query" | "pitch_name"> | null;
+  venueRow: Pick<VenueRow, "map_query" | "map_url" | "name" | "pitch_name"> | null;
   endsAt: Date;
 }) {
   const t = await getStrings();
   const locale = await getLocale();
 
-  const mapHref = `https://maps.google.com/?q=${encodeURIComponent(
-    venueRow?.map_query || game.venue,
-  )}`;
+  /*
+   * WHERE THE BUTTON GOES IS `venueMapsHref`'S DECISION, not this component's
+   * (round 31, item 1). It was `maps.google.com/?q=<map_query>` — which for a
+   * coordinate row opened Google labelled `50.092534,14.475315`, and for the
+   * two legacy rows holding a raw share URL searched Maps for a URL as words.
+   */
+  const mapHref = venueMapsHref({
+    name: venueRow?.name ?? game.venue,
+    mapQuery: venueRow?.map_query ?? null,
+    mapUrl: venueRow?.map_url ?? null,
+  });
 
   return (
     <section

@@ -465,7 +465,23 @@ export interface Database {
           name: string;
           /** `/venues/<file>` under `public/`, CHECK-constrained. Never a URL. */
           image_path: string | null;
+          /**
+           * What to SEARCH for: coordinates, an address, or a place name.
+           *
+           * **Never a URL** — `venues_map_query_not_a_url` enforces it since
+           * round 31. Two rows held one before that, and the address line
+           * printed them to players as though they were streets.
+           */
           map_query: string | null;
+          /**
+           * The Google Maps share link an admin pasted, verbatim (round 31).
+           *
+           * When set, the player's map button opens THIS — Google's own place
+           * card, with the name, photographs and entrance — rather than a
+           * search this product assembled. `map_query` still carries the
+           * coordinates extracted from it for everything internal.
+           */
+          map_url: string | null;
           /**
            * Closed catalog (migration 38) — `venues_amenities_catalog` is the
            * enforcement and `lib/venues/amenities.ts` is the render list. Never
@@ -913,12 +929,19 @@ export interface Database {
           p_venue_id: string;
           p_name: string;
           p_map_query?: string | null;
+          p_map_url?: string | null;
           p_pitch_name?: string | null;
         };
         Returns: Database["public"]["Tables"]["venues"]["Row"];
       };
       admin_create_venue: {
-        Args: { p_name: string; p_image_path?: string | null; p_map_query?: string | null };
+        Args: {
+          p_name: string;
+          p_image_path?: string | null;
+          p_map_query?: string | null;
+          /** Round 31 — the share link kept verbatim, when one was pasted. */
+          p_map_url?: string | null;
+        };
         Returns: string;
       };
       /** Admin-only. Always creates a `draft`; returns the new game id. */

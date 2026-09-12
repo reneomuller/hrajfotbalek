@@ -29,9 +29,12 @@ import { strings } from "@/lib/strings";
  */
 async function resolveMapField(
   raw: string,
-): Promise<{ ok: true; value: string | null } | { ok: false; message: string }> {
+): Promise<
+  | { ok: true; value: string | null; url: string | null }
+  | { ok: false; message: string }
+> {
   const value = raw.trim();
-  if (!value) return { ok: true, value: null };
+  if (!value) return { ok: true, value: null, url: null };
 
   /*
    * COORDINATES FIRST, AND WITHOUT A NETWORK (round 30, item 6). This is what
@@ -41,12 +44,19 @@ async function resolveMapField(
    * resolved link are stored in exactly one format.
    */
   const pasted = parseCoordinatePair(value);
-  if (pasted) return { ok: true, value: toMapQuery(pasted) };
+  if (pasted) return { ok: true, value: toMapQuery(pasted), url: null };
 
-  if (!isMapsUrl(value)) return { ok: true, value };
+  if (!isMapsUrl(value)) return { ok: true, value, url: null };
 
   const outcome = await resolveMapsShareLink(value);
-  if (outcome.ok) return { ok: true, value: outcome.mapQuery };
+  /*
+   * BOTH HALVES SURVIVE (round 31, item 1). The coordinates go to `map_query`
+   * for everything internal; the ORIGINAL LINK goes to `map_url`, because it
+   * is the only thing that opens Google's named place card. Round 30 kept the
+   * coordinates and threw the provenance away, which is why the player's
+   * button opened a screen labelled with raw numbers.
+   */
+  if (outcome.ok) return { ok: true, value: outcome.mapQuery, url: value };
 
   return {
     ok: false,
@@ -101,6 +111,7 @@ export async function createVenueAction(
     // here — `image_path` is a bucket key `set_venue_photo` writes, and a
     // create form has no id to upload against yet.
     p_map_query: mapField.value,
+    p_map_url: mapField.url,
   });
 
   if (error) return { status: "error", message: toAdminErrorMessage(error.message) };
@@ -134,6 +145,7 @@ export async function updateVenueAction(
     p_venue_id: venueId,
     p_name: name,
     p_map_query: mapField.value,
+    p_map_url: mapField.url,
     p_pitch_name: String(formData.get("pitchName") ?? "").trim() || null,
   });
 

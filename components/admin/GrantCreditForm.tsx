@@ -4,6 +4,7 @@ import { useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { grantCreditAction, type GrantCreditState } from "@/app/admin/players/actions";
 import { formatCzk } from "@/lib/format";
+import { adminWallet } from "@/lib/admin/credits";
 import { strings } from "@/lib/strings";
 
 const INITIAL: GrantCreditState = { status: "idle" };
@@ -87,7 +88,27 @@ export function GrantCreditForm({ playerId }: { playerId: string }) {
       {state.status === "granted" && (
         <p data-testid="grant-done" className="text-[12px] text-volt">
           {strings.admin.grantDone}
-          {state.balanceCzk !== undefined && <> — {formatCzk(state.balanceCzk)}</>}
+          {/*
+            THE OUTCOME IS READ BACK IN CREDITS (round 31, item 3), because the
+            input was in credits and echoing crowns would make the admin do the
+            division to check their own grant. The exact crowns still appear
+            when the balance does not divide cleanly — see `adminWallet`.
+          */}
+          {state.balanceCzk !== undefined && (
+            <>
+              {" — "}
+              {adminWallet(state.balanceCzk).credits} credits
+              {adminWallet(state.balanceCzk).remainderCzk !== null && (
+                <span className="text-muted">
+                  {" "}
+                  ({strings.admin.walletExactCzk.replace(
+                    "{czk}",
+                    formatCzk(adminWallet(state.balanceCzk).remainderCzk!),
+                  )})
+                </span>
+              )}
+            </>
+          )}
         </p>
       )}
       {state.status === "error" && state.message && (

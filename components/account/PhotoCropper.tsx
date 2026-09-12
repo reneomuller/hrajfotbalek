@@ -42,6 +42,18 @@ const MIN_ZOOM = 1;
 const MAX_ZOOM = 4;
 const ZOOM_STEP = 0.01;
 
+/**
+ * How much of the photograph shows OUTSIDE the crop, in pixels (round 31,
+ * item 2).
+ *
+ * ENOUGH TO JUDGE BY, NOT ENOUGH TO COMPETE. The point of the dim margin is to
+ * answer "what am I cutting off" — a sliver does not, and a wide one shrinks
+ * the crop itself on a 390px screen, which is the thing actually being
+ * composed. 24px reads as a border of context on a phone and still leaves the
+ * frame the dominant object.
+ */
+const REVEAL_PX = 24;
+
 export interface CropRect {
   /** Source rectangle in the ORIGINAL image's pixels, ready for `drawImage`. */
   sx: number;
@@ -216,6 +228,46 @@ export function PhotoCropper({
           {t.account.cropHint}
         </p>
 
+        {/*
+          THE STAGE — the photograph OUTSIDE the crop, dimmed (round 31, item 2).
+
+          WHAT WAS WRONG: the frame is `overflow-hidden`, so the only thing on
+          screen WAS the crop. The aspect had been correct since round 30 item
+          7 and the person composing still could not see what they were cutting
+          off — there was nothing to compare the crop against. "Position your
+          photo" asked for a judgement and showed one half of the evidence.
+
+          THE SAME IMAGE, THE SAME TRANSFORM, SHIFTED BY THE INSET. The frame
+          sits at exactly `REVEAL_PX` from the stage's top-left, so a copy
+          translated by the same offset plus that inset lines up to the pixel —
+          which is what makes the dim layer read as "the rest of the
+          photograph" rather than as a second picture behind it. One geometry,
+          drawn twice.
+
+          `aria-hidden`, because it is the same photograph the frame shows and
+          announcing it twice helps nobody.
+        */}
+        <div
+          data-testid="photo-cropper-stage"
+          className="relative overflow-hidden rounded-card bg-ink"
+          style={{ padding: `${REVEAL_PX}px` }}
+        >
+          {url && (
+            /* eslint-disable-next-line @next/next/no-img-element */
+            <img
+              src={url}
+              alt=""
+              aria-hidden
+              draggable={false}
+              style={{
+                transform: `translate(${offset.x + REVEAL_PX}px, ${offset.y + REVEAL_PX}px)`,
+                width: `${displayed.w}px`,
+                height: `${displayed.h}px`,
+              }}
+              className="pointer-events-none absolute left-0 top-0 max-w-none origin-top-left select-none opacity-30"
+            />
+          )}
+
         <div
           ref={frameRef}
           data-testid="photo-cropper-frame"
@@ -224,7 +276,22 @@ export function PhotoCropper({
           onPointerUp={onPointerUp}
           onPointerCancel={onPointerUp}
           style={frame ? { height: `${frame.h}px` } : undefined}
-          className="relative w-full cursor-grab touch-none overflow-hidden rounded-card bg-ink active:cursor-grabbing"
+          /*
+            THE OUTLINE IS VOLT, AND THE BLACK RING UNDER IT IS NOT DECORATION.
+
+            Volt is the product's "you can act on this" accent and this is the
+            one thing on the dialog being manipulated, so it earns it — the
+            round-3 objection was to volt on furniture, which this is not. But
+            a volt line on a bright photograph is low contrast, so a 1px black
+            ring sits outside it: together they are legible on any image,
+            which is the same two-tone trick the claim bar uses over a photo.
+
+            `ring` rather than `border`, because a border would be inside the
+            element's box and would move the crop region by two pixels — the
+            frame's box IS the crop, and it must stay exactly the aspect the
+            constants say.
+          */
+          className="relative w-full cursor-grab touch-none overflow-hidden rounded-card bg-ink ring-2 ring-volt ring-offset-1 ring-offset-black/60 active:cursor-grabbing"
         >
           {url && (
             /* eslint-disable-next-line @next/next/no-img-element */
@@ -253,6 +320,7 @@ export function PhotoCropper({
               className="max-w-none origin-top-left select-none"
             />
           )}
+        </div>
         </div>
 
         <label className="mt-4 block">

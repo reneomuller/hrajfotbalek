@@ -163,6 +163,43 @@ select pg_temp.ok(
   'a whitespace-only memo is stored as NULL, not as an empty string');
 
 -- =============================================================================
+-- ROUND 31, ITEM 3 — the admin's UNIT is credits; the ledger's is crowns
+--
+-- The conversion lives in `lib/admin/credits.ts` and is unit-tested there.
+-- What is asserted HERE is the half SQL owns: the ledger stores the converted
+-- CROWNS and nothing about the ruling leaked into the database. `credit_ledger`
+-- predates the credits ruling, it is append-only, and every refund rule and
+-- every booking's `credit_applied_czk` is denominated in crowns — so this is
+-- the assertion that it STAYED that way while the forms changed above it.
+-- =============================================================================
+
+select pg_temp.act_as('a0000000-0000-0000-0000-0000000c1e01');
+select public.grant_credit('aaaa0000-0000-0000-0000-0000000c1e02', 300, 'admin_grant', false, 'two credits');
+reset role;
+
+select pg_temp.ok(
+  (select count(*) from public.credit_ledger
+    where player_id = 'aaaa0000-0000-0000-0000-0000000c1e02'
+      and delta_czk = 300 and reason = 'admin_grant') = 1,
+  'two credits land as +300 CZK in the ledger');
+
+select pg_temp.act_as('a0000000-0000-0000-0000-0000000c1e01');
+select public.grant_credit('aaaa0000-0000-0000-0000-0000000c1e02', -150, 'adjustment', false, 'one credit back');
+reset role;
+
+select pg_temp.ok(
+  (select count(*) from public.credit_ledger
+    where player_id = 'aaaa0000-0000-0000-0000-0000000c1e02'
+      and delta_czk = -150 and reason = 'adjustment') = 1,
+  'removing one credit lands as -150 CZK');
+
+select pg_temp.ok(
+  (select data_type from information_schema.columns
+    where table_schema = 'public' and table_name = 'credit_ledger'
+      and column_name = 'delta_czk') = 'integer',
+  'the ledger is still denominated in whole crowns — the ruling did not reach it');
+
+-- =============================================================================
 -- `redemption` stays the booking rail's — an admin may not hand-write a spend
 -- =============================================================================
 

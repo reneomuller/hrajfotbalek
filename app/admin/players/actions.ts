@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/auth/requireAdmin";
 import { toAdminErrorMessage } from "@/lib/admin/errors";
 import { strings } from "@/lib/strings";
+import { czkFromCredits } from "@/lib/admin/credits";
 import { createServerSupabaseClient } from "@/lib/supabase/clients";
 
 export interface GrantCreditState {
@@ -35,7 +36,21 @@ export async function grantCreditAction(
   await requireAdmin();
 
   const playerId = String(formData.get("playerId") ?? "");
-  const amount = Number(String(formData.get("amount") ?? "").trim());
+  /*
+   * THE FORM SPEAKS CREDITS; THE LEDGER SPEAKS CROWNS (round 31, item 3).
+   *
+   * `amount` is now a whole number of CREDITS — the same unit the player reads
+   * on their wallet — and it is converted here, once, at the ruling's rate.
+   * The admin used to type crowns while the player read credits, which left
+   * the translation living in the organizer's head.
+   *
+   * CONVERTED IN THE ACTION AND NOT IN THE FORM, because a hidden field
+   * carrying a pre-multiplied number is a number a hand-made POST can set to
+   * anything. The credits are what crosses the wire; the crowns are derived
+   * where they cannot be tampered with.
+   */
+  const credits = Number(String(formData.get("amount") ?? "").trim());
+  const amount = czkFromCredits(credits);
   /*
    * THE NOTE IS REQUIRED (round 7, item 9), and it is required HERE rather
    * than only in the form — the form's `required` attribute is skipped by
@@ -50,7 +65,9 @@ export async function grantCreditAction(
   const unmatched = formData.get("unmatched") === "on";
 
   if (!playerId) return { status: "error", message: toAdminErrorMessage("PLAYER_NOT_FOUND") };
-  if (!Number.isInteger(amount) || amount === 0) {
+  // VALIDATED ON THE CREDITS, which is the number the admin actually typed —
+  // an error about crowns would name a figure they never entered.
+  if (!Number.isInteger(credits) || credits === 0) {
     return { status: "error", message: toAdminErrorMessage("INVALID_CREDIT_DELTA") };
   }
   if (note === null || note.length < 3) {
@@ -102,7 +119,9 @@ export async function removeCreditAction(
   await requireAdmin();
 
   const playerId = String(formData.get("playerId") ?? "");
-  const amount = Number(String(formData.get("amount") ?? "").trim());
+  // Whole CREDITS, converted once (round 31, item 3) — see the grant above.
+  const credits = Number(String(formData.get("amount") ?? "").trim());
+  const amount = czkFromCredits(credits);
   const note = String(formData.get("note") ?? "").trim() || null;
 
   if (!playerId) return { status: "error", message: toAdminErrorMessage("PLAYER_NOT_FOUND") };
@@ -113,7 +132,7 @@ export async function removeCreditAction(
    * money on a form that reads "remove 50" when the field said "-50". Refused
    * rather than interpreted.
    */
-  if (!Number.isInteger(amount) || amount <= 0) {
+  if (!Number.isInteger(credits) || credits <= 0) {
     return { status: "error", message: toAdminErrorMessage("INVALID_CREDIT_DELTA") };
   }
   if (note === null || note.length < 3) {

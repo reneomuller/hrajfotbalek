@@ -1729,7 +1729,7 @@ export const strings = {
     playerNoEmail: "No email — shadow player",
     playerCountry: "Country",
     playerSkill: "Skill",
-    playerBalance: "Wallet",
+    playerBalance: "Credits",
     playerGamesPlayed: "Games played",
     playerNoShows: "No-shows",
     playerGamesTitle: "History",
@@ -1858,8 +1858,14 @@ export const strings = {
     playerSearchEmpty: "No player matches \u201c{q}\u201d.",
     playerSearchCount: "{shown} of {total}",
     grantCredit: "Grant credit",
-    grantAmountLabel: "Amount (CZK)",
-    grantAmountHint: "Negative to correct a mistake. A wallet can never go below zero.",
+    /*
+     * ROUND 31, ITEM 3 — admin counts CREDITS, not crowns. One credit is one
+     * game, which is the unit the player reads on their own wallet; the
+     * organizer typing 450 while the player read "3 credits" left the
+     * translation living in somebody's head.
+     */
+    grantAmountLabel: "Credits",
+    grantAmountHint: "Whole credits — 1 credit is 1 game. Negative corrects a mistake; a wallet never goes below zero.",
     grantNoteLabel: "Why (optional)",
     grantUnmatchedLabel: "This resolves a payment that arrived with a wrong or missing VS",
     grantSubmit: "Add to wallet",
@@ -1886,9 +1892,11 @@ export const strings = {
     editProfileLink: "Edit profile",
     /* Round 28, item 5b — taking credit back out. Admin, English only. */
     removeCredit: "Remove credit",
-    removeCreditAmount: "Amount to remove (CZK)",
+    removeCreditAmount: "Credits to remove",
     removeCreditNote: "Why (required)",
     removeCreditBalance: "Balance now: {balance}",
+    /* Shown only when a balance does not divide into whole credits. */
+    walletExactCzk: "exactly {czk}",
     removeCreditConfirm: "Yes, remove it",
     removeCreditDone: "Removed. Balance is now {balance}.",
     removeCreditDoneBare: "Removed.",
