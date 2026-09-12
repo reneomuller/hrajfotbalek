@@ -125,6 +125,29 @@ export async function GameHero({
 
         The scrim's stops move with the band — see below.
       */
+      /*
+         ~~ROUND 30 GREW THIS BAND TO 236px AND IT WAS REVERTED THE SAME DAY.~~
+         The owner asked for the venue photo to "merge under the top nav
+         exactly as the banner does — it is currently COVERED by the nav", and
+         growing the band was the wrong instrument for a real complaint. See
+         ledger row 228 for the measurements and row 234 for the open question.
+
+         WHAT THE MEASUREMENTS SHOWED. The photo ALREADY reaches y=0 —
+         `elementFromPoint`, a bounding-box read and a luminance decode all
+         agree — under the same `bg-ink/[.86]` + `backdrop-blur-md` header that
+         sits over the PROFILE banner, at a luminance within a few points of
+         it. The two surfaces are geometrically identical. What differs is
+         SIZE: 208px here against the banner's 341px, so the fixed 67px header
+         takes a third of this and a fifth of that, and what is left reads as a
+         strip the nav ate.
+
+         WHY THE FIX IS NOT "MAKE IT TALLER". `games.spec.ts` guards this at
+         240px, and the guard is a RULING: the v1.2 hero was 280px and was
+         deliberately replaced by a band. A 300px band is not a bigger band, it
+         is the hero coming back — larger than the thing the rule was written
+         against. Reversing that is the owner's call, not a side effect of a
+         crop item.
+      */
       className="relative -mx-gutter overflow-hidden px-gutter pb-5 pt-36"
     >
       {/*

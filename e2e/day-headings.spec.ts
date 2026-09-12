@@ -73,9 +73,17 @@ test("home and the games page treat a day heading identically", async ({
     );
     expect(onHome.textTransform, "the day heading is uppercase again").toBe("none");
 
-    // The far date carries a weekday and a month, with no relative word to
-    // lean on — the shape the owner said was missing.
-    expect(gamesText).toMatch(/[A-Z][a-z]{2}\s+\d{1,2}\s+[A-Z][a-z]{2}/);
+    /*
+     * The far date carries a weekday and a month, with no relative word to
+     * lean on — the shape the owner said was missing.
+     *
+     * ~~`/[A-Z][a-z]{2}\s+\d{1,2}\s+[A-Z][a-z]{2}/`~~ — that pinned the
+     * THREE-LETTER form, which round 30 item 3 removed: `ne 13 9` was the
+     * owner's own example of the defect. The property being asserted is
+     * unchanged — a weekday, a day number and a month, all present — so the
+     * pattern widens to full names rather than the assertion disappearing.
+     */
+    expect(gamesText).toMatch(/[A-Z][a-z]{2,}\s+\d{1,2}\.?\s+[A-Za-z\u00C0-\u024F]{3,}/);
   } finally {
     await destroyScratchGame(game.id);
   }

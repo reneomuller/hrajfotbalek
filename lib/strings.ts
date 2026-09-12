@@ -1590,7 +1590,13 @@ export const strings = {
     venuePhotoFailed: "The upload did not go through. Try again.",
     venuePhotoNoVenue: "Save the game first — a photo attaches to a venue, and this one is new.",
     venueMapQueryLabel: "Map search (optional)",
-    venueMapQueryHint: "Defaults to the venue name.",
+    venueMapQueryHint:
+      "Paste a Google Maps share link (maps.app.goo.gl/…) or type a place name. A link is resolved to its exact spot.",
+    /* Round 30, item 4 — a link that will not resolve says so, in words. */
+    venueMapUnreachable:
+      "We could not open that Google Maps link — it may have expired, or Maps did not answer. Try pasting the full link from the browser address bar, or type the place name instead.",
+    venueMapUnparseable:
+      "That link opened, but it carries no location we could read. Open it in Google Maps, copy the address-bar URL, and paste that instead — or just type the place name.",
     startsAtLabel: "Kick-off",
     capacityLabel: "Capacity",
     capacityHint: "Cannot go below the players already booked.",

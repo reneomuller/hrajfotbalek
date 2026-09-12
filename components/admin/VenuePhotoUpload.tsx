@@ -1,37 +1,26 @@
 "use client";
 
-import { useRef, useState } from "react";
-import { useRouter } from "next/navigation";
-import { createBrowserSupabaseClient } from "@/lib/supabase/browser";
-import { VENUE_PHOTOS_BUCKET } from "@/lib/storage/avatar";
+import { PhotoUpload } from "@/components/account/PhotoUpload";
 import { strings } from "@/lib/strings";
 
-/** 4 MiB, matching `storage.buckets.file_size_limit` on the bucket itself. */
-const MAX_BYTES = 4 * 1024 * 1024;
-const ACCEPTED: Record<string, string> = {
-  "image/jpeg": "jpg",
-  "image/png": "png",
-  "image/webp": "webp",
-};
-
 /**
- * Upload a photograph of the pitch, from the game form (§5.4).
+ * Upload a photograph of the pitch, with a drag-crop (round 30, item 1).
  *
- * WHY THIS EXISTS. Until now a venue photo had to be a file committed under
- * `public/venues/`, which made adding one a deploy. §5.4 always intended
- * human-supplied pitch photographs; it did not intend the human to be a
- * developer. An organizer standing at a new pitch can now photograph it and
- * have it on the game page before they leave.
+ * ~~NO CLIENT-SIDE CROP, unlike the avatar. A pitch is landscape and the panel
+ * is landscape; cropping to a square here would throw away the goalposts.~~
+ * REVERSED, and the reasoning was half right. Nothing here ever cropped to a
+ * SQUARE — that was the avatar's problem, not this one — and the conclusion
+ * drawn from it was that no crop was needed at all. What actually happened is
+ * that `object-cover` took the middle of whatever was uploaded, and an
+ * organizer photographing a pitch on a phone got a centre crop of a portrait
+ * frame: sky and grass, no goal. The fix is the same layer the banner has,
+ * framed to the venue's own 16:9 rather than to a square.
  *
- * THE PATH IS CLAIMED FROM THE DATABASE FIRST, exactly as the profile-photo
- * flow does. `set_venue_photo` derives `venues/<venue id>.<ext>` and returns
- * it — the client never chooses a key, so no call can point at another venue's
- * object. Uploading first and recording second would leave an orphan in a
- * public bucket with no row pointing at it and nothing to clean it up.
- *
- * NO CLIENT-SIDE CROP, unlike the avatar. A pitch is landscape and the panel
- * is landscape; cropping to a square here would throw away the goalposts.
- * Bucket-side limits are the enforcement either way.
+ * IT IS NOW A THIN WRAPPER, and that is the point. `PhotoUpload` already owned
+ * the size limit, the type allow-list, the claim-the-path-first ordering, the
+ * cache-buster and the cropper; this file had its own copy of the first four
+ * and none of the fifth. Two implementations of "upload an image" is how one
+ * of them ends up without a crop for a year.
  *
  * Admin copy is English only — see `lib/i18n/locales.ts`.
  */
@@ -42,84 +31,26 @@ export function VenuePhotoUpload({
   venueId: string;
   hasPhoto: boolean;
 }) {
-  const router = useRouter();
-  const inputRef = useRef<HTMLInputElement>(null);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  async function onFile(event: React.ChangeEvent<HTMLInputElement>) {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    setError(null);
-
-    // The bucket enforces both of these as well. This is the part that says so
-    // before a slow upload on a phone at a pitch, rather than after it.
-    const extension = ACCEPTED[file.type];
-    if (!extension) {
-      setError(strings.admin.venuePhotoBadType);
-      event.target.value = "";
-      return;
-    }
-    if (file.size > MAX_BYTES) {
-      setError(strings.admin.venuePhotoTooBig);
-      event.target.value = "";
-      return;
-    }
-
-    setBusy(true);
-    try {
-      const supabase = createBrowserSupabaseClient();
-
-      const { data: path, error: rpcError } = await supabase.rpc("set_venue_photo", {
-        p_venue_id: venueId,
-        p_extension: extension,
-      });
-      if (rpcError || !path) throw new Error(rpcError?.message ?? "no path");
-
-      const { error: uploadError } = await supabase.storage
-        .from(VENUE_PHOTOS_BUCKET)
-        .upload(path, file, { contentType: file.type, upsert: true });
-      if (uploadError) throw new Error(uploadError.message);
-
-      router.refresh();
-    } catch (cause) {
-      console.error("venue photo upload failed", cause);
-      setError(strings.admin.venuePhotoFailed);
-    } finally {
-      setBusy(false);
-      if (inputRef.current) inputRef.current.value = "";
-    }
-  }
-
   return (
-    <div className="flex flex-col gap-2">
-      <label className="inline-flex w-fit cursor-pointer items-center justify-center rounded-control border border-hairline-volt px-4 py-2 text-[13px] font-bold uppercase tracking-wide text-volt transition hover:bg-volt/10">
-        <input
-          ref={inputRef}
-          type="file"
-          accept="image/jpeg,image/png,image/webp"
-          onChange={onFile}
-          disabled={busy}
-          data-testid="venue-photo-input"
-          className="sr-only"
-        />
-        {busy
-          ? strings.common.loading
-          : hasPhoto
-            ? strings.admin.venuePhotoReplace
-            : strings.admin.venuePhotoUpload}
-      </label>
-
-      <p className="text-[12px] leading-snug text-muted">
-        {strings.admin.venuePhotoHint}
+    <div data-testid="venue-photo-upload">
+      <p className="m-0 text-[10px] uppercase tracking-eyebrow text-muted">
+        {strings.admin.venuePhotoTitle}
       </p>
 
-      {error && (
-        <p role="alert" data-testid="venue-photo-error" className="text-[12px] text-volt">
-          {error}
-        </p>
-      )}
+      <div className="mt-2">
+        <PhotoUpload target="venue" venueId={venueId} hasPhoto={hasPhoto}>
+          <span
+            data-testid="venue-photo-control"
+            className="inline-flex min-h-11 items-center rounded-control border border-hairline-strong px-3 text-small font-semibold text-volt"
+          >
+            {hasPhoto ? strings.admin.venuePhotoReplace : strings.admin.venuePhotoUpload}
+          </span>
+        </PhotoUpload>
+      </div>
+
+      <p className="mt-2 mb-0 text-[12px] leading-snug text-muted">
+        {strings.admin.venuePhotoHint}
+      </p>
     </div>
   );
 }

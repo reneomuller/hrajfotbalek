@@ -11,6 +11,9 @@ import {
   PROFILE_PHOTOS_BUCKET,
   extensionForMimeType,
   rejectPhoto,
+  VENUE_WIDTH_PX,
+  VENUE_HEIGHT_PX,
+  VENUE_PHOTOS_BUCKET,
 } from "@/lib/storage/avatar";
 import { PhotoCropper, type CropRect } from "@/components/account/PhotoCropper";
 import { useStrings } from "@/components/LocaleProvider";
@@ -98,6 +101,7 @@ export function PhotoUpload({
   hasPhoto,
   children,
   target = "avatar",
+  venueId,
   photoVersion = null,
   className,
 }: {
@@ -111,7 +115,17 @@ export function PhotoUpload({
    * components would be two places for the size limit, the type allow-list,
    * the claim-the-path-first ordering and the error copy to drift.
    */
-  target?: "avatar" | "cover";
+  target?: "avatar" | "cover" | "venue";
+  /**
+   * Which venue, when `target` is `"venue"` (round 30, item 1).
+   *
+   * REQUIRED FOR THAT TARGET AND MEANINGLESS FOR THE OTHER TWO, which is why
+   * it is a separate prop rather than folded into `target`: the avatar and the
+   * cover are always the CALLER's own and need no subject, and
+   * `set_venue_photo` takes one explicitly because an admin is editing
+   * somebody else's pitch.
+   */
+  venueId?: string;
   /**
    * The version suffix the PAGE is currently rendering on this photo's URL.
    *
@@ -163,7 +177,9 @@ export function PhotoUpload({
       const cropped =
         target === "cover"
           ? await cropToRatio(file, COVER_WIDTH_PX, COVER_HEIGHT_PX, rect)
-          : await cropToRatio(file, AVATAR_SIDE_PX, AVATAR_SIDE_PX, rect);
+          : target === "venue"
+            ? await cropToRatio(file, VENUE_WIDTH_PX, VENUE_HEIGHT_PX, rect)
+            : await cropToRatio(file, AVATAR_SIDE_PX, AVATAR_SIDE_PX, rect);
       const supabase = createBrowserSupabaseClient();
 
       /*
@@ -175,14 +191,27 @@ export function PhotoUpload({
        * no row pointing at it and nothing to clean it up.
        */
       const extension = extensionForMimeType("image/webp");
-      const { data: path, error: rpcError } = await supabase.rpc(
-        target === "cover" ? "set_cover_photo" : "set_profile_photo",
-        { p_extension: extension! },
-      );
+
+      /*
+       * THE PATH IS CLAIMED FROM THE DATABASE FIRST, for all three targets.
+       * `set_venue_photo` derives `venues/<venue id>.<ext>` the same way the
+       * other two derive theirs from the caller's own id — the client never
+       * chooses a key, so no call can point at another venue's object.
+       */
+      const { data: path, error: rpcError } =
+        target === "venue"
+          ? await supabase.rpc("set_venue_photo", {
+              p_venue_id: venueId!,
+              p_extension: extension!,
+            })
+          : await supabase.rpc(
+              target === "cover" ? "set_cover_photo" : "set_profile_photo",
+              { p_extension: extension! },
+            );
       if (rpcError || !path) throw new Error(rpcError?.message ?? "no path");
 
       const { error: uploadError } = await supabase.storage
-        .from(PROFILE_PHOTOS_BUCKET)
+        .from(target === "venue" ? VENUE_PHOTOS_BUCKET : PROFILE_PHOTOS_BUCKET)
         .upload(path, cropped, { contentType: "image/webp", upsert: true });
       if (uploadError) throw new Error(uploadError.message);
 
@@ -261,7 +290,19 @@ export function PhotoUpload({
       accept="image/jpeg,image/png,image/webp"
       onChange={onFile}
       disabled={busy}
-      data-testid={target === "cover" ? "photo-input-cover" : "photo-input"}
+      /*
+       * THE VENUE KEEPS ITS OWN TESTID (round 30, item 1). `venue-photo-input`
+       * is what `strips-design.spec.ts` has asserted since round 13, and this
+       * component absorbing the venue uploader must not quietly rename a
+       * selector that other specs depend on.
+       */
+      data-testid={
+        target === "venue"
+          ? "venue-photo-input"
+          : target === "cover"
+            ? "photo-input-cover"
+            : "photo-input"
+      }
       className="sr-only"
     />
   );

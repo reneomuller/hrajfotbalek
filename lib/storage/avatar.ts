@@ -35,6 +35,23 @@ export const AVATAR_SIDE_PX = 512;
 export const COVER_WIDTH_PX = 1200;
 export const COVER_HEIGHT_PX = 400;
 
+/**
+ * The venue photograph's output (round 30, item 1).
+ *
+ * 16:9, NOT THE COVER'S 3:1. The banner is a thin strip behind a name; a pitch
+ * photograph is a scene, and 3:1 would slice the goalposts off the top and
+ * bottom of almost every phone photo taken at a football ground. The hero band
+ * it lands in renders at roughly 1.9:1 and `object-cover` takes the middle, so
+ * a 16:9 crop loses a sliver at the sides rather than the thing being
+ * photographed.
+ *
+ * THE CROP FRAME IS THIS ASPECT, exactly — which is the point of cropping in
+ * the browser at all: the organizer standing at the pitch sees what the page
+ * will show instead of discovering later that the middle was taken.
+ */
+export const VENUE_WIDTH_PX = 1600;
+export const VENUE_HEIGHT_PX = 900;
+
 export function extensionForMimeType(mimeType: string): string | null {
   return ACCEPTED_IMAGE_TYPES[mimeType] ?? null;
 }

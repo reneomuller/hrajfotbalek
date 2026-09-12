@@ -8,6 +8,7 @@ import {
 } from "@/app/admin/venues/actions";
 import { PendingButton } from "@/components/form/PendingButton";
 import { strings } from "@/lib/strings";
+import { VenuePhotoUpload } from "@/components/admin/VenuePhotoUpload";
 
 const INITIAL: VenueFormState = { status: "idle" };
 
@@ -98,6 +99,27 @@ export function VenueForm({
         <p data-testid="venue-saved" className="mt-3 text-[13px] text-volt">
           {state.status === "created" ? strings.admin.venueCreated : strings.admin.venueSaved}
         </p>
+      )}
+
+      {/*
+        THE PHOTO STEP, IN PLACE, THE MOMENT THE VENUE EXISTS (round 30,
+        item 1).
+
+        `set_venue_photo` takes a venue id, so before this the pitch photo was
+        an EDIT-only control and "create a venue, crop the photo" meant
+        creating it, finding it in the list below, and opening it again. The id
+        comes back with the success, so the crop happens where the creating
+        happened.
+
+        RENDERED OUTSIDE THE `<form>`'s fields but inside its element is not an
+        option — a file input inside a form that has just submitted would be
+        re-submitted by the next Enter. `PhotoUpload` posts nothing; it uploads
+        directly and refreshes.
+      */}
+      {state.status === "created" && state.venueId && (
+        <div data-testid="venue-create-photo" className="mt-5 border-t border-hairline pt-4">
+          <VenuePhotoUpload venueId={state.venueId} hasPhoto={false} />
+        </div>
       )}
       {state.status === "error" && state.message && (
         <p role="alert" data-testid="venue-error" className="mt-3 text-[13px] text-bone">
