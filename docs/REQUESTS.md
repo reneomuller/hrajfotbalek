@@ -337,6 +337,10 @@ round 13 added is item 2's reversal and a re-verification of item 3.
 | 220 | *The half of row 219 that could have gone wrong and did not.* **Round 24's money invariant survives and now guards MORE** | `SHIPPED round-29`. The sweep counts `credit_ledger` and live bookings before and after and rolls the entire run back if either moved — an invariant written to enforce "the sweep never settles", now guarding a sweep that DOES. It is the reason automating this is safe rather than brave: settling is one UPDATE and one event, so the counts must come out identical, and if a later round couples money to settlement the cron fails loudly instead of quietly paying people. **The reserved-rows check survives as a TRIPWIRE rather than a gate** — it SKIPS the game and reports its id rather than refusing, because a game nobody can close is a thing to look at, not a reason to abandon the rest of the sweep. Under pay-first it should never fire; the cron logs a non-empty skip list as news |
 | 221 | **Apply `20260909120000_auto_settle.sql`** | `BUILT-DORMANT-ON-the owner running it`. **It carries the backfill, so applying it IS the backfill** — one statement, marking every past game `settled` as-is. On production that is **35 games** (36 `played`, one of which has not kicked off yet). Validated rolled back against the local stack, where it marked 45. **NOT deploy-first and not late-safe in the usual way**: the deployed code drops the settle button and the sweep's return shape changes, so the two halves want to land together. Applying it while the OLD deploy is live leaves a settle button whose RPC is gone; deploying without it leaves a sweep that returns an integer where the route reads a shape |
 | 222 | *Recorded with row 219.* **What the backfill deliberately does NOT do** | `SHIPPED round-29`. No attendance is written or rewritten — unmarked stays unmarked, and the product reads unmarked as attended (the owner's rule), so writing it here would fabricate a record of who turned up. No money moves. No stats change, because nothing downstream distinguishes `played` from `settled`. `cancelled` games are excluded — already terminal, and settling one would overwrite somebody's decision. **One reporting number DOES move and it moves toward the truth**: the admin financials' "games settled in the period" goes from 3 to 38 on production, and the derived average-revenue-per-game stops dividing a year of revenue by three games |
+| 223 | **INCIDENT 2026-09-12 — a migration's verification drill was applied to production and COMMITTED** | `CLOSED same day`, and the rule it produced is in CLAUDE.md. Rounds 26–29 each ended with a behavioural drill — build a fixture, exercise the RPCs, assert. Every one was validated inside a hand-written `begin; … rollback;`, so the fixtures vanished on every test and **the pattern looked safe for four rounds**. `scripts/apply-migration.mjs` COMMITS. Round 29's drill left on production: a venue and two games named `auto settle probe`, two bookings against **the owner's own account** (the drill picks the oldest signed-up player), a real **"You were marked as a no-show" notification in his bell**, two games of inflated `games_played` and hours, **150 CZK of phantom money owed** (1,780 → 1,930), and a `played` game the nightly sweep would have reported as needing attention **every night for ever**. Cleaned up the same day: 2 events, 2 games (cascading 2 bookings and the notification) and 1 venue deleted; stats back to 15 games, outstanding back to 11 holds / 1,780 CZK, skip list empty, bell clear |
+| 224 | *The two that had not been applied yet, and were worse.* **Round 28's drills would have wiped a live profile and moved real money** | `CLOSED 2026-09-12`, found while fixing row 223 and rewritten **before** they could be applied. The public-profile drill **UPDATEd a real player's `country`, `skill_level` and `positions` and then set all three to NULL** — a wiped profile on a committing apply. The ledger drill called `grant_credit` three times for real (+500, −200, +10), **moving 310 CZK into a live wallet with real ledger rows**. Neither migration had been run; both are now shape-only. The near-miss is the reason this row exists separately from 223: the incident that happened was the cheap one |
+| 225 | **THE RULE: a migration's verification block may not write a row** | `SHIPPED round-29 follow-up`, and it is structural rather than a habit. A migration asserts the SHAPE it created — objects, columns, constraints, grants, capability flags, and the RESULT of any backfill it performs — and never inserts, never updates a row it did not come to change, and never calls an RPC that writes. **Behaviour moves to `supabase/tests/`, where `run.mjs` wraps every suite in `begin; … rollback;` BY DESIGN and a committing drill is structurally impossible.** Four new suites carry the drills that were removed: `auto_settle`, `add_guests_after_booking`, `public_profile_scope`, `credit_ledger_note`. The SQL suite goes 33 → 37. **The tell for a future reader: if a verification block declares a variable to hold a fixture id, it is a drill and it is in the wrong file** |
+| 226 | **Re-apply commands for rounds 27 and 28 (supersedes rows 203 and 215)** | `BUILT-DORMANT-ON-the owner running them`. The FOUR migrations still unapplied on production — confirmed by probing the objects, not the filenames: `checkout_sessions.kind` absent, `can_add_guests` absent, `credit_ledger.note` absent, `game_roster_public.is_pending` still present. **All four were rewritten on 2026-09-12 and re-validated end to end against a clean local stack; the versions Oliver was previously handed must not be run.** Order and the deploy-first rule for the cleanup are unchanged — see §6 |
 
 ---
 
@@ -438,7 +442,47 @@ their filter through `booking_holds_seat`. No row changes. Rollback is
 The `--production` flag is deliberate and cannot be replaced by an environment
 variable — see CLAUDE.md on why implicitness is what failed.
 
-### Round 29's migration (row 221) — APPLY IT WITH THE DEPLOY
+### ROUNDS 27 AND 28 — FRESH COMMANDS (row 226). The old ones are void.
+
+**All four were rewritten on 2026-09-12** after the incident in row 223: their
+verification blocks used to build fixtures and call writing RPCs, and
+`apply-migration.mjs` commits. Two of them would have damaged live data. They
+are shape-only now and re-validated end to end against a clean local stack.
+
+Run them in this order:
+
+```bash
+# Round 27 — add guests after booking (additive, capability-gated, late-safe)
+node scripts/apply-migration.mjs \
+  supabase/migrations/20260907100000_add_guests_after_booking.sql --production
+
+# Round 28 — the public profile's widened scope (additive, late-safe)
+node scripts/apply-migration.mjs \
+  supabase/migrations/20260909100000_public_profile_scope.sql --production
+
+# Round 28 — credit_ledger.note + grant_credit restated (additive, late-safe)
+node scripts/apply-migration.mjs \
+  supabase/migrations/20260909110000_credit_ledger_note.sql --production
+
+# Round 27 — the pending-machinery cleanup. LAST, and DEPLOY FIRST.
+node scripts/apply-migration.mjs \
+  supabase/migrations/20260907110000_pending_machinery_cleanup.sql --production
+```
+
+**The cleanup is last and is the only one with an ordering hazard.** It drops
+`is_pending` from `game_roster_public`, and only code from round 27 onward has
+stopped selecting that column. Production is already running it (`51b57bc`), so
+the condition is met — but it stays last because it is the one that would empty
+every lineup on the site if the deploy were ever rolled back beneath it.
+
+The first three are additive and capability-gated: without them the add-guests
+panel does not render, the public profile omits the three new fields, and the
+remove-credit form reports the RPC's error. Nothing breaks.
+
+**Each prints `TARGET <host>` before doing anything.** Check it says the
+production pooler, then let it run.
+
+### ~~Round 29's migration (row 221)~~ — APPLIED 2026-09-12
 
 ```bash
 node scripts/apply-migration.mjs \

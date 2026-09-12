@@ -295,20 +295,33 @@ $$;
 grant execute on function public.app_capabilities() to anon, authenticated, service_role;
 
 -- -----------------------------------------------------------------------------
--- Verification
+-- Verification — SHAPE ONLY
+--
+-- THIS BLOCK MAY NOT WRITE A ROW, AND THE REASON COST A PRODUCTION CLEANUP.
+--
+-- Migrations used to end with a behavioural DRILL: build a fixture, exercise
+-- the new RPCs, assert the outcome. Every one of them was validated inside
+-- `begin; … rollback;`, so the fixtures vanished on every test run — and
+-- `scripts/apply-migration.mjs` COMMITS. On 2026-09-12 round 29's drill was
+-- applied to production and left behind a fake venue, two fake games, two
+-- bookings against a real player, a real "you were marked as a no-show"
+-- notification in his bell, two games' worth of inflated stats, 150 CZK of
+-- phantom money owed, and a game the nightly sweep would have reported as
+-- needing attention every night for ever.
+--
+-- SO THE RULE IS: a migration asserts that the SHAPE it created exists —
+-- objects, columns, constraints, grants, capability flags. It never inserts,
+-- never updates, never calls an RPC that writes. Behaviour is drilled in
+-- `supabase/tests/`, where `run.mjs` wraps every suite in `begin; … rollback;`
+-- BY DESIGN and a committing drill is structurally impossible.
+--
+-- See CLAUDE.md, "A migration's verification block may not write a row".
 -- -----------------------------------------------------------------------------
+
 do $$
-declare
-  v_caps    jsonb;
-  v_venue   uuid;
-  v_game    uuid;
-  v_held    uuid;
-  v_player  uuid;
-  v_out     jsonb;
-  v_ledger  integer;
+declare v_past integer;
 begin
-  select public.app_capabilities() into v_caps;
-  if coalesce((v_caps ->> 'autoSettle')::boolean, false) is not true then
+  if coalesce((public.app_capabilities() ->> 'autoSettle')::boolean, false) is not true then
     raise exception 'auto-settle: the capability flag did not turn on';
   end if;
 
@@ -318,74 +331,21 @@ begin
     raise exception 'auto-settle: settle_game is still callable';
   end if;
 
-  -- THE BACKFILL LEFT NOTHING BEHIND.
-  if exists (select 1 from public.games
-              where starts_at < now() and status not in ('settled', 'cancelled', 'draft')) then
-    raise exception 'auto-settle: a past game survived the backfill';
+  -- The sweep must return the SHAPE, not the old integer — the cron route
+  -- reads `skipped` out of it.
+  if pg_get_function_result((select p.oid from pg_proc p join pg_namespace n on n.oid=p.pronamespace
+                              where n.nspname='public' and p.proname='advance_played_games'))
+     <> 'jsonb' then
+    raise exception 'auto-settle: the sweep does not return jsonb';
   end if;
 
-  select id into v_player from public.players where auth_user_id is not null order by created_at limit 1;
-  if v_player is null then
-    raise notice 'auto-settle: no signed-up player — forward sweep NOT exercised';
-    return;
+  -- THE BACKFILL IS THE ONE WRITE THIS FILE MAKES, and it is the migration's
+  -- purpose rather than a probe — so its RESULT is verified here.
+  select count(*) into v_past from public.games
+   where starts_at < now() and status not in ('settled', 'cancelled', 'draft');
+  if v_past > 0 then
+    raise exception 'auto-settle: % past games survived the backfill', v_past;
   end if;
 
-  begin
-    set local request.jwt.claims = '{"role":"service_role"}';
-
-    insert into public.venues (name) values ('auto settle probe') returning id into v_venue;
-
-    -- A game that kicked off well past the buffer, with a PAID booking on it.
-    insert into public.games (venue, venue_id, starts_at, capacity, price_czk, status, duration_minutes)
-         values ('auto settle probe', v_venue, now() - interval '6 hours', 10, 150, 'published', 60)
-      returning id into v_game;
-    insert into public.bookings (game_id, player_id, status, payment_method, price_czk,
-                                 credit_applied_czk, guest_count)
-         values (v_game, v_player, 'confirmed', 'qr', 150, 0, 0);
-
-    -- A second game past the buffer carrying an UNPAID hold — the tripwire.
-    insert into public.games (venue, venue_id, starts_at, capacity, price_czk, status, duration_minutes)
-         values ('auto settle probe held', v_venue, now() - interval '6 hours', 10, 150, 'published', 60)
-      returning id into v_held;
-    insert into public.bookings (game_id, player_id, status, payment_method, price_czk,
-                                 credit_applied_czk, guest_count)
-         values (v_held, v_player, 'reserved', 'cash', 150, 0, 0);
-
-    select count(*) into v_ledger from public.credit_ledger;
-
-    v_out := public.advance_played_games(120);
-
-    -- ONE SWEEP TOOK THE CLEAN GAME ALL THE WAY.
-    if (select status from public.games where id = v_game) <> 'settled' then
-      raise exception 'auto-settle: the clean game is % rather than settled',
-        (select status from public.games where id = v_game);
-    end if;
-
-    -- AND THE TRIPWIRE HELD THE OTHER AT `played`, reporting it.
-    if (select status from public.games where id = v_held) <> 'played' then
-      raise exception 'auto-settle: the held game is % rather than played',
-        (select status from public.games where id = v_held);
-    end if;
-    if coalesce((v_out ->> 'skipped')::integer, 0) < 1 then
-      raise exception 'auto-settle: the skip was not reported (%)', v_out::text;
-    end if;
-    if not (v_out -> 'skippedGameIds') ? v_held::text then
-      raise exception 'auto-settle: the skipped game was not named';
-    end if;
-
-    -- NO MONEY MOVED, which the sweep also asserts internally.
-    if (select count(*) from public.credit_ledger) <> v_ledger then
-      raise exception 'auto-settle: the sweep moved money';
-    end if;
-
-    -- ATTENDANCE IS STILL EDITABLE ON A SETTLED GAME (the owner's rule).
-    perform public.mark_attendance(
-      (select id from public.bookings where game_id = v_game limit 1), 'no_show');
-    if (select attendance from public.bookings where game_id = v_game limit 1)
-       is distinct from 'no_show' then
-      raise exception 'auto-settle: attendance could not be marked after settlement';
-    end if;
-
-    raise notice 'auto-settle: verified — one sweep settles, the tripwire skips and names, attendance still edits';
-  end;
+  raise notice 'auto-settle: shape verified — behaviour is drilled in supabase/tests/auto_settle.sql';
 end $$;

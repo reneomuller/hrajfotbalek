@@ -172,76 +172,56 @@ $$;
 grant execute on function public.app_capabilities() to anon, authenticated, service_role;
 
 -- -----------------------------------------------------------------------------
--- Verification
+-- Verification — SHAPE ONLY
+--
+-- THIS BLOCK MAY NOT WRITE A ROW, AND THE REASON COST A PRODUCTION CLEANUP.
+--
+-- Migrations used to end with a behavioural DRILL: build a fixture, exercise
+-- the new RPCs, assert the outcome. Every one of them was validated inside
+-- `begin; … rollback;`, so the fixtures vanished on every test run — and
+-- `scripts/apply-migration.mjs` COMMITS. On 2026-09-12 round 29's drill was
+-- applied to production and left behind a fake venue, two fake games, two
+-- bookings against a real player, a real "you were marked as a no-show"
+-- notification in his bell, two games' worth of inflated stats, 150 CZK of
+-- phantom money owed, and a game the nightly sweep would have reported as
+-- needing attention every night for ever.
+--
+-- SO THE RULE IS: a migration asserts that the SHAPE it created exists —
+-- objects, columns, constraints, grants, capability flags. It never inserts,
+-- never updates, never calls an RPC that writes. Behaviour is drilled in
+-- `supabase/tests/`, where `run.mjs` wraps every suite in `begin; … rollback;`
+-- BY DESIGN and a committing drill is structurally impossible.
+--
+-- See CLAUDE.md, "A migration's verification block may not write a row".
 -- -----------------------------------------------------------------------------
+
 do $$
-declare
-  v_caps    jsonb;
-  v_id      uuid;
-  v_before  integer;
-  v_after   integer;
-  v_note    text;
 begin
-  select public.app_capabilities() into v_caps;
-  if coalesce((v_caps ->> 'creditLedgerNote')::boolean, false) is not true then
+  if coalesce((public.app_capabilities() ->> 'creditLedgerNote')::boolean, false) is not true then
     raise exception 'ledger note: the capability flag did not turn on';
   end if;
 
-  select id into v_id from public.players where auth_user_id is not null order by created_at limit 1;
-  if v_id is null then
-    raise notice 'ledger note: no signed-up player — shape checked, behaviour NOT exercised';
-    return;
+  if not exists (select 1 from information_schema.columns
+                  where table_schema='public' and table_name='credit_ledger'
+                    and column_name='note' and data_type='text') then
+    raise exception 'ledger note: credit_ledger.note is missing';
   end if;
 
-  begin
-    set local request.jwt.claims = '{"role":"service_role"}';
+  -- NULLABLE ON PURPOSE: most movements explain themselves through `reason`
+  -- and `booking_id`, and a NOT NULL would break every automatic path.
+  if (select is_nullable from information_schema.columns
+       where table_schema='public' and table_name='credit_ledger' and column_name='note')
+     <> 'YES' then
+    raise exception 'ledger note: the column must stay nullable';
+  end if;
 
-    select coalesce(sum(delta_czk), 0) into v_before
-      from public.credit_ledger where player_id = v_id;
+  -- The defaults are part of the signature; dropping one breaks the callers
+  -- that pass three arguments, and Postgres refuses the replace anyway.
+  if pg_get_function_arguments((select p.oid from pg_proc p join pg_namespace n on n.oid=p.pronamespace
+                                 where n.nspname='public' and p.proname='grant_credit'))
+     not like '%DEFAULT%' then
+    raise exception 'ledger note: grant_credit lost its parameter defaults';
+  end if;
 
-    -- A GRANT CARRIES ITS MEMO.
-    v_after := public.grant_credit(v_id, 500, 'admin_grant', false, '  round 28 probe  ');
-    if v_after <> v_before + 500 then
-      raise exception 'ledger note: grant returned % rather than %', v_after, v_before + 500;
-    end if;
-
-    /*
-     * KEYED ON THE AMOUNT, NOT ON `created_at`. Every insert in this DO block
-     * shares one transaction, and `now()` is TRANSACTION time — so every row
-     * here has an identical timestamp and `order by created_at desc limit 1`
-     * picks an arbitrary one. The first draft of this probe failed on exactly
-     * that and blamed the function.
-     */
-    select note into v_note from public.credit_ledger
-     where player_id = v_id and delta_czk = 500 and reason = 'admin_grant';
-    if v_note is distinct from 'round 28 probe' then
-      raise exception 'ledger note: the memo did not land trimmed (got %)', coalesce(v_note, '<null>');
-    end if;
-
-    -- A REMOVAL IS THE SAME CALL WITH A NEGATIVE DELTA, and it carries a memo too.
-    v_after := public.grant_credit(v_id, -200, 'adjustment', false, 'took some back');
-    if v_after <> v_before + 300 then
-      raise exception 'ledger note: removal returned % rather than %', v_after, v_before + 300;
-    end if;
-
-    -- AND THE FLOOR HOLDS. A wallet never goes into debt.
-    begin
-      perform public.grant_credit(v_id, -(v_before + 100000), 'adjustment', false, 'too much');
-      raise exception 'ledger note: the floor let a wallet go negative';
-    exception
-      when others then
-        if sqlerrm not like '%CREDIT_NEGATIVE_BLOCKED%' then raise; end if;
-    end;
-
-    -- An empty memo is stored as NULL rather than as an empty string, so
-    -- "has a note" is one test rather than two.
-    perform public.grant_credit(v_id, 10, 'admin_grant', false, '   ');
-    select note into v_note from public.credit_ledger
-     where player_id = v_id and delta_czk = 10 and reason = 'admin_grant';
-    if v_note is not null then
-      raise exception 'ledger note: a blank memo was stored as a string';
-    end if;
-
-    raise notice 'ledger note: verified — memo lands trimmed, removal works, floor holds';
-  end;
+  raise notice 'ledger note: shape verified — behaviour is drilled in supabase/tests/credit_ledger_note.sql';
 end $$;

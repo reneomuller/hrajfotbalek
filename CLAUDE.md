@@ -171,6 +171,46 @@ extend a CHECK in place: drop and re-add, restating the list in full. That
 drop/re-add is **pre-approved** (2026-08-01) as long as the new list is a strict
 superset.
 
+## A migration's verification block may not write a row
+
+**Effective 2026-09-12, after it cost a production cleanup.** A migration
+asserts that the SHAPE it created exists — objects in `pg_proc`, columns,
+constraints, grants, capability flags, and the RESULT of any backfill the
+migration itself performs. It never inserts a fixture, never updates a row it
+did not come to change, and never calls an RPC that writes.
+
+**Behaviour is drilled in `supabase/tests/`, and that is not a style
+preference.** `run.mjs` wraps every suite in `begin; … rollback;` BY DESIGN, so
+a committing drill is structurally impossible there. A migration has no such
+wrapper: `scripts/apply-migration.mjs` COMMITS.
+
+**What happened.** Rounds 26–29 each ended with a behavioural drill — build a
+fixture, exercise the new RPCs, assert the outcome. Every one was validated
+inside a hand-written `begin; … rollback;`, so the fixtures vanished on every
+test run and the pattern looked safe for four rounds. On 2026-09-12 round 29's
+drill was applied to production and committed. It left:
+
+* a venue and two games named `auto settle probe`
+* two bookings against a **real player** — the drill picks the oldest
+  signed-up account, which is the owner's
+* a real **"You were marked as a no-show"** notification in his bell, because
+  the drill called `mark_attendance`, which notifies
+* two games' worth of inflated `games_played` and hours on his public profile
+* 150 CZK of phantom money owed, inflating the admin's outstanding figure from
+  1,780 to 1,930
+* a `played` game the nightly sweep would have reported as needing attention
+  **every night for ever** — permanent false news in the one channel built to
+  mean "a human should look at this"
+
+Two worse ones were still dormant when this was found and were rewritten before
+they could be applied: round 28's public-profile drill **overwrote a live
+player's `country`, `skill_level` and `positions` and then set them to NULL**,
+and its ledger drill called `grant_credit` three times for real — +500, −200,
++10 — moving 310 CZK into a live wallet with real ledger rows.
+
+**The tell, for next time:** if a verification block declares a variable to hold
+a fixture id, it is a drill and it is in the wrong file.
+
 ## `.env.local` is production, and six runners read it
 
 `SUPABASE_DB_URL` in `.env.local` points at the live database. Six things in

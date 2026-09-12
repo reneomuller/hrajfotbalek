@@ -151,64 +151,56 @@ $$;
 grant execute on function public.app_capabilities() to anon, authenticated, service_role;
 
 -- -----------------------------------------------------------------------------
--- Verification
+-- Verification — SHAPE ONLY
+--
+-- THIS BLOCK MAY NOT WRITE A ROW, AND THE REASON COST A PRODUCTION CLEANUP.
+--
+-- Migrations used to end with a behavioural DRILL: build a fixture, exercise
+-- the new RPCs, assert the outcome. Every one of them was validated inside
+-- `begin; … rollback;`, so the fixtures vanished on every test run — and
+-- `scripts/apply-migration.mjs` COMMITS. On 2026-09-12 round 29's drill was
+-- applied to production and left behind a fake venue, two fake games, two
+-- bookings against a real player, a real "you were marked as a no-show"
+-- notification in his bell, two games' worth of inflated stats, 150 CZK of
+-- phantom money owed, and a game the nightly sweep would have reported as
+-- needing attention every night for ever.
+--
+-- SO THE RULE IS: a migration asserts that the SHAPE it created exists —
+-- objects, columns, constraints, grants, capability flags. It never inserts,
+-- never updates, never calls an RPC that writes. Behaviour is drilled in
+-- `supabase/tests/`, where `run.mjs` wraps every suite in `begin; … rollback;`
+-- BY DESIGN and a committing drill is structurally impossible.
+--
+-- See CLAUDE.md, "A migration's verification block may not write a row".
 -- -----------------------------------------------------------------------------
+
 do $$
-declare
-  v_caps jsonb;
-  v_id   uuid;
-  v_nick text;
-  v_prof public.public_profile;
+declare v_cols text[];
 begin
-  select public.app_capabilities() into v_caps;
-  if coalesce((v_caps ->> 'publicProfileScope')::boolean, false) is not true then
+  if coalesce((public.app_capabilities() ->> 'publicProfileScope')::boolean, false) is not true then
     raise exception 'public scope: the capability flag did not turn on';
   end if;
 
-  select id, nickname into v_id, v_nick
-    from public.players where auth_user_id is not null order by created_at limit 1;
-  if v_id is null then
-    raise notice 'public scope: no signed-up player — shape checked, values NOT exercised';
-    return;
+  select array_agg(attname::text order by attname) into v_cols
+    from pg_attribute
+   where attrelid = 'public.public_profile'::regtype::text::regclass
+     and attnum > 0 and not attisdropped;
+
+  -- THE COMPOSITE IS THE BOUNDARY, so it is enumerated rather than sampled: a
+  -- field that should never be public cannot arrive without somebody typing it
+  -- here. Round 14's ruling, still bounding round 28's amendment.
+  if v_cols is distinct from array['country','cover_path','games_played','hours',
+                                   'nickname','photo_path','players_met','positions',
+                                   'skill_level','venues'] then
+    raise exception 'public scope: the composite is % rather than the ten allowed',
+      coalesce(array_to_string(v_cols, ', '), '<none>');
   end if;
 
-  begin
-    set local request.jwt.claims = '{"role":"service_role"}';
+  if not has_function_privilege('anon',
+        (select p.oid from pg_proc p join pg_namespace n on n.oid=p.pronamespace
+          where n.nspname='public' and p.proname='public_player_profile'), 'EXECUTE') then
+    raise exception 'public scope: anon cannot call public_player_profile';
+  end if;
 
-    update public.players
-       set country = 'CZ', skill_level = 'intermediate', positions = array['gk']
-     where id = v_id;
-
-    v_prof := public.public_player_profile(v_nick);
-
-    if v_prof.country is distinct from 'CZ' then
-      raise exception 'public scope: country did not project (got %)', v_prof.country;
-    end if;
-    if v_prof.skill_level is distinct from 'intermediate' then
-      raise exception 'public scope: skill level did not project (got %)', v_prof.skill_level;
-    end if;
-    if v_prof.positions is distinct from array['gk'] then
-      raise exception 'public scope: positions did not project';
-    end if;
-
-    -- UNSET STAYS UNSET. The page omits what is null; it must not be coerced.
-    update public.players
-       set country = null, skill_level = null, positions = '{}'
-     where id = v_id;
-
-    v_prof := public.public_player_profile(v_nick);
-    if v_prof.country is not null or v_prof.skill_level is not null then
-      raise exception 'public scope: an unset field came back non-null';
-    end if;
-    if array_length(v_prof.positions, 1) is not null then
-      raise exception 'public scope: unset positions came back non-empty';
-    end if;
-
-    -- AND THE ROUND-14 BOUNDARY STILL HOLDS: no contact detail crossed.
-    if v_prof::text like '%@%' then
-      raise exception 'public scope: something that looks like an email crossed the boundary';
-    end if;
-
-    raise notice 'public scope: verified — three fields project, unset stays unset';
-  end;
+  raise notice 'public scope: shape verified — behaviour is drilled in supabase/tests/public_profile_scope.sql';
 end $$;

@@ -549,163 +549,81 @@ $$;
 grant execute on function public.app_capabilities() to anon, authenticated, service_role;
 
 -- -----------------------------------------------------------------------------
--- Verification
+-- Verification — SHAPE ONLY
 --
--- CAPACITY THREE, so there is room for exactly one added guest and then none —
--- which is the only arrangement that exercises both endings in one drill.
+-- THIS BLOCK MAY NOT WRITE A ROW, AND THE REASON COST A PRODUCTION CLEANUP.
+--
+-- Migrations used to end with a behavioural DRILL: build a fixture, exercise
+-- the new RPCs, assert the outcome. Every one of them was validated inside
+-- `begin; … rollback;`, so the fixtures vanished on every test run — and
+-- `scripts/apply-migration.mjs` COMMITS. On 2026-09-12 round 29's drill was
+-- applied to production and left behind a fake venue, two fake games, two
+-- bookings against a real player, a real "you were marked as a no-show"
+-- notification in his bell, two games' worth of inflated stats, 150 CZK of
+-- phantom money owed, and a game the nightly sweep would have reported as
+-- needing attention every night for ever.
+--
+-- SO THE RULE IS: a migration asserts that the SHAPE it created exists —
+-- objects, columns, constraints, grants, capability flags. It never inserts,
+-- never updates, never calls an RPC that writes. Behaviour is drilled in
+-- `supabase/tests/`, where `run.mjs` wraps every suite in `begin; … rollback;`
+-- BY DESIGN and a committing drill is structurally impossible.
+--
+-- See CLAUDE.md, "A migration's verification block may not write a row".
 -- -----------------------------------------------------------------------------
 
 do $$
-declare
-  v_caps    jsonb;
-  v_a       uuid;
-  v_b       uuid;
-  v_venue   uuid;
-  v_game    uuid;
-  v_book    uuid;
-  v_outcome text;
-  v_balance integer;
-  v_room    integer;
-  v_guests  integer;
-  v_open    integer;
+declare v_fn text;
 begin
-  select public.app_capabilities() into v_caps;
-  if coalesce((v_caps ->> 'addGuestsAfterBooking')::boolean, false) is not true then
+  if coalesce((public.app_capabilities() ->> 'addGuestsAfterBooking')::boolean, false) is not true then
     raise exception 'add guests: the capability flag did not turn on';
   end if;
 
-  select id into v_a from public.players where auth_user_id is not null order by created_at limit 1;
-  select id into v_b from public.players where auth_user_id is not null and id <> v_a order by created_at limit 1;
-  if v_a is null or v_b is null then
-    raise notice 'add guests: fewer than two signed-up players — shape checked, race NOT exercised';
-    return;
+  if not exists (select 1 from information_schema.columns
+                  where table_schema='public' and table_name='checkout_sessions'
+                    and column_name='kind') then
+    raise exception 'add guests: checkout_sessions.kind is missing';
   end if;
 
-  begin
-    set local request.jwt.claims = '{"role":"service_role"}';
+  if not exists (select 1 from information_schema.columns
+                  where table_schema='public' and table_name='checkout_sessions'
+                    and column_name='target_booking_id') then
+    raise exception 'add guests: checkout_sessions.target_booking_id is missing';
+  end if;
 
-    insert into public.venues (name) values ('add guests probe') returning id into v_venue;
-    insert into public.games (venue, venue_id, starts_at, capacity, price_czk, status)
-         values ('add guests probe', v_venue, now() + interval '2 days', 3, 150, 'published')
-      returning id into v_game;
+  if not exists (select 1 from pg_constraint
+                  where conname='checkout_sessions_kind_catalog') then
+    raise exception 'add guests: the kind catalog constraint is missing';
+  end if;
 
-    -- A PAID booking, one seat, no guests yet.
-    insert into public.bookings
-           (game_id, player_id, status, payment_method, price_czk,
-            credit_applied_czk, guest_count)
-         values (v_game, v_a, 'confirmed', 'qr', 150, 0, 0)
-      returning id into v_book;
+  if not exists (select 1 from pg_constraint
+                  where conname='checkout_sessions_target_matches_kind') then
+    raise exception 'add guests: the target-matches-kind constraint is missing';
+  end if;
 
-    if public.game_seats_taken(v_game) <> 1 then
-      raise exception 'add guests: the fixture booking did not take its seat';
+  -- THE EVENT CATALOG, which is the trap CLAUDE.md records as already missed
+  -- once: a new event type that fails at the first WRITE, not at the migration.
+  if pg_get_constraintdef((select oid from pg_constraint
+                            where conname='events_event_type_catalog'))
+     not like '%booking_guests_added%' then
+    raise exception 'add guests: the event catalog was not widened';
+  end if;
+
+  for v_fn in select unnest(array['can_add_guests','add_guests_with_credit',
+                                  'open_add_guests_checkout','settle_checkout_session',
+                                  'checkout_outcome'])
+  loop
+    if not exists (select 1 from pg_proc p join pg_namespace n on n.oid=p.pronamespace
+                    where n.nspname='public' and p.proname=v_fn) then
+      raise exception 'add guests: % is missing', v_fn;
     end if;
+  end loop;
 
-    -- Two seats free, party ceiling three: the offer is two.
-    v_room := public.can_add_guests(v_book);
-    if v_room <> 2 then
-      raise exception 'add guests: expected room for 2, got %', v_room;
-    end if;
+  if pg_get_function_result((select p.oid from pg_proc p join pg_namespace n on n.oid=p.pronamespace
+                              where n.nspname='public' and p.proname='checkout_outcome'))
+     not like '%kind%' then
+    raise exception 'add guests: checkout_outcome does not project kind';
+  end if;
 
-    -- === THE ONLINE PATH, and it must take ONLY the guests' seats. ===
-    insert into public.checkout_sessions
-           (stripe_session_id, game_id, player_id, guest_count, amount_czk,
-            kind, target_booking_id)
-         values ('cs_probe_addguest', v_game, v_a, 1, 150, 'add_guests', v_book);
-
-    -- AN OPEN ADD-GUEST CHECKOUT HOLDS NOTHING, exactly like a booking one.
-    if public.game_seats_taken(v_game) <> 1 then
-      raise exception 'add guests: an open add-guest checkout took a seat';
-    end if;
-
-    select public.settle_checkout_session('cs_probe_addguest', 150) into v_outcome;
-    if v_outcome <> 'booked' then
-      raise exception 'add guests: settle returned % rather than booked', v_outcome;
-    end if;
-
-    select guest_count into v_guests from public.bookings where id = v_book;
-    if v_guests <> 1 then
-      raise exception 'add guests: guest_count is % rather than 1', v_guests;
-    end if;
-
-    -- THE SEAT COUNT MOVED BY ONE, not by two: the player was already counted.
-    if public.game_seats_taken(v_game) <> 2 then
-      raise exception 'add guests: seats are % rather than 2', public.game_seats_taken(v_game);
-    end if;
-
-    -- THE ROSTER NUMBERS THE NEW GUEST WITHOUT A GAP.
-    if (select count(*) from public.game_roster_public r
-         where r.game_id = v_game and r.is_guest and r.guest_index = 1) <> 1 then
-      raise exception 'add guests: the roster did not publish Guest 1';
-    end if;
-
-    -- REDELIVERY IS A NO-OP.
-    select public.settle_checkout_session('cs_probe_addguest', 150) into v_outcome;
-    if v_outcome <> 'already' then
-      raise exception 'add guests: redelivery returned % rather than already', v_outcome;
-    end if;
-    select guest_count into v_guests from public.bookings where id = v_book;
-    if v_guests <> 1 then
-      raise exception 'add guests: redelivery added a second guest';
-    end if;
-
-    -- === THE PITCH IS NOW ONE SEAT SHORT OF FULL. Fill it. ===
-    insert into public.bookings
-           (game_id, player_id, status, payment_method, price_czk,
-            credit_applied_czk, guest_count)
-         values (v_game, v_b, 'confirmed', 'qr', 150, 0, 0);
-
-    if public.can_add_guests(v_book) <> 0 then
-      raise exception 'add guests: the panel would still offer a seat on a full pitch';
-    end if;
-
-    -- === MONEY THAT ARRIVES ANYWAY IS CREDITED IN FULL. ===
-    insert into public.checkout_sessions
-           (stripe_session_id, game_id, player_id, guest_count, amount_czk,
-            kind, target_booking_id)
-         values ('cs_probe_addguest_late', v_game, v_a, 1, 150, 'add_guests', v_book);
-
-    -- ACTIVE EXPIRY NAMES IT, which is the defence that should have killed it.
-    select count(*) into v_open from public.checkouts_to_expire(v_game);
-    if v_open <> 1 then
-      raise exception 'add guests: expected 1 checkout to expire, got %', v_open;
-    end if;
-
-    select coalesce(sum(delta_czk), 0) into v_balance
-      from public.credit_ledger where player_id = v_a;
-
-    select public.settle_checkout_session('cs_probe_addguest_late', 150) into v_outcome;
-    if v_outcome <> 'credited' then
-      raise exception 'add guests: late payment returned % rather than credited', v_outcome;
-    end if;
-
-    if (select coalesce(sum(delta_czk), 0) from public.credit_ledger where player_id = v_a)
-       <> v_balance + 150 then
-      raise exception 'add guests: the late payer was not credited in full';
-    end if;
-
-    if not exists (select 1 from public.checkout_sessions
-                    where stripe_session_id = 'cs_probe_addguest_late'
-                      and attention_at is not null) then
-      raise exception 'add guests: the credited payment was not queued for attention';
-    end if;
-
-    -- THE GAME WAS NOT OVERSOLD.
-    if public.game_seats_taken(v_game) > 3 then
-      raise exception 'add guests: the game was oversold (% seats)',
-        public.game_seats_taken(v_game);
-    end if;
-
-    -- === THE CREDIT PATH REFUSES WHEN THERE IS NO ROOM. ===
-    begin
-      perform public.add_guests_with_credit(v_book, 1);
-      raise exception 'add guests: the credit path added a guest to a full game';
-    exception
-      when others then
-        if sqlerrm not like '%CAPACITY_FULL%' and sqlerrm not like '%INSUFFICIENT_PERMISSION%' then
-          raise;
-        end if;
-    end;
-
-    raise notice 'add guests: verified — online adds, redelivery is inert, a full pitch credits in full';
-  end;
+  raise notice 'add guests: shape verified — behaviour is drilled in supabase/tests/add_guests_after_booking.sql';
 end $$;
