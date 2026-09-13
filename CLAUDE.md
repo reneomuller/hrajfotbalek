@@ -156,6 +156,28 @@ only way to notice is to diff the live jsonb against the newest file. **Every
 new migration's list must be a superset of what is LIVE, not of what the
 previous file says**, which means probing before writing it.
 
+**A GLYPH WHOSE SHAPE IS THE MESSAGE MAY NOT BE LEFT TO FONT FALLBACK.** The
+dropdown cue shipped as `▾` (U+25BE) and rendered as a small blob on this
+product's type stack — several fallback faces draw that codepoint tiny and
+nearly round, so the universal "this opens" cue read as a dot. Draw it: an
+inline SVG is the same two vectors everywhere. The same applies to `▾` on the
+admin venue disclosure, which is next in line. **And assert it by decoding, not
+by markup** — "there is an SVG" would have passed for the character too; count
+lit pixels per row and require the top to carry more than the bottom.
+
+**THE PLAYER SAYS "CREDITS"; ONLY THE DATABASE AND THE ADMIN SAY "WALLET".**
+Round 34 made this a law with two tests, and enforcing it found the word in
+**twenty** English keys and thirteen to fifteen in each of Czech, Russian and
+Ukrainian — the cancel copy, the top-up page, the pass lede, the toast, the
+FAQ, the Stripe line item and three email templates. `credit_ledger` keeps its
+name and so does `admin.balanceLabel`. The two tests are deliberately both:
+`lib/i18n/__tests__/vocabulary.test.ts` walks every KEY, including ones only an
+error path renders; `e2e/vocabulary.spec.ts` crawls eight pages in four locales,
+because a table walk cannot see a word hardcoded into a component. **When one
+concept has two names, delete the second KEY rather than retranslating it** —
+`addGuests.payCredit` is gone and the panel renders `booking.payWithCredit`, so
+the two surfaces cannot drift without somebody deliberately adding a key back.
+
 **A SURFACE HAS NO ASPECT IF ITS HEIGHT IS CONTENT-DEPENDENT, and three rounds
 of crop fixes died on that.** The venue photograph feeds the games-list card
 AND the detail hero. The card is a fixed 159px tall, so its aspect moves only
@@ -329,6 +351,24 @@ anything is owed:
 update public.venues set name = replace(name, ' — ', ' • ') where name like '% — %';
 update public.games  set venue = replace(venue, ' — ', ' • ') where venue like '% — %';
 ```
+
+**Outstanding, round 34's one — additive, safe in either order against round
+33's.** It drops and recreates `checkout_outcome` (the return type gains a
+column) and widens the event catalog by one.
+
+```
+node scripts/apply-migration.mjs \
+  supabase/migrations/20260914100000_cancel_guests.sql --production
+```
+
+**AND IT CHANGES HOW `app_capabilities()` ANSWERS, which closes the trap above.**
+Every flag for an object the migration does not ITSELF create is now an
+existence probe against `pg_proc` / `information_schema` rather than a hardcoded
+`true`. Carrying the list forward by hand fixes the out-of-order case and leaves
+a worse one — a later file claiming `playerNumbers: true` on a database where
+that migration has not been applied, which is a flag lying about a column, and
+both admin reads answer a missing column by rendering nothing. **Write new flags
+the same way: assert only what this file creates, probe everything else.**
 
 **Outstanding, round 33's two — additive, order-free, neither deploy-first.**
 Both were applied TWICE against a clean local stack, because both do something a

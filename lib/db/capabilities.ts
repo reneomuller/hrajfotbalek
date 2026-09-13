@@ -71,6 +71,18 @@ export interface AppCapabilities {
    * player has chosen how to pay.
    */
   partyUpToThirteen: boolean;
+  /** Round 34 item 4 — `cancel_guests` exists. */
+  cancelGuests: boolean;
+  /**
+   * Round 34 item 3 — `checkout_outcome` projects `guest_count`.
+   *
+   * NOT READ BY A COMPONENT, and deliberately so: the confirmation's headline
+   * falls back to "Booking confirmed" when the number is absent, which is a
+   * true sentence rather than a degraded one. The flag is here because this
+   * interface mirrors what `app_capabilities()` returns, and because a round
+   * report that claims "applied" should be answerable by one call.
+   */
+  addGuestsConfirmation: boolean;
 }
 
 const NONE: AppCapabilities = {
@@ -86,6 +98,8 @@ const NONE: AppCapabilities = {
   adminRenamePlayer: false,
   playerNumbers: false,
   partyUpToThirteen: false,
+  cancelGuests: false,
+  addGuestsConfirmation: false,
 };
 
 export const appCapabilities = cache(async (): Promise<AppCapabilities> => {
@@ -117,6 +131,8 @@ export const appCapabilities = cache(async (): Promise<AppCapabilities> => {
       adminRenamePlayer: read("adminRenamePlayer"),
       playerNumbers: read("playerNumbers"),
       partyUpToThirteen: read("partyUpToThirteen"),
+      cancelGuests: read("cancelGuests"),
+      addGuestsConfirmation: read("addGuestsConfirmation"),
     };
   } catch {
     return NONE;

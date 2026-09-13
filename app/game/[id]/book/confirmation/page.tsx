@@ -5,7 +5,8 @@ import { requireCurrentPlayer } from "@/lib/auth/session";
 import { getOwnBookingWithGame } from "@/lib/booking/queries";
 import { formatCzk, formatGameDateTime } from "@/lib/format";
 import { amountDueCzk } from "@/lib/payments/spd";
-import { getStrings } from "@/lib/i18n/server";
+import { getLocale, getStrings } from "@/lib/i18n/server";
+import { pluralise } from "@/lib/i18n/plural";
 import { bestDiscountPercent, listPassTiers } from "@/lib/pass/queries";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -34,6 +35,7 @@ export default async function ConfirmationPage({
   searchParams,
 }: ConfirmationPageProps) {
   const t = await getStrings();
+  const locale = await getLocale();
   const { id: gameId } = await params;
   const query = await searchParams;
 
@@ -46,6 +48,26 @@ export default async function ConfirmationPage({
 
   const raw = query.booking;
   const bookingId = Array.isArray(raw) ? raw[0] : raw;
+
+  /*
+   * HOW MANY GUESTS THIS ARRIVAL ADDED (round 34, item 3).
+   *
+   * IT CHANGES THE SENTENCE, NOT THE FACTS. Everything else on this page is
+   * read back off the persisted booking; this one number says which of two
+   * true things just happened — a seat came into existence, or two more did.
+   * The booking itself cannot answer that: `guest_count` is the total, and a
+   * player who booked two guests and later added one more reads 3 either way.
+   *
+   * SO IT COMES THROUGH THE URL, AND IT IS TREATED AS DECORATION RATHER THAN
+   * AS EVIDENCE. Its two writers are the credit rail (which knows what it just
+   * spent) and `returnStatus.ts` (which reads the REGISTER ROW the webhook
+   * settled, never the query string it arrived on). A player who edits this
+   * number changes the headline on their own screen and nothing else — no
+   * money, no seat, no roster. That is the whole reason nothing downstream
+   * reads it.
+   */
+  const addedRaw = Array.isArray(query.added) ? query.added[0] : query.added;
+  const addedGuests = Number.isInteger(Number(addedRaw)) ? Number(addedRaw) : 0;
 
   const found = bookingId ? await getOwnBookingWithGame(bookingId) : null;
 
@@ -115,8 +137,27 @@ export default async function ConfirmationPage({
             >
               ✓
             </span>
-            <span className="font-display text-title uppercase leading-none tracking-wide text-volt">
-              {t.booking.bookingConfirmed}
+            {/*
+              THE SAME PANEL, THE SAME MARK, A DIFFERENT SENTENCE (round 34,
+              item 3). The owner's rule is the same treatment, not a second
+              screen — what changed is which true thing it says.
+            */}
+            <span
+              data-testid="confirmed-headline"
+              data-added={addedGuests > 0 ? String(addedGuests) : undefined}
+              className="font-display text-title uppercase leading-none tracking-wide text-volt"
+            >
+              {addedGuests > 0
+                ? pluralise(
+                    {
+                      one: t.booking.guestsAddedOne,
+                      few: t.booking.guestsAddedFew,
+                      many: t.booking.guestsAddedMany,
+                    },
+                    addedGuests,
+                    locale,
+                  )
+                : t.booking.bookingConfirmed}
             </span>
           </div>
         ) : (

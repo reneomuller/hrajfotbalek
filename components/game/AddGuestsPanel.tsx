@@ -1,12 +1,13 @@
 "use client";
 
 import { useActionState, useState } from "react";
-import { useStrings } from "@/components/LocaleProvider";
+import { useLocale, useStrings } from "@/components/LocaleProvider";
 import { formatCzk } from "@/lib/format";
 import { addGuestsAction } from "@/app/game/[id]/add-guests/actions";
-import { GuestOverflowSelect } from "@/components/game/GuestOverflowSelect";
-import { policy } from "@/lib/policy";
+import { GuestCountPicker } from "@/components/game/GuestCountPicker";
 import { ADD_GUESTS_INITIAL } from "@/lib/booking/addGuests";
+import { pluralise } from "@/lib/i18n/plural";
+import { PASS_REFERENCE_PRICE_CZK } from "@/lib/pass/creditPrice";
 
 /**
  * ADD GUESTS TO A SPOT YOU HAVE ALREADY PAID FOR (round 27, item 2).
@@ -49,6 +50,7 @@ export function AddGuestsPanel({
   embeddedCheckout: boolean;
 }) {
   const t = useStrings();
+  const locale = useLocale();
   const [state, formAction] = useActionState(addGuestsAction, ADD_GUESTS_INITIAL);
   const [picked, setPicked] = useState(1);
 
@@ -62,10 +64,46 @@ export function AddGuestsPanel({
    * will allow. The booking-time picker needs a flag because it derives its
    * ceiling from `lib/policy.ts`; this one is told.
    */
-  const pillMax = Math.min(policy.booking.partyPills, canAdd);
-  const options = Array.from({ length: pillMax }, (_, i) => i + 1);
+  /*
+   * CREDITS ONLY WHEN THE COST REALLY IS A WHOLE NUMBER OF THEM, and this is
+   * not pedantry — it is the difference between a figure and a lie.
+   *
+   * ~~One guest is one credit.~~ `add_guests_with_credit` debits
+   * `game.price_czk × guests`, NOT `150 × guests`. On the 150 CZK game that is
+   * the same number and the ruling holds; on a game priced 180 or 200 — and
+   * production has both — two guests cost 400 CZK, which is two and two-thirds
+   * credits. Printing "2 credits" beside a button that is about to take 400 is
+   * the kind of number a player reconciles against their balance and finds
+   * wrong.
+   *
+   * SO THE UNIT FOLLOWS THE ARITHMETIC. Divides cleanly: credits, which is what
+   * the player holds. Does not: crowns, which is at least true. The same
+   * "handled, not hidden" rule the admin wallet uses for a ragged balance, and
+   * `PASS_REFERENCE_PRICE_CZK` is the one place the rate lives.
+   *
+   * THE DIVERGENCE ITSELF IS A LEDGER ROW, not something to fix here: changing
+   * what a guest costs is a money decision and it is the owner's.
+   */
+  const wholeCredits = (czk: number) =>
+    czk >= 0 && czk % PASS_REFERENCE_PRICE_CZK === 0
+      ? czk / PASS_REFERENCE_PRICE_CZK
+      : null;
+
+  const creditsLabel = (n: number) =>
+    pluralise(
+      {
+        one: t.games.addGuests.creditOne,
+        few: t.games.addGuests.creditFew,
+        many: t.games.addGuests.creditMany,
+      },
+      n,
+      locale,
+    );
+
   const cost = priceCzk * picked;
   const affordable = creditCzk >= cost;
+  const costInCredits = wholeCredits(cost);
+  const leftInCredits = wholeCredits(creditCzk - cost);
 
   const guestLabel =
     picked === 1
@@ -85,71 +123,56 @@ export function AddGuestsPanel({
       </p>
 
       {/*
-        THE PICKER IS RADIO BEHAVIOUR DRAWN AS PILLS, and it is a real
-        `radiogroup` rather than a row of divs: this is a choice among a small
-        set, so a keyboard reaches it and a screen reader announces it as one
-        control with N options.
+        ONE PICKER COMPONENT, TWO PANELS (round 34, item 4). This markup used to
+        live here; `CancelGuestsPanel` asks the identical question in the
+        opposite direction and the owner asked for the same language, so the
+        pills and the overflow dropdown moved into `GuestCountPicker` rather
+        than being copied.
       */}
-      <div className="mt-4 flex flex-wrap items-center gap-2">
-        <div
-          role="radiogroup"
-          aria-label={t.games.addGuests.title}
-          data-testid="add-guests-picker"
-          className="flex flex-wrap gap-2"
-        >
-          {options.map((n) => (
-            <button
-              key={n}
-              type="button"
-              role="radio"
-              aria-checked={picked === n}
-              data-testid={`add-guests-pick-${n}`}
-              onClick={() => setPicked(n)}
-              className={
-                picked === n
-                  ? "rounded-control border-[1.5px] border-volt bg-volt px-4 py-2 text-body font-bold text-surface"
-                  : "rounded-control border-[1.5px] border-hairline bg-transparent px-4 py-2 text-body font-bold text-bone"
-              }
-            >
-              {t.games.addGuests.pick.replace("{n}", String(n))}
-            </button>
-          ))}
-        </div>
+      <GuestCountPicker
+        max={canAdd}
+        value={picked}
+        onChange={setPicked}
+        label={(n: number) => t.games.addGuests.pick.replace("{n}", String(n))}
+        ariaLabel={t.games.addGuests.title}
+        testId="add-guests"
+      />
 
-        {/*
-          THE FOURTH CONTROL, AND IT IS A SIBLING OF THE RADIOGROUP RATHER THAN
-          A MEMBER OF IT. A `<select>` is not a `radio`; inside the group it
-          would make the group announce an option count that does not match what
-          is in it. Two controls, one choice — which is what the legend above
-          says and what `picked` holds.
-        */}
-        <GuestOverflowSelect
-          min={policy.booking.partyPills + 1}
-          max={canAdd}
-          value={picked}
-          onChange={setPicked}
-          label={(n: number) => t.games.addGuests.pick.replace("{n}", String(n))}
-          ariaLabel={t.booking.partyMore}
-          testId="add-guests-more"
-        />
-      </div>
-
+      {/*
+        THE HEADLINE IS IN THE UNIT OF THE RAIL THE PLAYER CAN USE (round 34,
+        item 2). Credits when the balance covers it, crowns when it does not and
+        the online rail is what is left — because the number has to be one the
+        player can check against something they hold. "300 CZK" beside a credit
+        button asks them to divide by 150 before they know whether they can
+        afford it.
+      */}
       <p
         data-testid="add-guests-cost"
         className="mt-3 mb-0 font-display text-title uppercase leading-none text-volt"
       >
-        {t.games.addGuests.cost
-          .replace("{amount}", formatCzk(cost))
-          .replace("{n}", guestLabel)}
+        {affordable && costInCredits !== null
+          ? t.games.addGuests.costCredits
+              .replace("{credits}", creditsLabel(costInCredits))
+              .replace("{n}", guestLabel)
+          : t.games.addGuests.cost
+              .replace("{amount}", formatCzk(cost))
+              .replace("{n}", guestLabel)}
       </p>
 
       {/*
-        TWO BUTTONS, TWO RAILS, AND THE WALLET ONE IS NEVER A DEFAULT.
+        TWO BUTTONS, TWO RAILS, AND THE CREDIT ONE IS NEVER A DEFAULT.
 
-        The owner's rule from item 1 applies to every place money can move: the
-        wallet is spent only when somebody presses the wallet button. So both
-        rails are equally weighted controls and neither is pre-selected —
+        The owner's rule from round 27 item 1 applies to every place money can
+        move: credits are spent only when somebody presses the credit button. So
+        both rails are equally weighted controls and neither is pre-selected —
         submitting without choosing is not possible.
+
+        ~~"Pay from wallet".~~ IT SAYS WHAT THE BOOKING PAGE SAYS, and it says
+        it by rendering the BOOKING PAGE'S OWN KEY (round 34, item 2). There is
+        no `addGuests.payCredit` any more: two keys for one act is two things to
+        translate and two chances to drift, and they had already drifted — one
+        surface called it redeeming a credit and the other called it paying from
+        a wallet, which is the database's word for where the number is kept.
       */}
       <div className="mt-4 flex flex-col gap-2">
         <form action={formAction}>
@@ -163,16 +186,21 @@ export function AddGuestsPanel({
             data-testid="add-guests-credit"
             className="w-full rounded-control bg-volt px-4 py-3 text-body font-bold text-surface disabled:opacity-40"
           >
-            {t.games.addGuests.payCredit}
+            {t.booking.payWithCredit}
           </button>
         </form>
 
         {affordable ? (
           <p className="m-0 text-small text-faint">
-            {t.games.addGuests.creditAfter.replace(
-              "{amount}",
-              formatCzk(creditCzk - cost),
-            )}
+            {leftInCredits !== null
+              ? t.games.addGuests.creditAfter.replace(
+                  "{credits}",
+                  creditsLabel(leftInCredits),
+                )
+              : t.games.addGuests.creditAfterCzk.replace(
+                  "{amount}",
+                  formatCzk(creditCzk - cost),
+                )}
           </p>
         ) : (
           <p data-testid="add-guests-poor" className="m-0 text-small text-faint">

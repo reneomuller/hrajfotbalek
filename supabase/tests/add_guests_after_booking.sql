@@ -220,6 +220,92 @@ select pg_temp.ok_probe(
   'error:23514',
   'an add-guest session with no target booking is refused by the constraint');
 
+-- =============================================================================
+-- ROUND 34, ITEM 2 — WHAT THE CREDIT RAIL ACTUALLY DEBITS
+--
+-- The owner asked for this to be verified rather than assumed, and verifying it
+-- turned up a divergence worth naming: `add_guests_with_credit` charges
+-- `game.price_czk x guests`, NOT `150 x guests`. On a 150 CZK game the two are
+-- the same number and the credits ruling holds exactly; on a game priced 180 or
+-- 200 — production has both — a guest costs more than one credit.
+--
+-- THE ASSERTION IS WRITTEN AGAINST THE GAME'S PRICE, because that is what the
+-- function does and a test must say what is true. The question of whether a
+-- guest SHOULD cost one credit on a 200 CZK game is a money decision and it is
+-- the owner's; it is ledger row 277, not a silent change here.
+-- =============================================================================
+
+create temp table _debit_fixture as
+select '9d000000-0000-0000-0000-0000000d9f02'::uuid as game_id,
+       'aaaa0000-0000-0000-0000-0000000d9f02'::uuid as player_id;
+
+insert into public.games (id, venue, starts_at, capacity, price_czk, status) values
+  ('9d000000-0000-0000-0000-0000000d9f02', 'Add Guest Debit', now() + interval '9 days', 10, 150, 'published');
+
+insert into auth.users (id, email) values
+  ('6d000000-0000-0000-0000-0000000d9f02', 'agd@test.invalid');
+insert into public.players (id, nickname, email, auth_user_id) values
+  ('aaaa0000-0000-0000-0000-0000000d9f02', 'AddGuestDebit', 'agd@test.invalid',
+   '6d000000-0000-0000-0000-0000000d9f02');
+
+-- 450: the seat the booking below is about to spend, plus exactly two guests'
+-- worth and not a crown more. `create_booking` applies the wallet inside its
+-- own transaction, so granting 300 here would leave 150 and the refusal below
+-- would fire for the wrong reason.
+insert into public.credit_ledger (player_id, delta_czk, reason)
+values ('aaaa0000-0000-0000-0000-0000000d9f02', 450, 'admin_grant');
+
+select pg_temp.act_as('6d000000-0000-0000-0000-0000000d9f02');
+select public.create_booking('9d000000-0000-0000-0000-0000000d9f02', 'cash');
+reset role;
+
+update public.bookings set status = 'confirmed'
+ where game_id = '9d000000-0000-0000-0000-0000000d9f02'
+   and player_id = 'aaaa0000-0000-0000-0000-0000000d9f02';
+
+create function pg_temp.debit_booking() returns uuid language sql security definer as $$
+  select id from public.bookings
+   where game_id = '9d000000-0000-0000-0000-0000000d9f02'
+     and player_id = 'aaaa0000-0000-0000-0000-0000000d9f02'
+   limit 1
+$$;
+
+create function pg_temp.debit_balance() returns integer language sql security definer as $$
+  select coalesce(sum(delta_czk), 0)::integer from public.credit_ledger
+   where player_id = 'aaaa0000-0000-0000-0000-0000000d9f02'
+$$;
+
+-- THE REFUSAL COMES FIRST, so it is made against a balance that has not yet
+-- been spent: three guests cost 450 and the wallet holds 300.
+select pg_temp.act_as('6d000000-0000-0000-0000-0000000d9f02');
+select pg_temp.ok_probe(
+  format($q$select public.add_guests_with_credit(%L, 3)$q$, pg_temp.debit_booking()),
+  'raise:CREDIT_NEGATIVE_BLOCKED',
+  'the credit rail refuses when the balance does not cover the guests');
+reset role;
+
+select pg_temp.ok(
+  pg_temp.debit_balance() = 300,
+  'and the refusal took nothing — a refused spend that debits is the worst '
+  'possible bug in this file',
+  pg_temp.debit_balance()::text);
+
+select pg_temp.act_as('6d000000-0000-0000-0000-0000000d9f02');
+select public.add_guests_with_credit(pg_temp.debit_booking(), 2);
+reset role;
+
+select pg_temp.ok(
+  pg_temp.debit_balance() = 0,
+  'two guests on a 150 CZK game debit exactly 2 x 150 — one credit each',
+  pg_temp.debit_balance()::text);
+
+select pg_temp.ok(
+  (select count(*) from public.credit_ledger
+    where booking_id = pg_temp.debit_booking()
+      and reason = 'redemption'
+      and delta_czk = -300) = 1,
+  'as ONE redemption row, at the game price times the guest count');
+
 select seq, label, case when passed then 'PASS' else 'FAIL' end as result, detail
 from _results order by seq;
 

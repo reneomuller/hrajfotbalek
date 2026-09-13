@@ -7,6 +7,8 @@ import { InfoCard } from "@/components/game/InfoCard";
 import { OrganizerCard } from "@/components/game/OrganizerCard";
 import { PlayersList } from "@/components/game/PlayersList";
 import { AddGuestsPanel } from "@/components/game/AddGuestsPanel";
+import { CancelGuestsPanel } from "@/components/game/CancelGuestsPanel";
+import { refundCutoffHours } from "@/lib/policy/refundCutoff";
 import { ClaimBar } from "@/components/game/ClaimBar";
 import { ShareButton } from "@/components/game/ShareButton";
 import { effectivePitchName, venueDisplayName } from "@/lib/venues/displayName";
@@ -185,6 +187,27 @@ export default async function GameDetailPage({ params, searchParams }: GamePageP
       : 0;
 
   const addGuestsCredit = canAddGuests > 0 ? await getOwnCreditBalance() : 0;
+
+  /*
+   * CANCELLING GUESTS (round 34, item 4) — the same three gates, read the other
+   * way round.
+   *
+   * NO RPC IS NEEDED TO DECIDE THIS. What the control can offer is the guests
+   * already on the booking, which the booking row carries; `cancel_guests`
+   * re-checks it under the lock, which is where a second tab's answer is
+   * settled. The gate is therefore: a booking, guests on it, a game that has
+   * not kicked off, and a database that has the function.
+   *
+   * THE CUTOFF DOES NOT GATE IT, and that is `cancel_booking`'s rule rather
+   * than an omission — freeing a seat late is worth more to everyone else than
+   * the player's silence. What the cutoff changes is the sentence under the
+   * picker, from a promise to a warning.
+   */
+  const cancellableGuests =
+    ownBooking && capabilities.cancelGuests && !hasStarted
+      ? ownBooking.booking.guest_count
+      : 0;
+  const guestRefundCutoffHours = cancellableGuests > 0 ? await refundCutoffHours() : 0;
 
   const endsAt = gameEndsAt(game.starts_at, game.duration_minutes);
   const isFull = spotsLeft === 0;
@@ -472,6 +495,31 @@ export default async function GameDetailPage({ params, searchParams }: GamePageP
           priceCzk={game.price_czk}
           creditCzk={addGuestsCredit}
           embeddedCheckout={embeddedCheckoutEnabled()}
+        />
+      )}
+
+      {/*
+        CANCEL GUESTS — DIRECTLY UNDER ADD GUESTS (round 34, item 4).
+
+        The two are one thought in two directions and they belong next to each
+        other: somebody looking at the lineup and counting who is actually
+        coming is the reader for both. Like its neighbour it renders for one
+        person and otherwise not at all — no empty state, no disabled card.
+
+        IT DOES NOT REPLACE CANCEL. Leaving the game entirely stays on the claim
+        bar with its own confirmation, and this panel's copy says so, because
+        two controls that both say "cancel" on one page is how somebody ends up
+        out of a game they meant to stay in.
+      */}
+      {ownBooking && cancellableGuests > 0 && (
+        <CancelGuestsPanel
+          gameId={game.id}
+          bookingId={ownBooking.booking.id}
+          guestCount={cancellableGuests}
+          refundable={ownBooking.refundable}
+          refundCutoffHours={guestRefundCutoffHours}
+          /* ONE GUEST IS ONE CREDIT — the ruling the whole product counts in. */
+          creditPerGuest={1}
         />
       )}
 

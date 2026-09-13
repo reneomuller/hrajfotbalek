@@ -237,14 +237,29 @@ export const cs: StringsOverlay = {
       title: "Bereš někoho s sebou?",
       body: "Přidej si hosty ke svému místu. Do sestavy se přidají, jakmile dorazí platba.",
       cost: "{amount} za {n}",
+      costCredits: "{credits} za {n}",
       guestOne: "1 host",
       guestMany: "{n} hostů",
-      payCredit: "Zaplatit z peněženky",
       payOnline: "Zaplatit online",
-      creditAfter: "Zbyde {amount}",
-      notEnoughCredit: "Na tolik hostů nemáš dost kreditu",
+      creditAfter: "Zbyde {credits}",
+      creditAfterCzk: "Zbyde {amount}",
+      creditOne: "{n} kredit",
+      creditFew: "{n} kredity",
+      creditMany: "{n} kreditů",
+      notEnoughCredit: "Na tolik hostů nemáš dost kreditů",
       capacityFull: "Tahle místa právě padla",
       failed: "Nepovedlo se. Zkus to prosím znovu.",
+    },
+    cancelGuests: {
+      title: "Někdo vypadl?",
+      body: "Odeber hosty ze svého místa. Tvoje zůstává — jestli chceš ze zápasu pryč, použij Zrušit.",
+      refund: "{credits} se ti vrátí.",
+      forfeit: "Do začátku zbývá míň než {hours} h — za odebraného hosta se už nic nevrací.",
+      submit: "Odebrat {n}",
+      confirm: "Odebrat {n} ze svého místa?",
+      confirmLate: "Odebrat {n}? Je po hranici pro vrácení, takže se nic nevrátí.",
+      windowClosed: "Tenhle zápas už začal.",
+      countInvalid: "Tolik hostů nemáš.",
     },
     cancelled: "Tenhle zápas byl zrušený.",
     notFound: "Takový zápas neexistuje, nebo ještě není zveřejněný.",
@@ -388,7 +403,7 @@ export const cs: StringsOverlay = {
     // DRAFT — flagged for the standing native-review batch.
     // DRAFT — flagged for the standing native-review batch.
     payWithCredit: "Použít kredit",
-    payWithCreditHint: "Použije {seats} kredit(ů) z tvé peněženky. Nic neplatíš.",
+    payWithCreditHint: "Použije {seats} kredit(ů), které už máš. Nic neplatíš.",
     payWithCreditNone: "Zatím nemáš žádné kredity.",
     addCredits: "Dobít kredity →",
     payOnline: "Platba online",
@@ -423,6 +438,9 @@ export const cs: StringsOverlay = {
     cancelReassuranceCutoff:
       "Zrušit můžeš až do {hours} h před výkopem — všechno se ti vrátí jako kredit.",
     confirmBooking: "Potvrdit rezervaci",
+    guestsAddedOne: "+{n} host potvrzen",
+    guestsAddedFew: "+{n} hosté potvrzeni",
+    guestsAddedMany: "+{n} hostů potvrzeno",
     bookingConfirmed: "Rezervace potvrzena",
     reserved: "Místo rezervované",
     confirmed: "Platba potvrzená",
@@ -438,11 +456,11 @@ export const cs: StringsOverlay = {
     cancelTitle: "Zrušit rezervaci?",
     cancelKeep: "Nechat si místo",
     cancelFailed: "Zrušení se nepovedlo. Rezervaci máš pořád.",
-    refundToWallet: "Co jsi zaplatil, se ti vrátí jako kredit do peněženky.",
+    refundAsCredits: "Co jsi zaplatil, se ti vrátí jako kredity.",
     // DRAFT — flagged for the standing native-review batch.
     refundLostLate:
       "Do výkopu zbývá méně než {hours} hodin, takže se ti tenhle zápas nevrátí do kreditu. Zrušením ale uvolníš místo pro někoho dalšího.",
-    cancelConfirm: "Zrušit tuhle rezervaci? Kredit se ti vrátí do peněženky.",
+    cancelConfirm: "Zrušit tuhle rezervaci? Kredity se ti vrátí.",
     cancelled: "Rezervace zrušená",
     addToCalendar: "Přidat do kalendáře",
     share: "Sdílet",
@@ -465,7 +483,7 @@ export const cs: StringsOverlay = {
     returnTitle: "Potvrzujeme platbu",
     checkoutTitle: "Zaplať své místo",
     checkoutSeats: "{seats} míst(a) na tomto zápase",
-    checkoutCredits: "{credits} kreditů do peněženky",
+    checkoutCredits: "{credits} kreditů",
     confirmingTitle: "Potvrzujeme tvoji platbu…",
     confirmingBody:
       "Stripe má tvoji platbu. Čekáme, až k nám dorazí potvrzení — obvykle to trvá pár vteřin.",
@@ -571,7 +589,7 @@ export const cs: StringsOverlay = {
     attendancePresent: "Dorazil",
     attendanceNoShow: "Nedorazil",
 
-    topupTitle: "Dobij si peněženku",
+    topupTitle: "Dobij si kredity",
     topupLede: "Přidej si kredit teď a na další rezervaci se použije automaticky.",
     topupCta: "Získat permanentku",
     topupAmountLabel: "Částka",
@@ -580,8 +598,8 @@ export const cs: StringsOverlay = {
     topupOutOfRange: "Zvol částku mezi 50 a 2000 Kč.",
     topupPendingTitle: "Čekáme na tvoji platbu",
     topupPendingBody:
-      "Naskenuj kód v bankovní aplikaci. Peněženka se aktualizuje, jakmile organizátor potvrdí, že platba dorazila.",
-    topupConfirmedTitle: "Tohle dobití už máš v peněžence.",
+      "Naskenuj kód v bankovní aplikaci. Kredity ti přistanou, jakmile organizátor potvrdí, že platba dorazila.",
+    topupConfirmedTitle: "Tohle dobití už je připsané.",
     topupBackToAccount: "← Zpět na můj účet",
 
     photoTitle: "Profilová fotka",
@@ -631,7 +649,7 @@ export const cs: StringsOverlay = {
     badgeExpired: "Propadlo",
     past: "Odehrané",
     upcoming: "Nadcházející",
-    cancelSuccess: "Rezervace zrušená. Kredit je zpátky v peněžence.",
+    cancelSuccess: "Rezervace zrušená. Kredity jsou zpátky.",
   },
 
   errors: {
@@ -657,7 +675,7 @@ export const cs: StringsOverlay = {
 
   pass: {
     title: "Herní permanentka",
-    lede: "Předplať si zápasy se slevou. Přistane ti v peněžence jako kredit a sám se použije na další rezervaci.",
+    lede: "Předplať si zápasy se slevou. Přistanou ti kredity a samy se použijí na další rezervaci.",
     // The product name stays English in every locale — see lib/strings.ts.
     panelTitle: "Game Pass",
     panelBody: "Předplať si zápasy se slevou",
@@ -683,7 +701,7 @@ export const cs: StringsOverlay = {
     equivalence: "≈ {count} zápasů",
     howItWorks: "Jak to funguje",
     howItWorksBody:
-      "Zaplatíš kartou nebo mobilní peněženkou. Jakmile je platba potvrzená, kredity se ti automaticky připíšou na účet.",
+      "Zaplatíš kartou, přes Apple Pay nebo Google Pay. Jakmile je platba potvrzená, kredity se ti automaticky připíšou na účet.",
     batchesTitle: "Tvůj kredit",
     batchesExpiring: "Zbývá {credits} · vyprší {date}",
     batchesNever: "{credits} · bez expirace",
@@ -695,7 +713,7 @@ export const cs: StringsOverlay = {
   toast: {
     bookingCreated: "Jsi v sestavě. Místo ti držíme.",
     signedIn: "Přihlášeno.",
-    bookingCancelled: "Zrušeno — hodnota se ti vrátila do peněženky jako kredit.",
+    bookingCancelled: "Zrušeno — hodnota se ti vrátila jako kredity.",
     topupConfirmed: "Dobití potvrzeno. Zůstatek je aktualizovaný.",
     linkCopied: "Odkaz zkopírován.",
     failed: "Neprošlo to. Zkus to znovu.",
@@ -749,7 +767,7 @@ export const cs: StringsOverlay = {
       },
       {
         q: "Jak zaplatím?",
-        a: "Zaplať bezpečně kartou nebo mobilní peněženkou při rezervaci, nebo použij kredity z permanentky.",
+        a: "Zaplať bezpečně kartou, přes Apple Pay nebo Google Pay při rezervaci, nebo použij kredity z permanentky.",
       },
       {
         q: "Musím umět dobře hrát?",

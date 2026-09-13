@@ -170,7 +170,7 @@ export function CancelBookingForm({
               }`}
             >
               {refundable
-                ? t.booking.refundToWallet
+                ? t.booking.refundAsCredits
                 : t.booking.refundLostLate.replace(
                     "{hours}",
                     String(refundCutoffHours ?? ""),

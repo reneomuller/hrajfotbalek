@@ -1263,7 +1263,33 @@ export interface Database {
           booking_id: string | null;
           /** Round 27 item 2 — `booking` or `add_guests`, so the return page routes. */
           kind: string;
+          /**
+           * Round 34 item 3 — how many guests this checkout bought.
+           *
+           * OPTIONAL, and the `?` is the migration-safe rule again: a database
+           * without `20260914100000` does not project it, and the confirmation
+           * falls back to naming no number rather than rendering `undefined`.
+           */
+          guest_count?: number;
         }[];
+      };
+      /**
+       * Round 34 item 4 — removes N guests from the CALLER'S OWN booking.
+       *
+       * Never the player's own seat: the count is bounded by `guest_count`, so
+       * the smallest a booking becomes is the one seat it started as. The
+       * refund is credit and is gated on `cancel_booking`'s cutoff; the removal
+       * itself is permitted up to kickoff, which is `cancel_booking`'s rule too.
+       */
+      cancel_guests: {
+        Args: { p_booking_id: string; p_count: number };
+        Returns: {
+          booking_id: string;
+          guests_remaining: number;
+          credit_issued_czk: number;
+          forfeited_czk: number;
+          cancel_lead_hours: number;
+        };
       };
       /**
        * One addressed notification. Admin or service role only.

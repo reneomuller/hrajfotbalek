@@ -95,6 +95,8 @@ async function readBookingStatus(
     game_id: string;
     booking_id: string | null;
     kind?: string;
+    /** Round 34 item 3 — absent before `20260914100000`, which is why it is `?`. */
+    guest_count?: number;
   }[];
   const outcome = rows[0];
   if (error || !outcome) return null;
@@ -103,22 +105,37 @@ async function readBookingStatus(
 
   if (outcome.status === "booked" && outcome.booking_id) {
     /*
-     * ADDED GUESTS END ON THE ROSTER, NOT ON A CONFIRMATION SCREEN
-     * (round 27, item 2).
+     * ~~ADDED GUESTS END ON THE ROSTER, NOT ON A CONFIRMATION SCREEN
+     * (round 27, item 2).~~ OVERRULED BY THE OWNER (round 34, item 3).
      *
-     * The confirmation page is about a booking coming into existence — its
-     * calendar link, its variable symbol, its "you are in". None of that is
-     * what just happened: the player was already in, and what changed is that
-     * two more names appeared under theirs. The game page shows exactly that,
-     * and showing them a screen they have seen before, unchanged except for a
-     * number, would read as if nothing had happened.
+     * The round-27 reasoning was that "the confirmation page is about a booking
+     * coming into existence" and that a player who was already in would read an
+     * unchanged screen as nothing having happened. What it produced instead was
+     * a SILENT RETURN: money left the player's card and they were dropped back
+     * on the page they started from, with a roster that is one scroll away and
+     * two names longer. The absence of a full stop reads as a failure, and the
+     * fix is not a different page — it is the same page saying what actually
+     * happened.
      *
-     * `kind` is optional on the row because a database without round 27's
-     * migration does not project it — and its absence correctly means
-     * "booking", which is the only kind that existed then.
+     * SO BOTH RAILS END IN THE SAME PLACE and the copy carries the difference.
+     * `added` is read back off the REGISTER ROW the webhook settled, never from
+     * the URL the player arrived on: a number in a query string is a number the
+     * player can edit, and this one is about to be printed as a fact.
+     *
+     * `kind` and `guest_count` are optional on the row because a database
+     * without the migration that added each does not project it — and a missing
+     * `kind` correctly means "booking", which is the only kind that existed
+     * then.
      */
+    const confirmation = `/game/${outcome.game_id}/book/confirmation?booking=${outcome.booking_id}`;
+
     if (outcome.kind === "add_guests") {
-      return { state: "confirmed", href: `/game/${outcome.game_id}`, fallbackHref };
+      const added = Number(outcome.guest_count ?? 0);
+      return {
+        state: "confirmed",
+        href: added > 0 ? `${confirmation}&added=${added}` : confirmation,
+        fallbackHref,
+      };
     }
 
     return {

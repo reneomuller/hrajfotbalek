@@ -90,12 +90,30 @@ export function GuestOverflowSelect({
           </option>
         ))}
       </select>
-      <span
+      {/*
+        A DRAWN TRIANGLE, NOT A TYPED ONE (round 34, item 1).
+        
+        `▾` (U+25BE, BLACK DOWN-POINTING SMALL TRIANGLE) is what this was, and
+        on the product's own type stack it renders as a small blob — several of
+        the fallback faces draw that codepoint tiny and nearly round, so the
+        universal "this opens" cue read as a dot. A glyph whose SHAPE is the
+        whole message cannot be left to font fallback.
+
+        An inline SVG is the same two vectors on every device: a filled
+        triangle, `currentColor` so it takes the pill's selected/unselected
+        treatment with everything else, and `aria-hidden` because the `<select>`
+        already announces itself as a combobox.
+      */}
+      <svg
         aria-hidden
-        className="pointer-events-none absolute right-3.5 text-[10px] leading-none"
+        viewBox="0 0 10 6"
+        width="10"
+        height="6"
+        data-testid={`${testId}-caret`}
+        className="pointer-events-none absolute right-3.5"
       >
-        ▾
-      </span>
+        <path d="M0 0h10L5 6z" fill="currentColor" />
+      </svg>
     </span>
   );
 }

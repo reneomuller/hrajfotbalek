@@ -240,14 +240,29 @@ export const ru: StringsOverlay = {
       title: "Берёшь кого-то с собой?",
       body: "Добавь гостей к своему месту. Они появятся в составе, как только придёт оплата.",
       cost: "{amount} за {n}",
+      costCredits: "{credits} за {n}",
       guestOne: "1 гость",
       guestMany: "{n} гостей",
-      payCredit: "Оплатить из кошелька",
       payOnline: "Оплатить онлайн",
-      creditAfter: "Останется {amount}",
-      notEnoughCredit: "Не хватает кредита на столько гостей",
+      creditAfter: "Останется {credits}",
+      creditAfterCzk: "Останется {amount}",
+      creditOne: "{n} кредит",
+      creditFew: "{n} кредита",
+      creditMany: "{n} кредитов",
+      notEnoughCredit: "Не хватает кредитов на столько гостей",
       capacityFull: "Эти места только что заняли",
       failed: "Не получилось. Попробуй ещё раз.",
+    },
+    cancelGuests: {
+      title: "Кто-то не придёт?",
+      body: "Убери гостей со своего места. Твоё остаётся — чтобы уйти из матча совсем, нажми Отменить.",
+      refund: "{credits} вернутся тебе.",
+      forfeit: "До начала меньше {hours} ч — за снятого гостя уже ничего не вернётся.",
+      submit: "Убрать {n}",
+      confirm: "Убрать {n} со своего места?",
+      confirmLate: "Убрать {n}? Срок возврата прошёл, поэтому ничего не вернётся.",
+      windowClosed: "Этот матч уже начался.",
+      countInvalid: "У тебя нет столько гостей.",
     },
     cancelled: "Этот матч отменён.",
     notFound: "Такого матча нет или он ещё не опубликован.",
@@ -391,7 +406,7 @@ export const ru: StringsOverlay = {
     // DRAFT — flagged for the standing native-review batch.
     // DRAFT — flagged for the standing native-review batch.
     payWithCredit: "Списать кредит",
-    payWithCreditHint: "Спишется {seats} кредит(ов) из кошелька. Платить ничего не нужно.",
+    payWithCreditHint: "Спишется {seats} кредит(ов), которые у тебя уже есть. Платить ничего не нужно.",
     payWithCreditNone: "У тебя пока нет кредитов.",
     addCredits: "Пополнить кредиты →",
     payOnline: "Онлайн-оплата",
@@ -422,10 +437,13 @@ export const ru: StringsOverlay = {
       "Пока тебя не было, игра заполнилась, так что платить не за что. Ничего не списано.",
     awaitingRetry: "Повторить оплату",
     cancelReassuranceKickoff:
-      "Отменить можно в любой момент до начала — всё вернётся кредитом в кошелёк.",
+      "Отменить можно в любой момент до начала — кредиты вернутся полностью.",
     cancelReassuranceCutoff:
-      "Отменить можно за {hours} ч до начала — всё вернётся кредитом в кошелёк.",
+      "Отменить можно за {hours} ч до начала — кредиты вернутся полностью.",
     confirmBooking: "Подтвердить бронь",
+    guestsAddedOne: "+{n} гость подтверждён",
+    guestsAddedFew: "+{n} гостя подтверждены",
+    guestsAddedMany: "+{n} гостей подтверждено",
     bookingConfirmed: "Бронь подтверждена",
     reserved: "Место забронировано",
     confirmed: "Платёж подтверждён",
@@ -441,11 +459,11 @@ export const ru: StringsOverlay = {
     cancelTitle: "Отменить бронь?",
     cancelKeep: "Оставить место",
     cancelFailed: "Отменить не вышло. Бронь осталась.",
-    refundToWallet: "То, что ты заплатил, вернётся кредитом в кошелёк.",
+    refundAsCredits: "То, что ты заплатил, вернётся кредитами.",
     // DRAFT — flagged for the standing native-review batch.
     refundLostLate:
       "До начала меньше {hours} часов, поэтому кредит за эту игру не вернётся. Но отмена освободит твоё место для другого игрока.",
-    cancelConfirm: "Отменить эту бронь? Кредит вернётся в кошелёк.",
+    cancelConfirm: "Отменить эту бронь? Кредиты вернутся тебе.",
     cancelled: "Бронь отменена",
     addToCalendar: "Добавить в календарь",
     share: "Поделиться",
@@ -470,7 +488,7 @@ export const ru: StringsOverlay = {
     returnTitle: "Подтверждаем платёж",
     checkoutTitle: "Оплати своё место",
     checkoutSeats: "{seats} мест(а) на этом матче",
-    checkoutCredits: "{credits} кредитов в кошелёк",
+    checkoutCredits: "{credits} кредитов",
     confirmingTitle: "Подтверждаем твой платёж…",
     confirmingBody:
       "Stripe получил платёж. Ждём, пока подтверждение дойдёт до нас — обычно это несколько секунд.",
@@ -575,7 +593,7 @@ export const ru: StringsOverlay = {
     attendancePresent: "Пришёл",
     attendanceNoShow: "Не пришёл",
 
-    topupTitle: "Пополни кошелёк",
+    topupTitle: "Пополни кредиты",
     topupLede: "Добавь кредит сейчас — он автоматически применится к следующей брони.",
     topupCta: "Получить абонемент",
     topupAmountLabel: "Сумма",
@@ -584,8 +602,8 @@ export const ru: StringsOverlay = {
     topupOutOfRange: "Выбери сумму от 50 до 2000 CZK.",
     topupPendingTitle: "Ждём твой платёж",
     topupPendingBody:
-      "Отсканируй код в банковском приложении. Кошелёк обновится, как только организатор подтвердит, что платёж пришёл.",
-    topupConfirmedTitle: "Это пополнение уже в твоём кошельке.",
+      "Отсканируй код в банковском приложении. Кредиты придут, как только организатор подтвердит, что платёж пришёл.",
+    topupConfirmedTitle: "Это пополнение уже зачислено.",
     topupBackToAccount: "← Назад в мой профиль",
 
     photoTitle: "Фото профиля",
@@ -635,7 +653,7 @@ export const ru: StringsOverlay = {
     badgeExpired: "Истекло",
     past: "Прошедшие",
     upcoming: "Ближайшие",
-    cancelSuccess: "Бронь отменена. Кредит вернулся в кошелёк.",
+    cancelSuccess: "Бронь отменена. Кредиты вернулись.",
   },
 
   errors: {
@@ -661,7 +679,7 @@ export const ru: StringsOverlay = {
 
   pass: {
     title: "Игровой абонемент",
-    lede: "Купи матчи заранее со скидкой. Деньги попадут в кошелёк как кредит и сами применятся к следующей брони.",
+    lede: "Купи матчи заранее со скидкой. Деньги станут кредитами и сами применятся к следующей брони.",
     // The product name stays English in every locale — see lib/strings.ts.
     panelTitle: "Game Pass",
     panelBody: "Купи матчи заранее со скидкой",
@@ -687,7 +705,7 @@ export const ru: StringsOverlay = {
     equivalence: "≈ {count} матчей",
     howItWorks: "Как это работает",
     howItWorksBody:
-      "Платишь картой или мобильным кошельком. Как только платёж подтверждён, кредиты автоматически зачисляются на счёт.",
+      "Платишь картой, через Apple Pay или Google Pay. Как только платёж подтверждён, кредиты автоматически зачисляются на счёт.",
     batchesTitle: "Твой кредит",
     batchesExpiring: "Осталось {credits} · сгорает {date}",
     batchesNever: "{credits} · без срока",
@@ -699,7 +717,7 @@ export const ru: StringsOverlay = {
   toast: {
     bookingCreated: "Ты в составе. Место забронировано.",
     signedIn: "Вход выполнен.",
-    bookingCancelled: "Отменено — сумма вернулась в кошелёк как кредит.",
+    bookingCancelled: "Отменено — сумма вернулась кредитами.",
     topupConfirmed: "Пополнение подтверждено. Баланс обновлён.",
     linkCopied: "Ссылка скопирована.",
     failed: "Не прошло. Попробуй ещё раз.",
@@ -765,7 +783,7 @@ export const ru: StringsOverlay = {
       },
       {
         q: "Как оплатить?",
-        a: "Оплати картой или мобильным кошельком при бронировании, либо используй кредиты с абонемента.",
+        a: "Оплати картой, через Apple Pay или Google Pay при бронировании, либо используй кредиты с абонемента.",
       },
       {
         q: "Нужно ли хорошо играть?",

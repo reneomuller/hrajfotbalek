@@ -12,12 +12,16 @@ import type { AddGuestsState } from "@/lib/booking/addGuests";
 /**
  * ADD GUESTS TO A BOOKING THAT IS ALREADY PAID (round 27, item 2).
  *
- * TWO RAILS AND ONE RULE. The wallet path spends credit inside a single
+ * TWO RAILS AND ONE RULE. The credit path spends credit inside a single
  * transaction that also checks the seats; the online path creates no booking
  * change at all and hands the decision to the webhook, exactly as pay-first
- * does for a first booking. **Neither rail touches the wallet unless the
- * player pressed the wallet button** — the same rule round 27 item 1 made a
- * spec of, applied to the second place money can now move.
+ * does for a first booking. **Neither rail spends a credit unless the player
+ * pressed the credit button** — the same rule round 27 item 1 made a spec of,
+ * applied to the second place money can now move.
+ *
+ * BOTH RAILS NOW END ON THE CONFIRMATION SCREEN (round 34, item 3). They used
+ * to end on the game page, which is a silent return: money moves and the player
+ * is put back where they started.
  *
  * THE AMOUNT IS GUEST-ONLY. The player already paid for themselves; charging
  * `price × (1 + guests)` here would bill them twice for their own seat. It is
@@ -92,12 +96,23 @@ export async function addGuestsAction(
 
     revalidatePath(`/game/${gameId}`);
     /*
-     * REDIRECTED RATHER THAN FLAGGED. `revalidatePath` unmounts anything the
-     * action returns before it can be read — CLAUDE.md's client-state lesson —
-     * so the success signal is the roster itself, which is the thing the
-     * player actually wants to see.
+     * ~~REDIRECTED TO THE ROSTER.~~ TO THE CONFIRMATION, LIKE EVERY OTHER
+     * COMPLETED PURCHASE (round 34, item 3).
+     *
+     * The two rails used to end in two different places — this one on the game
+     * page, the online one also on the game page by way of
+     * `returnStatus.ts` — and neither said anything had happened. The owner's
+     * rule is that completing an add-guests purchase lands on the same BOOKING
+     * CONFIRMED moment the first checkout does, whichever way it was paid.
+     *
+     * THE REASON FOR REDIRECTING AT ALL IS UNCHANGED, and it is not cosmetic:
+     * `revalidatePath` unmounts anything this action returns before it can be
+     * read — CLAUDE.md's client-state lesson — so a flag in `useActionState`
+     * is not a signal anybody will see.
      */
-    redirect(`/game/${gameId}?added=${guests}`);
+    redirect(
+      `/game/${gameId}/book/confirmation?booking=${bookingId}&added=${guests}`,
+    );
   }
 
   /*

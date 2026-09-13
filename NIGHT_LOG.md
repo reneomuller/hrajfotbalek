@@ -7,6 +7,77 @@ way that nobody asked about.
 
 ---
 
+## Round 34 — 2026-09-14
+
+Four items. All four shipped. Two things worth knowing and one thing worth
+ruling on.
+
+### Item 2 was twenty times bigger than the surface that reported it
+
+The owner named one button: "Pay from wallet", on the add-guests panel. Writing
+the law-test first and running it red found the word in **20 English keys** and
+13-15 in each of the three overlays — the cancel reassurance, the cancel
+confirm, the top-up page and title, the pass lede, the bookingCancelled toast,
+the FAQ, the Stripe checkout line item and three email templates. One surface
+said "Redeem credit", another "Pay from wallet", a third "back in your wallet".
+
+**The fix for the reported button was to DELETE its key.** `addGuests.payCredit`
+is gone; the panel renders `booking.payWithCredit`, the booking page's own. Two
+keys for one act is two things to translate and two chances to drift, and they
+had already drifted — which is how the round started.
+
+**"Mobile wallet" turned out to be a different word wearing the same spelling.**
+The FAQ and the pass page meant Apple Pay and Google Pay. Carving an exception
+into the law would have weakened it; naming the two services is more concrete
+than the phrase it replaces and leaves the rule absolute.
+
+### The capability substrate now probes instead of asserting
+
+Round 33 found that `app_capabilities()` is restated in full by every migration
+that touches it, so an out-of-order apply silently drops flags. Carrying the
+list forward by hand fixes that and creates a worse failure: this round's file
+would have claimed `playerNumbers: true` on a database where round 33's
+migration is not applied — a flag lying about a column, and both admin reads
+answer a missing column by rendering nothing.
+
+So every flag for an object a migration does not ITSELF create is now an
+existence probe. It cannot lie and it cannot be dropped. The practical effect
+for the owner: round 34's migration is safe to apply before round 33's.
+
+### One thing for Oliver to rule on, and it is in the brief
+
+Item 4 says both "allowed only before the 8-hour cutoff" AND "Rules identical to
+self-cancellation … after the cutoff the control disappears/disables exactly
+like self-cancel". **Those are two different products**, because self-cancel
+does not disappear after the cutoff — `cancel_booking`'s own comment says
+"Cancelling is still permitted right up to kickoff; only the refund is gated."
+
+I built the identical-to-self-cancel reading: the control stays to kickoff and
+the sentence under it turns from a promise into a warning. One condition on one
+line flips it. Row 272.
+
+### And one decision about money, made rather than hidden
+
+A partial guest refund lands in the unexpiring pool instead of being mirrored
+back to the batch it came from. `cancel_booking` mirrors because a full refund
+has an unambiguous batch; a partial one does not — the ledger records that
+credit was spent on a booking, never which seat it bought. The chosen rule is
+never worse for the player than the alternative, which is the right way to break
+a tie about somebody else's money. Row 271.
+
+### Suites
+
+Unit 754/754 (20 new) · SQL 44/44 ALL PASS (23 new assertions) · lint 0 errors ·
+tsc clean · build clean. E2E result and the deployment id are in the round's
+final commit message.
+
+### Still owed by the owner
+
+Rows 184, 188, **261** (the 28 unsettled Stripe sessions — still the one that
+needs a human), 258 and **275**. Commands in `docs/REQUESTS.md` §6.
+
+---
+
 ## Round 33 — 2026-09-13
 
 Four items. All four shipped.

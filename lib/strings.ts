@@ -478,15 +478,60 @@ export const strings = {
       pick: "+{n}",
       /** `{amount} for 2 guests` — the whole guest-only price, never a unit. */
       cost: "{amount} for {n}",
+      /**
+       * The same total in CREDITS (round 34, item 2).
+       *
+       * ONE UNIT PER RAIL. The online button takes crowns, because that is
+       * what Stripe is handed; the credit button spends credits, because that
+       * is what the player holds and the only number they can check against
+       * their own balance. Showing crowns beside a credit button asks them to
+       * divide by 150 to know whether they can afford it.
+       */
+      costCredits: "{credits} for {n}",
       guestOne: "1 guest",
       guestMany: "{n} guests",
-      payCredit: "Pay from wallet",
       payOnline: "Pay online",
-      /* The wallet button says what it will cost so nobody spends blind. */
-      creditAfter: "{amount} left after",
-      notEnoughCredit: "Not enough credit for that many",
+      /* The credit button says what it will cost so nobody spends blind. */
+      creditAfter: "{credits} left after",
+      /* The same sentence in crowns, for a balance that is not a whole number
+         of credits — see `AddGuestsPanel`. */
+      creditAfterCzk: "{amount} left after",
+      /*
+        CREDITS, AS A COUNTABLE PHRASE (round 34, item 2). Same shape as
+        `booking.partySeats*`: the number arrives already agreeing with its own
+        noun, so the sentence around it does not have to. Czech and both
+        east-Slavic languages need three forms for this and English needs two.
+      */
+      creditOne: "{n} credit",
+      creditFew: "{n} credits",
+      creditMany: "{n} credits",
+      notEnoughCredit: "Not enough credits for that many",
       capacityFull: "Those spots have just gone",
       failed: "That did not work. Try again.",
+    },
+    /*
+     * CANCELLING GUESTS (round 34, item 4).
+     *
+     * THE COPY NEVER SAYS "CANCEL YOUR BOOKING", because this control cannot.
+     * Its largest option is the guests on the booking, so the player's own seat
+     * is not reachable from here — and the sentence has to make that obvious,
+     * or somebody will press it expecting to be out of the game.
+     *
+     * TWO CONFIRMS, NOT ONE WITH A BRANCH. Inside the window the question is
+     * about guests; outside it the question is about money that will not come
+     * back, and a warning folded into a subordinate clause is a warning nobody
+     * reads.
+     */
+    cancelGuests: {
+      title: "Someone dropping out?",
+      body: "Take guests off your spot. Yours stays — to leave the game entirely, use Cancel.",
+      refund: "{credits} come back to you.",
+      forfeit: "Less than {hours}h to kickoff — removing a guest now returns nothing.",
+      submit: "Remove {n}",
+      confirm: "Remove {n} from your spot?",
+      confirmLate: "Remove {n}? It is past the refund cutoff, so nothing comes back.",
+      windowClosed: "This game has already kicked off.",
+      countInvalid: "You do not have that many guests.",
     },
     cancelled: "This game was cancelled.",
     notFound: "That game does not exist, or is not published yet.",
@@ -815,7 +860,7 @@ export const strings = {
      * person, so a party of three spends three — and the option is offered
      * only when the wallet holds all of them.
      */
-    payWithCreditHint: "Uses {seats} credit(s) from your wallet. Nothing to pay.",
+    payWithCreditHint: "Uses {seats} credit(s) you already have. Nothing to pay.",
     payWithCreditNone: "You have no credits yet.",
     addCredits: "Add credits →",
     payOnline: "Online payment",
@@ -900,9 +945,9 @@ export const strings = {
     // wording under policy v1 (`cutoffHoursBeforeStart: 0`) and interpolates
     // {hours} into the cutoff wording if a v2 policy introduces a lead time.
     cancelReassuranceKickoff:
-      "Cancel anytime before kickoff for full wallet credit.",
+      "Cancel anytime before kickoff — your credits come back in full.",
     cancelReassuranceCutoff:
-      "Cancel up to {hours}h before kickoff for full wallet credit.",
+      "Cancel up to {hours}h before kickoff — your credits come back in full.",
     confirmBooking: "Confirm booking",
     /*
      * THE FULL STOP (round 13, item 10). Shown on the confirmation screen for
@@ -910,6 +955,18 @@ export const strings = {
      * the Stripe webhook — because those are one fact to the reader and differ
      * only in the sentence underneath.
      */
+    /*
+     * THE ADD-GUESTS ENDING (round 34, item 3).
+     *
+     * COUNTABLE, because it is a number next to a noun in four languages and
+     * Czech, Russian and Ukrainian each need three forms of it. Same shape as
+     * `partySeats*`: the phrase arrives already agreeing with its own number.
+     * "Confirmed" is the word the panel beside it uses for a booking, so the
+     * two readings of this screen differ by their subject and nothing else.
+     */
+    guestsAddedOne: "+{n} guest confirmed",
+    guestsAddedFew: "+{n} guests confirmed",
+    guestsAddedMany: "+{n} guests confirmed",
     bookingConfirmed: "Booking confirmed",
     reserved: "Spot reserved",
     confirmed: "Payment confirmed",
@@ -955,7 +1012,7 @@ export const strings = {
      * cash-refund path anywhere in the system. Saying "refund" here would
      * promise the half that is quarantined.
      */
-    refundToWallet: "What you paid goes back as wallet credit.",
+    refundAsCredits: "What you paid comes back as credits.",
     /*
      * POLICY v2's OTHER HALF, and the dialog must say it.
      *
@@ -971,7 +1028,7 @@ export const strings = {
      */
     refundLostLate:
       "It is less than {hours} hours to kickoff, so this one is not credited back. Cancelling still frees your spot for someone else.",
-    cancelConfirm: "Cancel this booking? Your credit is returned to your wallet.",
+    cancelConfirm: "Cancel this booking? Your credits are returned to you.",
     cancelled: "Booking cancelled",
     addToCalendar: "Add to calendar",
     share: "Share",
@@ -1005,7 +1062,7 @@ export const strings = {
     /* Round 25, item 2 — the embedded checkout's own page. */
     checkoutTitle: "Pay for your spot",
     checkoutSeats: "{seats} spot(s) at this game",
-    checkoutCredits: "{credits} credits for your wallet",
+    checkoutCredits: "{credits} credits",
     confirmingTitle: "Confirming your payment…",
     confirmingBody:
       "Stripe has your payment. We are waiting for the confirmation to reach us — this usually takes a few seconds.",
@@ -1198,7 +1255,7 @@ export const strings = {
     attendancePresent: "Turned up",
     attendanceNoShow: "Marked no-show",
 
-    topupTitle: "Top up your wallet",
+    topupTitle: "Top up your credits",
     topupLede: "Add credit now, and it applies to your next booking automatically.",
     /*
      * THE WALLET IS CREDITS, AND PASSES ARE THE ONLY ADVERTISED WAY TO GET
@@ -1217,8 +1274,8 @@ export const strings = {
     topupOutOfRange: "Choose an amount between 50 and 2000 CZK.",
     topupPendingTitle: "Waiting for your payment",
     topupPendingBody:
-      "Scan the code in your banking app. Your wallet updates once the organizer confirms the payment arrived.",
-    topupConfirmedTitle: "This top-up is already in your wallet.",
+      "Scan the code in your banking app. Your credits arrive once the organizer confirms the payment landed.",
+    topupConfirmedTitle: "This top-up has already been added.",
     topupBackToAccount: "← Back to my account",
 
     photoTitle: "Profile photo",
@@ -1288,7 +1345,7 @@ export const strings = {
     badgeExpired: "Expired",
     past: "Past",
     upcoming: "Upcoming",
-    cancelSuccess: "Booking cancelled. Any credit is back in your wallet.",
+    cancelSuccess: "Booking cancelled. Any credits have been returned.",
   },
 
   /**
@@ -1370,7 +1427,7 @@ export const strings = {
       },
       {
         q: "How do I pay?",
-        a: "Pay securely by card or mobile wallet when you book, or use credits from your game pass.",
+        a: "Pay securely by card, Apple Pay or Google Pay when you book, or use credits from your game pass.",
       },
       {
         q: "Do I need to be good?",
@@ -2117,9 +2174,9 @@ export const strings = {
      * the database, only a cookie (see lib/i18n/locales.ts).
      */
     topupReceipt: {
-      subject: "Your wallet has been topped up",
-      heading: "Money in the wallet",
-      body: "We received {amount} and added it to your wallet.",
+      subject: "Your credits have been topped up",
+      heading: "Credits added",
+      body: "We received {amount} and added it to your credits.",
       // The three that differ only for a pass (§4.2, REQ-PASS-005).
       receivedLabel: "Received",
       creditedLabel: "Credited",
@@ -2213,7 +2270,7 @@ export const strings = {
       subject: "Booking cancelled — credit added",
       heading: "Booking cancelled",
       body:
-        "Your booking is cancelled and what you paid is back in your wallet as " +
+        "Your booking is cancelled and what you paid is back as " +
         "credit. It applies automatically to your next booking.",
       noCreditBody:
         "Your booking is cancelled. Nothing had been paid, so there is no " +
@@ -2225,7 +2282,7 @@ export const strings = {
       heading: "This game is off",
       body:
         "The organizer cancelled this game. Anything you had paid is back in " +
-        "your wallet as credit and applies automatically to your next booking.",
+        "credits and applies automatically to your next booking.",
       noCreditBody:
         "The organizer cancelled this game. Nothing had been paid, so there is " +
         "no credit to return.",
@@ -2247,7 +2304,7 @@ export const strings = {
    */
   pass: {
     title: "Game pass",
-    lede: "Pre-buy games at a discount. It goes into your wallet as credit and applies itself to your next booking.",
+    lede: "Pre-buy games at a discount. It becomes credits and applies itself to your next booking.",
     /*
      * "Game Pass" IS THE PRODUCT NAME and stays in English in every locale —
      * see the Czech and Russian overlays, which translate the strapline beneath
@@ -2366,7 +2423,7 @@ export const strings = {
      * what somebody reads this box to find out.
      */
     howItWorksBody:
-      "You pay via your credit card or mobile wallet. Once the payment is confirmed, the credits will be applied to your account automatically.",
+      "You pay by card, Apple Pay or Google Pay. Once the payment is confirmed, the credits will be applied to your account automatically.",
     batchesTitle: "Your credit",
     /*
      * CREDITS, NOT CROWNS (round 14, item 10). These read
@@ -2417,7 +2474,7 @@ export const strings = {
     signedIn: "Signed in.",
     // Names the amount, because "cancelled" alone leaves the question the
     // player actually has — where did the money go — unanswered.
-    bookingCancelled: "Cancelled — the value is back in your wallet as credit.",
+    bookingCancelled: "Cancelled — the value comes back as credits.",
     topupConfirmed: "Top-up confirmed. Your balance is updated.",
     linkCopied: "Link copied.",
     /** The error variant. Deliberately blames nothing and offers the retry. */
