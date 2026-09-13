@@ -93,7 +93,12 @@ final commit message.
 ### Still owed by the owner
 
 Rows 184, 188, **261** (the 28 unsettled Stripe sessions — still the one that
-needs a human), 258 and **275**. Commands in `docs/REQUESTS.md` §6.
+needs a human) and **275**. Commands in `docs/REQUESTS.md` §6.
+
+**Row 258 came off**: round 33's two migrations are applied, probed by their
+objects on 2026-09-14. The party dropdown is live to thirteen, every player is
+numbered and the rename control is on the admin profile — and `venueMapUrl` is
+back in the capability set, which is round 260's repair landing with them.
 
 ---
 

@@ -370,23 +370,10 @@ that migration has not been applied, which is a flag lying about a column, and
 both admin reads answer a missing column by rendering nothing. **Write new flags
 the same way: assert only what this file creates, probe everything else.**
 
-**Outstanding, round 33's two — additive, order-free, neither deploy-first.**
-Both were applied TWICE against a clean local stack, because both do something a
-second run could get wrong: one sets a sequence (guarded so it cannot move
-backward and re-issue a number), one rewrites two function bodies in place
-(raises rather than overwrites if the token it expects is absent).
-
-```
-node scripts/apply-migration.mjs \
-  supabase/migrations/20260913110000_player_number_and_rename.sql --production
-node scripts/apply-migration.mjs \
-  supabase/migrations/20260913120000_party_up_to_thirteen.sql --production
-```
-
-Until the second lands the party picker is three pills, which is the old product
-working rather than a degraded one — `app_capabilities().partyUpToThirteen`
-gates it, because a `PARTY_TOO_LARGE` delivered after the player has chosen how
-to pay is the dead-path rule with money attached.
+**~~Outstanding, round 33's two.~~ APPLIED and verified 2026-09-14** — probed by
+their objects, not their filenames: `players.player_number` exists,
+`admin_set_display_name` and `max_party_guests` are in `pg_proc`, and the three
+flags are true. `venueMapUrl` came back with them.
 
 When a UI failure looks inexplicable and the code reads correctly, check this
 list before debugging the component.
