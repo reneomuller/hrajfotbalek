@@ -140,6 +140,7 @@ as $$
     'creditLedgerNote',       true,
     'autoSettle',             true,
     'adminRemoveCover',       true,
+    'venueMapUrl',            true,
     'playerNumbers',          true,
     'adminRenamePlayer',      true,
     'partyUpToThirteen',      true

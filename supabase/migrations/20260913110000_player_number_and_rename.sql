@@ -235,7 +235,19 @@ alter table public.events add constraint events_event_type_catalog check (
 -- -----------------------------------------------------------------------------
 -- 4. THE CAPABILITY FLAGS
 --
--- Two flags rather than one, because the two halves fail differently. Without
+-- `venueMapUrl` IS IN THIS LIST AND WAS NOT IN THE ONE BEFORE IT, AND THAT IS A
+-- BUG BEING REPAIRED RATHER THAN A FLAG BEING ADDED. `app_capabilities()` is
+-- restated IN FULL by every migration that touches it, so a flag survives only
+-- if each later file remembers to carry it. On 2026-09-13 production returned
+-- `adminRemoveCover: true` and no `venueMapUrl` at all — while
+-- `venues.map_url` and both four-argument venue writers were present. The two
+-- migrations were applied OUT OF DATE ORDER: round 31's `20260913100000` first,
+-- then round 30's `20260912100000`, whose older list overwrote the newer one
+-- and took the flag with it. Nothing in the product reads that flag today, so
+-- nothing broke — but the next one like it will, silently, and the only way to
+-- notice is to compare a jsonb against a file. Restated here as a superset.
+--
+-- Two NEW flags rather than one, because the two halves fail differently. Without
 -- `adminRenamePlayer` a control would 404; without `playerNumbers` a SELECT
 -- naming a column that does not exist makes PostgREST error, and BOTH admin
 -- reads answer an error by rendering nothing. Same family as the missing-GRANT
@@ -267,6 +279,7 @@ as $$
     'creditLedgerNote',       true,
     'autoSettle',             true,
     'adminRemoveCover',       true,
+    'venueMapUrl',            true,
     'playerNumbers',          true,
     'adminRenamePlayer',      true
   )

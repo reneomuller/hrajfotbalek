@@ -91,9 +91,29 @@ wrong reason**, `CAPACITY_FULL` on a pitch that seats two, while its label
 claimed the opposite. It now books `max_party_guests() + 1` on a pitch of
 twenty.
 
+### Two things found by re-verifying the ledger instead of echoing it
+
+**Rows 232 and 241 had silently come true.** Both were recorded as blocked; both
+migrations are on production, probed by the OBJECT rather than the filename.
+That is the second round running in which checking found a dormant row already
+applied.
+
+**And checking row 241 properly turned up something else.** `venues.map_url` is
+there and both writers carry the new argument — but `app_capabilities()` returns
+**no `venueMapUrl` at all**. The two were applied out of DATE order: round 31's
+`20260913100000` first, round 30's `20260912100000` second, and the older file
+restates the flag list in full, so it overwrote the newer one. Nothing reads
+that flag, so nothing broke. The next one will. Row 260.
+
+**`checkout_sessions` is no longer empty and not one row has settled.** 28
+`cs_live_` sessions, all `open`, 2026-09-06 to 2026-09-12 — and in the same ten
+days the product made eight bookings, none of them a card payment. Either 28
+abandonments or a rail that takes money and never settles it. Row 261; the
+Stripe dashboard answers it and nothing on this side can.
+
 ### Still owed by the owner
 
-Rows 184, 188, 232, 241 and **258** (round 33's two migrations). Commands in
+Rows 184, 188 and **258** (round 33's two migrations). Commands in
 `docs/REQUESTS.md` §6.
 
 ---

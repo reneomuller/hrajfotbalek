@@ -145,6 +145,17 @@ looks like missing data, not like a missing column. **A column drop and the
 selects that name it must ship in one change**, and the order is then DEPLOY
 FIRST, THEN MIGRATE — the opposite of an additive migration.
 
+**`app_capabilities()` IS RESTATED IN FULL BY EVERY MIGRATION THAT TOUCHES IT,
+so applying migrations OUT OF DATE ORDER silently drops flags.** Found on
+2026-09-13: production returned `adminRemoveCover: true` and **no `venueMapUrl`
+at all**, while `venues.map_url` and both four-argument venue writers were
+present and correct. Round 31's `20260913100000` had been applied FIRST and
+round 30's `20260912100000` second, and the older file's list overwrote the
+newer one. Nothing read that flag, so nothing broke — the next one will, and the
+only way to notice is to diff the live jsonb against the newest file. **Every
+new migration's list must be a superset of what is LIVE, not of what the
+previous file says**, which means probing before writing it.
+
 **A SURFACE HAS NO ASPECT IF ITS HEIGHT IS CONTENT-DEPENDENT, and three rounds
 of crop fixes died on that.** The venue photograph feeds the games-list card
 AND the detail hero. The card is a fixed 159px tall, so its aspect moves only
