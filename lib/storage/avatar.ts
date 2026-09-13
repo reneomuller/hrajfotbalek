@@ -58,20 +58,44 @@ export const COVER_HEIGHT_PX = 1049;
 /**
  * The venue photograph's output (round 30, item 1).
  *
- * ~~16:9.~~ **1.875:1, WHICH IS WHAT THE BAND ACTUALLY RENDERS** (round 30,
- * item 7) — measured at the canonical 390px viewport as 390x208. 16:9 was
- * close enough to look right and wrong enough to crop: a frame taller than its
- * surface means `object-cover` quietly takes a slice off the top and bottom of
- * whatever was composed in it.
+ * ~~16:9.~~ ~~1.875:1, the detail band.~~ **2.162:1 — THE GAME CARD**
+ * (round 33, item 4), and the reason is a measurement that invalidates the
+ * previous two attempts rather than refining them.
  *
- * THE CROP FRAME IS THE SURFACE'S ASPECT, EXACTLY, which is the entire point
- * of cropping in the browser: the organizer standing at the pitch sees what
- * the page will show rather than discovering later that the middle was taken.
- * `e2e/crop-frames.spec.ts` measures the rendered band and fails if these
- * numbers and it ever disagree.
+ * THE PHOTOGRAPH FEEDS TWO SURFACES WITH DIFFERENT SHAPES, and nothing said
+ * so until it was measured live on production at two widths:
+ *
+ *            390px            430px
+ *   card     344x159 = 2.167  384x159 = 2.419
+ *   hero     390x235 = 1.658  430x235 = 1.828
+ *
+ * AND THE HERO HAS NO STABLE ASPECT AT ALL. Two games on the SAME deploy at
+ * the SAME width render 390x235 (1.658) and 390x208 (1.875), because the band
+ * is `pt-36 pb-5` plus CONTENT and the content is a venue name that may wrap
+ * and badges that may or may not be there. That is why three rounds of "fix
+ * the constant" kept failing: each round measured one game, got one number,
+ * pinned it, and the next game rendered differently.
+ *
+ * SO THE CROP IS PINNED TO THE CARD, for three reasons that all point the same
+ * way. The card has a FIXED height (159px), so its aspect moves only with the
+ * viewport rather than with the fixture. It is the surface the owner is
+ * actually judging — "what users see on the game card". And it is the WIDER of
+ * the two, so every other surface cover-crops the SIDES of the frame rather
+ * than its top and bottom: a pitch photograph survives losing its edges and
+ * does not survive losing the goalposts, which was the round-30 complaint.
+ *
+ * WHAT THE HERO DOES WITH IT: `object-cover` scales the 2.162 frame to fill a
+ * 1.658-1.875 box, so it fills the height and loses a slice from each side.
+ * Nothing is lost from the top or bottom on any surface.
+ *
+ * 390 IS THE REFERENCE WIDTH, as everywhere else here. At 430 the card is
+ * 2.419 and takes a sliver off the frame's top and bottom instead; that is a
+ * real limit of pinning a fixed aspect to a fluid box, and it is stated rather
+ * than hidden. `e2e/crop-frames.spec.ts` measures the card and fails if the
+ * two drift; `e2e/crop-truth.spec.ts` proves it with a marked image.
  */
-export const VENUE_WIDTH_PX = 1500;
-export const VENUE_HEIGHT_PX = 800;
+export const VENUE_WIDTH_PX = 1600;
+export const VENUE_HEIGHT_PX = 740;
 
 /**
  * THE OUTPUT SIZE OF EVERY CROPPABLE SURFACE, IN ONE PLACE (round 32, item 1).
