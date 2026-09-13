@@ -244,8 +244,6 @@ export const ru: StringsOverlay = {
       guestOne: "1 гость",
       guestMany: "{n} гостей",
       payOnline: "Оплатить онлайн",
-      creditAfter: "Останется {credits}",
-      creditAfterCzk: "Останется {amount}",
       creditOne: "{n} кредит",
       creditFew: "{n} кредита",
       creditMany: "{n} кредитов",

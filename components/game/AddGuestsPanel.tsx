@@ -65,29 +65,20 @@ export function AddGuestsPanel({
    * ceiling from `lib/policy.ts`; this one is told.
    */
   /*
-   * CREDITS ONLY WHEN THE COST REALLY IS A WHOLE NUMBER OF THEM, and this is
-   * not pedantry — it is the difference between a figure and a lie.
+   * WHAT THE GUESTS COST IN CREDITS — ONE EACH, FLAT (round 35's ruling).
    *
-   * ~~One guest is one credit.~~ `add_guests_with_credit` debits
-   * `game.price_czk × guests`, NOT `150 × guests`. On the 150 CZK game that is
-   * the same number and the ruling holds; on a game priced 180 or 200 — and
-   * production has both — two guests cost 400 CZK, which is two and two-thirds
-   * credits. Printing "2 credits" beside a button that is about to take 400 is
-   * the kind of number a player reconciles against their balance and finds
-   * wrong.
+   * ~~`game.price_czk × guests`, shown in credits only when it divided
+   * cleanly.~~ Round 34 found the credit rail charging the game's price and
+   * reported it as a ruling rather than a bug; the owner ruled that a credit
+   * buys a SEAT, whatever the game charges a card. So the arithmetic is the
+   * guest count, the cost is always a whole number of credits, and the
+   * crowns-when-uneven fallback round 34 added is unreachable and gone.
    *
-   * SO THE UNIT FOLLOWS THE ARITHMETIC. Divides cleanly: credits, which is what
-   * the player holds. Does not: crowns, which is at least true. The same
-   * "handled, not hidden" rule the admin wallet uses for a ragged balance, and
-   * `PASS_REFERENCE_PRICE_CZK` is the one place the rate lives.
-   *
-   * THE DIVERGENCE ITSELF IS A LEDGER ROW, not something to fix here: changing
-   * what a guest costs is a money decision and it is the owner's.
+   * `cost` STAYS IN CROWNS AND IS STILL THE CARD PRICE, because the online rail
+   * really does charge the game's price — that half of the ruling did not move.
+   * Two rails, two numbers, and the button each sits under says which.
    */
-  const wholeCredits = (czk: number) =>
-    czk >= 0 && czk % PASS_REFERENCE_PRICE_CZK === 0
-      ? czk / PASS_REFERENCE_PRICE_CZK
-      : null;
+  const creditCost = PASS_REFERENCE_PRICE_CZK * picked;
 
   const creditsLabel = (n: number) =>
     pluralise(
@@ -101,9 +92,7 @@ export function AddGuestsPanel({
     );
 
   const cost = priceCzk * picked;
-  const affordable = creditCzk >= cost;
-  const costInCredits = wholeCredits(cost);
-  const leftInCredits = wholeCredits(creditCzk - cost);
+  const affordable = creditCzk >= creditCost;
 
   const guestLabel =
     picked === 1
@@ -150,9 +139,9 @@ export function AddGuestsPanel({
         data-testid="add-guests-cost"
         className="mt-3 mb-0 font-display text-title uppercase leading-none text-volt"
       >
-        {affordable && costInCredits !== null
+        {affordable
           ? t.games.addGuests.costCredits
-              .replace("{credits}", creditsLabel(costInCredits))
+              .replace("{credits}", creditsLabel(picked))
               .replace("{n}", guestLabel)
           : t.games.addGuests.cost
               .replace("{amount}", formatCzk(cost))
@@ -190,19 +179,22 @@ export function AddGuestsPanel({
           </button>
         </form>
 
-        {affordable ? (
-          <p className="m-0 text-small text-faint">
-            {leftInCredits !== null
-              ? t.games.addGuests.creditAfter.replace(
-                  "{credits}",
-                  creditsLabel(leftInCredits),
-                )
-              : t.games.addGuests.creditAfterCzk.replace(
-                  "{amount}",
-                  formatCzk(creditCzk - cost),
-                )}
-          </p>
-        ) : (
+        {/*
+          ~~"{amount} left after", between Redeem credit and Pay online.~~
+          REMOVED, NOT CONVERTED (round 35, the owner's word).
+          
+          It was a CZK preview of a credit balance, which is the thing the
+          vocabulary law now forbids outright: a credit surface reads credits or
+          it says nothing. Converting it to "2 credits left after" would have
+          kept a running-total line nobody asked for between two buttons — the
+          balance is on the account page, and this panel's job is to say what
+          the guests cost, not to do arithmetic on somebody's wallet in front of
+          them.
+
+          THE REFUSAL STAYS, because it is not a preview: it is the reason the
+          button above it is disabled.
+        */}
+        {!affordable && (
           <p data-testid="add-guests-poor" className="m-0 text-small text-faint">
             {t.games.addGuests.notEnoughCredit}
           </p>

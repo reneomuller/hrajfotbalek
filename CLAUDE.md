@@ -156,6 +156,36 @@ only way to notice is to diff the live jsonb against the newest file. **Every
 new migration's list must be a superset of what is LIVE, not of what the
 previous file says**, which means probing before writing it.
 
+**A CREDIT BUYS A SEAT, FLAT — `credit_seat_price_czk()` IS 150 AND THE GAME'S
+PRICE HAS NOTHING TO DO WITH IT** (owner's ruling, round 35). Card payments
+still charge `games.price_czk`; every CREDIT path debits `150 × seats`. Two
+consequences that are not obvious and cost a round to find:
+
+* **Partial credit in crowns no longer exists.** A seat is covered by a whole
+  credit or not at all, so a ONE-SEAT booking with any credit is fully paid and
+  the "applied credit, money still owed" state can only occur on a PARTY. Four
+  SQL suites asserted the old shape; two had to become parties of two.
+* **A balance under one credit is inert.** It buys no part of a seat and stays
+  in the wallet. Production holds 270 CZK like that across three players.
+
+**AND "CAN THIS WALLET PAY" WAS ASKED IN THREE PLACES, TWO OF THEM IN CROWNS** —
+`create_booking_internal`, `PaymentMethodChoice`'s disabled radio, and
+`createBookingAction`'s POST guard. A gate and a debit that ask different
+questions produce "Not enough credit" on a booking the RPC would have accepted.
+**If you change what a credit costs, grep for all three.**
+
+**CREDIT AMOUNTS NEVER RENDER AS CZK on a player surface** — balances, costs,
+arithmetic. Card prices in crowns are fine; a credit-denominated amount wearing
+crowns is not. Enforced by a table walk plus a rendered crawl, both in
+`vocabulary.test.ts` / `vocabulary.spec.ts`, admin exempt.
+
+**THE ADMIN COUNTED BOOKING ROWS WHERE EVERY PLAYER SURFACE COUNTS SEATS**, in
+THREE places — `countActiveBookings` (the games list and the game page's
+`{booked}/{capacity}`) and a query of its own in `dashboard.ts`. A booking with
+two guests read as 1, and house guests on the game were not rows at all. They
+all go through `game_seats_taken_many()`, which WRAPS `game_seats_taken` rather
+than mirroring its arithmetic. **One counter, and it lives in SQL.**
+
 **A GLYPH WHOSE SHAPE IS THE MESSAGE MAY NOT BE LEFT TO FONT FALLBACK.** The
 dropdown cue shipped as `▾` (U+25BE) and rendered as a small blob on this
 product's type stack — several fallback faces draw that codepoint tiny and
@@ -350,6 +380,15 @@ anything is owed:
 ```
 update public.venues set name = replace(name, ' — ', ' • ') where name like '% — %';
 update public.games  set venue = replace(venue, ' — ', ' • ') where venue like '% — %';
+```
+
+**Outstanding, round 35's one — the credits ruling.** Safe in either order
+against round 34's and safe without it: everything it needs from that file is
+created here too, guarded.
+
+```
+node scripts/apply-migration.mjs \
+  supabase/migrations/20260915100000_credits_are_seats.sql --production
 ```
 
 **Outstanding, round 34's one — additive, safe in either order against round

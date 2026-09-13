@@ -267,7 +267,9 @@ export default async function AdminDashboardPage() {
                       an organizer has to do anything about this game today.
                     */}
                     <span className="block text-body font-bold text-volt">
-                      {row.booked} / {row.capacity}
+                      <span data-testid="dashboard-game-capacity">
+                        {row.booked} / {row.capacity}
+                      </span>
                     </span>
                     {/*
                       p14 colours the status rather than greying it —

@@ -651,13 +651,21 @@ begin
   perform pg_temp.act_as('c0000000-0000-0000-0000-0000000020a3');
   v_result := public.create_booking('dddd0000-0000-0000-0000-0000000020a1', 'qr');
 
+  /*
+   * ~~The 40 is applied in full and 110 is owed.~~ ROUND 35: A CREDIT BUYS A
+   * SEAT, so 40 crowns buys no part of one. Nothing is applied, the whole 150
+   * is owed, and the 40 STAYS IN THE BATCH — which is the stronger form of the
+   * invariant this block is about. A balance that cannot go negative because it
+   * was never touched is still a balance that cannot go negative, and the
+   * player keeps value they would otherwise have spent on a fraction of a game.
+   */
   perform pg_temp.ok(
-    v_result.credit_applied_czk = 40 and v_result.amount_due_czk = 110,
-    'a partial batch balance is applied in full and the rest is owed');
+    v_result.credit_applied_czk = 0 and v_result.amount_due_czk = 150,
+    'a sub-credit batch balance buys nothing and the whole price is owed');
 
   perform pg_temp.ok(
-    pg_temp.balance('cccc0000-0000-0000-0000-0000000020a3') = 0,
-    'the wallet lands at exactly zero, never below');
+    pg_temp.balance('cccc0000-0000-0000-0000-0000000020a3') = 40,
+    'the wallet is untouched — never spent, and never below zero');
 
   perform pg_temp.ok(
     pg_temp.min_remaining('cccc0000-0000-0000-0000-0000000020a3') >= 0,

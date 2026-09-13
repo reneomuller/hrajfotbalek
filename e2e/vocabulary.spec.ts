@@ -91,6 +91,54 @@ for (const locale of LOCALES) {
   });
 }
 
+test("a credit amount never renders as crowns on a player surface", async ({
+  page,
+  context,
+}) => {
+  /*
+   * ROUND 35'S EXTENSION, CRAWLED. The table walk in
+   * `lib/i18n/__tests__/vocabulary.test.ts` sees every key; this sees what a
+   * component actually composed — a number formatted by `formatCzk` next to a
+   * credit label is invisible to the table, because neither half of it is a
+   * string in the table.
+   *
+   * THE SURFACES ARE THE ONES THAT SPEAK CREDITS, and the assertion is per
+   * LINE: a rendered line that mentions credit must not also carry a crowns
+   * figure. A card price on its own line — "180 CZK", "4 spots · 720 CZK" — is
+   * the product working and is not caught, which is the distinction the ruling
+   * draws.
+   */
+  const game = await createScratchGame({ capacity: 12, priceCzk: 180, hoursFromNow: 24 * 10 });
+  try {
+    await signInAs(context, players.creditRich);
+    await context.addCookies([
+      { name: LOCALE_COOKIE, value: "en", domain: "localhost", path: "/" },
+    ]);
+
+    const CREDIT = /credit/i;
+    const CROWNS = /\d[\d\s\u00a0]*(CZK|Kč)/i;
+    const offences: string[] = [];
+
+    for (const [surface, url] of [
+      ["the account page", "/account"],
+      ["the booking page", `/game/${game.id}/book`],
+      ["the game page", `/game/${game.id}`],
+      ["the pass page", "/pass"],
+    ] as const) {
+      await page.goto(url, { waitUntil: "networkidle" });
+      for (const line of (await page.locator("body").innerText()).split("\n")) {
+        if (CREDIT.test(line) && CROWNS.test(line)) {
+          offences.push(`${surface}: ${line.trim()}`);
+        }
+      }
+    }
+
+    expect(offences, offences.join("\n")).toEqual([]);
+  } finally {
+    await destroyScratchGame(game.id);
+  }
+});
+
 test("the add-guests panel and the booking page use the SAME word for credits", async ({
   page,
   context,

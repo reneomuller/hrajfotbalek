@@ -491,11 +491,6 @@ export const strings = {
       guestOne: "1 guest",
       guestMany: "{n} guests",
       payOnline: "Pay online",
-      /* The credit button says what it will cost so nobody spends blind. */
-      creditAfter: "{credits} left after",
-      /* The same sentence in crowns, for a balance that is not a whole number
-         of credits — see `AddGuestsPanel`. */
-      creditAfterCzk: "{amount} left after",
       /*
         CREDITS, AS A COUNTABLE PHRASE (round 34, item 2). Same shape as
         `booking.partySeats*`: the number arrives already agreeing with its own
@@ -2176,8 +2171,13 @@ export const strings = {
     topupReceipt: {
       subject: "Your credits have been topped up",
       heading: "Credits added",
-      body: "We received {amount} and added it to your credits.",
-      // The three that differ only for a pass (§4.2, REQ-PASS-005).
+      body: "We received {amount} and added {credits} to your account.",
+      /*
+       * RECEIVED IS THE ONLY CROWNS FIGURE ON THIS EMAIL, and that is the
+       * vocabulary law (round 35): a card or a bank transfer really does move
+       * crowns, so the money that ARRIVED is priced in them. Everything the
+       * player then HOLDS is credits — what was credited, and the balance.
+       */
       receivedLabel: "Received",
       creditedLabel: "Credited",
       expiresLabel: "Expires",
@@ -2198,9 +2198,8 @@ export const strings = {
     passExpiring: {
       subject: "Your credit runs out in 3 days",
       heading: "Use it before it goes",
-      body: "You have {amount} of pass credit left and it expires on {date}.",
+      body: "You have {credits} of pass credit left and it expires on {date}.",
       remainingLabel: "Left",
-      gamesLabel: "Roughly this many games",
       expiresLabel: "Expires",
       cta: "Find a game",
     },

@@ -27,7 +27,15 @@ type VenueRow = Database["public"]["Tables"]["venues"]["Row"];
  */
 
 export interface AdminGameRow extends GameRow {
-  /** Active (reserved + confirmed) bookings — the capacity-relevant count. */
+  /**
+   * SEATS taken — the number the pitch actually has to hold.
+   *
+   * ~~Active (reserved + confirmed) BOOKINGS.~~ Renamed in meaning rather than
+   * in name (round 35, item 2): the field has always been rendered as
+   * `{activeCount}/{capacity}`, which is a seat count everywhere else in the
+   * product, and it was counting rows. Guests are included, house guests
+   * included, straight from `game_seats_taken`.
+   */
   activeCount: number;
   /** Unconverted waitlist rows. The expansion-trigger sensor (REQ-UI-018). */
   waitlistCount: number;
@@ -70,7 +78,7 @@ export async function listAllGames(
 
   const ids = games.map((g) => g.id);
   const [active, waiting, unpaid] = await Promise.all([
-    countActiveBookings(ids),
+    countSeatsTaken(ids),
     countWaitlist(ids),
     countUnpaidBookings(ids),
   ]);
@@ -96,7 +104,7 @@ export async function getAdminGame(id: string): Promise<AdminGameRow | null> {
   if (error || !game) return null;
 
   const [active, waiting, unpaid] = await Promise.all([
-    countActiveBookings([game.id]),
+    countSeatsTaken([game.id]),
     countWaitlist([game.id]),
     countUnpaidBookings([game.id]),
   ]);
@@ -341,19 +349,42 @@ export async function listPlayers(): Promise<AdminPlayerRow[]> {
   }));
 }
 
-async function countActiveBookings(gameIds: string[]): Promise<Map<string, number>> {
+/**
+ * SEATS taken per game, from the database's own counter.
+ *
+ * ~~`select game_id from bookings where status in (…)`, one per row.~~ THAT
+ * COUNTED BOOKINGS, AND A BOOKING IS NOT A SEAT. A party of three is one row
+ * and three seats, and house guests on the game are not rows at all — so
+ * `/admin/games` and the game page's `{booked}/{capacity}` readout both
+ * undercounted every party ever booked, while every player surface had the
+ * right number. The admin half was the one deciding whether a pitch needed
+ * more people.
+ *
+ * `game_seats_taken` IS THE AUTHORITY and has been since round 11; it is what
+ * `create_booking` refuses against. This asks IT rather than mirroring its
+ * arithmetic in TypeScript — there is exactly one definition of a taken seat
+ * and this is not a second one. `game_seats_taken_many` is the batch wrapper,
+ * because a round trip per row on a list page is what the old query was
+ * avoiding and that reason is still good.
+ *
+ * AN EMPTY MAP ON ERROR, which reads as zero everywhere it lands. That is the
+ * same failure mode the old query had and it is the safe one here: a count
+ * that is too low shows a game as emptier than it is, where a count invented
+ * from a stale snapshot would show it as fuller.
+ */
+async function countSeatsTaken(gameIds: string[]): Promise<Map<string, number>> {
   const counts = new Map<string, number>();
   if (gameIds.length === 0) return counts;
 
   const service = createServiceRoleSupabaseClient();
-  const { data } = await service
-    .from("bookings")
-    .select("game_id")
-    .in("game_id", gameIds)
-    .in("status", ["reserved", "confirmed"]);
+  const { data, error } = await service.rpc("game_seats_taken_many", {
+    p_game_ids: gameIds,
+  });
 
-  for (const row of data ?? []) {
-    counts.set(row.game_id, (counts.get(row.game_id) ?? 0) + 1);
+  if (error || !data) return counts;
+
+  for (const row of data as { game_id: string; seats_taken: number }[]) {
+    counts.set(row.game_id, row.seats_taken);
   }
   return counts;
 }

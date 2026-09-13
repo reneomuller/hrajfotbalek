@@ -148,32 +148,49 @@ select pg_temp.ok(
   (select count(*) from public.bookings
     where player_id = 'aaaa0000-0000-0000-0000-00000000000a'
       and game_id = '92220000-0000-0000-0000-000000000002'
-      and status = 'confirmed' and payment_code is null and credit_applied_czk = 200) = 1,
-  'full-credit booking is confirmed, no VS, 200 credit applied');
+      and status = 'confirmed' and payment_code is null and credit_applied_czk = 150) = 1,
+  'full-credit booking is confirmed, no VS, and ONE CREDIT applied — 150, not '
+  'the game''s 200 (round 35''s seat-denominated ruling)');
 
 select pg_temp.ok(
   (select coalesce(sum(delta_czk), 0) from public.credit_ledger
-    where player_id = 'aaaa0000-0000-0000-0000-00000000000a') = 0,
-  'the wallet is drawn down to exactly 0, never below',
+    where player_id = 'aaaa0000-0000-0000-0000-00000000000a') = 50,
+  'and the wallet keeps the 50 that was not a whole credit',
   'balance=' || (select coalesce(sum(delta_czk), 0) from public.credit_ledger
                   where player_id = 'aaaa0000-0000-0000-0000-00000000000a'));
 
--- --- partial credit -> keeps the caller's method, reduced amount_due --------
+-- --- a SUB-CREDIT balance buys nothing --------------------------------------
+--
+-- ~~Partial credit reduces amount_due: 50 off a 200 CZK game.~~ THAT IS THE
+-- PRICE-BASED DEBIT THE RULING REMOVES. A credit buys a SEAT; 50 crowns is not
+-- a seat and cannot be a third of one, so nothing is applied and the whole
+-- price is owed.
+--
+-- THIS IS THE RULING'S SHARPEST CONSEQUENCE and it is asserted rather than
+-- discovered: a player holding less than one credit can no longer put it
+-- towards a game. See ledger row 283 — production has wallets of 110 and 50.
 insert into public.credit_ledger (player_id, delta_czk, reason) values
   ('bbbb0000-0000-0000-0000-00000000000b', 50, 'admin_grant');
 
 select pg_temp.act_as('b0000000-0000-0000-0000-0000000000b1');
 select pg_temp.ok(
-  (select (public.create_booking('92220000-0000-0000-0000-000000000002', 'qr')).amount_due_czk) = 150,
-  'partial credit reduces amount_due to 150 (200 price - 50 credit)');
+  (select (public.create_booking('92220000-0000-0000-0000-000000000002', 'qr')).amount_due_czk) = 200,
+  'a balance under one credit is not applied — the whole 200 is owed');
 
 reset role;
 select pg_temp.ok(
   (select count(*) from public.bookings
     where player_id = 'bbbb0000-0000-0000-0000-00000000000b'
       and status = 'reserved' and payment_method = 'qr'
-      and credit_applied_czk = 50 and payment_code is not null) = 1,
-  'partial-credit booking keeps qr, stays reserved, and gets a VS');
+      and credit_applied_czk = 0 and payment_code is not null) = 1,
+  'the booking keeps qr, stays reserved, gets a VS, and spends nothing');
+
+select pg_temp.ok(
+  (select coalesce(sum(delta_czk), 0) from public.credit_ledger
+    where player_id = 'bbbb0000-0000-0000-0000-00000000000b') = 50,
+  'and the 50 is STILL THERE — untouched, not consumed',
+  (select coalesce(sum(delta_czk), 0)::text from public.credit_ledger
+    where player_id = 'bbbb0000-0000-0000-0000-00000000000b'));
 
 -- --- cash reserves with no VS ------------------------------------------------
 select pg_temp.act_as('c0000000-0000-0000-0000-0000000000c1');

@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { PASS_REFERENCE_PRICE_CZK } from "../lib/pass/creditPrice";
 import { apiClientFor, players, serviceClient, signInAs } from "./helpers/session.ts";
 import {
   createScratchGame,
@@ -106,18 +107,45 @@ test("full credit confirms instantly and shows no QR", async ({ page, context })
   expect(data?.status).toBe("confirmed");
   // Derived by the RPC from the balance — the client asked for `qr`.
   expect(data?.payment_method).toBe("credit");
-  expect(data?.credit_applied_czk).toBe(game.priceCzk);
+  /*
+   * ONE CREDIT, NOT THE GAME'S PRICE (round 35's ruling). The fixture is a 200
+   * CZK game and a seat costs 150 whatever the card would have paid, so the
+   * assertion is the credit rather than the price — and the headroom above is
+   * what makes that visible instead of coincidental.
+   */
+  expect(data?.credit_applied_czk).toBe(PASS_REFERENCE_PRICE_CZK);
   // No money is owed, so there is no variable symbol to owe it against.
   expect(data?.payment_code).toBeNull();
 
-  expect(await walletBalance(players.creditRich.id)).toBe(250);
+  /*
+   * THE HEADROOM IS WHAT IS LEFT, and under the ruling that is more than it
+   * used to be: the wallet was funded at price + 250 and a seat costs one
+   * credit, so 300 remains on a 200 CZK game rather than 250. The number moving
+   * IS the ruling, which is why it is written as the arithmetic rather than as
+   * a literal.
+   */
+  expect(await walletBalance(players.creditRich.id)).toBe(
+    game.priceCzk + 250 - PASS_REFERENCE_PRICE_CZK,
+  );
 });
 
 test("partial credit reduces the amount due and still asks for the rest", async ({
   page,
   context,
 }) => {
-  const credit = 50;
+  /*
+   * ~~50 crowns against a 200 CZK game, one seat.~~ ONE CREDIT AND A PARTY OF
+   * TWO, SINCE ROUND 35, and the reshape is forced rather than cosmetic.
+   *
+   * Under the seat-denominated ruling a SINGLE seat can never be partly paid:
+   * it is covered by a whole credit or not at all. A sub-credit balance buys
+   * nothing, and a credit covers the seat outright — so the state this test
+   * exists for, applied credit with money still owed, now only occurs on a
+   * PARTY. One credit pays the first seat; the second is owed at the game's
+   * own price. The claim is unchanged: a booking that owes money says what it
+   * owes.
+   */
+  const credit = PASS_REFERENCE_PRICE_CZK;
   await signInAs(context, players.creditPartial);
   await setWalletTo(players.creditPartial.id, credit);
 
@@ -137,8 +165,9 @@ test("partial credit reduces the amount due and still asks for the rest", async 
   const { data: partialBooking, error: partialError } = await partial.rpc("create_booking", {
     p_game_id: game.id,
     p_payment_method: "qr",
+    p_guest_count: 1,
   });
-  expect(partialError).toBeNull();
+  expect(partialError, `create_booking: ${partialError?.message}`).toBeNull();
   await page.goto(
     `/game/${game.id}/book/confirmation?booking=${(partialBooking as unknown as { id: string }).id}`,
   );
@@ -146,12 +175,19 @@ test("partial credit reduces the amount due and still asks for the rest", async 
   await expect(page.getByTestId("confirmation")).toBeVisible();
 
   /*
-   * THE AMOUNT IS THE SUBJECT, not the instrument. 200 priced, 50 covered,
-   * 150 due — and that arithmetic is `create_booking`'s, unchanged by which
-   * rail the remainder travels on.
+   * THE AMOUNT IS THE SUBJECT, not the instrument. Two seats: one paid by a
+   * credit, one owed at the game's own price — and that arithmetic is
+   * `create_booking`'s, unchanged by which rail the remainder travels on.
    */
-  const due = game.priceCzk - credit;
+  const due = game.priceCzk;
   await expect(page.getByTestId("amount-due")).toContainText(String(due));
+
+  /*
+   * AND THE CREDIT HALF READS IN CREDITS, which is round 35's vocabulary law:
+   * a credit-denominated amount never wears crowns. The amount DUE beside it
+   * stays in crowns, because that is what a card is about to be charged.
+   */
+  await expect(page.getByTestId("credit-applied")).toContainText("1 credit");
 
   const admin = serviceClient();
   const { data } = await admin

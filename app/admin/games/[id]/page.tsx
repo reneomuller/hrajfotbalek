@@ -197,7 +197,7 @@ export default async function AdminGamePage({
           )}
         </dd>
         <dt className="text-muted">{strings.games.capacityLabel}</dt>
-        <dd className="m-0 text-bone">
+        <dd data-testid="admin-capacity" className="m-0 text-bone">
           {game.activeCount}/{game.capacity}
         </dd>
         <dt className="text-muted">{strings.games.priceLabel}</dt>

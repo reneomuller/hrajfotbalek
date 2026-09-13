@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { PASS_REFERENCE_PRICE_CZK } from "../lib/pass/creditPrice";
 import { createScratchGame, destroyScratchGame, resetWallet } from "./helpers/scaffold.ts";
 import { anonClient, apiClientFor, players, serviceClient, signInAs } from "./helpers/session.ts";
 import { moveBatchExpiry } from "./helpers/clock.ts";
@@ -293,13 +294,19 @@ test("pass credit books a game and a cancellation returns it to its batch", asyn
       p_payment_method: "cash",
     });
     expect(error).toBeNull();
-    expect(booking!.credit_applied_czk).toBe(200);
+    /*
+     * ONE CREDIT, NOT THE GAME'S 200 (round 35's ruling). What this test is
+     * about is UNCHANGED and is the line below: the BATCH paid, not the
+     * permanent credit, and the refund goes back to the batch with the batch's
+     * expiry. Only the size of the spend moved.
+     */
+    expect(booking!.credit_applied_czk).toBe(PASS_REFERENCE_PRICE_CZK);
 
     // The BATCH paid, not the permanent credit.
     const { data: batchRows } = await admin.rpc("credit_batches", {
       p_player_id: players.creditPartial.id,
     });
-    expect(batchRows![0].remaining_czk).toBe(550);
+    expect(batchRows![0].remaining_czk).toBe(750 - PASS_REFERENCE_PRICE_CZK);
 
     // Cancel: it goes back to the batch, with the batch's expiry.
     const { error: cancelError } = await player.rpc("cancel_booking", {

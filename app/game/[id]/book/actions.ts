@@ -11,6 +11,7 @@ import { getOwnCreditBalance } from "@/lib/booking/queries";
 import { toBookingErrorCode, type BookingErrorCode } from "@/lib/booking/errors";
 import { buildResumeUrl } from "@/lib/booking/resume";
 import { policy } from "@/lib/policy";
+import { PASS_REFERENCE_PRICE_CZK } from "@/lib/pass/creditPrice";
 import { rememberPendingPurchase } from "@/lib/payments/pendingPurchaseCookie";
 import { stripeBookingUrl, withStripeParams } from "@/lib/payments/stripeLinks";
 import { embeddedCheckoutEnabled } from "@/lib/payments/embeddedCheckout";
@@ -156,15 +157,32 @@ export async function createBookingAction(
    * the UI already renders, rather than an unpaid seat nobody can settle.
    */
   if (rawOption === "credit") {
+    /*
+     * SEATS, NOT THE GAME'S PRICE (round 35's ruling), and this was the THIRD
+     * place the same question was asked. A credit buys a seat, flat — so a
+     * wallet holding four credits can pay for a party of four on a 180 CZK
+     * game, and the old arithmetic here refused it at 720 versus 600 while the
+     * radio above it was correctly enabled and `create_booking` would have
+     * accepted it. The player met "Not enough credit for that booking" on a
+     * booking they could afford.
+     *
+     * THE GATE AND THE DEBIT MUST ASK THE SAME QUESTION. This is
+     * `create_booking_internal`'s arithmetic, one step earlier, so the answer
+     * can be a product error the UI already renders rather than an unpaid seat
+     * nobody can settle.
+     *
+     * THE GAME'S PRICE IS STILL READ, for the one case where it is zero: a free
+     * game spends no credit, so a wallet that cannot afford a credit must not
+     * be refused a seat that costs nothing.
+     */
     const supabase = await createServerSupabaseClient();
     const [balanceCzk, priceRow] = await Promise.all([
       getOwnCreditBalance(),
       supabase.from("games").select("price_czk").eq("id", gameId).maybeSingle(),
     ]);
     const priceCzk = priceRow.data?.price_czk ?? null;
-    // The same arithmetic `PaymentMethodChoice` does to disable the radio:
-    // seats are the player plus their guests, at one price each.
-    if (priceCzk === null || balanceCzk < priceCzk * (guests + 1)) {
+    const seatsCredit = PASS_REFERENCE_PRICE_CZK * (guests + 1);
+    if (priceCzk === null || (priceCzk > 0 && balanceCzk < seatsCredit)) {
       return { status: "error", code: "CREDIT_NEGATIVE_BLOCKED" };
     }
   }

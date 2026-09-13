@@ -107,13 +107,22 @@ export async function getAdminDashboard(): Promise<AdminDashboard> {
    */
   const ids = rowsRaw.map((g) => g.id);
   const [bookings, organizers] = await Promise.all([
+    /*
+     * SEATS, FROM THE DATABASE'S OWN COUNTER (round 35, item 2).
+     *
+     * ~~`select game_id,status from bookings where status in (…)`, one per
+     * row.~~ That counted BOOKINGS. A party of three is one row and three
+     * seats, and the game's own house guests are not rows at all — so this
+     * dashboard showed every pitch emptier than it was, on the page whose job
+     * is to tell the organizer whether a game needs more people.
+     *
+     * It was the third site with the same miss; `lib/admin/queries.ts` had the
+     * other two. All three now ask `game_seats_taken`, which is the authority
+     * `create_booking` refuses against.
+     */
     ids.length
-      ? service
-          .from("bookings")
-          .select("game_id,status")
-          .in("game_id", ids)
-          .in("status", ["reserved", "confirmed"])
-      : Promise.resolve({ data: [] as { game_id: string; status: string }[] }),
+      ? service.rpc("game_seats_taken_many", { p_game_ids: ids })
+      : Promise.resolve({ data: [] as { game_id: string; seats_taken: number }[] }),
     ids.length
       ? service
           .from("game_organizer_contacts")
@@ -123,8 +132,8 @@ export async function getAdminDashboard(): Promise<AdminDashboard> {
   ]);
 
   const booked = new Map<string, number>();
-  for (const b of bookings.data ?? []) {
-    booked.set(b.game_id, (booked.get(b.game_id) ?? 0) + 1);
+  for (const b of (bookings.data ?? []) as { game_id: string; seats_taken: number }[]) {
+    booked.set(b.game_id, b.seats_taken);
   }
   const organizerOf = new Map(
     (organizers.data ?? []).map((o) => [o.game_id, o.organizer_name]),

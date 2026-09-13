@@ -241,8 +241,6 @@ export const cs: StringsOverlay = {
       guestOne: "1 host",
       guestMany: "{n} hostů",
       payOnline: "Zaplatit online",
-      creditAfter: "Zbyde {credits}",
-      creditAfterCzk: "Zbyde {amount}",
       creditOne: "{n} kredit",
       creditFew: "{n} kredity",
       creditMany: "{n} kreditů",

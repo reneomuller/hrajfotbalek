@@ -48,7 +48,7 @@ async function playedGameWithBookings(
   const game = await createScratchGame({ hoursFromNow: 3, durationMinutes: 60, capacity: 8 });
 
   for (const player of who) {
-    await setWalletTo(player.id, 150);
+    await setWalletTo(player.id, 0);
     const client = await apiClientFor(player);
     const { data, error } = await client.rpc("create_booking", {
       p_game_id: game.id,
@@ -60,10 +60,16 @@ async function playedGameWithBookings(
      * THE FIXTURE'S PRECONDITION, ASSERTED (round 29). Every test built on this
      * helper depends on the booking being an UNPAID hold — that is what keeps
      * the game at `played` now that the sweep settles anything clean. The
-     * wallet is set to 150 against a 200 CZK game, so credit covers part and
-     * the row stays `reserved`; if either number ever moves, this fails HERE
-     * with the reason rather than three tests later on a status mismatch that
-     * looks like the sweep misbehaving.
+     * ~~The wallet is set to 150 against a 200 CZK game, so credit covers part
+     * and the row stays `reserved`.~~ THE WALLET IS NOW EMPTIED, because round
+     * 35 made a credit buy a whole SEAT: 150 against a one-seat booking pays
+     * for it outright and the row comes back `confirmed`. An empty wallet is
+     * the only way left to get an unpaid hold on one seat, and it is a
+     * simpler fixture than the party it would otherwise have to be.
+     *
+     * THIS ASSERTION IS WHY THE ROUND FOUND IT IN ONE LINE rather than in six
+     * tests: it fails HERE with the reason, instead of three tests later on a
+     * status mismatch that looks like the sweep misbehaving.
      */
     const { data: made } = await serviceClient()
       .from("bookings")

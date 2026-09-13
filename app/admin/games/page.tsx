@@ -99,6 +99,9 @@ export default async function AdminGamesPage({
               <li
                 key={game.id}
                 data-testid="admin-game-row"
+                /* Round 35 — a spec has to find THIS game's row rather than
+                   whichever one the sort put on top. */
+                data-game-id={game.id}
                 data-status={game.status}
                 /* Round 19 item 3 — lets a spec check the numbering DIRECTION
                    against the dates rather than against the row order. */
@@ -198,7 +201,10 @@ export default async function AdminGamesPage({
                   </span>
 
                   <span className="shrink-0 text-right">
-                    <span className="block text-body font-bold text-volt">
+                    <span
+                      data-testid="admin-game-capacity"
+                      className="block text-body font-bold text-volt"
+                    >
                       {game.activeCount}/{game.capacity}
                     </span>
                     <span

@@ -250,8 +250,6 @@ export const uk: StringsOverlay = {
       guestOne: "1 гість",
       guestMany: "{n} гостей",
       payOnline: "Оплатити онлайн",
-      creditAfter: "Залишиться {credits}",
-      creditAfterCzk: "Залишиться {amount}",
       creditOne: "{n} кредит",
       creditFew: "{n} кредити",
       creditMany: "{n} кредитів",

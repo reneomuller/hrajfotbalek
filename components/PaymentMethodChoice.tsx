@@ -7,6 +7,7 @@ import { PendingButton } from "@/components/form/PendingButton";
 import { describeBookingError } from "@/lib/booking/errors";
 import { useLocale, useStrings } from "@/components/LocaleProvider";
 import { GuestOverflowSelect } from "@/components/game/GuestOverflowSelect";
+import { PASS_REFERENCE_PRICE_CZK } from "@/lib/pass/creditPrice";
 import { pluralise } from "@/lib/i18n/plural";
 import Link from "next/link";
 import { formatCzk } from "@/lib/format";
@@ -174,7 +175,22 @@ export function PaymentMethodChoice({
    * and promises a settled booking, which it must not do for a party it can
    * only half pay for.
    */
-  const creditCovers = creditCzk >= partyPrice;
+  /*
+   * WHAT THE PARTY COSTS IN CREDITS — SEATS, NOT CROWNS (round 35's ruling).
+   *
+   * ~~`creditCzk >= partyPrice`.~~ A credit buys a SEAT now, flat, whatever the
+   * game charges a card. On the 150 CZK game the two tests agree; on the 180
+   * and 200 CZK fixtures production still has, the old test refused a wallet
+   * that could in fact pay — three credits could not cover a 540 CZK party of
+   * three, and under the ruling three credits is exactly what that party costs.
+   *
+   * THE GATE AND THE DEBIT MUST ASK THE SAME QUESTION. `create_booking_internal`
+   * floors the balance into credits and caps at the seats; this is that
+   * arithmetic, stated once on the surface that decides whether to offer the
+   * option at all. If they disagree the database is right and the UI is lying.
+   */
+  const partyCreditCzk = PASS_REFERENCE_PRICE_CZK * seats;
+  const creditCovers = creditCzk >= partyCreditCzk;
 
   const [choice, setChoice] = useState<"credit" | "online" | null>(
     // DEFAULT TO CREDIT WHEN IT COVERS THE GAME (item 11). A player who has

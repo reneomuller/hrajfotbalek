@@ -226,22 +226,31 @@ select pg_temp.ok(
   'the credit reason is cancellation_credit, not a refund of any kind');
 
 -- --- reserved with partial credit applied: only the applied credit comes back
+--
+-- ~~50 crowns against a 200 CZK game, one seat.~~ ONE CREDIT AND A PARTY OF
+-- TWO, SINCE ROUND 35, and the reshape is forced rather than cosmetic: under
+-- the seat-denominated ruling a SINGLE seat can never be partly paid. It is
+-- either covered by a whole credit or it is not covered at all, so the state
+-- this test exists for — applied credit with money still owed — only exists
+-- on a party now. One credit pays the first seat; the second is owed at the
+-- game''s own 200. The point is unchanged.
 insert into public.credit_ledger (player_id, delta_czk, reason) values
-  ('bbbb0000-0000-0000-0000-00000000000b', 50, 'admin_grant');
+  ('bbbb0000-0000-0000-0000-00000000000b', 150, 'admin_grant');
 
 select pg_temp.act_as('b0000000-0000-0000-0000-0000000000b1');
-select public.create_booking('94440000-0000-0000-0000-000000000004', 'qr');
+select public.create_booking('94440000-0000-0000-0000-000000000004', 'qr', null, null, 1);
 select pg_temp.ok(
   (select (public.cancel_booking(
     (select id from public.bookings where game_id = '94440000-0000-0000-0000-000000000004')
-  )).credit_issued_czk) = 50,
-  'cancelling a RESERVED booking with partial credit returns only the 50 applied, not the 200 price');
+  )).credit_issued_czk) = 150,
+  'cancelling a RESERVED booking with partial credit returns only the ONE '
+  'CREDIT applied, not the 350 the party was priced at');
 reset role;
 
 select pg_temp.ok(
   (select coalesce(sum(delta_czk), 0) from public.credit_ledger
-    where player_id = 'bbbb0000-0000-0000-0000-00000000000b') = 50,
-  'player B''s balance is restored to exactly the original 50',
+    where player_id = 'bbbb0000-0000-0000-0000-00000000000b') = 150,
+  'player B''s balance is restored to exactly the credit they started with',
   'balance=' || (select coalesce(sum(delta_czk), 0) from public.credit_ledger
                   where player_id = 'bbbb0000-0000-0000-0000-00000000000b'));
 

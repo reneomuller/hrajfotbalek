@@ -1281,6 +1281,18 @@ export interface Database {
        * refund is credit and is gated on `cancel_booking`'s cutoff; the removal
        * itself is permitted up to kickoff, which is `cancel_booking`'s rule too.
        */
+      /**
+       * Round 35 item 2 — seats taken for many games in one round trip.
+       *
+       * WRAPS `game_seats_taken`, which stays the single definition of a taken
+       * seat. It exists because three admin surfaces counted BOOKING ROWS and
+       * a booking is not a seat; calling the per-game function once per row on
+       * a list page is the round trip the old query was avoiding.
+       */
+      game_seats_taken_many: {
+        Args: { p_game_ids: string[] };
+        Returns: { game_id: string; seats_taken: number }[];
+      };
       cancel_guests: {
         Args: { p_booking_id: string; p_count: number };
         Returns: {

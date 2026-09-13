@@ -1,4 +1,5 @@
 import { formatCzk, formatDate } from "@/lib/format";
+import { creditsFromCzk } from "@/lib/admin/credits";
 import { strings } from "@/lib/strings";
 import {
   button,
@@ -49,9 +50,28 @@ export interface TopupReceiptProps {
  * distinguish: repeating "received 300, credited 300" adds a line whose only
  * job is to be identical to the one above it.
  */
+/**
+ * A credit amount as the player reads it (round 35).
+ *
+ * FLOORED, because a legacy ragged balance — production has three — cannot be
+ * spent past its whole credits, and the number in an email is one somebody will
+ * check against what the product will actually let them do. English only, like
+ * every other string in this file.
+ */
+function creditsPhrase(czk: number): string {
+  const credits = creditsFromCzk(czk);
+  return credits === 1 ? "1 credit" : `${credits} credits`;
+}
+
 export function topupReceiptEmail(props: TopupReceiptProps): RenderedEmail {
-  const credited = formatCzk(props.creditedCzk);
-  const balance = formatCzk(props.balanceCzk);
+  /*
+   * CREDITS FOR WHAT THE PLAYER HOLDS, CROWNS FOR WHAT ARRIVED (round 35's
+   * vocabulary law). `received` is a bank transfer and stays money; `credited`
+   * and `balance` are credit and read as credits, because a credit balance
+   * wearing crowns is the conversion the law exists to stop.
+   */
+  const credited = creditsPhrase(props.creditedCzk);
+  const balance = creditsPhrase(props.balanceCzk);
   const received = formatCzk(props.receivedCzk);
 
   // A pass is exactly the case where received and credited differ.
@@ -65,7 +85,11 @@ export function topupReceiptEmail(props: TopupReceiptProps): RenderedEmail {
     html: emailShell(
       emails.topupReceipt.heading,
       join([
-        paragraph(emails.topupReceipt.body.replace("{amount}", credited)),
+        paragraph(
+          emails.topupReceipt.body
+            .replace("{amount}", received)
+            .replace("{credits}", credited),
+        ),
         ...(isPass ? [fact(emails.topupReceipt.receivedLabel, received)] : []),
         fact(emails.topupReceipt.creditedLabel, credited),
         ...(isPass ? [fact(emails.topupReceipt.expiresLabel, expiryLine)] : []),
@@ -81,7 +105,7 @@ export function topupReceiptEmail(props: TopupReceiptProps): RenderedEmail {
     text: textBody([
       emails.topupReceipt.heading,
       "",
-      emails.topupReceipt.body.replace("{amount}", credited),
+      emails.topupReceipt.body.replace("{amount}", received).replace("{credits}", credited),
       ...(isPass ? [`${emails.topupReceipt.receivedLabel}: ${received}`] : []),
       `${emails.topupReceipt.creditedLabel}: ${credited}`,
       ...(isPass ? [`${emails.topupReceipt.expiresLabel}: ${expiryLine}`] : []),
@@ -98,7 +122,14 @@ export interface PassExpiringProps {
   nickname: string;
   /** What is left in the batch — not what was bought. */
   remainingCzk: number;
-  /** Roughly how many games that is, at the reference price. */
+  /**
+   * ~~Roughly how many games that is, at the reference price.~~ KEPT ON THE
+   * PROPS AND NO LONGER RENDERED (round 35). Under the seat-denominated ruling
+   * a credit IS a game, exactly — "3 credits" and "roughly 3 games" are the
+   * same line twice, and the second one says "roughly" about a number that is
+   * now precise. The caller still computes it and the type still takes it, so
+   * nothing about the cron route changes.
+   */
   gamesLeft: number;
   expiresAt: string;
   gamesUrl: string;
@@ -117,10 +148,12 @@ export interface PassExpiringProps {
  * people to ignore the first one.
  */
 export function passExpiringEmail(props: PassExpiringProps): RenderedEmail {
-  const remaining = formatCzk(props.remainingCzk);
+  // The batch's remaining value is CREDIT, so it reads as credits — the
+  // `gamesLeft` the caller already computes is the same number by another name.
+  const remaining = creditsPhrase(props.remainingCzk);
   const date = formatDate(props.expiresAt);
   const body = emails.passExpiring.body
-    .replace("{amount}", remaining)
+    .replace("{credits}", remaining)
     .replace("{date}", date);
 
   return {
@@ -130,7 +163,6 @@ export function passExpiringEmail(props: PassExpiringProps): RenderedEmail {
       join([
         paragraph(body),
         fact(emails.passExpiring.remainingLabel, remaining),
-        fact(emails.passExpiring.gamesLabel, String(props.gamesLeft)),
         fact(emails.passExpiring.expiresLabel, date),
         button(props.gamesUrl, emails.passExpiring.cta),
       ]),
@@ -140,7 +172,6 @@ export function passExpiringEmail(props: PassExpiringProps): RenderedEmail {
       "",
       body,
       `${emails.passExpiring.remainingLabel}: ${remaining}`,
-      `${emails.passExpiring.gamesLabel}: ${props.gamesLeft}`,
       `${emails.passExpiring.expiresLabel}: ${date}`,
       "",
       props.gamesUrl,

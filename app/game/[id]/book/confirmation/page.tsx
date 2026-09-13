@@ -7,6 +7,7 @@ import { formatCzk, formatGameDateTime } from "@/lib/format";
 import { amountDueCzk } from "@/lib/payments/spd";
 import { getLocale, getStrings } from "@/lib/i18n/server";
 import { pluralise } from "@/lib/i18n/plural";
+import { creditsFromCzk } from "@/lib/admin/credits";
 import { bestDiscountPercent, listPassTiers } from "@/lib/pass/queries";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -186,8 +187,25 @@ export default async function ConfirmationPage({
             <span className="text-[12px] text-muted">
               {t.booking.creditApplied}
             </span>
-            <span className="text-[13px] text-volt">
-              −{formatCzk(booking.credit_applied_czk)}
+            {/*
+              CREDITS, NOT CROWNS (round 35's ruling). A mixed booking's credit
+              half is whole seats by construction — `create_booking_internal`
+              floors the balance into credits before it applies any — so this
+              reads "−2 credits" rather than "−300 CZK", which is the unit the
+              player's own balance is in. The amount still owed below stays in
+              crowns, because that is what a card is about to be charged.
+            */}
+            <span data-testid="credit-applied" className="text-[13px] text-volt">
+              −
+              {pluralise(
+                {
+                  one: t.games.addGuests.creditOne,
+                  few: t.games.addGuests.creditFew,
+                  many: t.games.addGuests.creditMany,
+                },
+                creditsFromCzk(booking.credit_applied_czk),
+                locale,
+              )}
             </span>
           </div>
         )}

@@ -56,6 +56,32 @@ function walk(table: Table, prefix: string[] = []): [string, string][] {
   return out;
 }
 
+/**
+ * ROUND 35'S EXTENSION — A CREDIT AMOUNT NEVER WEARS CROWNS.
+ *
+ * THE RULING: credit balances, credit costs and credit arithmetic appear ONLY
+ * in credits on a player-facing surface. No conversions, no previews, no
+ * remainders. The round-34 crowns-when-uneven fallback died with the
+ * seat-denominated ruling and this is what keeps it dead.
+ *
+ * CARD PRICES ARE NOT THE TARGET AND MUST NOT BE CAUGHT. A game costs 180 CZK
+ * by card and saying so is the product working; what is banned is a
+ * credit-denominated amount rendered as money. The rule below is therefore
+ * narrow on purpose: a string is an offender only when it is ABOUT credit AND
+ * carries a money placeholder or unit.
+ *
+ * THE ONE STRING THAT LEGITIMATELY DOES BOTH is the top-up receipt's body —
+ * "We received {amount} and added {credits} to your account" — because a bank
+ * transfer really does move crowns and the thing it becomes really is credits.
+ * It names both, in the right units, which is exactly what the law wants; the
+ * `{credits}` placeholder is what tells this test so.
+ */
+const CREDIT_WORD = /credit|kredit|кредит/i;
+/** A money placeholder or a currency, in any of the four languages. */
+const MONEY = /\{amount\}|\{total\}|\{czk\}|\bCZK\b|Kč|крон/i;
+/** The escape hatch, and the only one: the string also names credits as credits. */
+const CREDITS_PLACEHOLDER = /\{credits\}/;
+
 describe.each([
   ["en", strings as unknown as Table],
   ["cs", cs as unknown as Table],
@@ -67,6 +93,22 @@ describe.each([
   it("has strings to check at all", () => {
     // A walk that found nothing would pass every assertion below.
     expect(entries.length).toBeGreaterThan(20);
+  });
+
+  it("never prices a credit amount in crowns", () => {
+    const offenders = entries
+      .filter(
+        ([path, value]) =>
+          (CREDIT_WORD.test(path) || CREDIT_WORD.test(value)) &&
+          MONEY.test(value) &&
+          !CREDITS_PLACEHOLDER.test(value),
+      )
+      .map(([path, value]) => `${path}: ${JSON.stringify(value)}`);
+
+    expect(
+      offenders,
+      `${locale} converts a credit amount into crowns in ${offenders.length} place(s)`,
+    ).toEqual([]);
   });
 
   for (const { label, pattern } of FORBIDDEN) {

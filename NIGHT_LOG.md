@@ -7,6 +7,63 @@ way that nobody asked about.
 
 ---
 
+## Round 35 — 2026-09-15
+
+A ruling and two items that arrived mid-round. All three done.
+
+### The ruling was four lines and its consequences were not
+
+"1 credit = 1 game = 1 seat, regardless of `price_czk`." The debit change is
+three statements. What it forced took the rest of the round:
+
+**Partial credit in crowns stopped existing**, and with it a state four SQL
+suites were built around. A seat is covered by a whole credit or not at all, so
+a one-seat booking with any credit is fully paid — the "applied credit, money
+still owed" case can only happen on a PARTY now. Two of those suites had to
+become parties of two. None of them was re-expected; each was reshaped to the
+state it exists to test.
+
+**"Can this wallet pay" turned out to be asked in three places**, two of them in
+crowns: the RPC everybody knew about, the disabled radio, and a round-23 POST
+guard. On a 180 CZK game a wallet holding four credits was told "Not enough
+credit" for a party the RPC would have accepted. The e2e caught it as a
+TIMEOUT rather than a wrong number, because the refusal renders somewhere
+nothing was asserting on.
+
+**And it makes 270 CZK inert on production** — one wallet of 50, two remainders
+of 110. Already unspendable as a whole game; now unspendable as a part of one.
+Measured rather than estimated, and it is row 283 for the owner to rule on.
+
+### The fixture that paid for itself
+
+`round24.spec.ts` books a hold it needs to stay UNPAID, and round 29 made it
+assert that precondition in the fixture rather than let six tests fail later on
+a status mismatch. Under the ruling 150 credit on a 200 CZK game stopped being
+a partial payment and became a paid seat, and the suite said so in one line
+with the reason in the message. Six tests would otherwise have failed looking
+like the played sweep misbehaving.
+
+### The admin miss was three sites, not two
+
+The owner named the upcoming-games view and the capacity readout. The audit
+found `dashboard.ts` doing the same thing with a query of its own. All three
+counted booking rows; a party of three read as 1 while the player page said 3.
+They now go through `game_seats_taken_many`, which wraps the authority instead
+of mirroring it.
+
+### Suites
+
+Unit 758/758 · SQL 45/45 ALL PASS · lint 0 errors · tsc clean. E2E result and
+the deployment id are in the round's final commit message.
+
+### Still owed by the owner
+
+Rows 184, 188, **261** (the 28 unsettled Stripe sessions — still the one that
+needs a human), 275, **283** (the 270 CZK) and **291**. Commands in
+`docs/REQUESTS.md` §6.
+
+---
+
 ## Round 34 — 2026-09-14
 
 Four items. All four shipped. Two things worth knowing and one thing worth
