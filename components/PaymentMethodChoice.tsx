@@ -6,6 +6,7 @@ import { FormError } from "@/components/form/FormError";
 import { PendingButton } from "@/components/form/PendingButton";
 import { describeBookingError } from "@/lib/booking/errors";
 import { useLocale, useStrings } from "@/components/LocaleProvider";
+import { GuestOverflowSelect } from "@/components/game/GuestOverflowSelect";
 import { pluralise } from "@/lib/i18n/plural";
 import Link from "next/link";
 import { formatCzk } from "@/lib/format";
@@ -43,6 +44,17 @@ export interface PaymentMethodChoiceProps {
    * of them.
    */
   embeddedCheckout: boolean;
+  /**
+   * Whether `public.max_party_guests()` has been raised to thirteen (round 33,
+   * item 3).
+   *
+   * RESOLVED ON THE SERVER, from `app_capabilities()`, for the same reason the
+   * rail is: the browser cannot ask the database what it is capped at, and a
+   * picker that guesses would offer a party the RPC refuses. False means the
+   * control keeps exactly the shape it had before this round — `+1/+2/+3` and
+   * no fourth control — which is the old product working, not a degraded one.
+   */
+  partyUpToThirteen: boolean;
 }
 
 const INITIAL: BookingActionState = { status: "idle" };
@@ -82,6 +94,7 @@ export function PaymentMethodChoice({
   creditCzk,
   spotsLeft,
   embeddedCheckout,
+  partyUpToThirteen,
 }: PaymentMethodChoiceProps) {
   const t = useStrings();
   const locale = useLocale();
@@ -98,7 +111,21 @@ export function PaymentMethodChoice({
    * free spots offers `+1` and `+2` and stops.
    */
   const [guests, setGuests] = useState(0);
-  const maxGuests = Math.max(0, Math.min(policy.booking.maxPartyGuests, spotsLeft - 1));
+  /*
+   * THE CEILING IS THE SMALLEST OF THREE THINGS (round 33, item 3).
+   *
+   * The policy's thirteen, what is left on the pitch — `spotsLeft` counts the
+   * player's own seat — and, until the migration lands, the three the DATABASE
+   * still enforces. That third term is the one that matters: offering `+7` to
+   * a `create_booking_internal` capped at three is a control with a dead path
+   * behind it, which is round 12's rule, and the player would meet it as
+   * `PARTY_TOO_LARGE` after choosing a payment method.
+   */
+  const policyMax = partyUpToThirteen
+    ? policy.booking.maxPartyGuests
+    : policy.booking.partyPills;
+  const maxGuests = Math.max(0, Math.min(policyMax, spotsLeft - 1));
+  const pillMax = Math.min(policy.booking.partyPills, maxGuests);
   const seats = guests + 1;
   const partyPrice = priceCzk * seats;
 
@@ -221,7 +248,7 @@ export function PaymentMethodChoice({
             it.
           */}
           <div className="flex flex-wrap gap-2">
-            {Array.from({ length: maxGuests + 1 }, (_, n) => (
+            {Array.from({ length: pillMax + 1 }, (_, n) => (
               <label
                 key={n}
                 data-testid={`party-${n}`}
@@ -242,6 +269,25 @@ export function PaymentMethodChoice({
                 {n === 0 ? t.booking.partyJustMe : t.booking.partyPlus.replace("{n}", String(n))}
               </label>
             ))}
+
+            {/*
+              THE FOURTH CONTROL (round 33, item 3). Everything above `+3`
+              lives behind one dropdown rather than ten more pills — the owner's
+              shape, and the only one that fits a 390px row.
+
+              It renders nothing when the cap has already trimmed the options
+              away, so a game with three spots left still shows exactly the
+              pills it can honour.
+            */}
+            <GuestOverflowSelect
+              min={policy.booking.partyPills + 1}
+              max={maxGuests}
+              value={guests}
+              onChange={setGuests}
+              label={(n: number) => t.booking.partyPlus.replace("{n}", String(n))}
+              ariaLabel={t.booking.partyMore}
+              testId="party-more"
+            />
           </div>
 
           {guests > 0 && (
@@ -274,7 +320,7 @@ export function PaymentMethodChoice({
             Said only when the pitch is the binding constraint, not the policy.
             "Only 2 more can fit" beside a full set of buttons would be noise.
           */}
-          {maxGuests < policy.booking.maxPartyGuests && (
+          {maxGuests < policyMax && (
             <p data-testid="party-limited" className="mt-2 text-[13px] text-muted">
               {t.booking.partyLimited.replace("{n}", String(maxGuests))}
             </p>

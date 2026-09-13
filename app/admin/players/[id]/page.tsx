@@ -6,6 +6,8 @@ import { GrantCreditForm } from "@/components/admin/GrantCreditForm";
 import { RemoveCreditForm } from "@/components/admin/RemoveCreditForm";
 import { RemovePhotoButton } from "@/components/admin/RemovePhotoButton";
 import { RemoveCoverButton } from "@/components/admin/RemoveCoverButton";
+import { ChangeNameForm } from "@/components/admin/ChangeNameForm";
+import { appCapabilities } from "@/lib/db/capabilities";
 import { requireAdmin } from "@/lib/auth/requireAdmin";
 import { getAdminPlayer } from "@/lib/admin/queries";
 import { formatCzk } from "@/lib/format";
@@ -44,6 +46,10 @@ export default async function AdminPlayerPage({
   const { id } = await params;
   const detail = await getAdminPlayer(id);
   if (!detail) notFound();
+
+  // The rename is an RPC, so it is gated: a control whose function does not
+  // exist is a button that 404s, which round 12 ruled against.
+  const capabilities = await appCapabilities();
 
   const { player, balanceCzk, gamesPlayed, noShowCount, games } = detail;
   const photo = avatarUrl(
@@ -112,8 +118,25 @@ export default async function AdminPlayerPage({
 
         <div className="flex min-w-0 flex-col gap-[2px] pb-1">
           {/* Nickname is free text; JSX escapes it. */}
-          <h2 className="m-0 truncate text-[26px] font-bold leading-tight text-white">
-            {player.nickname}
+          <h2 className="m-0 flex items-baseline gap-2 truncate text-[26px] font-bold leading-tight text-white">
+            {/*
+              THE PERMANENT NUMBER (round 33, item 2) — beside the name, and
+              deliberately the quietest thing in the heading. Inside the `h2` so
+              a screen reader reads "No. 14, Oliver" as one heading rather than
+              announcing a stray number, and `player_number` is optional in the
+              type so this simply is not there until the migration is applied.
+            */}
+            {player.player_number !== undefined && (
+              <span
+                data-testid="admin-player-number"
+                title={strings.admin.playerNumberTitle}
+                className="shrink-0 tabular-nums text-[13px] font-semibold text-faint"
+              >
+                {strings.admin.playerNumber}
+                {player.player_number}
+              </span>
+            )}
+            <span className="truncate">{player.nickname}</span>
           </h2>
           <p className="m-0 truncate text-small text-muted">
             {[
@@ -281,12 +304,25 @@ export default async function AdminPlayerPage({
           banner sees one button rather than one enabled and one dead. They
           share a divider because they are one kind of act.
         */}
-        {(player.photo_path || player.cover_path) && (
-          <div className="flex flex-wrap items-center gap-3 border-t border-hairline pt-4">
-            {player.photo_path && <RemovePhotoButton playerId={player.id} />}
-            {player.cover_path && <RemoveCoverButton playerId={player.id} />}
-          </div>
-        )}
+        {/*
+          THE IDENTITY ROW (round 33, item 1). The rename joins the two image
+          removals because all three act on how this player APPEARS, and the
+          owner asked for it "alongside Remove photo / Remove banner".
+
+          THE ROW IS NO LONGER CONDITIONAL, AND THAT IS THE ITEM. It used to
+          render only when there was an image to remove, which was right while
+          every control in it was about an image. A name always exists, so the
+          rename is always offered — and the two removals keep their own
+          conditions, because an enabled button for an absent photo would be a
+          promise the page cannot keep.
+        */}
+        <div className="flex flex-wrap items-start gap-3 border-t border-hairline pt-4">
+          {capabilities.adminRenamePlayer && (
+            <ChangeNameForm playerId={player.id} name={player.nickname} />
+          )}
+          {player.photo_path && <RemovePhotoButton playerId={player.id} />}
+          {player.cover_path && <RemoveCoverButton playerId={player.id} />}
+        </div>
       </section>
 
       {/* --- history, with the no-show control -------------------------------- */}

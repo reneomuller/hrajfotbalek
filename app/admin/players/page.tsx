@@ -172,6 +172,28 @@ export default async function AdminPlayersPage({
                       "who is here and what do they owe"; the page answers "who
                       is this person", which is a different question asked at a
                       different moment. */}
+                  {/*
+                    THE PERMANENT NUMBER, SMALL AND QUIET (round 33, item 2).
+
+                    It leads the name rather than trailing it, because the one
+                    thing it is for is finding a row: an admin holding an export
+                    scans a column of numbers, and a number that sits after a
+                    name of unpredictable length is not a column.
+
+                    `tabular-nums` so 9 and 10 line up under each other, and
+                    `text-faint` so it never competes with the name — it is a
+                    key, not a rank. It renders only when the migration has been
+                    applied; before that there is no number to be quiet about.
+                  */}
+                  {player.playerNumber !== null && (
+                    <span
+                      data-testid="admin-player-number"
+                      title={strings.admin.playerNumberTitle}
+                      className="shrink-0 tabular-nums text-[11px] text-faint"
+                    >
+                      {player.playerNumber}
+                    </span>
+                  )}
                   <Link
                     href={`/admin/players/${player.id}`}
                     data-testid="admin-player-link"

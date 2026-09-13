@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { appCapabilities } from "@/lib/db/capabilities";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { BookingError } from "@/components/BookingError";
@@ -146,6 +147,15 @@ export default async function BookPage({ params, searchParams }: BookPageProps) 
             true of exactly one of the two rails.
           */
           embeddedCheckout={embeddedCheckoutEnabled()}
+          /*
+            WHETHER THE DATABASE WILL ACTUALLY TAKE A PARTY OF THIRTEEN
+            (round 33, item 3). The owner applies migrations by hand, so the
+            deploy lands first — and a dropdown offering `+7` against a
+            `create_booking_internal` still capped at three is a control with a
+            dead path behind it. Until the flag is true the picker is exactly
+            what it was: three pills.
+          */
+          partyUpToThirteen={(await appCapabilities()).partyUpToThirteen}
         />
       </div>
 

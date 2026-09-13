@@ -147,22 +147,30 @@ export const policy = {
    * BRINGING PEOPLE (round 11, part B).
    *
    * `maxPartyGuests` is the number of EXTRA seats one booking may hold, so a
-   * party is at most `1 + maxPartyGuests` people. Three is the owner's figure:
-   * `+1/+2/+3`.
+   * party is at most `1 + maxPartyGuests` people. ~~Three: `+1/+2/+3`.~~
+   * THIRTEEN (round 33, item 3), so a booking can hold a whole side.
+   *
+   * `partyPills` IS A SEPARATE NUMBER AND NOT A SECOND CEILING. It is how many
+   * of the options are drawn as one-tap pills before the rest become a
+   * dropdown; the owner's shape is `+1/+2/+3` as pills and `+4`…`+13` behind a
+   * fourth control. Thirteen pills would wrap to three rows on a 390px screen
+   * and turn a two-second decision into a wall.
    *
    * DISPLAY ONLY, AND THIS IS THE SECOND WINDOW THAT SAYS SO. Like
-   * `cancellation`, the authority is in SQL — `create_booking_internal` holds
-   * its own `v_max_guests` and raises `PARTY_TOO_LARGE` — because a route
-   * guard is skipped by anyone using curl. If the two disagree, the database
-   * is right and the UI is lying. Moving the ceiling means editing both, in
-   * one commit, and the SQL comment says so too.
+   * `cancellation`, the authority is in SQL — and as of round 33 it is ONE
+   * value there rather than two: `public.max_party_guests()`, which
+   * `create_booking_internal` and `can_add_guests` both read. If the two
+   * disagree the database is right and the UI is lying, which is why the
+   * booking-time picker will not offer past three until
+   * `app_capabilities().partyUpToThirteen` says the migration has landed.
    *
    * NOT A `POLICY_VERSION` BUMP. Nothing transitions on it and no event is
    * stamped with it: it bounds a control's options, and a booking made at a
-   * party of three does not become invalid if the ceiling later moves to four.
+   * party of three does not become invalid if the ceiling later moves again.
    */
   booking: {
-    maxPartyGuests: 3,
+    maxPartyGuests: 13,
+    partyPills: 3,
     /**
      * How long an unpaid ONLINE booking holds its seats (round 12).
      *

@@ -47,6 +47,30 @@ export interface AppCapabilities {
    * and the reason the deploy is safe ahead of the migration.
    */
   addGuestsAfterBooking: boolean;
+  /** Round 33 item 1 — `admin_set_display_name` exists. */
+  adminRenamePlayer: boolean;
+  /**
+   * Round 33 item 2 — `players.player_number` exists.
+   *
+   * THE SURFACES DO NOT READ THIS FLAG, AND THAT IS DELIBERATE. Both admin
+   * reads are `select("*")`, so the column simply is not in the row before the
+   * migration and is after it, and the type declares it optional — the render
+   * gates on the VALUE being there, which cannot disagree with the database the
+   * way a second flag can. It is declared here because this interface mirrors
+   * what `app_capabilities()` returns, and because a round report that says
+   * "applied" should be answerable by one call.
+   */
+  playerNumbers: boolean;
+  /**
+   * Round 33 item 3 — `max_party_guests()` exists and returns thirteen, and
+   * both `create_booking_internal` and `can_add_guests` read it.
+   *
+   * THE ONE FLAG THIS ROUND THAT A PLAYER WOULD FEEL. The other two guard admin
+   * surfaces; this one guards a control that takes money. Offering `+7` to a
+   * database still capped at three is a `PARTY_TOO_LARGE` delivered after the
+   * player has chosen how to pay.
+   */
+  partyUpToThirteen: boolean;
 }
 
 const NONE: AppCapabilities = {
@@ -59,6 +83,9 @@ const NONE: AppCapabilities = {
   playersMet: false,
   organizerTelegram: false,
   addGuestsAfterBooking: false,
+  adminRenamePlayer: false,
+  playerNumbers: false,
+  partyUpToThirteen: false,
 };
 
 export const appCapabilities = cache(async (): Promise<AppCapabilities> => {
@@ -87,6 +114,9 @@ export const appCapabilities = cache(async (): Promise<AppCapabilities> => {
       playersMet: read("playersMet"),
       organizerTelegram: read("organizerTelegram"),
       addGuestsAfterBooking: read("addGuestsAfterBooking"),
+      adminRenamePlayer: read("adminRenamePlayer"),
+      playerNumbers: read("playerNumbers"),
+      partyUpToThirteen: read("partyUpToThirteen"),
     };
   } catch {
     return NONE;

@@ -864,6 +864,15 @@ export const strings = {
      * Shown when the pitch has less room than the ceiling allows, so the
      * missing buttons are explained rather than simply absent.
      */
+    /**
+     * The fourth control's accessible name (round 33, item 3).
+     *
+     * A `<select>` needs one: the pills say what they are, and the dropdown's
+     * closed label is "+4", which announces a number and not a question. It is
+     * the only NEW player-facing string this item adds — every option inside it
+     * is `partyPlus`, which every language already has.
+     */
+    partyMore: "More guests",
     partyLimited: "Only {n} more can fit on this pitch.",
     /**
      * THE ONE THING A STATIC PAYMENT LINK CANNOT DO. A Stripe Payment Link
@@ -1746,6 +1755,37 @@ export const strings = {
     coverRemoved: "Banner removed",
     coverRemoveConfirm:
       "Remove this player's banner? The image is deleted from storage and cannot be recovered.",
+    /* --- round 33, item 1: the rename ----------------------------------------
+     *
+     * ALWAYS VISIBLE, WHICH IS THE POINT THE OWNER MADE. The two removals
+     * render only when there is something to remove — correct, because a
+     * player with no banner has no banner to take away. A NAME ALWAYS EXISTS,
+     * so a control that appeared conditionally would be a control that was
+     * missing for no reason anybody could see.
+     *
+     * The confirm says what changes and what does not: a rename is visible to
+     * everyone who has ever played with them, and it is not a deletion.
+     */
+    nameChange: "Change name",
+    nameChangeOpen: "Change name",
+    nameChangeLabel: "Display name",
+    nameChangeSave: "Save name",
+    nameChangeCancel: "Cancel",
+    nameChanged: "Name changed",
+    nameChangeConfirm:
+      "Change this player's display name? It changes everywhere they appear — every roster, every history, every profile. Nothing else about the account moves.",
+    nameChangeHint: "Letters, numbers, spaces, - and _. Up to 20 characters.",
+    nameTaken: "Another player already uses that name.",
+
+    /* --- round 33, item 2: the permanent number ------------------------------
+     *
+     * ADMIN ONLY AND DELIBERATELY QUIET. It is a key for an export, not a
+     * badge: small, muted, beside the name, and on no player-facing surface at
+     * all.
+     */
+    playerNumber: "No.",
+    playerNumberTitle: "Permanent player number — signup order, never reused",
+
     siteSettingUnknownKey: "That setting does not exist.",
 
     /* --- guests (round 11, part A) -------------------------------------------

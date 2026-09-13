@@ -4,6 +4,8 @@ import { useActionState, useState } from "react";
 import { useStrings } from "@/components/LocaleProvider";
 import { formatCzk } from "@/lib/format";
 import { addGuestsAction } from "@/app/game/[id]/add-guests/actions";
+import { GuestOverflowSelect } from "@/components/game/GuestOverflowSelect";
+import { policy } from "@/lib/policy";
 import { ADD_GUESTS_INITIAL } from "@/lib/booking/addGuests";
 
 /**
@@ -50,7 +52,18 @@ export function AddGuestsPanel({
   const [state, formAction] = useActionState(addGuestsAction, ADD_GUESTS_INITIAL);
   const [picked, setPicked] = useState(1);
 
-  const options = Array.from({ length: canAdd }, (_, i) => i + 1);
+  /*
+   * PILLS UP TO THREE, A DROPDOWN FOR THE REST (round 33, item 3).
+   *
+   * NO CAPABILITY FLAG HERE, AND THAT IS NOT AN OVERSIGHT. `canAdd` IS
+   * `can_add_guests()`'s answer — computed by the same function the writers
+   * bound themselves by — so before the migration it is at most three and the
+   * dropdown never renders, and after it, it is already whatever the database
+   * will allow. The booking-time picker needs a flag because it derives its
+   * ceiling from `lib/policy.ts`; this one is told.
+   */
+  const pillMax = Math.min(policy.booking.partyPills, canAdd);
+  const options = Array.from({ length: pillMax }, (_, i) => i + 1);
   const cost = priceCzk * picked;
   const affordable = creditCzk >= cost;
 
@@ -77,29 +90,48 @@ export function AddGuestsPanel({
         set, so a keyboard reaches it and a screen reader announces it as one
         control with N options.
       */}
-      <div
-        role="radiogroup"
-        aria-label={t.games.addGuests.title}
-        data-testid="add-guests-picker"
-        className="mt-4 flex flex-wrap gap-2"
-      >
-        {options.map((n) => (
-          <button
-            key={n}
-            type="button"
-            role="radio"
-            aria-checked={picked === n}
-            data-testid={`add-guests-pick-${n}`}
-            onClick={() => setPicked(n)}
-            className={
-              picked === n
-                ? "rounded-control border-[1.5px] border-volt bg-volt px-4 py-2 text-body font-bold text-surface"
-                : "rounded-control border-[1.5px] border-hairline bg-transparent px-4 py-2 text-body font-bold text-bone"
-            }
-          >
-            {t.games.addGuests.pick.replace("{n}", String(n))}
-          </button>
-        ))}
+      <div className="mt-4 flex flex-wrap items-center gap-2">
+        <div
+          role="radiogroup"
+          aria-label={t.games.addGuests.title}
+          data-testid="add-guests-picker"
+          className="flex flex-wrap gap-2"
+        >
+          {options.map((n) => (
+            <button
+              key={n}
+              type="button"
+              role="radio"
+              aria-checked={picked === n}
+              data-testid={`add-guests-pick-${n}`}
+              onClick={() => setPicked(n)}
+              className={
+                picked === n
+                  ? "rounded-control border-[1.5px] border-volt bg-volt px-4 py-2 text-body font-bold text-surface"
+                  : "rounded-control border-[1.5px] border-hairline bg-transparent px-4 py-2 text-body font-bold text-bone"
+              }
+            >
+              {t.games.addGuests.pick.replace("{n}", String(n))}
+            </button>
+          ))}
+        </div>
+
+        {/*
+          THE FOURTH CONTROL, AND IT IS A SIBLING OF THE RADIOGROUP RATHER THAN
+          A MEMBER OF IT. A `<select>` is not a `radio`; inside the group it
+          would make the group announce an option count that does not match what
+          is in it. Two controls, one choice — which is what the legend above
+          says and what `picked` holds.
+        */}
+        <GuestOverflowSelect
+          min={policy.booking.partyPills + 1}
+          max={canAdd}
+          value={picked}
+          onChange={setPicked}
+          label={(n: number) => t.games.addGuests.pick.replace("{n}", String(n))}
+          ariaLabel={t.booking.partyMore}
+          testId="add-guests-more"
+        />
       </div>
 
       <p

@@ -405,6 +405,8 @@ export const ru: StringsOverlay = {
     partySeatsOne: "{n} место",
     partySeatsFew: "{n} места",
     partySeatsMany: "{n} мест",
+    /* Round 33, item 3 — the fourth control's accessible name. */
+    partyMore: "Больше гостей",
     partyLimited: "На это поле поместится ещё только {n}.",
     partyOnlineQuantity: "На странице оплаты укажи количество {seats}.",
     awaitingTitle: "Ждём твою оплату",

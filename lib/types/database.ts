@@ -283,6 +283,21 @@ export interface Database {
            * every player who predates it. See lib/players/positions.ts.
            */
           positions: string[];
+          /**
+           * Round 33 item 2 — the permanent signup-order number, ADMIN ONLY.
+           *
+           * OPTIONAL FOR THE SAME REASON `updated_at` IS: the migration is
+           * written and validated and the owner applies it by hand, so a row
+           * read before that has no such key. The `?` is what makes the
+           * compiler insist the admin surfaces handle its absence rather than
+           * rendering `undefined` at the live site.
+           *
+           * It is on no player-facing type on purpose. `players_select_own`
+           * means a player can read their OWN row, number included, through the
+           * API — the rule the owner set is about SURFACES, and the specs
+           * assert it there.
+           */
+          player_number?: number;
         };
         Insert: {
           id?: string;
@@ -1399,6 +1414,15 @@ export interface Database {
       remove_profile_photo: {
         Args: { p_player_id: string };
         Returns: string | null;
+      };
+      /**
+       * Round 33 item 1 — the ADMIN's rename. Returns the STORED name, which is
+       * the trimmed input rather than the input: the form re-seeds from it, so
+       * a trailing space the admin typed does not come back on the next render.
+       */
+      admin_set_display_name: {
+        Args: { p_player_id: string; p_nickname: string };
+        Returns: string;
       };
       /**
        * Admin-only. v2.5 §8 anonymization plus the Phase 2 photo rule. Returns

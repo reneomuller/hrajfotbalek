@@ -402,6 +402,8 @@ export const cs: StringsOverlay = {
     partySeatsOne: "{n} místo",
     partySeatsFew: "{n} místa",
     partySeatsMany: "{n} míst",
+    /* Round 33, item 3 — the fourth control's accessible name. */
+    partyMore: "Více hostů",
     partyLimited: "Na tomhle hřišti se vejde už jen {n}.",
     partyOnlineQuantity: "Na platební stránce nastav počet na {seats}.",
     awaitingTitle: "Čekáme na tvou platbu",

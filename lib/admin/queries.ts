@@ -291,6 +291,14 @@ export interface AdminPlayerRow {
   /** `SUM(delta_czk)` over the whole ledger — the wallet, computed here. */
   balanceCzk: number;
   bookingCount: number;
+  /**
+   * The permanent signup-order number (round 33, item 2).
+   *
+   * NULL UNTIL THE MIGRATION IS APPLIED, and null is a rendering instruction
+   * rather than an error: the surfaces print nothing. `select("*")` means this
+   * appears on its own the moment the column exists, with no deploy.
+   */
+  playerNumber: number | null;
 }
 
 /**
@@ -329,6 +337,7 @@ export async function listPlayers(): Promise<AdminPlayerRow[]> {
     isAdmin: player.is_admin,
     balanceCzk: balances.get(player.id) ?? 0,
     bookingCount: counts.get(player.id) ?? 0,
+    playerNumber: player.player_number ?? null,
   }));
 }
 

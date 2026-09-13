@@ -24,6 +24,8 @@ import {
 export interface PlayerAdminState {
   status: "idle" | "done" | "error";
   message?: string;
+  /** The stored display name, when a rename succeeded (round 33, item 1). */
+  name?: string;
 }
 
 /**
@@ -121,4 +123,41 @@ export async function removePhotoAction(
   revalidatePath(`/admin/players/${playerId}`);
   revalidatePath("/admin/players");
   return { status: "done" };
+}
+
+/**
+ * Admin rename of a player's display name (round 33, item 1).
+ *
+ * WHY IT IS NOT `removePhotoAction`'S SHAPE. Those two clear a column and then
+ * delete a storage object, so they have a second half that can fail
+ * independently. This one is a single RPC, and everything that could go wrong
+ * — the format, the collision, the missing player — comes back from it as a
+ * named error the admin mapper already knows how to print.
+ *
+ * THE NEW NAME TRAVELS BACK IN THE RESULT, and the reason is round 12's lesson
+ * about client-state markers: `revalidatePath` re-renders the page, and a
+ * "saved" flag living in `useActionState` can be unmounted before anybody sees
+ * it. The name in `state.name` is what the form re-seeds itself from, so the
+ * field agrees with the page even if the marker does not survive.
+ */
+export async function setDisplayNameAction(
+  _prev: PlayerAdminState,
+  formData: FormData,
+): Promise<PlayerAdminState> {
+  await requireAdmin();
+
+  const playerId = String(formData.get("playerId") ?? "");
+  if (!playerId) return { status: "error", message: toAdminErrorMessage("PLAYER_NOT_FOUND") };
+
+  const supabase = await createServerSupabaseClient();
+  const { data: name, error } = await supabase.rpc("admin_set_display_name", {
+    p_player_id: playerId,
+    p_nickname: String(formData.get("nickname") ?? ""),
+  });
+
+  if (error) return { status: "error", message: toAdminErrorMessage(error.message) };
+
+  revalidatePath(`/admin/players/${playerId}`);
+  revalidatePath("/admin/players");
+  return { status: "done", name: typeof name === "string" ? name : undefined };
 }

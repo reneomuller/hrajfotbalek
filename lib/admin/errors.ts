@@ -50,6 +50,14 @@ const CODES: Array<[string, string]> = [
    */
   ["PLAYER_NOT_FOUND", strings.admin.playerNotFound],
   ["INVALID_GUEST_COUNT", strings.admin.guestsInvalid],
+  /*
+   * Round 33, item 1. `admin_set_display_name` raises these rather than letting
+   * the CHECK and the unique index surface — an admin reading
+   * "players_nickname_format" learns nothing they can act on, and both of these
+   * have an obvious next move.
+   */
+  ["NICKNAME_INVALID", strings.admin.nameChangeHint],
+  ["NICKNAME_TAKEN", strings.admin.nameTaken],
   // CHECK-constraint violations reach here as the constraint name.
   ["venues_image_path_format", strings.admin.venueImageInvalid],
   ["games_format_format", strings.admin.formatInvalid],
