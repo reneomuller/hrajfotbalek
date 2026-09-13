@@ -5,14 +5,11 @@ import { useRouter } from "next/navigation";
 import { createBrowserSupabaseClient } from "@/lib/supabase/browser";
 import {
   avatarUrl,
-  AVATAR_SIDE_PX,
-  COVER_HEIGHT_PX,
-  COVER_WIDTH_PX,
+  CROP_OUTPUT,
+  type CropTarget,
   PROFILE_PHOTOS_BUCKET,
   extensionForMimeType,
   rejectPhoto,
-  VENUE_WIDTH_PX,
-  VENUE_HEIGHT_PX,
   VENUE_PHOTOS_BUCKET,
 } from "@/lib/storage/avatar";
 import { PhotoCropper, type CropRect } from "@/components/account/PhotoCropper";
@@ -115,7 +112,7 @@ export function PhotoUpload({
    * components would be two places for the size limit, the type allow-list,
    * the claim-the-path-first ordering and the error copy to drift.
    */
-  target?: "avatar" | "cover" | "venue";
+  target?: CropTarget;
   /**
    * Which venue, when `target` is `"venue"` (round 30, item 1).
    *
@@ -139,6 +136,8 @@ export function PhotoUpload({
 }) {
   const t = useStrings();
   const router = useRouter();
+  /** What this surface's photograph is, in pixels. One source for both uses. */
+  const output = CROP_OUTPUT[target];
   const inputRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -174,12 +173,8 @@ export function PhotoUpload({
     setPending(null);
     setBusy(true);
     try {
-      const cropped =
-        target === "cover"
-          ? await cropToRatio(file, COVER_WIDTH_PX, COVER_HEIGHT_PX, rect)
-          : target === "venue"
-            ? await cropToRatio(file, VENUE_WIDTH_PX, VENUE_HEIGHT_PX, rect)
-            : await cropToRatio(file, AVATAR_SIDE_PX, AVATAR_SIDE_PX, rect);
+      // ONE LOOKUP, the same one the cropper drew from — see `CROP_OUTPUT`.
+      const cropped = await cropToRatio(file, output.width, output.height, rect);
       const supabase = createBrowserSupabaseClient();
 
       /*
@@ -276,8 +271,13 @@ export function PhotoUpload({
   const cropper = pending ? (
     <PhotoCropper
       file={pending}
-      outputWidth={target === "cover" ? COVER_WIDTH_PX : AVATAR_SIDE_PX}
-      outputHeight={target === "cover" ? COVER_HEIGHT_PX : AVATAR_SIDE_PX}
+      /*
+        THE WINDOW AND THE ENCODER READ THE SAME ROW (round 32, item 1). These
+        used to be a separate ternary that had no `venue` arm, so the venue
+        composed square and saved wide.
+      */
+      outputWidth={output.width}
+      outputHeight={output.height}
       onCancel={() => setPending(null)}
       onConfirm={(rect) => void upload(pending, rect)}
     />

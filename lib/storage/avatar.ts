@@ -73,6 +73,30 @@ export const COVER_HEIGHT_PX = 1049;
 export const VENUE_WIDTH_PX = 1500;
 export const VENUE_HEIGHT_PX = 800;
 
+/**
+ * THE OUTPUT SIZE OF EVERY CROPPABLE SURFACE, IN ONE PLACE (round 32, item 1).
+ *
+ * WHY THIS MAP EXISTS, AND IT IS A BUG RATHER THAN TIDINESS. `PhotoUpload`
+ * carried the same decision TWICE as two ternaries — one choosing what to
+ * encode, one choosing what the cropper draws — and round 30 added a `venue`
+ * arm to the first and not the second. So a venue photo was COMPOSED in the
+ * avatar's 1:1 window and SAVED at the venue band's 1.875:1: the wide strip
+ * was taken out of the middle of a square the organizer had carefully filled.
+ * What you framed was emphatically not what you got, and the window looked
+ * nothing like the banner's, which is exactly the parity complaint.
+ *
+ * ONE MAP, READ BY BOTH. A record keyed by the target cannot have a missing
+ * arm — TypeScript refuses the object if a target is absent — where a ternary
+ * silently falls through to whatever the `else` happens to be.
+ */
+export const CROP_OUTPUT = {
+  avatar: { width: AVATAR_SIDE_PX, height: AVATAR_SIDE_PX },
+  cover: { width: COVER_WIDTH_PX, height: COVER_HEIGHT_PX },
+  venue: { width: VENUE_WIDTH_PX, height: VENUE_HEIGHT_PX },
+} as const satisfies Record<string, { width: number; height: number }>;
+
+export type CropTarget = keyof typeof CROP_OUTPUT;
+
 export function extensionForMimeType(mimeType: string): string | null {
   return ACCEPTED_IMAGE_TYPES[mimeType] ?? null;
 }
