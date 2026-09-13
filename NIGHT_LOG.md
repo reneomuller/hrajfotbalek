@@ -7,6 +7,97 @@ way that nobody asked about.
 
 ---
 
+## Round 33 — 2026-09-13
+
+Four items. All four shipped.
+
+### Item 4 was a diagnosis, not a fourth attempt at the same constant
+
+Three rounds had "fixed" the venue crop and it was still wrong, and the reason
+turned out to be that **nobody had measured both surfaces**. The photograph
+feeds the games-list card AND the detail hero, and live on production at two
+widths:
+
+```
+           390px            430px
+  card     344x159 = 2.167  384x159 = 2.419
+  hero     390x235 = 1.658  430x235 = 1.828
+```
+
+Then the finding that explains the whole saga: **the hero has no stable aspect
+at all.** Two games on the same deploy at the same width render 1.658 and
+1.875, because the band is `pt-36 pb-5` plus CONTENT — a venue name that may
+wrap, badges that may not be there. So each previous round measured one game's
+hero, got one number, pinned the constant to it, and the next fixture rendered
+differently. The constant it was pinned at, 1.875, matched nothing on either
+surface at any width.
+
+Pinned to the **card**: fixed 159px height, the surface the owner named, and
+the wider of the two — so every other surface trims the frame's sides rather
+than its top and bottom, which was the round-30 complaint.
+
+**The proof names no constant.** `e2e/crop-truth.spec.ts` imports nothing from
+`lib/storage/avatar.ts`. It builds a marked image, frames it, reads colours out
+of the crop window, saves, and reads colours out of the card as served. If the
+constant were wrong the two would disagree — which is what constant-versus-
+constant checking could never do, and is why three rounds of it passed while
+the product was wrong. The negative control was run: restoring 800 makes the
+card's top edge read `rgb(136,29,99)` where the crop window showed cyan.
+
+### The thing to know about the party ceiling
+
+It was in **two** places in SQL and the round-11 comment said so in as many
+words — "moving the ceiling means editing both, in one commit". That is a rule
+that works exactly until somebody misses one. It is now
+`public.max_party_guests()`.
+
+The migration **rewrites what is installed** rather than restating 240 lines of
+commented plpgsql: it reads `pg_get_functiondef`, substitutes one token, and
+raises if the token is not there. `prosrc` keeps comments, so the round trip
+loses nothing, and production's function is what gets edited rather than the
+repo's idea of it.
+
+### Two bugs the specs found, both worth the shape they cost
+
+**A form that closes on submit hides its own error.** The first `ChangeNameForm`
+called `setOpen(false)` in `onSubmit`, so a refused rename unmounted before the
+action answered and the admin saw nothing at all. Same family as the
+`revalidatePath` marker lesson: assert on what the server renders next.
+
+**A small integer is not a needle.** The spec proving the player number reaches
+no player-facing surface first looked for "2" in the page text and found it in
+"Friday 2 October". It now moves the number to `987654` for the duration and
+puts it back.
+
+### What is NOT done, stated rather than implied
+
+- `player_number` is hidden by SURFACE, not by grant. `players_select_own` lets
+  a player read their own row through the API, number included. Closing that
+  means revoking a table-wide `select` and re-granting a column list, which is
+  a large change to a grant every roster path depends on. Row 254.
+- The crop is pinned at the 390px reference. At 430px the card is 2.419 and
+  takes a sliver off the frame's top and bottom instead. That is what pinning a
+  fixed aspect to a fluid box costs, and it is stated rather than hidden.
+
+### Suites
+
+Unit 734/734 · SQL 43/43 ALL PASS · lint 0 errors · tsc clean. E2E result and
+the deployment id are in the round's final commit message.
+
+One pre-existing SQL assertion had to move with the ceiling:
+`guests_and_parties.sql` asserted four guests on a game seating two is refused
+as oversize. The naive fix — 4 becomes 14 — would have made it **pass for the
+wrong reason**, `CAPACITY_FULL` on a pitch that seats two, while its label
+claimed the opposite. It now books `max_party_guests() + 1` on a pitch of
+twenty.
+
+### Still owed by the owner
+
+Rows 184, 188, 232, 241 and **258** (round 33's two migrations). Commands in
+`docs/REQUESTS.md` §6.
+
+---
+
 ## Round 28 — 2026-09-09
 
 Twelve items. **Nine shipped, two found already shipped and verified, two not

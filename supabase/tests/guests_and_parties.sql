@@ -198,10 +198,22 @@ select pg_temp.ok(
   'the last seat of a party flips the game to full');
 
 -- --- the ceiling --------------------------------------------------------------
+--
+-- ~~FOUR GUESTS ON A GAME THAT SEATS TWO.~~ THE CEILING MOVED TO THIRTEEN
+-- (round 33, item 3) and this assertion moved with it — but NOT by simply
+-- changing 4 to 14, because on a pitch that seats two, fourteen is refused as
+-- CAPACITY_FULL and the assertion would pass for the wrong reason while
+-- claiming the opposite. The point has always been that an oversize party is
+-- refused as OVERSIZE, so the game underneath it has to be big enough for
+-- capacity not to answer first.
+insert into public.games (id, venue, starts_at, capacity, price_czk, status) values
+  ('96660000-0000-0000-0000-000000000004', 'Guest Cap Twenty', now() + interval '10 days', 20, 150, 'published');
+
 select pg_temp.act_as('60000000-0000-0000-0000-000000000061');
 
 select pg_temp.ok_probe(
-  $$select public.create_booking('96660000-0000-0000-0000-000000000002', 'cash', null, null, 4)$$,
+  $$select public.create_booking('96660000-0000-0000-0000-000000000004', 'cash', null, null,
+      public.max_party_guests() + 1)$$,
   'raise:PARTY_TOO_LARGE',
   'a party larger than the policy ceiling is refused as oversize, not as full');
 

@@ -145,6 +145,31 @@ looks like missing data, not like a missing column. **A column drop and the
 selects that name it must ship in one change**, and the order is then DEPLOY
 FIRST, THEN MIGRATE — the opposite of an additive migration.
 
+**A SURFACE HAS NO ASPECT IF ITS HEIGHT IS CONTENT-DEPENDENT, and three rounds
+of crop fixes died on that.** The venue photograph feeds the games-list card
+AND the detail hero. The card is a fixed 159px tall, so its aspect moves only
+with the viewport. **The hero is padding plus CONTENT** — a venue name that may
+wrap, badges that may not be there — so two games on the SAME deploy at the
+SAME width render 390x235 (1.658) and 390x208 (1.875). Every round measured one
+game's hero, got one number, pinned the crop constant to it, and the next
+fixture rendered differently, which is why each fix "worked" and the product was
+still wrong. **Before pinning a crop to a surface, measure it on more than one
+row of real data.** The crop is now pinned to the CARD (`1600x740`), and the
+hero is asserted only to be NARROWER than the frame — the property that means
+`object-cover` trims its sides and never the goalposts.
+
+**And a crop test that compares two constants can never fail for the reason you
+care about.** `crop-frames.spec.ts` compared the constant to a rendered box and
+passed for three rounds while the wrong surface was being measured.
+`e2e/crop-truth.spec.ts` imports no constant at all: it frames a marked image,
+reads colours out of the crop window, saves, and reads colours out of the card
+as served. Keep that shape for anything claiming what-you-see-is-what-you-get.
+
+**A form that closes itself on submit hides its own error.** `ChangeNameForm`
+called `setOpen(false)` in `onSubmit`, so a refused rename unmounted before the
+action answered and the admin saw nothing — not the old name, not a reason.
+Close on the SERVER's next render, or do not close at all.
+
 **Client-state success markers do not survive `revalidatePath`.** Anything
 rendered from a `useActionState` result (`confirm-result`, `settle-done`,
 `game-form-saved`) can be unmounted by the re-render before it can be observed.
@@ -293,6 +318,24 @@ anything is owed:
 update public.venues set name = replace(name, ' — ', ' • ') where name like '% — %';
 update public.games  set venue = replace(venue, ' — ', ' • ') where venue like '% — %';
 ```
+
+**Outstanding, round 33's two — additive, order-free, neither deploy-first.**
+Both were applied TWICE against a clean local stack, because both do something a
+second run could get wrong: one sets a sequence (guarded so it cannot move
+backward and re-issue a number), one rewrites two function bodies in place
+(raises rather than overwrites if the token it expects is absent).
+
+```
+node scripts/apply-migration.mjs \
+  supabase/migrations/20260913110000_player_number_and_rename.sql --production
+node scripts/apply-migration.mjs \
+  supabase/migrations/20260913120000_party_up_to_thirteen.sql --production
+```
+
+Until the second lands the party picker is three pills, which is the old product
+working rather than a degraded one — `app_capabilities().partyUpToThirteen`
+gates it, because a `PARTY_TOO_LARGE` delivered after the player has chosen how
+to pay is the dead-path rule with money attached.
 
 When a UI failure looks inexplicable and the code reads correctly, check this
 list before debugging the component.
