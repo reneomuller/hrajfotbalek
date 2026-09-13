@@ -412,6 +412,28 @@ Diagnose this class with `document.elementFromPoint(x, y)` at the control's
 centre rather than by reading the CSS: the answer names the element actually
 on top.
 
+## A SPEC THAT PASSES ON A SUSPENSE FALLBACK IS A SPEC THAT PROVES NOTHING
+
+`cutover.spec.ts` waited for a heading reading "Upcoming games" on
+`/football/games`. **The games page has had no such heading since round 23**,
+which removed it on purpose; the only place that string still renders as an
+`<h1>` is `GameCardSkeleton`, the Suspense fallback. So the assertion passed
+only while the server was slow enough to paint a skeleton — and failed once it
+was warm. It failed in two consecutive rounds' full runs, passed in isolation
+every time, and round 33 wrote it off as flake.
+
+**This is the `count(*)` trap in a different costume**: the probe reported
+success without the thing it probed ever happening. Assert on something the
+REAL page renders — `game-list`, not the fallback's heading.
+
+Two wrong fixes went in before the diagnosis, and both are worth knowing.
+**`waitUntil: "networkidle"` on that route hangs until the test times out** —
+the list streams, so the network never goes idle. And the edit that rewrote the
+comment block deleted the `page.goto` with it, which only an instrumented run
+caught: `url about:blank`, a test asserting against a blank page. **When a spec
+fails only in a full run and passes alone, print what the page actually
+contains before theorising** — the answer was in one line of `body` text.
+
 ## The seed drifts, and the admin spec is the canary
 
 `admin.spec.ts` "the player detail page shows history and marks a no-show"

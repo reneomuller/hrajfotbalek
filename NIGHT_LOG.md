@@ -65,6 +65,25 @@ credit was spent on a booking, never which seat it bought. The chosen rule is
 never worse for the player than the alternative, which is the right way to break
 a tie about somebody else's money. Row 271.
 
+### The "flake" from round 33 was a spec asserting on a loading skeleton
+
+`cutover.spec.ts` failed in both rounds' full runs on `/football/games` and
+passed in isolation every time. Round 33 called it flake and re-ran.
+
+It waited for a heading reading "Upcoming games". **The games page has had no
+such heading since round 23**, which removed it deliberately; the only place
+that string still renders as an `<h1>` is the Suspense fallback. The assertion
+passed while the server was slow enough to paint a skeleton and failed once it
+was warm — a test that could not tell the product working from the product
+missing. It now asserts `game-list`.
+
+**Two wrong fixes went in before the diagnosis and both are worth remembering.**
+`networkidle` hangs on that route, because the list streams and the network
+never goes idle. And the edit that replaced the comment block deleted the
+`page.goto` with it — caught only by instrumenting the run and reading
+`url about:blank`. The answer was one `console.log` of the page's body text
+away the whole time, and I theorised twice before printing it.
+
 ### Suites
 
 Unit 754/754 (20 new) · SQL 44/44 ALL PASS (23 new assertions) · lint 0 errors ·

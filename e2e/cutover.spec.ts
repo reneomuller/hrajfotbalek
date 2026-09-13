@@ -22,10 +22,42 @@ import { createScratchGame, destroyScratchGame } from "./helpers/scaffold.ts";
  * yields an empty segment, which is exactly the kind of thing that works in
  * dev and 404s once built. Both are drawn.
  */
+/**
+ * HOW LONG A COLD ROUTE MAY TAKE TO ARRIVE.
+ *
+ * The `/football` namespace is exercised in this file and nowhere else, so
+ * every route here is always the first request the dev server has seen for it
+ * and `goto` resolves on the document while Next is still compiling beneath.
+ * Playwright's 5s default is measured against a warm route and this one never
+ * is.
+ */
+const COLD_COMPILE_MS = 30_000;
+
 test("the football namespace serves the home page, the list and a game", async ({ page }) => {
   const game = await createScratchGame({});
 
   try {
+    /*
+     * WHAT EACH OF THE THREE ASSERTIONS BELOW LOOKS FOR IS A REAL PART OF THE
+     * PAGE, AND ONE OF THEM DID NOT USED TO BE.
+     *
+     * ~~`getByRole("heading", { name: /upcoming games/i })` on the list.~~ THE
+     * GAMES PAGE HAS NO SUCH HEADING AND HAS NOT HAD ONE SINCE ROUND 23, which
+     * removed it deliberately — "a heading repeating the tab name is the
+     * largest type on the page spent on the one fact the reader cannot have
+     * arrived without knowing". The only place that string still renders as an
+     * `<h1>` is `GameCardSkeleton`, the SUSPENSE FALLBACK.
+     *
+     * So this assertion was passing on a LOADING SKELETON, and only while the
+     * server was slow enough to show one. That is why it "flaked" late in a
+     * long run and passed in isolation: warm, the real page arrives before the
+     * fallback is ever painted, and the thing being asserted never exists.
+     * Round 33 called it flake and re-ran. Two rounds of runs were spent on a
+     * test that could not tell the product working from the product missing.
+     *
+     * `game-list` is the list itself, which is what "the namespace serves the
+     * list" actually means.
+     */
     await page.goto("/football");
     /*
      * ~~"Find a game", the hero's pill.~~ REMOVED in round 23 item 4, so the
@@ -33,13 +65,15 @@ test("the football namespace serves the home page, the list and a game", async (
      * — which is a better one: the old assertion passed on a page whose games
      * had failed to load.
      */
-    await expect(page.getByTestId("next-matches-all")).toBeVisible();
+    await expect(page.getByTestId("next-matches-all")).toBeVisible({ timeout: COLD_COMPILE_MS });
 
     await page.goto("/football/games");
-    await expect(page.getByRole("heading", { name: /upcoming games/i })).toBeVisible();
+    await expect(page.getByTestId("game-list")).toBeVisible({ timeout: COLD_COMPILE_MS });
 
     await page.goto(`/football/game/${game.id}`);
-    await expect(page.getByText("E2E Scratch Pitch").first()).toBeVisible();
+    await expect(page.getByText("E2E Scratch Pitch").first()).toBeVisible({
+      timeout: COLD_COMPILE_MS,
+    });
   } finally {
     await destroyScratchGame(game.id);
   }
@@ -95,7 +129,9 @@ test("the unprefixed paths still resolve, and are not redirected", async ({ page
 
     expect(response?.status()).toBe(200);
     expect(new URL(page.url()).pathname).toBe(`/game/${game.id}`);
-    await expect(page.getByText("E2E Scratch Pitch").first()).toBeVisible();
+    await expect(page.getByText("E2E Scratch Pitch").first()).toBeVisible({
+      timeout: COLD_COMPILE_MS,
+    });
   } finally {
     await destroyScratchGame(game.id);
   }

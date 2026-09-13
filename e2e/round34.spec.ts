@@ -110,6 +110,28 @@ test("the dropdown's cue is a downward triangle, not a dot", async ({ page, cont
       `the cue is ${top}px wide at the top and ${bottom}px at the bottom — ` +
         `that is not a downward triangle`,
     ).toBeGreaterThan(bottom * 2);
+
+    /*
+     * AND THE OTHER PICKER, because the owner named both. It is the same
+     * component, so this is a wiring check rather than a second shape check —
+     * what could break is one surface being left on the old glyph, not the
+     * triangle being drawn differently in two places.
+     */
+    const booked = await apiClientFor(players.runner);
+    const made = await booked.rpc("create_booking", {
+      p_game_id: game.id,
+      p_payment_method: "cash",
+    });
+    expect(made.error, `create_booking: ${made.error?.message}`).toBeNull();
+    const admin = await apiClientFor(players.organizer);
+    await admin.rpc("confirm_booking", {
+      p_booking_id: (made.data as { id: string }).id,
+      p_confirmed_by: players.organizer.id,
+      p_received_amount_czk: (made.data as { price_czk: number }).price_czk,
+    });
+
+    await page.goto(`/game/${game.id}`, { waitUntil: "networkidle" });
+    await expect(page.getByTestId("add-guests-more-caret")).toBeVisible();
   } finally {
     await destroyScratchGame(game.id);
   }

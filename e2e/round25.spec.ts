@@ -146,7 +146,20 @@ test("the FAQ renders the owner's four questions and answers, in order", async (
   // And the exact opening words the owner supplied, so a later "improvement"
   // to the table is caught here rather than shipped.
   expect(rendered.questions[0]).toBe("What should I bring?");
-  expect(rendered.answers[2]).toContain("card or mobile wallet");
+  /*
+   * ~~"card or mobile wallet".~~ NAMED SERVICES SINCE ROUND 34, ITEM 2. The
+   * vocabulary law kills "wallet" on every player surface, and this answer used
+   * the word in its OTHER sense — Apple Pay and Google Pay, not this product's
+   * credits. Carving an exception into the law for one sentence would have
+   * weakened the law; naming the two services is more concrete than the phrase
+   * it replaced.
+   *
+   * The assertion moved with it and got stronger: it pins the two payment
+   * routes this answer must offer rather than one substring, so a rewrite that
+   * drops one of them fails here instead of shipping.
+   */
+  expect(rendered.answers[2]).toContain("Apple Pay or Google Pay");
+  expect(rendered.answers[2]).toContain("credits");
   expect(rendered.answers[3]).toBe(
     "Not at all. All skill levels are welcome. Games are casual unless a level badge says otherwise.",
   );
