@@ -298,6 +298,14 @@ export interface Database {
            * assert it there.
            */
           player_number?: number;
+          /**
+           * Round 35 v2 item 8 — when this account was banned, or null.
+           *
+           * OPTIONAL, the migration-safe rule again: a database without
+           * `20260916120000` does not project it, and the admin surface treats
+           * its absence as "not banned", which is true there.
+           */
+          banned_at?: string | null;
         };
         Insert: {
           id?: string;
@@ -566,7 +574,7 @@ export interface Database {
         Row: {
           games: number;
           price_czk: number;
-          /** Always `games * 150`, CHECKed. */
+          /** Always `games * credit_seat_price_czk()`, CHECKed. */
           credited_czk: number;
           /** Null = never expires. Only the 1-game tier. */
           expires_months: number | null;
@@ -1293,6 +1301,17 @@ export interface Database {
         Args: { p_game_ids: string[] };
         Returns: { game_id: string; seats_taken: number }[];
       };
+      /**
+       * Round 35 v2 item 8 — bans a player. Returns how many FUTURE bookings
+       * were cancelled, so the surface can say what it cost.
+       *
+       * ABSENT before `20260916120000`, which is why `banProfile` gates the
+       * control: a button whose RPC is a 404 is round 12's dead path.
+       */
+      ban_player: { Args: { p_player_id: string }; Returns: number };
+      unban_player: { Args: { p_player_id: string }; Returns: void };
+      /** Is this phone number refused at signup? */
+      is_phone_banned: { Args: { p_phone: string }; Returns: boolean };
       cancel_guests: {
         Args: { p_booking_id: string; p_count: number };
         Returns: {

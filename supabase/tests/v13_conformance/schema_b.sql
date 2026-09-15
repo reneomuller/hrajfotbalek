@@ -146,8 +146,20 @@ select pg_temp.ok(
     where reason in ('admin_grant', 'adjustment')
       and (expires_at is not null or batch_id is not null)));
 
--- And the ledger is not trivially empty of them, which would make the
--- assertion above pass by having nothing to check.
+/*
+ * And the ledger is not trivially empty of them, which would make the assertion
+ * above pass by having nothing to check.
+ *
+ * THE ROW IS MADE HERE RATHER THAN READ FROM THE SEED (round 35 v2). It used to
+ * rely on a grant existing already; the clean-slate reset emptied every wallet,
+ * so the guard against a vacuous assertion became vacuous itself — which is a
+ * neat demonstration of why it was written. A suite that depends on data it did
+ * not create is a suite that passes or fails by accident.
+ */
+insert into public.credit_ledger (player_id, delta_czk, reason, note)
+select p.id, 180, 'admin_grant', 'conformance fixture'
+  from public.players p where p.auth_user_id is not null order by p.created_at limit 1;
+
 select pg_temp.ok(
   (select count(*) from public.credit_ledger
     where reason in ('admin_grant', 'adjustment')) > 0,
@@ -394,7 +406,7 @@ select pg_temp.ok(
   pg_temp.attempt($q$
     insert into public.credit_topups
       (player_id, amount_czk, payment_code, status, city, brand, policy_version)
-    values ((select player_id from _fx), 750, 2700000001, 'confirmed',
+    values ((select player_id from _fx), 900, 2700000001, 'confirmed',
             'Praha', 'hrajfotbal', 'v1')
   $q$) = 'denied',
   'a direct client INSERT into credit_topups is refused — including status=confirmed');
@@ -470,7 +482,7 @@ where player_id = (select player_id from _fx);
 
 insert into public.credit_topups
   (player_id, amount_czk, payment_code, status, city, brand, policy_version)
-values ((select player_id from _fx), 750, public.next_topup_code(), 'pending',
+values ((select player_id from _fx), 900, public.next_topup_code(), 'pending',
         'Praha', 'hrajfotbal', 'v1');
 
 insert into _ledger_count
@@ -509,13 +521,13 @@ select pg_temp.ok(
   (select array_agg(games order by games)::text from public.pass_tiers));
 
 select pg_temp.ok(
-  (select count(*) from public.pass_tiers where credited_czk <> games * 150) = 0,
-  'every tier credits games x 150');
+  (select count(*) from public.pass_tiers where credited_czk <> games * public.credit_seat_price_czk()) = 0,
+  'every tier credits games x the credit rate');
 
 select pg_temp.ok(
   pg_temp.chk('pass_tiers', 'pass_tiers_credited_rule')
-    = 'CHECK ((credited_czk = (games * 150)))',
-  'the 150 peg is a CHECK, not a convention',
+    = 'CHECK ((credited_czk = (games * credit_seat_price_czk())))',
+  'the credit-rate peg is a CHECK, not a convention',
   pg_temp.chk('pass_tiers', 'pass_tiers_credited_rule'));
 
 select pg_temp.ok(

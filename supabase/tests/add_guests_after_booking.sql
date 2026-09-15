@@ -240,7 +240,7 @@ select '9d000000-0000-0000-0000-0000000d9f02'::uuid as game_id,
        'aaaa0000-0000-0000-0000-0000000d9f02'::uuid as player_id;
 
 insert into public.games (id, venue, starts_at, capacity, price_czk, status) values
-  ('9d000000-0000-0000-0000-0000000d9f02', 'Add Guest Debit', now() + interval '9 days', 10, 150, 'published');
+  ('9d000000-0000-0000-0000-0000000d9f02', 'Add Guest Debit', now() + interval '9 days', 10, 200, 'published');
 
 insert into auth.users (id, email) values
   ('6d000000-0000-0000-0000-0000000d9f02', 'agd@test.invalid');
@@ -248,12 +248,12 @@ insert into public.players (id, nickname, email, auth_user_id) values
   ('aaaa0000-0000-0000-0000-0000000d9f02', 'AddGuestDebit', 'agd@test.invalid',
    '6d000000-0000-0000-0000-0000000d9f02');
 
--- 450: the seat the booking below is about to spend, plus exactly two guests'
--- worth and not a crown more. `create_booking` applies the wallet inside its
--- own transaction, so granting 300 here would leave 150 and the refusal below
--- would fire for the wrong reason.
+-- THREE CREDITS: the seat the booking below is about to spend, plus exactly two
+-- guests' worth and not a crown more. `create_booking` applies the wallet inside
+-- its own transaction, so granting two here would leave one and the refusal
+-- below would fire for the wrong reason.
 insert into public.credit_ledger (player_id, delta_czk, reason)
-values ('aaaa0000-0000-0000-0000-0000000d9f02', 450, 'admin_grant');
+values ('aaaa0000-0000-0000-0000-0000000d9f02', 3 * 180, 'admin_grant');
 
 select pg_temp.act_as('6d000000-0000-0000-0000-0000000d9f02');
 select public.create_booking('9d000000-0000-0000-0000-0000000d9f02', 'cash');
@@ -285,7 +285,7 @@ select pg_temp.ok_probe(
 reset role;
 
 select pg_temp.ok(
-  pg_temp.debit_balance() = 300,
+  pg_temp.debit_balance() = 2 * 180,
   'and the refusal took nothing — a refused spend that debits is the worst '
   'possible bug in this file',
   pg_temp.debit_balance()::text);
@@ -296,15 +296,15 @@ reset role;
 
 select pg_temp.ok(
   pg_temp.debit_balance() = 0,
-  'two guests on a 150 CZK game debit exactly 2 x 150 — one credit each',
+  'two guests debit exactly two credits — one each, whatever the game charges',
   pg_temp.debit_balance()::text);
 
 select pg_temp.ok(
   (select count(*) from public.credit_ledger
     where booking_id = pg_temp.debit_booking()
       and reason = 'redemption'
-      and delta_czk = -300) = 1,
-  'as ONE redemption row, at the game price times the guest count');
+      and delta_czk = -2 * 180) = 1,
+  'as ONE redemption row, at the credit rate times the guest count');
 
 select seq, label, case when passed then 'PASS' else 'FAIL' end as result, detail
 from _results order by seq;

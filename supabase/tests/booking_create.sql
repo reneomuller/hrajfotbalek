@@ -136,7 +136,7 @@ select pg_temp.ok(
 
 -- --- full credit -> credit, confirmed instantly, no VS ----------------------
 insert into public.credit_ledger (player_id, delta_czk, reason) values
-  ('aaaa0000-0000-0000-0000-00000000000a', 200, 'admin_grant');
+  ('aaaa0000-0000-0000-0000-00000000000a', 230, 'admin_grant');
 
 select pg_temp.act_as('a0000000-0000-0000-0000-0000000000a1');
 select pg_temp.ok(
@@ -148,8 +148,8 @@ select pg_temp.ok(
   (select count(*) from public.bookings
     where player_id = 'aaaa0000-0000-0000-0000-00000000000a'
       and game_id = '92220000-0000-0000-0000-000000000002'
-      and status = 'confirmed' and payment_code is null and credit_applied_czk = 150) = 1,
-  'full-credit booking is confirmed, no VS, and ONE CREDIT applied — 150, not '
+      and status = 'confirmed' and payment_code is null and credit_applied_czk = 180) = 1,
+  'full-credit booking is confirmed, no VS, and ONE CREDIT applied — 180, not '
   'the game''s 200 (round 35''s seat-denominated ruling)');
 
 select pg_temp.ok(

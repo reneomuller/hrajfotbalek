@@ -156,11 +156,11 @@ insert into public.venues (id, name) values
 
 insert into public.games (id, venue, venue_id, starts_at, capacity, price_czk, status) values
   ('dddd0000-0000-0000-0000-0000000020a1', 'Pass Pitch', '11110000-0000-0000-0000-0000000020a1',
-   now() + interval '5 days', 10, 150, 'published'),
+   now() + interval '5 days', 10, 180, 'published'),
   ('dddd0000-0000-0000-0000-0000000020a2', 'Pass Pitch', '11110000-0000-0000-0000-0000000020a1',
-   now() + interval '6 days', 10, 150, 'published'),
+   now() + interval '6 days', 10, 180, 'published'),
   ('dddd0000-0000-0000-0000-0000000020a3', 'Pass Pitch', '11110000-0000-0000-0000-0000000020a1',
-   now() + interval '7 days', 1, 150, 'published');
+   now() + interval '7 days', 1, 180, 'published');
 
 -- =============================================================================
 -- The tiers (§4.2)
@@ -171,8 +171,8 @@ select pg_temp.ok(
   'five tiers ship — the pass starts at five games (migration 36)');
 
 select pg_temp.ok(
-  (select bool_and(credited_czk = games * 150) from public.pass_tiers),
-  'credited value is always games x 150 — the CHECK, restated as an assertion');
+  (select bool_and(credited_czk = games * public.credit_seat_price_czk()) from public.pass_tiers),
+  'credited value is always games x the credit rate — the CHECK, restated as an assertion');
 
 -- THE 1-GAME TIER IS GONE, and the assertion is that it cannot come back: the
 -- floor is a CHECK rather than a convention, so the next person restoring a
@@ -187,8 +187,13 @@ select pg_temp.ok(
 -- same reason the top-up probes elsewhere in this file are do-blocks.
 do $$
 begin
+  /*
+   * `credited_czk` MUST SATISFY THE CREDIT-RATE PEG or the insert is refused by
+   * the WRONG constraint and this assertion stops being about the minimum.
+   * Round 35 v2 moved the rate, so the fixture moved with it.
+   */
   insert into public.pass_tiers (games, price_czk, credited_czk, expires_months)
-  values (1, 150, 150, null);
+  values (1, 150, 1 * 180, null);
 
   perform pg_temp.ok(false,
     'a sub-five tier is refused by the constraint, not merely absent from the seed');
@@ -198,9 +203,9 @@ exception when check_violation then
 end $$;
 
 select pg_temp.ok(
-  (select price_czk = 700 and credited_czk = 750 and expires_months = 1
+  (select price_czk = 840 and credited_czk = 900 and expires_months = 1
      from public.pass_tiers where games = 5),
-  'the 5-pass: 700 buys 750, expiring in a month');
+  'the 5-pass: 840 buys 900, expiring in a month');
 
 select pg_temp.ok(
   (select count(distinct price_czk) = count(*) from public.pass_tiers),
@@ -226,7 +231,7 @@ begin
   v_topup := public.create_pass_topup(5);
 
   perform pg_temp.ok(
-    v_topup.amount_czk = 700 and v_topup.pass_games = 5,
+    v_topup.amount_czk = 840 and v_topup.pass_games = 5,
     'a pass request is priced from the TIER, not from anything the caller sent');
 
   perform pg_temp.ok(
@@ -258,15 +263,15 @@ begin
    where player_id = 'bbbb0000-0000-0000-0000-0000000020a2' limit 1;
 
   -- EXACT match on the pass price -> the pass VALUE is credited, with expiry.
-  v_result := public.confirm_topup(v_topup.id, 'aaaa0000-0000-0000-0000-0000000020a1', 700);
+  v_result := public.confirm_topup(v_topup.id, 'aaaa0000-0000-0000-0000-0000000020a1', 840);
 
   perform pg_temp.ok(
-    v_result.credited_czk = 750,
-    'an exact 700 credits the 5-pass VALUE of 750 — the one exception to credited-equals-received',
+    v_result.credited_czk = 900,
+    'an exact 840 credits the 5-pass VALUE of 900 — the one exception to credited-equals-received',
     v_result.credited_czk::text);
 
   perform pg_temp.ok(
-    pg_temp.balance('bbbb0000-0000-0000-0000-0000000020a2') = 750,
+    pg_temp.balance('bbbb0000-0000-0000-0000-0000000020a2') = 900,
     'and the balance is still SUM(delta_czk)');
 
   v_batch := pg_temp.only_batch('bbbb0000-0000-0000-0000-0000000020a2');
@@ -282,8 +287,8 @@ begin
 
   -- ALL THREE NUMBERS on the event, because they differ (§4.2).
   perform pg_temp.ok(
-    (select metadata ->> 'received_czk' = '700'
-        and metadata ->> 'credited_czk' = '750'
+    (select metadata ->> 'received_czk' = '840'
+        and metadata ->> 'credited_czk' = '900'
         and metadata ->> 'expires_at' is not null
        from public.events
       where event_type = 'topup_confirmed'
@@ -296,8 +301,8 @@ end $$;
 -- THE CLARIFIED KEYING (ruled 2026-08-02): intent AND amount
 --
 -- An ordinary top-up of a coincidental tier amount is an ORDINARY TOP-UP.
--- Free entry admits 50–2000, so a player typing 700 into the top-up form is
--- entirely plausible — and crediting them 750 with a one-month expiry would
+-- Free entry admits 50–2000, so a player typing 840 into the top-up form is
+-- entirely plausible — and crediting them 900 with a one-month expiry would
 -- transform money they meant to keep permanently. This is the assertion that
 -- says it cannot happen.
 -- =============================================================================
@@ -311,18 +316,18 @@ begin
 
   perform pg_temp.act_as('b0000000-0000-0000-0000-0000000020a2');
   -- The ORDINARY path: no tier chosen, an amount that happens to equal one.
-  v_topup := public.create_topup(700);
+  v_topup := public.create_topup(840);
 
   perform pg_temp.ok(
     v_topup.pass_games is null,
     'an ordinary top-up records no tier, whatever the amount');
 
   perform pg_temp.as_service();
-  v_result := public.confirm_topup(v_topup.id, 'aaaa0000-0000-0000-0000-0000000020a1', 700);
+  v_result := public.confirm_topup(v_topup.id, 'aaaa0000-0000-0000-0000-0000000020a1', 840);
 
   perform pg_temp.ok(
-    v_result.credited_czk = 700,
-    'an ordinary 700 credits 700 — never 750. The player meant 700 CZK that keeps',
+    v_result.credited_czk = 840,
+    'an ordinary 840 credits 840 — never 900. The player meant 840 CZK that keeps',
     v_result.credited_czk::text);
 
   perform pg_temp.ok(
@@ -333,7 +338,7 @@ end $$;
 reset role;
 
 -- A pass paid at ANOTHER tier's price is a mispayment, not a purchase of that
--- other tier. Crediting 1200 on the strength of a coincidence would hand over
+-- other tier. Crediting the 8-pass value on the strength of a coincidence would hand over
 -- 450 CZK nobody asked for.
 do $$
 declare
@@ -343,14 +348,14 @@ begin
   perform pg_temp.reset_wallet('bbbb0000-0000-0000-0000-0000000020a2');
 
   perform pg_temp.act_as('b0000000-0000-0000-0000-0000000020a2');
-  v_topup := public.create_pass_topup(5);   -- 700
+  v_topup := public.create_pass_topup(5);   -- 840
 
   perform pg_temp.as_service();
   v_result := public.confirm_topup(
-    v_topup.id, 'aaaa0000-0000-0000-0000-0000000020a1', 1080);  -- the 8-pass price
+    v_topup.id, 'aaaa0000-0000-0000-0000-0000000020a1', 1296);  -- the 8-pass price
 
   perform pg_temp.ok(
-    v_result.credited_czk = 1080,
+    v_result.credited_czk = 1296,
     'a 5-pass paid at the 8-pass price credits what arrived, not the 8-pass value',
     v_result.credited_czk::text);
 
@@ -374,11 +379,11 @@ begin
   v_topup := public.create_pass_topup(5);
 
   perform pg_temp.as_service();
-  v_result := public.confirm_topup(v_topup.id, 'aaaa0000-0000-0000-0000-0000000020a1', 700);
+  v_result := public.confirm_topup(v_topup.id, 'aaaa0000-0000-0000-0000-0000000020a1', 840);
 
   perform pg_temp.ok(
-    v_result.credited_czk = 750,
-    'a CHOSEN 5-pass paid at exactly 700 still credits 750');
+    v_result.credited_czk = 900,
+    'a CHOSEN 5-pass paid at exactly 840 still credits 900');
 
   perform pg_temp.ok(
     pg_temp.batch_count('bbbb0000-0000-0000-0000-0000000020a2') = 1,
@@ -399,7 +404,7 @@ begin
   v_topup := public.create_pass_topup(5);
 
   perform pg_temp.as_service();
-  -- 690 against a 700 pass: a top-up, not a purchase.
+  -- A few crowns short of the 840 pass: a top-up, not a purchase.
   v_result := public.confirm_topup(v_topup.id, 'aaaa0000-0000-0000-0000-0000000020a1', 690);
 
   perform pg_temp.ok(
@@ -438,13 +443,14 @@ begin
   -- Booked AS the player: `create_booking` takes identity from the session and
   -- accepts a player id only to refuse it.
   perform pg_temp.act_as('c0000000-0000-0000-0000-0000000020a3');
-  -- A 150 game: the soonest batch has 100, so it is emptied and the rest comes
-  -- from the next one.
+  -- ONE CREDIT IS 180 and the soonest batch has 100, so it is emptied and the
+  -- rest comes from the next one — which is the batch-ordering claim this block
+  -- exists for, and it survives the rate moving.
   v_result := public.create_booking('dddd0000-0000-0000-0000-0000000020a1', 'cash');
 
   perform pg_temp.ok(
-    v_result.credit_applied_czk = 150 and v_result.status = 'confirmed',
-    'the whole price came out of the wallet');
+    v_result.credit_applied_czk = 180 and v_result.status = 'confirmed',
+    'the whole seat came out of the wallet');
 
   perform pg_temp.ok(
     pg_temp.remaining('cccc0000-0000-0000-0000-0000000020a3', v_soon) = 0,
@@ -452,8 +458,8 @@ begin
     coalesce(pg_temp.remaining('cccc0000-0000-0000-0000-0000000020a3', v_soon)::text, 'null'));
 
   perform pg_temp.ok(
-    pg_temp.remaining('cccc0000-0000-0000-0000-0000000020a3', v_late) = 250,
-    'the later batch covers the remainder — 50 of it');
+    pg_temp.remaining('cccc0000-0000-0000-0000-0000000020a3', v_late) = 220,
+    'the later batch covers the remainder — 80 of it');
 
   -- The ordinary pool is untouched while any batch has anything in it.
   perform pg_temp.ok(
@@ -464,7 +470,7 @@ begin
     'never-expiring credit is spent LAST — otherwise the pass expires while the permanent credit goes');
 
   perform pg_temp.ok(
-    pg_temp.balance('cccc0000-0000-0000-0000-0000000020a3') = 750,
+    pg_temp.balance('cccc0000-0000-0000-0000-0000000020a3') = 720,
     'and balance is still SUM(delta_czk), down by exactly the price');
 end $$;
 
@@ -530,8 +536,9 @@ begin
   perform public.cancel_booking(v_booking);
 
   perform pg_temp.ok(
-    pg_temp.balance('cccc0000-0000-0000-0000-0000000020a3') = 150,
-    'a cash-paid cancellation still credits the price');
+    pg_temp.balance('cccc0000-0000-0000-0000-0000000020a3') = 180,
+    'a cash-paid cancellation still credits the price',
+    pg_temp.balance('cccc0000-0000-0000-0000-0000000020a3')::text);
 
   perform pg_temp.ok(
     pg_temp.batch_count('cccc0000-0000-0000-0000-0000000020a3') = 0,
@@ -615,7 +622,7 @@ declare
   v_count integer;
 begin
   perform pg_temp.reset_wallet('cccc0000-0000-0000-0000-0000000020a3');
-  v_batch := pg_temp.grant_batch('cccc0000-0000-0000-0000-0000000020a3', 150, now() + interval '2 days');
+  v_batch := pg_temp.grant_batch('cccc0000-0000-0000-0000-0000000020a3', 180, now() + interval '2 days');
 
   perform pg_temp.act_as('c0000000-0000-0000-0000-0000000020a3');
   perform public.create_booking('dddd0000-0000-0000-0000-0000000020a2', 'cash');
@@ -645,7 +652,7 @@ declare
 begin
   perform pg_temp.reset_wallet('cccc0000-0000-0000-0000-0000000020a3');
 
-  -- 40 CZK, in a batch, against a 150 game.
+  -- 40 CZK, in a batch, against a 180 game.
   perform pg_temp.grant_batch('cccc0000-0000-0000-0000-0000000020a3', 40, now() + interval '10 days');
 
   perform pg_temp.act_as('c0000000-0000-0000-0000-0000000020a3');
@@ -653,14 +660,14 @@ begin
 
   /*
    * ~~The 40 is applied in full and 110 is owed.~~ ROUND 35: A CREDIT BUYS A
-   * SEAT, so 40 crowns buys no part of one. Nothing is applied, the whole 150
+   * SEAT, so 40 crowns buys no part of one. Nothing is applied, the whole 180
    * is owed, and the 40 STAYS IN THE BATCH — which is the stronger form of the
    * invariant this block is about. A balance that cannot go negative because it
    * was never touched is still a balance that cannot go negative, and the
    * player keeps value they would otherwise have spent on a fraction of a game.
    */
   perform pg_temp.ok(
-    v_result.credit_applied_czk = 0 and v_result.amount_due_czk = 150,
+    v_result.credit_applied_czk = 0 and v_result.amount_due_czk = 180,
     'a sub-credit batch balance buys nothing and the whole price is owed');
 
   perform pg_temp.ok(
@@ -689,25 +696,26 @@ declare
 begin
   perform pg_temp.reset_wallet('cccc0000-0000-0000-0000-0000000020a3');
 
-  -- Exactly one game's worth, in a batch.
-  perform pg_temp.grant_batch('cccc0000-0000-0000-0000-0000000020a3', 150, now() + interval '10 days');
+  -- Exactly one game's worth, in a batch — one CREDIT, which since round 35 v2
+  -- is what a seat costs whatever the game charges a card.
+  perform pg_temp.grant_batch('cccc0000-0000-0000-0000-0000000020a3', 180, now() + interval '10 days');
 
   perform pg_temp.act_as('c0000000-0000-0000-0000-0000000020a3');
   v_first  := public.create_booking('dddd0000-0000-0000-0000-0000000020a1', 'cash');
   v_second := public.create_booking('dddd0000-0000-0000-0000-0000000020a2', 'cash');
 
   perform pg_temp.ok(
-    v_first.credit_applied_czk = 150,
+    v_first.credit_applied_czk = 180,
     'the first booking spends the batch');
 
   perform pg_temp.ok(
-    v_second.credit_applied_czk = 0 and v_second.amount_due_czk = 150,
-    'the second spends NOTHING — the same 150 cannot buy two games',
+    v_second.credit_applied_czk = 0 and v_second.amount_due_czk = 180,
+    'the second spends NOTHING — the same credit cannot buy two games',
     v_second.credit_applied_czk::text);
 
   perform pg_temp.ok(
     pg_temp.balance('cccc0000-0000-0000-0000-0000000020a3') = 0,
-    'and the wallet is zero, not minus 150');
+    'and the wallet is zero, not minus one credit');
 end $$;
 
 reset role;

@@ -156,6 +156,28 @@ only way to notice is to diff the live jsonb against the newest file. **Every
 new migration's list must be a superset of what is LIVE, not of what the
 previous file says**, which means probing before writing it.
 
+**THE GAME COSTS 180 AND THE PRICE LIVES IN ONE PLACE PER SIDE** —
+`public.credit_seat_price_czk()` in SQL, `PASS_REFERENCE_PRICE_CZK` in
+TypeScript, SQL being the authority. **The round-35-v2 audit found FOUR copies**,
+and the one worth remembering is `pass_tiers_credited_rule`: a CHECK constraint
+that spelled the price as a literal. A literal in a constraint does not fail
+when the price moves — it fails the next time somebody INSERTS, naming a
+constraint rather than a price. It now calls the function, which is legal
+because the function is IMMUTABLE, **with the cost that Postgres does not
+re-validate existing rows: a future price move must update `pass_tiers` in the
+same migration.** `lib/pass/__tests__/seatPrice.test.ts` sweeps for a fifth copy
+on every run.
+
+**A SPEC THAT PASSES ON A SUSPENSE FALLBACK, AND A SPEC THAT READS PIXELS NEXT
+TO A RING, ARE THE SAME MISTAKE.** `crop-truth.spec.ts` compared a screenshot of
+the crop WINDOW against the card, and the window carries a `ring-2` with an
+offset over a dimmed copy of the same photograph — so a sample near its edge
+lands on the ring, the dim layer, or the crop, depending on a device pixel.
+Three insets were tried and each moved which edge misread. **A reading that
+cannot be trusted cannot be evidence.** The proof now rests where it belongs:
+the card's pixels against SENTINELS in the marked image, each 150px thick so no
+amount of edge noise can reach them, plus zero magenta anywhere.
+
 **A CREDIT BUYS A SEAT, FLAT — `credit_seat_price_czk()` IS 150 AND THE GAME'S
 PRICE HAS NOTHING TO DO WITH IT** (owner's ruling, round 35). Card payments
 still charge `games.price_czk`; every CREDIT path debits `150 × seats`. Two
@@ -381,6 +403,13 @@ anything is owed:
 update public.venues set name = replace(name, ' — ', ' • ') where name like '% — %';
 update public.games  set venue = replace(venue, ' — ', ' • ') where venue like '% — %';
 ```
+
+**~~Outstanding, round 35's one.~~ ROUND 35 v2 APPLIED FOUR, IN DATE ORDER, BY
+ME** — on a one-time authorization the owner gave for that round only. **The
+Oliver-applies rule stands.** The order mattered: `20260916100000` moves the
+seat price to 180 and `20260915100000` creates it at 150, so the wrong order
+silently reverts the price. Every file probes rather than asserts its
+capability flags, so a partial state is safe; a wrong ORDER is not.
 
 **Outstanding, round 35's one — the credits ruling.** Safe in either order
 against round 34's and safe without it: everything it needs from that file is

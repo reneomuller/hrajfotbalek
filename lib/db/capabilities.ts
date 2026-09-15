@@ -83,6 +83,10 @@ export interface AppCapabilities {
    * report that claims "applied" should be answerable by one call.
    */
   addGuestsConfirmation: boolean;
+  /** Round 35 v2 item 8 — `ban_player` exists. */
+  banProfile: boolean;
+  /** Round 35 v2 item 2 — `credit_seat_price_czk()` returns 180. */
+  priceOneEighty: boolean;
 }
 
 const NONE: AppCapabilities = {
@@ -100,6 +104,8 @@ const NONE: AppCapabilities = {
   partyUpToThirteen: false,
   cancelGuests: false,
   addGuestsConfirmation: false,
+  banProfile: false,
+  priceOneEighty: false,
 };
 
 export const appCapabilities = cache(async (): Promise<AppCapabilities> => {
@@ -133,6 +139,8 @@ export const appCapabilities = cache(async (): Promise<AppCapabilities> => {
       partyUpToThirteen: read("partyUpToThirteen"),
       cancelGuests: read("cancelGuests"),
       addGuestsConfirmation: read("addGuestsConfirmation"),
+      banProfile: read("banProfile"),
+      priceOneEighty: read("priceOneEighty"),
     };
   } catch {
     return NONE;

@@ -1,3 +1,4 @@
+import { PASS_REFERENCE_PRICE_CZK } from "../lib/pass/creditPrice";
 import { expect, test } from "@playwright/test";
 import { LOCALE_COOKIE } from "../lib/i18n/locales";
 import { players, serviceClient, signInAs } from "./helpers/session";
@@ -25,7 +26,7 @@ import {
 
 test.use({ viewport: { width: 390, height: 844 } });
 
-const PRICE = 150;
+const PRICE = PASS_REFERENCE_PRICE_CZK;
 
 test("a player brings two guests: one booking, one price, three seats", async ({
   page,
@@ -56,7 +57,9 @@ test("a player brings two guests: one booking, one price, three seats", async ({
 
     // The price shown is the WHOLE party's, before anything is committed.
     await expect(page.getByTestId("party-summary")).toContainText("3 spots");
-    await expect(page.getByTestId("party-summary")).toContainText("450");
+    // Three seats at the game's own price — the CARD total, which stays in
+    // crowns because that is what a card is charged.
+    await expect(page.getByTestId("party-summary")).toContainText(String(3 * PRICE));
 
     await page.getByTestId("pay-credit-input").check();
     await page.getByTestId("confirm-booking").click();

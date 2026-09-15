@@ -6,11 +6,18 @@ import { PASS_REFERENCE_PRICE_CZK } from "@/lib/pass/creditPrice";
  * ROUND 31, ITEM 3 — admin counts credits, the ledger keeps crowns.
  */
 
+/*
+ * ~~150.~~ THE RATE IS 180 SINCE ROUND 35 v2, and these are written as the
+ * CONSTANT rather than as literals wherever the literal would only be restating
+ * it. The two that stay literal are the ones whose point IS the number: a
+ * balance that does not divide, and the floor.
+ */
+const RATE = PASS_REFERENCE_PRICE_CZK;
+
 describe("czkFromCredits", () => {
   it("converts whole credits at the ruling's rate", () => {
-    // The owner's own acceptance numbers.
-    expect(czkFromCredits(2)).toBe(300);
-    expect(czkFromCredits(1)).toBe(150);
+    expect(czkFromCredits(2)).toBe(2 * RATE);
+    expect(czkFromCredits(1)).toBe(RATE);
   });
 
   it("is the ruling's constant, not a literal of its own", () => {
@@ -26,8 +33,8 @@ describe("czkFromCredits", () => {
 
 describe("creditsFromCzk", () => {
   it("counts whole credits a player can actually spend", () => {
-    expect(creditsFromCzk(450)).toBe(3);
-    expect(creditsFromCzk(150)).toBe(1);
+    expect(creditsFromCzk(3 * RATE)).toBe(3);
+    expect(creditsFromCzk(RATE)).toBe(1);
     expect(creditsFromCzk(0)).toBe(0);
   });
 
@@ -36,24 +43,30 @@ describe("creditsFromCzk", () => {
      * 149 CZK is not "one credit". Rounding up states a number the player
      * cannot spend, which is worse than stating a smaller true one.
      */
-    expect(creditsFromCzk(149)).toBe(0);
-    expect(creditsFromCzk(299)).toBe(1);
-    expect(creditsFromCzk(4460)).toBe(29);
+    expect(creditsFromCzk(RATE - 1)).toBe(0);
+    expect(creditsFromCzk(2 * RATE - 1)).toBe(1);
+    // A ragged legacy balance, floored to what it can actually buy.
+    expect(creditsFromCzk(4460)).toBe(24);
   });
 
   it("never goes negative", () => {
-    expect(creditsFromCzk(-150)).toBe(0);
+    expect(creditsFromCzk(-RATE)).toBe(0);
   });
 });
 
 describe("isWholeCredits", () => {
   it("recognises a clean balance", () => {
     expect(isWholeCredits(0)).toBe(true);
-    expect(isWholeCredits(300)).toBe(true);
+    expect(isWholeCredits(2 * RATE)).toBe(true);
   });
 
-  it("recognises the ragged ones that exist on production today", () => {
-    // 4,460 / 110 / 50 — arbitrary-CZK grants made before the credits ruling.
+  it("recognises a balance that does not divide", () => {
+    /*
+     * ~~"the ragged ones that exist on production today".~~ NONE DO ANY MORE —
+     * round 35 v2 zeroed every wallet, which is what closed row 244. These are
+     * kept as arithmetic rather than as a census: the function must still be
+     * right the first time somebody is granted an odd amount by hand.
+     */
     for (const balance of [4460, 110, 50]) {
       expect(isWholeCredits(balance), `${balance} read as clean`).toBe(false);
     }
@@ -62,7 +75,7 @@ describe("isWholeCredits", () => {
 
 describe("adminWallet", () => {
   it("shows credits alone when the balance divides cleanly", () => {
-    expect(adminWallet(450)).toEqual({ credits: 3, remainderCzk: null });
+    expect(adminWallet(3 * RATE)).toEqual({ credits: 3, remainderCzk: null });
     expect(adminWallet(0)).toEqual({ credits: 0, remainderCzk: null });
   });
 
@@ -72,7 +85,7 @@ describe("adminWallet", () => {
      * has to be able to see. `remainderCzk` is what the surface prints as
      * subtext — never instead of the credit count, always beside it.
      */
-    expect(adminWallet(4460)).toEqual({ credits: 29, remainderCzk: 4460 });
+    expect(adminWallet(4460)).toEqual({ credits: 24, remainderCzk: 4460 });
     expect(adminWallet(110)).toEqual({ credits: 0, remainderCzk: 110 });
     expect(adminWallet(50)).toEqual({ credits: 0, remainderCzk: 50 });
   });

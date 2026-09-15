@@ -273,42 +273,40 @@ reset role;
 -- the running balance explicitly here because getting it wrong is exactly what
 -- made this assertion fail first time round — against a correct RPC.
 insert into public.credit_ledger (player_id, delta_czk, reason) values
-  ('bbbb0000-0000-0000-0000-00000000000b', 50, 'admin_grant');
+  ('bbbb0000-0000-0000-0000-00000000000b', 130, 'admin_grant');
 
 select pg_temp.ok(
   (select coalesce(sum(delta_czk), 0) from public.credit_ledger
-    where player_id = 'bbbb0000-0000-0000-0000-00000000000b') = 100,
-  'player B''s balance before the expiring booking is 100 (50 overpayment + 50 grant)',
+    where player_id = 'bbbb0000-0000-0000-0000-00000000000b') = 180,
+  'player B''s balance before the expiring booking is 180 — one credit, made of '
+  'a 50 overpayment and a 130 grant',
   'balance=' || (select coalesce(sum(delta_czk), 0) from public.credit_ledger
                   where player_id = 'bbbb0000-0000-0000-0000-00000000000b'));
 
--- ONE MORE CREDIT AND A PARTY OF TWO, both forced by round 35's ruling. Credit
--- buys whole SEATS: 100 crowns is not a seat, so the booking would apply
--- nothing; and a SINGLE seat covered by a credit is fully paid, so it would be
--- confirmed and could not expire at all. One credit on the first seat, 200 owed
--- on the second, is the reserved-with-credit state this test is about.
-insert into public.credit_ledger (player_id, delta_czk, reason) values
-  ('bbbb0000-0000-0000-0000-00000000000b', 50, 'admin_grant');
-
+-- A PARTY OF TWO, forced by round 35's ruling: a SINGLE seat covered by a
+-- credit is fully paid, so it would be confirmed and could not expire at all.
+-- One credit on the first seat, 200 owed on the second, is the
+-- reserved-with-credit state this test is about — and the balance above is
+-- already exactly one credit, so nothing more is granted here.
 select pg_temp.act_as('b0000000-0000-0000-0000-0000000000b1');
 select public.create_booking('9aaa0000-0000-0000-0000-00000000000a', 'qr', null, null, 1);
 reset role;
 
 select pg_temp.ok(
   (select credit_applied_czk from public.bookings
-    where game_id = '9aaa0000-0000-0000-0000-00000000000a') = 150,
+    where game_id = '9aaa0000-0000-0000-0000-00000000000a') = 180,
   'the booking applies ONE CREDIT and leaves the rest due');
 
 select pg_temp.act_as_service();
 select pg_temp.ok(
   (select (public.expire_booking(
-    pg_temp.booking_id_for('9aaa0000-0000-0000-0000-00000000000a'))).credit_issued_czk) = 150,
+    pg_temp.booking_id_for('9aaa0000-0000-0000-0000-00000000000a'))).credit_issued_czk) = 180,
   'expiring a booking with applied credit returns ALL of it to the wallet');
 reset role;
 
 select pg_temp.ok(
   (select coalesce(sum(delta_czk), 0) from public.credit_ledger
-    where player_id = 'bbbb0000-0000-0000-0000-00000000000b') = 150,
+    where player_id = 'bbbb0000-0000-0000-0000-00000000000b') = 180,
   'player B ends where they started: the expiry confiscated nothing',
   'balance=' || (select coalesce(sum(delta_czk), 0) from public.credit_ledger
                   where player_id = 'bbbb0000-0000-0000-0000-00000000000b'));

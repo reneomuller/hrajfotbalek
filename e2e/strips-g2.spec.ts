@@ -315,7 +315,7 @@ test("the pass tiers, the panel above the list, and the wallet in batches", asyn
     await admin.rpc("confirm_topup", {
       p_topup_id: topup.id,
       p_confirmed_by: players.organizer.id,
-      p_received_amount_czk: 1080,
+      p_received_amount_czk: 1296,
     });
 
     await signInAs(context, players.creditPartial);

@@ -117,6 +117,18 @@ test("a credit amount never renders as crowns on a player surface", async ({
 
     const CREDIT = /credit/i;
     const CROWNS = /\d[\d\s\u00a0]*(CZK|Kč)/i;
+    /*
+     * AN EQUIVALENCE IS NOT A CONVERSION, and this is the distinction the rule
+     * turns on. The claim bar renders "180 CZK / 1 credit": a card price in
+     * crowns beside the credit price in credits, each in its own unit, which is
+     * the product TELLING the player the rate rather than making them apply it.
+     * `games.spec.ts` asserts that line deliberately.
+     *
+     * What the law forbids is a credit AMOUNT wearing crowns — a balance, a
+     * cost, a remainder. A line that carries a crowns figure AND a credit
+     * COUNT is showing both units and cannot be that.
+     */
+    const CREDIT_COUNT = /\d+\s*credit/i;
     const offences: string[] = [];
 
     for (const [surface, url] of [
@@ -127,7 +139,7 @@ test("a credit amount never renders as crowns on a player surface", async ({
     ] as const) {
       await page.goto(url, { waitUntil: "networkidle" });
       for (const line of (await page.locator("body").innerText()).split("\n")) {
-        if (CREDIT.test(line) && CROWNS.test(line)) {
+        if (CREDIT.test(line) && CROWNS.test(line) && !CREDIT_COUNT.test(line)) {
           offences.push(`${surface}: ${line.trim()}`);
         }
       }

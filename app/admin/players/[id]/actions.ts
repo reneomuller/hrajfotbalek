@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/auth/requireAdmin";
 import { toAdminErrorMessage } from "@/lib/admin/errors";
+import { notifyWaitlistForGame } from "@/lib/cron/waitlistRelease";
 import { PROFILE_PHOTOS_BUCKET } from "@/lib/storage/avatar";
 import {
   createServerSupabaseClient,
@@ -160,4 +161,71 @@ export async function setDisplayNameAction(
   revalidatePath(`/admin/players/${playerId}`);
   revalidatePath("/admin/players");
   return { status: "done", name: typeof name === "string" ? name : undefined };
+}
+
+/**
+ * Ban or unban a player (round 35 v2, item 8).
+ *
+ * ONE ACTION, BOTH DIRECTIONS, and the direction travels in the form rather
+ * than being read off the row here — the same shape `setPlayerAdminAction` uses
+ * and for the same reason: a stale page must not be able to flip the wrong way
+ * by describing the state it happens to be showing.
+ *
+ * EVERYTHING THAT MATTERS IS INSIDE THE RPC. `ban_player` re-checks that the
+ * caller is an admin, refuses to ban an admin, cancels the future bookings,
+ * releases the seats and emits `spot_released` — all under one transaction, so
+ * there is no moment where the account is blocked and the seats are still held.
+ *
+ * THE WAITLIST IS TOLD FROM HERE, because SQL cannot send mail. Same as
+ * `cancelBookingAction` and `cancelGuestsAction`; a failure to notify must
+ * never fail the ban, which is already committed by the time this runs.
+ */
+export async function setPlayerBannedAction(
+  _prev: PlayerAdminState,
+  formData: FormData,
+): Promise<PlayerAdminState> {
+  await requireAdmin();
+
+  const playerId = String(formData.get("playerId") ?? "");
+  if (!playerId) return { status: "error", message: toAdminErrorMessage("PLAYER_NOT_FOUND") };
+
+  const banning = String(formData.get("banned") ?? "") === "true";
+  const supabase = await createServerSupabaseClient();
+
+  const { error } = banning
+    ? await supabase.rpc("ban_player", { p_player_id: playerId })
+    : await supabase.rpc("unban_player", { p_player_id: playerId });
+
+  if (error) return { status: "error", message: toAdminErrorMessage(error.message) };
+
+  /*
+   * A BAN FREES SEATS, so the games those seats were on may have room again.
+   * The RPC emits `spot_released` for each; this is what turns that into mail.
+   */
+  if (banning) {
+    try {
+      const service = createServiceRoleSupabaseClient();
+      const { data: freed } = await service
+        .from("events")
+        .select("game_id")
+        .eq("event_type", "spot_released")
+        .eq("player_id", playerId)
+        .order("created_at", { ascending: false })
+        .limit(20);
+
+      for (const gameId of new Set(
+        ((freed ?? []) as { game_id: string | null }[])
+          .map((row) => row.game_id)
+          .filter((id): id is string => Boolean(id)),
+      )) {
+        await notifyWaitlistForGame(gameId);
+      }
+    } catch (notifyError) {
+      console.error("waitlist notify after ban failed", notifyError);
+    }
+  }
+
+  revalidatePath(`/admin/players/${playerId}`);
+  revalidatePath("/admin/players");
+  return { status: "done" };
 }

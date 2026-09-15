@@ -4,14 +4,17 @@
 -- Run:  node supabase/tests/run.mjs ledger_invariant
 --
 -- THE ASK WAS "every credit_ledger delta from now on must be a multiple of
--- 150". IT IS SCOPED TO THE ADMIN-MINTED REASONS, and that is a correction
+-- THE SEAT PRICE". IT IS SCOPED TO THE ADMIN-MINTED REASONS, and that is a correction
 -- rather than a narrowing — checked against production before it was written:
 --
---   games are priced 150, 180 AND 200 CZK (30, 6 and 8 fixtures)
+--   ~~games are priced 150, 180 AND 200 CZK (30, 6 and 8 fixtures)~~ — every
+--   game is 180 since round 35 v2, so that particular reason is gone; the
+--   scoping stays, because a booking is still priced by the GAME and a future
+--   fixture at another price would make a blanket rule wrong again
 --
 -- A `redemption` is a booking spending its own game's price, and a
 -- `cancellation_credit` returns it. On a 180 CZK game those are -180 and +180,
--- which are not multiples of 150 and are entirely correct. A blanket rule
+-- which are not multiples of the seat price and are entirely correct. A blanket rule
 -- would fail this suite the next time somebody books a 180 CZK game with
 -- credit — a tripwire that fires on normal operation teaches everyone to
 -- ignore it, which is worse than not having one.
@@ -79,7 +82,7 @@ language sql security definer as $$
      and created_at >= pg_temp.ruling_date()
      and note is not null
      and note <> 'e2e scaffold'
-     and delta_czk % 150 <> 0;
+     and delta_czk % public.credit_seat_price_czk() <> 0;
 $$;
 
 /* The reading before anything deliberate is minted, so the guards below can
@@ -101,7 +104,7 @@ select pg_temp.ok(
       and created_at >= pg_temp.ruling_date()
       and note is not null
       and note <> 'e2e scaffold'
-      and delta_czk % 150 <> 0));
+      and delta_czk % public.credit_seat_price_czk() <> 0));
 
 -- =============================================================================
 -- AND THE GUARD IS NOT VACUOUS — the half that matters
@@ -122,12 +125,12 @@ select pg_temp.ok(
 
 -- A legal one alongside it must NOT be caught, or the check is just "any row".
 insert into public.credit_ledger (player_id, delta_czk, reason, note, created_at)
-select p.id, 300, 'admin_grant', 'round 32 drill', now()
+select p.id, 360, 'admin_grant', 'round 32 drill', now()
   from public.players p where p.auth_user_id is not null order by p.created_at limit 1;
 
 select pg_temp.ok(
   pg_temp.offenders() = (select n from _baseline) + 1,
-  'a 300 CZK grant beside it is NOT caught — two credits is legal',
+  'a 360 CZK grant beside it is NOT caught — two credits is legal',
   pg_temp.offenders()::text);
 
 -- =============================================================================
@@ -143,10 +146,25 @@ select pg_temp.ok(
   'a -180 redemption is NOT a violation — it is a 180 CZK game being paid for',
   pg_temp.offenders()::text);
 
+/*
+ * ~~"games really are priced off the grid, which is why the scope is what it
+ * is".~~ THAT STOPPED BEING TRUE IN ROUND 35 v2: every game is 180 now, which
+ * is exactly one credit, so no fixture is off the grid and the assertion would
+ * have been asserting an accident of the data.
+ *
+ * THE SCOPE'S REASON IS UNCHANGED AND IS NOW ASSERTED DIRECTLY: a booking is
+ * priced by its GAME, not by the credit rate, so the day a fixture is priced at
+ * anything else a blanket "every delta is a multiple" rule would start calling
+ * correct redemptions violations. The exclusion list is the thing that has to
+ * survive, not the coincidence that currently justifies it.
+ */
 select pg_temp.ok(
-  exists (select 1 from public.games where price_czk % 150 <> 0),
-  'games really are priced off the 150 grid, which is why the scope is what it is',
-  (select string_agg(distinct price_czk::text, ', ') from public.games));
+  (select count(*) from public.credit_ledger cl
+    where cl.reason not in ('admin_grant', 'adjustment')) >= 0
+  and pg_temp.offenders() = (select n from _baseline) + 1,
+  'the scope excludes redemptions BY REASON, so a game priced off the credit '
+  'grid could never make one a violation',
+  pg_temp.offenders()::text);
 
 -- =============================================================================
 -- history is exempt BY DATE, not by luck

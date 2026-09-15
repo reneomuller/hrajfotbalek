@@ -7,6 +7,7 @@ import { RemoveCreditForm } from "@/components/admin/RemoveCreditForm";
 import { RemovePhotoButton } from "@/components/admin/RemovePhotoButton";
 import { RemoveCoverButton } from "@/components/admin/RemoveCoverButton";
 import { ChangeNameForm } from "@/components/admin/ChangeNameForm";
+import { BanPlayerButton } from "@/components/admin/BanPlayerButton";
 import { appCapabilities } from "@/lib/db/capabilities";
 import { requireAdmin } from "@/lib/auth/requireAdmin";
 import { getAdminPlayer } from "@/lib/admin/queries";
@@ -272,9 +273,33 @@ export default async function AdminPlayerPage({
           {strings.admin.adminActionsTitle}
         </h3>
 
-        <div className="mt-4 border-b border-hairline pb-4">
+        {/*
+          WHAT THIS ACCOUNT *IS* — the two controls that change it, together
+          (round 35 v2, item 8). Admin rights and the ban are the same kind of
+          act; Remove photo and Remove banner are one row down, where the acts
+          about appearance live.
+        */}
+        <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-3 border-b border-hairline pb-4">
           <AdminRightsButton playerId={player.id} isAdmin={player.is_admin} />
+          {capabilities.banProfile && (
+            <BanPlayerButton playerId={player.id} isBanned={Boolean(player.banned_at)} />
+          )}
         </div>
+
+        {/*
+          THE STATE ITSELF, said once and plainly. The toggle's label already
+          reads "Unban profile", but a banned account is a fact about the person
+          whose page this is rather than a property of one button — an organizer
+          scrolling to the history needs to know why it stops.
+        */}
+        {player.banned_at && (
+          <p
+            data-testid="player-banned-notice"
+            className="mt-3 mb-0 text-[11px] uppercase tracking-eyebrow text-danger"
+          >
+            {strings.admin.banned}
+          </p>
+        )}
 
         {/*
           THE WALLET, BOTH DIRECTIONS (round 28, item 5b). Side by side and

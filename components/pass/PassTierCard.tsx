@@ -161,7 +161,7 @@ export async function PassTierCard({
           same alarming red. The strike-through already says "not this one";
           the colour only has to say "quieter than the real price".
 
-          All the pass law is untouched: the anchor is still the flat-150
+          All the pass law is untouched: the anchor is still the flat per-seat
           reference, still struck, still beside the real price at the same
           size, with the computed whole-percent discount after both.
         */}

@@ -187,6 +187,7 @@ export const cs: StringsOverlay = {
     nicknameLabel: "Přezdívka",
     nicknameHint: "Písmena, číslice, mezery, _ a - · max. 20 znaků",
     nicknameInvalid: "Použij jen písmena, číslice, mezery, _ a - (max. 20 znaků).",
+    phoneRefused: "Tohle telefonní číslo nejde použít. Zkus jiné, nebo nám napiš.",
     nicknameTaken: "Tahle přezdívka je zabraná. Zkus jinou.",
     gdprLabel: "Souhlasím se zásadami ochrany osobních údajů.",
     gdprLink: "Přečíst zásady ochrany osobních údajů",

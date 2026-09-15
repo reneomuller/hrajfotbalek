@@ -307,6 +307,17 @@ export interface AdminPlayerRow {
    * appears on its own the moment the column exists, with no deploy.
    */
   playerNumber: number | null;
+  /**
+   * The avatar's storage key, or null (round 35 v2, item 9).
+   *
+   * THE KEY, NOT A URL. Building the URL needs `NEXT_PUBLIC_SUPABASE_URL` and a
+   * cache-busting stamp, and both belong to the surface that renders it —
+   * `avatarUrl` is what every other avatar in this product goes through, and a
+   * second way of composing the same address is a second thing to get wrong.
+   */
+  photoPath: string | null;
+  /** `created_at`, which is what `avatarUrl` uses as its cache stamp. */
+  createdAt: string;
 }
 
 /**
@@ -346,6 +357,8 @@ export async function listPlayers(): Promise<AdminPlayerRow[]> {
     balanceCzk: balances.get(player.id) ?? 0,
     bookingCount: counts.get(player.id) ?? 0,
     playerNumber: player.player_number ?? null,
+    photoPath: player.photo_path ?? null,
+    createdAt: player.created_at,
   }));
 }
 
@@ -367,12 +380,23 @@ export async function listPlayers(): Promise<AdminPlayerRow[]> {
  * because a round trip per row on a list page is what the old query was
  * avoiding and that reason is still good.
  *
- * AN EMPTY MAP ON ERROR, which reads as zero everywhere it lands. That is the
- * same failure mode the old query had and it is the safe one here: a count
- * that is too low shows a game as emptier than it is, where a count invented
- * from a stale snapshot would show it as fuller.
+ * ~~AN EMPTY MAP ON ERROR, which reads as zero everywhere it lands.~~ THAT WAS
+ * A LIVE REGRESSION AND IT SHIPPED. The RPC is created by a migration the owner
+ * applies by hand, and the deploy lands first — so for the whole window between
+ * them, every admin count read ZERO. Not stale: zero. The games list, the
+ * capacity readout and the dashboard all showed empty pitches, which is exactly
+ * the failure CLAUDE.md records for a missing GRANT: a read that comes back
+ * empty looks like missing data rather than a missing function.
+ *
+ * SO IT FALLS BACK TO THE SEATS RATHER THAN TO NOTHING. `countSeatsFallback`
+ * does `game_seats_taken`'s arithmetic — one per booking plus its guests, plus
+ * the game's own house guests — over a single query that needs no migration.
+ * It is a SECOND COPY of that arithmetic and it is here on purpose and on
+ * borrowed time: the RPC is the counter, this is the bridge across the
+ * deploy-to-apply window, and it can be deleted once `20260915100000` is
+ * applied everywhere. A comment is not a plan, so it is also a ledger row.
  */
-async function countSeatsTaken(gameIds: string[]): Promise<Map<string, number>> {
+export async function countSeatsTaken(gameIds: string[]): Promise<Map<string, number>> {
   const counts = new Map<string, number>();
   if (gameIds.length === 0) return counts;
 
@@ -381,10 +405,40 @@ async function countSeatsTaken(gameIds: string[]): Promise<Map<string, number>> 
     p_game_ids: gameIds,
   });
 
-  if (error || !data) return counts;
+  if (error || !data) return countSeatsFallback(gameIds);
 
   for (const row of data as { game_id: string; seats_taken: number }[]) {
     counts.set(row.game_id, row.seats_taken);
+  }
+  return counts;
+}
+
+/**
+ * `game_seats_taken`'s arithmetic, for a database that does not have the batch
+ * wrapper yet. See the note above: a bridge, not a design.
+ *
+ * ONE PER BOOKING PLUS ITS GUESTS, PLUS THE GAME'S OWN. House guests live on
+ * `games.guest_count` and are not booking rows at all, which is half of what
+ * the row-counting version got wrong.
+ */
+async function countSeatsFallback(gameIds: string[]): Promise<Map<string, number>> {
+  const counts = new Map<string, number>();
+  const service = createServiceRoleSupabaseClient();
+
+  const [{ data: bookings }, { data: games }] = await Promise.all([
+    service
+      .from("bookings")
+      .select("game_id,guest_count")
+      .in("game_id", gameIds)
+      .in("status", ["reserved", "confirmed"]),
+    service.from("games").select("id,guest_count").in("id", gameIds),
+  ]);
+
+  for (const g of (games ?? []) as { id: string; guest_count: number }[]) {
+    counts.set(g.id, g.guest_count ?? 0);
+  }
+  for (const b of (bookings ?? []) as { game_id: string; guest_count: number }[]) {
+    counts.set(b.game_id, (counts.get(b.game_id) ?? 0) + 1 + (b.guest_count ?? 0));
   }
   return counts;
 }

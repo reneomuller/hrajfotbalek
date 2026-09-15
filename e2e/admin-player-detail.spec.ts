@@ -1,3 +1,4 @@
+import { PASS_REFERENCE_PRICE_CZK } from "../lib/pass/creditPrice";
 import { expect, test } from "@playwright/test";
 import { players, serviceClient, signInAs } from "./helpers/session.ts";
 
@@ -113,7 +114,7 @@ test("a credit grant with a note writes a ledger row carrying it", async ({
   await page.goto(`/admin/players/${id}`, { waitUntil: "networkidle" });
   await page.getByTestId("grant-credit-open").click();
   /*
-   * TWO CREDITS, WHICH MUST LAND AS 300 CZK — the owner's own acceptance
+   * TWO CREDITS, WHICH MUST LAND AS TWICE THE RATE — the owner's own acceptance
    * numbers for round 31 item 3. The field speaks credits; the ledger keeps
    * crowns, and this is the assertion that ties the two rates together.
    */
@@ -129,7 +130,7 @@ test("a credit grant with a note writes a ledger row carrying it", async ({
         .from("credit_ledger")
         .select("delta_czk,reason")
         .eq("player_id", id)
-        .eq("delta_czk", 300)
+        .eq("delta_czk", 2 * PASS_REFERENCE_PRICE_CZK)
         .eq("reason", "admin_grant");
       return (data ?? []).length;
     })

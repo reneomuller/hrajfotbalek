@@ -3,6 +3,7 @@ import { requireAdmin } from "@/lib/auth/requireAdmin";
 import { listPlayers } from "@/lib/admin/queries";
 import { filterPlayers } from "@/lib/admin/playerSearch";
 import { initials } from "@/lib/roster/initials";
+import { avatarUrl } from "@/lib/storage/avatar";
 import { ExportCsvLink } from "@/components/admin/ExportCsvLink";
 import { strings } from "@/lib/strings";
 import { creditsFromCzk } from "@/lib/admin/credits";
@@ -45,6 +46,7 @@ export default async function AdminPlayersPage({
 }: {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
 }) {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
   // Whose session is acting. Used only to decide which row renders no rights
   // control — `set_player_admin` refuses a self-change on its own.
   const [acting, players] = await Promise.all([requireAdmin(), listPlayers()]);
@@ -157,12 +159,38 @@ export default async function AdminPlayersPage({
               */
               className="lifted flex flex-wrap items-start gap-x-4 gap-y-2 rounded-card px-4 py-3"
             >
-              {/* The tile. `aria-hidden` — the nickname is right beside it. */}
+              {/*
+                THE TILE, AND SINCE ROUND 35 v2 IT CARRIES THE PHOTOGRAPH.
+
+                The detail page has shown it since Phase 7; the list showed
+                initials for everybody, so the one surface an organizer scans to
+                find somebody was the one that made them all look alike.
+
+                SAME COMPONENT DISCIPLINE AS EVERY OTHER AVATAR HERE: a plain
+                `<img>` over a public bucket — a small tile does not need the
+                optimizer — with `overflow-hidden` doing the clipping and the
+                initials underneath as the fallback rather than beside it. The
+                geometry is untouched: 44px, `rounded-control`, the volt hairline
+                and the volt initials are exactly what this row already drew.
+
+                `aria-hidden` — the nickname is right beside it.
+              */}
               <span
                 aria-hidden
-                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-control border border-hairline-volt bg-volt/[.08] text-body font-bold text-volt"
+                data-testid="admin-player-tile"
+                className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-control border border-hairline-volt bg-volt/[.08] text-body font-bold text-volt"
               >
-                {initials(player.nickname)}
+                {avatarUrl(supabaseUrl, player.photoPath, player.createdAt) ? (
+                  /* eslint-disable-next-line @next/next/no-img-element */
+                  <img
+                    src={avatarUrl(supabaseUrl, player.photoPath, player.createdAt)!}
+                    alt=""
+                    data-testid="admin-player-list-photo"
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  initials(player.nickname)
+                )}
               </span>
 
               <div className="min-w-[160px] flex-1">

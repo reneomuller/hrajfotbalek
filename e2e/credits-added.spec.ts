@@ -1,3 +1,4 @@
+import { PASS_REFERENCE_PRICE_CZK } from "../lib/pass/creditPrice";
 import { expect, test } from "@playwright/test";
 import { LOCALE_COOKIE } from "../lib/i18n/locales";
 import { players, signInAs, signOut } from "./helpers/session";
@@ -20,7 +21,7 @@ import { resetWallet, setWalletTo } from "./helpers/scaffold";
 
 test.use({ viewport: { width: 390, height: 844 } });
 
-const CREDIT_CZK = 150;
+const CREDIT_CZK = PASS_REFERENCE_PRICE_CZK;
 
 test.describe("credits added", () => {
   test.afterEach(async () => {

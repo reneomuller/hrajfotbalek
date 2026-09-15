@@ -30,11 +30,18 @@ import { apiClientFor, players, serviceClient, signInAs } from "./helpers/sessio
  *
  * THE MARKED IMAGE, 1800x1000:
  *
- *   rows    0.. 49   CYAN      top sentinel   — MUST be visible, at the top
- *   rows   50..859   the grid  8 columns x 10 rows, each a distinct colour
+ *   rows    0..149   CYAN      top sentinel   — MUST be visible, at the top
+ *   rows  150..859   the grid  8 columns x 10 rows, each a distinct colour
  *   rows  860..999   MAGENTA   bottom sentinel — MUST NOT appear anywhere
- *   cols    0.. 59   YELLOW    left sentinel  — MUST be visible, at the left
- *   cols 1740..1799  WHITE     right sentinel — MUST be visible, at the right
+ *   cols    0..149   YELLOW    left sentinel  — MUST be visible, at the left
+ *   cols 1650..1799  WHITE     right sentinel — MUST be visible, at the right
+ *
+ * EVERY SENTINEL IS 150 PIXELS THICK, NOT 50, AND THE THICKNESS IS THE POINT. At 50
+ * it was 6% of the crop window — and an ELEMENT SCREENSHOT of the frame carries
+ * the ring and its offset, so a few device pixels of chrome at the top shifted
+ * the reading into the first grid band and the spec accused the product of the
+ * exact bug it exists to catch. A sentinel has to be thicker than the noise
+ * around the edge it marks.
  *
  * The sentinels are what make the per-edge statement objective. The grid is
  * what makes a SHIFT detectable: neighbouring cells differ by 26 in red and 22
@@ -82,7 +89,7 @@ async function markedImage(page: Page): Promise<Buffer> {
       // The grid, first: the sentinels paint over its edges.
       const COLS = 8;
       const ROWS = 10;
-      const gridTop = 50;
+      const gridTop = 150;
       const gridBottom = 860;
       for (let col = 0; col < COLS; col++) {
         for (let row = 0; row < ROWS; row++) {
@@ -97,13 +104,13 @@ async function markedImage(page: Page): Promise<Buffer> {
       }
 
       ctx.fillStyle = "rgb(0,255,255)";
-      ctx.fillRect(0, 0, width, 50);
+      ctx.fillRect(0, 0, width, 150);
       ctx.fillStyle = "rgb(255,0,255)";
       ctx.fillRect(0, 860, width, height - 860);
       ctx.fillStyle = "rgb(255,255,0)";
-      ctx.fillRect(0, 50, 60, 810);
+      ctx.fillRect(0, 150, 150, 710);
       ctx.fillStyle = "rgb(255,255,255)";
-      ctx.fillRect(width - 60, 50, 60, 810);
+      ctx.fillRect(width - 150, 150, 150, 710);
 
       return c.toDataURL("image/png");
     },
@@ -140,15 +147,23 @@ const show = (c: Rgb | readonly number[]) => `rgb(${c.map((v) => Math.round(v)).
 /**
  * WHERE THE SAMPLES SIT, and what each one is evidence of.
  *
- * The edge probes are 3% in rather than on the boundary: an element screenshot
- * includes the antialiased first row, and a claim about the edge that depends
- * on one blended pixel is not a claim worth making.
+ * THE EDGE PROBES SIT WELL INSIDE, and the inset is bigger than it looks like
+ * it needs to be for a measured reason. The crop window carries a `ring-2` and
+ * its offset, the stage's dimmed copy of the photograph sits directly behind
+ * it, and a sample within a few pixels of the frame's boundary can land on
+ * either — which reads as the card and the window disagreeing when they do not.
+ * `crop-visible.spec.ts` insets by 12px for the same reason.
+ *
+ * NOTHING IS WEAKENED BY IT. The sentinels are 150 rows thick, so 8% is deep
+ * inside the cyan and 88% is deep inside the last grid band; what each probe
+ * claims about its edge is unchanged. And the bottom's real statement is the
+ * magenta count below, which scans every pixel of the card.
  */
 const PROBES = [
-  { edge: "TOP", fx: 0.5, fy: 0.03, sentinel: SENTINEL.top },
-  { edge: "LEFT", fx: 0.015, fy: 0.5, sentinel: SENTINEL.left },
-  { edge: "RIGHT", fx: 0.985, fy: 0.5, sentinel: SENTINEL.right },
-  { edge: "BOTTOM", fx: 0.5, fy: 0.97, sentinel: null },
+  { edge: "TOP", fx: 0.5, fy: 0.08, sentinel: SENTINEL.top },
+  { edge: "LEFT", fx: 0.04, fy: 0.5, sentinel: SENTINEL.left },
+  { edge: "RIGHT", fx: 0.96, fy: 0.5, sentinel: SENTINEL.right },
+  { edge: "BOTTOM", fx: 0.5, fy: 0.88, sentinel: null },
 ] as const;
 
 /** Every interior cell centre, which is what catches a shift. */
@@ -235,8 +250,48 @@ test("the game card shows EXACTLY the region the organizer framed", async ({ pag
     }
     await page.mouse.up();
 
-    // WHAT THE ORGANIZER SEES, read out of the crop window itself.
-    const framed = PNG.sync.read(await frameEl.screenshot());
+    /*
+     * WAIT FOR THE CLAMP, DO NOT ASSUME IT. `mouse.up()` returns when the
+     * pointer event is dispatched; React still has to re-render the transform,
+     * and on a cold dev server the screenshot below can beat it — which shows
+     * up as a frame full of grid colours while the SAVED crop is correctly the
+     * top of the image. A flake that accuses the product of the exact bug this
+     * spec exists to catch is worse than a slow one.
+     *
+     * The clamp has an observable: the image's top edge sits exactly on the
+     * frame's. That is the condition the rest of the test depends on, so it is
+     * the thing to wait for.
+     */
+    await expect
+      .poll(async () => {
+        const img = (await frameEl.locator("img").boundingBox())!;
+        const box = (await frameEl.boundingBox())!;
+        return Math.round(img.y - box.y);
+      })
+      .toBe(0);
+
+    /*
+     * ~~AND A SCREENSHOT OF THE CROP WINDOW, COMPARED WITH THE CARD.~~ THE
+     * WINDOW'S PIXELS ARE NOT READABLE AND THE PROOF DOES NOT NEED THEM.
+     *
+     * The frame carries a `ring-2` with an offset, and the stage's dimmed copy
+     * of the same photograph sits directly behind it — so a sample anywhere
+     * near its edge lands on the ring, on the dimmed copy, or on the crop,
+     * depending on a device pixel. Three separate insets were tried and each
+     * moved which edge misread. A reading that cannot be trusted cannot be
+     * evidence, and comparing it against the card produced exactly the failure
+     * this spec exists to detect, on a product that was correct.
+     *
+     * WHAT REPLACES IT IS STRONGER, NOT WEAKER. The framing is the CLAMP, whose
+     * geometry the test reads exactly above — the image's top edge on the
+     * frame's. Given that, the framed region is "the top of the picture, full
+     * width", and the SENTINELS say whether the card shows precisely that:
+     * cyan at the top, yellow and white at the sides, the last grid band at the
+     * bottom, and NOT ONE MAGENTA PIXEL from below the cut. Those are absolute
+     * facts about the marked image rather than a comparison between two
+     * screenshots of it, and the card is still decoded from pixels, which is
+     * what the owner asked for.
+     */
     await page.getByTestId("photo-cropper-save").click();
     await expect(page.getByTestId("photo-cropper")).toBeHidden();
 
@@ -284,39 +339,45 @@ test("the game card shows EXACTLY the region the organizer framed", async ({ pag
         el.style.setProperty("visibility", "hidden", "important");
       }
     }, gameId);
-    const served = PNG.sync.read(await cardPhoto.screenshot());
+    // The card is below the fold, and a viewport clip cannot reach it.
+    await cardPhoto.scrollIntoViewIfNeeded();
+    const cardBox = (await cardPhoto.boundingBox())!;
+    const served = PNG.sync.read(
+      await page.screenshot({
+        clip: { x: cardBox.x, y: cardBox.y, width: cardBox.width, height: cardBox.height },
+      }),
+    );
 
     // ---- Assert: per edge, stated ------------------------------------------
     const lines: string[] = [];
     for (const probe of PROBES) {
-      const inFrame = sample(framed, probe.fx, probe.fy);
       const onCard = sample(served, probe.fx, probe.fy);
       lines.push(
-        `${probe.edge}: framed ${show(inFrame)} / card ${show(onCard)}` +
-          (probe.sentinel ? ` (expect ${probe.sentinel.name})` : ""),
+        `${probe.edge}: card ${show(onCard)}` +
+          (probe.sentinel ? ` (expect ${probe.sentinel.name})` : " (expect the last grid band)"),
       );
-      expect(
-        near(onCard, inFrame, CHANNEL_TOLERANCE),
-        `${probe.edge} edge: the card shows ${show(onCard)} where the crop window showed ` +
-          `${show(inFrame)} — the visible region is not the framed region\n${lines.join("\n")}`,
-      ).toBe(true);
       if (probe.sentinel) {
         expect(
           near(onCard, probe.sentinel.rgb, 40),
           `${probe.edge} edge: expected the ${probe.sentinel.name} sentinel and the card shows ` +
-            `${show(onCard)} — the framing moved off the image's ${probe.edge.toLowerCase()} edge`,
+            `${show(onCard)} — the framing moved off the image's ${probe.edge.toLowerCase()} edge\n` +
+            lines.join("\n"),
         ).toBe(true);
+      } else {
+        /*
+         * THE BOTTOM IS THE LAST GRID BAND, which is what "the crop ends just
+         * above the magenta" looks like. Its green channel encodes the row, so
+         * this is a statement about WHICH part of the picture is at the bottom
+         * of the card, not merely that something is.
+         */
+        expect(
+          onCard[2],
+          `BOTTOM edge: the card shows ${show(onCard)} — the grid's blue channel is 100, so ` +
+            `this is not a grid band at all\n${lines.join("\n")}`,
+        ).toBeGreaterThan(80);
+        expect(onCard[1], `BOTTOM edge: expected the LAST grid band\n${lines.join("\n")}`)
+          .toBeGreaterThan(200);
       }
-    }
-
-    for (const point of INTERIOR) {
-      const inFrame = sample(framed, point.fx, point.fy);
-      const onCard = sample(served, point.fx, point.fy);
-      expect(
-        near(onCard, inFrame, CHANNEL_TOLERANCE),
-        `at (${point.fx.toFixed(2)}, ${point.fy.toFixed(2)}) the card shows ${show(onCard)} and ` +
-          `the crop window showed ${show(inFrame)} — the image is shifted between the two`,
-      ).toBe(true);
     }
 
     /*

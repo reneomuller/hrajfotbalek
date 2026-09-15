@@ -1,5 +1,5 @@
 -- =============================================================================
--- ROUND 35 — credits are seat-denominated, drilled on a 180 CZK fixture.
+-- ROUND 35 v2 — credits are seat-denominated, drilled on a 200 CZK fixture.
 --
 -- Run:  node supabase/tests/run.mjs credits_are_seats
 -- =============================================================================
@@ -57,11 +57,13 @@ end $$;
 
 -- --- fixtures ----------------------------------------------------------------
 
--- THE FIXTURE IS PRICED 180 ON PURPOSE. At 150 the ruling and the old
--- price-based debit are the same number, so a suite built on the ordinary
--- fixture would pass against either behaviour — the `count(*)` trap in a
--- different costume. 180 is a price production actually has, and it is the one
--- the owner named in the acceptance.
+-- THE FIXTURE IS PRICED 200 ON PURPOSE, and the number moved with the ruling.
+-- ~~180, because at 150 the ruling and the old price-based debit were the same
+-- number.~~ 180 IS NOW THE CREDIT RATE, so a fixture at 180 would be the
+-- coincidence this suite exists to avoid — a seat costing one credit and one
+-- game price at once proves nothing about which rule produced it. 200 is a
+-- price no game carries any more, which is exactly what makes it a good probe:
+-- the seat must still cost 180.
 
 insert into auth.users (id, email) values
   ('60000000-0000-0000-0000-0000000000f1', 'cas-a@test.invalid'),
@@ -76,8 +78,8 @@ insert into public.players (id, nickname, email, auth_user_id) values
   ('6fff0000-0000-0000-0000-0000000000f4', 'SeatCreditD', 'cas-d@test.invalid', '60000000-0000-0000-0000-0000000000f4');
 
 insert into public.games (id, venue, starts_at, capacity, price_czk, status) values
-  ('9fff0000-0000-0000-0000-0000000000f1', 'Seat Credit 180', now() + interval '30 hours', 20, 180, 'published'),
-  ('9fff0000-0000-0000-0000-0000000000f2', 'Seat Credit Mixed', now() + interval '31 hours', 20, 180, 'published'),
+  ('9fff0000-0000-0000-0000-0000000000f1', 'Seat Credit 200', now() + interval '30 hours', 20, 200, 'published'),
+  ('9fff0000-0000-0000-0000-0000000000f2', 'Seat Credit Mixed', now() + interval '31 hours', 20, 200, 'published'),
   ('9fff0000-0000-0000-0000-0000000000f3', 'Seat Credit Free', now() + interval '32 hours', 20, 0, 'published');
 
 create function pg_temp.bal(p uuid) returns integer language sql security definer as $$
@@ -96,15 +98,15 @@ $$;
 -- =============================================================================
 
 insert into public.credit_ledger (player_id, delta_czk, reason)
-values ('6fff0000-0000-0000-0000-0000000000f1', 600, 'admin_grant');
+values ('6fff0000-0000-0000-0000-0000000000f1', 720, 'admin_grant');
 
 select pg_temp.act_as('60000000-0000-0000-0000-0000000000f1');
 select public.create_booking('9fff0000-0000-0000-0000-0000000000f1', 'cash');
 reset role;
 
 select pg_temp.ok(
-  pg_temp.bal('6fff0000-0000-0000-0000-0000000000f1') = 450,
-  'ONE SEAT ON A 180 CZK GAME DEBITS 150, not 180',
+  pg_temp.bal('6fff0000-0000-0000-0000-0000000000f1') = 540,
+  'ONE SEAT ON A 200 CZK GAME DEBITS 180 — one credit, not the game price',
   pg_temp.bal('6fff0000-0000-0000-0000-0000000000f1')::text);
 
 select pg_temp.ok(
@@ -120,17 +122,17 @@ select pg_temp.ok(
 
 select pg_temp.ok(
   (pg_temp.bk('9fff0000-0000-0000-0000-0000000000f1',
-              '6fff0000-0000-0000-0000-0000000000f1')).price_czk = 150,
-  'and price_czk is what the booking is WORTH — 150, the credit it cost, not '
-  'the 180 a card would have paid',
+              '6fff0000-0000-0000-0000-0000000000f1')).price_czk = 180,
+  'and price_czk is what the booking is WORTH — 180, the credit it cost, not '
+  'the 200 a card would have paid',
   (pg_temp.bk('9fff0000-0000-0000-0000-0000000000f1',
               '6fff0000-0000-0000-0000-0000000000f1')).price_czk::text);
 
 select pg_temp.ok(
   (select count(*) from public.credit_ledger
     where player_id = '6fff0000-0000-0000-0000-0000000000f1'
-      and reason = 'redemption' and delta_czk = -150) = 1,
-  'the ledger records −150, exactly one credit');
+      and reason = 'redemption' and delta_czk = -180) = 1,
+  'the ledger records −180, exactly one credit');
 
 -- =============================================================================
 -- ADD GUESTS — two guests cost two credits, on the same 180 CZK game
@@ -143,13 +145,13 @@ select public.add_guests_with_credit(
 reset role;
 
 select pg_temp.ok(
-  pg_temp.bal('6fff0000-0000-0000-0000-0000000000f1') = 150,
-  'TWO GUESTS DEBIT 300 — the owner''s acceptance number',
+  pg_temp.bal('6fff0000-0000-0000-0000-0000000000f1') = 180,
+  'TWO GUESTS DEBIT 360 — two credits, whatever the game charges a card',
   pg_temp.bal('6fff0000-0000-0000-0000-0000000000f1')::text);
 
 select pg_temp.ok(
   (pg_temp.bk('9fff0000-0000-0000-0000-0000000000f1',
-              '6fff0000-0000-0000-0000-0000000000f1')).price_czk = 450,
+              '6fff0000-0000-0000-0000-0000000000f1')).price_czk = 540,
   'the booking is now worth three credits',
   (pg_temp.bk('9fff0000-0000-0000-0000-0000000000f1',
               '6fff0000-0000-0000-0000-0000000000f1')).price_czk::text);
@@ -162,18 +164,18 @@ select pg_temp.act_as('60000000-0000-0000-0000-0000000000f1');
 select pg_temp.ok(
   (public.cancel_guests(
      (pg_temp.bk('9fff0000-0000-0000-0000-0000000000f1',
-                 '6fff0000-0000-0000-0000-0000000000f1')).id, 1)).credit_issued_czk = 150,
-  'REMOVING ONE CREDIT-PAID GUEST RETURNS +150 — the owner''s acceptance number');
+                 '6fff0000-0000-0000-0000-0000000000f1')).id, 1)).credit_issued_czk = 180,
+  'REMOVING ONE CREDIT-PAID GUEST RETURNS +180 — exactly one credit');
 reset role;
 
 select pg_temp.ok(
-  pg_temp.bal('6fff0000-0000-0000-0000-0000000000f1') = 300,
+  pg_temp.bal('6fff0000-0000-0000-0000-0000000000f1') = 360,
   'and the balance says so',
   pg_temp.bal('6fff0000-0000-0000-0000-0000000000f1')::text);
 
 select pg_temp.ok(
   (pg_temp.bk('9fff0000-0000-0000-0000-0000000000f1',
-              '6fff0000-0000-0000-0000-0000000000f1')).credit_applied_czk = 300,
+              '6fff0000-0000-0000-0000-0000000000f1')).credit_applied_czk = 360,
   'the booking still holds two credits'' worth',
   (pg_temp.bk('9fff0000-0000-0000-0000-0000000000f1',
               '6fff0000-0000-0000-0000-0000000000f1')).credit_applied_czk::text);
@@ -191,7 +193,7 @@ select pg_temp.ok(
 -- =============================================================================
 
 insert into public.credit_ledger (player_id, delta_czk, reason)
-values ('6fff0000-0000-0000-0000-0000000000f2', 150, 'admin_grant');
+values ('6fff0000-0000-0000-0000-0000000000f2', 180, 'admin_grant');
 
 select pg_temp.act_as('60000000-0000-0000-0000-0000000000f2');
 select public.create_booking('9fff0000-0000-0000-0000-0000000000f2', 'qr', null, null, 2);
@@ -199,14 +201,14 @@ reset role;
 
 select pg_temp.ok(
   (pg_temp.bk('9fff0000-0000-0000-0000-0000000000f2',
-              '6fff0000-0000-0000-0000-0000000000f2')).credit_applied_czk = 150,
+              '6fff0000-0000-0000-0000-0000000000f2')).credit_applied_czk = 180,
   'one credit covers ONE seat and no more — never a slice of the other two',
   (pg_temp.bk('9fff0000-0000-0000-0000-0000000000f2',
               '6fff0000-0000-0000-0000-0000000000f2')).credit_applied_czk::text);
 
 select pg_temp.ok(
   (pg_temp.bk('9fff0000-0000-0000-0000-0000000000f2',
-              '6fff0000-0000-0000-0000-0000000000f2')).price_czk = 150 + 2 * 180,
+              '6fff0000-0000-0000-0000-0000000000f2')).price_czk = 180 + 2 * 200,
   'and the price is one credit seat plus two CARD seats at the game''s own price',
   (pg_temp.bk('9fff0000-0000-0000-0000-0000000000f2',
               '6fff0000-0000-0000-0000-0000000000f2')).price_czk::text);
@@ -221,7 +223,7 @@ select pg_temp.act_as('60000000-0000-0000-0000-0000000000f2');
 select pg_temp.ok(
   (public.cancel_guests(
      (pg_temp.bk('9fff0000-0000-0000-0000-0000000000f2',
-                 '6fff0000-0000-0000-0000-0000000000f2')).id, 1)).credit_issued_czk = 150,
+                 '6fff0000-0000-0000-0000-0000000000f2')).id, 1)).credit_issued_czk = 180,
   'removing one guest from a mixed booking returns the CREDIT seat first — one '
   'whole credit, not a share of a card payment');
 reset role;
@@ -235,7 +237,7 @@ select pg_temp.ok(
 
 select pg_temp.ok(
   (pg_temp.bk('9fff0000-0000-0000-0000-0000000000f2',
-              '6fff0000-0000-0000-0000-0000000000f2')).price_czk = 2 * 180,
+              '6fff0000-0000-0000-0000-0000000000f2')).price_czk = 2 * 200,
   'and what is left is two card seats',
   (pg_temp.bk('9fff0000-0000-0000-0000-0000000000f2',
               '6fff0000-0000-0000-0000-0000000000f2')).price_czk::text);
@@ -246,14 +248,14 @@ select pg_temp.ok(
 -- =============================================================================
 
 insert into public.credit_ledger (player_id, delta_czk, reason)
-values ('6fff0000-0000-0000-0000-0000000000f3', 300, 'admin_grant');
+values ('6fff0000-0000-0000-0000-0000000000f3', 360, 'admin_grant');
 
 select pg_temp.act_as('60000000-0000-0000-0000-0000000000f3');
 select public.create_booking('9fff0000-0000-0000-0000-0000000000f3', 'cash');
 reset role;
 
 select pg_temp.ok(
-  pg_temp.bal('6fff0000-0000-0000-0000-0000000000f3') = 300,
+  pg_temp.bal('6fff0000-0000-0000-0000-0000000000f3') = 360,
   'a game priced at zero takes no credit',
   pg_temp.bal('6fff0000-0000-0000-0000-0000000000f3')::text);
 
@@ -267,8 +269,8 @@ reset role;
 
 select pg_temp.ok(
   (pg_temp.bk('9fff0000-0000-0000-0000-0000000000f1',
-              '6fff0000-0000-0000-0000-0000000000f4')).price_czk = 2 * 180,
-  'WITHOUT CREDIT NOTHING CHANGES — two seats at the game''s own 180',
+              '6fff0000-0000-0000-0000-0000000000f4')).price_czk = 2 * 200,
+  'WITHOUT CREDIT NOTHING CHANGES — two seats at the game''s own 200',
   (pg_temp.bk('9fff0000-0000-0000-0000-0000000000f1',
               '6fff0000-0000-0000-0000-0000000000f4')).price_czk::text);
 

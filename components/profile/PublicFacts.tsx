@@ -57,7 +57,7 @@ export function PublicFacts({
       label: t.profile.nationality,
       value: (
         <span className="flex items-center gap-2">
-          <CountryFlag code={country} width={18} />
+          <CountryFlag code={country} size="profile" />
           <span>{countryName(country, locale)}</span>
         </span>
       ),

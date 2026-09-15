@@ -1,4 +1,5 @@
 import { createServiceRoleSupabaseClient } from "@/lib/supabase/clients";
+import { countSeatsTaken } from "@/lib/admin/queries";
 import { financialBounds, type PeriodBounds } from "@/lib/admin/financials";
 
 /**
@@ -106,23 +107,18 @@ export async function getAdminDashboard(): Promise<AdminDashboard> {
    * whose entire job is to load fast.
    */
   const ids = rowsRaw.map((g) => g.id);
-  const [bookings, organizers] = await Promise.all([
+  const [booked, organizers] = await Promise.all([
     /*
-     * SEATS, FROM THE DATABASE'S OWN COUNTER (round 35, item 2).
+     * SEATS, THROUGH THE ONE COUNTER (round 35, item 5).
      *
-     * ~~`select game_id,status from bookings where status in (…)`, one per
-     * row.~~ That counted BOOKINGS. A party of three is one row and three
-     * seats, and the game's own house guests are not rows at all — so this
-     * dashboard showed every pitch emptier than it was, on the page whose job
-     * is to tell the organizer whether a game needs more people.
-     *
-     * It was the third site with the same miss; `lib/admin/queries.ts` had the
-     * other two. All three now ask `game_seats_taken`, which is the authority
-     * `create_booking` refuses against.
+     * ~~A `bookings` query of its own, counting rows.~~ That was the third site
+     * with the same miss — a party of three read as 1 and the game's own house
+     * guests were not rows at all — and replacing it with a private copy of the
+     * fix would have been a fourth. `countSeatsTaken` is the games list's, RPC
+     * first and seat arithmetic as the bridge, so this page cannot drift from
+     * that one again.
      */
-    ids.length
-      ? service.rpc("game_seats_taken_many", { p_game_ids: ids })
-      : Promise.resolve({ data: [] as { game_id: string; seats_taken: number }[] }),
+    countSeatsTaken(ids),
     ids.length
       ? service
           .from("game_organizer_contacts")
@@ -131,10 +127,6 @@ export async function getAdminDashboard(): Promise<AdminDashboard> {
       : Promise.resolve({ data: [] as { game_id: string; organizer_name: string }[] }),
   ]);
 
-  const booked = new Map<string, number>();
-  for (const b of (bookings.data ?? []) as { game_id: string; seats_taken: number }[]) {
-    booked.set(b.game_id, b.seats_taken);
-  }
   const organizerOf = new Map(
     (organizers.data ?? []).map((o) => [o.game_id, o.organizer_name]),
   );

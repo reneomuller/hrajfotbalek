@@ -1,3 +1,4 @@
+import { PASS_REFERENCE_PRICE_CZK } from "../lib/pass/creditPrice";
 import { expect, test } from "@playwright/test";
 import { apiClientFor, players, serviceClient, signInAs } from "./helpers/session.ts";
 import { setWalletTo, walletBalance } from "./helpers/scaffold.ts";
@@ -27,7 +28,7 @@ test("a top-up is requested, shows a QR, and is not money until confirmed", asyn
   context,
 }) => {
   const runner = await apiClientFor(players.runner);
-  const { data: topup, error } = await runner.rpc("create_topup", { p_amount_czk: 300 });
+  const { data: topup, error } = await runner.rpc("create_topup", { p_amount_czk: 2 * PASS_REFERENCE_PRICE_CZK });
   expect(error).toBeNull();
   expect(topup.status).toBe("pending");
 
@@ -68,18 +69,18 @@ test("a top-up is requested, shows a QR, and is not money until confirmed", asyn
  */
 test("a confirmed top-up credits what actually arrived", async () => {
   const runner = await apiClientFor(players.runner);
-  const { data: topup } = await runner.rpc("create_topup", { p_amount_czk: 300 });
+  const { data: topup } = await runner.rpc("create_topup", { p_amount_czk: 2 * PASS_REFERENCE_PRICE_CZK });
 
   const service = serviceClient();
   const { error } = await service.rpc("confirm_topup", {
     p_topup_id: topup.id,
     p_confirmed_by: players.organizer.id,
-    p_received_amount_czk: 300,
+    p_received_amount_czk: 2 * PASS_REFERENCE_PRICE_CZK,
   });
   expect(error).toBeNull();
 
   await expect(async () => {
-    expect(await walletBalance(players.runner.id)).toBe(300);
+    expect(await walletBalance(players.runner.id)).toBe(2 * PASS_REFERENCE_PRICE_CZK);
   }).toPass();
 
   // ...and THIS top-up is the one that moved: asserted on its own row rather
@@ -92,7 +93,7 @@ test("a confirmed top-up credits what actually arrived", async () => {
     .eq("id", topup.id)
     .maybeSingle();
   expect(confirmedTopup?.status).toBe("confirmed");
-  expect(confirmedTopup?.received_amount_czk).toBe(300);
+  expect(confirmedTopup?.received_amount_czk).toBe(2 * PASS_REFERENCE_PRICE_CZK);
   expect(confirmedTopup?.confirmed_at).not.toBeNull();
 });
 
@@ -132,10 +133,14 @@ test("topped-up credit spends on the next booking", async ({ page, context }) =>
   await page.goto("/account");
   // `formatCzk` groups thousands for the display locale — "2,000 CZK", not
   // "2000". Asserting the raw digits would be asserting a formatter bug.
-  // The wallet counts CREDITS and prints no crown figure: 2,000 / 150 floors
-  // to 13. The crowns are asserted against the ledger by `walletBalance`
-  // elsewhere; this screen's job is to say how many games that is.
-  await expect(page.getByTestId("credit-balance")).toContainText("13");
+  // The wallet counts CREDITS and prints no crown figure: 2,000 floors to
+  // whatever the rate divides into it — 11 at 180. Written as the arithmetic
+  // rather than as a literal, because the number moving IS the reprice. The
+  // crowns are asserted against the ledger by `walletBalance` elsewhere; this
+  // screen's job is to say how many games that is.
+  await expect(page.getByTestId("credit-balance")).toContainText(
+    String(Math.floor(2000 / PASS_REFERENCE_PRICE_CZK)),
+  );
   await expect(page.getByTestId("credit-balance-czk")).toHaveCount(0);
 });
 

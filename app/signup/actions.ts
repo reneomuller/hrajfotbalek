@@ -211,6 +211,18 @@ export async function writeProfileFromMetadata(): Promise<ProfileWriteResult> {
   });
 
   if (error) {
+    /*
+     * A BANNED NUMBER, SAID PLAINLY (round 35 v2, item 8).
+     *
+     * IT NAMES THE FIELD, so the message lands on the phone input rather than
+     * at the top of the form as a general failure. What it deliberately does
+     * NOT do is explain: "this number cannot be used" is the whole of what a
+     * person needs, and a sentence about being banned invites an argument the
+     * form cannot have.
+     */
+    if (error.message.includes("PHONE_BANNED")) {
+      return { ok: false, field: "phone", message: t.auth.phoneRefused };
+    }
     if (error.message.includes("NICKNAME_TAKEN")) {
       return { ok: false, field: "nickname", message: t.auth.nicknameTaken };
     }
@@ -274,6 +286,23 @@ export async function finishSignup(
   });
 
   if (error) {
+    /*
+     * A BANNED NUMBER, SAID PLAINLY (round 35 v2, item 8).
+     *
+     * IT NAMES THE FIELD, so the message lands on the phone input rather than
+     * at the top of the form as a general failure. What it deliberately does
+     * NOT do is explain: "this number cannot be used" is the whole of what a
+     * person needs, and a sentence about being banned invites an argument the
+     * form cannot have.
+     */
+    if (error.message.includes("PHONE_BANNED")) {
+      return {
+        status: "error",
+        field: "phone",
+        message: t.auth.phoneRefused,
+        values: submittedValues(formData),
+      };
+    }
     if (error.message.includes("NICKNAME_TAKEN")) {
       return {
         status: "error",

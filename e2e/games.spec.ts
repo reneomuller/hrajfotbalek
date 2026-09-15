@@ -1,3 +1,4 @@
+import { PASS_REFERENCE_PRICE_CZK } from "../lib/pass/creditPrice";
 import { expect, test } from "@playwright/test";
 import { createScratchGame, destroyScratchGame, setWalletTo } from "./helpers/scaffold.ts";
 import { anonClient, apiClientFor, players, serviceClient, signInAs } from "./helpers/session.ts";
@@ -883,7 +884,7 @@ test("a card carries venue, time, format, surface, bar and spots — no price, n
 
     /*
      * THE PRICE IS ON THE CARD AGAIN, reversing v1.2 §5.5 — it came off for
-     * distinguishing nothing, and it is back because `150 CZK / 1 credit` is
+     * distinguishing nothing, and it is back because `180 CZK / 1 credit` is
      * how a reader learns what a credit is worth, on the surface where they
      * decide whether a pass is worth buying.
      *
@@ -1415,20 +1416,22 @@ test("a venue's own photo backs its games on the list and the detail alike", asy
 /*
  * THE FLAT-150 CASE, ON THE CLAIM BAR — where the layout law puts it.
  *
- * The card used to carry `150 CZK / 1 credit`; the law moves it to the bar,
+ * The card used to carry the equivalence; the law moves it to the bar,
  * on the reasoning that a figure identical across eight rows teaches nothing
  * while scanning and everything at the moment of commitment.
  */
-test("the claim bar shows the credit equivalence at 150, and not at any other price", async ({
+test("the claim bar shows the credit equivalence at the rate, and not at any other price", async ({
   page,
 }) => {
-  const flat = await createScratchGame({ hoursFromNow: 24 * 5, priceCzk: 150 });
+  const flat = await createScratchGame({ hoursFromNow: 24 * 5, priceCzk: PASS_REFERENCE_PRICE_CZK });
   const other = await createScratchGame({ hoursFromNow: 24 * 5 + 1, priceCzk: 200 });
 
   try {
     await page.goto(`/game/${flat.id}`);
     const bar = page.getByTestId("claim-bar");
-    await expect(bar.getByTestId("claim-bar-price")).toContainText("150");
+    await expect(bar.getByTestId("claim-bar-price")).toContainText(
+      String(PASS_REFERENCE_PRICE_CZK),
+    );
     await expect(bar.getByTestId("claim-bar-price-credit")).toContainText("1");
 
     // 200 is not one credit, and the bar declines to guess what it is —

@@ -295,6 +295,8 @@ export const strings = {
     nicknameHint: "Letters, numbers, spaces, _ and - · up to 20 characters",
     nicknameInvalid:
       "Use only letters, numbers, spaces, _ and - (up to 20 characters).",
+    /* Round 35 v2, item 8 — a banned number, said without an argument. */
+    phoneRefused: "That phone number cannot be used. Try another, or contact us.",
     nicknameTaken: "That nickname is taken. Try another.",
 
     passwordLabel: "Password",
@@ -1818,6 +1820,23 @@ export const strings = {
      * The confirm says what changes and what does not: a rename is visible to
      * everyone who has ever played with them, and it is not a deletion.
      */
+    /* --- round 35 v2, item 8: the ban ---------------------------------------
+     *
+     * DESTRUCTIVE AND SAID SO. The confirm names all three things a ban does,
+     * because two of them are invisible from this page: the seats going and the
+     * phone number being refused at signup. A dialog that said only "ban this
+     * player?" would be asking about a third of the act.
+     */
+    banPlayer: "Ban profile",
+    unbanPlayer: "Unban profile",
+    banned: "Banned",
+    banConfirm:
+      "Ban this player? They cannot sign in or act, their phone number is refused at signup, and every future booking is cancelled with the seats released. Past games keep their history and their credits are frozen, not taken.",
+    unbanConfirm:
+      "Unban this player? Access comes back and the phone number is freed. Bookings cancelled by the ban stay cancelled.",
+    banDone: "Profile banned",
+    unbanDone: "Profile unbanned",
+    banCannotAdmin: "An admin cannot be banned. Remove their admin rights first.",
     nameChange: "Change name",
     nameChangeOpen: "Change name",
     nameChangeLabel: "Display name",

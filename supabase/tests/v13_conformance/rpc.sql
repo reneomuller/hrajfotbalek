@@ -354,7 +354,7 @@ select pg_temp.ok(
 
 -- A legitimate one, kept for the assertions below.
 select set_config('rpc.topup_ordinary',
-  (select (public.create_topup(700)).id::text), true);
+  (select (public.create_topup(840)).id::text), true);
 
 -- Back to postgres for these two: `authenticated` has no grant on `events` at
 -- all (by design — the log is not a client surface), and the suite would die
@@ -409,11 +409,11 @@ set local role authenticated;
 select set_config('request.jwt.claims',
   json_build_object('sub', current_setting('rpc.p2'))::text, true);
 select pg_temp.ok(
-  pg_temp.why(format($q$select public.confirm_topup(%L::uuid, %L::uuid, 700)$q$,
+  pg_temp.why(format($q$select public.confirm_topup(%L::uuid, %L::uuid, 840)$q$,
                      current_setting('rpc.topup_ordinary'),
                      current_setting('rpc.p2_player'))) = 'INSUFFICIENT_PERMISSION',
   'the payer cannot confirm their own top-up',
-  pg_temp.why(format($q$select public.confirm_topup(%L::uuid, %L::uuid, 700)$q$,
+  pg_temp.why(format($q$select public.confirm_topup(%L::uuid, %L::uuid, 840)$q$,
                      current_setting('rpc.topup_ordinary'),
                      current_setting('rpc.p2_player'))));
 reset role;
@@ -429,7 +429,7 @@ select set_config('request.jwt.claims', '', true);
 -- crediting the 8-pass value would hand over 450 CZK on a coincidence.
 --
 -- Asserted on both halves, because each alone would produce a plausible bug:
--- amount-only turns an ordinary 700 into a pass, and intent-only credits a
+-- amount-only turns an ordinary 840 into a pass, and intent-only credits a
 -- 690 near-miss as though it were exact.
 -- =============================================================================
 
@@ -447,9 +447,9 @@ select set_config('request.jwt.claims',
 
 -- Half one: intent present, amount exact -> tier value, WITH an expiry.
 select pg_temp.ok(
-  pg_temp.why(format($q$select public.confirm_topup(%L::uuid, null, 700)$q$,
+  pg_temp.why(format($q$select public.confirm_topup(%L::uuid, null, 840)$q$,
                      current_setting('rpc.topup_pass'))) = 'ok',
-  'an admin confirms the 5-pass top-up at exactly 700');
+  'an admin confirms the 5-pass top-up at exactly 840');
 
 /*
  * Back to postgres to READ the ledger.
@@ -466,8 +466,8 @@ select pg_temp.ok(
   (select delta_czk from public.credit_ledger
     where reason = 'topup' and expires_at is not null
       and player_id = current_setting('rpc.p2_player')::uuid
-    order by created_at desc limit 1) = 750,
-  'a 5-pass paid at exactly 700 credits the tier value of 750',
+    order by created_at desc limit 1) = 900,
+  'a 5-pass paid at exactly 840 credits the tier value of 900',
   (select coalesce((select delta_czk::text from public.credit_ledger
      where reason = 'topup' and expires_at is not null
        and player_id = current_setting('rpc.p2_player')::uuid
@@ -486,9 +486,9 @@ select set_config('request.jwt.claims',
   json_build_object('sub', current_setting('rpc.p1'))::text, true);
 
 select pg_temp.ok(
-  pg_temp.why(format($q$select public.confirm_topup(%L::uuid, null, 700)$q$,
+  pg_temp.why(format($q$select public.confirm_topup(%L::uuid, null, 840)$q$,
                      current_setting('rpc.topup_ordinary'))) = 'ok',
-  'an admin confirms the ordinary 700 top-up');
+  'an admin confirms the ordinary 840 top-up');
 
 reset role;
 select set_config('request.jwt.claims', '', true);
@@ -497,8 +497,8 @@ select pg_temp.ok(
   (select delta_czk from public.credit_ledger
     where reason = 'topup' and expires_at is null
       and player_id = current_setting('rpc.p2_player')::uuid
-    order by created_at desc limit 1) = 700,
-  'an ORDINARY 700 credits 700, never 750 — the amount alone is not enough',
+    order by created_at desc limit 1) = 840,
+  'an ORDINARY 840 credits 840, never 900 — the amount alone is not enough',
   (select coalesce((select delta_czk::text from public.credit_ledger
      where reason = 'topup' and expires_at is null
        and player_id = current_setting('rpc.p2_player')::uuid
@@ -508,7 +508,7 @@ reset role;
 select set_config('request.jwt.claims', '', true);
 
 /*
- * The near-miss half — 690 against a 700 pass — is asserted end to end in
+ * The near-miss half — a few crowns short of a pass — is asserted end to end in
  * e2e/pass.spec.ts ("a near-miss payment credits what arrived, with no
  * expiry") rather than duplicated here. It needs a second pass top-up and a
  * second confirm against the same player, and the ledger assertions above

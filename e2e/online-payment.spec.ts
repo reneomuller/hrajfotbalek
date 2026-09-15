@@ -1,3 +1,4 @@
+import { PASS_REFERENCE_PRICE_CZK } from "../lib/pass/creditPrice";
 import { expect, test } from "@playwright/test";
 import { createHmac } from "node:crypto";
 import { LOCALE_COOKIE } from "../lib/i18n/locales";
@@ -28,7 +29,7 @@ import {
 
 test.use({ viewport: { width: 390, height: 844 } });
 
-const PRICE = 150;
+const PRICE = PASS_REFERENCE_PRICE_CZK;
 const SECRET = process.env.STRIPE_WEBHOOK_SECRET ?? "";
 
 function signedEvent(sessionId: string, bookingId: string, amountMinor: number) {
@@ -220,7 +221,7 @@ test("an underpayment is flagged for a human, never seated", async ({ request })
     });
     const bookingId = (booking as { id: string }).id;
 
-    // A party of three owes 450; this pays for one. The realistic cause is
+    // A party of three owes three seats; this pays for one. The realistic cause is
     // "adjustable quantity" left at 1 on the payment link.
     const { payload, header } = signedEvent("cs_e2e_short", bookingId, PRICE * 100);
     const response = await request.post("/api/stripe/webhook", {
@@ -238,7 +239,7 @@ test("an underpayment is flagged for a human, never seated", async ({ request })
       .single();
     expect(after?.status, "an underpaid party is not confirmed").toBe("reserved");
     expect(after?.payment_attention_at).not.toBeNull();
-    expect(after?.payment_attention_reason).toContain("150");
+    expect(after?.payment_attention_reason).toContain(String(PASS_REFERENCE_PRICE_CZK));
   } finally {
     await clearActiveBookings("runner");
     await destroyScratchGame(game.id);

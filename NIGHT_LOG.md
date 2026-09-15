@@ -7,6 +7,76 @@ way that nobody asked about.
 
 ---
 
+## Round 35 v2 — 2026-09-15/16
+
+Nine items, three of which arrived mid-round. All nine done. The pre-launch
+ruling — unpublished site, test data, no ceremony — is what made most of them
+short.
+
+### The lead: the price was in four places, and one was a CHECK constraint
+
+The owner asked for one source and an audit for a second copy. There were three
+besides it. The declared source, the SQL function, an unused `TOPUP_PRESETS =
+[150, 300, 450]`, and `pass_tiers_credited_rule` — a CHECK spelling 150 as a
+literal, which I had looked straight at the round before and left alone. A
+literal in a constraint is the worst kind: it does not fail when the price
+moves, it fails the next time somebody inserts, naming a constraint rather than
+a price.
+
+### And the thing I have to lead the report with
+
+Item 5 was reported as "the admin count is entirely stale — updates on NEITHER
+bookings NOR guests". It was not stale. **It was zero, and I shipped it.** Round
+35 v1 routed all three admin counts through an RPC created by a migration the
+owner had not applied, and the error path returned an empty map. Deployed hours
+before the report. Same family as the missing-GRANT trap: a read that comes back
+empty looks like missing data rather than a missing function. It now falls back
+to the arithmetic rather than to nothing.
+
+### Three things the suites caught that I would not have
+
+**The conformance suite refused my first delete fix.** v1.3's rule is that no
+function anywhere hard-deletes a booking, asserted by scanning `prosrc`. My fix
+deleted the cancelled rows by hand — to do something the database was already
+doing, since every foreign key pointing at `games` cascades. The extra half came
+out and the verification now asserts its absence.
+
+**A guard against a vacuous assertion became vacuous.** `v13_conformance/schema_b`
+checked that admin-grant rows exist so the assertion above it is not empty; the
+wallet reset emptied the ledger. It now creates its own row, which is the lesson
+it was written to teach.
+
+**And `crop-truth` had been reading pixels next to a ring.** It compared a
+screenshot of the crop window against the card; the window carries a `ring-2`
+over a dimmed copy of the same photograph, so samples near the edge landed on
+whichever of the three a device pixel decided. It accused a correct product of
+the exact bug it exists to catch. The proof now rests on the card's pixels
+against sentinels 150px thick.
+
+### The environment fought back, and some of that was mine
+
+Docker died four times. The cause was a container from an unrelated project
+(`twenty-server-1`) that publishes port 3000 and is restored on every Docker
+start — so Playwright could not bind, and my `kill` on whatever held 3000 was
+killing Docker itself. Stopped for the run and **restarted afterwards**. Worth
+knowing before assuming the repo is at fault.
+
+### Suites
+
+Unit 763/763 · SQL 47/47 · lint 0 errors · tsc clean. E2E result and the
+deployment id are in the round's final commit message. `pgtap` had to be
+reinstalled after the local stack was rebuilt — `create extension pgtap` — which
+is a local-stack fact rather than a repo one.
+
+### Still owed by the owner
+
+Rows 184, 188, **261** (the 28 unsettled Stripe sessions — still the one thing
+that needs a human) and **296** (the top-up rows that now disagree with an empty
+ledger). Round 35 v2's four migrations were applied by me on a one-time
+authorization; the Oliver-applies rule stands.
+
+---
+
 ## Round 35 — 2026-09-15
 
 A ruling and two items that arrived mid-round. All three done.

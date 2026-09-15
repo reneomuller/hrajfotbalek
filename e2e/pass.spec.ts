@@ -46,11 +46,11 @@ test("the pass page lists every tier with its saving and its expiry", async ({ p
    * after both.
    */
   const five = page.locator('[data-testid="pass-tier"][data-games="5"]');
-  await expect(five.getByTestId("pass-tier-per-game")).toContainText("140");
-  await expect(five.getByTestId("pass-tier-price")).toContainText("700");
-  // 5 x 150. NOT `credited_czk` (750 here by coincidence of this tier) — the
+  await expect(five.getByTestId("pass-tier-per-game")).toContainText("168");
+  await expect(five.getByTestId("pass-tier-price")).toContainText("840");
+  // 5 x the rate. NOT `credited_czk` (900 here, equal by construction) — the
   // anchor is what the games would have cost, which is a different claim.
-  await expect(five.getByTestId("pass-tier-anchor")).toContainText("750");
+  await expect(five.getByTestId("pass-tier-anchor")).toContainText("900");
   // Whole percent, rounded to nearest (owner's call): 6.66… renders as 7.
   await expect(five.getByTestId("pass-tier-discount")).toContainText("7");
   // The window is stated in DAYS now, derived from the tier's `expires_months`
@@ -61,7 +61,7 @@ test("the pass page lists every tier with its saving and its expiry", async ({ p
   // The 20-pass, where the anchor and the credited value genuinely diverge:
   // 20 x 150 = 3,000 against a 2,300 price.
   const twenty = page.locator('[data-testid="pass-tier"][data-games="20"]');
-  await expect(twenty.getByTestId("pass-tier-anchor")).toContainText("3,000");
+  await expect(twenty.getByTestId("pass-tier-anchor")).toContainText("3,600");
   // Whole percent, rounded to nearest: 23.33… renders as 23.
   await expect(twenty.getByTestId("pass-tier-discount")).toContainText("23");
 
@@ -195,7 +195,7 @@ test("the webhook credits a pass purchase through the existing ledger path", asy
       p_pass_games: 5,
     });
     expect(startError).toBeNull();
-    expect(topup!.amount_czk).toBe(700);
+    expect(topup!.amount_czk).toBe(840);
     expect(topup!.pass_games).toBe(5);
     // The 27-series is what lets a bank statement tell a top-up from a
     // booking. It survives the rail change: it is the permanent identifier of
@@ -210,23 +210,23 @@ test("the webhook credits a pass purchase through the existing ledger path", asy
     const { data: outcome, error } = await admin.rpc("confirm_online_purchase", {
       p_reference: topup!.id,
       p_session_id: "cs_pass_e2e_1",
-      p_amount_czk: 700,
+      p_amount_czk: 840,
     });
     expect(error).toBeNull();
     expect(outcome).toBe("confirmed");
 
     // The PASS VALUE, not the price paid — `confirm_topup` owns that rule and
     // the webhook did not have to know it.
-    expect(await balanceOf(players.creditPartial.id)).toBe(750);
+    expect(await balanceOf(players.creditPartial.id)).toBe(900);
 
     // Redelivery is a no-op, so a retried webhook cannot credit twice.
     const { data: again } = await admin.rpc("confirm_online_purchase", {
       p_reference: topup!.id,
       p_session_id: "cs_pass_e2e_1",
-      p_amount_czk: 700,
+      p_amount_czk: 840,
     });
     expect(again).toBe("already");
-    expect(await balanceOf(players.creditPartial.id)).toBe(750);
+    expect(await balanceOf(players.creditPartial.id)).toBe(900);
   } finally {
     await clearWallet(players.creditPartial.id);
   }
@@ -279,7 +279,7 @@ test("pass credit books a game and a cancellation returns it to its batch", asyn
     await admin.rpc("confirm_topup", {
       p_topup_id: topup!.id,
       p_confirmed_by: players.organizer.id,
-      p_received_amount_czk: 700,
+      p_received_amount_czk: 840,
     });
     await admin.rpc("grant_credit", {
       p_player_id: players.creditPartial.id,
@@ -287,7 +287,7 @@ test("pass credit books a game and a cancellation returns it to its batch", asyn
       p_note: "pass spec — ordinary credit",
     });
 
-    expect(await balanceOf(players.creditPartial.id)).toBe(1250);
+    expect(await balanceOf(players.creditPartial.id)).toBe(1400);
 
     const { data: booking, error } = await player.rpc("create_booking", {
       p_game_id: game.id,
@@ -306,7 +306,7 @@ test("pass credit books a game and a cancellation returns it to its batch", asyn
     const { data: batchRows } = await admin.rpc("credit_batches", {
       p_player_id: players.creditPartial.id,
     });
-    expect(batchRows![0].remaining_czk).toBe(750 - PASS_REFERENCE_PRICE_CZK);
+    expect(batchRows![0].remaining_czk).toBe(900 - PASS_REFERENCE_PRICE_CZK);
 
     // Cancel: it goes back to the batch, with the batch's expiry.
     const { error: cancelError } = await player.rpc("cancel_booking", {
@@ -317,8 +317,8 @@ test("pass credit books a game and a cancellation returns it to its batch", asyn
     const { data: after } = await admin.rpc("credit_batches", {
       p_player_id: players.creditPartial.id,
     });
-    expect(after![0].remaining_czk).toBe(750);
-    expect(await balanceOf(players.creditPartial.id)).toBe(1250);
+    expect(after![0].remaining_czk).toBe(900);
+    expect(await balanceOf(players.creditPartial.id)).toBe(1400);
 
     // And nothing became never-expiring credit — that is the laundering route
     // §4.2 closes.
@@ -364,7 +364,7 @@ test("the cron route warns once and expires once", async ({ request }) => {
     await admin.rpc("confirm_topup", {
       p_topup_id: topup!.id,
       p_confirmed_by: players.organizer.id,
-      p_received_amount_czk: 700,
+      p_received_amount_czk: 840,
     });
 
     const { data: row } = await admin
@@ -420,9 +420,9 @@ async function balanceOf(playerId: string): Promise<number> {
  * THE CLARIFIED KEYING (§4.2, ruled 2026-08-02) — intent AND amount.
  *
  * Asserted through the ORDINARY TOP-UP PATH, because that is where the harm
- * would land: free entry admits 50–2000, so a player typing 700 into the
+ * would land: free entry admits 50–2000, so a player typing 840 into the
  * top-up form is entirely plausible. Under amount-only keying they would have
- * received 750 CZK carrying a one-month expiry they never agreed to — money
+ * received 900 CZK carrying a one-month expiry they never agreed to — money
  * they meant to keep, quietly converted into money that runs out.
  */
 test("an ordinary top-up of a tier amount is credited as typed, with no expiry", async () => {
@@ -432,7 +432,7 @@ test("an ordinary top-up of a tier amount is credited as typed, with no expiry",
     const player = await apiClientFor(players.creditPartial);
     // The ordinary RPC, no tier — exactly what the top-up form calls.
     const { data: topup, error: createError } = await player.rpc("create_topup", {
-      p_amount_czk: 700,
+      p_amount_czk: 840,
     });
     expect(createError).toBeNull();
     expect(topup!.pass_games).toBeNull();
@@ -441,12 +441,12 @@ test("an ordinary top-up of a tier amount is credited as typed, with no expiry",
     const { data: result } = await admin.rpc("confirm_topup", {
       p_topup_id: topup!.id,
       p_confirmed_by: players.organizer.id,
-      p_received_amount_czk: 700,
+      p_received_amount_czk: 840,
     });
 
-    // 700, never 750.
-    expect(result!.credited_czk).toBe(700);
-    expect(await balanceOf(players.creditPartial.id)).toBe(700);
+    // 840, never 900.
+    expect(result!.credited_czk).toBe(840);
+    expect(await balanceOf(players.creditPartial.id)).toBe(840);
 
     // And nothing expires.
     const { data: batches } = await admin
@@ -461,10 +461,10 @@ test("an ordinary top-up of a tier amount is credited as typed, with no expiry",
 });
 
 /*
- * The counterpart, so the pair reads as one rule: the SAME 700, against a
- * chosen 5-pass, still credits 750 with an expiry.
+ * The counterpart, so the pair reads as one rule: the SAME 840, against a
+ * chosen 5-pass, still credits 900 with an expiry.
  */
-test("a chosen 5-pass received at 700 still credits 750 with an expiry", async () => {
+test("a chosen 5-pass received at 840 still credits 900 with an expiry", async () => {
   await clearWallet(players.creditPartial.id);
 
   try {
@@ -476,10 +476,10 @@ test("a chosen 5-pass received at 700 still credits 750 with an expiry", async (
     const { data: result } = await admin.rpc("confirm_topup", {
       p_topup_id: topup!.id,
       p_confirmed_by: players.organizer.id,
-      p_received_amount_czk: 700,
+      p_received_amount_czk: 840,
     });
 
-    expect(result!.credited_czk).toBe(750);
+    expect(result!.credited_czk).toBe(900);
 
     const { data: batches } = await admin
       .from("credit_ledger")

@@ -132,7 +132,7 @@ export function AddGuestsPanel({
         item 2). Credits when the balance covers it, crowns when it does not and
         the online rail is what is left — because the number has to be one the
         player can check against something they hold. "300 CZK" beside a credit
-        button asks them to divide by 150 before they know whether they can
+        button asks them to divide by the seat price before they know whether they can
         afford it.
       */}
       <p
