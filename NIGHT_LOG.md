@@ -49,6 +49,15 @@ INVOKER function writes state" listed the whole extension. They filter on
 `pg_depend` now; they had only ever been correct by accident of where the
 extension happened to live.
 
+### The reset had to happen twice
+
+v2 zeroed every wallet on the 15th and it was true when it ran. By the 16th the
+owner had been exercising the product — two grants noted "TEST" and "asdasda" —
+and two wallets held 1,620 and 2,520. Item 2 asked again rather than assuming,
+so it went in as its own migration: a reset that happens twice will happen a
+third time, and a file is the difference between "the wallets are empty" and
+"somebody emptied them, on this date, for this reason".
+
 ### Suites
 
 Unit 768/768 · SQL 48/48 · lint 0 errors · tsc clean. E2E result and the

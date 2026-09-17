@@ -433,6 +433,8 @@ round 13 added is item 2's reversal and a re-verification of item 3.
 | 316 | *Found by installing pgTAP.* **Two conformance scans were reading an extension's functions as ours** | `SHIPPED round-35 v5`. `create extension pgtap` puts several hundred helpers into `public`, and `v13_conformance/security.sql` began reporting every one of them — "no SECURITY INVOKER function writes state" listed the whole of pgTAP. The assertions are about code we wrote; `pg_depend` tells them apart by extension ownership, which is more honest than a name list that goes stale the first time pgTAP adds a helper. **The scans were only ever correct by accident of where the extension happened to live** |
 | 317 | **(R35v5-3) The pass table — unchanged from v2 and re-verified** | `SHIPPED round-35 v2, verified round-35 v5`. 5 = 840 · 8 = 1,296 · 12 = 1,879 · 15 = 2,241 · 20 = 2,772, anchored at `games x 180`. The percentages are computed from the two numbers beside them and are not stored. `/pass` renders all five prices and all five discounts on production |
 | 318 | **Apply round 35 v5's migration** | `APPLIED BY ME on the owner's one-time overnight authorization` — `20260917100000_duration_pricing.sql`. The Oliver-applies rule stands for every future round |
+| 319 | *The reset, done twice, which is why it is a file.* **Two wallets had refilled since v2** | `SHIPPED round-35 v5`. v2 zeroed every balance on 2026-09-15 and it was true when it ran; by the 16th the owner had exercised the product — two admin grants noted **"TEST"** and **"asdasda"**, some bookings, some cancellations — leaving 1,620 and 2,520 CZK in two wallets. Item 2 asked for the reset again rather than assuming the last one held, so it is `20260917110000_wallet_reset.sql` rather than a statement somebody runs: **a reset that happens twice will happen a third time**, and a file is the difference between "the wallets are empty" and "somebody emptied them, here, on this date, for this reason". Method unchanged and stated: delete every ledger row, and zero `bookings.credit_applied_czk` with it, because that column is a claim the ledger no longer backs |
+| 320 | *What could not be verified live, stated rather than implied.* **There is no published 60-minute game on production** | `OPEN — informational`. The end-state check confirms a 90-minute game serves 180 and the pass page serves all five prices; the 60-minute half is proved in the SQL drill and in `e2e/round35v5.spec.ts`, not on production, because no published game of that length exists yet. The seventeen 60-minute games are all past. **The first short game the owner publishes is the real check**, and it needs nothing from me |
 
 ---
 
@@ -539,6 +541,8 @@ variable — see CLAUDE.md on why implicitness is what failed.
 ```bash
 node scripts/apply-migration.mjs \
   supabase/migrations/20260917100000_duration_pricing.sql --production
+node scripts/apply-migration.mjs \
+  supabase/migrations/20260917110000_wallet_reset.sql --production
 ```
 
 One file, and it is the last of the round-35 sequence. It creates
