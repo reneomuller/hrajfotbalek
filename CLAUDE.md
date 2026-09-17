@@ -299,6 +299,72 @@ list, and `pg_proc` will happily hold two functions with one name and opposite
 behaviour.** Before substituting into a writer, check which overload the app
 imports; and pin the other one as an ABSENCE so the two cannot silently diverge.
 
+**THE FUNCTION RAN IN WASHINGTON AND THE DATABASE IS IN IRELAND.** For every
+round before 37, `x-vercel-id` read `fra1::iad1` — served from Frankfurt,
+EXECUTED in Virginia — while Supabase is `aws-0-eu-west-1`. A page makes 10-17
+database round trips and every one of them crossed the Atlantic twice. One line,
+`"regions": ["dub1"]` in `vercel.json`, took the home page's TTFB from a 1.40s
+median to 0.37s. **`x-vercel-id` is `<edge>::<function>` and only the second
+half matters** — the first is where the request landed, not where it ran, and
+reading it as "we are in Frankfurt, we are fine" is how this survived 36 rounds.
+
+**`supabase.auth.getUser()` IS A NETWORK CALL, AND SO IS EVERY READ THROUGH
+POSTGREST.** Counting them is the measurement that matters, and they are
+countable: `docker logs supabase_kong_hrajfotbalek` lists every `/rest/` and
+`/auth/` request the local stack answers, so a spec can navigate and diff the
+log. That is how round 37 found `app_capabilities()`, `site_settings` and
+`cancellation_refund_cutoff_hours` firing once per navigation on all five
+journeys.
+
+**A CACHE OVER A CAPABILITY FLAG MUST NOT OUTLIVE THE OWNER'S PATIENCE.** The
+whole capability mechanism exists so that applying a migration by hand turns
+features on; a cache that holds `false` turns that ritual into "it didn't work".
+`lib/db/stableRead.ts` caps every shared read at SIXTY SECONDS, keys it on the
+build id so a deploy busts it outright, tags it so a writer can expire it, and
+caches a `false` no longer than a `true`. All four are asserted in
+`lib/db/__tests__/stableRead.test.ts`, because raising a TTL is a one-character
+edit whose cost appears only the next time somebody applies a migration.
+
+**`next/image` CANNOT FETCH THE LOCAL SUPABASE STACK, EVER.** The optimizer
+refuses any upstream that resolves to a private IP — an SSRF guard — and reports
+it to the browser as `400 "url" parameter is not allowed`, which names the
+remote-pattern allow-list when the allow-list is not the problem. Three attempts
+at naming the host, the port, and then any host at all failed identically. It is
+off outside production (`images.unoptimized`), which is why local behaviour is
+unchanged and why no spec exercises the optimizer path.
+
+**AND `next/image` IS LAZY BY DEFAULT, WHICH IS WRONG FOR THE TOP CARD.** The
+first game card's photo is the Largest Contentful Paint on both the home page
+and the games list, and moving from `<img>` to `<Image>` silently made it
+lazy-loaded. Next says so in the dev console — "detected as the Largest
+Contentful Paint. Please add the loading=eager property" — and that line is the
+only thing that catches it. The list passes `priority` for index 0 of day 0.
+
+**A `loading.tsx` IS NOT DECORATION; IT IS WHAT `<Link>` PREFETCHES.** Automatic
+prefetch on a dynamic route caches only as far as the nearest loading boundary,
+so a route without one cannot paint anything until the server answers. Measured
+on production: `/pass` took **828ms** from tap to its first pixel and **47ms**
+after the boundary was added. **And `next dev` disables prefetch entirely**, so
+this can only be measured on a deployed build — a local run shows zero prefetch
+requests and proves nothing either way.
+
+**A SKELETON MAY NOT CONTAIN THE REAL PAGE'S COPY.** Round 37's first
+`app/loading.tsx` printed the hero's own headline, and `home.spec.ts` immediately
+measured THAT h1 and reported "Play football." wrapping in 0px of available
+width. It is the `cutover.spec.ts` trap from the other side — there a spec
+asserted on a fallback's content, here it measured before the fallback had gone.
+**Adding a loading boundary also makes `page.goto` resolve while the skeleton is
+up**, so every spec on that route must wait for something only the real page
+renders.
+
+**AND A TAP THAT DOES NOTHING FEELS BROKEN NO MATTER HOW FAST THE PAGE IS.**
+`e2e/tap-feedback.spec.ts` presses a control and decodes the pixels under the
+thumb until they move. The bottom nav answered in 40ms, the booking confirm in
+26ms, and the GAME CARD — the most-tapped control in the product — produced no
+visible change at all. **Measure it by decoding, not by looking for an `active:`
+class**, which passes for a rule that never matches; and sample a SMALL
+rectangle, because the screenshot's own cost is the instrument's resolution.
+
 **A form that closes itself on submit hides its own error.** `ChangeNameForm`
 called `setOpen(false)` in `onSubmit`, so a refused rename unmounted before the
 action answered and the admin saw nothing — not the old name, not a reason.

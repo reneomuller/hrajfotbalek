@@ -7,6 +7,133 @@ way that nobody asked about.
 
 ---
 
+## Round 37 — 2026-09-17
+
+A performance round with one rule: no optimization ships without a
+before-number. That rule earned its keep twice — once by finding the verdict in
+thirty seconds, and once by telling me a fix I had already written was worth
+nothing.
+
+### The verdict was in a response header
+
+`x-vercel-id: fra1::iad1::…`. The edge is Frankfurt; **the function ran in
+Washington DC**, and Supabase is `aws-0-eu-west-1`. A page makes ten to
+seventeen database round trips and every one crossed the Atlantic twice.
+
+`"regions": ["dub1"]` — Dublin, same city as `eu-west-1` — took the home page
+from a **1.404s TTFB median to 0.371s**, with nothing else in that deploy. It is
+the only fix this round that is isolated by construction, and it is the biggest.
+
+The reason this survived thirty-six rounds is worth keeping: the header's first
+half says Frankfurt, which looks correct. Only the second half is where code
+runs.
+
+### What the round trips actually were
+
+Counted rather than reasoned about, by navigating and diffing the local stack's
+Kong access log: home 13, games list 14, **game detail 17**, booking 10, account
+13. Three of them were on every single page — the capability probe, the footer's
+`site_settings` read and the refund cutoff — plus two token verifications, one
+from the proxy and one from the render.
+
+The game page's six independent reads were sequential purely because of the
+order they were written in over eleven rounds. They are one tier now. Measured
+AFTER the region fix, so the visible gain was small (0.228 → 0.213); in the old
+region the same edit would have been worth about a second, which is a decent
+illustration of why the region came first.
+
+### The caching, under the owner's constraint
+
+The owner's note mid-round was the design brief: an applied migration's feature
+must still show up promptly, never sit behind a stale cache. So the three shared
+reads are capped at **sixty seconds**, keyed on the deployment id so a deploy
+busts them outright, tagged so `admin/site` expires the contact details on save,
+and — the one that matters most — a `false` is cached no longer than a `true`.
+"The migration is not applied yet" is the state the owner is actively trying to
+leave, and it is the most tempting value to cache hard.
+
+All four properties are asserted rather than commented, because raising a TTL is
+a one-character edit whose cost appears only the next time somebody applies a
+migration by hand.
+
+### A megabyte of photographs to draw four cards
+
+The games list served **1,031,636 bytes** of images, every one the raw upload:
+venue photos stored at 1600x740 painted into a 358x159 card — one of them 429 KB
+— and 512x512 avatars into 34px circles. Through the optimizer at the sizes
+actually rendered: **203,740 bytes, down 80%**. Avatars went from 51 KB to under
+10.
+
+Three things that change would have shipped silently, and all three were found
+by running it rather than by reading it:
+
+* **A hardcoded `https`** in the remote-pattern allow-list. Correct in
+  production; every photo page threw locally, where storage is
+  `http://127.0.0.1:54321`.
+* **`next/image` is lazy by default**, and the top card's photo is the Largest
+  Contentful Paint. Next's own console warning is the only thing that says so.
+* **The optimizer refuses any upstream that resolves to a private IP.** It can
+  therefore never fetch the local stack, and it reports this as
+  `400 "url" parameter is not allowed` — naming the allow-list when the
+  allow-list is not the problem. Three attempts at naming the host, then the
+  port, then any host at all failed identically before I read the server log.
+
+### The tap that did nothing
+
+Beyond raw speed, the item asked whether a tap gives instant feedback.
+`e2e/tap-feedback.spec.ts` presses a control and decodes the pixels under the
+thumb until they move. The bottom nav answered in 40ms and the booking confirm
+in 26ms. **The game card — the control every journey goes through — produced no
+visible change at all**, until the next page painted.
+
+A background colour would not have fixed it: half that card is a photograph
+under a scrim, which is exactly where a thumb lands. Brightness and scale move
+every layer at once. All six controls are now inside the 100ms budget.
+
+### And the rule caught me
+
+`getSessionUser` and `getCurrentPlayer` each called `auth.getUser()`, and the
+layout, the page and the player read all called those — so I wrapped them in
+`cache()` and wrote a commit message claiming four verification round trips
+saved. **Then I counted: two before, two after.** Next's fetch deduplication was
+already collapsing them, and the proxy makes the other one. The change is kept
+because routing `getCurrentPlayer` through `getSessionUser` removes a genuinely
+redundant call path, but it is reported as **no measurable win**, which is what
+the before-number says.
+
+The same rule caught two bad instruments. A boundary A/B that waited on
+`location.pathname` measured the router, not the paint, and reported no
+difference at all. Its replacement asked one route for "skeleton or real" and
+the other for "real only" and reported fifteen-fold. Asked the same question,
+the honest claim is `/pass`'s own before and after: **828ms to first pixel, then
+47ms.**
+
+### Two failures that are not mine
+
+`public-profile.spec.ts` (a shadow player's page answers 200 instead of 404) and
+`round25.spec.ts` (a checkout opened for a cancelled game) both fail. I stashed
+the round's changes, re-seeded and re-ran: both fail without any of this work.
+Not investigated — a performance round is the wrong place — but the second is a
+guard around money and should not wait long.
+
+### The ledger, re-probed again, and empty for the first time
+
+Round 36's report handed over one migration and row 331 said it was outstanding.
+Probing production before printing that row found the `ROUND 36` marker inside
+`admin_create_game_v2` and the `coalesce(p_price_czk, …)` statement live: the
+owner applied it in the hours between. **The BUILT-DORMANT list is now empty for
+the first time in this ledger's history**, and this is the third consecutive
+round in which re-probing a dormant row changed its answer.
+
+### Deferred, with numbers
+
+Six architectural candidates are written up in the report rather than started,
+which is what the item asked for. The largest remaining one is that `/` and
+`/games` are `force-dynamic` for live capacity and therefore cannot be cached at
+the edge at all.
+
+---
+
 ## Round 36 — 2026-09-17
 
 Two items. One is a question answered by elimination; the other is the owner
