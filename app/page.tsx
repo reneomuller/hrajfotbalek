@@ -65,23 +65,45 @@ export default async function LandingPage() {
   // `now` comes back FROM the query layer, which is where the clock is read —
   // so the pills and the list agree about what "Today" means even across a
   // Prague midnight.
+  /*
+   * TWO TIERS, NOT FOUR (round 37, item 2).
+   *
+   * ~~Four sequential awaits.~~ This page made `listUpcomingGames`,
+   * `listRostersByGame`, a pair, and `getHomeContent` wait for each other in a
+   * line, and only the last pair was parallel — so a render cost FOUR database
+   * round trips end to end where it needs TWO. Measured before the change at a
+   * 1.40s median TTFB against 0.50s for `/games`, which does the same work in
+   * two tiers; the gap was the waterfall, not the work.
+   *
+   * WHAT ACTUALLY DEPENDS ON WHAT. Only the three follow-up reads need the game
+   * ids, so only they belong behind `listUpcomingGames`. `getHomeContent` reads
+   * `site_settings` and knows nothing about which games are on — it was waiting
+   * for three reads it has no relationship with, purely because of where the
+   * line was written.
+   */
+  const homeContent = getHomeContent();
   const { games, now } = await listUpcomingGames(3);
-  // The canonical card carries an avatar stack (§2.1, ruling D), so the home
-  // preview needs the same roster read the list does — one round trip for all
-  // three games rather than one apiece.
-  const rosters = await listRostersByGame(games.map(({ game }) => game.id));
-  // Pitch names, live from `venues` — see `listPitchNamesByGame`.
-  const [pitchNames, venueImages] = await Promise.all([
-    listPitchNamesByGame(games.map(({ game }) => game)),
+  const gameIds = games.map(({ game }) => game.id);
+  const gameRows = games.map(({ game }) => game);
+  const [rosters, pitchNames, venueImages, home] = await Promise.all([
+    // The canonical card carries an avatar stack (§2.1, ruling D), so the home
+    // preview needs the same roster read the list does — one round trip for all
+    // three games rather than one apiece.
+    listRostersByGame(gameIds),
+    // Pitch names, live from `venues` — see `listPitchNamesByGame`.
+    listPitchNamesByGame(gameRows),
     // The venue's own photograph, where it has one (round 13, item 24).
-    listVenueImagesByGame(games.map(({ game }) => game)),
+    listVenueImagesByGame(gameRows),
+    // Admin-editable content (§6). Every read behind this is anon-legal,
+    // because this page is what a shared WhatsApp link opens for someone with
+    // no account. STARTED ABOVE, awaited here: it is in the list so that a
+    // rejection is still awaited on the same tick as the others, rather than
+    // becoming an unhandled rejection if one of its neighbours throws first.
+    homeContent,
   ]);
   // Storage origin for the Player-of-the-Month photo (§4a). Absent, the panel
   // falls back to initials, which is the ordinary case rather than a failure.
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
-  // Admin-editable content (§6). Every read behind this is anon-legal, because
-  // this page is what a shared WhatsApp link opens for someone with no account.
-  const home = await getHomeContent();
 
   return (
     <>

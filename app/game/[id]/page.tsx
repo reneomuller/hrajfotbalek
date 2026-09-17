@@ -136,34 +136,74 @@ export default async function GameDetailPage({ params, searchParams }: GamePageP
   }
 
   const { game, bookedCount, spotsLeft, hasStarted, inProgress, isCancelled } = result;
-  const roster = await getRoster(game.id);
+
+  /*
+   * ONE TIER OF READS, NOT SIX (round 37, item 2).
+   *
+   * ~~Six awaits in a line.~~ Roster, venue, waitlist, organizer, own booking
+   * and the capability probe are MUTUALLY INDEPENDENT — every one of them needs
+   * nothing but `game.id` or `game.venue_id`, both of which `getGameById` has
+   * already returned. They were sequential for no reason except the order they
+   * were written in over eleven rounds, and each one cost a full database round
+   * trip before the next could start.
+   *
+   * THE SESSION READS ARE IN HERE TOO. `getSessionUser` and `getCurrentPlayer`
+   * are used two hundred lines below and were awaited there; hoisting them into
+   * this tier costs nothing when they are already warm and saves two more trips
+   * when they are not. `getLocale` and `siteUrl` read cookies and env rather
+   * than the database, and are included only so that the line below is the
+   * whole of this page's first tier rather than most of it.
+   *
+   * WHAT IS STILL SEQUENTIAL, and correctly so: `can_add_guests` needs the
+   * booking this resolves, the credit balance needs that count, and the
+   * waitlist position needs to know the viewer is on the list. Those are real
+   * dependencies and they stay in a line.
+   */
+  const [
+    roster,
+    locale,
+    venueRow,
+    waitlist,
+    organizer,
+    ownBooking,
+    capabilities,
+    sessionUser,
+    currentPlayer,
+    baseUrl,
+  ] = await Promise.all([
+    getRoster(game.id),
+    // The active UI language, for the dates this page renders (round 28, item 9).
+    getLocale(),
+    getVenue(game.venue_id),
+    // The queue is public — see migration 20 and getWaitlist(). Fetched for
+    // every visitor, signed in or not, because "who is waiting" is part of what
+    // makes a full game worth queueing for.
+    getWaitlist(game.id),
+    // §5.1 — two different kinds of fact through two different exits. The name
+    // is public; the phone comes back non-null only for a caller holding a
+    // spot, and the function decides that from the session, not from anything
+    // passed here.
+    getGameOrganizer(game.id),
+    // REQ-GAME-018. Resolved from the caller's OWN booking row under RLS. A
+    // nickname match against the public roster would be display-grade and would
+    // hand anyone "their" booking by choosing the right nickname.
+    getOwnActiveBooking(game.id),
+    appCapabilities(),
+    getSessionUser(),
+    getCurrentPlayer(),
+    siteUrl(),
+  ]);
+
   // Storage origin for the roster photos. Read here rather than inside
   // `AvatarRow` so the component stays renderable in isolation; absent, every
   // avatar falls back to initials, which is the correct degradation.
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
-  // The active UI language, for the dates this page renders (round 28, item 9).
-  const locale = await getLocale();
-  const venueRow = await getVenue(game.venue_id);
   /*
    * This game's pitch, falling back to the venue's default (migration 41).
    * Resolved once and passed down, so the header and the WhatsApp draft below
    * cannot disagree about which pitch this game is on.
    */
   const pitchName = effectivePitchName(game.pitch_name, venueRow?.pitch_name);
-  // The queue is public — see migration 20 and getWaitlist(). Fetched for every
-  // visitor, signed in or not, because "who is waiting" is part of what makes a
-  // full game worth queueing for.
-  const waitlist = await getWaitlist(game.id);
-
-  // §5.1 — two different kinds of fact through two different exits. The name is
-  // public; the phone comes back non-null only for a caller holding a spot, and
-  // the function decides that from the session, not from anything passed here.
-  const organizer = await getGameOrganizer(game.id);
-
-  // REQ-GAME-018. Resolved from the caller's OWN booking row under RLS. A
-  // nickname match against the public roster would be display-grade and would
-  // hand anyone "their" booking by choosing the right nickname.
-  const ownBooking = await getOwnActiveBooking(game.id);
 
   /*
    * ADD GUESTS AFTER BOOKING (round 27, item 2) — resolved on the server, and
@@ -175,7 +215,6 @@ export default async function GameDetailPage({ params, searchParams }: GamePageP
    * 404 stand in for an answer. What is left is a single RPC and a balance
    * read for the player who might actually use it.
    */
-  const capabilities = await appCapabilities();
   const canAddGuests =
     ownBooking && capabilities.addGuestsAfterBooking
       ? await (async () => {
@@ -215,7 +254,7 @@ export default async function GameDetailPage({ params, searchParams }: GamePageP
   const endsAt = gameEndsAt(game.starts_at, game.duration_minutes);
   const isFull = spotsLeft === 0;
   const canAct = !isCancelled && !hasStarted;
-  const shareUrl = `${await siteUrl()}/game/${game.id}`;
+  const shareUrl = `${baseUrl}/game/${game.id}`;
 
   // A holder is never offered a claim (§5.6). Everything below branches on
   // this one value rather than each block deciding for itself.
@@ -224,13 +263,13 @@ export default async function GameDetailPage({ params, searchParams }: GamePageP
   // Label only. The write is gated in `createBookingAction`, not here — an
   // anonymous visitor may still walk the whole flow and authenticate at the
   // end, which is the no-pre-auth-hold rule.
-  const signedIn = (await getSessionUser()) !== null;
+  const signedIn = sessionUser !== null;
 
   // DISPLAY ONLY: used to ring the viewer's own avatar in the public queue.
   // The views project no player id, so a nickname match is the only way to
   // answer "which of these is me" — adequate for a highlight, and never the
   // authority on membership (that is `isOnWaitlist`, which reads under RLS).
-  const viewerNickname = signedIn ? ((await getCurrentPlayer())?.nickname ?? null) : null;
+  const viewerNickname = signedIn ? (currentPlayer?.nickname ?? null) : null;
 
   // A full game now offers the waitlist rather than a dead end: `join_waitlist`
   // exists as of Phase 17, so the CTA leads somewhere real. Read under own-row
@@ -270,7 +309,7 @@ export default async function GameDetailPage({ params, searchParams }: GamePageP
   const schema = gameEventSchema({
     game,
     spotsLeft,
-    url: `${await siteUrl()}/game/${game.id}`,
+    url: `${baseUrl}/game/${game.id}`,
     venueName: venueRow?.name ?? game.venue,
     city: game.city,
   });
