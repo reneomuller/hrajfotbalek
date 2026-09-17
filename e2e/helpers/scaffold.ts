@@ -1,3 +1,4 @@
+import { CREDIT_SEAT_MINUTES, priceForDurationCzk } from "../../lib/games/price.ts";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { execAsOwner } from "./clock.ts";
 import { assertTestDatabaseUrl } from "../../lib/env/testDatabase.ts";
@@ -116,7 +117,7 @@ export async function createScratchGame({
   startsAt: startsAtOverride,
   organizerName = "E2E Organizer",
   organizerPhone = null,
-  durationMinutes = null,
+  durationMinutes,
   allowedSkillLevels = null,
   subsPerTeam = null,
   format = null,
@@ -138,6 +139,15 @@ export async function createScratchGame({
   startsAt?: string;
   organizerName?: string;
   organizerPhone?: string | null;
+  /**
+   * How long the scratch game is (round 35 v5).
+   *
+   * DEFAULTS TO THE CREDIT'S OWN LENGTH rather than to null, because a credit
+   * buys one 90-minute seat and a null-duration fixture is a SIXTY-minute game
+   * that takes no credit at all. Every spec that spends a credit would
+   * otherwise be testing the online-only path by accident. A spec that wants
+   * the short game asks for it — `e2e/round35v5.spec.ts` does.
+   */
   durationMinutes?: number | null;
   allowedSkillLevels?: ("beginner" | "intermediate" | "advanced")[] | null;
   subsPerTeam?: number | null;
@@ -163,6 +173,38 @@ export async function createScratchGame({
    */
   amenities?: string[];
 } = {}): Promise<ScratchGame> {
+  /*
+   * THE DURATION DECIDES THE PRICE NOW, SO THE SCAFFOLD RESOLVES ONE FROM THE
+   * OTHER (round 35 v5).
+   *
+   * `admin_create_game_v2` derives `price_czk` from the length and ignores what
+   * it is sent — which is the product working, and which quietly made this
+   * helper's `priceCzk` inert. Sixty-seven call sites pass it and twenty of
+   * them then assert the number back.
+   *
+   * So `priceCzk` still means what callers think it means, by choosing the
+   * LENGTH that produces it: 150 is the sixty-minute game, anything else is the
+   * ninety-minute one. A caller that names a duration outright wins, because
+   * that is the more specific instruction — and a spec about credit says 90
+   * rather than hoping.
+   *
+   * AN EXPLICIT `null` IS A REAL ANSWER and is passed through untouched: a game
+   * with no duration at all is a shape the product has nineteen of, and
+   * `games.spec.ts` asserts it renders as the standard length. `undefined` — the
+   * parameter not given — is what triggers the resolution above.
+   *
+   * IT CANNOT PRODUCE AN ARBITRARY PRICE, and that is correct rather than a
+   * limitation: the product cannot either. A spec asking for 250 gets the
+   * ninety-minute price and an assertion about 250 fails loudly, which is the
+   * right way to find out that a price is no longer something anybody chooses.
+   */
+  const resolvedDuration =
+    durationMinutes !== undefined
+      ? durationMinutes
+      : priceCzk === 150
+        ? 60
+        : CREDIT_SEAT_MINUTES;
+
   const organizer = await apiClientFor(players.organizer);
   const admin = serviceClient();
 
@@ -192,7 +234,7 @@ export async function createScratchGame({
     p_surface: surface,
     p_notes: null,
     p_organizer_phone: organizerPhone,
-    p_duration_minutes: durationMinutes,
+    p_duration_minutes: resolvedDuration,
     p_allowed_skill_levels: allowedSkillLevels,
     p_subs_per_team: subsPerTeam,
   });
@@ -203,7 +245,18 @@ export async function createScratchGame({
     if (publishError) throw new Error(`publish_game: ${publishError.message}`);
   }
 
-  return { id: id as string, capacity, priceCzk, durationMinutes, startsAt };
+  /*
+   * THE PRICE THE DATABASE ACTUALLY STORED, not the one that was asked for.
+   * A spec that reads `game.priceCzk` is reading what the row holds — which is
+   * the only number any assertion should be made against.
+   */
+  return {
+    id: id as string,
+    capacity,
+    priceCzk: priceForDurationCzk(resolvedDuration),
+    durationMinutes: resolvedDuration ?? null,
+    startsAt,
+  };
 }
 
 /**

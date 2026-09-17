@@ -109,12 +109,17 @@ insert into public.players (id, nickname, email, auth_user_id, is_seed, is_admin
   -- Shadow: never logged in, no session, cannot act for itself.
   ('eeee0000-0000-0000-0000-00000000000e', 'TstShadowE', 'shadow@test.invalid', null, false, false);
 
-insert into public.games (id, venue, starts_at, capacity, price_czk, status) values
-  ('91110000-0000-0000-0000-000000000001', 'Cap Two',    now() + interval '7 days', 2,  200, 'published'),
-  ('92220000-0000-0000-0000-000000000002', 'Roomy',      now() + interval '8 days', 10, 200, 'published'),
-  ('93330000-0000-0000-0000-000000000003', 'Roomy Two',  now() + interval '9 days', 10, 200, 'published'),
-  ('94440000-0000-0000-0000-000000000004', 'Draft Game', now() + interval '9 days', 10, 200, 'draft'),
-  ('95550000-0000-0000-0000-000000000005', 'Waitlisted', now() + interval '9 days', 10, 200, 'published');
+-- CREDIT NEEDS A NINETY-MINUTE PITCH (round 35 v5, item 1). A credit buys one
+-- 90-minute seat, and a fixture with no duration is a SIXTY-minute game, which
+-- takes no credit at all — so every game a credit is spent on below says how
+-- long it is. The price follows from that, which is why none of these rows
+-- states one it chose.
+insert into public.games (id, venue, starts_at, capacity, price_czk, status, duration_minutes) values
+  ('91110000-0000-0000-0000-000000000001', 'Cap Two',    now() + interval '7 days', 2,  200, 'published', 90),
+  ('92220000-0000-0000-0000-000000000002', 'Roomy',      now() + interval '8 days', 10, 200, 'published', 90),
+  ('93330000-0000-0000-0000-000000000003', 'Roomy Two',  now() + interval '9 days', 10, 200, 'published', 90),
+  ('94440000-0000-0000-0000-000000000004', 'Draft Game', now() + interval '9 days', 10, 200, 'draft', 90),
+  ('95550000-0000-0000-0000-000000000005', 'Waitlisted', now() + interval '9 days', 10, 200, 'published', 90);
 
 -- =============================================================================
 -- payment_method derivation

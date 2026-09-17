@@ -46,6 +46,20 @@ export interface PaymentMethodChoiceProps {
    */
   embeddedCheckout: boolean;
   /**
+   * Whether this game takes credit at all (round 35 v5, item 1).
+   *
+   * A CREDIT IS ONE 90-MINUTE SEAT. A game of any other length is online-only,
+   * and the credit option does not render — not disabled with an explanation,
+   * NOT RENDERED, because a greyed-out control invites the question "why can I
+   * not use my credits" on a screen that cannot answer it. The sentence that
+   * does answer it lives on the pass page, where somebody is deciding to buy.
+   *
+   * RESOLVED ON THE SERVER from the game's own duration, for the same reason
+   * `partyUpToThirteen` is: `create_booking_internal` applies credit only at
+   * that length, and a picker that guesses would offer a rail the RPC ignores.
+   */
+  takesCredit: boolean;
+  /**
    * Whether `public.max_party_guests()` has been raised to thirteen (round 33,
    * item 3).
    *
@@ -96,6 +110,7 @@ export function PaymentMethodChoice({
   spotsLeft,
   embeddedCheckout,
   partyUpToThirteen,
+  takesCredit,
 }: PaymentMethodChoiceProps) {
   const t = useStrings();
   const locale = useLocale();
@@ -190,7 +205,12 @@ export function PaymentMethodChoice({
    * option at all. If they disagree the database is right and the UI is lying.
    */
   const partyCreditCzk = PASS_REFERENCE_PRICE_CZK * seats;
-  const creditCovers = creditCzk >= partyCreditCzk;
+  /*
+   * AND THE GAME HAS TO TAKE CREDIT AT ALL. On a 60-minute game this is false
+   * whatever the wallet holds, so nothing below is selectable, preselected, or
+   * rendered — see `takesCredit`.
+   */
+  const creditCovers = takesCredit && creditCzk >= partyCreditCzk;
 
   const [choice, setChoice] = useState<"credit" | "online" | null>(
     // DEFAULT TO CREDIT WHEN IT COVERS THE GAME (item 11). A player who has
@@ -351,6 +371,7 @@ export function PaymentMethodChoice({
 
         <div className="flex flex-col gap-3">
           {/* ---- credit -------------------------------------------------- */}
+          {takesCredit && (
           <label data-testid="pay-credit" className={optionClass("credit", !creditCovers)}>
             <input
               type="radio"
@@ -396,6 +417,7 @@ export function PaymentMethodChoice({
               )}
             </span>
           </label>
+          )}
 
           {/* ---- online ------------------------------------------------- */}
           <label data-testid="pay-online" className={optionClass("online", !onlineReady)}>

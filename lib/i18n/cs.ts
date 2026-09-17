@@ -674,6 +674,7 @@ export const cs: StringsOverlay = {
 
   pass: {
     title: "Herní permanentka",
+    creditUnit: "Jeden kredit je jeden 90minutový zápas. Kratší zápasy se platí online.",
     lede: "Předplať si zápasy se slevou. Přistanou ti kredity a samy se použijí na další rezervaci.",
     // The product name stays English in every locale — see lib/strings.ts.
     panelTitle: "Game Pass",

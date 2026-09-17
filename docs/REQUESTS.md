@@ -423,6 +423,16 @@ round 13 added is item 2's reversal and a re-verification of item 3.
 | 306 | **(R35v2-9) The admin players list shows faces** | `SHIPPED round-35 v2`. The detail page has shown the avatar since Phase 7; the list showed initials for everybody, so the one surface an organizer scans to find somebody was the one that made them all look alike. Same 44px tile, same volt hairline, same initials underneath as the fallback — `overflow-hidden` doing the clipping and `avatarUrl` composing the address, because a second way of building it is a second thing to get wrong |
 | 307 | *What the reprice cost the suites, counted.* **Eight SQL suites and four e2e specs moved with the rate** | `SHIPPED round-35 v2`. `booking_create`, `booking_cancel`, `booking_rpcs_b`, `game_pass`, `add_guests_after_booking`, `credits_are_seats`, `ledger_invariant` and two conformance files; `booking.spec`, `pass.spec`, `round24.spec` and `round35.spec`. **The `credits_are_seats` fixture moved from 180 to 200**, because at 180 the credit rate and the game price would be the same number — the coincidence that suite exists to rule out. And `v13_conformance/schema_b` had a guard against a VACUOUS assertion which the wallet reset made vacuous itself; it now creates its own row, which is the lesson it was written to teach |
 | 308 | **Apply round 35 v2's migrations** | `APPLIED BY ME on the owner's one-time overnight authorization` — see §6 for the order and the verification. `20260915100000_credits_are_seats`, `20260916100000_price_180_clean_slate`, `20260916110000_delete_cancelled_game`, `20260916120000_ban_profile`. The Oliver-applies rule stands for every future round |
+| 309 | **(R35v5-2, THE LEAD) The single-source audit — the price is no longer a NUMBER, so a copy of it cannot exist** | `SHIPPED round-35 v5`. Round 35 v2 audited a FLAT price and found it in four places, one of them inside a CHECK constraint. This round removes the category: **the price is a FUNCTION of the duration**, so there is nothing constant left to copy. `public.price_for_duration()` is the authority and `lib/games/price.ts` mirrors it. The stray assumptions the audit found this time were all of the same shape — a number standing in for a decision: the admin form PREFILLED the credit nominal as the price and let an organizer type over it, `scripts/fixtures.ts` set every seeded game to it, and `admin_create_game_v2` / `admin_update_game` stored whatever the caller sent. **All three now derive**, and the form's price field is read-only |
+| 310 | *The distinction the round turns on.* **The credit nominal and the 90-minute price are the same number and must not become the same constant** | `SHIPPED round-35 v5`. `credit_seat_price_czk()` is 180 because that is what a credit is worth in the ledger; `price_for_duration(90)` is 180 because that is what ninety minutes costs a card. They agree today. Keeping them as one constant would make the day they diverge a silent data change rather than a decision — so they are two functions, and `lib/games/__tests__/price.test.ts` asserts the coincidence DELIBERATELY, which is what makes it visible when it ends |
+| 311 | **(R35v5-2) Every game reprices per its length, and NULL is sixty** | `SHIPPED round-35 v5`. Production held 51 games at a flat 180 and two at 150. Nineteen carry no duration at all: they render as the standard length, so they are priced as one. **Reading null as "unknown, charge the higher price" would have billed nineteen historical games for time nobody booked** |
+| 312 | *The flag item 2 asked for.* **One 120-minute game exists, and it is priced at 180 pending a ruling** | `OPEN — Oliver's ruling`. Exactly one: `c8543c80…`, Praha 5 • Smíchov, **settled**, 2026-08-27. `price_for_duration` returns the 90-minute price for anything that is not 60, which is a pre-pick rather than an invented tier — it costs nothing today because the only such game is in the past and paid for. A second one appearing is the moment this needs an answer |
+| 313 | **(R35v5-1) A credit buys a 90-minute seat, and a 60-minute game is online-only** | `SHIPPED round-35 v5`. `credit_seat_minutes()` is 90. `create_booking_internal` applies credit only at that length — a shorter game applies nothing and comes back owing its whole price, so the only rail left is the online one. `add_guests_with_credit` refuses by name, `GAME_NOT_CREDIT_ELIGIBLE`, because that path IS the rail: the player pressed the credit button and deserves the reason. **Neither control renders on a short game** — not disabled with an explanation, NOT RENDERED, because a greyed-out credit button asks "why can I not use my credits" on a screen with no room to answer. The sentence that answers it is on `/pass`, above the prices, where somebody is deciding to buy |
+| 314 | *What item 1 created that the product had never had.* **A game with no way to pay for a guest** | `SHIPPED round-35 v5`. The add-guests panel assumed at least one rail was always available. On a 60-minute game with the online rail unconfigured it rendered its heading, its picker and its price with **no button under them** — a control that asks a question it cannot act on. It now renders only when a rail exists; on production that is always the online one, so the visible effect is nil and the dead state is gone |
+| 315 | *Where the fixtures had to move with the ruling.* **A fixture with no duration is a 60-minute game, and takes no credit** | `SHIPPED round-35 v5`. Six SQL suites and the seed asserted credit behaviour on games that carried no duration — which under item 1 take no credit at all. The scaffold now defaults to the credit's own length so the rest of the suite keeps testing what it was written to test, and a spec that wants the short game asks for it. **The seed's own acceptance check caught this in one line**: "expected a derived credit/confirmed booking, got qr/reserved" |
+| 316 | *Found by installing pgTAP.* **Two conformance scans were reading an extension's functions as ours** | `SHIPPED round-35 v5`. `create extension pgtap` puts several hundred helpers into `public`, and `v13_conformance/security.sql` began reporting every one of them — "no SECURITY INVOKER function writes state" listed the whole of pgTAP. The assertions are about code we wrote; `pg_depend` tells them apart by extension ownership, which is more honest than a name list that goes stale the first time pgTAP adds a helper. **The scans were only ever correct by accident of where the extension happened to live** |
+| 317 | **(R35v5-3) The pass table — unchanged from v2 and re-verified** | `SHIPPED round-35 v2, verified round-35 v5`. 5 = 840 · 8 = 1,296 · 12 = 1,879 · 15 = 2,241 · 20 = 2,772, anchored at `games x 180`. The percentages are computed from the two numbers beside them and are not stored. `/pass` renders all five prices and all five discounts on production |
+| 318 | **Apply round 35 v5's migration** | `APPLIED BY ME on the owner's one-time overnight authorization` — `20260917100000_duration_pricing.sql`. The Oliver-applies rule stands for every future round |
 
 ---
 
@@ -523,6 +533,29 @@ their filter through `booking_holds_seat`. No row changes. Rollback is
 
 The `--production` flag is deliberate and cannot be replaced by an environment
 variable — see CLAUDE.md on why implicitness is what failed.
+
+### Round 35 v5's migration (row 318) — APPLIED BY ME, one-time authorization
+
+```bash
+node scripts/apply-migration.mjs \
+  supabase/migrations/20260917100000_duration_pricing.sql --production
+```
+
+One file, and it is the last of the round-35 sequence. It creates
+`price_for_duration()` and `credit_seat_minutes()`, reprices every game per its
+length, makes both game writers derive the price, and stops `create_booking`
+and `add_guests_with_credit` applying credit to a game that is not 90 minutes.
+
+| Before it runs | After it runs |
+|---|---|
+| Every game costs 180, whatever its length | 60 minutes is 150, 90 is 180, from one mapping |
+| A caller's price is stored as sent | The length decides, and the form's field is read-only |
+| A credit buys any game | A credit buys a 90-minute seat; shorter games are online-only |
+
+**IT REWRITES FOUR FUNCTION BODIES IN PLACE** — `admin_create_game_v2`,
+`admin_update_game`, `create_booking_internal` and `add_guests_with_credit` —
+reading `pg_get_functiondef`, substituting one statement each, and **raising
+rather than overwriting** if the text it expects is absent.
 
 ### Round 35 v2's migrations (row 308) — APPLIED BY ME, on a one-time authorization
 

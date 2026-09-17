@@ -154,13 +154,18 @@ insert into public.players (id, nickname, email, auth_user_id, is_admin) values
 insert into public.venues (id, name) values
   ('11110000-0000-0000-0000-0000000020a1', 'Pass Pitch');
 
-insert into public.games (id, venue, venue_id, starts_at, capacity, price_czk, status) values
+-- CREDIT NEEDS A NINETY-MINUTE PITCH (round 35 v5, item 1). A credit buys one
+-- 90-minute seat, and a fixture with no duration is a SIXTY-minute game, which
+-- takes no credit at all — so every game a credit is spent on below says how
+-- long it is. The price follows from that, which is why none of these rows
+-- states one it chose.
+insert into public.games (id, venue, venue_id, starts_at, capacity, price_czk, status, duration_minutes) values
   ('dddd0000-0000-0000-0000-0000000020a1', 'Pass Pitch', '11110000-0000-0000-0000-0000000020a1',
-   now() + interval '5 days', 10, 180, 'published'),
+   now() + interval '5 days', 10, 180, 'published', 90),
   ('dddd0000-0000-0000-0000-0000000020a2', 'Pass Pitch', '11110000-0000-0000-0000-0000000020a1',
-   now() + interval '6 days', 10, 180, 'published'),
+   now() + interval '6 days', 10, 180, 'published', 90),
   ('dddd0000-0000-0000-0000-0000000020a3', 'Pass Pitch', '11110000-0000-0000-0000-0000000020a1',
-   now() + interval '7 days', 1, 180, 'published');
+   now() + interval '7 days', 1, 180, 'published', 90);
 
 -- =============================================================================
 -- The tiers (§4.2)

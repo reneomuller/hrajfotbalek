@@ -259,10 +259,18 @@ begin
                                    now() + interval '4 days', 350, '5v5', 'indoor', 'New notes');
   reset role;
 
+  /*
+   * ~~"writes the new price".~~ IT WRITES THE PRICE ITS LENGTH IMPLIES
+   * (round 35 v5, item 2). 350 was sent and is ignored: `admin_update_game`
+   * asks `price_for_duration()` about the row's own duration, so no caller can
+   * put a game and its price out of step. The detail columns still come from
+   * the caller, which is what the rest of this assertion is about.
+   */
   perform pg_temp.ok(
-    (select price_czk = 350 and format = '5v5' and surface = 'indoor'
+    (select price_czk = public.price_for_duration(duration_minutes)
+              and format = '5v5' and surface = 'indoor'
        from public.games where id = v_game),
-    'admin_update_game writes the new price and detail columns');
+    'admin_update_game writes the detail columns, and prices from the length');
 
   perform pg_temp.ok(
     (select status = 'published' from public.games where id = v_game),

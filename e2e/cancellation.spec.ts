@@ -80,8 +80,8 @@ test("beyond the cutoff, a cancellation still credits in full", async () => {
 
     // Assert
     expect(error).toBeNull();
-    expect(result!.credit_issued_czk).toBe(200);
-    expect(await walletBalance(players.creditRich.id)).toBe(before + 200);
+    expect(result!.credit_issued_czk).toBe(game.priceCzk);
+    expect(await walletBalance(players.creditRich.id)).toBe(before + game.priceCzk);
   } finally {
     await destroyScratchGame(game.id);
     await setWalletTo(players.creditRich.id, 0);
@@ -151,7 +151,7 @@ test("inside the cutoff, the spot is freed and nothing is credited", async () =>
       .select("metadata")
       .eq("booking_id", booking!.id)
       .eq("event_type", "booking_cancelled");
-    expect(events![0].metadata.forfeited_czk).toBe(200);
+    expect(events![0].metadata.forfeited_czk).toBe(game.priceCzk);
     expect(events![0].metadata.credit_issued_czk).toBe(0);
   } finally {
     await destroyScratchGame(game.id);
@@ -166,7 +166,7 @@ test("the cancel dialog warns before taking the credit, and still offers the can
 }) => {
   /*
    * THE COPY HALF. A dialog that went on saying "what you paid goes back as
-   * wallet credit" while taking 200 CZK would be the product lying at the
+   * wallet credit" while taking the game's price would be the product lying at the
    * moment a player is deciding — worse than having no dialog at all.
    */
   await setWalletTo(players.creditRich.id, 0);

@@ -677,6 +677,7 @@ export const uk: StringsOverlay = {
 
   pass: {
     title: "Ігровий абонемент",
+    creditUnit: "Один кредит — це один 90-хвилинний матч. Коротші матчі оплачуються онлайн.",
     lede: "Купи матчі заздалегідь зі знижкою. Гроші стануть кредитами і самі застосуються до наступного бронювання.",
     // The product name stays English in every locale — see lib/strings.ts.
     panelTitle: "Game Pass",

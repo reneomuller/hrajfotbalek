@@ -15,7 +15,7 @@ import {
 } from "@/lib/admin/gameForm";
 import { LanguagePill } from "@/components/game/LanguagePill";
 import { gameLanguageOf, type GameLanguage } from "@/lib/games/language";
-import { PASS_REFERENCE_PRICE_CZK } from "@/lib/pass/creditPrice";
+import { priceForDurationCzk } from "@/lib/games/price";
 import { strings } from "@/lib/strings";
 import type { Database, GameSurface, SkillLevel } from "@/lib/types/database";
 
@@ -147,9 +147,18 @@ export function GameForm({
    * create games a credit does not cover — which is the one price at which the
    * wallet arithmetic stops meaning anything.
    */
-  const [priceCzk, setPriceCzk] = useState(
-    String(game?.price_czk ?? PASS_REFERENCE_PRICE_CZK),
-  );
+  /*
+   * ~~A TYPED PRICE, PREFILLED WITH THE CREDIT NOMINAL.~~ IT IS DERIVED FROM
+   * THE DURATION NOW (round 35 v5, item 2): sixty minutes is 150, ninety is
+   * 180, from `priceForDurationCzk` — the same mapping
+   * `public.price_for_duration()` applies to whatever this form sends, so the
+   * field cannot propose a number the database will not store.
+   *
+   * IT IS STILL A FIELD RATHER THAN A SENTENCE, and still posted, because
+   * `admin_create_game_v2` validates it — a caller sending nonsense hears about
+   * it rather than having it silently discarded. What changed is that nobody
+   * chooses it.
+   */
   const [format, setFormat] = useState(game?.format ?? "");
   const [surface, setSurface] = useState<string>(game?.surface ?? "");
   // Round 18 item 2 — resolved through `gameLanguageOf` so a pre-migration row
@@ -170,6 +179,18 @@ export function GameForm({
   const [durationMinutes, setDurationMinutes] = useState(
     game?.duration_minutes != null ? String(game.duration_minutes) : "",
   );
+  /*
+   * THE PRICE, FROM THE LENGTH. Recomputed on every keystroke in the duration
+   * field, so the number in the box is always the one the database will store —
+   * `admin_create_game_v2` applies the same mapping to whatever is posted.
+   *
+   * A BLANK DURATION IS THE STANDARD LENGTH, which is what the placeholder
+   * under that field already says, so a blank form reads 150 rather than empty.
+   */
+  const derivedPriceCzk = String(
+    priceForDurationCzk(durationMinutes.trim() === "" ? null : Number(durationMinutes)),
+  );
+
   const [subsPerTeam, setSubsPerTeam] = useState(
     game?.subs_per_team != null ? String(game.subs_per_team) : "",
   );
@@ -306,12 +327,12 @@ export function GameForm({
             id="priceCzk"
             name="priceCzk"
             type="number"
-            min={0}
-            className={FIELD}
-            value={priceCzk}
-            onChange={(event) => setPriceCzk(event.target.value)}
+            readOnly
+            data-testid="price-czk"
+            className={`${FIELD} opacity-70`}
+            value={derivedPriceCzk}
           />
-          <p className={HINT}>{strings.admin.priceHint}</p>
+          <p className={HINT}>{strings.admin.priceDerivedHint}</p>
           {errors.priceCzk && <p className={ERROR}>{errors.priceCzk}</p>}
         </div>
       </div>

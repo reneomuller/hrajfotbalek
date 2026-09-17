@@ -45,6 +45,18 @@ export default async function PassPage() {
       <p className="mt-3 max-w-[520px] text-[14px] leading-relaxed text-muted">
         {t.pass.lede}
       </p>
+      {/*
+        WHAT A CREDIT BUYS, BEFORE THE PRICES (round 35 v5, item 1). A credit is
+        one 90-minute game and a 60-minute game is online-only — which is a fact
+        about what this page is selling, so it belongs above the tiers rather
+        than at the payment step, where somebody has already decided.
+      */}
+      <p
+        data-testid="pass-credit-unit"
+        className="mt-2 max-w-[520px] text-[13px] leading-relaxed text-bone"
+      >
+        {t.pass.creditUnit}
+      </p>
 
       {/*
         THE EQUIVALENCE, DIRECTLY ABOVE THE TIERS.

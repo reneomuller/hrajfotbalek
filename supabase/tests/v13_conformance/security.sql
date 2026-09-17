@@ -120,14 +120,33 @@ select pg_temp.ok(
 -- is stated as both halves.
 -- =============================================================================
 
+/*
+ * EXTENSION FUNCTIONS ARE NOT THIS PRODUCT'S FUNCTIONS (round 35 v5).
+ *
+ * `create extension pgtap` puts several hundred helpers into `public`, and both
+ * scans below started reporting every one of them the moment the local stack
+ * was rebuilt with pgTAP installed there. The assertions are about code WE
+ * wrote; an extension's internals are neither ours to fix nor ours to judge.
+ *
+ * `pg_depend` is what tells them apart — a function owned by an extension has a
+ * dependency row of type `e` — and filtering on it is more honest than a name
+ * list that would go stale the first time pgTAP added a helper.
+ */
+create function pg_temp.ours(p_oid oid) returns boolean language sql stable as $$
+  select not exists (
+    select 1 from pg_depend d
+     where d.objid = p_oid and d.classid = 'pg_proc'::regclass and d.deptype = 'e'
+  )
+$$;
+
 select pg_temp.ok(
   (select count(*) from pg_proc p join pg_namespace n on n.oid = p.pronamespace
-    where n.nspname = 'public' and p.prokind = 'f'
+    where n.nspname = 'public' and p.prokind = 'f' and pg_temp.ours(p.oid)
       and not (p.proconfig @> array['search_path=""'])) = 0,
   'every function in public pins search_path to the empty string',
   (select coalesce(string_agg(p.proname, ', '), 'none')
      from pg_proc p join pg_namespace n on n.oid = p.pronamespace
-    where n.nspname = 'public' and p.prokind = 'f'
+    where n.nspname = 'public' and p.prokind = 'f' and pg_temp.ours(p.oid)
       and not (p.proconfig @> array['search_path=""'])));
 
 /*
@@ -139,6 +158,7 @@ select pg_temp.ok(
 select pg_temp.ok(
   (select count(*) from pg_proc p join pg_namespace n on n.oid = p.pronamespace
     where n.nspname = 'public' and p.prokind = 'f' and not p.prosecdef
+      and pg_temp.ours(p.oid)
       and p.prosrc ~* '(insert into|update |delete from)') = 0,
   'no SECURITY INVOKER function writes state',
   (select coalesce(string_agg(p.proname, ', '), 'none')

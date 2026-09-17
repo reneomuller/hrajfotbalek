@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { LOCALE_COOKIE, LOCALES } from "../lib/i18n/locales";
+import { CREDIT_SEAT_MINUTES } from "../lib/games/price";
 import { apiClientFor, players, signInAs } from "./helpers/session";
 import { createScratchGame, destroyScratchGame } from "./helpers/scaffold";
 
@@ -163,7 +164,16 @@ test("the add-guests panel and the booking page use the SAME word for credits", 
    * KEY — `booking.payWithCredit` — and this is what would notice if a second
    * key came back.
    */
-  const game = await createScratchGame({ capacity: 12, priceCzk: 150, hoursFromNow: 24 * 15 });
+  const game = await createScratchGame({
+    capacity: 12,
+    /*
+     * A GAME A CREDIT CAN BUY (round 35 v5, item 1). This spec compares the
+     * credit rail's wording on two surfaces, and on a 60-minute game there is
+     * no credit rail on either — the comparison would be between two absences.
+     */
+    durationMinutes: CREDIT_SEAT_MINUTES,
+    hoursFromNow: 24 * 15,
+  });
   try {
     await signInAs(context, players.creditRich);
     await context.addCookies([

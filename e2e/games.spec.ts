@@ -857,10 +857,15 @@ test("a card carries venue, time, format, surface, bar and spots — no price, n
   const game = await createScratchGame({
     hoursFromNow: 24 * 17,
     capacity: 12,
-    priceCzk: 250,
+    /*
+     * ~~250, a price chosen to be unmistakable in a page of numbers.~~ THE
+     * PRICE IS NOT CHOSEN ANY MORE (round 35 v5), so the assertions below read
+     * it off the game the scaffold actually made. What this spec is about — the
+     * card withholds it and the detail page prints it — is unchanged.
+     */
+    durationMinutes: 90,
     format: "5v5",
     subsPerTeam: 2,
-    durationMinutes: 90,
     allowedSkillLevels: ["advanced"],
   });
 
@@ -897,7 +902,7 @@ test("a card carries venue, time, format, surface, bar and spots — no price, n
     // leaked value could not hide behind another row's — which makes it the
     // strongest case for asserting the absence.
     await expect(row.getByTestId("card-price")).toHaveCount(0);
-    await expect(row).not.toContainText("250");
+    await expect(row).not.toContainText(String(game.priceCzk));
     // What the card carries instead: the dotted count line.
     await expect(row.getByTestId("row-spots")).toBeVisible();
     await expect(row.getByTestId("card-players-count")).toHaveCount(0);
@@ -920,7 +925,7 @@ test("a card carries venue, time, format, surface, bar and spots — no price, n
     await row.click();
     await page.waitForURL(`**/game/${game.id}`);
     await expect(page.getByTestId("game-subs")).toContainText("2");
-    await expect(page.locator("body")).toContainText("250");
+    await expect(page.locator("body")).toContainText(String(game.priceCzk));
   } finally {
     await destroyScratchGame(game.id);
   }
@@ -1424,7 +1429,13 @@ test("the claim bar shows the credit equivalence at the rate, and not at any oth
   page,
 }) => {
   const flat = await createScratchGame({ hoursFromNow: 24 * 5, priceCzk: PASS_REFERENCE_PRICE_CZK });
-  const other = await createScratchGame({ hoursFromNow: 24 * 5 + 1, priceCzk: 200 });
+  /*
+     * A LENGTH WHOSE PRICE IS NOT ONE CREDIT. ~~A 200 CZK game.~~ The price is
+     * not a thing a caller picks any more, so the way to get a game that is not
+     * exactly one credit is to ask for the SIXTY-minute one — which is 150, and
+     * which a credit cannot buy at all.
+     */
+    const other = await createScratchGame({ hoursFromNow: 24 * 5 + 1, durationMinutes: 60 });
 
   try {
     await page.goto(`/game/${flat.id}`);
@@ -1437,7 +1448,7 @@ test("the claim bar shows the credit equivalence at the rate, and not at any oth
     // 200 is not one credit, and the bar declines to guess what it is —
     // inventing that ratio is the pro-rating the credits ruling stops on.
     await page.goto(`/game/${other.id}`);
-    await expect(bar.getByTestId("claim-bar-price")).toContainText("200");
+    await expect(bar.getByTestId("claim-bar-price")).toContainText(String(other.priceCzk));
     await expect(bar.getByTestId("claim-bar-price-credit")).toHaveCount(0);
   } finally {
     await destroyScratchGame(flat.id);

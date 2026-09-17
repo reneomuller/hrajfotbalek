@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { appCapabilities } from "@/lib/db/capabilities";
+import { gameTakesCredit } from "@/lib/games/price";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { BookingError } from "@/components/BookingError";
@@ -156,6 +157,13 @@ export default async function BookPage({ params, searchParams }: BookPageProps) 
             what it was: three pills.
           */
           partyUpToThirteen={(await appCapabilities()).partyUpToThirteen}
+          /*
+            WHETHER A CREDIT CAN BUY THIS GAME AT ALL (round 35 v5, item 1).
+            One credit is one 90-minute seat; a game of any other length is
+            online-only, and the credit option is not rendered rather than
+            rendered disabled.
+          */
+          takesCredit={gameTakesCredit(game.duration_minutes)}
         />
       </div>
 

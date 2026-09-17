@@ -156,6 +156,36 @@ only way to notice is to diff the live jsonb against the newest file. **Every
 new migration's list must be a superset of what is LIVE, not of what the
 previous file says**, which means probing before writing it.
 
+**THE PRICE IS A FUNCTION OF THE DURATION, NOT A NUMBER** — `price_for_duration()`
+in SQL, `lib/games/price.ts` in TypeScript: 60 minutes is 150, everything else
+is 180. That is deliberate design against the copy problem rather than a
+feature: round 35 v2 audited a FLAT price and found it in four places, one of
+them inside a CHECK constraint. **A constant invites a copy; a function of
+something else has to be called.** Both game writers derive the stored price and
+the admin form's price field is read-only, so no caller can put a game and its
+price out of step.
+
+**A CREDIT BUYS A 90-MINUTE SEAT. A 60-MINUTE GAME IS ONLINE-ONLY** —
+`credit_seat_minutes()`. Neither credit control RENDERS on a short game (not
+disabled: a greyed-out credit button asks a question the screen cannot answer),
+`create_booking_internal` applies nothing, and `add_guests_with_credit` refuses
+by name. **`credit_seat_price_czk()` (180, the ledger nominal) and
+`price_for_duration(90)` (180, what a card pays) are the same number and are
+deliberately two functions** — `lib/games/__tests__/price.test.ts` asserts the
+coincidence so the day it ends is a decision rather than a silent data change.
+
+**A FIXTURE WITH NO DURATION IS A 60-MINUTE GAME AND TAKES NO CREDIT.** Six SQL
+suites and the seed asserted credit behaviour on duration-less games and all of
+them broke at once. `createScratchGame` now defaults to 90; a spec that wants the
+short game asks for it.
+
+**pgTAP LIVES IN `public`, AND TWO CONFORMANCE SCANS WERE READING IT AS OURS.**
+`create extension pgtap` adds several hundred helpers there; "no SECURITY INVOKER
+function writes state" listed the whole of pgTAP the moment the local stack was
+rebuilt with it installed. Both scans now filter on `pg_depend` extension
+ownership. **They were only ever correct by accident of where the extension
+happened to live.**
+
 **THE GAME COSTS 180 AND THE PRICE LIVES IN ONE PLACE PER SIDE** —
 `public.credit_seat_price_czk()` in SQL, `PASS_REFERENCE_PRICE_CZK` in
 TypeScript, SQL being the authority. **The round-35-v2 audit found FOUR copies**,

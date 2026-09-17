@@ -12,6 +12,7 @@ import { toBookingErrorCode, type BookingErrorCode } from "@/lib/booking/errors"
 import { buildResumeUrl } from "@/lib/booking/resume";
 import { policy } from "@/lib/policy";
 import { PASS_REFERENCE_PRICE_CZK } from "@/lib/pass/creditPrice";
+import { gameTakesCredit } from "@/lib/games/price";
 import { rememberPendingPurchase } from "@/lib/payments/pendingPurchaseCookie";
 import { stripeBookingUrl, withStripeParams } from "@/lib/payments/stripeLinks";
 import { embeddedCheckoutEnabled } from "@/lib/payments/embeddedCheckout";
@@ -178,9 +179,26 @@ export async function createBookingAction(
     const supabase = await createServerSupabaseClient();
     const [balanceCzk, priceRow] = await Promise.all([
       getOwnCreditBalance(),
-      supabase.from("games").select("price_czk").eq("id", gameId).maybeSingle(),
+      supabase
+        .from("games")
+        .select("price_czk, duration_minutes")
+        .eq("id", gameId)
+        .maybeSingle(),
     ]);
     const priceCzk = priceRow.data?.price_czk ?? null;
+
+    /*
+     * A CREDIT IS A 90-MINUTE SEAT (round 35 v5, item 1), so a game of any
+     * other length cannot be paid for with one — and `create_booking_internal`
+     * would apply nothing and leave an UNPAID booking on a product that no
+     * longer takes cash, which is exactly the failure this guard was added for
+     * in round 23. The form does not render the option; this is the half a
+     * form cannot enforce.
+     */
+    if (!gameTakesCredit(priceRow.data?.duration_minutes ?? null)) {
+      return { status: "error", code: "CREDIT_NEGATIVE_BLOCKED" };
+    }
+
     const seatsCredit = PASS_REFERENCE_PRICE_CZK * (guests + 1);
     if (priceCzk === null || (priceCzk > 0 && balanceCzk < seatsCredit)) {
       return { status: "error", code: "CREDIT_NEGATIVE_BLOCKED" };

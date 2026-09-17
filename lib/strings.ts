@@ -1664,6 +1664,8 @@ export const strings = {
     capacityLabel: "Capacity",
     capacityHint: "Cannot go below the players already booked.",
     priceLabel: "Price (CZK)",
+    /* Round 35 v5, item 2 — the price is not a choice any more. */
+    priceDerivedHint: "Set by the duration: 60 minutes is 150 CZK, 90 is 180.",
     priceHint: "Future bookings only.",
     formatLabel: "Format (optional)",
     formatHint: "Like 6v6, or 6v6v6 for a three-way.",
@@ -2323,6 +2325,13 @@ export const strings = {
   pass: {
     title: "Game pass",
     lede: "Pre-buy games at a discount. It becomes credits and applies itself to your next booking.",
+    /*
+     * WHAT A CREDIT ACTUALLY BUYS (round 35 v5, item 1), said on the page where
+     * somebody is deciding to spend money rather than on the one where they
+     * have already decided. A 60-minute game is online-only, and a player who
+     * learns that at the payment step learns it too late.
+     */
+    creditUnit: "One credit is one 90-minute game. Shorter games are paid online.",
     /*
      * "Game Pass" IS THE PRODUCT NAME and stays in English in every locale —
      * see the Czech and Russian overlays, which translate the strapline beneath

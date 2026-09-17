@@ -37,6 +37,7 @@ export function AddGuestsPanel({
   priceCzk,
   creditCzk,
   embeddedCheckout,
+  takesCredit,
 }: {
   gameId: string;
   bookingId: string;
@@ -48,6 +49,15 @@ export function AddGuestsPanel({
   creditCzk: number;
   /** Whether the online rail is live; the link rail cannot do this. */
   embeddedCheckout: boolean;
+  /**
+   * Whether this game takes credit at all (round 35 v5, item 1).
+   *
+   * A CREDIT IS ONE 90-MINUTE SEAT, so on a 60-minute game the credit button
+   * does not render and Pay online stands alone. `add_guests_with_credit`
+   * refuses such a game by name — `GAME_NOT_CREDIT_ELIGIBLE` — and this is the
+   * control not offering what the RPC would refuse.
+   */
+  takesCredit: boolean;
 }) {
   const t = useStrings();
   const locale = useLocale();
@@ -139,7 +149,7 @@ export function AddGuestsPanel({
         data-testid="add-guests-cost"
         className="mt-3 mb-0 font-display text-title uppercase leading-none text-volt"
       >
-        {affordable
+        {takesCredit && affordable
           ? t.games.addGuests.costCredits
               .replace("{credits}", creditsLabel(picked))
               .replace("{n}", guestLabel)
@@ -164,6 +174,13 @@ export function AddGuestsPanel({
         a wallet, which is the database's word for where the number is kept.
       */}
       <div className="mt-4 flex flex-col gap-2">
+        {/*
+          AND ON A GAME A CREDIT CANNOT BUY, NEITHER OF THESE RENDERS — Pay
+          online stands alone (round 35 v5, item 1). Not disabled with an
+          explanation: a greyed-out credit button asks "why can I not use my
+          credits" on a panel that has no room to answer.
+        */}
+        {takesCredit && (
         <form action={formAction}>
           <input type="hidden" name="gameId" value={gameId} />
           <input type="hidden" name="bookingId" value={bookingId} />
@@ -178,6 +195,7 @@ export function AddGuestsPanel({
             {t.booking.payWithCredit}
           </button>
         </form>
+        )}
 
         {/*
           ~~"{amount} left after", between Redeem credit and Pay online.~~
@@ -194,7 +212,7 @@ export function AddGuestsPanel({
           THE REFUSAL STAYS, because it is not a preview: it is the reason the
           button above it is disabled.
         */}
-        {!affordable && (
+        {takesCredit && !affordable && (
           <p data-testid="add-guests-poor" className="m-0 text-small text-faint">
             {t.games.addGuests.notEnoughCredit}
           </p>

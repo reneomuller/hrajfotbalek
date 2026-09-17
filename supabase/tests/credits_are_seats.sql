@@ -77,10 +77,15 @@ insert into public.players (id, nickname, email, auth_user_id) values
   ('6fff0000-0000-0000-0000-0000000000f3', 'SeatCreditC', 'cas-c@test.invalid', '60000000-0000-0000-0000-0000000000f3'),
   ('6fff0000-0000-0000-0000-0000000000f4', 'SeatCreditD', 'cas-d@test.invalid', '60000000-0000-0000-0000-0000000000f4');
 
-insert into public.games (id, venue, starts_at, capacity, price_czk, status) values
-  ('9fff0000-0000-0000-0000-0000000000f1', 'Seat Credit 200', now() + interval '30 hours', 20, 200, 'published'),
-  ('9fff0000-0000-0000-0000-0000000000f2', 'Seat Credit Mixed', now() + interval '31 hours', 20, 200, 'published'),
-  ('9fff0000-0000-0000-0000-0000000000f3', 'Seat Credit Free', now() + interval '32 hours', 20, 0, 'published');
+-- CREDIT NEEDS A NINETY-MINUTE PITCH (round 35 v5, item 1). A credit buys one
+-- 90-minute seat, and a fixture with no duration is a SIXTY-minute game, which
+-- takes no credit at all — so every game a credit is spent on below says how
+-- long it is. The price follows from that, which is why none of these rows
+-- states one it chose.
+insert into public.games (id, venue, starts_at, capacity, price_czk, status, duration_minutes) values
+  ('9fff0000-0000-0000-0000-0000000000f1', 'Seat Credit 200', now() + interval '30 hours', 20, 200, 'published', 90),
+  ('9fff0000-0000-0000-0000-0000000000f2', 'Seat Credit Mixed', now() + interval '31 hours', 20, 200, 'published', 90),
+  ('9fff0000-0000-0000-0000-0000000000f3', 'Seat Credit Free', now() + interval '32 hours', 20, 0, 'published', 90);
 
 create function pg_temp.bal(p uuid) returns integer language sql security definer as $$
   select coalesce(sum(delta_czk), 0)::integer from public.credit_ledger where player_id = p

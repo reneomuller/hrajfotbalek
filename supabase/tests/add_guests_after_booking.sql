@@ -74,9 +74,14 @@ insert into public.players (id, nickname, email, auth_user_id) values
 
 -- CAPACITY THREE: room for the host, one added guest, and then nothing. The
 -- only arrangement that exercises both endings in one drill.
-insert into public.games (id, venue, starts_at, capacity, price_czk, status) values
+-- CREDIT NEEDS A NINETY-MINUTE PITCH (round 35 v5, item 1). A credit buys one
+-- 90-minute seat, and a fixture with no duration is a SIXTY-minute game, which
+-- takes no credit at all — so every game a credit is spent on below says how
+-- long it is. The price follows from that, which is why none of these rows
+-- states one it chose.
+insert into public.games (id, venue, starts_at, capacity, price_czk, status, duration_minutes) values
   ('9d000000-0000-0000-0000-0000000d9e01', 'Guest Pitch',
-   now() + interval '2 days', 3, 150, 'published');
+   now() + interval '2 days', 3, 150, 'published', 90);
 
 insert into public.bookings (id, game_id, player_id, status, payment_method, price_czk,
                              credit_applied_czk, guest_count)
@@ -239,8 +244,13 @@ create temp table _debit_fixture as
 select '9d000000-0000-0000-0000-0000000d9f02'::uuid as game_id,
        'aaaa0000-0000-0000-0000-0000000d9f02'::uuid as player_id;
 
-insert into public.games (id, venue, starts_at, capacity, price_czk, status) values
-  ('9d000000-0000-0000-0000-0000000d9f02', 'Add Guest Debit', now() + interval '9 days', 10, 200, 'published');
+-- CREDIT NEEDS A NINETY-MINUTE PITCH (round 35 v5, item 1). A credit buys one
+-- 90-minute seat, and a fixture with no duration is a SIXTY-minute game, which
+-- takes no credit at all — so every game a credit is spent on below says how
+-- long it is. The price follows from that, which is why none of these rows
+-- states one it chose.
+insert into public.games (id, venue, starts_at, capacity, price_czk, status, duration_minutes) values
+  ('9d000000-0000-0000-0000-0000000d9f02', 'Add Guest Debit', now() + interval '9 days', 10, 200, 'published', 90);
 
 insert into auth.users (id, email) values
   ('6d000000-0000-0000-0000-0000000d9f02', 'agd@test.invalid');

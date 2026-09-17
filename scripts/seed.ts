@@ -26,6 +26,7 @@
  *     signs in as them instead.
  */
 
+import { CREDIT_SEAT_MINUTES } from "../lib/games/price.ts";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import {
   SEED_PASSWORD,
@@ -314,6 +315,17 @@ async function seed(): Promise<void> {
           format: g.format ?? null,
           surface: g.surface ?? null,
           subs_per_team: g.subsPerTeam ?? null,
+          /*
+           * HOW LONG, AND THEREFORE WHAT IT COSTS (round 35 v5).
+           *
+           * The seeded world is a 90-minute one, because that is the length a
+           * credit buys — a fixture with no duration is a SIXTY-minute game
+           * that takes no credit at all, and the seed's own acceptance check
+           * books one with a wallet. It caught this immediately: "expected a
+           * derived credit/confirmed booking, got qr/reserved".
+           */
+          duration_minutes:
+            ("durationMinutes" in g ? g.durationMinutes : null) ?? CREDIT_SEAT_MINUTES,
           status: "draft",
         })),
       )

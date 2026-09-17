@@ -7,6 +7,61 @@ way that nobody asked about.
 
 ---
 
+## Round 35 v5 — 2026-09-17
+
+Three items. Two of them refine what v2 shipped two days ago; the third was
+already done and needed verifying rather than rebuilding.
+
+### The lead: the price stopped being a number
+
+v2's audit found a flat price in four places and one of them was a CHECK
+constraint. v5 removes the category rather than the copies: **the price is a
+function of the duration**, so there is no constant left to copy. What the audit
+found this time was the same shape in three more places — a number standing in
+for a decision. The admin form prefilled the credit nominal and let an organizer
+type over it; the seed set every game to it; both game writers stored whatever
+the caller sent. All three derive now, and the form's field is read-only.
+
+### The distinction worth keeping
+
+`credit_seat_price_czk()` is 180 and `price_for_duration(90)` is 180, and they
+are two different facts that happen to agree. One constant would make the day
+they diverge a silent data change. There is a unit test whose entire job is to
+assert the coincidence, so that ending it is a decision somebody makes.
+
+### What item 1 created that the product had never had
+
+A game a credit cannot buy. The add-guests panel assumed at least one rail was
+always available — on a 60-minute game with the online rail unconfigured it
+rendered a heading, a picker and a price with no button under them. A control
+that asks a question it cannot act on. It renders only when a rail exists now.
+
+### And two things the suites caught
+
+**A fixture with no duration is a 60-minute game**, so six SQL suites and the
+seed were suddenly testing the online-only path by accident. The seed's own
+acceptance check said so in one line: "expected a derived credit/confirmed
+booking, got qr/reserved". `createScratchGame` defaults to 90 now.
+
+**pgTAP lives in `public`.** Installing it after the stack rebuild made two
+conformance scans report several hundred of its helpers as ours — "no SECURITY
+INVOKER function writes state" listed the whole extension. They filter on
+`pg_depend` now; they had only ever been correct by accident of where the
+extension happened to live.
+
+### Suites
+
+Unit 768/768 · SQL 48/48 · lint 0 errors · tsc clean. E2E result and the
+deployment id are in the round's final commit message.
+
+### Still owed by the owner
+
+Rows 184, 188, **261** (the 28 unsettled Stripe sessions), 296 and **312** — the
+single 120-minute game, priced at 180 pending a ruling. The migration was
+applied by me on a one-time authorization; the Oliver-applies rule stands.
+
+---
+
 ## Round 35 v2 — 2026-09-15/16
 
 Nine items, three of which arrived mid-round. All nine done. The pre-launch

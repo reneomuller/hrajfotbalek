@@ -414,7 +414,13 @@ test("publishing a game lands on an unmistakable confirmed state", async ({
     .getByTestId("starts-at")
     .fill(new Date(Date.now() + 21 * 24 * 3600_000).toISOString().slice(0, 16));
   await page.locator('input[name="capacity"]').fill("12");
-  await page.locator('input[name="priceCzk"]').fill("150");
+  /*
+   * ~~Type a price.~~ THE PRICE IS DERIVED FROM THE DURATION (round 35 v5,
+   * item 2) and the field is read-only, so the thing to set is the LENGTH. The
+   * number that appears beside it is the product's answer rather than this
+   * spec's.
+   */
+  await page.getByTestId("duration-minutes").fill("60");
   await page.getByTestId("game-form-submit").click();
 
   await page.waitForURL(/\/admin\/games\/[0-9a-f-]{36}(\?|$)/);

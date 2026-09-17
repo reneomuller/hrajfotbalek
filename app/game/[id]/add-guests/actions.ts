@@ -76,6 +76,14 @@ export async function addGuestsAction(
       if (message.includes("CREDIT_NEGATIVE_BLOCKED")) {
         return { status: "error", code: "CREDIT_NEGATIVE_BLOCKED" };
       }
+      /*
+       * A 60-MINUTE GAME TAKES NO CREDIT (round 35 v5, item 1). The panel does
+       * not render the button, so reaching this means a hand-made POST — and it
+       * gets the same honest answer the RPC gave rather than a generic failure.
+       */
+      if (message.includes("GAME_NOT_CREDIT_ELIGIBLE")) {
+        return { status: "error", code: "GAME_NOT_CREDIT_ELIGIBLE" };
+      }
       console.error("add guests: credit rail refused", {
         booking: bookingId,
         message,
