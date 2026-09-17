@@ -125,10 +125,36 @@ Until it lands, a typed price is accepted by the form and overwritten by the
 length on CREATE. The edit path already stores what it is sent, for the reason
 above.
 
+### The ledger re-verification found six rows that had come true
+
+This is the second time the "a dormant row is never echoed" rule has paid for
+itself, and it paid bigger than the first. **Rows 203, 215, 221, 226, 275 and
+291 all read `BUILT-DORMANT-ON-the owner running it`** — some of them for four
+rounds — and **every one of those migrations is applied on production**. Probed
+by their objects and their capability flags, not by filename: rounds 27, 28, 29,
+34 and 35 are all live, `app_capabilities()` returns 27 flags and every one is
+true. Round 29's backfill has visibly run — **44 of 53 games are `settled`**,
+none are a `played` backlog for the nightly sweep to complain about.
+
+Two more re-probes while I was there:
+
+* **Row 244 is empty.** The three ragged wallets (4,460 · 110 · 50) are gone;
+  the whole production ledger now sums to **180 CZK across one player**, which
+  is exactly one credit.
+* **A checkout session has reached `booked`.** 38 open, 1 booked — which is the
+  positive half row 261 never had: the webhook fires, `settle_checkout_session`
+  runs, the rail works end to end.
+
+And the production catalog confirms row 328 is not a local artefact:
+`admin_update_game_v2` on production contains no `price_for_duration`, while
+`admin_create_game_v2` and the legacy `admin_update_game` both do. Round 35 v5
+has been half-applied there since the day it landed.
+
 ### Ledger
 
 216 closes DONE, 261 closes EXPLAINED, 312 closes MOOTED — all three on the
-owner's word rather than on a check of mine. Rows 321-330 are new.
+owner's word. 203, 215, 221, 226, 244, 275 and 291 close on a probe. Rows
+321-335 are new, and **331 is the only dormant row left**.
 
 ---
 
