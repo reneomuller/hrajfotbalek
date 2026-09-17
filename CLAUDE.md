@@ -280,6 +280,25 @@ passed for three rounds while the wrong surface was being measured.
 reads colours out of the crop window, saves, and reads colours out of the card
 as served. Keep that shape for anything claiming what-you-see-is-what-you-get.
 
+**`X or true` IS FOLDED AWAY, AND THE CALL INSIDE IT NEVER RUNS.** The
+`duration_pricing` drill wrapped its edit as `(select admin_update_game(...)) is
+not null or true` -- a shrug at the return value -- and Postgres constant-folds
+the expression to `true` without evaluating the left side. The update did not
+execute, and the price the assertion then "confirmed" was the one the CREATE had
+already written, so the drill passed while testing nothing. **Same family as the
+`count(*)` probe above**: an assertion that can pass without running the thing it
+probes. Anything with a side effect gets its own statement.
+
+**A SUBSTITUTION CAN LAND IN A FUNCTION NOTHING CALLS.** Round 35 v5 substituted
+its price derive into `admin_update_game`, the seven-argument legacy function;
+every edit in `app/admin/games/actions.ts` goes through `admin_update_game_v2`,
+the thirteen-argument overload. The migration applied, the verification block
+found its text, the drill drove the legacy function and passed -- and the product
+behaved as though the round had never shipped. **Postgres overloads by argument
+list, and `pg_proc` will happily hold two functions with one name and opposite
+behaviour.** Before substituting into a writer, check which overload the app
+imports; and pin the other one as an ABSENCE so the two cannot silently diverge.
+
 **A form that closes itself on submit hides its own error.** `ChangeNameForm`
 called `setOpen(false)` in `onSubmit`, so a refused rename unmounted before the
 action answered and the admin saw nothing — not the old name, not a reason.
@@ -433,6 +452,20 @@ anything is owed:
 update public.venues set name = replace(name, ' — ', ' • ') where name like '% — %';
 update public.games  set venue = replace(venue, ' — ', ' • ') where venue like '% — %';
 ```
+
+**Outstanding, round 36's one -- additive, idempotent, not deploy-first, and
+order-free against everything below.** It reverses round 35 v5's price derive in
+both game writers by substitution, and RAISES rather than overwrites if the text
+it expects is absent. Applied twice against a clean local stack.
+
+```
+node scripts/apply-migration.mjs \
+  supabase/migrations/20260918100000_price_is_typed.sql --production
+```
+
+Until it lands, a typed price is accepted by the form and then overwritten by the
+length on CREATE. The EDIT path already stores what it is sent -- round 35 v5's
+substitution went into an overload nothing calls, which is the lesson above.
 
 **~~Outstanding, round 35's one.~~ ROUND 35 v2 APPLIED FOUR, IN DATE ORDER, BY
 ME** — on a one-time authorization the owner gave for that round only. **The

@@ -82,11 +82,36 @@ function walk(dir: string): string[] {
 
 const files = ROOTS.flatMap((root) => walk(path.resolve(process.cwd(), root)));
 
+/**
+ * Strips `//` lines and `/* … *\/` blocks so a HISTORICAL NOTE is not a call site.
+ *
+ * Found on 2026-09-17: `DayPicker.tsx` documents the v1.3 skin by naming the
+ * class the skin REMOVED — "`rounded-chip` is gone" — and the sweep read its own
+ * evidence of success as a failure. A comment cannot generate CSS, so it cannot
+ * be the creeping-back this file exists to catch, and a check that forces prose
+ * to talk around the name it is about gets worked around rather than obeyed.
+ *
+ * Same shape as `withoutComments` in `lib/pass/__tests__/seatPrice.test.ts`, and
+ * kept as a second copy deliberately: `scripts/**` is excluded from the unit
+ * config, so importing across that line would put this file in two runners.
+ */
+function withoutComments(source: string): string {
+  return source
+    // A block comment keeps its newlines, so the line numbers below stay true.
+    .replace(/\/\*[\s\S]*?\*\//g, (block) => block.replace(/[^\n]/g, " "))
+    .replace(/^\s*\/\/.*$/gm, "");
+}
+
 /** Every occurrence of `pattern`, as `path:line` strings a human can open. */
 function findAll(pattern: RegExp): string[] {
   const hits: string[] = [];
   for (const file of files) {
-    const lines = readFileSync(file, "utf8").split("\n");
+    /*
+     * BLANKED, NOT DELETED. Replacing a comment with nothing would renumber
+     * every line after it, so the `path:line` a failure prints would not be the
+     * line a human opens.
+     */
+    const lines = withoutComments(readFileSync(file, "utf8")).split("\n");
     lines.forEach((line, i) => {
       // A fresh regex per line: `g` flags carry lastIndex between calls, and a
       // check that silently skips every other match is worse than no check.

@@ -1665,7 +1665,8 @@ export const strings = {
     capacityHint: "Cannot go below the players already booked.",
     priceLabel: "Price (CZK)",
     /* Round 35 v5, item 2 — the price is not a choice any more. */
-    priceDerivedHint: "Set by the duration: 60 minutes is 150 CZK, 90 is 180.",
+    priceDerivedHint:
+      "Whole CZK. The duration prefills it — 60 minutes 150, 90 minutes 180 — and changing the duration refills the box. Type over it freely.",
     priceHint: "Future bookings only.",
     formatLabel: "Format (optional)",
     formatHint: "Like 6v6, or 6v6v6 for a three-way.",
@@ -1772,7 +1773,7 @@ export const strings = {
     capacityInvalid: "Capacity must be a whole number of at least 1.",
     capacityBelowBooked:
       "Capacity cannot go below the players already booked. Cancel a booking first.",
-    priceInvalid: "Price must be 0 or more.",
+    priceInvalid: "Price must be a whole number of CZK, 1 or more.",
     formatInvalid: "Format looks like 6v6, or 6v6v6 — two or three numbers with a v between them.",
     /* --- pitch name (migration 41, round 9). Admin copy is English only. --- */
     pitchNameLabel: "Pitch name",

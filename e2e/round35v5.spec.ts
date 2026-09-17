@@ -5,7 +5,14 @@ import { apiClientFor, players, serviceClient, signInAs } from "./helpers/sessio
 import { createScratchGame, destroyScratchGame, setWalletTo, walletBalance } from "./helpers/scaffold";
 
 /**
- * ROUND 35 v5 — the price follows the length, and a credit buys 90 minutes.
+ * ROUND 35 v5 — ~~the price follows the length~~, and a credit buys 90 minutes.
+ *
+ * THE PRICE HALF WAS OVERRULED IN ROUND 36: the length PREFILLS the organizer's
+ * price field and decides nothing after that, so every fixture below now says
+ * what it costs instead of letting a mapping say it. The prices chosen are the
+ * mapping's own — these tests are about the DEFAULT path — and the inversion,
+ * with fixtures priced deliberately across the mapping, lives in
+ * `e2e/round36.spec.ts`.
  *
  * THE SIXTY-MINUTE GAME IS THE SUBJECT OF MOST OF THIS FILE, because it is the
  * case the product did not have until now: a game a credit cannot buy. The
@@ -30,15 +37,29 @@ async function asPlayer(
 // ITEM 2 — the price comes from the length, on the page and in the row
 // =============================================================================
 
-test("a 60-minute game is 150 and a 90-minute game is 180, wherever it is read", async ({
+test("a 60-minute game at 150 and a 90-minute game at 180 read that way everywhere", async ({
   page,
   context,
 }) => {
-  const short = await createScratchGame({ durationMinutes: 60, hoursFromNow: 24 * 6 });
-  const long = await createScratchGame({ durationMinutes: 90, hoursFromNow: 24 * 6 + 1 });
+  /*
+   * ~~The row, which `admin_create_game_v2` priced from the duration.~~ The
+   * row now holds what it was handed, which is why both fixtures state their
+   * price. What survives round 36 is the part that was always the point: the
+   * number in `games.price_czk` is the number the player's page shows, with no
+   * second opinion computed anywhere on the way out.
+   */
+  const short = await createScratchGame({
+    durationMinutes: 60,
+    priceCzk: priceForDurationCzk(60),
+    hoursFromNow: 24 * 6,
+  });
+  const long = await createScratchGame({
+    durationMinutes: 90,
+    priceCzk: priceForDurationCzk(90),
+    hoursFromNow: 24 * 6 + 1,
+  });
   const admin = serviceClient();
   try {
-    // The row, which `admin_create_game_v2` priced from the duration it was given.
     const { data: rows } = await admin
       .from("games")
       .select("id, price_czk, duration_minutes")
@@ -68,8 +89,7 @@ test("a 60-minute game is 150 and a 90-minute game is 180, wherever it is read",
   }
 });
 
-test("the scaffold's own price agrees with the mapping", () => {
-  // The mapping is the only place either number is written down.
+test("the PREFILL mapping is the only place either number is written down", () => {
   expect(priceForDurationCzk(60)).toBe(150);
   expect(priceForDurationCzk(CREDIT_SEAT_MINUTES)).toBe(180);
 });
@@ -82,7 +102,7 @@ test("a 60-minute game offers NO credit option — Pay online stands alone", asy
   page,
   context,
 }) => {
-  const short = await createScratchGame({ durationMinutes: 60, hoursFromNow: 24 * 5 });
+  const short = await createScratchGame({ durationMinutes: 60, priceCzk: 150, hoursFromNow: 24 * 5 });
   try {
     // A wallet that could pay for it three times over, so the absence is about
     // the LENGTH and cannot be mistaken for an empty balance.
@@ -104,7 +124,7 @@ test("a 90-minute game still offers it, and spends one credit a seat", async ({
   page,
   context,
 }) => {
-  const long = await createScratchGame({ durationMinutes: 90, hoursFromNow: 24 * 4 });
+  const long = await createScratchGame({ durationMinutes: 90, priceCzk: 180, hoursFromNow: 24 * 4 });
   try {
     await setWalletTo(players.creditRich.id, 3 * 180);
     await asPlayer(context, "creditRich");
@@ -127,7 +147,7 @@ test("the server refuses the credit rail on a short game, even by hand", async (
    * this means a hand-made POST or a stale tab — and the answer has to be a
    * refusal rather than an unpaid booking on a product that takes no cash.
    */
-  const short = await createScratchGame({ durationMinutes: 60, hoursFromNow: 24 * 3 });
+  const short = await createScratchGame({ durationMinutes: 60, priceCzk: 150, hoursFromNow: 24 * 3 });
   const admin = serviceClient();
   try {
     await setWalletTo(players.creditRich.id, 3 * 180);
@@ -157,7 +177,7 @@ test("the server refuses the credit rail on a short game, even by hand", async (
 });
 
 test("the add-guests panel on a short game shows Pay online alone", async ({ page, context }) => {
-  const short = await createScratchGame({ durationMinutes: 60, hoursFromNow: 24 * 2 });
+  const short = await createScratchGame({ durationMinutes: 60, priceCzk: 150, hoursFromNow: 24 * 2 });
   const admin = serviceClient();
   try {
     await setWalletTo(players.creditRich.id, 3 * 180);

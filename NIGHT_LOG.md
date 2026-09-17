@@ -7,6 +7,131 @@ way that nobody asked about.
 
 ---
 
+## Round 36 — 2026-09-17
+
+Two items. One is a question answered by elimination; the other is the owner
+reversing a decision this project made two days ago, which is the more
+interesting half because of what reversing it exposed.
+
+### Item 1: the second Apple Pay button is Stripe's, and here is why that is not a shrug
+
+Three layers could put a wallet on that page twice, and two are ruled out by
+reading rather than guessing.
+
+**Our shell renders one checkout.** `EmbeddedCheckoutFrame.tsx` mounts exactly
+one `<EmbeddedCheckoutProvider><EmbeddedCheckout /></EmbeddedCheckoutProvider>`,
+and a search of the repository finds no express-checkout element at all —
+nothing of ours draws a wallet button anywhere.
+
+**Our session config cannot do it either, and this is the part worth keeping.**
+A Checkout Session has no parameter that surfaces a wallet a second time:
+`SessionCreateParams.WalletOptions` in the installed SDK has exactly one member,
+`link`; `apple_pay` is not a valid `PaymentMethodType`; and `express_checkout`,
+`wallet_placement` and `payment_layout` have zero matches across the 5,137-line
+declaration file. Apple Pay and Google Pay are PRESENTATIONS of `card` — they
+are not things a session turns on, so they are not things a session can turn on
+twice.
+
+So it is Stripe's internal embedded layout, which places the wallet row both
+above the form and beside the pay button. **What shipped is the config that
+minimizes the row**: `wallet_options.link.display = "never"`. That also closes a
+gap nobody had noticed — the code's own comment claimed `payment_method_types:
+["card"]` excluded Link, and it excluded Link as a METHOD while Checkout went on
+offering it as a WALLET. One of those is what the comment said; the other is
+what the product did.
+
+**What could not be done: the visual reproduction the item asked for.**
+`vercel env pull` returns `STRIPE_SECRET_KEY="[SENSITIVE]"` — Vercel redacts it
+by design — so no session can be created outside production and there is no
+embedded checkout here to photograph. The evidence above is static. It proves
+what our code and this SDK version can and cannot do; it does not prove what the
+iframe drew on the owner's phone, and those are different claims.
+
+**And the conclusion is pinned as an ABSENCE**, because "Stripe gives us no
+knob" is true of a VERSION rather than of the world.
+`lib/payments/__tests__/walletOptions.test.ts` reads `Sessions.d.ts` and fails
+the day a wallet parameter appears — which names the row to revisit instead of
+letting this round's answer stand unexamined.
+
+### Item 2: the price is typed again, and the mapping is a default
+
+Round 35 v5 made the length decide the price. The owner has refined that to a
+PREFILL: 60 prefills 150, 90 prefills 180, anything else prefills 180, and the
+organizer overwrites any of them with any positive whole number.
+
+**Changing the duration overwrites a customised price**, deliberately. The
+alternative is a field that remembers whether its value was chosen or suggested
+and quietly declines to update — a rule that is invisible on screen and that
+nobody can predict from the outside. Retyping is one visible step instead of an
+invisible one, and `e2e/round36.spec.ts` asserts it so a later round adding
+stickiness has to decide it on purpose.
+
+**Validation moved from `>= 0` to `>= 1`.** Zero was unreachable while the field
+was derived. It is reachable now, and a game priced at nothing is a booking
+Stripe refuses to charge for — the failure belongs on the organizer at the form,
+not on a player at checkout. The browser's `min={1}` stops it first and
+`parseGameForm` answers a hand-made POST; neither guard is enough alone.
+
+**The two knobs are kept apart.** Credit eligibility keys on the DURATION and
+reads no price. Every fixture in the new spec and in the SQL drill is priced
+ACROSS the old mapping — a 90-minute game at 150, a 60-minute one at exactly the
+credit nominal of 180 — because a fixture priced ON the mapping cannot tell a
+product that reads the length from one that reads the price. Any of those tests
+passing with matching numbers would have been testing a coincidence.
+
+### What reversing it exposed, which is the real find
+
+**Round 35 v5's edit half never shipped.** Its substitution went into
+`admin_update_game`, the seven-argument legacy function; every edit in
+`app/admin/games/actions.ts` goes through `admin_update_game_v2`, the
+thirteen-argument overload. The migration applied, its verification found the
+text it was looking for, and the drill drove the legacy function and passed —
+while the product went on storing the typed price the whole time. Nothing was
+wrong on production, because round 36 wants exactly that. But for two days the
+suite was green for a reason unconnected to the product.
+
+**And the drill was passing without running.** The edit sat inside
+`(select admin_update_game(…)) is not null or true`, and Postgres constant-folds
+`or true` without evaluating the left side, so the update never executed and the
+price the assertion "confirmed" was the one the CREATE had already written. Same
+family as the `count(*)` pruning trap CLAUDE.md already records: a probe that
+passes without running the thing it probes. Both are now lessons in CLAUDE.md.
+
+### Two smaller ones, found by the suites
+
+**Eight specs asserted a price the scaffold used to override.**
+`createScratchGame` defaults to 200 CZK and the derive silently rewrote it to
+150 or 180, so specs asserting `3 x 180` passed on a number nobody had asked
+for. Every spec that asserts a price now states it.
+
+**The token sweep was reading its own evidence of success as a failure.**
+`DayPicker.tsx` documents the v1.3 skin by naming the class the skin removed —
+"`rounded-chip` is gone" — and `scripts/token-sweep.check.ts` counted the
+comment as a call site. A comment cannot generate CSS. It now blanks comments
+before scanning, preserving newlines so the `path:line` it prints is still the
+line a human opens.
+
+### What is owed
+
+One migration, **handed over, not applied** — the round-35 overnight
+authorization was one-time and has expired:
+
+```
+node scripts/apply-migration.mjs \
+  supabase/migrations/20260918100000_price_is_typed.sql --production
+```
+
+Until it lands, a typed price is accepted by the form and overwritten by the
+length on CREATE. The edit path already stores what it is sent, for the reason
+above.
+
+### Ledger
+
+216 closes DONE, 261 closes EXPLAINED, 312 closes MOOTED — all three on the
+owner's word rather than on a check of mine. Rows 321-330 are new.
+
+---
+
 ## Round 35 v5 — 2026-09-17
 
 Three items. Two of them refine what v2 shipped two days ago; the third was

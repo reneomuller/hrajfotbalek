@@ -79,10 +79,47 @@ function withoutComments(source: string): string {
 }
 
 describe("the seat price", () => {
-  it("is 180 as the credit nominal, and 150/180 as the two game prices", () => {
+  it("is 180 as the credit nominal, and 150/180 as the two PREFILLS", () => {
+    /*
+     * ~~"as the two game prices".~~ A PREFILL (round 36, item 2). The mapping
+     * still has to be right — it is what lands in the organizer's box — but a
+     * game's price is whatever they left in that box, so nothing downstream may
+     * read this function to find out what a game costs.
+     */
     expect(PASS_REFERENCE_PRICE_CZK).toBe(180);
     expect(priceForDurationCzk(60)).toBe(150);
     expect(priceForDurationCzk(90)).toBe(180);
+  });
+
+  it("PREFILLS A FIELD THE ORGANIZER CAN TYPE IN, rather than deciding for them", () => {
+    /*
+     * ROUND 36, ITEM 2 — THE INVERSION, READ OFF THE SOURCE.
+     *
+     * Round 35 v5 made the field `readOnly` and swept for "0 games off-price".
+     * The owner has since ruled the mapping a DEFAULT, so the sweep asserts the
+     * opposite shape: a writable input, seeded from the duration, and a
+     * validator that takes any positive whole number rather than one of two.
+     *
+     * Source-level because the alternative — a browser — already covers the
+     * behaviour in `e2e/round36.spec.ts`. What this catches is the REGRESSION:
+     * somebody re-deriving the price in a later round and leaving the e2e green
+     * because the prefill happens to equal the typed value on a default form.
+     */
+    const form = readFileSync("components/admin/GameForm.tsx", "utf8");
+    const priceInput = form.slice(form.indexOf('id="priceCzk"'));
+    const inputTag = priceInput.slice(0, priceInput.indexOf("/>"));
+
+    expect(inputTag, "the price input is read-only again").not.toContain("readOnly");
+    expect(inputTag, "the price input is not wired to state").toContain("value={priceCzk}");
+    expect(inputTag, "the price input cannot be typed in").toContain("onChange");
+    expect(form, "changing the duration no longer refills the price").toContain(
+      "setPriceCzk(prefillForDuration(minutes))",
+    );
+
+    const validator = readFileSync("lib/admin/gameForm.ts", "utf8");
+    expect(validator, "the price is not validated as a positive whole number").toContain(
+      "!Number.isInteger(priceCzk) || priceCzk < 1",
+    );
   });
 
   it("is written down nowhere else in the source that runs", () => {

@@ -174,8 +174,17 @@ export function parseGameForm(form: FormData): GameFormResult {
     fieldErrors.capacity = strings.admin.capacityInvalid;
   }
 
+  /*
+   * POSITIVE WHOLE CROWNS (round 36, item 2).
+   *
+   * ~~`>= 0`.~~ Zero was permitted while the price was derived and no form
+   * could produce it; a typed field can, and a game priced at nothing is a
+   * booking the card rail cannot charge for — Stripe refuses a zero-amount
+   * line. Refusing it here names the field instead, which is the difference
+   * between an organizer fixing a typo and a player meeting a 500 at checkout.
+   */
   const priceCzk = Number(text(form, "priceCzk"));
-  if (!Number.isInteger(priceCzk) || priceCzk < 0) {
+  if (!Number.isInteger(priceCzk) || priceCzk < 1) {
     fieldErrors.priceCzk = strings.admin.priceInvalid;
   }
 

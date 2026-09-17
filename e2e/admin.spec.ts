@@ -337,10 +337,10 @@ test("the whole admin lifecycle fits inside five minutes", async ({ page, contex
     .fill(new Date(Date.now() + 48 * 3600_000).toISOString().slice(0, 16));
   await page.locator('input[name="capacity"]').fill("6");
   /*
-   * ~~Type a price.~~ THE PRICE IS DERIVED FROM THE DURATION (round 35 v5,
-   * item 2) and the field is read-only, so the thing to set is the LENGTH. The
-   * number that appears beside it is the product's answer rather than this
-   * spec's.
+   * ~~The field is read-only, so the thing to set is the LENGTH.~~ ROUND 36
+   * GAVE THE PRICE BACK TO THE ORGANIZER; the length only prefills it. This
+   * flow is about the lifecycle rather than the price, so it sets the length
+   * and takes the prefill — which is also the path most creates will take.
    */
   await page.getByTestId("duration-minutes").fill("90");
   await page.getByTestId("game-form-submit").click();

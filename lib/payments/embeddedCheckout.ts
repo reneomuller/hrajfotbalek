@@ -102,6 +102,24 @@ export const CHECKOUT_UI_MODE = "embedded_page";
  */
 export const CHECKOUT_PAYMENT_METHOD_TYPES = ["card"] as const;
 
+/**
+ * LINK IS OFF AS A WALLET, NOT ONLY AS A METHOD (round 36, item 1).
+ *
+ * THE GAP THIS CLOSES. The comment above has said since round 28 that Link is
+ * excluded — and `payment_method_types: ["card"]` excludes it as a payment
+ * METHOD, which is the half that was done. It does not stop Checkout
+ * presenting Link as a WALLET in the express row at the top of the form, and
+ * the SDK says so in as many words: "By default, Checkout will display all the
+ * supported wallets that the Checkout Session was created with."
+ *
+ * So the code now matches what its own comment claimed. `never` is the only
+ * other value the SDK declares for this field.
+ *
+ * IT IS ALSO THE WHOLE OF WHAT ITEM 1 CAN CONTROL, which is the finding rather
+ * than the fix — see the note on `wallet_options` in `createEmbeddedSession`.
+ */
+export const CHECKOUT_LINK_DISPLAY = "never" as const;
+
 /** CZK has a hundred haléřů and Stripe counts in the minor unit. */
 export function czkToMinorUnits(amountCzk: number): number {
   return Math.round(amountCzk * 100);
@@ -197,6 +215,26 @@ export async function createEmbeddedSession(
      * change underneath us.
      */
     payment_method_types: [...CHECKOUT_PAYMENT_METHOD_TYPES],
+    /*
+     * THE ONLY WALLET KNOB A CHECKOUT SESSION HAS, and round 36 item 1 is the
+     * reason it is worth saying so here.
+     *
+     * The owner reported Apple Pay rendering TWICE in the embedded form — once
+     * at the top, once at the bottom — and asked which layer produces each. It
+     * is not this one, and the SDK's own declarations are the evidence:
+     * `SessionCreateParams.WalletOptions` contains exactly one member, `link`;
+     * there is no `apple_pay`, no `google_pay`, and no express-checkout or
+     * layout parameter anywhere in the 5,137-line declaration file. `apple_pay`
+     * is not even a valid `PaymentMethodType` — the wallets are presentations
+     * OF `card`, which is why they appear without being asked for and cannot be
+     * placed, counted or suppressed from here.
+     *
+     * WHAT THIS DOES ACHIEVE is the one wallet we CAN turn off. Link out of the
+     * express row leaves it to the device's own wallet, which is the narrowest
+     * that row can be made from a session — the "config that minimizes it" the
+     * item asks for, offered without pretending it removes the duplicate.
+     */
+    wallet_options: { link: { display: CHECKOUT_LINK_DISPLAY } },
     client_reference_id: input.reference,
     customer_email: input.customerEmail ?? undefined,
     /*

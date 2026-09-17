@@ -1,4 +1,4 @@
-import { CREDIT_SEAT_MINUTES, priceForDurationCzk } from "../../lib/games/price.ts";
+import { CREDIT_SEAT_MINUTES } from "../../lib/games/price.ts";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { execAsOwner } from "./clock.ts";
 import { assertTestDatabaseUrl } from "../../lib/env/testDatabase.ts";
@@ -174,29 +174,31 @@ export async function createScratchGame({
   amenities?: string[];
 } = {}): Promise<ScratchGame> {
   /*
-   * THE DURATION DECIDES THE PRICE NOW, SO THE SCAFFOLD RESOLVES ONE FROM THE
-   * OTHER (round 35 v5).
+   * THE PRICE IS STORED AS ASKED AGAIN; THE LENGTH IS WHAT THE SCAFFOLD STILL
+   * HAS TO GUESS (round 36, item 2).
    *
-   * `admin_create_game_v2` derives `price_czk` from the length and ignores what
-   * it is sent — which is the product working, and which quietly made this
-   * helper's `priceCzk` inert. Sixty-seven call sites pass it and twenty of
-   * them then assert the number back.
+   * ~~`admin_create_game_v2` derives `price_czk` from the length and ignores
+   * what it is sent.~~ It stores what it is sent, so `priceCzk` is no longer
+   * inert and the twenty specs that assert the number back now read their own
+   * number.
    *
-   * So `priceCzk` still means what callers think it means, by choosing the
-   * LENGTH that produces it: 150 is the sixty-minute game, anything else is the
-   * ninety-minute one. A caller that names a duration outright wins, because
-   * that is the more specific instruction — and a spec about credit says 90
-   * rather than hoping.
+   * THE RESOLUTION STAYS, because the thing it resolves was never really the
+   * price: it is CREDIT ELIGIBILITY, which keys on the duration and which
+   * sixty-seven call sites never mention. 150 has meant "the cheap online-only
+   * game" throughout this suite and still selects a 60-minute one; anything
+   * else selects the 90-minute, credit-eligible shape. A caller that names a
+   * duration outright wins, because that is the more specific instruction — and
+   * a spec about credit says 90 rather than hoping.
    *
    * AN EXPLICIT `null` IS A REAL ANSWER and is passed through untouched: a game
    * with no duration at all is a shape the product has nineteen of, and
    * `games.spec.ts` asserts it renders as the standard length. `undefined` — the
    * parameter not given — is what triggers the resolution above.
    *
-   * IT CANNOT PRODUCE AN ARBITRARY PRICE, and that is correct rather than a
-   * limitation: the product cannot either. A spec asking for 250 gets the
-   * ninety-minute price and an assertion about 250 fails loudly, which is the
-   * right way to find out that a price is no longer something anybody chooses.
+   * AND IT PRODUCES ANY PRICE AGAIN. A spec asking for 250 gets a game that
+   * costs 250 — and, because 250 is not 150, a ninety-minute one that a credit
+   * can buy. The two knobs are independent in the product and they are
+   * independent here: pass `durationMinutes` when the length is the point.
    */
   const resolvedDuration =
     durationMinutes !== undefined
@@ -246,14 +248,16 @@ export async function createScratchGame({
   }
 
   /*
-   * THE PRICE THE DATABASE ACTUALLY STORED, not the one that was asked for.
-   * A spec that reads `game.priceCzk` is reading what the row holds — which is
-   * the only number any assertion should be made against.
+   * THE PRICE THE DATABASE ACTUALLY STORED — which, since round 36, is the one
+   * that was asked for. Still returned rather than echoed blindly from the
+   * argument list: a spec that reads `game.priceCzk` must be reading what the
+   * row holds, and the day those two diverge again this line is where it gets
+   * fixed.
    */
   return {
     id: id as string,
     capacity,
-    priceCzk: priceForDurationCzk(resolvedDuration),
+    priceCzk,
     durationMinutes: resolvedDuration ?? null,
     startsAt,
   };

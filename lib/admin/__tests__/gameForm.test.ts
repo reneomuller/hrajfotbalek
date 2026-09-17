@@ -105,9 +105,22 @@ describe("parseGameForm", () => {
     }
   });
 
-  it("accepts a zero price but not a negative one", () => {
-    expect(parseGameForm(form({ ...VALID, priceCzk: "0" })).ok).toBe(true);
-    expect(parseGameForm(form({ ...VALID, priceCzk: "-1" })).ok).toBe(false);
+  it("takes any POSITIVE WHOLE price, and nothing else", () => {
+    /*
+     * ~~"accepts a zero price".~~ ROUND 36 MADE THE FIELD TYPEABLE, and zero
+     * stopped being unreachable the same day: a game priced at nothing is a
+     * booking Stripe refuses to charge for, so the form has to name the field
+     * rather than let the failure land on a player at checkout.
+     *
+     * The upper end is deliberately unbounded — the owner types the price, and
+     * a cap here would be this file inventing a policy nobody stated.
+     */
+    for (const good of ["1", "95", "222", "4242", "99999"]) {
+      expect(parseGameForm(form({ ...VALID, priceCzk: good })).ok, good).toBe(true);
+    }
+    for (const bad of ["0", "-1", "12.5", "", "abc"]) {
+      expect(parseGameForm(form({ ...VALID, priceCzk: bad })).ok, bad).toBe(false);
+    }
   });
 
   it("mirrors the format CHECK", () => {

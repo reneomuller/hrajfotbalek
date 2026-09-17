@@ -107,7 +107,16 @@ select pg_temp.ok(
   'a credit buys ninety minutes');
 
 -- =============================================================================
--- THE WRITERS DERIVE THE PRICE — a caller cannot create a disagreement
+-- THE WRITERS STORE THE PRICE THEY ARE SENT (round 36, item 2)
+--
+-- ~~THE WRITERS DERIVE THE PRICE — a caller cannot create a disagreement.~~
+-- The mapping is a DEFAULT the form prefills with, not a law the database
+-- enforces. These two fixtures are priced deliberately ACROSS the mapping —
+-- a 60-minute game at the credit-seat price, a 90-minute game at the 60-minute
+-- one — so that everything below about credit eligibility is proved to key on
+-- the DURATION and not on the number in `price_czk`. If eligibility ever
+-- quietly started reading the price, these prices are the ones that would
+-- catch it.
 -- =============================================================================
 
 select pg_temp.act_as('60000000-0000-0000-0000-00000000dd01');
@@ -115,44 +124,58 @@ select pg_temp.act_as('60000000-0000-0000-0000-00000000dd01');
 create temp table _made as
 select public.admin_create_game_v2(
   '11110000-0000-0000-0000-00000000dd01', now() + interval '30 hours', 12,
-  9999,                      -- a price the caller made up
+  180,                       -- the CREDIT-SEAT price, typed by the organizer
   'Dur Organizer', null, null, null, null,
-  60                         -- ...against a 60-minute game
+  60                         -- ...against a 60-minute game, which prefills 150
 ) as id;
 
 select pg_temp.ok(
-  pg_temp.game_price((select id from _made)) = 150,
-  'A CALLER''S PRICE IS IGNORED — 9999 was sent and the length decided 150',
+  pg_temp.game_price((select id from _made)) = 180,
+  'THE TYPED PRICE IS STORED — 180 was sent against a 60-minute game and stuck',
   pg_temp.game_price((select id from _made))::text);
 
 create temp table _made90 as
 select public.admin_create_game_v2(
   '11110000-0000-0000-0000-00000000dd01', now() + interval '31 hours', 12,
-  1,                         -- and again, from the other direction
+  150,                       -- and again, from the other direction
   'Dur Organizer', null, null, null, null, 90
 ) as id;
 
 select pg_temp.ok(
-  pg_temp.game_price((select id from _made90)) = 180,
-  'and a 90-minute game is 180 however little the caller asked for',
+  pg_temp.game_price((select id from _made90)) = 150,
+  'and a 90-minute game keeps the 150 it was given, prefill notwithstanding',
   pg_temp.game_price((select id from _made90))::text);
 
--- Editing prices from the row's OWN length, not from the caller either.
+-- AND THE EDIT STORES WHAT IT IS HANDED TOO — through `admin_update_game_v2`,
+-- WHICH IS THE ONE THE ADMIN FORM ACTUALLY CALLS.
+--
+-- ~~`admin_update_game`.~~ The old assertion drove the SEVEN-ARGUMENT legacy
+-- function, which nothing in `app/` has called since the v2 overload landed, so
+-- it proved nothing about the edit form either way.
+--
+-- AND IT PROVED IT BY NOT RUNNING. The call sat inside `(…) is not null or
+-- true`, and Postgres folds `X or true` to `true` without evaluating X — the
+-- same pruning trap as the `count(*)` probe in CLAUDE.md, wearing a different
+-- hat. The update never executed; the price it "confirmed" was the one the
+-- CREATE had already written. The call is now its own statement, where nothing
+-- can optimise it away.
 select public.publish_game((select id from _made));
 select public.publish_game((select id from _made90));
-select pg_temp.ok(
-  (select public.admin_update_game((select id from _made),
-     '11110000-0000-0000-0000-00000000dd01', now() + interval '32 hours', 4242)) is not null
-  or true,
-  'the edit accepts a made-up price');
+
+select public.admin_update_game_v2(
+  (select id from _made), '11110000-0000-0000-0000-00000000dd01',
+  now() + interval '32 hours',
+  4242,                      -- a price no mapping would ever produce
+  'Dur Organizer', null, null, null, null,
+  60                         -- ...and the length is unchanged at 60
+);
 reset role;
 
 select pg_temp.ok(
-  pg_temp.game_price((select id from _made)) = 150,
-  'and stores the one its length implies',
+  pg_temp.game_price((select id from _made)) = 4242,
+  'THE EDIT STORES EXACTLY WHAT WAS TYPED — 4242, against a 60-minute row',
   pg_temp.game_price((select id from _made))::text);
 
--- =============================================================================
 -- ITEM 1 — A CREDIT BUYS A 90-MINUTE SEAT AND NOTHING ELSE
 -- =============================================================================
 
@@ -193,8 +216,8 @@ select pg_temp.ok(
   'so it owes its whole price and the only rail left is the online one');
 
 select pg_temp.ok(
-  (pg_temp.bk((select id from _made), '6ddd0000-0000-0000-0000-00000000dd03')).price_czk = 150,
-  'which is 150, the sixty-minute price',
+  (pg_temp.bk((select id from _made), '6ddd0000-0000-0000-0000-00000000dd03')).price_czk = 4242,
+  'which is the 4242 the organizer typed, not anything a mapping decided',
   (pg_temp.bk((select id from _made), '6ddd0000-0000-0000-0000-00000000dd03')).price_czk::text);
 
 -- =============================================================================
@@ -232,15 +255,45 @@ select pg_temp.ok(
   pg_temp.bal('6ddd0000-0000-0000-0000-00000000dd02')::text);
 
 -- =============================================================================
--- EVERY GAME IN THE DATABASE AGREES WITH ITS OWN LENGTH
+-- ELIGIBILITY KEYS ON THE LENGTH, AND THE PRICE IS NOBODY'S BUSINESS BUT THE
+-- CARD RAIL'S (round 36, item 2)
+--
+-- ~~EVERY GAME IN THE DATABASE AGREES WITH ITS OWN LENGTH.~~ That census was a
+-- LAW asserted over a mapping that is now a DEFAULT, and it would fail the
+-- moment an organizer typed a price — which is the feature. INVERTED HERE into
+-- the property that actually has to hold: the two fixtures above are priced
+-- across the mapping, and credit eligibility followed the LENGTH anyway.
 -- =============================================================================
 
 select pg_temp.ok(
-  (select count(*) from public.games
-    where price_czk is distinct from public.price_for_duration(duration_minutes)) = 0,
-  'no game is priced against its length',
-  (select count(*)::text from public.games
-    where price_czk is distinct from public.price_for_duration(duration_minutes)));
+  pg_temp.game_price((select id from _made90)) <> public.price_for_duration(90)
+  and pg_temp.game_price((select id from _made)) <> public.price_for_duration(60),
+  'BOTH FIXTURES ARE PRICED OFF THE MAPPING — otherwise everything above is a '
+  'test of a coincidence',
+  pg_temp.game_price((select id from _made))::text || ' / '
+  || pg_temp.game_price((select id from _made90))::text);
+
+select pg_temp.ok(
+  (select count(*) from public.bookings b
+     join public.games g on g.id = b.game_id
+    where b.credit_applied_czk > 0
+      and g.duration_minutes is distinct from public.credit_seat_minutes()) = 0,
+  'NO CREDIT WAS EVER APPLIED TO A GAME THAT IS NOT NINETY MINUTES, whatever '
+  'anything cost',
+  (select count(*)::text from public.bookings b
+     join public.games g on g.id = b.game_id
+    where b.credit_applied_czk > 0
+      and g.duration_minutes is distinct from public.credit_seat_minutes()));
+
+select pg_temp.ok(
+  (select count(*) from public.bookings
+    where credit_applied_czk > 0
+      and credit_applied_czk % public.credit_seat_price_czk() <> 0) = 0,
+  'and every credit that WAS applied came in whole seats — flat at 180 each, '
+  'unmoved by a game priced at 150 or at 4242',
+  (select count(*)::text from public.bookings
+    where credit_applied_czk > 0
+      and credit_applied_czk % public.credit_seat_price_czk() <> 0));
 
 select seq, label, case when passed then 'PASS' else 'FAIL' end as result, detail
 from _results order by seq;

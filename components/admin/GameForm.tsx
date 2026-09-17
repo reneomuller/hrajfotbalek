@@ -148,16 +148,25 @@ export function GameForm({
    * wallet arithmetic stops meaning anything.
    */
   /*
-   * ~~A TYPED PRICE, PREFILLED WITH THE CREDIT NOMINAL.~~ IT IS DERIVED FROM
-   * THE DURATION NOW (round 35 v5, item 2): sixty minutes is 150, ninety is
-   * 180, from `priceForDurationCzk` — the same mapping
-   * `public.price_for_duration()` applies to whatever this form sends, so the
-   * field cannot propose a number the database will not store.
+   * A TYPED PRICE, PREFILLED BY THE DURATION (round 36, item 2).
    *
-   * IT IS STILL A FIELD RATHER THAN A SENTENCE, and still posted, because
-   * `admin_create_game_v2` validates it — a caller sending nonsense hears about
-   * it rather than having it silently discarded. What changed is that nobody
-   * chooses it.
+   * ~~Derived and read-only.~~ Round 35 v5 made the length decide the price
+   * outright; the owner has refined it to a DEFAULT. The organizer types what
+   * they like and the card is charged exactly that — `admin_create_game_v2`
+   * stores what it is sent again.
+   *
+   * CHANGING THE DURATION RE-PREFILLS THE FIELD, and overwrites a customised
+   * number when it does. That is the owner's call and it is the simplest honest
+   * behaviour: the alternative is a form that remembers whether a value was
+   * "chosen" or "suggested" and silently declines to update it, which is a
+   * rule nobody can see. If the organizer had customised the price, they retype
+   * it after changing the length — one visible step rather than an invisible
+   * one.
+   *
+   * WHAT THE PRICE DOES NOT DECIDE is whether a credit can buy the game. That
+   * keys on the DURATION — `credit_seat_minutes()` — so a 90-minute game takes
+   * one credit a seat whatever it costs, and a 60-minute one is online-only
+   * however it is priced. The two were briefly the same question and are not.
    */
   const [format, setFormat] = useState(game?.format ?? "");
   const [surface, setSurface] = useState<string>(game?.surface ?? "");
@@ -180,16 +189,32 @@ export function GameForm({
     game?.duration_minutes != null ? String(game.duration_minutes) : "",
   );
   /*
-   * THE PRICE, FROM THE LENGTH. Recomputed on every keystroke in the duration
-   * field, so the number in the box is always the one the database will store —
-   * `admin_create_game_v2` applies the same mapping to whatever is posted.
-   *
-   * A BLANK DURATION IS THE STANDARD LENGTH, which is what the placeholder
-   * under that field already says, so a blank form reads 150 rather than empty.
+   * WHAT THE LENGTH SUGGESTS. A blank duration is the standard length — which
+   * is what the placeholder under that field already says — so a blank form
+   * proposes the 60-minute price rather than nothing.
    */
-  const derivedPriceCzk = String(
-    priceForDurationCzk(durationMinutes.trim() === "" ? null : Number(durationMinutes)),
+  const prefillForDuration = (minutes: string) =>
+    String(priceForDurationCzk(minutes.trim() === "" ? null : Number(minutes)));
+
+  const [priceCzk, setPriceCzk] = useState(
+    game?.price_czk != null
+      ? String(game.price_czk)
+      : prefillForDuration(game?.duration_minutes != null ? String(game.duration_minutes) : ""),
   );
+
+  /*
+   * THE PREFILL IS DONE IN THE DURATION HANDLER, NOT IN AN EFFECT.
+   *
+   * An effect watching `durationMinutes` would also fire on mount and on every
+   * re-render that touched it, overwriting a price the organizer had typed for
+   * reasons they never triggered. Writing it where the CHANGE happens means the
+   * field moves exactly when somebody edits the length, which is the rule as
+   * stated and the only one a reader can predict.
+   */
+  const onDurationChange = (minutes: string) => {
+    setDurationMinutes(minutes);
+    setPriceCzk(prefillForDuration(minutes));
+  };
 
   const [subsPerTeam, setSubsPerTeam] = useState(
     game?.subs_per_team != null ? String(game.subs_per_team) : "",
@@ -327,10 +352,12 @@ export function GameForm({
             id="priceCzk"
             name="priceCzk"
             type="number"
-            readOnly
+            min={1}
+            step={1}
             data-testid="price-czk"
-            className={`${FIELD} opacity-70`}
-            value={derivedPriceCzk}
+            className={FIELD}
+            value={priceCzk}
+            onChange={(event) => setPriceCzk(event.target.value)}
           />
           <p className={HINT}>{strings.admin.priceDerivedHint}</p>
           {errors.priceCzk && <p className={ERROR}>{errors.priceCzk}</p>}
@@ -435,7 +462,7 @@ export function GameForm({
             data-testid="duration-minutes"
             placeholder={String(DURATION_DEFAULT)}
             value={durationMinutes}
-            onChange={(event) => setDurationMinutes(event.target.value)}
+            onChange={(event) => onDurationChange(event.target.value)}
           />
           <p className={HINT}>{strings.admin.durationHint}</p>
           {errors.durationMinutes && <p className={ERROR}>{errors.durationMinutes}</p>}
