@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { AvatarRow } from "@/components/game/AvatarRow";
 import { CapacityBar } from "@/components/game/CapacityBar";
@@ -84,6 +85,7 @@ export async function GameCard({
   pitchName,
   past = false,
   joinCue = true,
+  priority = false,
 }: {
   game: GameCardGame;
   bookedCount: number;
@@ -105,6 +107,23 @@ export async function GameCard({
    * name alone.
    */
   pitchName?: string | null;
+  /**
+   * Load this card's photograph EAGERLY, for the one that is above the fold.
+   *
+   * ROUND 37, ITEM 2 — AND IT IS A REGRESSION GUARD, not an optimisation.
+   * Moving to `next/image` brought `loading="lazy"` with it by default, which
+   * is right for the eleventh card and wrong for the first: the top card's
+   * photo IS the Largest Contentful Paint on both the home page and the games
+   * list, and lazy-loading the LCP element delays it by a whole extra request
+   * round trip. Next says so itself in the dev console, which is how this was
+   * caught: "Image was detected as the Largest Contentful Paint. Please add the
+   * loading=eager property if this image is above the fold."
+   *
+   * SET BY THE LIST, NOT GUESSED HERE. A card cannot know whether it is first;
+   * the two surfaces that render lists do, and they pass it for index 0 of the
+   * first day only.
+   */
+  priority?: boolean;
   /**
    * Whether to paint the `Join →` cue (round 8, item 9).
    *
@@ -194,10 +213,27 @@ export async function GameCard({
           file is a second thing to keep in step; this is the same image read
           differently by one surface.
         */}
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
+        {/*
+          THROUGH THE OPTIMIZER (round 37, item 2).
+
+          ~~A raw `<img>` at the storage URL.~~ That painted a 1600x740 upload
+          into this 358x159 strip — 143 KB for one card and 429 KB for another,
+          measured on production before the change. `fill` keeps the markup
+          shape identical (the parent span is already `absolute inset-0`), so
+          `object-cover object-bottom` above still means exactly what it meant,
+          and the pixel specs that read this card are reading the same crop at a
+          sane resolution.
+
+          `sizes` IS THE WHOLE SAVING. Without it Next assumes 100vw at the
+          largest device size and serves the biggest variant anyway; the card is
+          full-bleed inside a 560px shell, so one breakpoint states it honestly.
+        */}
+        <Image
           src={photo}
           alt=""
+          fill
+          sizes="(max-width: 600px) 100vw, 560px"
+          priority={priority}
           data-testid="card-photo"
           data-photo={photo === DEFAULT_PITCH ? "default" : "venue"}
           className="h-full w-full object-cover object-bottom"
@@ -421,7 +457,7 @@ export async function GameCard({
       href={`/game/${game.id}`}
       data-testid="game-row"
       data-past="false"
-      className="game-box relative isolate block overflow-hidden rounded-card px-4 py-3 no-underline transition-colors"
+      className="game-box pressable relative isolate block overflow-hidden rounded-card px-4 py-3 no-underline"
     >
       {body}
     </Link>

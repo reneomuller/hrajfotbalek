@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { initials } from "@/lib/roster/initials";
 import { guestLabel, isAnonymousGuest } from "@/lib/roster/guests";
@@ -154,20 +155,32 @@ export async function AvatarRow({
           <>
             {photo ? (
               /*
-                A plain <img>, not next/image. The bucket is a public Supabase
-                origin and these are 34px circles: the optimizer would want a
-                remote-pattern allow-list and a round trip through /_next/image
-                to resize an already-tiny square.
+                ~~A plain <img>, not next/image — "an already-tiny square".~~
+                THE SQUARE WAS NEVER TINY (round 37, item 2).
+
+                That reasoning was right about the SLOT and wrong about the
+                FILE. Avatars are stored at `AVATAR_SIDE_PX` — 512x512 — and
+                one measured 51 KB on production, painted into a 34px circle.
+                A dozen of them down a list is most of half a megabyte to draw
+                circles the size of a fingernail. The allow-list the old comment
+                declined to add now exists for the venue photos, so this costs
+                nothing extra.
+
+                96px RATHER THAN 34. The rendered box is set by the classes
+                below; the number here is what the srcset is built from, and it
+                is the 34px circle at 2x with room for the larger rows that use
+                this same component.
 
                 `alt` is empty deliberately. The nickname is the element's
                 title and is rendered in the lineup list beside this row, so
                 announcing it again here is duplication for a screen reader —
                 these avatars are decorative next to that list.
               */
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
+              <Image
                 src={photo}
                 alt=""
+                width={96}
+                height={96}
                 data-testid="avatar-photo"
                 className="h-full w-full object-cover"
                 loading="lazy"

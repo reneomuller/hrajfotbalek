@@ -1,3 +1,4 @@
+import { STABLE_TAGS, stableRead } from "@/lib/db/stableRead";
 import {
   createServerSupabaseClient,
   createServiceRoleSupabaseClient,
@@ -201,27 +202,52 @@ export interface ContactDetails {
   phones: string[];
 }
 
+/*
+ * THE FOOTER'S CONTACT ROW IS ON EVERY PAGE, and so was this read (round 37,
+ * item 2). Measured on the local stack: one `site_settings` round trip per
+ * navigation, on all five journeys, for a value the owner changes from
+ * `/admin/site` perhaps twice a year.
+ *
+ * SIXTY SECONDS, AND TAGGED. `admin/site`'s save revalidates
+ * `STABLE_TAGS.siteSettings`, so an edit is visible on the next render rather
+ * than up to a minute later — the TTL is the backstop, not the mechanism.
+ *
+ * THE FALLBACK EMAIL IS NOT PART OF THE KEY, and must not be: it is a string
+ * from the caller's own locale table, so keying on it would cache the same
+ * settings row four times. It is applied AFTER the cached read instead.
+ */
+const readContactSettings = stableRead(
+  ["site_settings", "contact"],
+  STABLE_TAGS.siteSettings,
+  async (): Promise<{ emails: string[]; phones: string[] }> => {
+    const supabase = createServiceRoleSupabaseClient();
+
+    const { data } = await supabase
+      .from("site_settings")
+      .select("settings")
+      .eq("id", "singleton")
+      .maybeSingle();
+
+    const settings = (data?.settings ?? {}) as {
+      contact_emails?: unknown;
+      contact_phones?: unknown;
+    };
+
+    return {
+      emails: stringList(settings.contact_emails),
+      phones: stringList(settings.contact_phones),
+    };
+  },
+);
+
 export async function getContactDetails(fallbackEmail: string): Promise<ContactDetails> {
-  const supabase = await createServerSupabaseClient();
-
-  const { data } = await supabase
-    .from("site_settings")
-    .select("settings")
-    .eq("id", "singleton")
-    .maybeSingle();
-
-  const settings = (data?.settings ?? {}) as {
-    contact_emails?: unknown;
-    contact_phones?: unknown;
-  };
-
-  const emails = stringList(settings.contact_emails);
+  const { emails, phones } = await readContactSettings();
   return {
     // NEVER AN EMPTY EMAIL LIST. A contact dialog with no way to make contact
     // is worse than the `mailto:` it replaced, so the built-in address stands
     // in until the owner sets one.
     emails: emails.length > 0 ? emails : [fallbackEmail],
-    phones: stringList(settings.contact_phones),
+    phones,
   };
 }
 

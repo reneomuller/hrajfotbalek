@@ -314,7 +314,7 @@ export default async function LandingPage() {
             {games.length > 0 ? (
               <div data-testid="next-matches" className="flex flex-col gap-5">
                 {groupByDay(games, ({ game }) => game.starts_at, now, t, locale).map(
-                  (day) => (
+                  (day, dayIndex) => (
                     <section key={day.key} data-testid="day-group" data-day={day.key}>
                       {/*
                         ~~An 11px uppercase eyebrow.~~ Round 14 item 4 replaced
@@ -325,11 +325,13 @@ export default async function LandingPage() {
                       */}
                       <DayHeading>{day.label}</DayHeading>
                       <div className="flex flex-col gap-3">
-                        {day.items.map(({ game, bookedCount }) => (
+                        {day.items.map(({ game, bookedCount }, cardIndex) => (
                           <GameCard
                             key={game.id}
                             game={game}
                             bookedCount={bookedCount}
+                            /* The LCP image on this page — see GameCard. */
+                            priority={dayIndex === 0 && cardIndex === 0}
                             roster={rosters.get(game.id) ?? []}
                             supabaseUrl={supabaseUrl}
                             pitchName={pitchNames.get(game.id)}

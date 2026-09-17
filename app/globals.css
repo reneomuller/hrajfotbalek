@@ -232,6 +232,33 @@
   }
 
   /*
+   * `.pressable` — A TAP ANSWERS BEFORE THE PAGE DOES (round 37, item 3).
+   *
+   * MEASURED, AND IT WAS THE WORST CONTROL IN THE PRODUCT. `e2e/tap-feedback
+   * .spec.ts` presses a control and decodes the rectangle under the thumb until
+   * the pixels move. The bottom nav answered in 40ms and the booking confirm in
+   * 26ms; the GAME CARD — the single most-tapped thing here, the one every
+   * journey goes through — produced NO VISIBLE CHANGE AT ALL. Nothing happened
+   * under the finger until the next page painted, which after item 2's work is
+   * about 215ms away. Fast and dead still feels broken.
+   *
+   * BRIGHTNESS, NOT A BACKGROUND COLOUR. Half of this card is a photograph
+   * under a scrim ramp, so a `bg-` change is invisible across its top half —
+   * which is exactly where a thumb lands. A filter moves every layer at once,
+   * including the photo, so the whole shape responds rather than a strip of it.
+   *
+   * AND A SCALE, because on a card this size brightness alone reads as a
+   * flicker. 0.985 is under a pixel of movement at 358px wide: felt, not seen.
+   *
+   * `active:` RATHER THAN `:hover`. This is a 390px product; the pointer that
+   * matters has no hover state, and a hover rule on touch sticks after the tap.
+   */
+  .pressable {
+    @apply transition-[filter,transform] duration-100 ease-out;
+    @apply active:brightness-[1.35] active:scale-[0.985];
+  }
+
+  /*
    * `.field` / `.field-label` — THE FORM CONTROL, WRITTEN ONCE.
    *
    * Added in redesign v2 round 5. `app/login/LoginForm.tsx` and

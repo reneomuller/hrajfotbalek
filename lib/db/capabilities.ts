@@ -1,5 +1,6 @@
 import { cache } from "react";
-import { createServerSupabaseClient } from "@/lib/supabase/clients";
+import { createServiceRoleSupabaseClient } from "@/lib/supabase/clients";
+import { STABLE_TAGS, stableRead } from "@/lib/db/stableRead";
 
 /**
  * Which round-16 actions this database can perform (round 16).
@@ -108,9 +109,31 @@ const NONE: AppCapabilities = {
   priceOneEighty: false,
 };
 
-export const appCapabilities = cache(async (): Promise<AppCapabilities> => {
+/*
+ * READ ONCE A MINUTE, NOT ONCE A NAVIGATION (round 37, item 2).
+ *
+ * `cache()` below still collapses this to one call per REQUEST; `stableRead`
+ * carries the answer BETWEEN requests for at most sixty seconds, keyed by build
+ * id so a deploy can never serve the previous one's flags.
+ *
+ * THE APPLY RITUAL SURVIVES, which is the constraint this had to meet: the
+ * owner applies a migration by hand and the feature must light up promptly.
+ * One minute is the worst case, and `false` is cached no longer than `true` —
+ * there is no negative-result shortcut, so "not applied yet" expires exactly as
+ * fast as any other answer. A deploy busts it outright.
+ *
+ * THE SERVICE-ROLE CLIENT, DELIBERATELY. A cached value is shared by everyone,
+ * so it may not be computed from a cookie-bound session — `unstable_cache`
+ * cannot read request state anyway. `app_capabilities()` is granted to `anon`,
+ * `authenticated` and `service_role` alike and returns the same jsonb to all
+ * three, which is what makes one shared answer correct rather than a leak.
+ */
+const readCapabilities = stableRead(
+  ["app_capabilities"],
+  STABLE_TAGS.capabilities,
+  async (): Promise<AppCapabilities> => {
   try {
-    const supabase = await createServerSupabaseClient();
+    const supabase = createServiceRoleSupabaseClient();
     const { data, error } = await supabase.rpc("app_capabilities");
 
     /*
@@ -145,4 +168,7 @@ export const appCapabilities = cache(async (): Promise<AppCapabilities> => {
   } catch {
     return NONE;
   }
-});
+  },
+);
+
+export const appCapabilities = cache(readCapabilities);

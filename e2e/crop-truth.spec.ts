@@ -305,6 +305,39 @@ test("the game card shows EXACTLY the region the organizer framed", async ({ pag
         async () => {
           await page.goto(`/games?day=${pragueDayKey(startsAt)}`, { waitUntil: "networkidle" });
           if ((await cardPhoto.count()) === 0) return "missing";
+          /*
+           * SCROLL IT INTO VIEW BEFORE ASKING WHETHER IT LOADED (round 37).
+           *
+           * The card's photograph goes through `next/image` now, and every card
+           * but the first is `loading="lazy"` — which is the point: a list of a
+           * dozen venues should not fetch a dozen photographs to show three.
+           * This fixture's game is rarely the first card, so the image was
+           * correctly never loading and the poll read `loading` until it timed
+           * out.
+           *
+           * A REAL READER SCROLLS TO IT. Doing the same here keeps the lazy
+           * behaviour under test rather than switching it off to make the test
+           * pass — if the image failed to load once visible, this would still
+           * fail, which is the property worth keeping.
+           */
+          await cardPhoto.scrollIntoViewIfNeeded();
+          /*
+           * AND WAIT FOR THE FETCH THE SCROLL JUST STARTED. Scrolling makes a
+           * lazy image eligible to load; it does not make it loaded. Without
+           * this the check ran on the same tick and read `loading` every time,
+           * which looks identical to an image that never loads at all.
+           */
+          await cardPhoto
+            .evaluate(
+              (el: HTMLImageElement) =>
+                el.complete
+                  ? null
+                  : new Promise<null>((resolve) => {
+                      el.addEventListener("load", () => resolve(null), { once: true });
+                      el.addEventListener("error", () => resolve(null), { once: true });
+                    }),
+            )
+            .catch(() => null);
           return (
             (await cardPhoto.evaluate(
               (el: HTMLImageElement) => (el.complete && el.naturalWidth > 0 ? el.dataset.photo : "loading"),

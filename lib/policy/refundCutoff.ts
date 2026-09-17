@@ -1,6 +1,7 @@
 import { cache } from "react";
 import { policy } from "@/lib/policy";
-import { createServerSupabaseClient } from "@/lib/supabase/clients";
+import { createServiceRoleSupabaseClient } from "@/lib/supabase/clients";
+import { STABLE_TAGS, stableRead } from "@/lib/db/stableRead";
 
 /**
  * The refund cutoff the DATABASE is actually enforcing (round 16, item 6).
@@ -23,12 +24,25 @@ import { createServerSupabaseClient } from "@/lib/supabase/clients";
  * the booking list and the FAQ panel; without this that is three round trips
  * for a number that cannot change mid-render.
  *
+ * AND `stableRead` CARRIES IT BETWEEN REQUESTS, for at most a minute (round
+ * 37, item 2). It was one round trip per navigation on four of the five
+ * journeys, for a constant that moves when a policy migration is applied —
+ * which is the same apply-then-appear ritual the capability flags have, and
+ * gets the same sixty-second ceiling and the same bust-on-deploy key. A policy
+ * change is not something a player must see within the second; it IS something
+ * the owner must see within the minute.
+ *
  * IT IS NOT THE ENFORCEMENT. `cancel_booking` decides; this only decides what
  * the player is told beforehand. A caller who skips it is rude, not dangerous.
  */
-export const refundCutoffHours = cache(async (): Promise<number> => {
+const readRefundCutoff = stableRead(
+  ["cancellation_refund_cutoff_hours"],
+  STABLE_TAGS.policy,
+  async (): Promise<number> => {
   try {
-    const supabase = await createServerSupabaseClient();
+    // Shared by everyone, so computed without the caller's session — the
+    // function returns the same number to `anon` and `authenticated` alike.
+    const supabase = createServiceRoleSupabaseClient();
     const { data, error } = await supabase.rpc("cancellation_refund_cutoff_hours");
 
     /*
@@ -45,4 +59,7 @@ export const refundCutoffHours = cache(async (): Promise<number> => {
   } catch {
     return policy.cancellation.refundCutoffHoursBeforeStart;
   }
-});
+  },
+);
+
+export const refundCutoffHours = cache(readRefundCutoff);

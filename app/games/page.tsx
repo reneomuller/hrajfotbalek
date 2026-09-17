@@ -202,7 +202,7 @@ export default async function GamesPage({
         </div>
       ) : (
         <div className="mt-6 flex flex-col gap-5" data-testid="game-list">
-          {grouped.map((day) => (
+          {grouped.map((day, dayIndex) => (
             <section key={day.key} data-testid="day-group" data-day={day.key}>
               {/*
                 THE DATE, ABOVE THE GROUP. "Today" alone stops meaning anything
@@ -213,11 +213,13 @@ export default async function GamesPage({
               */}
               <DayHeading>{day.label}</DayHeading>
               <div className="flex flex-col gap-3">
-                {day.items.map(({ game, bookedCount }) => (
+                {day.items.map(({ game, bookedCount }, cardIndex) => (
                   <GameCard
                     key={game.id}
                     game={game}
                     bookedCount={bookedCount}
+                    /* The LCP image on this page — see GameCard. */
+                    priority={dayIndex === 0 && cardIndex === 0}
                     roster={rosters.get(game.id) ?? []}
                     supabaseUrl={supabaseUrl}
                     pitchName={pitchNames.get(game.id)}

@@ -1,6 +1,7 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
+import { STABLE_TAGS } from "@/lib/db/stableRead";
 import { requireAdmin } from "@/lib/auth/requireAdmin";
 import { toAdminErrorMessage } from "@/lib/admin/errors";
 import { createServerSupabaseClient } from "@/lib/supabase/clients";
@@ -69,6 +70,15 @@ async function setNumberSetting(
   if (error) return { status: "error", message: toAdminErrorMessage(error.message) };
 
   // Both numbers render on the home page's stats panel, from these values.
+  /*
+   * THE SHARED READ GOES WITH THE PAGES (round 37, item 2).
+   *
+   * `getContactDetails` is cached across requests for up to a minute, so
+   * revalidating the paths alone would re-render both pages against the OLD
+   * settings row and the owner would watch their edit not take. The tag is the
+   * mechanism; the TTL is only the backstop.
+   */
+  revalidateTag(STABLE_TAGS.siteSettings, "max");
   revalidatePath("/");
   revalidatePath("/admin/site");
   return { status: "saved" };
@@ -92,6 +102,15 @@ export async function setPlayerOfMonthAction(
 
   if (error) return { status: "error", message: toAdminErrorMessage(error.message) };
 
+  /*
+   * THE SHARED READ GOES WITH THE PAGES (round 37, item 2).
+   *
+   * `getContactDetails` is cached across requests for up to a minute, so
+   * revalidating the paths alone would re-render both pages against the OLD
+   * settings row and the owner would watch their edit not take. The tag is the
+   * mechanism; the TTL is only the backstop.
+   */
+  revalidateTag(STABLE_TAGS.siteSettings, "max");
   revalidatePath("/");
   revalidatePath("/admin/site");
   return { status: "saved" };
@@ -136,6 +155,7 @@ export async function setContactAction(
   }
 
   // Every page renders the footer, so the whole site is stale after this.
+  revalidateTag(STABLE_TAGS.siteSettings, "max");
   revalidatePath("/", "layout");
 
   return { status: "saved" };

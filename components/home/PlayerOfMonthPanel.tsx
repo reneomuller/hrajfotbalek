@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { getStrings } from "@/lib/i18n/server";
 import { initials } from "@/lib/roster/initials";
 import { avatarUrl } from "@/lib/storage/avatar";
@@ -109,10 +110,12 @@ export async function PlayerOfMonthPanel({
             className="flex h-[72px] w-[72px] shrink-0 items-center justify-center overflow-hidden rounded-pill border-2 border-volt bg-surface-avatar text-[26px] font-bold text-volt"
           >
             {photo ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
+              /* 72px rendered, so 160 covers it at 2x (round 37, item 2). */
+              <Image
                 src={photo}
                 alt=""
+                width={160}
+                height={160}
                 data-testid="potm-photo"
                 className="h-full w-full object-cover"
               />

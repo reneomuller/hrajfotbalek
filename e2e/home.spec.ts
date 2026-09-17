@@ -319,6 +319,21 @@ test("the hero headline breaks only at sentence boundaries, in every language", 
       ]);
       const page = await context.newPage();
       await page.goto("/");
+      /*
+       * WAIT FOR THE REAL HEADLINE, NOT FOR `load` (round 37, item 3).
+       *
+       * `/` gained a `loading.tsx` so the home tab has something to prefetch
+       * and something to paint. That makes `goto` resolve while the SKELETON is
+       * on screen, and this measurement then found either no `hero-headline` or
+       * one mid-swap — reported as `"Play football." wraps in 0px`, which reads
+       * like a layout bug and is a timing one.
+       *
+       * The same trap CLAUDE.md records from `cutover.spec.ts`, approached from
+       * the other side: there a spec asserted on the FALLBACK's content, here it
+       * measured before the fallback had gone. Both are fixed by naming
+       * something only the real page renders and waiting for it.
+       */
+      await page.getByTestId("hero-headline").waitFor({ state: "visible" });
       await page.evaluate(() => document.fonts.ready);
 
       const measured = await page.evaluate(() => {
@@ -506,6 +521,9 @@ test.describe("the home page under ruling J", () => {
      * product, the games ARE the product.
      */
     await page.goto("/");
+    // The real games row, not the skeleton's placeholder — see the headline
+    // test above for why `goto` is no longer enough on this route.
+    await page.getByTestId("next-matches").waitFor({ state: "visible" });
     await page.evaluate(() => document.fonts.ready);
 
     const games = (await page.getByTestId("next-matches").boundingBox())!;

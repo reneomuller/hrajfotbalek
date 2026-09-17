@@ -80,6 +80,21 @@ async function readSchema(page: import("@playwright/test").Page) {
  * with the page: a wrong DTEND produces a calendar entry a player only notices
  * while standing on the pitch, and a wrong endDate is simply indexed.
  */
+
+/**
+ * The image a `src` ultimately points at, whether or not it goes through the
+ * optimizer (round 37, item 2).
+ *
+ * `/_next/image?url=X&w=…&q=…` and a plain `X` are the same photograph; which
+ * of the two a surface emits is a performance decision, and no assertion about
+ * WHICH PICTURE IS SHOWN should be able to fail when that decision changes.
+ */
+function underlyingSource(src: string | null): string {
+  const value = src ?? "";
+  if (!value.startsWith("/_next/image")) return value;
+  return decodeURIComponent(new URL(value, "http://x").searchParams.get("url") ?? "");
+}
+
 test("a 90-minute game renders its span on the page, in the .ics and in the structured data", async ({
   page,
   request,
@@ -1394,25 +1409,24 @@ test("a venue's own photo backs its games on the list and the detail alike", asy
 
     const cardPhoto = row.locator('[data-testid="card-photo"]');
     await expect(cardPhoto).toHaveAttribute("data-photo", "venue");
-    const cardSrc = await cardPhoto.getAttribute("src");
-    expect(cardSrc, "the card fell back to the default").not.toBe("/pitch-default.jpg");
+    const cardSource = underlyingSource(await cardPhoto.getAttribute("src"));
+    expect(cardSource, "the card fell back to the default").not.toBe("/pitch-default.jpg");
 
     /*
      * ...and the detail band shows the SAME image.
      *
-     * COMPARED AS SOURCE FILES, not as URLs. The hero goes through
-     * `next/image` and the card does not, so the band's `src` is
-     * `/_next/image?url=%2Fvenues%2F…` where the card's is the plain path.
-     * Asserting the raw strings would be asserting which surface uses the
-     * optimizer, which is not the property — the property is that one game
-     * does not show two different pitches.
+     * COMPARED AS SOURCE FILES, not as URLs — and now BOTH SIDES are unwrapped.
+     * ~~"The hero goes through `next/image` and the card does not."~~ Round 37
+     * item 2 put both through it, so both `src` values are
+     * `/_next/image?url=…&w=…`, and a raw-string comparison would now pass or
+     * fail on the WIDTH each surface asks for rather than on the photograph.
+     * The property is unchanged: one game does not show two different pitches.
      */
     await page.goto(`/game/${game.id}`);
-    const heroSrc = (await page.getByTestId("hero-photo").first().getAttribute("src")) ?? "";
-    const heroSource = heroSrc.startsWith("/_next/image")
-      ? decodeURIComponent(new URL(heroSrc, "http://x").searchParams.get("url") ?? "")
-      : heroSrc;
-    expect(heroSource).toBe(cardSrc);
+    const heroSource = underlyingSource(
+      await page.getByTestId("hero-photo").first().getAttribute("src"),
+    );
+    expect(heroSource).toBe(cardSource);
   } finally {
     await destroyScratchGame(game.id);
   }

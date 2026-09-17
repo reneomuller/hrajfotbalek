@@ -250,7 +250,7 @@ export async function ClaimBar({
           data-testid="book-cta"
           /* `rounded-pill` — p03 draws the bar's action as a full capsule,
              the same shape the home hero's CTA took in round 3. */
-          className="ml-auto flex min-h-[52px] shrink-0 items-center justify-center rounded-pill bg-volt px-5 text-body-lg font-bold text-ink no-underline transition-colors hover:bg-volt-dim"
+          className="pressable ml-auto flex min-h-[52px] shrink-0 items-center justify-center rounded-pill bg-volt px-5 text-body-lg font-bold text-ink no-underline hover:bg-volt-dim"
         >
           {state.kind === "open-signed-in"
             ? t.booking.claimSpot

@@ -166,13 +166,25 @@ export async function GameHero({
       */}
       <span aria-hidden className="pointer-events-none absolute inset-0">
         {isRemote ? (
-          // A bucket object does not go through next/image: the optimizer would
-          // need a remote-pattern allow-list per Supabase project and would
-          // bill a transform per venue per size.
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
+          /*
+            ~~"The optimizer would need a remote-pattern allow-list per Supabase
+            project and would bill a transform per venue per size."~~ BOTH HALVES
+            ANSWERED (round 37, item 2).
+
+            The allow-list exists now and is DERIVED from
+            `NEXT_PUBLIC_SUPABASE_URL`, so it is not a thing to keep per project.
+            And the transform count is bounded by the venues, not by the views:
+            seven venues times the handful of widths in `deviceSizes`, cached for
+            a year against a path that changes whenever the photo does. The bill
+            it was avoiding is smaller than the 1.03 MB the games list was
+            serving on every cold visit.
+          */
+          <Image
             src={image}
             alt=""
+            fill
+            sizes="(max-width: 600px) 100vw, 560px"
+            priority
             data-testid="hero-photo"
             className="h-full w-full object-cover object-[50%_30%]"
           />

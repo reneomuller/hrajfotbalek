@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { GuestIcon } from "@/components/game/GuestIcon";
 import { sortRoster, toRosterAvatar, type RosterAvatar } from "@/lib/games/queries";
@@ -230,10 +231,12 @@ async function Avatar({
       }`}
     >
       {photo ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
+        /* 512x512 stored, 34px rendered — see AvatarRow (round 37, item 2). */
+        <Image
           src={photo}
           alt=""
+          width={96}
+          height={96}
           data-testid="roster-avatar-photo"
           className="h-full w-full object-cover"
           loading="lazy"
