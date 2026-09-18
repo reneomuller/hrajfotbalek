@@ -660,6 +660,7 @@ export const uk: StringsOverlay = {
     partyTooLarge: "Стільки гостей на одне бронювання не поміститься.",
     reasonRequired: "Напиши причину — її прочитають усі записані гравці.",
     passNotConfigured: "Цей абонемент поки не продається.",
+    amountOutOfRange: "Цю суму зараз не можна оплатити. Повідомте організатора.",
     capacityFull: "Поки ти думав, місце зайняв хтось інший.",
     capacityFullTitle: "Місце вже зайняте",
     duplicateActiveBooking: "У тебе вже є місце в цьому матчі.",

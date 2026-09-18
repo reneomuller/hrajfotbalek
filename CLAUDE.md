@@ -365,6 +365,50 @@ visible change at all. **Measure it by decoding, not by looking for an `active:`
 class**, which passes for a rule that never matches; and sample a SMALL
 rectangle, because the screenshot's own cost is the instrument's resolution.
 
+**A PRICE CHANGE CAN WALK A ROW OUT THROUGH A CEILING SOMEBODY ELSE WROTE.**
+The 15- and 20-game passes could not be bought while 5, 8 and 12 could:
+`credit_topups.amount_czk` was capped at 2000 CZK — bounds written for a
+HAND-ENTERED top-up, where a typo of 20000 must not become an obligation — and
+round 35 v2 priced those two tiers at 2241 and 2772. **The split between the
+working and the failing tiers was exactly the ceiling.** The rows were fine;
+nothing about them was malformed. **When one row of a set fails and the rest of
+the set works on the same code path, diff the ROWS against every bound the write
+path crosses, not the code.**
+
+**AND THE GUARD SAID SO ITSELF, IN A COMMENT.** `create_pass_topup` carried "the
+same 50–2000 bounds the ordinary path enforces. A tier priced outside them would
+be a tier nobody could pay for" — right about the consequence, wrong about which
+side should move. A comment that describes a failure mode is a bug report
+nobody filed.
+
+**"THE DISPLAY RENDERS IT" IS NOT "IT CAN BE BOUGHT".** Round 35 v2's end-state
+check verified that `/pass` shows all five prices and all five discounts on
+production. That was true throughout, and the tiles were never what was broken —
+**the purchase path applies validations the display does not**, so a surface
+check can pass on a feature that has never once worked. The 20-game pass was
+priced at 2300 on the day it was created and had therefore been unsellable for
+its entire six-week existence, with zero rows in `credit_topups` to show for it.
+
+**A FIXTURE REACHES FOR THE CHEAPEST ROW, SO PER-ROW FAILURES ARE INVISIBLE.**
+Every pass suite exercised one tier and it was always one of the three under the
+ceiling. Anything driven by a table now loops over THE TABLE rather than over a
+list — `supabase/tests/pass_tiers_payable.sql` and `e2e/pass-tiers.spec.ts` — so
+a sixth tier is covered the day it is inserted and not the day somebody
+remembers. **Both were verified by reintroducing the bug and watching them
+fail**, which is the only thing that proves a regression guard guards anything.
+
+**AN UNRECOGNISED ERROR CODE BECOMES "SOMETHING WENT WRONG. PLEASE TRY AGAIN."**
+`AMOUNT_OUT_OF_RANGE` was raised correctly from the first day and was missing
+from `KNOWN_CODES`, so it fell to `UNKNOWN` and the player was told a transient
+fault had occurred and invited to retry — the one action guaranteed not to help.
+**Every code an RPC can raise belongs in `KNOWN_CODES`**, and a refusal by rule
+should never say "try again".
+
+**AND `npx supabase db reset` DROPS pgTAP**, because the extension is installed
+by hand rather than by a migration. `notifications.sql` then fails with
+`function plan(integer) does not exist`, which reads like a broken suite.
+`create extension if not exists pgtap` puts it back.
+
 **A form that closes itself on submit hides its own error.** `ChangeNameForm`
 called `setOpen(false)` in `onSubmit`, so a refused rename unmounted before the
 action answered and the admin saw nothing — not the old name, not a reason.
@@ -518,6 +562,22 @@ anything is owed:
 update public.venues set name = replace(name, ' — ', ' • ') where name like '% — %';
 update public.games  set venue = replace(venue, ' — ', ' • ') where venue like '% — %';
 ```
+
+**OUTSTANDING AND IT IS A HOTFIX — two pass tiers cannot be sold until it is
+applied.** Additive, idempotent, not deploy-first, order-free. It widens a
+ceiling that made the 15- and 20-game passes unbuyable, moves the bound into one
+IMMUTABLE function, and substitutes both top-up writers (RAISING rather than
+overwriting if the expected text is absent). Validated against a **clean**
+`supabase db reset`, which is the only way to prove a substitution met the text
+it will meet on production.
+
+```
+node scripts/apply-migration.mjs \
+  supabase/migrations/20260918110000_pass_tier_ceiling.sql --production
+```
+
+Until it lands, `/pass` sells three of its five tiers and the other two answer
+"Something went wrong."
 
 **Outstanding, round 36's one -- additive, idempotent, not deploy-first, and
 order-free against everything below.** It reverses round 35 v5's price derive in

@@ -657,6 +657,7 @@ export const cs: StringsOverlay = {
     // Round 16 item 19 — DRAFT.
     reasonRequired: "Napiš důvod — přečtou si ho všichni přihlášení hráči.",
     passNotConfigured: "Tahle permanentka zatím není v prodeji.",
+    amountOutOfRange: "Tuhle částku teď nejde zaplatit. Dej prosím vědět organizátorovi.",
     capacityFull: "Tohle místo ti někdo vyfoukl, než ses rozhodl.",
     capacityFullTitle: "Místo je pryč",
     duplicateActiveBooking: "V tomhle zápase už místo máš.",

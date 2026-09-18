@@ -2157,6 +2157,13 @@ export const strings = {
        two messages. */
     reasonRequired: "Write a reason — every booked player is about to read it.",
     passNotConfigured: "This pass is not on sale yet.",
+    /*
+     * HOTFIX 2026-09-18. Deliberately NOT "try again": the amount is refused by
+     * a rule, so trying again produces the same refusal. It says the price is
+     * the problem and points at the person who can change it, which is the
+     * organizer rather than the reader.
+     */
+    amountOutOfRange: "That amount can't be paid right now. Please tell the organizer.",
     capacityFull: "That spot was taken while you were deciding.",
     capacityFullTitle: "Spot already taken",
     duplicateActiveBooking: "You already have a spot in this game.",

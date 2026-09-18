@@ -34,6 +34,22 @@ export type BookingErrorCode =
      which is why its message is English by ruling R22 like the rest of the
      panel — it can never reach a player. */
   | "REASON_REQUIRED"
+  /*
+   * HOTFIX 2026-09-18: a top-up the database refuses to write.
+   *
+   * IT WAS ALREADY BEING RAISED and nothing recognised it, which is the half of
+   * the pass-tier outage that made it hard to see. `create_pass_topup` raised
+   * `AMOUNT_OUT_OF_RANGE` for the 15- and 20-game passes; the code was not in
+   * `KNOWN_CODES`, so it fell to `UNKNOWN` and the player read "Something went
+   * wrong. Please try again." — a message that describes a transient fault and
+   * invites the one action guaranteed not to help.
+   *
+   * ADDING IT HERE IS NOT THE FIX — the migration is. This is so the NEXT tier
+   * priced out of range says what is wrong instead of blaming the network.
+   */
+  | "AMOUNT_OUT_OF_RANGE"
+  /* Round 13 / the same hotfix: the tier row itself is gone. */
+  | "PASS_TIER_NOT_FOUND"
   | "UNKNOWN";
 
 const KNOWN_CODES: BookingErrorCode[] = [
@@ -52,6 +68,8 @@ const KNOWN_CODES: BookingErrorCode[] = [
   "PARTY_TOO_LARGE",
   "PASS_NOT_CONFIGURED",
   "REASON_REQUIRED",
+  "AMOUNT_OUT_OF_RANGE",
+  "PASS_TIER_NOT_FOUND",
 ];
 
 /** Extracts a known code from a PostgREST error message. */
@@ -95,6 +113,10 @@ export function describeBookingError(
       return { code, title: t.errors.tryAgain, message: t.errors.cancelWindowClosed };
     case "PASS_NOT_CONFIGURED":
       return { code, title: t.errors.tryAgain, message: t.errors.passNotConfigured };
+    case "PASS_TIER_NOT_FOUND":
+      return { code, title: t.errors.tryAgain, message: t.errors.passNotConfigured };
+    case "AMOUNT_OUT_OF_RANGE":
+      return { code, title: t.errors.tryAgain, message: t.errors.amountOutOfRange };
     case "REASON_REQUIRED":
       return { code, title: t.errors.tryAgain, message: t.errors.reasonRequired };
     case "PARTY_TOO_LARGE":

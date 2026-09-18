@@ -661,6 +661,7 @@ export const ru: StringsOverlay = {
     // Round 16 item 19 — DRAFT.
     reasonRequired: "Напиши причину — её прочитают все записавшиеся игроки.",
     passNotConfigured: "Этот абонемент пока не продаётся.",
+    amountOutOfRange: "Эту сумму сейчас нельзя оплатить. Сообщите организатору.",
     capacityFull: "Пока ты думал, место занял кто-то другой.",
     capacityFullTitle: "Место уже занято",
     duplicateActiveBooking: "У тебя уже есть место в этом матче.",
