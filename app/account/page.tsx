@@ -7,6 +7,7 @@ import { CreditBalance } from "@/components/CreditBalance";
 import { CreditBatches } from "@/components/account/CreditBatches";
 import { PlayerHistory } from "@/components/account/PlayerHistory";
 import { ProfileDetails } from "@/components/account/ProfileDetails";
+import { MarketingPreference } from "@/components/account/MarketingPreference";
 import { ProfileCover } from "@/components/account/ProfileCover";
 import { ProfileIdentity } from "@/components/account/ProfileIdentity";
 import { ProfileStats } from "@/components/account/ProfileStats";
@@ -313,6 +314,18 @@ export default async function AccountPage({
               email={player.email}
               countries={countryOptions(locale)}
             />
+          </div>
+
+          {/*
+            EMAIL PREFERENCES (round 38), under the details and above the
+            account actions — a setting about you, not an action on the
+            account. Its own heading, for the reason the details block got one.
+          */}
+          <h2 className="mt-12 mb-0 text-[17px] font-bold uppercase tracking-wide text-white">
+            {t.profile.emailPrefsTitle}
+          </h2>
+          <div className="mt-4">
+            <MarketingPreference optedIn={player.marketing_opt_in} />
           </div>
 
           {/*

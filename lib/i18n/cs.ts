@@ -516,6 +516,8 @@ export const cs: StringsOverlay = {
     notSet: "Nevyplněno",
     saved: "Profil uložen",
     saveFailed: "Uložení se nepovedlo. Zkus to prosím znovu.",
+    emailPrefsTitle: "Nastavení e-mailů",
+    marketingToggle: "Novinky o nových zápasech a nabídkách",
     positions: {
       gk: "Brankář",
       def: "Obránce",

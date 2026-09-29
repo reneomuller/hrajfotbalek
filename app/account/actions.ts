@@ -371,3 +371,45 @@ export async function updateProfileAction(
   revalidatePath("/account");
   return { status: "saved" };
 }
+
+/**
+ * The marketing opt-in, after signup (round 38).
+ *
+ * The signup box says "You can unsubscribe at any time"; this is what makes
+ * that true. `marketing_opt_in` has carried an own-row UPDATE grant since
+ * migration 1, so it takes the same path as the profile fields above — the
+ * grant and `players_update_own` are the enforcement, not this action.
+ *
+ * THE FORM SENDS THE VALUE IT WANTS, not "toggle". A double submit, or a page
+ * left open in two tabs, then converges on what the player last saw and chose
+ * rather than flipping twice.
+ */
+export interface MarketingActionState {
+  status: "idle" | "saved" | "error";
+  message?: string;
+}
+
+export async function setMarketingOptInAction(
+  _prev: MarketingActionState,
+  formData: FormData,
+): Promise<MarketingActionState> {
+  const t = await getStrings();
+  const player = await getCurrentPlayer();
+  if (!player) return { status: "error", message: t.errors.generic };
+
+  const optIn = formData.get("optIn") === "true";
+
+  const supabase = await createServerSupabaseClient();
+  const { error } = await supabase
+    .from("players")
+    .update({ marketing_opt_in: optIn })
+    .eq("id", player.id);
+
+  if (error) {
+    console.error("marketing opt-in update failed", error.message);
+    return { status: "error", message: t.profile.saveFailed };
+  }
+
+  revalidatePath("/account");
+  return { status: "saved" };
+}

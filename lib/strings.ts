@@ -1122,6 +1122,13 @@ export const strings = {
     notSet: "Not set",
     saved: "Profile saved",
     saveFailed: "We could not save that. Please try again.",
+    /*
+     * EMAIL PREFERENCES (round 38) — the switch behind signup's "You can
+     * unsubscribe at any time". Same subject as `auth.marketingLabel`, said as
+     * a setting rather than a request.
+     */
+    emailPrefsTitle: "Email preferences",
+    marketingToggle: "News about new games and offers",
     positions: {
       gk: "Goalkeeper",
       def: "Defender",

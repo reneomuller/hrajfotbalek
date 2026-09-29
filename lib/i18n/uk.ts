@@ -516,6 +516,8 @@ export const uk: StringsOverlay = {
     notSet: "Не вказано",
     saved: "Профіль збережено",
     saveFailed: "Зберегти не вдалося. Спробуй ще раз.",
+    emailPrefsTitle: "Налаштування листів",
+    marketingToggle: "Новини про нові матчі та пропозиції",
     positions: {
       gk: "Воротар",
       def: "Захисник",
