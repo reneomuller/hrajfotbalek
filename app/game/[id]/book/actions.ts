@@ -95,10 +95,16 @@ export async function createBookingAction(
 
   if (!gameId) return { status: "error", code: "GAME_NOT_FOUND" };
 
-  // THE TERMS BOX, ENFORCED WHERE IT CANNOT BE SKIPPED (round 38). Checked
-  // before the login redirect, so the post-auth resume only ever replays a
-  // submission that carried it.
-  if (!acceptedTerms(formData)) return { status: "error", code: "TERMS_REQUIRED" };
+  /*
+   * THE TERMS BOX, ON THE ONE PATH STRIPE DOES NOT SEE (round 38). A card
+   * payment accepts the terms inside Stripe's form, directly above Pay
+   * (`lib/payments/termsConsent.ts`). A CREDIT booking never reaches Stripe,
+   * so it carries our box and this is where that box is enforced — before the
+   * login redirect, so the post-auth resume only replays a ticked submission.
+   */
+  if (rawOption === "credit" && !acceptedTerms(formData)) {
+    return { status: "error", code: "TERMS_REQUIRED" };
+  }
 
   /*
    * THE PARTY, CLAMPED RATHER THAN TRUSTED.

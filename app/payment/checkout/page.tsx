@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { EmbeddedCheckoutFrame } from "@/components/payment/EmbeddedCheckoutFrame";
+import { CheckoutTermsGate } from "@/components/payment/CheckoutTermsGate";
 import { requireCurrentPlayer } from "@/lib/auth/session";
 import { getStrings } from "@/lib/i18n/server";
 import {
@@ -323,11 +324,25 @@ export default async function CheckoutPage({
       </p>
       <p className="mt-1 text-[13px] leading-snug text-muted">{line.description}</p>
 
+      {/*
+        THE TERMS BOX IS STRIPE'S, directly above Pay, whenever Stripe will draw
+        it (round 38). `termsInStripe` is false only when the Dashboard has no
+        Terms of Service URL, and then our own box stands in front of the form.
+      */}
       <div className="mt-6">
-        <EmbeddedCheckoutFrame
-          clientSecret={session.clientSecret}
-          publishableKey={process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!}
-        />
+        {session.termsInStripe ? (
+          <EmbeddedCheckoutFrame
+            clientSecret={session.clientSecret}
+            publishableKey={process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!}
+          />
+        ) : (
+          <CheckoutTermsGate>
+            <EmbeddedCheckoutFrame
+              clientSecret={session.clientSecret}
+              publishableKey={process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!}
+            />
+          </CheckoutTermsGate>
+        )}
       </div>
     </main>
   );

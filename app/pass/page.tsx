@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { PassTierCard } from "@/components/pass/PassTierCard";
-import { PassTermsCheckbox, PassTermsProvider } from "@/components/pass/PassTerms";
 import { getSessionUser } from "@/lib/auth/session";
 import { listPassTiers } from "@/lib/pass/queries";
 import { getStrings } from "@/lib/i18n/server";
@@ -77,19 +76,11 @@ export default async function PassPage() {
         {t.pass.creditEqualsGame}
       </p>
 
-      {/*
-        THE TERMS BOX, ONCE, ABOVE EVERY TIER (round 38) — see `PassTerms`.
-        Signed out it is not shown: the buy button sends a visitor to log in
-        first, and they come back here to a fresh page anyway.
-      */}
-      <PassTermsProvider>
-        {user && <PassTermsCheckbox />}
-        <div className="mt-4 flex flex-col gap-3" data-testid="pass-tiers">
-          {tiers.map((tier) => (
-            <PassTierCard key={tier.games} tier={tier} signedIn={user !== null} />
-          ))}
-        </div>
-      </PassTermsProvider>
+      <div className="mt-4 flex flex-col gap-3" data-testid="pass-tiers">
+        {tiers.map((tier) => (
+          <PassTierCard key={tier.games} tier={tier} signedIn={user !== null} />
+        ))}
+      </div>
 
       {/* `.lifted`, like every other panel in the redesign. `rounded-card
           bg-surface` was the pre-round-3 spelling — an edgeless box five points

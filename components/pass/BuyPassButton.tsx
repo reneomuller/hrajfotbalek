@@ -5,8 +5,6 @@ import { useFormStatus } from "react-dom";
 import { buyPassAction, type PassActionState } from "@/app/pass/actions";
 import { describeBookingError } from "@/lib/booking/errors";
 import { useStrings } from "@/components/LocaleProvider";
-import { usePassTerms } from "@/components/pass/PassTerms";
-import { TERMS_FIELD } from "@/lib/legal/terms";
 
 const INITIAL: PassActionState = { status: "idle" };
 
@@ -52,7 +50,6 @@ export function BuyPassButton({
   const [state, formAction] = useActionState(buyPassAction, INITIAL);
   // Shown only for an unconfigured tier, and only after a press.
   const [notice, setNotice] = useState(false);
-  const terms = usePassTerms();
 
   /*
    * ~~A grey "Coming soon" chip when the tier has no link.~~ ROUND 14 ITEM 7:
@@ -100,17 +97,8 @@ export function BuyPassButton({
   }
 
   return (
-    <form
-      action={formAction}
-      onSubmit={(event) => {
-        // Signed out, the action sends them to log in and no box is shown.
-        if (!signedIn || terms.accepted) return;
-        event.preventDefault();
-        terms.demand();
-      }}
-    >
+    <form action={formAction}>
       <input type="hidden" name="games" value={games} />
-      {terms.accepted && <input type="hidden" name={TERMS_FIELD} value="on" />}
       <Submit
         label={signedIn ? label : t.booking.logInToClaim}
         games={games}

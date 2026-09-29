@@ -1,4 +1,5 @@
 import Stripe from "stripe";
+import { CHECKOUT_TERMS_CONSENT, isTermsUrlMissing } from "@/lib/payments/termsConsent";
 
 /**
  * Embedded Checkout (round 25, item 2) — the server half.
@@ -176,11 +177,11 @@ export interface EmbeddedSessionInput {
  */
 export async function createEmbeddedSession(
   input: EmbeddedSessionInput,
-): Promise<{ clientSecret: string; sessionId: string } | null> {
+): Promise<{ clientSecret: string; sessionId: string; termsInStripe: boolean } | null> {
   const stripe = stripeClient();
   if (!stripe) return null;
 
-  const session = await stripe.checkout.sessions.create({
+  const params: Stripe.Checkout.SessionCreateParams = {
     /*
      * `embedded_page`, NOT `embedded` — AND THE TYPE SYSTEM COULD NOT CATCH IT.
      *
@@ -277,8 +278,29 @@ export async function createEmbeddedSession(
      * anything the browser could have edited.
      */
     return_url: input.returnUrl,
-  });
+  };
+
+  /*
+   * THE TERMS BOX ABOVE PAY, OR OURS IN FRONT OF THE FORM (round 38) — see
+   * `lib/payments/termsConsent.ts`. Only the one refusal that means "no terms
+   * URL in the Dashboard" falls back; every other error still throws.
+   */
+  let termsInStripe = true;
+  let session: Stripe.Checkout.Session;
+  try {
+    session = await stripe.checkout.sessions.create({
+      ...params,
+      consent_collection: CHECKOUT_TERMS_CONSENT,
+    });
+  } catch (error) {
+    if (!isTermsUrlMissing(error)) throw error;
+    console.error(
+      "checkout: Stripe has no Terms of Service URL — set it under Settings → Business → Public details; falling back to our own terms box",
+    );
+    termsInStripe = false;
+    session = await stripe.checkout.sessions.create(params);
+  }
 
   if (!session.client_secret) return null;
-  return { clientSecret: session.client_secret, sessionId: session.id };
+  return { clientSecret: session.client_secret, sessionId: session.id, termsInStripe };
 }

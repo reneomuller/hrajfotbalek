@@ -51,7 +51,7 @@ export type BookingErrorCode =
   /* Round 13 / the same hotfix: the tier row itself is gone. */
   | "PASS_TIER_NOT_FOUND"
   /*
-   * Round 38: a booking or a pass submitted without the terms box ticked.
+   * Round 38: a credit booking submitted without the terms box ticked.
    * Raised by the server actions, not an RPC (`lib/legal/terms.ts`). A refusal
    * by rule, so its copy says what to do rather than "try again".
    */

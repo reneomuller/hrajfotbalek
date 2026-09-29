@@ -505,15 +505,18 @@ export function PaymentMethodChoice({
       </fieldset>
 
       {/*
-        THE TERMS BOX, DIRECTLY ABOVE THE COMMIT (round 38). `required` lets the
-        browser stop an unticked submit; `createBookingAction` refuses one that
-        gets past it, and that refusal renders here, beside the box, rather
-        than in the failure block below.
+        THE TERMS BOX, FOR CREDIT ONLY, DIRECTLY ABOVE THE COMMIT (round 38).
+        Online, the terms are accepted inside Stripe's form right above Pay —
+        a second box here would ask twice. Credit completes on this page, so
+        this is its Pay button. `required` lets the browser stop an unticked
+        submit; `createBookingAction` refuses one that gets past it.
       */}
-      <TermsCheckbox
-        required
-        error={termsRefused ? t.auth.tosRequired : undefined}
-      />
+      {activeChoice === "credit" && (
+        <TermsCheckbox
+          required
+          error={termsRefused ? t.auth.tosRequired : undefined}
+        />
+      )}
 
       {failure && (
         <FormError title={failure.title} message={failure.message} code={state.code}>

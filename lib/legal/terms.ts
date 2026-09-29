@@ -1,10 +1,12 @@
 /**
  * The terms checkbox at the point of purchase (round 38).
  *
- * Booking a game and buying a pass each carry a required "I accept the terms"
- * box. The box is the courtesy; THIS is the rule — both server actions refuse
- * a submission that does not carry it, because a form control is not a check
- * anyone using curl has to pass.
+ * A CREDIT booking carries a required "I accept the terms" box — it is the
+ * one purchase that completes on our page. Card payments accept the terms
+ * inside Stripe's form instead (`lib/payments/termsConsent.ts`). The box is
+ * the courtesy; THIS is the rule — the booking action refuses a credit
+ * submission without it, because a form control is not a check anyone using
+ * curl has to pass.
  *
  * ONLY THE CHECKBOX'S OWN VALUE COUNTS. A native checkbox posts "on" when
  * ticked and nothing when not, so any other value is a hand-made request and

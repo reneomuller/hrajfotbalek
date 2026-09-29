@@ -7,7 +7,6 @@ import { stripePassUrl, withStripeParams } from "@/lib/payments/stripeLinks";
 import { embeddedCheckoutEnabled } from "@/lib/payments/embeddedCheckout";
 import { toBookingErrorCode, type BookingErrorCode } from "@/lib/booking/errors";
 import { createServerSupabaseClient } from "@/lib/supabase/clients";
-import { acceptedTerms } from "@/lib/legal/terms";
 
 /**
  * Buying a pass.
@@ -36,10 +35,6 @@ export async function buyPassAction(
     // Signed out, with the intent preserved: they come back to this page.
     redirect(`/login?next=${encodeURIComponent("/pass")}`);
   }
-
-  // THE TERMS BOX (round 38) — after the sign-in redirect, because a signed-out
-  // visitor is not shown the box, and before anything is written.
-  if (!acceptedTerms(formData)) return { status: "error", code: "TERMS_REQUIRED" };
 
   const games = Number(formData.get("games") ?? "");
   if (!Number.isInteger(games) || games <= 0) {

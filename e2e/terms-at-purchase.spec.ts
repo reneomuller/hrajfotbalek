@@ -10,11 +10,11 @@ import {
 /**
  * The terms box at the point of purchase (round 38).
  *
- * A booking is not created until the box is ticked, and the pass page carries
- * one box above its tiers for a signed-in player. The server half — both
- * actions refusing an unticked submission — is `lib/legal/terms.ts` and its
- * unit test; the pass BUY press cannot be driven here because this environment
- * has no Stripe keys and every tier renders unconfigured (REQUESTS row 356).
+ * A CARD payment accepts the terms inside Stripe's embedded form, directly
+ * above Pay — `lib/payments/termsConsent.ts`, unit-tested, because this
+ * environment has no Stripe keys and cannot render the form. What CAN be
+ * driven here is the path Stripe never sees: a CREDIT booking completes on our
+ * page, so it carries our own box, and nothing else does.
  */
 
 let game: ScratchGame;
@@ -64,24 +64,30 @@ test("a booking is not made until the terms box is ticked", async ({ page, conte
   expect(await bookingsOn(game.id, players.runner.id)).toBe(1);
 });
 
-test("the pass page shows one terms box to a signed-in player", async ({ page, context }) => {
+test("paying online shows no terms box here — Stripe asks above Pay", async ({
+  page,
+  context,
+}) => {
+  // Arrange — no credit, so online is the only way to pay.
+  await signInAs(context, players.runner);
+  await setWalletTo(players.runner.id, 0);
+  await page.goto(`/game/${game.id}/book`);
+
+  // Act
+  await page.getByTestId("pay-online-input").check();
+
+  // Assert
+  await expect(page.getByTestId("terms-accept")).toHaveCount(0);
+});
+
+test("the pass page carries no terms box of its own", async ({ page, context }) => {
   // Arrange
   await signInAs(context, players.runner);
 
   // Act
   await page.goto("/pass");
 
-  // Assert — once, above the tiers, linking to the terms.
-  await expect(page.getByTestId("pass-tiers")).toBeVisible();
-  await expect(page.getByTestId("terms-accept")).toHaveCount(1);
-  await expect(page.getByTestId("pass-terms").getByRole("link")).toHaveAttribute("href", "/terms");
-});
-
-test("the pass page shows no terms box when signed out", async ({ page }) => {
-  // Arrange / Act
-  await page.goto("/pass");
-
-  // Assert — a visitor is sent to log in first and comes back to a fresh page.
+  // Assert — every pass is paid by card, so the terms are Stripe's to ask.
   await expect(page.getByTestId("pass-tiers")).toBeVisible();
   await expect(page.getByTestId("terms-accept")).toHaveCount(0);
 });

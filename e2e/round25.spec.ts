@@ -62,7 +62,6 @@ test("the online option stays live and the flow never dead-ends", async ({
     const online = page.getByTestId("pay-online-input");
     await expect(online).toBeEnabled();
     await online.check();
-    await page.getByTestId("terms-accept").check();
     await page.getByTestId("confirm-booking").click();
 
     // It went SOMEWHERE — a payment page or our own checkout — and not back
