@@ -13,6 +13,7 @@ import { buildResumeUrl } from "@/lib/booking/resume";
 import { policy } from "@/lib/policy";
 import { PASS_REFERENCE_PRICE_CZK } from "@/lib/pass/creditPrice";
 import { gameTakesCredit } from "@/lib/games/price";
+import { acceptedTerms } from "@/lib/legal/terms";
 import { rememberPendingPurchase } from "@/lib/payments/pendingPurchaseCookie";
 import { stripeBookingUrl, withStripeParams } from "@/lib/payments/stripeLinks";
 import { embeddedCheckoutEnabled } from "@/lib/payments/embeddedCheckout";
@@ -93,6 +94,11 @@ export async function createBookingAction(
   const rawOption = formData.get("option");
 
   if (!gameId) return { status: "error", code: "GAME_NOT_FOUND" };
+
+  // THE TERMS BOX, ENFORCED WHERE IT CANNOT BE SKIPPED (round 38). Checked
+  // before the login redirect, so the post-auth resume only ever replays a
+  // submission that carried it.
+  if (!acceptedTerms(formData)) return { status: "error", code: "TERMS_REQUIRED" };
 
   /*
    * THE PARTY, CLAMPED RATHER THAN TRUSTED.

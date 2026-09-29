@@ -270,6 +270,7 @@ test("a 90-minute game priced BELOW the credit nominal still takes exactly one c
       "a cheap 90-minute game hid the credit option",
     ).toBeEnabled();
     await page.getByTestId("pay-credit-input").check();
+    await page.getByTestId("terms-accept").check();
     await page.getByTestId("confirm-booking").click();
     await page.waitForURL(/\/book\/confirmation\?/);
 

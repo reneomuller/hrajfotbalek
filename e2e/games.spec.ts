@@ -1159,6 +1159,7 @@ test("booking and cancelling each raise their toast on the page that follows", a
     await page.goto(`/game/${game.id}/book`);
     // Credit is preselected when it covers (round 7, item 11).
     await expect(page.getByTestId("pay-credit-input")).toBeChecked();
+    await page.getByTestId("terms-accept").check();
     await page.getByTestId("confirm-booking").click();
     await page.waitForURL(/\/book\/confirmation/);
     await expect(page.getByTestId("toast")).toBeVisible();

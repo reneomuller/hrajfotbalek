@@ -53,6 +53,7 @@ test("the online option redirects to a stamped payment link", async ({ page, con
      */
     await page.goto(`/game/${game.id}/book`, { waitUntil: "networkidle" });
     await page.getByTestId("pay-online-input").check();
+    await page.getByTestId("terms-accept").check();
     await page.getByTestId("confirm-booking").click();
 
     const target = new URL(BOOKING_URL!);

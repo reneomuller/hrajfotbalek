@@ -47,6 +47,7 @@ test("a player with a covering balance redeems credit and is confirmed", async (
     await expect(credit).toBeEnabled();
     await expect(credit).toBeChecked();
 
+    await page.getByTestId("terms-accept").check();
     await page.getByTestId("confirm-booking").click();
     await page.waitForURL(/\/book\/confirmation/, { timeout: 15000 });
 
@@ -106,6 +107,7 @@ test("a party paid entirely in credit spends one credit per seat", async ({ page
     await page.getByTestId("party-2").click();
     await expect(page.getByTestId("pay-credit-input")).toBeEnabled();
     await page.getByTestId("pay-credit-input").check();
+    await page.getByTestId("terms-accept").check();
     await page.getByTestId("confirm-booking").click();
     await page.waitForURL(/\/book\/confirmation/, { timeout: 15000 });
 

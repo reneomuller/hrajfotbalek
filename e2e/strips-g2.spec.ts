@@ -163,6 +163,7 @@ test("the reworked header, the venue fallback, the share pair and a toast", asyn
     await setWalletTo(players.runner.id, game.priceCzk);
     await page.goto(`/game/${game.id}/book`, { waitUntil: "networkidle" });
     await page.getByTestId("pay-credit-input").check();
+    await page.getByTestId("terms-accept").check();
     await page.getByTestId("confirm-booking").click();
     await page.waitForURL(/\/book\/confirmation/);
     await expect(page.getByTestId("toast")).toBeVisible();

@@ -47,10 +47,16 @@ export function PendingButton({
 
   const base =
     "inline-flex min-h-[52px] items-center justify-center gap-2 rounded-control px-6 text-body-lg font-bold transition-colors";
+  /*
+   * `active:` BESIDE EVERY `hover:` (round 38). The pointer that matters here
+   * has no hover, so without these a tap on Confirm changed nothing under the
+   * thumb until the action went pending — `tap-feedback.spec.ts` had been
+   * reading the hover state as the answer.
+   */
   const skin =
     variant === "primary"
-      ? "bg-volt text-ink hover:bg-volt-dim"
-      : "border border-hairline-strong text-bone hover:border-hairline-volt";
+      ? "bg-volt text-ink hover:bg-volt-dim active:bg-volt-dim"
+      : "border border-hairline-strong text-bone hover:border-hairline-volt active:border-hairline-volt";
 
   return (
     <button

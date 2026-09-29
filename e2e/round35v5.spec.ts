@@ -132,6 +132,7 @@ test("a 90-minute game still offers it, and spends one credit a seat", async ({
     await page.goto(`/game/${long.id}/book`, { waitUntil: "networkidle" });
     await expect(page.getByTestId("pay-credit-input")).toBeEnabled();
     await page.getByTestId("pay-credit-input").check();
+    await page.getByTestId("terms-accept").check();
     await page.getByTestId("confirm-booking").click();
     await page.waitForURL(/\/book\/confirmation\?/);
 

@@ -50,6 +50,12 @@ export type BookingErrorCode =
   | "AMOUNT_OUT_OF_RANGE"
   /* Round 13 / the same hotfix: the tier row itself is gone. */
   | "PASS_TIER_NOT_FOUND"
+  /*
+   * Round 38: a booking or a pass submitted without the terms box ticked.
+   * Raised by the server actions, not an RPC (`lib/legal/terms.ts`). A refusal
+   * by rule, so its copy says what to do rather than "try again".
+   */
+  | "TERMS_REQUIRED"
   | "UNKNOWN";
 
 const KNOWN_CODES: BookingErrorCode[] = [
@@ -70,6 +76,7 @@ const KNOWN_CODES: BookingErrorCode[] = [
   "REASON_REQUIRED",
   "AMOUNT_OUT_OF_RANGE",
   "PASS_TIER_NOT_FOUND",
+  "TERMS_REQUIRED",
 ];
 
 /** Extracts a known code from a PostgREST error message. */
@@ -119,6 +126,8 @@ export function describeBookingError(
       return { code, title: t.errors.tryAgain, message: t.errors.amountOutOfRange };
     case "REASON_REQUIRED":
       return { code, title: t.errors.tryAgain, message: t.errors.reasonRequired };
+    case "TERMS_REQUIRED":
+      return { code, title: t.auth.legalGroupLabel, message: t.auth.tosRequired };
     case "PARTY_TOO_LARGE":
       return { code, title: t.errors.tryAgain, message: t.errors.partyTooLarge };
     case "INSUFFICIENT_PERMISSION":

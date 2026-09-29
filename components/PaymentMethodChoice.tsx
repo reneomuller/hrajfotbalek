@@ -4,6 +4,7 @@ import { useActionState, useState } from "react";
 import { createBookingAction, type BookingActionState } from "@/app/game/[id]/book/actions";
 import { FormError } from "@/components/form/FormError";
 import { PendingButton } from "@/components/form/PendingButton";
+import { TermsCheckbox } from "@/components/form/TermsCheckbox";
 import { describeBookingError } from "@/lib/booking/errors";
 import { useLocale, useStrings } from "@/components/LocaleProvider";
 import { GuestOverflowSelect } from "@/components/game/GuestOverflowSelect";
@@ -244,8 +245,9 @@ export function PaymentMethodChoice({
    * the least deserving of that: someone simply tapped first. The block sits
    * above the button, the form stands, and trying again is one tap.
    */
+  const termsRefused = state.status === "error" && state.code === "TERMS_REQUIRED";
   const failure =
-    state.status === "error" && state.code
+    state.status === "error" && state.code && !termsRefused
       ? describeBookingError(state.code, t)
       : null;
 
@@ -501,6 +503,17 @@ export function PaymentMethodChoice({
           */}
         </div>
       </fieldset>
+
+      {/*
+        THE TERMS BOX, DIRECTLY ABOVE THE COMMIT (round 38). `required` lets the
+        browser stop an unticked submit; `createBookingAction` refuses one that
+        gets past it, and that refusal renders here, beside the box, rather
+        than in the failure block below.
+      */}
+      <TermsCheckbox
+        required
+        error={termsRefused ? t.auth.tosRequired : undefined}
+      />
 
       {failure && (
         <FormError title={failure.title} message={failure.message} code={state.code}>

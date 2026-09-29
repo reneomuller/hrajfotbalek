@@ -68,6 +68,7 @@ test("book to a confirmed spot in under 60 seconds", async ({ page, context }) =
    * is asserted in `games.spec.ts` where the player has no credit.
    */
   await expect(page.getByTestId("pay-credit-input")).toBeChecked();
+  await page.getByTestId("terms-accept").check();
   await page.getByTestId("confirm-booking").click();
 
   await expect(page.getByTestId("confirmation")).toBeVisible();
@@ -88,6 +89,7 @@ test("full credit confirms instantly and shows no QR", async ({ page, context })
 
   await page.goto(`/game/${game.id}/book`);
   await page.getByTestId("pay-credit-input").check();
+  await page.getByTestId("terms-accept").check();
   await page.getByTestId("confirm-booking").click();
 
   await expect(page.getByTestId("confirmation")).toBeVisible();

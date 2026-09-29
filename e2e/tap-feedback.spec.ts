@@ -60,6 +60,13 @@ async function pressFeedbackMs(
     height: 44,
   };
 
+  /*
+   * THE POINTER STARTS AWAY FROM THE TARGET (round 38). It used to stay
+   * wherever the previous check pressed, so when a layout change moved a
+   * control under that spot the "resting" frame was already hovered and the
+   * press read as NO VISIBLE CHANGE. A resting frame must be at rest.
+   */
+  await page.mouse.move(0, 0);
   const resting = meanPixel(PNG.sync.read(await page.screenshot({ clip })));
 
   // A real press: down, hold, and sample while the finger is still on it.
@@ -105,7 +112,14 @@ test("every primary tap on the five journeys answers within 100ms", async ({ pag
       report.push(`${label}: control not present — skipped`);
       return;
     }
-    await target.scrollIntoViewIfNeeded();
+    /*
+     * TO THE MIDDLE, NOT "IF NEEDED" (round 38). `scrollIntoViewIfNeeded` does
+     * nothing for a control that is inside the viewport but UNDER the fixed tab
+     * bar, so the press landed on the bar. Round 38's terms box moved Confirm
+     * down by one row, into exactly that band. A thumb scrolls a control into
+     * the open before pressing it; so does this.
+     */
+    await target.evaluate((el) => el.scrollIntoView({ block: "center" }));
     const ms = await pressFeedbackMs(page, target);
     report.push(`${label}: ${ms === null ? "NO VISIBLE CHANGE" : `${ms}ms`}`);
     if (ms === null || ms > FEEDBACK_BUDGET_MS) dead.push(`${label} (${ms ?? "never"})`);

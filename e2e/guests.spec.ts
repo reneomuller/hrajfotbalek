@@ -62,6 +62,7 @@ test("a player brings two guests: one booking, one price, three seats", async ({
     await expect(page.getByTestId("party-summary")).toContainText(String(3 * PRICE));
 
     await page.getByTestId("pay-credit-input").check();
+    await page.getByTestId("terms-accept").check();
     await page.getByTestId("confirm-booking").click();
     await page.waitForURL(/\/book\/confirmation/);
 
@@ -108,6 +109,7 @@ test("the party renders as guests, last in the row and never with a photo", asyn
     await page.goto(`/game/${game.id}/book`, { waitUntil: "networkidle" });
     await page.getByTestId("party-2").click();
     await page.getByTestId("pay-credit-input").check();
+    await page.getByTestId("terms-accept").check();
     await page.getByTestId("confirm-booking").click();
     await page.waitForURL(/\/book\/confirmation/);
 
@@ -222,6 +224,7 @@ test("credits are offered only when the wallet covers the whole party", async ({
 
     // And spending it is atomic: one booking, fully covered, confirmed.
     await page.getByTestId("pay-credit-input").check();
+    await page.getByTestId("terms-accept").check();
     await page.getByTestId("confirm-booking").click();
     await page.waitForURL(/\/book\/confirmation/);
 
@@ -295,6 +298,7 @@ test("cancelling a party releases every one of its seats", async ({ page, contex
     await page.goto(`/game/${game.id}/book`, { waitUntil: "networkidle" });
     await page.getByTestId("party-2").click();
     await page.getByTestId("pay-credit-input").check();
+    await page.getByTestId("terms-accept").check();
     await page.getByTestId("confirm-booking").click();
     await page.waitForURL(/\/book\/confirmation/);
 

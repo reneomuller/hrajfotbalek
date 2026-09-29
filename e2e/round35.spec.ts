@@ -49,6 +49,7 @@ test("redeeming a credit on a 180 CZK game debits exactly 150", async ({ page, c
      */
     await expect(page.getByTestId("pay-credit-input")).toBeEnabled();
     await page.getByTestId("pay-credit-input").check();
+    await page.getByTestId("terms-accept").check();
     await page.getByTestId("confirm-booking").click();
     await page.waitForURL(/\/book\/confirmation\?/);
 
@@ -80,6 +81,7 @@ test("a party of four is offered credit when the wallet holds four credits, not 
     await expect(page.getByTestId("pay-credit-input")).toBeEnabled();
 
     await page.getByTestId("pay-credit-input").check();
+    await page.getByTestId("terms-accept").check();
     await page.getByTestId("confirm-booking").click();
     await page.waitForURL(/\/book\/confirmation\?/);
 
