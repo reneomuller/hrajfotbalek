@@ -78,12 +78,13 @@ export const BADGE_THRESHOLDS = {
  * ICONS COME FROM THE EXISTING SET (`components/Icon.tsx`) — no new art this
  * round, per the owner's ruling. They are assigned by what the badge MEASURES
  * rather than by mood, which is what keeps the glyphs from reading as
- * decoration: `balls` and `calendar` and `list` are the games ladder (a first
- * football, then turning up week after week, then a long record), `pin` is the
+ * decoration: `balls` and `calendar` and `medal` are the games ladder (a first
+ * football, then turning up week after week, then long service), `pin` is the
  * venue count, `users` is the people met.
  *
  * ~~`clock` is the hours~~ — Iron legs takes `boot` (owner's request, round
- * 38): a clock said "time", and the badge is about legs.
+ * 38): a clock said "time", and the badge is about legs. ~~`list`~~ — Veteran
+ * takes `medal` in the same round: a checklist read as a to-do, not a record.
  */
 export function playerBadges(stats: BadgeStats, t: Strings): Badge[] {
   const { badges } = t.profile;
@@ -105,7 +106,7 @@ export function playerBadges(stats: BadgeStats, t: Strings): Badge[] {
     },
     {
       key: "veteran",
-      icon: "list",
+      icon: "medal",
       name: badges.veteran,
       requirement: badges.veteranHint,
       earned: stats.gamesPlayed >= BADGE_THRESHOLDS.veteran,
