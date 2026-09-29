@@ -342,7 +342,7 @@ export const strings = {
     gdprLink: "Read the privacy policy",
     gdprRequired: "Please agree to the privacy policy to continue.",
     preferencesGroupLabel: "Optional",
-    marketingLabel: "Email me about new games. (Optional)",
+    marketingLabel: "Send me emails about new games and offers. You can unsubscribe at any time.",
     createAccount: "Create my account",
 
     emailTaken:
@@ -1200,7 +1200,7 @@ export const strings = {
     badgesCount: "{earned} of {total}",
 
     /*
-     * THE FIVE BADGES. Name and requirement are separate keys because the
+     * THE BADGES. Name and requirement are separate keys because the
      * requirement is shown on the LOCKED state as the thing to aim at, and a
      * name with the number folded into it ("Play 5 games") reads as an
      * instruction rather than as something you own once you have it.
@@ -1221,6 +1221,8 @@ export const strings = {
       explorerHint: "Play at 3 different pitches",
       ironLegs: "Iron legs",
       ironLegsHint: "Spend 10 hours on the pitch",
+      teamPlayer: "Team player",
+      teamPlayerHint: "Meet 50 players",
     },
   },
 

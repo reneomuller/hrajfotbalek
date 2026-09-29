@@ -3,25 +3,25 @@ import { BADGE_THRESHOLDS, earnedCount, playerBadges } from "@/lib/profile/badge
 import { strings } from "@/lib/strings";
 import { LOCALES } from "@/lib/i18n/locales";
 import { resolveStrings } from "@/lib/i18n/resolve";
-import type { ProfileStats } from "@/lib/profile/stats";
+import type { BadgeStats } from "@/lib/profile/badges";
 
-const NONE: ProfileStats = { gamesPlayed: 0, hours: 0, venues: 0 };
+const NONE: BadgeStats = { gamesPlayed: 0, hours: 0, venues: 0, playersMet: 0 };
 
-function at(overrides: Partial<ProfileStats>) {
+function at(overrides: Partial<BadgeStats>) {
   return playerBadges({ ...NONE, ...overrides }, strings);
 }
 
-function badge(stats: Partial<ProfileStats>, key: string) {
+function badge(stats: Partial<BadgeStats>, key: string) {
   return at(stats).find((b) => b.key === key)!;
 }
 
 describe("playerBadges", () => {
-  it("locks all five for a player who has played nothing", () => {
+  it("locks all six for a player who has played nothing", () => {
     // Arrange / Act
     const badges = at({});
 
     // Assert
-    expect(badges).toHaveLength(5);
+    expect(badges).toHaveLength(6);
     expect(badges.every((b) => !b.earned)).toBe(true);
     expect(earnedCount(badges)).toBe(0);
   });
@@ -33,12 +33,13 @@ describe("playerBadges", () => {
    * keeps passing after the threshold moves to 6, which makes it a test of
    * nothing at all.
    */
-  const ladder: { key: string; stat: keyof ProfileStats }[] = [
+  const ladder: { key: string; stat: keyof BadgeStats }[] = [
     { key: "firstGame", stat: "gamesPlayed" },
     { key: "regular", stat: "gamesPlayed" },
     { key: "veteran", stat: "gamesPlayed" },
     { key: "explorer", stat: "venues" },
     { key: "ironLegs", stat: "hours" },
+    { key: "teamPlayer", stat: "playersMet" },
   ];
 
   for (const { key, stat } of ladder) {
@@ -69,6 +70,17 @@ describe("playerBadges", () => {
     expect(byKey.veteran).toBe(false);
     expect(byKey.explorer).toBe(true);
     expect(byKey.ironLegs).toBe(true);
+  });
+
+  it("keeps team player locked when players met cannot be counted", () => {
+    // Null means the database has no `players_met` yet — unknown, not zero,
+    // and unknown must not read as earned.
+
+    // Arrange / Act
+    const teamPlayer = badge({ playersMet: null }, "teamPlayer");
+
+    // Assert
+    expect(teamPlayer.earned).toBe(false);
   });
 
   it("counts the earned badges for the heading", () => {
@@ -119,8 +131,9 @@ describe("playerBadges", () => {
     expect(hints.veteranHint).toContain(String(BADGE_THRESHOLDS.veteran));
     expect(hints.explorerHint).toContain(String(BADGE_THRESHOLDS.explorer));
     expect(hints.ironLegsHint).toContain(String(BADGE_THRESHOLDS.ironLegs));
+    expect(hints.teamPlayerHint).toContain(String(BADGE_THRESHOLDS.teamPlayer));
     // `firstGame` says "one game" in words, which is why it is asserted apart
-    // from the four numeric ones rather than being made to say "1".
+    // from the numeric ones rather than being made to say "1".
     expect(hints.firstGameHint.toLowerCase()).toContain("one");
   });
 });

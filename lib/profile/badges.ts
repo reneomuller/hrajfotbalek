@@ -3,7 +3,7 @@ import type { Strings } from "@/lib/strings";
 import type { ProfileStats } from "@/lib/profile/stats";
 
 /**
- * The badge ladder — five badges over the three profile stats.
+ * The badge ladder — six badges over the three profile stats and players met.
  *
  * DERIVED FROM EXISTING DATA ONLY, and that is the whole design of this round.
  * No `badges` table, no `player_badges` join, no awarding job, no rules engine:
@@ -30,7 +30,24 @@ import type { ProfileStats } from "@/lib/profile/stats";
  * who plays everywhere both have something ahead of them.
  */
 
-export type BadgeKey = "firstGame" | "regular" | "veteran" | "explorer" | "ironLegs";
+export type BadgeKey =
+  | "firstGame"
+  | "regular"
+  | "veteran"
+  | "explorer"
+  | "ironLegs"
+  | "teamPlayer";
+
+/**
+ * What the ladder reads: the three booking-derived stats, plus players met.
+ *
+ * `playersMet` is NULL, NOT ZERO, when the database cannot count it — the same
+ * convention `ProfileStats`' third tile uses. A null leaves Team player locked,
+ * which is the truthful reading of "we do not know".
+ */
+export interface BadgeStats extends ProfileStats {
+  playersMet: number | null;
+}
 
 export interface Badge {
   key: BadgeKey;
@@ -54,17 +71,21 @@ export const BADGE_THRESHOLDS = {
   veteran: 20,
   explorer: 3,
   ironLegs: 10,
+  teamPlayer: 50,
 } as const;
 
 /**
  * ICONS COME FROM THE EXISTING SET (`components/Icon.tsx`) — no new art this
  * round, per the owner's ruling. They are assigned by what the badge MEASURES
- * rather than by mood, which is what keeps five glyphs from reading as
+ * rather than by mood, which is what keeps the glyphs from reading as
  * decoration: `balls` and `calendar` and `list` are the games ladder (a first
  * football, then turning up week after week, then a long record), `pin` is the
- * venue count, `clock` is the hours.
+ * venue count, `users` is the people met.
+ *
+ * ~~`clock` is the hours~~ — Iron legs takes `boot` (owner's request, round
+ * 38): a clock said "time", and the badge is about legs.
  */
-export function playerBadges(stats: ProfileStats, t: Strings): Badge[] {
+export function playerBadges(stats: BadgeStats, t: Strings): Badge[] {
   const { badges } = t.profile;
 
   return [
@@ -98,15 +119,22 @@ export function playerBadges(stats: ProfileStats, t: Strings): Badge[] {
     },
     {
       key: "ironLegs",
-      icon: "clock",
+      icon: "boot",
       name: badges.ironLegs,
       requirement: badges.ironLegsHint,
       earned: stats.hours >= BADGE_THRESHOLDS.ironLegs,
     },
+    {
+      key: "teamPlayer",
+      icon: "users",
+      name: badges.teamPlayer,
+      requirement: badges.teamPlayerHint,
+      earned: stats.playersMet !== null && stats.playersMet >= BADGE_THRESHOLDS.teamPlayer,
+    },
   ];
 }
 
-/** How many of the five are earned — the `0 of 5` counter beside the heading. */
+/** How many are earned — the `0 of 6` counter beside the heading. */
 export function earnedCount(badges: Badge[]): number {
   return badges.filter((badge) => badge.earned).length;
 }

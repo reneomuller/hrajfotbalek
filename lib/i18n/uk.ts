@@ -203,7 +203,7 @@ export const uk: StringsOverlay = {
     gdprLabel: "Я погоджуюся з політикою конфіденційності.",
     gdprLink: "Читати політику конфіденційності",
     gdprRequired: "Без згоди з політикою продовжити не вийде.",
-    marketingLabel: "Надсилайте листи про нові матчі. (Необов’язково)",
+    marketingLabel: "Надсилайте мені листи про нові матчі та пропозиції. Відписатися можна будь-коли.",
     createAccount: "Створити акаунт",
   },
 
@@ -564,6 +564,8 @@ export const uk: StringsOverlay = {
       explorerHint: "Зіграй на 3 різних майданчиках",
       ironLegs: "Залізні ноги",
       ironLegsHint: "Проведи на полі 10 годин",
+      teamPlayer: "Командний гравець",
+      teamPlayerHint: "Познайомся з 50 гравцями",
     },
   },
 

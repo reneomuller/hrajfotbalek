@@ -85,10 +85,10 @@ test.describe("item 3 — the rebuilt profile", () => {
       page.getByTestId("profile-tab").filter({ hasText: /overview/i }),
     ).toHaveAttribute("data-selected", "true");
 
-    // Five badges, and BOTH STATES present — a grid where everything is locked
+    // Six badges, and BOTH STATES present — a grid where everything is locked
     // photographs identically to one where the earned styling is broken.
     const badges = page.getByTestId("badge");
-    await expect(badges).toHaveCount(5);
+    await expect(badges).toHaveCount(6);
     const earned = await page.locator('[data-testid="badge"][data-earned="true"]').count();
     const locked = await page.locator('[data-testid="badge"][data-earned="false"]').count();
     expect(earned, "no earned badge in the strip").toBeGreaterThan(0);

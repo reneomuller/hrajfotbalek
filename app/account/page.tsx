@@ -126,7 +126,7 @@ export default async function AccountPage({
   const playersMet = capabilities.playersMet ? await playersMetFor(player.id) : null;
 
   const stats = profileStats(bookings);
-  const badges = playerBadges(stats, t);
+  const badges = playerBadges({ ...stats, playersMet }, t);
   const history = splitHistory(bookings);
 
   const deletionHref =

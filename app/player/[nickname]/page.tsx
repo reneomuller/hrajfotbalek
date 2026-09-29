@@ -80,7 +80,7 @@ export default async function PublicPlayerPage({
    * here even though "players met" has taken its place in the row above.
    */
   const stats = { gamesPlayed: profile.gamesPlayed, hours: profile.hours, venues: profile.venues };
-  const badges = playerBadges(stats, t);
+  const badges = playerBadges({ ...stats, playersMet: profile.playersMet }, t);
 
   return (
     <main className="relative z-10 mx-auto w-full max-w-shell px-gutter pb-16 pt-24">

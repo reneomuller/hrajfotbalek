@@ -192,7 +192,7 @@ export const cs: StringsOverlay = {
     gdprLabel: "Souhlasím se zásadami ochrany osobních údajů.",
     gdprLink: "Přečíst zásady ochrany osobních údajů",
     gdprRequired: "Bez souhlasu se zásadami to bohužel nejde.",
-    marketingLabel: "Posílejte mi e-maily o nových zápasech. (Nepovinné)",
+    marketingLabel: "Posílejte mi e-maily o nových zápasech a nabídkách. Odhlásit se můžu kdykoli.",
     createAccount: "Založit účet",
   },
 
@@ -557,6 +557,8 @@ export const cs: StringsOverlay = {
       explorerHint: "Zahraj si na 3 různých hřištích",
       ironLegs: "Železné nohy",
       ironLegsHint: "Stráv na hřišti 10 hodin",
+      teamPlayer: "Týmový hráč",
+      teamPlayerHint: "Potkej 50 hráčů",
     },
   },
 

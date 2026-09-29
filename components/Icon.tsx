@@ -33,6 +33,8 @@ export type IconName =
   | "ticket"
   | "list"
   | "user"
+  // Iron legs (round 38) — a football boot, studs down, toe right.
+  | "boot"
   // The amenity catalog (migration 38). One entry per permitted value, and
   // widening the CHECK means widening this — an amenity with no icon renders
   // as a gap.
@@ -108,6 +110,12 @@ const PATHS: Record<IconName, React.ReactNode> = {
       <circle cx="9" cy="8" r="3.4" />
       <path d="M2.5 20a6.5 6.5 0 0 1 13 0" />
       <path d="M16 5.2a3.4 3.4 0 0 1 0 5.6M17.5 14.4A6.5 6.5 0 0 1 21.5 20" />
+    </>
+  ),
+  boot: (
+    <>
+      <path d="M7 4h5v5.2l6.2 2.2a3.8 3.8 0 0 1 2.8 3.6V16H3.5v-3a3.4 3.4 0 0 1 2-3.1L7 9.2z" />
+      <path d="M6 16v2.5M11 16v2.5M17 16v2.5M14.2 10l-1 1.7M16.6 10.8l-1 1.7" />
     </>
   ),
 

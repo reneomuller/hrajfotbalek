@@ -3,7 +3,7 @@ import { earnedCount, type Badge } from "@/lib/profile/badges";
 import type { Strings } from "@/lib/strings";
 
 /**
- * The badge grid — two columns, five badges, locked ones visible.
+ * The badge grid — two columns, six badges, locked ones visible.
  *
  * LOCKED IS DRAWN, NOT HIDDEN, and it is the whole mechanic. A grid that shows
  * only what you have earned tells a new player they have nothing; a grid that
@@ -60,10 +60,10 @@ export function BadgeGrid({ badges, t }: { badges: Badge[]; t: Strings }) {
 
       {/*
         TWO COLUMNS AT EVERY WIDTH the phone reaches, which is the reference's
-        shape. Five is odd, so the last tile sits alone on its row — left
-        aligned rather than centred or stretched, because a widened final card
-        would be the only card of its size on the page and would read as the
-        important one.
+        shape. Should the count go odd again, the last tile sits alone on its
+        row — left aligned rather than centred or stretched, because a widened
+        final card would be the only card of its size on the page and would
+        read as the important one.
       */}
       <ul className="m-0 mt-3 grid list-none grid-cols-2 gap-2 p-0">
         {badges.map((badge) => (
