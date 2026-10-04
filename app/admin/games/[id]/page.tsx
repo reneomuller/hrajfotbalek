@@ -26,6 +26,8 @@ import { GuestControl } from "@/components/admin/GuestControl";
 import { NotifyForm } from "@/components/admin/NotifyForm";
 import { formatGameDateTime } from "@/lib/format";
 import { venueDisplayName } from "@/lib/venues/displayName";
+import { pickableVenues } from "@/lib/venues/archive";
+import { deleteErasesHistory } from "@/lib/admin/gameDelete";
 import { updateGameAction } from "../actions";
 import { markPlayedAction } from "./attendance/actions";
 import { deleteGameAction } from "./actions";
@@ -94,6 +96,7 @@ export default async function AdminGamePage({
   const { canEdit, canPlay, canSettle, canCancel } = availableTransitions(
     game.status,
   );
+  const erasesHistory = deleteErasesHistory(game);
 
   return (
     <>
@@ -481,7 +484,7 @@ export default async function AdminGamePage({
           </h3>
           <GameForm
             action={updateGameAction}
-            venues={venues}
+            venues={pickableVenues(venues, game.venue_id)}
             game={game}
             organizer={organizer}
             defaultOrganizerName={admin.nickname}
@@ -507,7 +510,7 @@ export default async function AdminGamePage({
         
         `canCancel` is `draft | published | full`. So a PLAYED, SETTLED or
         CANCELLED game rendered no delete control at all, while
-        `admin_delete_game` refuses on BOOKINGS and never on status: an empty
+        `admin_delete_game` refused on BOOKINGS and never on status: an empty
         cancelled game, or a test fixture somebody marked played, is exactly
         what you would want to remove and exactly what the UI never offered.
         Measured across one game of every status before it was changed —
@@ -520,6 +523,11 @@ export default async function AdminGamePage({
         
         IT STAYS BELOW CANCEL where both render, because the order is still
         the advice: cancelling is what you do to a game with people on it.
+
+        A PAST GAME SAYS WHAT IT COSTS (round 39, item 1). Since round 39 the
+        RPC refuses only an UPCOMING game with players still on it, so a played
+        or settled game deletes — and its bookings cascade with it, out of
+        every player's stats and history. The confirm states that plainly.
       */}
       {capabilities.adminDelete && (
         <div className={canCancel ? "mt-6" : "mt-10 border-t border-hairline pt-6"}>
@@ -527,8 +535,16 @@ export default async function AdminGamePage({
             action={deleteGameAction}
             hiddenFields={{ gameId: game.id }}
             label={strings.admin.deleteGame}
-            title={strings.admin.deleteGameConfirmTitle}
-            body={strings.admin.deleteGameConfirmBody}
+            title={
+              erasesHistory
+                ? strings.admin.deleteGamePastConfirmTitle
+                : strings.admin.deleteGameConfirmTitle
+            }
+            body={
+              erasesHistory
+                ? strings.admin.deleteGamePastConfirmBody
+                : strings.admin.deleteGameConfirmBody
+            }
             confirmLabel={strings.admin.deleteGameConfirm}
             testId="game-delete"
           />

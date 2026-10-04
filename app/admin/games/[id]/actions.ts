@@ -142,16 +142,15 @@ export interface DeleteState {
 /**
  * Delete a game outright (round 16, item 18).
  *
- * IT REFUSES A GAME WITH BOOKINGS, and the refusal is in SQL rather than in
- * this action or in the dialog. A booking is what the credit ledger is keyed
- * to; deleting one quietly is how a wallet stops adding up. The route is
- * skipped by anyone using curl, so the guarantee has to live where the write
- * does.
+ * IT REFUSES ONLY AN UPCOMING GAME WITH PLAYERS STILL ON IT (round 39), and
+ * the refusal is in SQL rather than in this action or in the dialog. The route
+ * is skipped by anyone using curl, so the guarantee has to live where the
+ * write does. That is the one case where cancel-first protects anything:
+ * `cancel_game` credits and tells everyone, and a delete does neither.
  *
- * THE ORDER IS CANCEL, THEN DELETE. `cancel_game` credits everyone through the
- * loop that already exists; only after that is there nothing left to lose —
- * and even then a cancelled game with cancelled bookings stays, because those
- * rows are the audit trail. What deletes is a game nobody ever booked.
+ * EVERYTHING ELSE DELETES — empty, cancelled and past games. A past game's
+ * bookings cascade away with it, which the page's confirm states; the credit
+ * ledger keeps its rows (ON DELETE SET NULL), so no wallet moves.
  *
  * IT REDIRECTS ON SUCCESS, because the page it was called from no longer
  * exists. Returning a state to a route that 404s on its next render is a

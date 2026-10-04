@@ -6,6 +6,7 @@ import {
 import { requireAdmin } from "@/lib/auth/requireAdmin";
 import { appCapabilities } from "@/lib/db/capabilities";
 import { strings } from "@/lib/strings";
+import { pickableVenues } from "@/lib/venues/archive";
 import { createGameAction } from "../actions";
 
 export const metadata = { title: strings.admin.newGameTitle };
@@ -80,7 +81,7 @@ export default async function NewGamePage({
 
       <GameForm
         action={createGameAction}
-        venues={venues}
+        venues={pickableVenues(venues, null)}
         defaultOrganizerName={admin.nickname}
         canSetLanguage={capabilities.gameLanguage}
             canSetTelegram={capabilities.organizerTelegram}

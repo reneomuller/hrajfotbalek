@@ -521,6 +521,14 @@ export interface Database {
           city: string;
           brand: string;
           created_at: string;
+          /**
+           * Round 39 — set when an admin archives the venue: it leaves the
+           * game picker and the active list, never a game. OPTIONAL because
+           * the app deploys before the migration and `select *` omits a
+           * column that does not exist yet; `lib/venues/archive.ts` reads
+           * absent as active.
+           */
+          archived_at?: string | null;
         };
         /** Written only by `admin_create_venue` and `set_venue_amenities`. */
         Insert: never;
@@ -861,6 +869,8 @@ export interface Database {
       admin_remove_booking: { Args: { p_booking_id: string }; Returns: number };
       admin_delete_game: { Args: { p_game_id: string }; Returns: undefined };
       admin_delete_venue: { Args: { p_venue_id: string }; Returns: undefined };
+      admin_archive_venue: { Args: { p_venue_id: string }; Returns: undefined };
+      admin_restore_venue: { Args: { p_venue_id: string }; Returns: undefined };
       cancel_game_with_reason: {
         Args: { p_game_id: string; p_reason: string };
         Returns: number;

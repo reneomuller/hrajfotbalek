@@ -338,8 +338,9 @@ test("a venue row says it opens, and what is inside it is reachable", async ({
     })
     .not.toBe(closed);
 
-  // And the control the owner was looking for is genuinely on the page.
-  const remove = page.getByTestId("venue-delete").first();
+  // And the control the owner was looking for is genuinely on the page —
+  // ARCHIVE since round 39, which replaced delete for any venue with games.
+  const remove = page.getByTestId("venue-archive").first();
   await expect(remove).toBeVisible();
   await remove.scrollIntoViewIfNeeded();
   await expect(remove).toBeInViewport();

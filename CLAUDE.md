@@ -440,6 +440,14 @@ extend a CHECK in place: drop and re-add, restating the list in full. That
 drop/re-add is **pre-approved** (2026-08-01) as long as the new list is a strict
 superset.
 
+**A GUARD THAT ASKS ABOUT THE ROW AND NOT ABOUT ITS PARENT IS HALF A GUARD.**
+Round 35 v2 fixed the game delete to count only `reserved`/`confirmed`
+bookings — the right question about a booking — and never asked whether the
+GAME was still ahead. Every game on production is past, so the guard blocked
+every completed game (41 confirmed rows) and six "empty" ones held by legacy
+`reserved` holds nothing can expire. Round 39 asks both. When a status test
+looks right and the guard still fires, look one table up.
+
 ## A migration's verification block may not write a row
 
 **Effective 2026-09-12, after it cost a production cleanup.** A migration
@@ -563,8 +571,10 @@ update public.venues set name = replace(name, ' — ', ' • ') where name like 
 update public.games  set venue = replace(venue, ' — ', ' • ') where venue like '% — %';
 ```
 
-**OUTSTANDING AND IT IS A HOTFIX — two pass tiers cannot be sold until it is
-applied.** Additive, idempotent, not deploy-first, order-free. It widens a
+**~~OUTSTANDING AND IT IS A HOTFIX~~ — APPLIED, verified 2026-10-04** by its
+objects: `manual_topup_min_czk`/`manual_topup_max_czk` are in `pg_proc` and the
+`credit_topups` amount CHECK calls them. ~~two pass tiers cannot be sold until it is
+applied.~~ Additive, idempotent, not deploy-first, order-free. It widens a
 ceiling that made the 15- and 20-game passes unbuyable, moves the bound into one
 IMMUTABLE function, and substitutes both top-up writers (RAISING rather than
 overwriting if the expected text is absent). Validated against a **clean**
@@ -579,7 +589,8 @@ node scripts/apply-migration.mjs \
 Until it lands, `/pass` sells three of its five tiers and the other two answer
 "Something went wrong."
 
-**Outstanding, round 36's one -- additive, idempotent, not deploy-first, and
+**~~Outstanding~~ APPLIED, verified 2026-10-04 (`admin_create_game_v2` carries
+the `ROUND 36` coalesce) -- round 36's one -- additive, idempotent, not deploy-first, and
 order-free against everything below.** It reverses round 35 v5's price derive in
 both game writers by substitution, and RAISES rather than overwrites if the text
 it expects is absent. Applied twice against a clean local stack.
@@ -600,7 +611,8 @@ seat price to 180 and `20260915100000` creates it at 150, so the wrong order
 silently reverts the price. Every file probes rather than asserts its
 capability flags, so a partial state is safe; a wrong ORDER is not.
 
-**Outstanding, round 35's one — the credits ruling.** Safe in either order
+**~~Outstanding~~ APPLIED, verified 2026-10-04 (`credit_seat_price_czk` in
+`pg_proc`) — round 35's one — the credits ruling.** Safe in either order
 against round 34's and safe without it: everything it needs from that file is
 created here too, guarded.
 
@@ -609,7 +621,8 @@ node scripts/apply-migration.mjs \
   supabase/migrations/20260915100000_credits_are_seats.sql --production
 ```
 
-**Outstanding, round 34's one — additive, safe in either order against round
+**~~Outstanding~~ APPLIED, verified 2026-10-04 (`cancel_guests` in `pg_proc`) —
+round 34's one — additive, safe in either order against round
 33's.** It drops and recreates `checkout_outcome` (the return type gains a
 column) and widens the event catalog by one.
 
@@ -631,6 +644,27 @@ the same way: assert only what this file creates, probe everything else.**
 their objects, not their filenames: `players.player_number` exists,
 `admin_set_display_name` and `max_party_guests` are in `pg_proc`, and the three
 flags are true. `venueMapUrl` came back with them.
+
+**OUTSTANDING, round 39's two — additive, idempotent, not deploy-first,
+order-free, each applied twice against a clean `db reset`.** The deploy is safe
+without them: the delete keeps its old guard, and the venue page keeps its old
+Delete button until `app_capabilities()` says `venueArchive`.
+
+```
+node scripts/apply-migration.mjs \
+  supabase/migrations/20261004100000_delete_game_obligations.sql --production
+node scripts/apply-migration.mjs \
+  supabase/migrations/20261004110000_venue_archive.sql --production
+```
+
+The first lets past, cancelled and empty games delete. The second adds
+`venues.archived_at`, the archive/restore RPCs, two event types and the
+`venueArchive` flag. **Its event-catalog block READS the live list rather than
+restating it** — and its first draft read only the `ARRAY['a'::text…]`
+spelling, so on its own second run it parsed the `'{a,b}'` spelling it had just
+written as EMPTY and tried to rebuild the catalog with two types. Only the
+existing rows violating that stopped the commit. Both spellings are parsed now,
+with a floor that raises if fewer than thirty types come back.
 
 When a UI failure looks inexplicable and the code reads correctly, check this
 list before debugging the component.

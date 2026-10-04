@@ -10,6 +10,7 @@ import {
 } from "@/lib/venues/mapsLink";
 import { toAdminErrorMessage } from "@/lib/admin/errors";
 import type { DeleteState } from "@/app/admin/games/[id]/actions";
+import type { TransitionState } from "@/lib/admin/actionState";
 import { createServerSupabaseClient } from "@/lib/supabase/clients";
 import { strings } from "@/lib/strings";
 
@@ -186,6 +187,50 @@ export async function deleteVenueAction(
   if (error) return { status: "error", message: toAdminErrorMessage(error.message) };
 
   // A venue reaches every card that names it, so the whole layout is stale.
+  revalidatePath("/", "layout");
+  return { status: "idle" };
+}
+
+/**
+ * Archive and restore a venue (round 39, item 2).
+ *
+ * ARCHIVE IS WHAT "DELETE VENUE" WAS FOR. A ground worth retiring has games on
+ * it, and `admin_delete_venue` rightly refuses those; archiving takes it out of
+ * the picker and leaves every game that references it exactly as it was.
+ * Reversible, so there is no confirm dialog — Restore is the undo.
+ *
+ * THE WHOLE LAYOUT IS REVALIDATED: the picker on every game form reads the
+ * flag, and so does this page's split into active and archived.
+ */
+export async function archiveVenueAction(
+  _prev: TransitionState,
+  formData: FormData,
+): Promise<TransitionState> {
+  return setVenueArchived(formData, "admin_archive_venue", strings.admin.archiveVenueFailed);
+}
+
+export async function restoreVenueAction(
+  _prev: TransitionState,
+  formData: FormData,
+): Promise<TransitionState> {
+  return setVenueArchived(formData, "admin_restore_venue", strings.admin.restoreVenueFailed);
+}
+
+async function setVenueArchived(
+  formData: FormData,
+  rpc: "admin_archive_venue" | "admin_restore_venue",
+  failed: string,
+): Promise<TransitionState> {
+  await requireAdmin();
+
+  const venueId = String(formData.get("venueId") ?? "");
+  if (!venueId) return { status: "error", message: failed };
+
+  const supabase = await createServerSupabaseClient();
+  const { error } = await supabase.rpc(rpc, { p_venue_id: venueId });
+
+  if (error) return { status: "error", message: toAdminErrorMessage(error.message) };
+
   revalidatePath("/", "layout");
   return { status: "idle" };
 }

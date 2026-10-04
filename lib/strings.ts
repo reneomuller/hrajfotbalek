@@ -2117,16 +2117,33 @@ export const strings = {
       "It disappears from the board and from the admin list. This cannot be undone.",
     deleteGameConfirm: "Yes — delete it",
     deleteGameFailed: "We could not delete that game.",
+    /*
+     * Round 39: refused ONLY for an upcoming game with players still on it —
+     * a past, cancelled or empty game deletes — so the message names that case.
+     */
     deleteGameBlocked:
-      "This game has bookings. Cancel it first — that credits everyone — and the delete becomes available.",
+      "Players are still booked on this upcoming game. Cancel it first — that credits everyone and tells them — then delete it.",
+    deleteGamePastConfirmTitle: "Delete this past game?",
+    deleteGamePastConfirmBody:
+      "This game has been played. Deleting it removes it from every player's stats and history — their games played, hours and players met go down, and it leaves their list of games. No wallet changes. This cannot be undone.",
     deleteVenue: "Delete",
     deleteVenueConfirmTitle: "Delete this venue?",
     deleteVenueConfirmBody:
-      "It disappears from the venue picker. Games already at it are unaffected.",
+      "No game has ever been played here, so it is removed outright. This cannot be undone.",
     deleteVenueConfirm: "Yes — delete it",
     deleteVenueFailed: "We could not delete that venue.",
     deleteVenueBlocked:
-      "Games reference this venue, so it cannot be deleted. Delete or reassign those games first.",
+      "Games reference this venue, so it cannot be deleted. Archive it instead — it leaves the picker and its games keep it.",
+    /* Round 39 item 2 — archive replaces delete for a venue with games. */
+    archiveVenue: "Archive",
+    archiveVenueHint:
+      "Takes it out of the venue picker. Every game already at it keeps showing it.",
+    archiveVenueFailed: "We could not archive that venue.",
+    restoreVenue: "Restore",
+    restoreVenueFailed: "We could not restore that venue.",
+    venuesArchivedHeading: "Archived ({count})",
+    venuesArchivedLede:
+      "Not offered for new games. Games played here still show the venue, and the games list still sorts by it.",
     cancelGame: "Cancel this game",
     cancelGameWarning:
       "This cancels every booking, returns every player's money as credit, clears the waitlist and emails everyone. It cannot be undone.",

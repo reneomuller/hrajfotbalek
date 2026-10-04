@@ -2,11 +2,17 @@ import type { Metadata } from "next";
 import { VenueAmenities } from "@/components/admin/VenueAmenities";
 import { DeleteControl } from "@/components/admin/DeleteControl";
 import { VenueForm } from "@/components/admin/VenueForm";
-import { deleteVenueAction } from "@/app/admin/venues/actions";
+import {
+  archiveVenueAction,
+  deleteVenueAction,
+  restoreVenueAction,
+} from "@/app/admin/venues/actions";
+import { VenueArchiveButton } from "@/components/admin/VenueArchiveButton";
+import { partitionVenues } from "@/lib/venues/archive";
 import { appCapabilities } from "@/lib/db/capabilities";
 import { VenuePhotoUpload } from "@/components/admin/VenuePhotoUpload";
 import { requireAdmin } from "@/lib/auth/requireAdmin";
-import { listVenues } from "@/lib/admin/queries";
+import { countGamesByVenue, listVenues } from "@/lib/admin/queries";
 import { strings } from "@/lib/strings";
 
 export const metadata: Metadata = { title: strings.admin.venuesTitle };
@@ -39,10 +45,28 @@ export const dynamic = "force-dynamic";
  * screen-reader behaviour for free, and the browser keeps one open while you
  * work in it. The summary carries the two facts you scan a venue list for:
  * its name, and whether it has a photograph yet.
+ *
+ * ARCHIVED VENUES SIT BELOW, COLLAPSED (round 39, item 2). Archive replaced
+ * delete for any venue with games: it leaves the picker, never a game. A
+ * venue nobody has played at can still be deleted outright.
  */
 export default async function AdminVenuesPage() {
   await requireAdmin();
-  const [venues, capabilities] = await Promise.all([listVenues(), appCapabilities()]);
+  const [all, capabilities, gameCounts] = await Promise.all([
+    listVenues(),
+    appCapabilities(),
+    countGamesByVenue(),
+  ]);
+  const { active: venues, archived } = partitionVenues(all);
+  /*
+   * DELETE ONLY WHERE IT CAN SUCCEED once archive exists. Before the migration
+   * the old control stays exactly as it was — offered everywhere, refused in
+   * SQL for a venue with games — because there is nothing else to offer.
+   */
+  const canHardDelete = (venueId: string) =>
+    capabilities.adminDelete &&
+    (!capabilities.venueArchive ||
+      (gameCounts.ok && (gameCounts.counts.get(venueId) ?? 0) === 0));
 
   return (
     <>
@@ -155,29 +179,44 @@ export default async function AdminVenuesPage() {
               </div>
 
               {/*
-                DELETE, LAST AND QUIETEST (round 16, item 18).
+                ARCHIVE, THEN DELETE, LAST AND QUIETEST (round 16 item 18,
+                round 39 item 2).
 
-                Below the presets rather than beside the name: it is the one
-                control here that cannot be undone by pressing something else,
-                and putting it next to Save is how somebody deletes a venue
-                they meant to rename.
+                Below the presets rather than beside the name: putting a
+                destructive control next to Save is how somebody removes a
+                venue they meant to rename.
 
-                THE REFUSAL IS THE SAFETY, not the placement. `admin_delete_venue`
-                counts the games referencing this row and raises rather than
-                orphaning them; the dialog explains, and the error names the
-                next step. Gated on the round-16 migration.
+                ARCHIVE is what retiring a ground means — it leaves the picker
+                and every game at it keeps it. DELETE survives only for a venue
+                no game references, which is the only one `admin_delete_venue`
+                accepts; the refusal in SQL is still the safety.
               */}
-              {capabilities.adminDelete && (
-                <div className="mt-8 border-t border-hairline pt-4">
-                  <DeleteControl
-                    action={deleteVenueAction}
-                    hiddenFields={{ venueId: venue.id }}
-                    label={strings.admin.deleteVenue}
-                    title={strings.admin.deleteVenueConfirmTitle}
-                    body={strings.admin.deleteVenueConfirmBody}
-                    confirmLabel={strings.admin.deleteVenueConfirm}
-                    testId="venue-delete"
-                  />
+              {(capabilities.venueArchive || canHardDelete(venue.id)) && (
+                <div className="mt-8 flex flex-wrap items-start gap-3 border-t border-hairline pt-4">
+                  {capabilities.venueArchive && (
+                    <div>
+                      <VenueArchiveButton
+                        action={archiveVenueAction}
+                        venueId={venue.id}
+                        label={strings.admin.archiveVenue}
+                        testId="venue-archive"
+                      />
+                      <p className="mt-2 max-w-[360px] text-[12px] text-muted">
+                        {strings.admin.archiveVenueHint}
+                      </p>
+                    </div>
+                  )}
+                  {canHardDelete(venue.id) && (
+                    <DeleteControl
+                      action={deleteVenueAction}
+                      hiddenFields={{ venueId: venue.id }}
+                      label={strings.admin.deleteVenue}
+                      title={strings.admin.deleteVenueConfirmTitle}
+                      body={strings.admin.deleteVenueConfirmBody}
+                      confirmLabel={strings.admin.deleteVenueConfirm}
+                      testId="venue-delete"
+                    />
+                  )}
                 </div>
               )}
                 </div>
@@ -186,6 +225,77 @@ export default async function AdminVenuesPage() {
           ))}
         </ul>
       )}
+
+      {archived.length > 0 && (
+        <details className="group mt-10 border-t border-hairline pt-6" data-testid="venues-archived">
+          <summary
+            data-testid="venues-archived-summary"
+            className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 marker:content-none"
+          >
+            <h3 className="m-0 font-display text-body-lg uppercase tracking-wide text-muted">
+              {strings.admin.venuesArchivedHeading.replace("{count}", String(archived.length))}
+            </h3>
+            <ChevronDown />
+          </summary>
+          <p className="mt-2 max-w-[560px] text-[12px] leading-relaxed text-muted">
+            {strings.admin.venuesArchivedLede}
+          </p>
+          <ul className="mt-4 list-none space-y-2 p-0">
+            {archived.map((venue) => (
+              <li
+                key={venue.id}
+                data-testid="venue-archived-row"
+                data-venue-id={venue.id}
+                className="flex flex-wrap items-center justify-between gap-3 rounded-card border border-hairline px-5 py-3"
+              >
+                <span className="min-w-0">
+                  <span className="block truncate text-body font-semibold text-bone">
+                    {venue.name}
+                  </span>
+                  <span className="mt-[1px] block truncate text-[12px] text-muted">
+                    {venue.pitch_name ?? strings.admin.venueNoPitchName}
+                  </span>
+                </span>
+                <span className="flex flex-wrap items-start gap-3">
+                  <VenueArchiveButton
+                    action={restoreVenueAction}
+                    venueId={venue.id}
+                    label={strings.admin.restoreVenue}
+                    testId="venue-restore"
+                  />
+                  {canHardDelete(venue.id) && (
+                    <DeleteControl
+                      action={deleteVenueAction}
+                      hiddenFields={{ venueId: venue.id }}
+                      label={strings.admin.deleteVenue}
+                      title={strings.admin.deleteVenueConfirmTitle}
+                      body={strings.admin.deleteVenueConfirmBody}
+                      confirmLabel={strings.admin.deleteVenueConfirm}
+                      testId="venue-delete"
+                    />
+                  )}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </details>
+      )}
     </>
+  );
+}
+
+/**
+ * The disclosure cue, DRAWN rather than typed — CLAUDE.md's glyph rule: `▾`
+ * renders as a dot in several fallback faces on this type stack.
+ */
+function ChevronDown() {
+  return (
+    <svg
+      aria-hidden
+      viewBox="0 0 12 8"
+      className="h-2 w-3 shrink-0 text-muted transition-transform group-open:rotate-180"
+    >
+      <path d="M1 1.5 6 6.5 11 1.5" fill="none" stroke="currentColor" strokeWidth="1.6" />
+    </svg>
   );
 }

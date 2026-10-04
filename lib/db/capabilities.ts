@@ -88,6 +88,8 @@ export interface AppCapabilities {
   banProfile: boolean;
   /** Round 35 v2 item 2 — `credit_seat_price_czk()` returns 180. */
   priceOneEighty: boolean;
+  /** Round 39 item 2 — `venues.archived_at` and the archive/restore RPCs. */
+  venueArchive: boolean;
 }
 
 const NONE: AppCapabilities = {
@@ -107,6 +109,7 @@ const NONE: AppCapabilities = {
   addGuestsConfirmation: false,
   banProfile: false,
   priceOneEighty: false,
+  venueArchive: false,
 };
 
 /*
@@ -164,6 +167,7 @@ const readCapabilities = stableRead(
       addGuestsConfirmation: read("addGuestsConfirmation"),
       banProfile: read("banProfile"),
       priceOneEighty: read("priceOneEighty"),
+      venueArchive: read("venueArchive"),
     };
   } catch {
     return NONE;

@@ -117,7 +117,11 @@ export async function getAdminGame(id: string): Promise<AdminGameRow | null> {
   };
 }
 
-/** All venues, alphabetically — the picker on the game form. */
+/**
+ * All venues, alphabetically, ARCHIVED ONES INCLUDED (round 39). The game
+ * form's picker narrows this through `pickableVenues`; the game page needs the
+ * full list to find the row of a game whose venue has since been archived.
+ */
 export async function listVenues(): Promise<VenueRow[]> {
   const service = createServiceRoleSupabaseClient();
 
@@ -127,6 +131,32 @@ export async function listVenues(): Promise<VenueRow[]> {
     .order("name", { ascending: true });
 
   return error || !data ? [] : data;
+}
+
+/**
+ * How many games reference each venue, keyed by venue id (round 39, item 2).
+ *
+ * `/admin/venues` offers a hard delete only where this is zero — the one case
+ * `admin_delete_venue` accepts — and Archive everywhere else. A venue absent
+ * from the map has no games. On a failed read the map is empty AND `ok` is
+ * false, so the page withholds the delete rather than offering one that the
+ * RPC would refuse for every venue with games.
+ */
+export async function countGamesByVenue(): Promise<{ ok: boolean; counts: Map<string, number> }> {
+  const service = createServiceRoleSupabaseClient();
+
+  const { data, error } = await service
+    .from("games")
+    .select("venue_id")
+    .not("venue_id", "is", null);
+
+  const counts = new Map<string, number>();
+  if (error || !data) return { ok: false, counts };
+
+  for (const { venue_id } of data) {
+    if (venue_id) counts.set(venue_id, (counts.get(venue_id) ?? 0) + 1);
+  }
+  return { ok: true, counts };
 }
 
 /*
