@@ -692,8 +692,13 @@ written as EMPTY and tried to rebuild the catalog with two types. Only the
 existing rows violating that stopped the commit. Both spellings are parsed now,
 with a floor that raises if fewer than thirty types come back.
 
-**OUTSTANDING, round 40's one — APPLY IT BEFORE (or within the hour of) THE
-DEPLOY.** The deploy's copy says 60 days, 12 hours and +7 days, and until the
+**~~OUTSTANDING~~ APPLIED, verified 2026-10-19 — round 40's one, applied BY ME
+on the owner's explicit instruction for this migration only ("also apply the
+migration"); the Oliver-applies rule stands.** Probed by its objects: the four
+policy functions answer 60/7/12/180, all seven rewritten bodies carry `ROUND
+40`, `credit_seat_minutes()` is gone, `consent_records` has RLS with a read
+grant and no write grant, and `app_capabilities()` returns 30 flags, all true.
+Applied BEFORE the deploy, which was the point: The deploy's copy says 60 days, 12 hours and +7 days, and until the
 migration lands the database still does months, 8 hours and no extension. The
 old build is safe against the new database (it reads the cutoff from
 `cancellation_refund_cutoff_hours()` and calls nothing the file removes), so
