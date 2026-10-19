@@ -1,0 +1,33 @@
+{
+  "comment": "The ONLY edits made to the lawyer's documents in content/legal/original/. Each rule must match exactly `count` times or loading the document throws. Rulings by the owner, 2026-10-19: the effective date is the publication day, and there is no phone number yet.",
+  "rules": [
+    {
+      "document": "obchodni-podminky",
+      "find": "<span class=\"ph\">[●]</span> 2026",
+      "replace": "19. 10. 2026",
+      "count": 2,
+      "why": "Effective date: the header line and clause 19.5."
+    },
+    {
+      "document": "obchodni-podminky",
+      "find": ", telefon <span class=\"ph\">[●]</span>",
+      "replace": "",
+      "count": 1,
+      "why": "Clause 1.2: no phone number yet."
+    },
+    {
+      "document": "zasady-zpracovani-osobnich-udaju",
+      "find": "<span class=\"ph\">[●]</span> 2026",
+      "replace": "19. 10. 2026",
+      "count": 1,
+      "why": "Effective date in the header line."
+    },
+    {
+      "document": "zasady-pouzivani-cookies",
+      "find": "<span class=\"ph\">[●]</span> 2026",
+      "replace": "19. 10. 2026",
+      "count": 1,
+      "why": "Effective date in the header line."
+    }
+  ]
+}

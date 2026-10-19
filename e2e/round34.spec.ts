@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { PNG } from "pngjs";
-import { CREDIT_SEAT_MINUTES } from "../lib/games/price";
+import { policy } from "../lib/policy";
 /*
  * ROUND 36 — THE FIXTURES NOW STATE THEIR PRICE.
  *
@@ -152,7 +152,7 @@ test("the dropdown's cue is a downward triangle, not a dot", async ({ page, cont
 // =============================================================================
 
 test("the CREDIT rail lands on the confirmation, naming the guests", async ({ page, context }) => {
-  const game = await createScratchGame({ capacity: 20, durationMinutes: CREDIT_SEAT_MINUTES, priceCzk: PASS_REFERENCE_PRICE_CZK, hoursFromNow: 24 * 20 });
+  const game = await createScratchGame({ capacity: 20, durationMinutes: policy.game.standardMinutes, priceCzk: PASS_REFERENCE_PRICE_CZK, hoursFromNow: 24 * 20 });
   try {
     const bookingId = await bookWithGuests(game.id, 0, "creditRich");
     await setWalletTo(players.creditRich.id, 900);
@@ -185,7 +185,7 @@ test("the ONLINE rail lands on the same confirmation, through the webhook's own 
    * webhook runs — the only thing not covered is Stripe's own redirect, which
    * is a URL Stripe builds and this suite cannot make it build.
    */
-  const game = await createScratchGame({ capacity: 20, durationMinutes: CREDIT_SEAT_MINUTES, priceCzk: PASS_REFERENCE_PRICE_CZK, hoursFromNow: 24 * 19 });
+  const game = await createScratchGame({ capacity: 20, durationMinutes: policy.game.standardMinutes, priceCzk: PASS_REFERENCE_PRICE_CZK, hoursFromNow: 24 * 19 });
   const sessionId = `cs_test_r34_${Date.now()}`;
   const admin = serviceClient();
   try {
@@ -227,7 +227,7 @@ test("removing guests frees the seats, returns credits, and never touches the pl
   page,
   context,
 }) => {
-  const game = await createScratchGame({ capacity: 12, durationMinutes: CREDIT_SEAT_MINUTES, priceCzk: PASS_REFERENCE_PRICE_CZK, hoursFromNow: 24 * 18 });
+  const game = await createScratchGame({ capacity: 12, durationMinutes: policy.game.standardMinutes, priceCzk: PASS_REFERENCE_PRICE_CZK, hoursFromNow: 24 * 18 });
   const admin = serviceClient();
   try {
     const bookingId = await bookWithGuests(game.id, 3, "runner");
@@ -275,7 +275,7 @@ test("removing guests frees the seats, returns credits, and never touches the pl
 });
 
 test("removing the LAST guest leaves the player in the game", async ({ page, context }) => {
-  const game = await createScratchGame({ capacity: 12, durationMinutes: CREDIT_SEAT_MINUTES, priceCzk: PASS_REFERENCE_PRICE_CZK, hoursFromNow: 24 * 17 });
+  const game = await createScratchGame({ capacity: 12, durationMinutes: policy.game.standardMinutes, priceCzk: PASS_REFERENCE_PRICE_CZK, hoursFromNow: 24 * 17 });
   const admin = serviceClient();
   try {
     const bookingId = await bookWithGuests(game.id, 1, "runner");
@@ -310,7 +310,7 @@ test("past the cutoff the panel warns instead of promising, and refunds nothing"
   context,
 }) => {
   // Seven hours out: inside the cancel window, outside the refund window.
-  const game = await createScratchGame({ capacity: 12, durationMinutes: CREDIT_SEAT_MINUTES, priceCzk: PASS_REFERENCE_PRICE_CZK, hoursFromNow: 7 });
+  const game = await createScratchGame({ capacity: 12, durationMinutes: policy.game.standardMinutes, priceCzk: PASS_REFERENCE_PRICE_CZK, hoursFromNow: 7 });
   const admin = serviceClient();
   try {
     const bookingId = await bookWithGuests(game.id, 2, "runner");

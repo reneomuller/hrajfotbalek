@@ -39,7 +39,7 @@ export function CancelBookingForm({
    * it always did, rather than accusing every cancellation of forfeiting.
    */
   refundable?: boolean;
-  /** The window, for the warning's `{hours}`. Only read when not refundable. */
+  /** The window, for `{hours}` in both sentences (round 40: 12, said either way). */
   refundCutoffHours?: number;
   /**
    * Where to land afterwards, so the cancellation toast is rendered by the
@@ -92,7 +92,19 @@ export function CancelBookingForm({
             : "min-h-11 rounded-control border border-hairline-strong px-4 text-body text-muted transition-colors hover:border-hairline-volt"
         }
       >
-        {variant === "bar" ? t.booking.barCancel : t.booking.cancelBooking}
+        {/*
+          "I CAN'T MAKE IT" INSIDE THE CUTOFF (round 40, the owner). Nothing
+          comes back by then, but saying so still frees the spot — so the
+          control names what the player is doing rather than offering a
+          "cancellation" that sounds like a refund.
+        */}
+        {variant === "bar"
+          ? refundable
+            ? t.booking.barCancel
+            : t.booking.barCantMakeIt
+          : refundable
+            ? t.booking.cancelBooking
+            : t.booking.cantMakeIt}
       </button>
 
       {open && typeof document !== "undefined" &&
@@ -149,7 +161,7 @@ export function CancelBookingForm({
               id="cancel-dialog-title"
               className="m-0 text-body-lg font-semibold text-bone"
             >
-              {t.booking.cancelTitle}
+              {refundable ? t.booking.cancelTitle : t.booking.cantMakeItTitle}
             </h2>
 
             {/*
@@ -169,12 +181,10 @@ export function CancelBookingForm({
                 refundable ? "text-muted" : "text-warn"
               }`}
             >
-              {refundable
-                ? t.booking.refundAsCredits
-                : t.booking.refundLostLate.replace(
-                    "{hours}",
-                    String(refundCutoffHours ?? ""),
-                  )}
+              {(refundable ? t.booking.refundAsCredits : t.booking.refundLostLate).replace(
+                "{hours}",
+                String(refundCutoffHours ?? ""),
+              )}
             </p>
 
             {failed && (
@@ -189,7 +199,10 @@ export function CancelBookingForm({
             <form action={formAction} className="mt-5 flex flex-wrap items-center gap-3">
               <input type="hidden" name="bookingId" value={bookingId} />
               {toastTo && <input type="hidden" name="toastTo" value={toastTo} />}
-              <ConfirmButton innerRef={confirmButton} />
+              <ConfirmButton
+                innerRef={confirmButton}
+                label={refundable ? t.booking.cancelBooking : t.booking.cantMakeItConfirm}
+              />
               <button
                 type="button"
                 data-testid="cancel-dialog-keep"
@@ -215,8 +228,13 @@ export function CancelBookingForm({
  * spot`, which is the quiet text button beside it precisely because the
  * decision has already been made by the time someone is reading this.
  */
-function ConfirmButton({ innerRef }: { innerRef: React.RefObject<HTMLButtonElement | null> }) {
-  const t = useStrings();
+function ConfirmButton({
+  innerRef,
+  label,
+}: {
+  innerRef: React.RefObject<HTMLButtonElement | null>;
+  label: string;
+}) {
   const { pending } = useFormStatus();
   return (
     <button
@@ -236,7 +254,7 @@ function ConfirmButton({ innerRef }: { innerRef: React.RefObject<HTMLButtonEleme
           className="h-4 w-4 shrink-0 animate-spin rounded-pill border-2 border-current border-t-transparent motion-reduce:animate-none"
         />
       )}
-      {t.booking.cancelBooking}
+      {label}
     </button>
   );
 }

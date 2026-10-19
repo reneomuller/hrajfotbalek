@@ -480,7 +480,9 @@ select pg_temp.ok(
     order by created_at desc limit 1),
   'and it carries an expiry — a pass is time-limited credit');
 
--- Half two: no intent, tier-shaped amount -> face value, NO expiry.
+-- Half two: no intent, tier-shaped amount -> face value. ~~NO expiry.~~ Since
+-- round 40 every top-up is valid sixty days (Obchodní podmínky 5.4), so the two
+-- halves differ in AMOUNT only, and that is what is asserted.
 set local role authenticated;
 select set_config('request.jwt.claims',
   json_build_object('sub', current_setting('rpc.p1'))::text, true);
@@ -493,16 +495,19 @@ select pg_temp.ok(
 reset role;
 select set_config('request.jwt.claims', '', true);
 
+-- BY AMOUNT, not by "the latest row": inside one transaction both top-ups carry
+-- the same `created_at`, so an ORDER BY could not tell them apart.
 select pg_temp.ok(
-  (select delta_czk from public.credit_ledger
-    where reason = 'topup' and expires_at is null
-      and player_id = current_setting('rpc.p2_player')::uuid
-    order by created_at desc limit 1) = 840,
+  (select count(*) from public.credit_ledger
+    where reason = 'topup' and delta_czk = 840
+      and player_id = current_setting('rpc.p2_player')::uuid) = 1
+  and (select count(*) from public.credit_ledger
+    where reason = 'topup' and delta_czk = 900
+      and player_id = current_setting('rpc.p2_player')::uuid) = 1,
   'an ORDINARY 840 credits 840, never 900 — the amount alone is not enough',
-  (select coalesce((select delta_czk::text from public.credit_ledger
-     where reason = 'topup' and expires_at is null
-       and player_id = current_setting('rpc.p2_player')::uuid
-     order by created_at desc limit 1), 'no row')));
+  (select coalesce(string_agg(delta_czk::text, ', '), 'no row') from public.credit_ledger
+     where reason = 'topup'
+       and player_id = current_setting('rpc.p2_player')::uuid));
 
 reset role;
 select set_config('request.jwt.claims', '', true);

@@ -157,15 +157,20 @@ new migration's list must be a superset of what is LIVE, not of what the
 previous file says**, which means probing before writing it.
 
 **THE PRICE IS A FUNCTION OF THE DURATION, NOT A NUMBER** — `price_for_duration()`
-in SQL, `lib/games/price.ts` in TypeScript: 60 minutes is 150, everything else
-is 180. That is deliberate design against the copy problem rather than a
+in SQL, `lib/games/price.ts` in TypeScript: ~~60 minutes is 150, everything else
+is 180~~ **since round 40 every length prefills one Credit's price (180), and the
+SQL function CALLS `credit_seat_price_czk()`** — the owner removed the 150 CZK
+hour; the standard game is 90 minutes at 180. That is deliberate design against the copy problem rather than a
 feature: round 35 v2 audited a FLAT price and found it in four places, one of
 them inside a CHECK constraint. **A constant invites a copy; a function of
 something else has to be called.** Both game writers derive the stored price and
 the admin form's price field is read-only, so no caller can put a game and its
 price out of step.
 
-**A CREDIT BUYS A 90-MINUTE SEAT. A 60-MINUTE GAME IS ONLINE-ONLY** —
+**~~A CREDIT BUYS A 90-MINUTE SEAT. A 60-MINUTE GAME IS ONLINE-ONLY~~ — RETIRED
+IN ROUND 40: a Credit pays for a game of any length** (the terms say 1 Credit = 1
+place; `credit_seat_minutes()` and `gameTakesCredit()` are gone). What follows
+is history —
 `credit_seat_minutes()`. Neither credit control RENDERS on a short game (not
 disabled: a greyed-out credit button asks a question the screen cannot answer),
 `create_booking_internal` applies nothing, and `add_guests_with_credit` refuses
@@ -174,7 +179,8 @@ by name. **`credit_seat_price_czk()` (180, the ledger nominal) and
 deliberately two functions** — `lib/games/__tests__/price.test.ts` asserts the
 coincidence so the day it ends is a decision rather than a silent data change.
 
-**A FIXTURE WITH NO DURATION IS A 60-MINUTE GAME AND TAKES NO CREDIT.** Six SQL
+**A FIXTURE WITH NO DURATION IS A 60-MINUTE GAME** ~~AND TAKES NO CREDIT~~ (it
+takes one since round 40). Six SQL
 suites and the seed asserted credit behaviour on duration-less games and all of
 them broke at once. `createScratchGame` now defaults to 90; a spec that wants the
 short game asks for it.
@@ -440,6 +446,22 @@ extend a CHECK in place: drop and re-add, restating the list in full. That
 drop/re-add is **pre-approved** (2026-08-01) as long as the new list is a strict
 superset.
 
+**A REFUND THAT MIRRORS THE LEDGER MUST BE CAPPED BY WHAT THE ROW IS STILL
+WORTH.** `cancel_booking` returned every `redemption` row a booking had written —
+and `cancel_guests` had already refunded the guests' seats without touching
+those rows. A party of three on three Credits, guests removed, then cancelled,
+came back as FIVE (540 spent, 900 returned). Round 40 found it writing a drill,
+not in production, where no guest has ever been removed. **The ledger records
+what was spent, not what is still owed; a refund must read both.**
+
+**EVERY CARD PAYMENT BUYS CREDITS (round 40, Obchodní podmínky 5.1).** A single
+game is one Credit spent at once, so a refunded card payment is a CREDIT valid
+`credit_validity_days()` (60) from the payment — never unexpiring money — and
+every checkout carries the Credit summary above Pay and the waiver box. The
+legal documents live in `content/legal/original/` VERBATIM and a test fails on
+any drift; the lawyer's `Texty pro web` file is an instruction list, recorded
+row by row in `docs/REQUESTS.md` 367–382.
+
 **A GUARD THAT ASKS ABOUT THE ROW AND NOT ABOUT ITS PARENT IS HALF A GUARD.**
 Round 35 v2 fixed the game delete to count only `reserved`/`confirmed`
 bookings — the right question about a booking — and never asked whether the
@@ -645,8 +667,12 @@ their objects, not their filenames: `players.player_number` exists,
 `admin_set_display_name` and `max_party_guests` are in `pg_proc`, and the three
 flags are true. `venueMapUrl` came back with them.
 
-**OUTSTANDING, round 39's two — additive, idempotent, not deploy-first,
-order-free, each applied twice against a clean `db reset`.** The deploy is safe
+**~~OUTSTANDING~~ APPLIED, verified 2026-10-19 — round 39's two** — probed by
+their objects: `admin_delete_game` carries the `ROUND 39` status guard,
+`venues.archived_at`, `admin_archive_venue` / `admin_restore_venue` and both
+event types exist, and the live `app_capabilities()` matches the newest file's
+28 flags exactly, all true. Additive, idempotent, not deploy-first,
+order-free, each applied twice against a clean `db reset`. The deploy is safe
 without them: the delete keeps its old guard, and the venue page keeps its old
 Delete button until `app_capabilities()` says `venueArchive`.
 
@@ -665,6 +691,20 @@ spelling, so on its own second run it parsed the `'{a,b}'` spelling it had just
 written as EMPTY and tried to rebuild the catalog with two types. Only the
 existing rows violating that stopped the commit. Both spellings are parsed now,
 with a floor that raises if fewer than thirty types come back.
+
+**OUTSTANDING, round 40's one — APPLY IT BEFORE (or within the hour of) THE
+DEPLOY.** The deploy's copy says 60 days, 12 hours and +7 days, and until the
+migration lands the database still does months, 8 hours and no extension. The
+old build is safe against the new database (it reads the cutoff from
+`cancellation_refund_cutoff_hours()` and calls nothing the file removes), so
+migration-first is the clean order. Additive in effect, idempotent, order-free
+against round 39's two, validated against a clean `db reset`; `app_capabilities()`
+is restated as a superset of the 28 flags live on 2026-10-19.
+
+```
+node scripts/apply-migration.mjs \
+  supabase/migrations/20261019100000_credits_sixty_days.sql --production
+```
 
 When a UI failure looks inexplicable and the code reads correctly, check this
 list before debugging the component.

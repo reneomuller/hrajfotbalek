@@ -1,4 +1,4 @@
-import { CREDIT_SEAT_MINUTES } from "../../lib/games/price.ts";
+import { policy } from "../../lib/policy.ts";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { execAsOwner } from "./clock.ts";
 import { assertTestDatabaseUrl } from "../../lib/env/testDatabase.ts";
@@ -205,7 +205,7 @@ export async function createScratchGame({
       ? durationMinutes
       : priceCzk === 150
         ? 60
-        : CREDIT_SEAT_MINUTES;
+        : policy.game.standardMinutes;
 
   const organizer = await apiClientFor(players.organizer);
   const admin = serviceClient();

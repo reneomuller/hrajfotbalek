@@ -9,7 +9,6 @@ import { PlayersList } from "@/components/game/PlayersList";
 import { AddGuestsPanel } from "@/components/game/AddGuestsPanel";
 import { CancelGuestsPanel } from "@/components/game/CancelGuestsPanel";
 import { refundCutoffHours } from "@/lib/policy/refundCutoff";
-import { gameTakesCredit } from "@/lib/games/price";
 import { ClaimBar } from "@/components/game/ClaimBar";
 import { ShareButton } from "@/components/game/ShareButton";
 import { effectivePitchName, venueDisplayName } from "@/lib/venues/displayName";
@@ -227,8 +226,6 @@ export default async function GameDetailPage({ params, searchParams }: GamePageP
       : 0;
 
   const addGuestsCredit = canAddGuests > 0 ? await getOwnCreditBalance() : 0;
-  /** One credit is one 90-minute seat; anything else is online-only. */
-  const addGuestsTakesCredit = gameTakesCredit(game.duration_minutes);
 
   /*
    * CANCELLING GUESTS (round 34, item 4) — the same three gates, read the other
@@ -530,16 +527,11 @@ export default async function GameDetailPage({ params, searchParams }: GamePageP
         and on a database without the migration.
       */}
       {/*
-        AND ONLY WHEN THERE IS A WAY TO PAY (round 35 v5, item 1).
-        
-        Item 1 created a case this panel had never had: a game a CREDIT cannot
-        buy. On one of those, with the online rail also unavailable, the panel
-        rendered its heading, its picker and its price with no button under
-        them — a control that asks a question it cannot act on. It now renders
-        only if at least one rail is live, which on production is always the
-        online one.
+        ~~AND ONLY WHEN THERE IS A WAY TO PAY (round 35 v5, item 1).~~ There
+        always is since round 40: a Credit buys a seat on any game, so the
+        credit button is always a rail.
       */}
-      {ownBooking && canAddGuests > 0 && (addGuestsTakesCredit || embeddedCheckoutEnabled()) && (
+      {ownBooking && canAddGuests > 0 && (
         <AddGuestsPanel
           gameId={game.id}
           bookingId={ownBooking.booking.id}
@@ -547,8 +539,6 @@ export default async function GameDetailPage({ params, searchParams }: GamePageP
           priceCzk={game.price_czk}
           creditCzk={addGuestsCredit}
           embeddedCheckout={embeddedCheckoutEnabled()}
-          /* One credit is one 90-minute seat; anything else is online-only. */
-          takesCredit={addGuestsTakesCredit}
         />
       )}
 

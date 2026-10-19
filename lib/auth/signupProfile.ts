@@ -61,8 +61,7 @@ export type SignupField =
   | "country"
   | "skill"
   | "phone"
-  | "tos"
-  | "gdpr";
+  | "tos";
 
 export type SignupParse =
   | { ok: true; value: SignupSubmission }
@@ -76,8 +75,7 @@ export type SignupErrorCode =
   | "SKILL_REQUIRED"
   | "PHONE_REQUIRED"
   | "PHONE_INVALID"
-  | "TOS_REQUIRED"
-  | "CONSENT_REQUIRED";
+  | "TOS_REQUIRED";
 
 /**
  * Deliberately loose, exactly as in Phase 1: real validation is "did the mail
@@ -163,10 +161,9 @@ export function parseSignupForm(form: {
   }
   const phone = phoneRaw;
 
-  // The two required legal acts, separately (contract §3.1, ruled 2026-07-31).
-  // Distinct codes so the form can point at the box that was not ticked.
+  // ONE required legal box since round 40 (the lawyer's Texty 2.2). The privacy
+  // policy is a link beneath it: processing rests on the contract, not consent.
   if (!checked(form.get("tos"))) return { ok: false, field: "tos", code: "TOS_REQUIRED" };
-  if (!checked(form.get("gdpr"))) return { ok: false, field: "gdpr", code: "CONSENT_REQUIRED" };
 
   return {
     ok: true,
@@ -200,8 +197,11 @@ export function signupMetadata(submission: SignupSubmission): Record<string, unk
     phone: submission.phone,
     marketing_opt_in: submission.marketingOptIn,
     tos_version: submission.tosVersion,
-    // Recorded as facts about what was ticked, not as permission to skip the
-    // check: `complete_signup_v2` still refuses unless both are true.
+    // Recorded as facts about what was shown and ticked, not as permission to
+    // skip the check: `complete_signup_v2` still refuses unless both are true.
+    // `gdpr_consent` now means "the privacy policy was linked beneath the terms
+    // box" — the RPC's gate kept its name, and its signature is not worth an
+    // overload (CLAUDE.md: a substitution can land in a function nothing calls).
     tos_accepted: true,
     gdpr_consent: true,
   };

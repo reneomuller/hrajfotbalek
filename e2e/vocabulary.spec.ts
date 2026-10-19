@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { LOCALE_COOKIE, LOCALES } from "../lib/i18n/locales";
-import { CREDIT_SEAT_MINUTES } from "../lib/games/price";
+import { policy } from "../lib/policy";
 import { apiClientFor, players, signInAs } from "./helpers/session";
 import { createScratchGame, destroyScratchGame } from "./helpers/scaffold";
 
@@ -171,7 +171,7 @@ test("the add-guests panel and the booking page use the SAME word for credits", 
      * credit rail's wording on two surfaces, and on a 60-minute game there is
      * no credit rail on either — the comparison would be between two absences.
      */
-    durationMinutes: CREDIT_SEAT_MINUTES,
+    durationMinutes: policy.game.standardMinutes,
     hoursFromNow: 24 * 15,
   });
   try {

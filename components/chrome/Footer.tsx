@@ -1,38 +1,37 @@
 import Link from "next/link";
-import { ContactDialog } from "@/components/chrome/ContactDialog";
-import { CookieSettingsLink } from "@/components/consent/CookieSettingsLink";
-import { getContactDetails } from "@/lib/home/queries";
 import { getStrings } from "@/lib/i18n/server";
+import { OPERATOR_CONTACT } from "@/lib/legal";
 
 /**
  * The slim legal strip, rendered once from the root layout beneath the page.
  *
  * The landing page keeps its own brand footer above this one. They are
  * different things and both earn their place: that one is design, this one is
- * the privacy link the signup consent copy points at, on every route.
+ * the operator and the legal documents, on every route.
  *
- * THREE LINKS, AND EACH IS LOAD-BEARING.
+ * WHAT THE LAWYER'S BRIEF PUTS HERE (items 1.1 and 1.2, 2026-10-19).
  *
- * Privacy, because the signup consent copy links to it and a consent that
- * points at a page nobody can reach afterwards is not evidence of anything.
+ * Four links — Obchodní podmínky, Zásady zpracování osobních údajů, Zásady
+ * používání cookies, Kontakt — because the terms are accepted at signup and
+ * at every purchase, so they must be reachable without an account and
+ * findable again by someone who wants to check what they agreed to.
  *
- * Terms, because they are a document people are asked to ACCEPT at signup —
- * so they have to be readable without signing up, and findable again by
- * someone who wants to check what they agreed to.
+ * The operator line — who runs the platform, its address, the out-of-court
+ * body for consumer disputes, and the Digital Services Act's single point of
+ * contact. Consumer law wants it on every page, not one click away. No phone
+ * number: there is none to publish yet. No ODR link: the EU platform it
+ * pointed at was abolished on 20 July 2025.
  *
- * Contact, because a product that takes money and holds personal data needs
- * one reachable address that is not a WhatsApp group. Data-protection requests
- * have their own address on /privacy, so they land somewhere they can be
- * answered properly rather than in a general inbox.
+ * ~~The Contact DIALOG~~ (round 13) is now the `/contact` page, which also
+ * lists whatever the owner adds in `/admin`. ~~"Cookie settings"~~ is now the
+ * cookie policy: with only necessary cookies there is no choice to reopen.
  *
- * RULING B: the links were tracked capitals at 10px. They are now `small` in
- * sentence case — `eyebrow` is the only uppercase style in the product, and a
- * footer link is not an eyebrow.
+ * RULING B: the links are `small` in sentence case — `eyebrow` is the only
+ * uppercase style in the product, and a footer link is not an eyebrow.
  */
 export async function Footer() {
   const t = await getStrings();
-  const contact = await getContactDetails(t.siteFooter.contactEmail);
-  const { siteFooter } = t;
+  const { siteFooter, legal } = t;
 
   /*
    * `min-h-11` AND `items-center`, NOT JUST TYPE (audit F17/F6).
@@ -41,16 +40,18 @@ export async function Footer() {
    * product, on all thirty-three pages. The 44px floor is this product's own
    * (round 14, item 5: "below the 44px tap target floor everything else in
    * this product respects"), and the footer was the place it had never been
-   * applied.
-   *
-   * NOTHING MOVES VISUALLY. The links keep their size, colour and weight; the
-   * hit area grows around them, and the row was already `items-center` inside
-   * `py-5`, so the taller box sits inside padding that already existed. The
-   * gap goes 4 to 5 only because two 44px targets touching is a different
-   * mis-tap.
+   * applied. The hit area grows around the text; nothing moves visually.
    */
   const linkClass =
     "flex min-h-11 items-center text-small text-faint no-underline transition hover:text-volt-dim";
+  const inlineLink = "text-faint underline-offset-2 hover:text-volt-dim hover:underline";
+
+  const links = [
+    { href: "/terms", label: legal.termsTitle },
+    { href: "/privacy", label: legal.privacyTitle },
+    { href: "/cookies", label: legal.cookiesTitle },
+    { href: "/contact", label: siteFooter.contact },
+  ];
 
   return (
     <footer
@@ -71,43 +72,55 @@ export async function Footer() {
         absolute rank, it is a rank within a stacking context" — and it is
         fixed here rather than at the claim bar because the footer is the one
         that never needed the height. Nothing overlaps a footer except
-        page-level fixed chrome, which should win every time. Fixing it here
-        fixes it for every page and every future fixed element, rather than
-        for the one bar somebody noticed.
+        page-level fixed chrome, which should win every time.
 
         `z-[2]` and not `z-0`: `SiteBackground` occupies `z-0` and `z-[1]`, so
         the footer still has to clear the canvas and the vignette.
       */
-      className="relative z-[2] mx-auto flex w-full max-w-shell flex-wrap items-center justify-between gap-2 border-t border-hairline px-gutter py-5"
+      className="relative z-[2] mx-auto flex w-full max-w-shell flex-col gap-3 border-t border-hairline px-gutter py-5"
     >
-      <div className="flex items-center gap-5">
-        <Link href="/privacy" className={linkClass}>
-          {siteFooter.privacy}
-        </Link>
-        <Link href="/terms" className={linkClass}>
-          {siteFooter.terms}
-        </Link>
-        {/*
-          ~~A `mailto:` to a hardcoded address.~~ A DIALOG (round 13, item 18).
+      <nav aria-label={legal.footerNavLabel} className="flex flex-wrap items-center gap-x-5">
+        {links.map((link) => (
+          <Link key={link.href} href={link.href} className={linkClass}>
+            {link.label}
+          </Link>
+        ))}
+      </nav>
 
-          On a phone the old link opened a mail client over the site with a
-          blank message, which is a lot to ask of somebody who wanted to know
-          whether there is a phone number. The dialog shows what there is and
-          lets them choose — and its contents come from `site_settings`, so
-          the owner edits them in `/admin` without a deploy.
-        */}
-        <ContactDialog emails={contact.emails} phones={contact.phones} />
-      </div>
-      {/*
-        THE COPYRIGHT AND THE WAY BACK TO THE COOKIE CHOICE, on one line
-        (round 28, item 1). The consent sheet hides itself once answered, so
-        without this there is no route back to it — and "I pressed the wrong
-        one" is the first thing anybody says about a consent banner.
-      */}
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-small text-faint">
-        <span>{siteFooter.copyright}</span>
-        <CookieSettingsLink />
-      </div>
+      <address
+        data-testid="footer-operator"
+        className="flex flex-wrap gap-x-4 gap-y-1 text-small not-italic text-faint"
+      >
+        <span>
+          {legal.operatorLabel}: {OPERATOR_CONTACT.name}
+        </span>
+        <span>
+          {legal.emailLabel}:{" "}
+          <a href={`mailto:${OPERATOR_CONTACT.email}`} className={inlineLink}>
+            {OPERATOR_CONTACT.email}
+          </a>
+        </span>
+        <span>
+          {legal.adrLabel}:{" "}
+          <a
+            href={OPERATOR_CONTACT.adrUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={inlineLink}
+          >
+            {legal.adrName}
+          </a>
+        </span>
+        <span>
+          {legal.dsaLabel}:{" "}
+          <a href={`mailto:${OPERATOR_CONTACT.email}`} className={inlineLink}>
+            {OPERATOR_CONTACT.email}
+          </a>{" "}
+          ({legal.dsaLanguages})
+        </span>
+      </address>
+
+      <p className="m-0 text-small text-faint">{siteFooter.copyright}</p>
     </footer>
   );
 }

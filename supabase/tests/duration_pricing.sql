@@ -1,5 +1,7 @@
 -- =============================================================================
 -- ROUND 35 v5 — the price follows the length, and a credit buys 90 minutes.
+-- ROUND 40 — ~~and a credit buys 90 minutes~~: a game of ANY length is one
+-- Credit, and every length prefills the Credit price. The 150 CZK hour is gone.
 --
 -- Run:  node supabase/tests/run.mjs duration_pricing
 -- =============================================================================
@@ -91,20 +93,14 @@ $$;
 -- THE MAPPING
 -- =============================================================================
 
-select pg_temp.ok(public.price_for_duration(60) = 150, 'sixty minutes is 150');
+select pg_temp.ok(public.price_for_duration(60) = 180,
+  'sixty minutes prefills 180 — ~~150~~, removed by the owner in round 40');
 select pg_temp.ok(public.price_for_duration(90) = 180, 'ninety minutes is 180');
+select pg_temp.ok(public.price_for_duration(null) = 180, 'so is a null length');
+select pg_temp.ok(public.price_for_duration(120) = 180, 'and so is anything else');
 select pg_temp.ok(
-  public.price_for_duration(null) = 150,
-  'A NULL LENGTH IS SIXTY, because a null row renders as the standard length — '
-  'reading it as "unknown, charge more" would bill for time nobody booked');
-select pg_temp.ok(
-  public.price_for_duration(120) = 180,
-  'and anything else takes the 90-minute price — pre-picked, and flagged for a '
-  'ruling rather than invented as a tier');
-
-select pg_temp.ok(
-  public.credit_seat_minutes() = 90,
-  'a credit buys ninety minutes');
+  public.price_for_duration(60) = public.credit_seat_price_czk(),
+  'because a game IS one Credit — the prefill is the Credit price, called, not copied');
 
 -- =============================================================================
 -- THE WRITERS STORE THE PRICE THEY ARE SENT (round 36, item 2)
@@ -176,7 +172,8 @@ select pg_temp.ok(
   'THE EDIT STORES EXACTLY WHAT WAS TYPED — 4242, against a 60-minute row',
   pg_temp.game_price((select id from _made))::text);
 
--- ITEM 1 — A CREDIT BUYS A 90-MINUTE SEAT AND NOTHING ELSE
+-- ~~ITEM 1 — A CREDIT BUYS A 90-MINUTE SEAT AND NOTHING ELSE~~
+-- ROUND 40 — A CREDIT PAYS FOR A GAME OF ANY LENGTH, AT ANY PRICE
 -- =============================================================================
 
 insert into public.credit_ledger (player_id, delta_czk, reason) values
@@ -197,53 +194,38 @@ select pg_temp.ok(
   (pg_temp.bk((select id from _made90), '6ddd0000-0000-0000-0000-00000000dd02')).status = 'confirmed',
   'and the booking is settled');
 
--- The sixty-minute game: NOTHING is applied, whatever the wallet holds.
+-- The sixty-minute game, priced 4242 by its organizer: ONE Credit, all the same.
 select pg_temp.act_as('60000000-0000-0000-0000-00000000dd03');
-select public.create_booking((select id from _made), 'qr');
+select public.create_booking((select id from _made), 'cash', null, null, 0);
 reset role;
 
 select pg_temp.ok(
-  pg_temp.bal('6ddd0000-0000-0000-0000-00000000dd03') = 3 * 180,
-  'A SIXTY-MINUTE GAME TAKES NO CREDIT — the wallet is untouched',
+  pg_temp.bal('6ddd0000-0000-0000-0000-00000000dd03') = 2 * 180,
+  'A SIXTY-MINUTE GAME TAKES ONE CREDIT — ~~no credit at all~~ ended in round 40',
   pg_temp.bal('6ddd0000-0000-0000-0000-00000000dd03')::text);
 
 select pg_temp.ok(
-  (pg_temp.bk((select id from _made), '6ddd0000-0000-0000-0000-00000000dd03')).credit_applied_czk = 0,
-  'nothing was applied to the booking');
-
-select pg_temp.ok(
-  (pg_temp.bk((select id from _made), '6ddd0000-0000-0000-0000-00000000dd03')).status = 'reserved',
-  'so it owes its whole price and the only rail left is the online one');
-
-select pg_temp.ok(
-  (pg_temp.bk((select id from _made), '6ddd0000-0000-0000-0000-00000000dd03')).price_czk = 4242,
-  'which is the 4242 the organizer typed, not anything a mapping decided',
-  (pg_temp.bk((select id from _made), '6ddd0000-0000-0000-0000-00000000dd03')).price_czk::text);
+  (pg_temp.bk((select id from _made), '6ddd0000-0000-0000-0000-00000000dd03')).credit_applied_czk = 180
+  and (pg_temp.bk((select id from _made), '6ddd0000-0000-0000-0000-00000000dd03')).status = 'confirmed',
+  'flat at the Credit rate whatever the card price is, and settled');
 
 -- =============================================================================
--- AND THE ADD-GUESTS CREDIT RAIL REFUSES OUTRIGHT
+-- AND THE ADD-GUESTS CREDIT RAIL TAKES IT TOO
 --
--- A NAMED ERROR, NOT A SILENT ZERO. The booking path can apply nothing and
--- carry on, because another rail sits behind it in the same form. This one IS
--- the rail: the player pressed the credit button.
+-- ~~refuses a sixty-minute game by name~~ — GAME_NOT_CREDIT_ELIGIBLE is gone
+-- with the rule it named.
 -- =============================================================================
-
-update public.bookings set status = 'confirmed'
- where id = (pg_temp.bk((select id from _made), '6ddd0000-0000-0000-0000-00000000dd03')).id;
 
 select pg_temp.act_as('60000000-0000-0000-0000-00000000dd03');
-select pg_temp.ok_probe(
-  format($q$select public.add_guests_with_credit(%L, 1)$q$,
-         (pg_temp.bk((select id from _made), '6ddd0000-0000-0000-0000-00000000dd03')).id),
-  'raise:GAME_NOT_CREDIT_ELIGIBLE',
-  'the add-guests credit rail refuses a sixty-minute game by name');
+select public.add_guests_with_credit(
+  (pg_temp.bk((select id from _made), '6ddd0000-0000-0000-0000-00000000dd03')).id, 1);
 reset role;
 
 select pg_temp.ok(
-  pg_temp.bal('6ddd0000-0000-0000-0000-00000000dd03') = 3 * 180,
-  'and the refusal took nothing');
+  pg_temp.bal('6ddd0000-0000-0000-0000-00000000dd03') = 180,
+  'a guest on a sixty-minute game costs exactly one credit',
+  pg_temp.bal('6ddd0000-0000-0000-0000-00000000dd03')::text);
 
--- ...while the ninety-minute one still works.
 select pg_temp.act_as('60000000-0000-0000-0000-00000000dd02');
 select public.add_guests_with_credit(
   (pg_temp.bk((select id from _made90), '6ddd0000-0000-0000-0000-00000000dd02')).id, 1);
@@ -251,39 +233,23 @@ reset role;
 
 select pg_temp.ok(
   pg_temp.bal('6ddd0000-0000-0000-0000-00000000dd02') = 0,
-  'a guest on a ninety-minute game still costs exactly one credit',
+  'and so does one on a ninety-minute game',
   pg_temp.bal('6ddd0000-0000-0000-0000-00000000dd02')::text);
 
 -- =============================================================================
--- ELIGIBILITY KEYS ON THE LENGTH, AND THE PRICE IS NOBODY'S BUSINESS BUT THE
--- CARD RAIL'S (round 36, item 2)
+-- THE PRICE IS NOBODY'S BUSINESS BUT THE CARD RAIL'S (round 36, item 2)
 --
--- ~~EVERY GAME IN THE DATABASE AGREES WITH ITS OWN LENGTH.~~ That census was a
--- LAW asserted over a mapping that is now a DEFAULT, and it would fail the
--- moment an organizer typed a price — which is the feature. INVERTED HERE into
--- the property that actually has to hold: the two fixtures above are priced
--- across the mapping, and credit eligibility followed the LENGTH anyway.
+-- Both fixtures are priced across the prefill, and a Credit still bought each
+-- seat at exactly one Credit.
 -- =============================================================================
 
 select pg_temp.ok(
   pg_temp.game_price((select id from _made90)) <> public.price_for_duration(90)
   and pg_temp.game_price((select id from _made)) <> public.price_for_duration(60),
-  'BOTH FIXTURES ARE PRICED OFF THE MAPPING — otherwise everything above is a '
+  'BOTH FIXTURES ARE PRICED OFF THE PREFILL — otherwise everything above is a '
   'test of a coincidence',
   pg_temp.game_price((select id from _made))::text || ' / '
   || pg_temp.game_price((select id from _made90))::text);
-
-select pg_temp.ok(
-  (select count(*) from public.bookings b
-     join public.games g on g.id = b.game_id
-    where b.credit_applied_czk > 0
-      and g.duration_minutes is distinct from public.credit_seat_minutes()) = 0,
-  'NO CREDIT WAS EVER APPLIED TO A GAME THAT IS NOT NINETY MINUTES, whatever '
-  'anything cost',
-  (select count(*)::text from public.bookings b
-     join public.games g on g.id = b.game_id
-    where b.credit_applied_czk > 0
-      and g.duration_minutes is distinct from public.credit_seat_minutes()));
 
 select pg_temp.ok(
   (select count(*) from public.bookings

@@ -6,6 +6,7 @@ import { MOST_POPULAR_GAMES, PASS_REFERENCE_PRICE_CZK } from "@/lib/pass/queries
 import type { PassTier } from "@/lib/pass/queries";
 import { getLocale, getStrings } from "@/lib/i18n/server";
 import { creditsLabel } from "@/lib/pass/credits";
+import { policy } from "@/lib/policy";
 
 /**
  * One tier, with its per-game price, its saving, and ITS EXPIRY STATED LOUDLY.
@@ -78,33 +79,16 @@ export async function PassTierCard({
   const mostPopular = tier.games === MOST_POPULAR_GAMES;
 
   /*
-   * THE WINDOW IN DAYS, DERIVED — never the literal "30" on every card.
-   *
-   * `pass_tiers.expires_months` is 1 for the 5- and 8-credit tiers and 2 for
-   * the 12, 15 and 20. A flat "Expires 30 days" would therefore be wrong on
-   * three of the five, and wrong in the direction that costs the buyer: it
-   * would tell someone who bought 20 credits that they die in a month when
-   * they in fact last two.
-   *
-   * THE DATABASE STILL ADDS CALENDAR MONTHS — `now() + make_interval(months
-   * => n)` in `confirm_topup` — so "30 days" is that month rounded. A January
-   * purchase actually gets 31 days and a February one 28, which makes this
-   * copy optimistic by up to two days in February and pessimistic by one in
-   * the long months.
-   *
-   * NO MIGRATION HAS BEEN WRITTEN for this. Making the two agree exactly means
-   * `create or replace`-ing `confirm_topup` to add days instead of months —
-   * a behaviour change to the money path, which is the owner's call and not a
-   * side effect of a copy edit. Flagged rather than done.
+   * SIXTY DAYS, EVERY TIER (round 40, Obchodní podmínky 5.4). ~~Derived from
+   * `pass_tiers.expires_months` and rounded to 30-day months~~ — the database
+   * now adds `credit_validity_days()` DAYS to every top-up, so the tile states
+   * the policy value and the two agree to the day. The column is no longer
+   * read by anything that writes.
    */
-  const DAYS_PER_MONTH = 30;
-  const expiry =
-    tier.expiresMonths === null
-      ? t.pass.tierNeverExpires
-      : t.pass.tierExpiresDays.replace(
-          "{days}",
-          String(tier.expiresMonths * DAYS_PER_MONTH),
-        );
+  const expiry = t.pass.tierExpiresDays.replace(
+    "{days}",
+    String(policy.credits.validityDays),
+  );
 
   return (
     <article

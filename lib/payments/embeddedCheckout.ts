@@ -1,4 +1,5 @@
 import Stripe from "stripe";
+import type { Locale } from "@/lib/i18n/locales";
 import { CHECKOUT_TERMS_CONSENT, isTermsUrlMissing } from "@/lib/payments/termsConsent";
 
 /**
@@ -154,7 +155,31 @@ export interface EmbeddedSessionInput {
   gameId?: string;
   playerId?: string;
   guestCount?: number;
+  /**
+   * THE LAWYER'S TWO TEXTS, INSIDE STRIPE'S FORM (round 40). Every card
+   * payment buys Credits (Obchodní podmínky 5.1), so every session carries
+   * the Credit summary directly above Pay (Texty 3.2) and the withdrawal
+   * waiver as the box Stripe draws above it (Texty 3.3) — Pay stays disabled
+   * until it is ticked, which no box on our own page can promise about a form
+   * inside an iframe.
+   */
+  legal: {
+    /** Markdown: Stripe renders the terms link. ≤ 1200 characters. */
+    summary: string;
+    waiver: string;
+    /** Our locale; Stripe has no Ukrainian, so that one falls back to the browser. */
+    locale: Locale;
+    termsVersion: string;
+  };
 }
+
+/** Stripe Checkout's own label languages, for the four this product speaks. */
+const STRIPE_LOCALE: Record<Locale, Stripe.Checkout.SessionCreateParams.Locale> = {
+  en: "en",
+  cs: "cs",
+  ru: "ru",
+  uk: "auto",
+};
 
 /**
  * One Checkout Session, embedded.
@@ -249,9 +274,19 @@ export async function createEmbeddedSession(
      * are for a HUMAN reading the Stripe dashboard, and for the day somebody
      * has to reconcile a payment by hand.
      */
+    /*
+     * "Pay", AND THE AMOUNT BESIDE IT. Texty 3.5 wants a button that says money
+     * moves; Stripe's `pay` renders "Zaplatit" / "Pay" with the total.
+     */
+    submit_type: "pay",
+    locale: STRIPE_LOCALE[input.legal.locale],
+    custom_text: { submit: { message: input.legal.summary } },
     metadata: {
       kind: input.kind,
       reference: input.reference,
+      // What the webhook needs to RECORD the waiver (Texty 2.4, round 40).
+      consent_locale: input.legal.locale,
+      terms_version: input.legal.termsVersion,
       ...(input.gameId ? { game_id: input.gameId } : {}),
       ...(input.playerId ? { player_id: input.playerId } : {}),
       ...(input.guestCount !== undefined
@@ -291,6 +326,11 @@ export async function createEmbeddedSession(
     session = await stripe.checkout.sessions.create({
       ...params,
       consent_collection: CHECKOUT_TERMS_CONSENT,
+      custom_text: {
+        ...params.custom_text,
+        terms_of_service_acceptance: { message: input.legal.waiver },
+      },
+      metadata: { ...params.metadata, consent_via: "stripe" },
     });
   } catch (error) {
     if (!isTermsUrlMissing(error)) throw error;
@@ -298,7 +338,11 @@ export async function createEmbeddedSession(
       "checkout: Stripe has no Terms of Service URL — set it under Settings → Business → Public details; falling back to our own terms box",
     );
     termsInStripe = false;
-    session = await stripe.checkout.sessions.create(params);
+    // Our own box stands in front of the form instead (CheckoutTermsGate).
+    session = await stripe.checkout.sessions.create({
+      ...params,
+      metadata: { ...params.metadata, consent_via: "site" },
+    });
   }
 
   if (!session.client_secret) return null;

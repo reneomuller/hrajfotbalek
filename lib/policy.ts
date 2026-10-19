@@ -85,6 +85,19 @@ export const policy = {
   },
 
   /**
+   * CREDITS (round 40) — Obchodní podmínky 5.4 and 11.3.
+   *
+   * Mirrors of `credit_validity_days()` and `cancelled_game_extension_days()`;
+   * the database is the authority and applies them. These are what the
+   * sentences above Pay and on the pass tiles SAY, so the two must move
+   * together — `supabase/tests/credits_sixty_days.sql` pins the SQL side.
+   */
+  credits: {
+    validityDays: 60,
+    cancelledGameExtensionDays: 7,
+  },
+
+  /**
    * Scarcity nudge: an unpaid reservation on a game starting within this window
    * gets one "pay online or lose the spot" notice. `nudge_sent_at` is the
    * idempotency guard — the sweep never nudges the same booking twice.
@@ -140,7 +153,18 @@ export const policy = {
    * rather than carrying its own, so the two cannot drift apart again.
    */
   game: {
+    /**
+     * THE NULL-ROW FALLBACK, and only that. Twelve games on production carry no
+     * length and were priced as hour games; moving this number would silently
+     * rewrite how each of them reads, and every player's hours on the pitch.
+     */
     durationMinutes: 60,
+    /**
+     * WHAT A NEW GAME IS (owner, round 40): ninety minutes at one Credit. The
+     * admin form pre-fills it when creating, so new games store their length
+     * rather than leaning on the fallback above.
+     */
+    standardMinutes: 90,
   },
 
   /**

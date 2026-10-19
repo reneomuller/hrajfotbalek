@@ -745,6 +745,31 @@ export interface Database {
         Update: never;
         Relationships: [];
       };
+      /**
+       * Round 40 (`20261019100000_credits_sixty_days`) — one row per tick: the
+       * words shown, their language and the terms version (Texty 2.4). Written
+       * only through `record_consent` / `record_consent_for`.
+       */
+      consent_records: {
+        Row: {
+          id: string;
+          player_id: string;
+          kind:
+            | "terms"
+            | "terms_at_booking"
+            | "marketing_opt_in"
+            | "marketing_opt_out"
+            | "withdrawal_waiver";
+          wording: string;
+          locale: "en" | "cs" | "ru" | "uk";
+          terms_version: string;
+          context: Json;
+          accepted_at: string;
+        };
+        Insert: never;
+        Update: never;
+        Relationships: [];
+      };
     };
 
     Views: {
@@ -832,6 +857,40 @@ export interface Database {
       cancellation_refund_cutoff_hours: {
         Args: Record<string, never>;
         Returns: number;
+      };
+      /** Round 40 — days a Credit is valid (Obchodní podmínky 5.4). */
+      credit_validity_days: {
+        Args: Record<string, never>;
+        Returns: number;
+      };
+      /** Round 40 — days added when WE cancel a game (Obchodní podmínky 11.3). */
+      cancelled_game_extension_days: {
+        Args: Record<string, never>;
+        Returns: number;
+      };
+      /** Round 40 — the caller's own consent; never a purchase waiver. */
+      record_consent: {
+        Args: {
+          p_kind: "terms" | "terms_at_booking" | "marketing_opt_in" | "marketing_opt_out";
+          p_wording: string;
+          p_locale: string;
+          p_terms_version: string;
+          p_context?: Json;
+        };
+        Returns: string;
+      };
+      /** Round 40 — service role only: the waiver ticked inside Stripe's form. */
+      record_consent_for: {
+        Args: {
+          p_player_id: string;
+          p_kind: "withdrawal_waiver" | "terms" | "terms_at_booking" | "marketing_opt_in" | "marketing_opt_out";
+          p_wording: string;
+          p_locale: string;
+          p_terms_version: string;
+          p_context?: Json;
+          p_accepted_at?: string;
+        };
+        Returns: string;
       };
       /*
        * Round 16. Present only once `20260823120000_round16_actions` is

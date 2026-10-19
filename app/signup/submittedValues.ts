@@ -28,7 +28,6 @@ export interface SubmittedValues {
   skill: string;
   phone: string;
   tos: boolean;
-  gdpr: boolean;
   marketing: boolean;
 }
 
@@ -50,7 +49,6 @@ export function submittedValues(formData: FormData): SubmittedValues {
     skill: text(formData, "skill"),
     phone: text(formData, "phone"),
     tos: ticked(formData, "tos"),
-    gdpr: ticked(formData, "gdpr"),
     marketing: ticked(formData, "marketing"),
   };
 }

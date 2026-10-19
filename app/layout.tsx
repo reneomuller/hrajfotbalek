@@ -5,7 +5,6 @@ import { LocaleProvider } from "@/components/LocaleProvider";
 import { SessionProvider } from "@/components/SessionProvider";
 import { SiteBackground } from "@/components/SiteBackground";
 import { Footer } from "@/components/chrome/Footer";
-import { CookieConsent } from "@/components/consent/CookieConsent";
 import { Header } from "@/components/chrome/Header";
 import { photoVersionFor } from "@/lib/storage/avatar";
 import { EMPTY_BELL, getBellState } from "@/lib/notifications/queries";
@@ -202,12 +201,16 @@ export default async function RootLayout({
               {children}
               <Footer />
               {/*
-                THE CONSENT SHEET, mounted once at the root and portalled to
-                `document.body` from there. It renders nothing until it has
-                read this browser's cookie, so it costs an unanswered reader
-                one effect and everybody else nothing.
+                ~~THE CONSENT SHEET~~ IS OFF (2026-10-19), not deleted.
+
+                The site sets only necessary cookies — sign-in, language, and
+                Stripe at payment — and those need no consent, so the lawyer's
+                brief (item 9.1) says no banner should show while that is true;
+                the footer links the cookie policy instead. `CookieConsent` and
+                `lib/consent.ts` stay as they are because analytics is next:
+                the day a script needs consent, the brief's banner (item 9.2)
+                comes back here, mounted where this one was.
               */}
-              <CookieConsent />
             </div>
 
             {/* Phone widths only. On a desktop this would be a phone

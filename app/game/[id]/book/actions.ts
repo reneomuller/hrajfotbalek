@@ -12,8 +12,10 @@ import { toBookingErrorCode, type BookingErrorCode } from "@/lib/booking/errors"
 import { buildResumeUrl } from "@/lib/booking/resume";
 import { policy } from "@/lib/policy";
 import { PASS_REFERENCE_PRICE_CZK } from "@/lib/pass/creditPrice";
-import { gameTakesCredit } from "@/lib/games/price";
 import { acceptedTerms } from "@/lib/legal/terms";
+import { bookingTermsWording } from "@/lib/legal/consentWording";
+import { recordOwnConsent } from "@/lib/legal/recordConsent";
+import { getLocale, getStrings } from "@/lib/i18n/server";
 import { rememberPendingPurchase } from "@/lib/payments/pendingPurchaseCookie";
 import { stripeBookingUrl, withStripeParams } from "@/lib/payments/stripeLinks";
 import { embeddedCheckoutEnabled } from "@/lib/payments/embeddedCheckout";
@@ -193,24 +195,13 @@ export async function createBookingAction(
       getOwnCreditBalance(),
       supabase
         .from("games")
-        .select("price_czk, duration_minutes")
+        .select("price_czk")
         .eq("id", gameId)
         .maybeSingle(),
     ]);
     const priceCzk = priceRow.data?.price_czk ?? null;
 
-    /*
-     * A CREDIT IS A 90-MINUTE SEAT (round 35 v5, item 1), so a game of any
-     * other length cannot be paid for with one — and `create_booking_internal`
-     * would apply nothing and leave an UNPAID booking on a product that no
-     * longer takes cash, which is exactly the failure this guard was added for
-     * in round 23. The form does not render the option; this is the half a
-     * form cannot enforce.
-     */
-    if (!gameTakesCredit(priceRow.data?.duration_minutes ?? null)) {
-      return { status: "error", code: "CREDIT_NEGATIVE_BLOCKED" };
-    }
-
+    // ~~A CREDIT IS A 90-MINUTE SEAT~~ — a Credit pays any game since round 40.
     const seatsCredit = PASS_REFERENCE_PRICE_CZK * (guests + 1);
     if (priceCzk === null || (priceCzk > 0 && balanceCzk < seatsCredit)) {
       return { status: "error", code: "CREDIT_NEGATIVE_BLOCKED" };
@@ -354,6 +345,14 @@ export async function runCreateBooking(
   // PostgREST returns a composite as a single object.
   const result = data as unknown as BookingResult | null;
   if (!result?.id) return { status: "error", code: "UNKNOWN" };
+
+  // Texty 2.4 — the box above "Book for 1 Credit", recorded once it is booked.
+  await recordOwnConsent(supabase, {
+    kind: "terms_at_booking",
+    wording: bookingTermsWording(await getStrings()),
+    locale: await getLocale(),
+    context: { booking_id: result.id, game_id: gameId },
+  });
 
   await dispatchBookingEmails(result);
 

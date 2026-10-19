@@ -5,6 +5,7 @@ import { createBookingAction, type BookingActionState } from "@/app/game/[id]/bo
 import { FormError } from "@/components/form/FormError";
 import { PendingButton } from "@/components/form/PendingButton";
 import { TermsCheckbox } from "@/components/form/TermsCheckbox";
+import { creditCount, reservationSummary } from "@/lib/legal/purchaseSummary";
 import { describeBookingError } from "@/lib/booking/errors";
 import { useLocale, useStrings } from "@/components/LocaleProvider";
 import { GuestOverflowSelect } from "@/components/game/GuestOverflowSelect";
@@ -47,20 +48,6 @@ export interface PaymentMethodChoiceProps {
    */
   embeddedCheckout: boolean;
   /**
-   * Whether this game takes credit at all (round 35 v5, item 1).
-   *
-   * A CREDIT IS ONE 90-MINUTE SEAT. A game of any other length is online-only,
-   * and the credit option does not render — not disabled with an explanation,
-   * NOT RENDERED, because a greyed-out control invites the question "why can I
-   * not use my credits" on a screen that cannot answer it. The sentence that
-   * does answer it lives on the pass page, where somebody is deciding to buy.
-   *
-   * RESOLVED ON THE SERVER from the game's own duration, for the same reason
-   * `partyUpToThirteen` is: `create_booking_internal` applies credit only at
-   * that length, and a picker that guesses would offer a rail the RPC ignores.
-   */
-  takesCredit: boolean;
-  /**
    * Whether `public.max_party_guests()` has been raised to thirteen (round 33,
    * item 3).
    *
@@ -71,6 +58,12 @@ export interface PaymentMethodChoiceProps {
    * no fourth control — which is the old product working, not a degraded one.
    */
   partyUpToThirteen: boolean;
+  /**
+   * The facts Texty 4.1's summary states before a CREDIT booking is committed
+   * (round 40). The Credit count follows the party picker, so the sentence is
+   * built here rather than on the server.
+   */
+  reservation: { when: string; venue: string; cutoffHours: number };
 }
 
 const INITIAL: BookingActionState = { status: "idle" };
@@ -111,7 +104,7 @@ export function PaymentMethodChoice({
   spotsLeft,
   embeddedCheckout,
   partyUpToThirteen,
-  takesCredit,
+  reservation,
 }: PaymentMethodChoiceProps) {
   const t = useStrings();
   const locale = useLocale();
@@ -206,12 +199,8 @@ export function PaymentMethodChoice({
    * option at all. If they disagree the database is right and the UI is lying.
    */
   const partyCreditCzk = PASS_REFERENCE_PRICE_CZK * seats;
-  /*
-   * AND THE GAME HAS TO TAKE CREDIT AT ALL. On a 60-minute game this is false
-   * whatever the wallet holds, so nothing below is selectable, preselected, or
-   * rendered — see `takesCredit`.
-   */
-  const creditCovers = takesCredit && creditCzk >= partyCreditCzk;
+  // ~~AND THE GAME HAS TO TAKE CREDIT AT ALL~~ — every game does since round 40.
+  const creditCovers = creditCzk >= partyCreditCzk;
 
   const [choice, setChoice] = useState<"credit" | "online" | null>(
     // DEFAULT TO CREDIT WHEN IT COVERS THE GAME (item 11). A player who has
@@ -373,7 +362,6 @@ export function PaymentMethodChoice({
 
         <div className="flex flex-col gap-3">
           {/* ---- credit -------------------------------------------------- */}
-          {takesCredit && (
           <label data-testid="pay-credit" className={optionClass("credit", !creditCovers)}>
             <input
               type="radio"
@@ -419,7 +407,6 @@ export function PaymentMethodChoice({
               )}
             </span>
           </label>
-          )}
 
           {/* ---- online ------------------------------------------------- */}
           <label data-testid="pay-online" className={optionClass("online", !onlineReady)}>
@@ -511,6 +498,20 @@ export function PaymentMethodChoice({
         this is its Pay button. `required` lets the browser stop an unticked
         submit; `createBookingAction` refuses one that gets past it.
       */}
+      {/*
+        TEXTY 4.1 — WHAT THE BOOKING IS, BEFORE IT IS MADE (round 40). On the
+        online rail the same sentence sits on the checkout page above Stripe's
+        form, so it is said once on each path, never twice.
+      */}
+      {activeChoice === "credit" && (
+        <p
+          data-testid="reservation-summary"
+          className="m-0 text-[12px] leading-snug text-muted"
+        >
+          {reservationSummary({ ...reservation, credits: seats }, locale, t)}
+        </p>
+      )}
+
       {activeChoice === "credit" && (
         <TermsCheckbox
           required
@@ -536,7 +537,11 @@ export function PaymentMethodChoice({
       )}
 
       <PendingButton
-        label={t.booking.confirmBooking}
+        label={
+          activeChoice === "credit"
+            ? t.booking.confirmWithCredits.replace("{credits}", creditCount(seats, locale, t))
+            : t.booking.confirmBooking
+        }
         testId="confirm-booking"
         className="w-full"
         disabled={activeChoice === null}

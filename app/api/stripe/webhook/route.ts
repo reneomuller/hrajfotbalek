@@ -6,6 +6,9 @@ import {
 } from "@/lib/payments/stripeWebhook";
 import { createServiceRoleSupabaseClient } from "@/lib/supabase/clients";
 import { expireOpenCheckouts } from "@/lib/payments/activeExpiry";
+import { parseCheckoutConsent } from "@/lib/payments/checkoutConsent";
+import { waiverWording } from "@/lib/legal/consentWording";
+import { resolveStrings } from "@/lib/i18n/resolve";
 
 export const dynamic = "force-dynamic";
 
@@ -146,6 +149,7 @@ export async function POST(request: Request) {
       });
     }
 
+    await recordWaiver(supabase, payload, settled.data);
     return NextResponse.json({ ok: true, outcome: settled.data });
   }
 
@@ -182,5 +186,41 @@ export async function POST(request: Request) {
     });
   }
 
+  await recordWaiver(supabase, payload, outcome);
   return NextResponse.json({ ok: true, outcome });
+}
+
+/*
+ * THE WAIVER, RECORDED ONCE THE PURCHASE IS REAL (round 40, Texty 2.4 and
+ * 3.3). Only on the outcomes that mean Credits were bought just now — a seat
+ * booked, money credited, a pass confirmed. `already` is Stripe retrying an
+ * event this endpoint has settled, and recording again would claim a second
+ * tick. Never fatal: the money has been handled by the time this runs.
+ */
+const PURCHASE_OUTCOMES = new Set(["booked", "credited", "confirmed"]);
+
+async function recordWaiver(
+  supabase: ReturnType<typeof createServiceRoleSupabaseClient>,
+  payload: string,
+  outcome: string,
+): Promise<void> {
+  if (!PURCHASE_OUTCOMES.has(outcome)) return;
+  const consent = parseCheckoutConsent(payload);
+  if (!consent) return;
+
+  const { error } = await supabase.rpc("record_consent_for", {
+    p_player_id: consent.playerId,
+    p_kind: "withdrawal_waiver",
+    p_wording: waiverWording(resolveStrings(consent.locale)),
+    p_locale: consent.locale,
+    p_terms_version: consent.termsVersion,
+    p_context: { stripe_session_id: consent.sessionId, via: consent.via, outcome },
+    p_accepted_at: consent.acceptedAt,
+  });
+  if (error) {
+    console.error("stripe webhook: could not record the waiver", {
+      session: consent.sessionId,
+      message: error.message,
+    });
+  }
 }

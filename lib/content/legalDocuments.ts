@@ -1,63 +1,50 @@
 /**
- * Loading a legal document for a locale.
+ * The legal documents the site publishes, loaded by name.
  *
- * THE DOCUMENTS ARE FILES, NOT STRINGS. `lib/strings.ts` is a UI table with a
- * partial-overlay model: a missing Czech key silently renders English, which is
- * exactly right for a button label and exactly wrong for a contract. A legal
- * text is authored whole, per language, by a person — so it lives in
- * `content/` as one file per language and is loaded by name.
+ * THE TEXT IS THE LAWYER'S, VERBATIM. The originals are the HTML files in
+ * `content/legal/original/`, embedded by `scripts/legal/build-legal.mjs` so a
+ * route ships them by importing rather than by reading `content/` at request
+ * time. The only edits are the rules in `content/legal/substitutions.json` —
+ * the effective date and the missing phone number — and each must match
+ * exactly as often as it says or loading throws.
  *
- * WHAT HAPPENS WHEN A LANGUAGE HAS NO DOCUMENT. It falls back to English AND
- * says so. Silently showing English to a Russian speaker who ticked a box
- * saying they accept the terms is the failure this function exists to make
- * impossible: the caller is handed `isTranslated: false` and has to render the
- * notice. The alternative — machine-translating a contract and shipping it
- * behind a "draft" label — produces a document that is legally operative and
- * unreviewed, which is worse than an honest English one.
+ * CZECH IN EVERY LOCALE. Contracts are concluded in Czech (Terms 1.5) and the
+ * lawyer delivered Czech only, so there is nothing else to show. A reader of
+ * another language is told, in their language, that the Czech text is the
+ * binding one; the documents themselves are never machine-translated.
  */
 
-import { readFileSync } from "node:fs";
-import path from "node:path";
-import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/locales";
-import { parseMarkdown, type MarkdownBlock } from "@/lib/content/markdown";
+import substitutions from "@/content/legal/substitutions.json";
+import { LEGAL_ORIGINALS, type LegalOriginalId } from "@/lib/content/legalOriginals.generated";
+import { parseLegalHtml, type ParsedLegalDocument } from "@/lib/content/legalHtml";
+import { applyLegalSubstitutions } from "@/lib/content/legalSubstitutions";
 
-export type LegalDocumentName = "terms";
+export type LegalDocumentName = "terms" | "privacy" | "cookies";
 
-/**
- * Which languages each document has been authored in.
- *
- * Explicit rather than "whatever files happen to exist", so adding a language
- * is a deliberate edit here and a missing file is a crash at build time rather
- * than a silent fallback in front of a player.
- */
-const AUTHORED: Record<LegalDocumentName, readonly Locale[]> = {
-  // Russian is absent deliberately: no reviewed Russian text exists. See the
-  // header — an unreviewed translation of a contract is not an improvement.
-  terms: ["en", "cs"],
+export const LEGAL_DOCUMENT_ORIGINAL: Record<LegalDocumentName, LegalOriginalId> = {
+  terms: "obchodni-podminky",
+  privacy: "zasady-zpracovani-osobnich-udaju",
+  cookies: "zasady-pouzivani-cookies",
 };
 
-export interface LegalDocument {
-  blocks: MarkdownBlock[];
-  /** The language actually rendered, which may not be the one asked for. */
-  locale: Locale;
-  /** False when the reader is being shown a language they did not ask for. */
-  isTranslated: boolean;
+/** The language every legal document is published in. */
+export const LEGAL_DOCUMENT_LOCALE = "cs" as const;
+
+/** The anchor of the terms' Příloha 1 — the signup box links to `/terms#pravidla`. */
+export const TERMS_RULES_ANCHOR = "pravidla";
+
+/** The original HTML with the documented substitutions applied. */
+export function legalDocumentHtml(name: LegalDocumentName): string {
+  const id = LEGAL_DOCUMENT_ORIGINAL[name];
+  return applyLegalSubstitutions(id, LEGAL_ORIGINALS[id], substitutions.rules);
 }
 
-export function hasAuthoredDocument(name: LegalDocumentName, locale: Locale): boolean {
-  return AUTHORED[name].includes(locale);
-}
+const parsed = new Map<LegalDocumentName, ParsedLegalDocument>();
 
-export function loadLegalDocument(
-  name: LegalDocumentName,
-  locale: Locale,
-): LegalDocument {
-  const resolved = hasAuthoredDocument(name, locale) ? locale : DEFAULT_LOCALE;
-  const file = path.resolve(process.cwd(), "content", `${name}.${resolved}.md`);
-
-  return {
-    blocks: parseMarkdown(readFileSync(file, "utf8")),
-    locale: resolved,
-    isTranslated: resolved === locale,
-  };
+export function loadLegalDocument(name: LegalDocumentName): ParsedLegalDocument {
+  const cached = parsed.get(name);
+  if (cached) return cached;
+  const document = parseLegalHtml(legalDocumentHtml(name));
+  parsed.set(name, document);
+  return document;
 }

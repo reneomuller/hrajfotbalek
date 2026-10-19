@@ -13,8 +13,7 @@
 export interface AddGuestsState {
   status: "idle" | "error";
   /** A product error code the panel maps to copy, never a raw message. */
-  code?: "CAPACITY_FULL" | "CREDIT_NEGATIVE_BLOCKED"
-  | "GAME_NOT_CREDIT_ELIGIBLE" | "FAILED";
+  code?: "CAPACITY_FULL" | "CREDIT_NEGATIVE_BLOCKED" | "FAILED";
 }
 
 export const ADD_GUESTS_INITIAL: AddGuestsState = { status: "idle" };

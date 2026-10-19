@@ -438,6 +438,18 @@ export default async function LandingPage() {
               </li>
             ))}
           </ol>
+          {/*
+            WHAT PLAYLLU DOES AND DOES NOT DO (the lawyer's brief, item 1.4):
+            on the home page and with "how it works", which is this strip. It
+            sits directly under the three steps because it qualifies them —
+            "come and play" is followed by who is, and is not, on the pitch.
+          */}
+          <p
+            data-testid="how-it-works-note"
+            className="m-0 mt-3 px-[18px] text-left text-small text-muted"
+          >
+            {landing.howItWorksNote}
+          </p>
 
           {/*
             COMMUNITY (now carrying the numbers) beside PLAYER OF THE MONTH,

@@ -37,11 +37,11 @@ describe("submittedValues", () => {
   });
 
   it("keeps the box the player DID tick", () => {
-    // The whole point of the bug: ticking one consent and missing the other
-    // must not reset both, or the error blames the box that was fine.
+    // The whole point of the bug: ticking one box and missing the other must
+    // not reset both, or the error blames the box that was fine.
     const values = submittedValues(form({ tos: "on" }));
     expect(values.tos).toBe(true);
-    expect(values.gdpr).toBe(false);
+    expect(values.marketing).toBe(false);
   });
 
   it("reads an unticked box as false rather than as missing", () => {
@@ -49,7 +49,6 @@ describe("submittedValues", () => {
     // would render as an uncontrolled input and React would warn.
     const values = submittedValues(form({}));
     expect(values.tos).toBe(false);
-    expect(values.gdpr).toBe(false);
     expect(values.marketing).toBe(false);
     expect(values.email).toBe("");
   });

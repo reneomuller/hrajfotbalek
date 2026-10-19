@@ -79,7 +79,7 @@ function withoutComments(source: string): string {
 }
 
 describe("the seat price", () => {
-  it("is 180 as the credit nominal, and 150/180 as the two PREFILLS", () => {
+  it("is 180 as the credit nominal, and 180 as the prefill for every length", () => {
     /*
      * ~~"as the two game prices".~~ A PREFILL (round 36, item 2). The mapping
      * still has to be right — it is what lands in the organizer's box — but a
@@ -87,7 +87,8 @@ describe("the seat price", () => {
      * read this function to find out what a game costs.
      */
     expect(PASS_REFERENCE_PRICE_CZK).toBe(180);
-    expect(priceForDurationCzk(60)).toBe(150);
+    // ~~60 minutes prefilled 150~~ — gone in round 40: a game is one Credit.
+    expect(priceForDurationCzk(60)).toBe(180);
     expect(priceForDurationCzk(90)).toBe(180);
   });
 

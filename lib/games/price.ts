@@ -2,65 +2,30 @@
  * A LEAF MODULE, AND THE RELATIVE IMPORT IS WHY (round 16, item 20's lesson
  * applied again). `scripts/fixtures.ts` is run by a plain node ESM loader with
  * no `@/` alias, so an aliased import here breaks the seed — which is how this
- * file first reached the seed and failed. `lib/policy` is itself a leaf.
+ * file first reached the seed and failed. `lib/pass/creditPrice` is itself a
+ * leaf.
  */
-import { policy } from "../policy.ts";
+import { PASS_REFERENCE_PRICE_CZK } from "../pass/creditPrice.ts";
 
 /**
- * What a game costs a card, from how long it is (round 35 v5, item 2).
+ * What the admin form PREFILLS as a game's price (round 40).
  *
- * THE OWNER'S RULING: sixty minutes is 150 CZK, ninety is 180. The price is not
- * a field somebody types any more — it is a consequence of the length, decided
- * once at creation.
+ * A GAME IS ONE CREDIT, WHATEVER ITS LENGTH. The owner removed the 150 CZK
+ * hour, and the lawyer's terms make every booking a Credit (Obchodní podmínky
+ * 5.1): buying a single game IS buying one Credit, spent on that game at once.
+ * So every length prefills the Credit price, and a Credit pays for a game of
+ * any length — `credit_seat_minutes()` and `gameTakesCredit()` are gone with
+ * the 90-minute rule they encoded.
  *
- * `public.price_for_duration()` IS THE AUTHORITY and this mirrors it for
- * display, which is the same arrangement every policy window here has: a route
- * guard is skipped by anyone using curl, and `admin_create_game_v2` derives the
- * stored price whatever a caller sends. If the two ever disagree the database
- * is right and the form is lying.
+ * `public.price_for_duration()` mirrors this in SQL and CALLS
+ * `credit_seat_price_czk()` rather than restating 180 — one price, one place
+ * per side. The organizer can still type another number (round 36).
  *
- * WHY IT IS A MAPPING AND NOT A CONSTANT. Round 35 v2 audited a flat price and
- * found it in four places — one of them inside a CHECK constraint. A number
- * that is the same everywhere invites a copy; a FUNCTION of something else has
- * to be called.
- *
- * ANYTHING THAT IS NOT SIXTY TAKES THE NINETY-MINUTE PRICE, and that is a
- * pre-pick rather than a tier. Production holds exactly one game of another
- * length — 120 minutes, settled, 2026-08-27 — so the choice costs nothing today
- * and the owner rules on it when a second one appears.
- *
- * NULL IS SIXTY. `games.duration_minutes` is nullable and a null row renders as
- * the standard length, so it is priced as one.
+ * The parameter stays so the form's call site still reads as "the length
+ * suggests the price", and so a future length-dependent price is an edit here
+ * rather than a hunt for every caller.
  */
-export const DURATION_PRICE_CZK = {
-  /** The standard length, and `policy.game.durationMinutes`. */
-  60: 150,
-  /** The length a credit buys — see `CREDIT_SEAT_MINUTES`. */
-  90: 180,
-} as const;
-
-/** The length one credit is good for. Any other length is online-only. */
-export const CREDIT_SEAT_MINUTES = 90;
-
-/** How long this game is, resolving null to the standard length. */
-export function durationMinutesOf(minutes: number | null | undefined): number {
-  return minutes ?? policy.game.durationMinutes;
-}
-
 export function priceForDurationCzk(minutes: number | null | undefined): number {
-  return durationMinutesOf(minutes) === 60
-    ? DURATION_PRICE_CZK[60]
-    : DURATION_PRICE_CZK[90];
-}
-
-/**
- * Does this game take credit at all?
- *
- * A CREDIT IS ONE 90-MINUTE SEAT, so a game of any other length is online-only
- * and no credit control renders for it. This is the ONE predicate every surface
- * asks — the booking form, the add-guests panel and the server action behind
- * each — so the three cannot disagree about which games take credit.
- */
-export function gameTakesCredit(minutes: number | null | undefined): boolean {
-  return durationMinutesOf(minutes) === CREDIT_SEAT_MINUTES;
+  void minutes;
+  return PASS_REFERENCE_PRICE_CZK;
 }

@@ -70,20 +70,25 @@ export const strings = {
   },
 
   siteFooter: {
-    privacy: "Privacy",
-    terms: "Terms",
-    copyright: "© hrajfotbal",
+    /*
+     * THE LEGAL LINKS USE `legal.*Title` (2026-10-19) rather than keys of
+     * their own: a footer link and the page it opens are one concept, and two
+     * keys for one name drift apart in translation.
+     */
+    copyright: "© Playllu",
     // A real address in the footer of every page. A booking product that takes
     // money and holds personal data needs one reachable line that is not a
     // WhatsApp group, and GDPR expects a controller contact anyway.
     contact: "Contact",
     /*
-     * THE FALLBACK, not the source of truth (round 13, item 18). The addresses
-     * and numbers the dialog shows live in `site_settings` and are edited in
-     * `/admin`; this is what renders when the owner has not set any, so a
-     * fresh database still has one reachable line rather than an empty box.
+     * THE FALLBACK, not the source of truth (round 13, item 18). The extra
+     * addresses and numbers `/contact` shows live in `site_settings` and are
+     * edited in `/admin`; this is what stands in when the owner has set none.
+     * It is the operator's address from the lawyer's brief, and must equal
+     * `OPERATOR_CONTACT.email` in `lib/legal.ts` — a unit test holds the two
+     * together.
      */
-    contactEmail: "ahoj@hrajfotbal.com",
+    contactEmail: "info@playllu.com",
     contactTitle: "Get in touch",
   },
 
@@ -185,6 +190,13 @@ export const strings = {
      * by `pitchHours`; the string does no arithmetic.
      */
     potmHours: "{hours} h on the pitch this month",
+    /*
+     * The lawyer's brief, item 1.4: said on the home page, under "how it
+     * works". The Czech is the lawyer's sentence verbatim; the rest are
+     * translations of it. It names Playllu, the operator, on purpose.
+     */
+    howItWorksNote:
+      "Playllu connects you with people who want to play football, and provides the pitch, balls, bibs and gloves. But we don't organise the games – there is no referee, coordinator or medic on the pitch. The game is up to you.",
 
 
     community: {
@@ -325,24 +337,27 @@ export const strings = {
     phoneInvalid: "A phone number is between 3 and 32 characters.",
 
     /*
-     * THREE BOXES, TWO OF THEM LEGAL ACTS.
+     * ONE LEGAL BOX AND ONE PREFERENCE (round 40, the lawyer's Texty 2.2–2.3).
      *
-     * Accepting the terms and consenting to data processing are separate acts
-     * with separate errors (contract §3.1, ruled 2026-07-31) — one box covering
-     * both makes the consent non-specific, which is what makes it invalid. The
-     * reminders preference is grouped apart from them on purpose: a preference
-     * that looks like a legal act gets ticked unread, and a legal act that
-     * looks like a preference gets ignored.
+     * ~~Three boxes: terms, privacy, reminders.~~ The lawyer's wording puts the
+     * terms, the community rules, the "we do not organise the games" notice
+     * and the photo permission in ONE required box, and makes the privacy
+     * policy a LINK beneath it: processing rests on the contract, not on a
+     * consent, and a box that pretends otherwise is the wrong legal basis. The
+     * newsletter stays apart and unticked.
+     *
+     * `{terms}` and `{rules}` are links, and the translation decides where they
+     * sit — see `lib/i18n/template.ts`. The Czech is the lawyer's own.
      */
     legalGroupLabel: "Before you start",
-    tosLabel: "I accept the terms of service.",
-    tosLink: "Read the terms",
+    tosAgreement:
+      "I have read and agree to the {terms} and the {rules}. I understand that Playllu does not organise the games and that I take part at my own risk. I allow photos and videos to be taken at games and used for Playllu's marketing and social media, as set out in Article 13 of the Terms and Conditions.",
+    tosTermsLink: "Terms and Conditions",
+    tosRulesLink: "Community and Game Rules",
     tosRequired: "Please accept the terms to continue.",
-    gdprLabel: "I agree to the privacy policy.",
-    gdprLink: "Read the privacy policy",
-    gdprRequired: "Please agree to the privacy policy to continue.",
+    privacyHowLink: "How we handle your data",
     preferencesGroupLabel: "Optional",
-    marketingLabel: "Send me emails about new games and offers. You can unsubscribe at any time.",
+    marketingLabel: "I want to receive the Playllu newsletter and news by email. I can unsubscribe at any time.",
     createAccount: "Create my account",
 
     emailTaken:
@@ -946,6 +961,10 @@ export const strings = {
     cancelReassuranceCutoff:
       "Cancel up to {hours}h before kickoff — your credits come back in full.",
     confirmBooking: "Confirm booking",
+    /** Texty 4.2 — the commit names what it costs. `{credits}` is "1 Credit". */
+    confirmWithCredits: "Book for {credits}",
+    /** The credit booking's own terms box (round 38); `{terms}` is a link. */
+    termsAgree: "I agree to the {terms}.",
     /*
      * THE FULL STOP (round 13, item 10). Shown on the confirmation screen for
      * a CONFIRMED booking however it got there — credits, a seed account, or
@@ -1009,7 +1028,21 @@ export const strings = {
      * cash-refund path anywhere in the system. Saying "refund" here would
      * promise the half that is quarantined.
      */
-    refundAsCredits: "What you paid comes back as credits.",
+    /*
+     * THE TWELVE HOURS, SAID IN BOTH SENTENCES (round 40, Obchodní podmínky
+     * 9.1). `{hours}` is `cancellation_refund_cutoff_hours()`, read out.
+     */
+    refundAsCredits: "It's more than {hours} hours to kick-off, so your Credit comes back.",
+    /*
+     * "I CAN'T MAKE IT" (round 40, the owner). Inside the cutoff nothing comes
+     * back, but telling us still frees the spot — so the control says what the
+     * player is actually doing, rather than offering a "cancellation" that
+     * sounds like a refund.
+     */
+    cantMakeIt: "I can't make it",
+    barCantMakeIt: "Can't make it",
+    cantMakeItTitle: "Can't make it?",
+    cantMakeItConfirm: "Free my spot",
     /*
      * POLICY v2's OTHER HALF, and the dialog must say it.
      *
@@ -1355,28 +1388,45 @@ export const strings = {
   },
 
   /**
-   * The `/privacy` placeholder.
+   * The legal pages around the lawyer's documents (2026-10-19).
    *
-   * DELIBERATELY NOT A PRIVACY POLICY. A GDPR policy is a legal representation
-   * about what this system does with personal data; generated text that reads
-   * as finished is worse than an obvious placeholder, because it invites
-   * shipping. Everything here is scaffolding around a human-supplied slot —
-   * the only strings are the DRAFT warning and the labels of the sections
-   * Oliver has to fill in. This copy is replaced wholesale at the M5 cutover,
-   * and it is NOT translated: the real policy is a per-language legal text,
-   * not a UI string.
+   * THE DOCUMENTS THEMSELVES ARE NOT HERE. They are the lawyer's HTML in
+   * `content/legal/`, published in Czech in every locale and never translated
+   * (`lib/content/legalDocuments.ts`). These keys are the furniture around
+   * them and the operator's contact block, which ARE translated: a reader has
+   * to be able to find the binding text, and the operator, in their own
+   * language.
    */
-  terms: {
-    title: "Terms of service",
-    versionLabel: "Version",
-    /**
-     * Shown when the reader's language has no authored document and English is
-     * being displayed instead. Never omitted: a person who ticked "I accept the
-     * terms" is entitled to know which language the thing they accepted is in.
+  legal: {
+    termsTitle: "Terms and conditions",
+    privacyTitle: "Privacy policy",
+    cookiesTitle: "Cookie policy",
+    /** The accessible name of the footer's row of legal links. */
+    footerNavLabel: "Legal information",
+    /*
+     * Shown above a document to every reader whose language is not Czech.
+     * Never omitted: a person who accepted the terms is entitled to know which
+     * language the thing they accepted is in, and which text binds.
      */
-    notTranslated:
-      "These terms have not been translated into your language yet, so the English text is shown. It is the version that applies.",
+    czechOnlyNotice:
+      "This document is in Czech. The Czech text is the legally binding version.",
+    downloadPdf: "Download the terms as PDF",
     back: "← Back to the games",
+    /*
+     * The operator block — `/contact` and the footer (the lawyer's brief,
+     * item 1.1). The addresses and the link are facts, in `lib/legal.ts`;
+     * these are only their labels.
+     */
+    operatorLabel: "Operator",
+    emailLabel: "Email",
+    privacyEmailLabel: "Personal data",
+    adrLabel: "Out-of-court resolution of consumer disputes",
+    adrName: "Czech Trade Inspection Authority",
+    dsaLabel: "Single point of contact under Articles 11 and 12 of the Digital Services Act",
+    dsaLanguages: "Czech, English",
+    /** The addresses and numbers the owner adds in `/admin`, when there are any. */
+    otherContactsLabel: "Other ways to reach us",
+    phoneLabel: "Phone",
   },
 
   /**
@@ -1440,27 +1490,6 @@ export const strings = {
         a: "Not at all. All skill levels are welcome. Games are casual unless a level badge says otherwise.",
       },
     ],
-  },
-
-  privacy: {
-    title: "Privacy",
-    draftBadge: "DRAFT — NOT THE REAL POLICY",
-    draftWarning:
-      "This page is a placeholder. It is not a privacy policy, it makes no promises, and it must be replaced with the real text before launch.",
-    insertionPoint: "▼ HUMAN-SUPPLIED TEXT GOES HERE ▼",
-    insertionHint:
-      "Oliver supplies the final wording. Nothing below is legally meaningful until then — these are the headings the real text needs to cover, not the text itself.",
-    outline: [
-      "Who is responsible for your data (controller identity and contact)",
-      "What is collected: email, nickname, phone if given, bookings, payments, attendance",
-      "Why it is collected and on what legal basis",
-      "Who else sees it: the hosting, database and email providers",
-      "How long it is kept",
-      "Your rights, including access, correction and deletion",
-      "How to ask for deletion, and how quickly it happens",
-    ],
-    contactLead: "Questions or a deletion request, today:",
-    back: "← Back to the games",
   },
 
   admin: {
@@ -1720,7 +1749,7 @@ export const strings = {
     organizerPhoneHint:
       "Only players holding a spot can see it.",
     durationLabel: "Duration (minutes)",
-    durationHint: "30 to 180. Empty uses 60.",
+    durationHint: "30 to 180. A new game starts at 90; empty uses 60.",
     skillHeading: "Skill level",
     skillHint:
       "Leave everything unticked for all levels — that shows no badge. Ticking every level means the same thing.",
@@ -2356,6 +2385,40 @@ export const strings = {
    * counter of games — and the copy says so, because a player who thinks they
    * bought five games will feel cheated when a game costs 200.
    */
+  /**
+   * WHAT A PURCHASE SAYS BEFORE IT IS PAID (round 40) — the lawyer's Texty pro
+   * web 3.2, 3.3, 4.1 and 7, in the player's language. The Czech overlay is the
+   * lawyer's text verbatim; the policy numbers (`{days}`, `{hours}`,
+   * `{extensionDays}`) are filled from the policy functions so the sentence can
+   * never disagree with what the database does.
+   *
+   * Every purchase is a purchase of Credits (Obchodní podmínky 5.1): a single
+   * game is one Credit spent at once, so the Credit summary and the waiver
+   * apply to every checkout, and a game checkout adds the booking summary.
+   */
+  purchase: {
+    creditsOne: "{n} Credit",
+    creditsFew: "{n} Credits",
+    creditsMany: "{n} Credits",
+    /** Texty 3.2 — directly above Stripe's Pay button. */
+    creditSummary:
+      "You're buying: {credits} (1 Credit = 1 place in one game). Total price: {amount}. Credits are valid for {days} days from when they're added, i.e. until {date}; unused Credits then expire. Credits can only be used to book Playllu games, can't be transferred and can't be exchanged for money. We add them to your account as soon as you pay. A purchase of Credits can't be withdrawn from. {terms}",
+    termsLinkLabel: "Terms and Conditions",
+    /** Texty 3.3 — the separate box; inside Stripe's form, or ours in front of it. */
+    waiver:
+      "I ask for the Credits to be delivered immediately after payment, i.e. before the 14-day withdrawal period ends. I agree that adding the Credits to my account means the service has been provided in full, and I acknowledge that I thereby lose the right to withdraw from the contract for the purchase of Credits.",
+    /** Texty 4.1 — before a booking is confirmed. */
+    reservationSummary:
+      "You're booking a place at the game on {when}, {venue}. Payment: {credits}. Cancelling: you can cancel up to {hours} hours before kick-off and your Credit comes back. If you cancel later or don't turn up, the Credit is lost. If we cancel the game, we return your Credit and extend its validity by {extensionDays} days. A booking can't be withdrawn from, because it's a leisure service provided on a specific date and time (§ 1837(j) of the Czech Civil Code). We don't organise the games; you play at your own risk.",
+    reservationTitle: "Your booking",
+    /** Texty 7 — on the booking page and in the booking confirmation. */
+    safetyTitle: "Safety",
+    safety:
+      "Football is a contact sport and injuries happen. Playllu doesn't organise the games: there is no referee, coordinator, medic or place to leave your things. You play at your own risk and on your own responsibility. Only play when your health allows it, never under the influence of alcohol or drugs, in suitable shoes and ideally with shin guards. We recommend accident and liability insurance. If someone is injured, call 112.",
+    /** Our own box in front of the form, when Stripe cannot draw its own. */
+    lockedHint: "Tick the box above to unlock payment.",
+  },
+
   pass: {
     title: "Game pass",
     lede: "Pre-buy games at a discount. It becomes credits and applies itself to your next booking.",
@@ -2365,7 +2428,7 @@ export const strings = {
      * have already decided. A 60-minute game is online-only, and a player who
      * learns that at the payment step learns it too late.
      */
-    creditUnit: "One credit is one 90-minute game. Shorter games are paid online.",
+    creditUnit: "1 Credit = 1 place in one game, whatever its length.",
     /*
      * "Game Pass" IS THE PRODUCT NAME and stays in English in every locale —
      * see the Czech and Russian overlays, which translate the strapline beneath

@@ -5,6 +5,7 @@ import { useFormStatus } from "react-dom";
 import type { AdminActionState } from "@/app/admin/games/actions";
 import {
   DURATION_DEFAULT,
+  DURATION_STANDARD,
   DURATION_MAX,
   DURATION_MIN,
   ORGANIZER_NAME_MAX,
@@ -163,10 +164,8 @@ export function GameForm({
    * it after changing the length — one visible step rather than an invisible
    * one.
    *
-   * WHAT THE PRICE DOES NOT DECIDE is whether a credit can buy the game. That
-   * keys on the DURATION — `credit_seat_minutes()` — so a 90-minute game takes
-   * one credit a seat whatever it costs, and a 60-minute one is online-only
-   * however it is priced. The two were briefly the same question and are not.
+   * WHAT THE PRICE DOES NOT DECIDE is whether a credit can buy the game: since
+   * round 40 a Credit buys a seat on ANY game, whatever its length or price.
    */
   const [format, setFormat] = useState(game?.format ?? "");
   const [surface, setSurface] = useState<string>(game?.surface ?? "");
@@ -182,11 +181,16 @@ export function GameForm({
     organizer?.organizer_name ?? defaultOrganizerName ?? "",
   );
   const [organizerPhone, setOrganizerPhone] = useState(organizer?.organizer_phone ?? "");
-  // Blank when creating rather than pre-filled with 60: a number already in the
-  // box is a number nobody chose, and null is a real answer that renders as the
-  // standard length. The placeholder says what blank will mean.
+  // ~~Blank when creating~~ — ROUND 40: a NEW game starts at the standard
+  // ninety minutes, because the owner's standard game is 90 and a blank box
+  // still means the 60-minute fallback history was written under. Editing a
+  // legacy row with no length keeps it blank.
   const [durationMinutes, setDurationMinutes] = useState(
-    game?.duration_minutes != null ? String(game.duration_minutes) : "",
+    game?.duration_minutes != null
+      ? String(game.duration_minutes)
+      : game
+        ? ""
+        : String(DURATION_STANDARD),
   );
   /*
    * WHAT THE LENGTH SUGGESTS. A blank duration is the standard length — which

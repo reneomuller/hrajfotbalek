@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { appCapabilities } from "@/lib/db/capabilities";
-import { gameTakesCredit } from "@/lib/games/price";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { BookingError } from "@/components/BookingError";
@@ -13,7 +12,8 @@ import { readResumeIntent } from "@/lib/booking/resume";
 import { formatCzk, formatGameDateTime } from "@/lib/format";
 import { getGameById } from "@/lib/games/queries";
 import { refundCutoffHours } from "@/lib/policy/refundCutoff";
-import { getStrings } from "@/lib/i18n/server";
+import { getLocale, getStrings } from "@/lib/i18n/server";
+import { SafetyNotice } from "@/components/legal/SafetyNotice";
 import { runCreateBooking } from "./actions";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -157,15 +157,15 @@ export default async function BookPage({ params, searchParams }: BookPageProps) 
             what it was: three pills.
           */
           partyUpToThirteen={(await appCapabilities()).partyUpToThirteen}
-          /*
-            WHETHER A CREDIT CAN BUY THIS GAME AT ALL (round 35 v5, item 1).
-            One credit is one 90-minute seat; a game of any other length is
-            online-only, and the credit option is not rendered rather than
-            rendered disabled.
-          */
-          takesCredit={gameTakesCredit(game.duration_minutes)}
+          reservation={{
+            when: formatGameDateTime(game.starts_at, await getLocale()),
+            venue: game.venue,
+            cutoffHours: await refundCutoffHours(),
+          }}
         />
       </div>
+
+      <SafetyNotice title={t.purchase.safetyTitle} body={t.purchase.safety} />
 
       {/*
         Reassurance before the commit, not after it: the question a player asks

@@ -71,6 +71,12 @@ export const DURATION_MAX = 180;
  */
 export const DURATION_DEFAULT = policy.game.durationMinutes;
 
+/**
+ * What a NEW game's length field starts at (round 40): the standard game is
+ * ninety minutes. `DURATION_DEFAULT` above stays what a blank box means.
+ */
+export const DURATION_STANDARD = policy.game.standardMinutes;
+
 /** Mirrors `games_subs_range` and `assert_game_shape`. */
 export const SUBS_MIN = 0;
 export const SUBS_MAX = 20;

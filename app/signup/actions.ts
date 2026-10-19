@@ -2,7 +2,9 @@
 
 import { redirect } from "next/navigation";
 import { createServerSupabaseClient } from "@/lib/supabase/clients";
-import { getStrings } from "@/lib/i18n/server";
+import { getLocale, getStrings } from "@/lib/i18n/server";
+import { isLocale } from "@/lib/i18n/locales";
+import { recordSignupConsents } from "@/lib/legal/recordConsent";
 import { siteOrigin } from "@/lib/auth/origin";
 import {
   parseSignupForm,
@@ -69,8 +71,6 @@ async function messageFor(code: SignupErrorCode): Promise<string> {
       return t.auth.phoneInvalid;
     case "TOS_REQUIRED":
       return t.auth.tosRequired;
-    case "CONSENT_REQUIRED":
-      return t.auth.gdprRequired;
   }
 }
 
@@ -115,7 +115,9 @@ export async function startSignup(
     password: submission.password,
     options: {
       emailRedirectTo: callback.toString(),
-      data: signupMetadata(submission),
+      // The language the boxes were READ in travels with the profile, because
+      // the verification link may open in another browser (round 40).
+      data: { ...signupMetadata(submission), consent_locale: await getLocale() },
     },
   });
 
@@ -233,6 +235,11 @@ export async function writeProfileFromMetadata(): Promise<ProfileWriteResult> {
     return { ok: false, message: t.errors.generic };
   }
 
+  const metadata = user.user_metadata as Record<string, unknown> | null;
+  await recordSignupConsents(supabase, {
+    locale: isLocale(metadata?.consent_locale) ? metadata.consent_locale : await getLocale(),
+    marketingOptIn: profile.marketingOptIn,
+  });
   return { ok: true };
 }
 
@@ -257,7 +264,7 @@ export async function finishSignup(
   // The email and password are already settled, so the shared parser is fed the
   // address from the session and a placeholder secret it will not look at.
   const proxy = new FormData();
-  for (const key of ["nickname", "country", "skill", "phone", "tos", "gdpr", "marketing"]) {
+  for (const key of ["nickname", "country", "skill", "phone", "tos", "marketing"]) {
     const value = formData.get(key);
     if (value !== null) proxy.set(key, value);
   }
@@ -326,6 +333,11 @@ export async function finishSignup(
       values: submittedValues(formData),
     };
   }
+
+  await recordSignupConsents(supabase, {
+    locale: await getLocale(),
+    marketingOptIn: parsed.value.marketingOptIn,
+  });
 
   const next = String(formData.get("next") ?? "/games");
   redirect(next.startsWith("/") ? next : "/games");

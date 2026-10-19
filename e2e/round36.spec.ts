@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { LOCALE_COOKIE } from "../lib/i18n/locales";
-import { CREDIT_SEAT_MINUTES, priceForDurationCzk } from "../lib/games/price";
+import { priceForDurationCzk } from "../lib/games/price";
+import { policy } from "../lib/policy";
 import { players, serviceClient, signInAs } from "./helpers/session";
 import {
   createScratchGame,
@@ -61,16 +62,16 @@ test("the duration PREFILLS the price, and the organizer types over it", async (
   const price = page.getByTestId("price-czk");
   const duration = page.getByTestId("duration-minutes");
 
-  // Act / Assert — the length moves the box.
+  // Assert — a NEW game starts at the standard ninety minutes (round 40).
+  await expect(duration, "a new game did not start at 90 minutes").toHaveValue("90");
+  await expect(price, "the standard game did not prefill 180").toHaveValue("180");
+
+  // Act / Assert — ~~60 prefilled 150~~: since round 40 every length prefills
+  // one Credit's price.
   await duration.fill("60");
-  await expect(price, "60 minutes did not prefill 150").toHaveValue("150");
-  await duration.fill("90");
-  await expect(price, "90 minutes did not prefill 180").toHaveValue("180");
+  await expect(price, "60 minutes did not prefill 180").toHaveValue("180");
   await duration.fill("120");
-  await expect(
-    price,
-    "an unmapped length did not take the 90-minute prefill",
-  ).toHaveValue("180");
+  await expect(price, "120 minutes did not prefill 180").toHaveValue("180");
 
   // And the box is the organizer's, not the mapping's.
   await price.fill(String(OFF_MAPPING_HIGH));
@@ -104,8 +105,8 @@ test("CHANGING THE DURATION OVERWRITES A CUSTOMISED PRICE, on purpose", async ({
   // Act
   await page.getByTestId("duration-minutes").fill("60");
 
-  // Assert
-  await expect(price, "the customised price survived a duration change").toHaveValue("150");
+  // Assert — every length prefills 180 since round 40.
+  await expect(price, "the customised price survived a duration change").toHaveValue("180");
 });
 
 test("a price of zero never leaves the form", async ({ page, context }) => {
@@ -170,11 +171,11 @@ test("the typed price is what the database stores and what the game page shows",
       .eq("id", gameId)
       .single();
     expect(row!.price_czk, "the row did not keep the typed price").toBe(OFF_MAPPING_HIGH);
-    expect(row!.duration_minutes).toBe(CREDIT_SEAT_MINUTES);
+    expect(row!.duration_minutes).toBe(policy.game.standardMinutes);
     expect(
       row!.price_czk,
       "the fixture is priced ON the mapping, so it proves nothing",
-    ).not.toBe(priceForDurationCzk(CREDIT_SEAT_MINUTES));
+    ).not.toBe(priceForDurationCzk(policy.game.standardMinutes));
 
     // ...and the page, which is where a player meets the number.
     await page.goto(`/game/${gameId}`, { waitUntil: "networkidle" });
@@ -252,7 +253,7 @@ test("a 90-minute game priced BELOW the credit nominal still takes exactly one c
    */
   // Arrange
   const game = await createScratchGame({
-    durationMinutes: CREDIT_SEAT_MINUTES,
+    durationMinutes: policy.game.standardMinutes,
     priceCzk: 150,
     hoursFromNow: 24 * 4,
   });
@@ -284,40 +285,9 @@ test("a 90-minute game priced BELOW the credit nominal still takes exactly one c
   }
 });
 
-test("a 60-minute game priced AT the credit nominal is still online-only", async ({
-  page,
-  context,
-}) => {
-  /*
-   * THE MIRROR, AND THE SHARPER HALF. 180 is exactly what a credit is worth,
-   * so a product that decided eligibility by comparing the price to the credit
-   * nominal would offer this game — and it must not, because it is sixty
-   * minutes long.
-   */
-  // Arrange
-  const game = await createScratchGame({
-    durationMinutes: 60,
-    priceCzk: 180,
-    hoursFromNow: 24 * 3,
-  });
-  try {
-    await setWalletTo(players.creditRich.id, 3 * 180);
-    await signInAs(context, players.creditRich);
-    await context.addCookies([
-      { name: LOCALE_COOKIE, value: "en", domain: "localhost", path: "/" },
-    ]);
-
-    // Act
-    await page.goto(`/game/${game.id}/book`, { waitUntil: "networkidle" });
-
-    // Assert
-    await expect(page.getByTestId("pay-online")).toBeVisible();
-    await expect(
-      page.getByTestId("pay-credit"),
-      "a sixty-minute game offered a credit because its price matched the nominal",
-    ).toHaveCount(0);
-    expect(await page.locator("body").innerText()).toContain("180");
-  } finally {
-    await destroyScratchGame(game.id);
-  }
-});
+/*
+ * ~~"a 60-minute game priced AT the credit nominal is still online-only"~~ —
+ * RETIRED IN ROUND 40 with the rule it pinned: a Credit now pays for a game of
+ * any length (Obchodní podmínky 5.1). The opposite is asserted in
+ * `e2e/credits-any-length.spec.ts`.
+ */

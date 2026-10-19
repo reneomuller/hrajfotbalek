@@ -14,18 +14,32 @@ import { strings } from "@/lib/strings";
 /**
  * The sections that MUST be fully translated.
  *
- * This list is the contract. `admin`, `emails` and `privacy` are absent on
- * purpose — see lib/i18n/locales.ts — and `brand` is a name, not copy.
+ * This list is the contract. `admin` and `emails` are absent on purpose — see
+ * lib/i18n/locales.ts — and `brand` is a name, not copy. (`privacy` was here
+ * too until 2026-10-19, when its DRAFT placeholder gave way to the lawyer's
+ * Czech document and the section was deleted.)
  */
 const PLAYER_FACING = [
   "meta",
   "nav",
   "siteFooter",
+  /*
+   * The legal pages' furniture and the operator's contact block (2026-10-19).
+   * The documents are Czech for everyone; what surrounds them is not, because
+   * the notice saying which text binds is useless in a language the reader
+   * cannot read.
+   */
+  "legal",
   "notFound",
   "landing",
   "auth",
   "games",
   "booking",
+  /*
+   * What a purchase says before it is paid (round 40) — the lawyer's summary,
+   * waiver, booking summary and safety notice. The Czech is the lawyer's own.
+   */
+  "purchase",
   "payment",
   "account",
   /*

@@ -140,22 +140,11 @@ describe("parseSignupForm", () => {
       expect(result).toMatchObject({ ok: false, field: "tos", code: "TOS_REQUIRED" });
     });
 
-    it("refuses a submission with no data-processing consent", () => {
+    it("needs no privacy box — the privacy policy is a link, not a consent", () => {
+      // Round 40, the lawyer's Texty 2.2: processing rests on the contract, so
+      // the form links the policy beneath the terms box instead of asking.
       const result = parseSignupForm(form({ gdpr: "" }));
-      expect(result).toMatchObject({ ok: false, field: "gdpr", code: "CONSENT_REQUIRED" });
-    });
-
-    it("does not let one stand in for the other, in either direction", () => {
-      // The whole reason they are two boxes: neither implies the other, and the
-      // error has to name the one that is missing.
-      expect(parseSignupForm(form({ tos: "on", gdpr: "" }))).toMatchObject({
-        field: "gdpr",
-        code: "CONSENT_REQUIRED",
-      });
-      expect(parseSignupForm(form({ tos: "", gdpr: "on" }))).toMatchObject({
-        field: "tos",
-        code: "TOS_REQUIRED",
-      });
+      expect(result).toMatchObject({ ok: true });
     });
 
     it("treats the optional preference as optional", () => {

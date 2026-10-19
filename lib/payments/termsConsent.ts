@@ -1,6 +1,13 @@
 /**
  * THE TERMS BOX, INSIDE STRIPE'S FORM (round 38).
  *
+ * ROUND 40: its words are replaced through
+ * `custom_text.terms_of_service_acceptance` with the lawyer's withdrawal waiver
+ * (Texty 3.3), and the Credit summary goes above Pay through
+ * `custom_text.submit` — see `createEmbeddedSession`. Stripe records the tick as
+ * `consent.terms_of_service = "accepted"`, which the webhook writes to
+ * `consent_records`.
+ *
  * `consent_collection.terms_of_service: "required"` makes embedded Checkout
  * draw a required "I agree to the Terms of Service" box directly above its
  * Pay button, in the buyer's language, and record the answer on the session

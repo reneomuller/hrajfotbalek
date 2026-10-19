@@ -12,6 +12,7 @@ import {
 } from "@/lib/auth/signupProfile";
 import type { CountryOption } from "@/lib/auth/countries";
 import { useStrings } from "@/components/LocaleProvider";
+import { LinkedText } from "@/components/form/LinkedText";
 
 const initialState: SignupFormState = { status: "idle" };
 
@@ -234,12 +235,13 @@ export function SignupForm({
       </label>
 
       {/*
-        THE TWO LEGAL ACTS, TOGETHER AND APART FROM THE PREFERENCE.
-        Contract §3.1 as corrected 2026-07-31: accepting the terms and
-        consenting to data processing are separate acts with separate errors —
-        one box covering both makes the consent non-specific, which is what
-        makes it invalid. The grouping is part of the requirement, not styling:
-        a preference that looks like a legal act gets ticked unread.
+        THE LEGAL ACT, APART FROM THE PREFERENCE (round 40, the lawyer's Texty
+        2.2). ~~Two boxes, terms and privacy.~~ One required box carries the
+        terms, the community rules, the "we do not organise the games" notice
+        and the photo permission; the privacy policy is a LINK beneath it,
+        because processing rests on the contract and not on a consent. The
+        grouping still matters: a preference that looks like a legal act gets
+        ticked unread.
       */}
       <fieldset className="flex flex-col gap-3 rounded-card border border-hairline-strong p-4">
         <legend className={`px-2 ${LABEL_CLASS}`}>{t.auth.legalGroupLabel}</legend>
@@ -252,31 +254,27 @@ export function SignupForm({
             defaultChecked={v?.tos ?? false}
             className="mt-1 accent-volt"
           />
-          <span>
-            {t.auth.tosLabel}{" "}
-            <Link href="/terms" className="underline opacity-70">
-              {t.auth.tosLink}
-            </Link>
+          <span data-testid="tos-agreement">
+            <LinkedText
+              template={t.auth.tosAgreement}
+              links={{
+                terms: { href: "/terms", label: t.auth.tosTermsLink },
+                rules: { href: "/terms#pravidla", label: t.auth.tosRulesLink },
+              }}
+            />
           </span>
         </label>
         <FieldError show={state.field === "tos"} message={state.message} />
 
-        <label className="flex items-start gap-3 text-sm">
-          <input
-            key={`gdpr-${valuesKey}`}
-            type="checkbox"
-            name="gdpr"
-            defaultChecked={v?.gdpr ?? false}
-            className="mt-1 accent-volt"
-          />
-          <span>
-            {t.auth.gdprLabel}{" "}
-            <Link href="/privacy" className="underline opacity-70">
-              {t.auth.gdprLink}
-            </Link>
-          </span>
-        </label>
-        <FieldError show={state.field === "gdpr"} message={state.message} />
+        <Link
+          href="/privacy"
+          target="_blank"
+          rel="noopener noreferrer"
+          data-testid="privacy-how"
+          className="ml-7 text-sm underline opacity-70"
+        >
+          {t.auth.privacyHowLink}
+        </Link>
       </fieldset>
 
       <div className="flex flex-col gap-2">

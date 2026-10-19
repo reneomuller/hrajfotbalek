@@ -1,41 +1,49 @@
 /**
- * Which revision of the legal documents a player is being asked to accept.
+ * Which revision of the legal documents a player is being asked to accept,
+ * and who the operator behind them is.
  *
- * Stamped onto `players.tos_version` by `complete_signup_v2` and rendered on
- * `/terms`, so the record of what someone agreed to and the document they were
- * shown cannot drift apart. Every acceptance is recorded against this string —
- * so it changes when, and only when, the words change.
+ * THE DOCUMENTS ARE THE LAWYER'S, delivered 2026-10-15 as version 2.0 and
+ * published 2026-10-19: `content/legal/original/`, rendered by
+ * `lib/content/legalDocuments.ts`. They replace the 1.0 terms of 2026-08-01
+ * and the DRAFT privacy placeholder.
  *
- * 1.0 is the human-authored text delivered 2026-08-01 and effective from that
- * date, in `content/terms.en.md` (authoritative) and `content/terms.cs.md`.
+ * CZECH ONLY, AND THAT REPLACES THE 2026-08-01 RULING. That ruling said a
+ * language without an authored document falls back to English behind a
+ * notice. There is no English any more: contracts are concluded in Czech
+ * (Terms 1.5), and the lawyer delivered Czech alone. So every locale shows the
+ * Czech text, and every locale except Czech is told, in its own language,
+ * that the Czech text binds. The documents are never machine-translated — an
+ * unreviewed translation of a legally operative text is worse than the
+ * original in a language the reader can identify.
+ *
+ * Each version string equals the "verze" printed in its document's header,
+ * and a unit test holds them together: these strings are stamped onto
+ * consent records, so the record of what someone agreed to and the words they
+ * were shown cannot drift apart. Bump one when, and only when, its words
+ * change.
  */
-export const TERMS_VERSION = "1.0" as const;
+export const TERMS_VERSION = "2.0" as const;
+
+export const PRIVACY_VERSION = "2.0" as const;
+
+export const COOKIES_VERSION = "2.0" as const;
 
 /**
- * The privacy policy has NOT been delivered.
+ * The operator, from the lawyer's brief (item 1.1) and the owner's ruling of
+ * 2026-10-19: the operator is Playllu, the holding company. General and
+ * consumer matters go to `email`; personal-data matters to `privacyEmail`.
+ * No phone number is published yet.
  *
- * Terms of service and a privacy policy are different documents, and only the
- * first arrived. `/privacy` therefore keeps its DRAFT banner and this version
- * keeps saying draft — contract §3.1 and v2.5 §8 both forbid generated legal
- * copy, and a plausible-looking generated policy is the specific failure mode
- * they exist to prevent: it gets shipped.
- *
- * This matters more than a placeholder page usually would, because the signup
- * form's second required box is a GDPR data-processing consent that links here.
- * Asking someone to consent to a document that does not exist is the one part
- * of signup that cannot be fixed after launch.
- *
- * DEFERRED BY RULING (2026-08-01) to the G3 public-launch checklist, alongside
- * the domain cutover and the Vercel Pro flip. When the text lands it takes the
- * SAME shape the terms took, which was ratified in the same ruling:
- *
- *   - a document per language under `content/`, never string-table keys —
- *     a table falls back key by key, and half a clause in the wrong language is
- *     worse than a whole document in a language the reader can identify;
- *   - a language with no authored text renders English behind the
- *     not-translated notice, rather than an unreviewed machine translation of a
- *     document that is legally operative;
- *   - this constant bumps off `draft-` in the same change that removes the
- *     banner, so the version and the words can never disagree.
+ * Facts rather than copy, which is why they live here and not in
+ * `lib/strings.ts`: an address is the same string in every language.
  */
-export const PRIVACY_VERSION = "draft-2026-07" as const;
+export const OPERATOR_CONTACT = {
+  name: "Playllu",
+  email: "info@playllu.com",
+  privacyEmail: "privacy@hrajfotbal.com",
+  /** Česká obchodní inspekce — the out-of-court body for consumer disputes. */
+  adrUrl: "https://coi.gov.cz/mimosoudni-reseni-spotrebitelskych-sporu-adr/",
+} as const;
+
+/** Where the terms are published as a PDF (the lawyer's brief, item 1.2). */
+export const TERMS_PDF_PATH = "/legal/obchodni-podminky.pdf";

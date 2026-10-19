@@ -222,10 +222,11 @@ test("signup collects the profile and both legal acts, grouped apart from the pr
   await expect(page.locator('select[name="country"]')).toBeVisible();
   await expect(page.locator('input[name="skill"]').first()).toBeVisible();
 
-  // Three boxes: two legal acts and one preference. The count is the assertion
-  // — merging the consents is the mistake this guards against.
+  // ~~Three boxes~~ — round 40, the lawyer's Texty 2.2: ONE legal box, the
+  // privacy policy as a link beneath it, and the newsletter apart.
   await expect(page.locator('input[name="tos"]')).toBeVisible();
-  await expect(page.locator('input[name="gdpr"]')).toBeVisible();
+  await expect(page.locator('input[name="gdpr"]')).toHaveCount(0);
+  await expect(page.getByTestId("privacy-how")).toHaveAttribute("href", "/privacy");
   await expect(page.locator('input[name="marketing"]')).toBeVisible();
 });
 
@@ -233,15 +234,14 @@ test("the terms are readable without an account", async ({ page }) => {
   // Someone is asked to accept these at signup, so they have to be reachable
   // before signing up — and findable again afterwards.
   await page.goto("/terms");
-  await expect(page.getByRole("heading", { name: /terms of service/i })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { level: 1, name: "Obchodní podmínky" }),
+  ).toBeVisible();
 
-  // TWO version strings, and their agreement is the property. One is inside the
-  // document ("Version 1.0, effective 01.08.2026"), the other is the page's own
-  // stamp read from TERMS_VERSION — the same constant written onto every
-  // acceptance. If they ever disagree, the consent record points at words
-  // nobody was shown.
-  await expect(page.getByText("Version 1.0, effective 01.08.2026")).toBeVisible();
-  await expect(page.getByText("Version 1.0", { exact: true })).toBeVisible();
+  // The version the document prints is the TERMS_VERSION stamped onto every
+  // acceptance; `lib/content/__tests__/legalDocuments.test.tsx` holds the two
+  // together, and this is the reader-side half: the line is really on the page.
+  await expect(page.getByText("účinné od 19. 10. 2026, verze 2.0")).toBeVisible();
 });
 
 test("set-password is a page, not a gate", async ({ page, context }) => {
@@ -303,15 +303,16 @@ test("a signup rejected for a missing consent keeps every other field", async ({
   // outright and this test passes for the wrong reason — the form never posts,
   // so of course every field still holds what was typed into it.
   await page.fill('input[name="phone"]', "+420600123456");
-  // One consent ticked, the other missed — so the error must not blame both.
-  await page.check('input[name="tos"]');
+  // The newsletter ticked, the terms missed — so the error must name the terms
+  // and must not reset the box that WAS ticked.
+  await page.check('input[name="marketing"]');
 
   const submit = page.getByTestId("signup-submit");
   await submit.scrollIntoViewIfNeeded();
   await submit.click();
 
   // The error arrives...
-  await expect(page.locator("body")).toContainText(/privacy|consent|policy/i);
+  await expect(page.locator("body")).toContainText(/accept the terms/i);
 
   // ...and the work survives it.
   await expect(page.locator('input[name="email"]')).toHaveValue(email);
@@ -319,8 +320,8 @@ test("a signup rejected for a missing consent keeps every other field", async ({
   await expect(page.locator('select[name="country"]')).toHaveValue("CZ");
   await expect(page.locator('input[name="skill"][value="intermediate"]')).toBeChecked();
   // The box that WAS ticked stays ticked; the missing one stays clear.
-  await expect(page.locator('input[name="tos"]')).toBeChecked();
-  await expect(page.locator('input[name="gdpr"]')).not.toBeChecked();
+  await expect(page.locator('input[name="marketing"]')).toBeChecked();
+  await expect(page.locator('input[name="tos"]')).not.toBeChecked();
 
   await expect(page.locator('input[name="phone"]')).toHaveValue("+420600123456");
 
@@ -349,7 +350,6 @@ test("signup refuses a missing phone number on the server, not only in the brows
   await page.selectOption('select[name="country"]', "CZ");
   await page.check('input[name="skill"][value="intermediate"]');
   await page.check('input[name="tos"]');
-  await page.check('input[name="gdpr"]');
 
   // Defeat the client-side gate so the submission actually reaches the action.
   await page.evaluate(() => {

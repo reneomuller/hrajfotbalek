@@ -49,10 +49,28 @@ export const cs: StringsOverlay = {
   },
 
   siteFooter: {
-    privacy: "Soukromí",
-    terms: "Podmínky",
     contact: "Kontakt",
     contactTitle: "Ozvi se nám",
+  },
+
+  // The operator block's labels are the lawyer's own words (brief item 1.1).
+  legal: {
+    termsTitle: "Obchodní podmínky",
+    privacyTitle: "Zásady zpracování osobních údajů",
+    cookiesTitle: "Zásady používání cookies",
+    footerNavLabel: "Právní informace",
+    czechOnlyNotice: "Tento dokument je v češtině. Právně závazné je české znění.",
+    downloadPdf: "Stáhnout podmínky v PDF",
+    back: "← Zpět na zápasy",
+    operatorLabel: "Provozovatel",
+    emailLabel: "E-mail",
+    privacyEmailLabel: "Ochrana osobních údajů",
+    adrLabel: "Mimosoudní řešení spotřebitelských sporů",
+    adrName: "Česká obchodní inspekce",
+    dsaLabel: "Jednotné kontaktní místo podle čl. 11 a 12 nařízení o digitálních službách",
+    dsaLanguages: "čeština, angličtina",
+    otherContactsLabel: "Další kontakty",
+    phoneLabel: "Telefon",
   },
 
   notFound: {
@@ -85,6 +103,9 @@ export const cs: StringsOverlay = {
     potmTitle: "Hráč měsíce",
     potmEmpty: "Zatím nikdo — může to být klidně ty.",
     potmHours: "{hours} h na hřišti tenhle měsíc",
+    // The lawyer's sentence, verbatim (brief item 1.4).
+    howItWorksNote:
+      "Playllu tě propojí s lidmi, kteří si chtějí zahrát fotbal, a zajistí hřiště, míče, rozlišováky a rukavice. Zápasy ale neorganizujeme – na hřišti není rozhodčí, koordinátor ani zdravotník. Hra je na vás.",
     community: {
       title: "Přidej se k nám",
       body: "Sleduj naše sítě a neuteče ti nic z dění v komunitě",
@@ -160,8 +181,10 @@ export const cs: StringsOverlay = {
     phoneHint: "Vidí ho jen organizátor, a jen u zápasů, které máš zarezervované.",
 
     legalGroupLabel: "Než začneš",
-    tosLabel: "Souhlasím s obchodními podmínkami.",
-    tosLink: "Přečíst podmínky",
+    tosAgreement: "Seznámil(a) jsem se s {terms} a s {rules} a souhlasím s nimi. Beru na vědomí, že Playllu zápasy neorganizuje a že se jich účastním na vlastní nebezpečí. Uděluji svolení k pořizování fotografií a videí ze Zápasů a k jejich užití pro marketing a na sociálních sítích Playllu podle článku 13 Obchodních podmínek.",
+    tosTermsLink: "Obchodními podmínkami",
+    tosRulesLink: "Pravidly komunity a hry",
+    privacyHowLink: "Jak zpracováváme tvoje údaje",
     tosRequired: "Pro pokračování prosím potvrď podmínky.",
     preferencesGroupLabel: "Nepovinné",
 
@@ -189,10 +212,7 @@ export const cs: StringsOverlay = {
     nicknameInvalid: "Použij jen písmena, číslice, mezery, _ a - (max. 20 znaků).",
     phoneRefused: "Tohle telefonní číslo nejde použít. Zkus jiné, nebo nám napiš.",
     nicknameTaken: "Tahle přezdívka je zabraná. Zkus jinou.",
-    gdprLabel: "Souhlasím se zásadami ochrany osobních údajů.",
-    gdprLink: "Přečíst zásady ochrany osobních údajů",
-    gdprRequired: "Bez souhlasu se zásadami to bohužel nejde.",
-    marketingLabel: "Posílejte mi e-maily o nových zápasech a nabídkách. Odhlásit se můžu kdykoli.",
+    marketingLabel: "Chci dostávat newsletter a novinky Playllu e-mailem. Odhlásit se můžu kdykoli.",
     createAccount: "Založit účet",
   },
 
@@ -437,6 +457,8 @@ export const cs: StringsOverlay = {
     cancelReassuranceCutoff:
       "Zrušit můžeš až do {hours} h před výkopem — všechno se ti vrátí jako kredit.",
     confirmBooking: "Potvrdit rezervaci",
+    confirmWithCredits: "Závazně rezervovat za {credits}",
+    termsAgree: "Souhlasím s {terms}.",
     guestsAddedOne: "+{n} host potvrzen",
     guestsAddedFew: "+{n} hosté potvrzeni",
     guestsAddedMany: "+{n} hostů potvrzeno",
@@ -455,7 +477,11 @@ export const cs: StringsOverlay = {
     cancelTitle: "Zrušit rezervaci?",
     cancelKeep: "Nechat si místo",
     cancelFailed: "Zrušení se nepovedlo. Rezervaci máš pořád.",
-    refundAsCredits: "Co jsi zaplatil, se ti vrátí jako kredity.",
+    refundAsCredits: "Do výkopu zbývá víc než {hours} hodin, takže se ti Kredit vrátí.",
+    cantMakeIt: "Nemůžu přijít",
+    barCantMakeIt: "Nemůžu přijít",
+    cantMakeItTitle: "Nemůžeš přijít?",
+    cantMakeItConfirm: "Uvolnit místo",
     // DRAFT — flagged for the standing native-review batch.
     refundLostLate:
       "Do výkopu zbývá méně než {hours} hodin, takže se ti tenhle zápas nevrátí do kreditu. Zrušením ale uvolníš místo pro někoho dalšího.",
@@ -677,9 +703,23 @@ export const cs: StringsOverlay = {
     tryAgain: "Zkusit znovu",
   },
 
+  purchase: {
+    creditsOne: "{n} Kredit",
+    creditsFew: "{n} Kredity",
+    creditsMany: "{n} Kreditů",
+    creditSummary: "Kupuješ: {credits} (1 Kredit = 1 místo na jednom Zápase). Cena celkem: {amount}. Platnost Kreditů: {days} dní od připsání, tj. do {date}; nevyčerpané Kredity poté propadají. Kredity lze použít jen na Rezervace Zápasů Playllu, nejsou převoditelné a nelze je vyměnit za peníze. Kredity ti připíšeme okamžitě po zaplacení. Od nákupu Kreditů nelze odstoupit. {terms}",
+    termsLinkLabel: "Obchodní podmínky",
+    waiver: "Žádám o okamžité dodání Kreditů po zaplacení, tedy ještě před uplynutím 14denní lhůty pro odstoupení od smlouvy. Souhlasím s tím, že připsáním Kreditů na můj účet je plnění poskytnuto v plném rozsahu, a beru na vědomí, že tím ztrácím právo od smlouvy o nákupu Kreditů odstoupit.",
+    reservationSummary: "Rezervuješ místo na Zápase {when}, {venue}. Úhrada: {credits}. Zrušení: Rezervaci můžeš zrušit nejpozději {hours} hodin před začátkem Zápasu, Kredit se ti vrátí. Při pozdějším zrušení nebo neúčasti Kredit propadá. Když Zápas zrušíme my, vrátíme ti Kredit a prodloužíme jeho platnost o {extensionDays} dní. Od Rezervace nelze odstoupit, protože jde o službu volného času poskytovanou v určitý den a čas (§ 1837 písm. j) občanského zákoníku). Zápas neorganizujeme; hraješ na vlastní nebezpečí.",
+    reservationTitle: "Tvoje rezervace",
+    safetyTitle: "Bezpečnost",
+    safety: "Fotbal je kontaktní sport a hrozí při něm úraz. Playllu zápasy neorganizuje: na hřišti není rozhodčí, koordinátor, zdravotník ani úschova věcí. Hraješ na vlastní nebezpečí a na vlastní odpovědnost. Hraj jen tehdy, když ti to dovoluje zdravotní stav, nikdy pod vlivem alkoholu nebo drog, ve vhodné obuvi a ideálně s chrániči holení. Doporučujeme mít úrazové pojištění a pojištění odpovědnosti. Při zranění volej 112.",
+    lockedHint: "Zaškrtni políčko nahoře a platba se odemkne.",
+  },
+
   pass: {
     title: "Herní permanentka",
-    creditUnit: "Jeden kredit je jeden 90minutový zápas. Kratší zápasy se platí online.",
+    creditUnit: "1 Kredit = 1 místo na jednom Zápase, ať trvá jakkoli dlouho.",
     lede: "Předplať si zápasy se slevou. Přistanou ti kredity a samy se použijí na další rezervaci.",
     // The product name stays English in every locale — see lib/strings.ts.
     panelTitle: "Game Pass",

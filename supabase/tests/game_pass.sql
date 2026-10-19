@@ -285,10 +285,9 @@ begin
     'the credit lands as a BATCH row carrying an expiry');
 
   perform pg_temp.ok(
-    (select expires_at > now() + interval '25 days'
-       and expires_at < now() + interval '35 days'
+    (select expires_at = now() + interval '60 days'
        from public.credit_ledger where id = v_batch),
-    'the 5-pass expires in about a month');
+    'the 5-pass expires in sixty days — every Credit does since round 40');
 
   -- ALL THREE NUMBERS on the event, because they differ (§4.2).
   perform pg_temp.ok(
@@ -336,8 +335,11 @@ begin
     v_result.credited_czk::text);
 
   perform pg_temp.ok(
-    pg_temp.batch_count('bbbb0000-0000-0000-0000-0000000020a2') = 0,
-    'and it carries NO expiry — an unasked bonus is not a kindness when it makes money run out');
+    exists (select 1 from public.credit_ledger
+             where player_id = 'bbbb0000-0000-0000-0000-0000000020a2'
+               and reason = 'topup' and delta_czk = 840
+               and expires_at = now() + interval '60 days'),
+    'and it is valid sixty days like every Credit — ~~NO expiry~~ ended in round 40');
 end $$;
 
 reset role;
@@ -365,8 +367,11 @@ begin
     v_result.credited_czk::text);
 
   perform pg_temp.ok(
-    pg_temp.batch_count('bbbb0000-0000-0000-0000-0000000020a2') = 0,
-    'and no expiry — it is a mispaid pass, which is a top-up');
+    exists (select 1 from public.credit_ledger
+             where player_id = 'bbbb0000-0000-0000-0000-0000000020a2'
+               and reason = 'topup' and delta_czk = 1296
+               and expires_at = now() + interval '60 days'),
+    'and it is a top-up, valid sixty days like every Credit since round 40');
 end $$;
 
 reset role;
@@ -418,8 +423,11 @@ begin
     v_result.credited_czk::text);
 
   perform pg_temp.ok(
-    pg_temp.batch_count('cccc0000-0000-0000-0000-0000000020a3') = 0,
-    'and it carries NO expiry — a short payment is a top-up, and top-ups do not expire');
+    exists (select 1 from public.credit_ledger
+             where player_id = 'cccc0000-0000-0000-0000-0000000020a3'
+               and reason = 'topup' and delta_czk = 690
+               and expires_at = now() + interval '60 days'),
+    'and it is a top-up — valid sixty days since round 40, when top-ups began to expire');
 end $$;
 
 reset role;
@@ -546,8 +554,12 @@ begin
     pg_temp.balance('cccc0000-0000-0000-0000-0000000020a3')::text);
 
   perform pg_temp.ok(
-    pg_temp.batch_count('cccc0000-0000-0000-0000-0000000020a3') = 0,
-    'and it credits WITHOUT an expiry — Phase 1 behaviour, unchanged');
+    exists (select 1 from public.credit_ledger
+             where player_id = 'cccc0000-0000-0000-0000-0000000020a3'
+               and reason = 'cancellation_credit' and delta_czk = 180
+               and expires_at is not null),
+    'and since round 40 the paid price comes back as a Credit that expires — '
+    'sixty days from the payment, not unexpiring');
 end $$;
 
 reset role;

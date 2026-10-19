@@ -1,7 +1,7 @@
 "use client";
 
 import type { Ref } from "react";
-import Link from "next/link";
+import { LinkedText } from "@/components/form/LinkedText";
 import { useStrings } from "@/components/LocaleProvider";
 import { TERMS_FIELD } from "@/lib/legal/terms";
 
@@ -51,15 +51,10 @@ export function TermsCheckbox({
           className="mt-1 accent-volt"
         />
         <span>
-          {t.auth.tosLabel}{" "}
-          <Link
-            href="/terms"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="underline opacity-70"
-          >
-            {t.auth.tosLink}
-          </Link>
+          <LinkedText
+            template={t.booking.termsAgree}
+            links={{ terms: { href: "/terms", label: t.auth.tosTermsLink } }}
+          />
         </span>
       </label>
       {error && (

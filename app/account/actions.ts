@@ -9,7 +9,8 @@ import { dispatchEmail } from "@/lib/email/dispatch";
 import { createServerSupabaseClient, createServiceRoleSupabaseClient } from "@/lib/supabase/clients";
 import { getSessionUser } from "@/lib/auth/session";
 import { toBookingErrorCode, type BookingErrorCode } from "@/lib/booking/errors";
-import { getStrings } from "@/lib/i18n/server";
+import { getLocale, getStrings } from "@/lib/i18n/server";
+import { recordOwnConsent } from "@/lib/legal/recordConsent";
 import { siteOrigin } from "@/lib/auth/origin";
 import { PASSWORD_MIN_LENGTH, SKILL_LEVELS, type SkillLevel } from "@/lib/auth/signupProfile";
 import { NICKNAME_PATTERN } from "@/lib/auth/nickname";
@@ -409,6 +410,14 @@ export async function setMarketingOptInAction(
     console.error("marketing opt-in update failed", error.message);
     return { status: "error", message: t.profile.saveFailed };
   }
+
+  // Texty 2.4: switching it off is recorded as carefully as switching it on.
+  await recordOwnConsent(supabase, {
+    kind: optIn ? "marketing_opt_in" : "marketing_opt_out",
+    wording: t.profile.marketingToggle,
+    locale: await getLocale(),
+    context: { surface: "account" },
+  });
 
   revalidatePath("/account");
   return { status: "saved" };

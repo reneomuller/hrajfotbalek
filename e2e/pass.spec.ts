@@ -53,10 +53,9 @@ test("the pass page lists every tier with its saving and its expiry", async ({ p
   await expect(five.getByTestId("pass-tier-anchor")).toContainText("900");
   // Whole percent, rounded to nearest (owner's call): 6.66… renders as 7.
   await expect(five.getByTestId("pass-tier-discount")).toContainText("7");
-  // The window is stated in DAYS now, derived from the tier's `expires_months`
-  // — so the 1-month tiers say 30 and the 2-month tiers say 60, rather than
-  // every card claiming 30.
-  await expect(five.getByTestId("pass-tier-expiry")).toContainText("30 days");
+  // ~~Derived from `expires_months`, 30 or 60~~ — round 40: every Credit is
+  // valid sixty days (Obchodní podmínky 5.4), whatever the tier.
+  await expect(five.getByTestId("pass-tier-expiry")).toContainText("60 days");
 
   // The 20-pass, where the anchor and the credited value genuinely diverge:
   // 20 x 150 = 3,000 against a 2,300 price.
@@ -233,7 +232,7 @@ test("the webhook credits a pass purchase through the existing ledger path", asy
 });
 
 
-test("a near-miss payment credits what arrived, with no expiry", async () => {
+test("a near-miss payment credits what arrived, valid sixty days like every Credit", async () => {
   await clearWallet(players.creditPartial.id);
 
   try {
@@ -250,13 +249,16 @@ test("a near-miss payment credits what arrived, with no expiry", async () => {
     expect(result!.credited_czk).toBe(690);
     expect(await balanceOf(players.creditPartial.id)).toBe(690);
 
-    // No batch, so nothing expires.
+    // ~~No batch, so nothing expires~~ — round 40: EVERY top-up is a 60-day
+    // batch (Obchodní podmínky 5.4). What a near miss still must not get is
+    // the PASS's value.
     const { data: batches } = await admin
       .from("credit_ledger")
-      .select("expires_at")
+      .select("delta_czk, expires_at")
       .eq("player_id", players.creditPartial.id)
       .not("expires_at", "is", null);
-    expect((batches ?? []).length).toBe(0);
+    expect(batches ?? []).toHaveLength(1);
+    expect(batches![0]!.delta_czk).toBe(690);
   } finally {
     await clearWallet(players.creditPartial.id);
   }
@@ -425,7 +427,7 @@ async function balanceOf(playerId: string): Promise<number> {
  * received 900 CZK carrying a one-month expiry they never agreed to — money
  * they meant to keep, quietly converted into money that runs out.
  */
-test("an ordinary top-up of a tier amount is credited as typed, with no expiry", async () => {
+test("an ordinary top-up of a tier amount is credited as typed, not as the pass", async () => {
   await clearWallet(players.creditPartial.id);
 
   try {
@@ -448,13 +450,14 @@ test("an ordinary top-up of a tier amount is credited as typed, with no expiry",
     expect(result!.credited_czk).toBe(840);
     expect(await balanceOf(players.creditPartial.id)).toBe(840);
 
-    // And nothing expires.
+    // ~~And nothing expires~~ — since round 40 every top-up is a 60-day batch,
+    // so the pass and the ordinary top-up now differ in AMOUNT only.
     const { data: batches } = await admin
       .from("credit_ledger")
-      .select("expires_at")
+      .select("delta_czk")
       .eq("player_id", players.creditPartial.id)
       .not("expires_at", "is", null);
-    expect((batches ?? []).length).toBe(0);
+    expect((batches ?? []).map((b) => b.delta_czk)).toEqual([840]);
   } finally {
     await clearWallet(players.creditPartial.id);
   }

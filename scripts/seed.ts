@@ -26,7 +26,7 @@
  *     signs in as them instead.
  */
 
-import { CREDIT_SEAT_MINUTES } from "../lib/games/price.ts";
+import { policy } from "../lib/policy.ts";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import {
   SEED_PASSWORD,
@@ -325,7 +325,7 @@ async function seed(): Promise<void> {
            * derived credit/confirmed booking, got qr/reserved".
            */
           duration_minutes:
-            ("durationMinutes" in g ? g.durationMinutes : null) ?? CREDIT_SEAT_MINUTES,
+            ("durationMinutes" in g ? g.durationMinutes : null) ?? policy.game.standardMinutes,
           status: "draft",
         })),
       )

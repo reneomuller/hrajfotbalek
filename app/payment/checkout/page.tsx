@@ -3,15 +3,24 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { EmbeddedCheckoutFrame } from "@/components/payment/EmbeddedCheckoutFrame";
 import { CheckoutTermsGate } from "@/components/payment/CheckoutTermsGate";
+import { SafetyNotice } from "@/components/legal/SafetyNotice";
 import { requireCurrentPlayer } from "@/lib/auth/session";
-import { getStrings } from "@/lib/i18n/server";
+import { getLocale, getStrings } from "@/lib/i18n/server";
 import {
   createEmbeddedSession,
   embeddedCheckoutEnabled,
 } from "@/lib/payments/embeddedCheckout";
 import { siteUrl } from "@/lib/site";
 import { createServerSupabaseClient } from "@/lib/supabase/clients";
-import { formatCzk } from "@/lib/format";
+import { formatCzk, formatGameDateTime } from "@/lib/format";
+import { TERMS_VERSION } from "@/lib/legal";
+import { waiverWording } from "@/lib/legal/consentWording";
+import {
+  creditPurchaseSummary,
+  reservationSummary,
+  type ReservationFacts,
+} from "@/lib/legal/purchaseSummary";
+import { refundCutoffHours } from "@/lib/policy/refundCutoff";
 import { policy } from "@/lib/policy";
 import { partyAmountCzk } from "@/lib/payments/partyAmount";
 
@@ -72,7 +81,11 @@ export default async function CheckoutPage({
 
   if (!gameId && !passId && !addGuestsBookingId) notFound();
 
-  const [t, player] = await Promise.all([getStrings(), requireCurrentPlayer()]);
+  const [t, locale, player] = await Promise.all([
+    getStrings(),
+    getLocale(),
+    requireCurrentPlayer(),
+  ]);
 
   /*
    * NOT ENABLED IS NOT AN ERROR PAGE. Somebody could reach this URL from a
@@ -91,6 +104,10 @@ export default async function CheckoutPage({
   let line: { name: string; description?: string; amountCzk: number };
   let reference: string;
   let backHref: string;
+  /** How many Credits this payment buys — every card payment buys Credits (round 40). */
+  let credits: number;
+  /** A game checkout also states the booking it makes (Texty 4.1); a pass does not. */
+  let reservation: ReservationFacts | null = null;
 
   if (addGuestsBookingId) {
     /*
@@ -117,11 +134,11 @@ export default async function CheckoutPage({
 
     const { data: gameRow } = await supabase
       .from("games")
-      .select("id, venue, price_czk")
+      .select("id, venue, price_czk, starts_at")
       .eq("id", booking.game_id)
       .maybeSingle();
     const game = gameRow as
-      | { id: string; venue: string; price_czk: number }
+      | { id: string; venue: string; price_czk: number; starts_at: string }
       | null;
     if (!game) notFound();
 
@@ -136,15 +153,29 @@ export default async function CheckoutPage({
     };
     reference = booking.id;
     backHref = `/game/${game.id}`;
+    credits = guests;
+    reservation = {
+      when: formatGameDateTime(game.starts_at, locale),
+      venue: game.venue,
+      credits: guests,
+      cutoffHours: await refundCutoffHours(),
+    };
   } else if (gameId) {
     const { data: gameRow } = await supabase
       .from("games")
-      .select("id, venue, status, price_czk, capacity")
+      .select("id, venue, status, price_czk, capacity, starts_at")
       .eq("id", gameId)
       .maybeSingle();
 
     const game = gameRow as
-      | { id: string; venue: string; status: string; price_czk: number; capacity: number }
+      | {
+          id: string;
+          venue: string;
+          status: string;
+          price_czk: number;
+          capacity: number;
+          starts_at: string;
+        }
       | null;
 
     if (!game) notFound();
@@ -181,7 +212,14 @@ export default async function CheckoutPage({
     };
     reference = game.id;
     backHref = `/game/${game.id}`;
-    } else {
+    credits = seats;
+    reservation = {
+      when: formatGameDateTime(game.starts_at, locale),
+      venue: game.venue,
+      credits: seats,
+      cutoffHours: await refundCutoffHours(),
+    };
+  } else {
     const { data } = await supabase
       .from("credit_topups")
       .select("id, player_id, status, amount_czk, pass_games")
@@ -218,6 +256,7 @@ export default async function CheckoutPage({
     };
     reference = topup.id;
     backHref = "/pass";
+    credits = topup.pass_games ?? 0;
   }
 
   const session = await createEmbeddedSession({
@@ -226,7 +265,25 @@ export default async function CheckoutPage({
     kind: gameId || addGuestsBookingId ? "booking" : "pass",
     customerEmail: player.email ?? null,
     returnUrl,
-    ...(gameId ? { gameId, guestCount: guests, playerId: player.id } : {}),
+    // The player on every kind: the webhook records the waiver against them.
+    playerId: player.id,
+    ...(gameId ? { gameId, guestCount: guests } : {}),
+    legal: {
+      summary: creditPurchaseSummary(
+        {
+          credits,
+          amountCzk: line.amountCzk,
+          ...(passId ? { packageName: t.pass.panelTitle } : {}),
+          paidAt: new Date(),
+          termsUrl: `${origin}/terms`,
+        },
+        locale,
+        t,
+      ),
+      waiver: waiverWording(t),
+      locale,
+      termsVersion: TERMS_VERSION,
+    },
   });
 
   // Stripe refused, or the key was pulled between the gate above and here.
@@ -325,9 +382,27 @@ export default async function CheckoutPage({
       <p className="mt-1 text-[13px] leading-snug text-muted">{line.description}</p>
 
       {/*
-        THE TERMS BOX IS STRIPE'S, directly above Pay, whenever Stripe will draw
-        it (round 38). `termsInStripe` is false only when the Dashboard has no
-        Terms of Service URL, and then our own box stands in front of the form.
+        THE BOOKING THIS PAYMENT MAKES (round 40, Texty 4.1), before the form —
+        the Credit summary itself sits inside Stripe's form, directly above Pay.
+      */}
+      {reservation && (
+        <section data-testid="checkout-reservation" className="mt-4">
+          <h2 className="m-0 text-[11px] uppercase tracking-eyebrow text-muted">
+            {t.purchase.reservationTitle}
+          </h2>
+          <p className="mt-2 mb-0 text-[12px] leading-snug text-muted">
+            {reservationSummary(reservation, locale, t)}
+          </p>
+        </section>
+      )}
+      {reservation && <SafetyNotice title={t.purchase.safetyTitle} body={t.purchase.safety} />}
+
+      {/*
+        THE BOX IS STRIPE'S, directly above Pay, whenever Stripe will draw it
+        (round 38) — worded since round 40 as the lawyer's withdrawal waiver
+        (Texty 3.3). `termsInStripe` is false only when the Dashboard has no
+        Terms of Service URL; then our own box stands in front of the form,
+        which is visible but inert until it is ticked.
       */}
       <div className="mt-6">
         {session.termsInStripe ? (
@@ -336,7 +411,7 @@ export default async function CheckoutPage({
             publishableKey={process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!}
           />
         ) : (
-          <CheckoutTermsGate>
+          <CheckoutTermsGate label={waiverWording(t)} lockedHint={t.purchase.lockedHint}>
             <EmbeddedCheckoutFrame
               clientSecret={session.clientSecret}
               publishableKey={process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!}
