@@ -1373,6 +1373,10 @@ export const strings = {
     changeEmailLink: "Change my email",
     deleteAccount: "Delete my account",
     deleteAccountHint: "Email us and we remove your data.",
+    /* Round 40 — self-service, as Obchodní podmínky 4.7 promises. */
+    deleteAccountConfirm:
+      "Delete your account? Your name, email, phone and photos are removed and you are signed out for good. Future bookings are cancelled and unused Credits lapse. This cannot be undone.",
+    deleteAccountFailed: "We could not delete your account. Please email us instead.",
     deleteMailto: "privacy@hrajfotbal.com",
     deleteSubject: "Account deletion request",
     // Payment/status badges.
@@ -1878,6 +1882,15 @@ export const strings = {
     banDone: "Profile banned",
     unbanDone: "Profile unbanned",
     banCannotAdmin: "An admin cannot be banned. Remove their admin rights first.",
+    /* --- round 40: delete an account, beside the ban ----------------------
+     *
+     * Not a ban: the person is removed (name, email, phone, photos, login) and
+     * the books stay. Irreversible, so the confirm says exactly that. */
+    deletePlayer: "Delete account",
+    deleteConfirm:
+      "Delete this account? Their name, email, phone and photos are removed for good, they can no longer sign in, future bookings are cancelled and unused Credits lapse. Past games and payments stay, anonymised. This cannot be undone.",
+    deleteCannotAdmin: "An admin account cannot be deleted. Remove their admin rights first.",
+    deleted: "Deleted account",
     nameChange: "Change name",
     nameChangeOpen: "Change name",
     nameChangeLabel: "Display name",

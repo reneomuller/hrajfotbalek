@@ -8,6 +8,7 @@ import { RemovePhotoButton } from "@/components/admin/RemovePhotoButton";
 import { RemoveCoverButton } from "@/components/admin/RemoveCoverButton";
 import { ChangeNameForm } from "@/components/admin/ChangeNameForm";
 import { BanPlayerButton } from "@/components/admin/BanPlayerButton";
+import { DeletePlayerButton } from "@/components/admin/DeletePlayerButton";
 import { appCapabilities } from "@/lib/db/capabilities";
 import { requireAdmin } from "@/lib/auth/requireAdmin";
 import { getAdminPlayer } from "@/lib/admin/queries";
@@ -281,8 +282,12 @@ export default async function AdminPlayerPage({
         */}
         <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-3 border-b border-hairline pb-4">
           <AdminRightsButton playerId={player.id} isAdmin={player.is_admin} />
-          {capabilities.banProfile && (
+          {/* A DELETED account has nothing left to ban or delete (round 40). */}
+          {capabilities.banProfile && !player.deleted_at && (
             <BanPlayerButton playerId={player.id} isBanned={Boolean(player.banned_at)} />
+          )}
+          {capabilities.deleteAccount && !player.deleted_at && !player.is_admin && (
+            <DeletePlayerButton playerId={player.id} />
           )}
         </div>
 
@@ -294,10 +299,10 @@ export default async function AdminPlayerPage({
         */}
         {player.banned_at && (
           <p
-            data-testid="player-banned-notice"
+            data-testid={player.deleted_at ? "player-deleted-notice" : "player-banned-notice"}
             className="mt-3 mb-0 text-[11px] uppercase tracking-eyebrow text-danger"
           >
-            {strings.admin.banned}
+            {player.deleted_at ? strings.admin.deleted : strings.admin.banned}
           </p>
         )}
 

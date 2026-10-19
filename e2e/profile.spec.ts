@@ -211,7 +211,7 @@ test("the account page shows a photo slot and the security controls", async ({
   await expect(page.getByTestId("current-password")).toHaveCount(0);
   await expect(page.getByTestId("change-password-link")).toBeVisible();
   await expect(page.getByTestId("change-email-link")).toBeVisible();
-  await expect(page.getByTestId("deletion-mailto")).toBeVisible();
+  await expect(page.getByTestId("delete-account")).toBeVisible();
 
   await page.getByTestId("change-password-link").click();
   await expect(page.getByTestId("current-password")).toBeVisible();
@@ -355,7 +355,7 @@ test("the overview runs wallet, accomplishments, details, then the account actio
       ["details", document.querySelector('[data-testid="profile-details"]')],
       ["signOut", document.querySelector('[data-testid="sign-out"]')],
       ["password", document.querySelector('[data-testid="change-password-link"]')],
-      ["delete", document.querySelector('[data-testid="deletion-mailto"]')],
+      ["delete", document.querySelector('[data-testid="delete-account"]')],
     ];
     return marks
       .filter(([, el]) => el !== null)
@@ -404,7 +404,7 @@ test("the account actions are reachable with the page scrolled to the bottom", a
     .poll(
       async () =>
         page.evaluate(() => {
-          const el = document.querySelector('[data-testid="deletion-mailto"]');
+          const el = document.querySelector('[data-testid="delete-account"]');
           if (!el) return false;
           const box = el.getBoundingClientRect();
           return box.top >= 0 && box.bottom <= window.innerHeight;
@@ -414,7 +414,7 @@ test("the account actions are reachable with the page scrolled to the bottom", a
     .toBe(true);
 
   const covered = await page.evaluate(() =>
-    ["sign-out", "change-password-link", "deletion-mailto"]
+    ["sign-out", "change-password-link", "delete-account"]
       .map((id) => {
         const el = document.querySelector(`[data-testid="${id}"]`);
         if (!el) return { id, on: "MISSING" };

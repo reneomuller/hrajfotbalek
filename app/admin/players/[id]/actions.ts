@@ -5,6 +5,7 @@ import { requireAdmin } from "@/lib/auth/requireAdmin";
 import { toAdminErrorMessage } from "@/lib/admin/errors";
 import { notifyWaitlistForGame } from "@/lib/cron/waitlistRelease";
 import { PROFILE_PHOTOS_BUCKET } from "@/lib/storage/avatar";
+import { finishAccountDeletion, parseDeletionResult } from "@/lib/players/accountDeletion";
 import {
   createServerSupabaseClient,
   createServiceRoleSupabaseClient,
@@ -224,6 +225,35 @@ export async function setPlayerBannedAction(
       console.error("waitlist notify after ban failed", notifyError);
     }
   }
+
+  revalidatePath(`/admin/players/${playerId}`);
+  revalidatePath("/admin/players");
+  return { status: "done" };
+}
+
+/**
+ * Delete an account (round 40) — beside the ban, and not the same act.
+ *
+ * A ban keeps the person and stops them; a deletion removes the person and
+ * keeps the books. `delete_player_account` refuses admins, anonymises the row,
+ * cancels future bookings and lapses Credits; `finishAccountDeletion` removes
+ * the login and the photos, which SQL cannot reach.
+ */
+export async function deletePlayerAction(
+  _prev: PlayerAdminState,
+  formData: FormData,
+): Promise<PlayerAdminState> {
+  await requireAdmin();
+
+  const playerId = String(formData.get("playerId") ?? "");
+  if (!playerId) return { status: "error", message: toAdminErrorMessage("PLAYER_NOT_FOUND") };
+
+  const supabase = await createServerSupabaseClient();
+  const { data, error } = await supabase.rpc("delete_player_account", { p_player_id: playerId });
+  if (error) return { status: "error", message: toAdminErrorMessage(error.message) };
+
+  const result = parseDeletionResult(data);
+  if (result) await finishAccountDeletion(playerId, result);
 
   revalidatePath(`/admin/players/${playerId}`);
   revalidatePath("/admin/players");

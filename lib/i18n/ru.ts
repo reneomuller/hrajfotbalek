@@ -673,6 +673,8 @@ export const ru: StringsOverlay = {
     changeEmailLink: "Сменить e-mail",
     deleteAccount: "Удалить аккаунт",
     deleteAccountHint: "Напиши нам — и мы удалим твои данные.",
+    deleteAccountConfirm: "Удалить аккаунт? Твоё имя, e-mail, телефон и фото будут удалены, и ты выйдешь навсегда. Будущие брони отменятся, неиспользованные кредиты сгорят. Это нельзя отменить.",
+    deleteAccountFailed: "Не удалось удалить аккаунт. Напиши нам, пожалуйста, на e-mail.",
     deleteSubject: "Запрос на удаление аккаунта",
     badgePaid: "Оплачено",
     badgeReserved: "Ждёт оплаты",

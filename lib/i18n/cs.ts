@@ -669,6 +669,8 @@ export const cs: StringsOverlay = {
     changeEmailLink: "Změnit e-mail",
     deleteAccount: "Smazat účet",
     deleteAccountHint: "Napiš nám a tvoje data smažeme.",
+    deleteAccountConfirm: "Smazat účet? Tvoje jméno, e-mail, telefon a fotky budou odstraněny a natrvalo se odhlásíš. Budoucí rezervace se zruší a nevyčerpané Kredity propadnou. Nelze to vrátit zpět.",
+    deleteAccountFailed: "Účet se nepodařilo smazat. Napiš nám prosím e-mail.",
     deleteSubject: "Žádost o smazání účtu",
     badgePaid: "Zaplaceno",
     badgeReserved: "Čeká na platbu",

@@ -27,6 +27,7 @@ import { playerBadges } from "@/lib/profile/badges";
 import { profileStats } from "@/lib/profile/stats";
 import { playersMetFor } from "@/lib/profile/playersMet";
 import { appCapabilities } from "@/lib/db/capabilities";
+import { DeleteAccountButton } from "@/components/account/DeleteAccountButton";
 import { signOutAction } from "./actions";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -393,17 +394,23 @@ export default async function AccountPage({
             <SecurityLinks />
 
             {/*
-              DESTRUCTIVE LAST (round 17, item 5), and it keeps the flow it
-              had: a `mailto:` to a human, because deletion is implemented as
-              ANONYMIZATION and there is deliberately no self-serve path.
+              DESTRUCTIVE LAST (round 17, item 5). ~~A `mailto:` to a human,
+              deliberately no self-serve path~~ — round 40: the terms promise
+              cancelling the account "in its settings" (Obchodní podmínky
+              4.7), so it is a button once `delete_player_account` exists, and
+              the mailto stays as the fallback until then.
             */}
-            <a
-              href={deletionHref}
-              data-testid="deletion-mailto"
-              className="block py-2 text-[12px] text-muted no-underline transition hover:text-bone"
-            >
-              {t.account.deleteAccount}
-            </a>
+            {capabilities.deleteAccount ? (
+              <DeleteAccountButton />
+            ) : (
+              <a
+                href={deletionHref}
+                data-testid="deletion-mailto"
+                className="block py-2 text-[12px] text-muted no-underline transition hover:text-bone"
+              >
+                {t.account.deleteAccount}
+              </a>
+            )}
           </section>
         </>
       )}

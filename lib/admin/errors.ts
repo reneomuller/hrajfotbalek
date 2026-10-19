@@ -60,6 +60,7 @@ const CODES: Array<[string, string]> = [
   ["NICKNAME_TAKEN", strings.admin.nameTaken],
   // Round 35 v2, item 8.
   ["CANNOT_BAN_ADMIN", strings.admin.banCannotAdmin],
+  ["CANNOT_DELETE_ADMIN", strings.admin.deleteCannotAdmin],
   // CHECK-constraint violations reach here as the constraint name.
   ["venues_image_path_format", strings.admin.venueImageInvalid],
   ["games_format_format", strings.admin.formatInvalid],

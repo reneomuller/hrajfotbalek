@@ -90,6 +90,8 @@ export interface AppCapabilities {
   priceOneEighty: boolean;
   /** Round 39 item 2 — `venues.archived_at` and the archive/restore RPCs. */
   venueArchive: boolean;
+  /** Round 40 — `delete_player_account` exists. */
+  deleteAccount: boolean;
 }
 
 const NONE: AppCapabilities = {
@@ -110,6 +112,7 @@ const NONE: AppCapabilities = {
   banProfile: false,
   priceOneEighty: false,
   venueArchive: false,
+  deleteAccount: false,
 };
 
 /*
@@ -168,6 +171,7 @@ const readCapabilities = stableRead(
       banProfile: read("banProfile"),
       priceOneEighty: read("priceOneEighty"),
       venueArchive: read("venueArchive"),
+      deleteAccount: read("deleteAccount"),
     };
   } catch {
     return NONE;

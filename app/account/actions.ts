@@ -11,6 +11,7 @@ import { getSessionUser } from "@/lib/auth/session";
 import { toBookingErrorCode, type BookingErrorCode } from "@/lib/booking/errors";
 import { getLocale, getStrings } from "@/lib/i18n/server";
 import { recordOwnConsent } from "@/lib/legal/recordConsent";
+import { finishAccountDeletion, parseDeletionResult } from "@/lib/players/accountDeletion";
 import { siteOrigin } from "@/lib/auth/origin";
 import { PASSWORD_MIN_LENGTH, SKILL_LEVELS, type SkillLevel } from "@/lib/auth/signupProfile";
 import { NICKNAME_PATTERN } from "@/lib/auth/nickname";
@@ -421,4 +422,36 @@ export async function setMarketingOptInAction(
 
   revalidatePath("/account");
   return { status: "saved" };
+}
+
+/**
+ * A player deletes their own account (round 40, Obchodní podmínky 4.7 — "in
+ * the account's settings"). Same RPC as the admin path; it checks the caller is
+ * the player. Signed out FIRST, while the session is still valid, then the
+ * login itself is removed.
+ */
+export interface DeleteAccountState {
+  status: "idle" | "error";
+  message?: string;
+}
+
+export async function deleteOwnAccountAction(
+  _prev: DeleteAccountState,
+): Promise<DeleteAccountState> {
+  const t = await getStrings();
+  const player = await getCurrentPlayer();
+  if (!player) redirect("/login");
+
+  const supabase = await createServerSupabaseClient();
+  const { data, error } = await supabase.rpc("delete_player_account", { p_player_id: player.id });
+  if (error) {
+    console.error("delete own account failed", error.message);
+    return { status: "error", message: t.account.deleteAccountFailed };
+  }
+
+  await supabase.auth.signOut();
+  const result = parseDeletionResult(data);
+  if (result) await finishAccountDeletion(player.id, result);
+
+  redirect("/");
 }

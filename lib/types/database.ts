@@ -306,6 +306,8 @@ export interface Database {
            * its absence as "not banned", which is true there.
            */
           banned_at?: string | null;
+          /** Round 40 — set when the account was deleted (anonymised); absent before the migration. */
+          deleted_at?: string | null;
         };
         Insert: {
           id?: string;
@@ -1378,6 +1380,8 @@ export interface Database {
        * control: a button whose RPC is a 404 is round 12's dead path.
        */
       ban_player: { Args: { p_player_id: string }; Returns: number };
+      /** Round 40 — anonymises the player; returns what the server must remove. */
+      delete_player_account: { Args: { p_player_id: string }; Returns: Json };
       unban_player: { Args: { p_player_id: string }; Returns: void };
       /** Is this phone number refused at signup? */
       is_phone_banned: { Args: { p_phone: string }; Returns: boolean };

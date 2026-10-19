@@ -428,8 +428,8 @@ select pg_temp.ok(
   'app_capabilities reports both round-40 flags');
 
 select pg_temp.ok(
-  (select count(*) from jsonb_object_keys(public.app_capabilities())) = 30,
-  'and still reports the twenty-eight it reported before',
+  (select count(*) from jsonb_object_keys(public.app_capabilities())) >= 30,
+  'and still reports the twenty-eight it reported before (later files only add)',
   (select count(*) from jsonb_object_keys(public.app_capabilities()))::text);
 
 select seq, label, case when passed then 'PASS' else 'FAIL' end as result, detail
