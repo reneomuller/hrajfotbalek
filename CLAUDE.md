@@ -711,8 +711,11 @@ node scripts/apply-migration.mjs \
   supabase/migrations/20261019100000_credits_sixty_days.sql --production
 ```
 
-**OUTSTANDING, round 40's second — delete an account. Additive, idempotent,
-order-free, NOT deploy-first:** both buttons wait for `app_capabilities()` to
+**~~OUTSTANDING~~ APPLIED, verified 2026-10-19 — round 40's second, delete an
+account, applied by me on the owner's "go" for this migration.** Probed:
+`players.deleted_at`, `delete_player_account` (no anon execute),
+`account_deleted` in the catalog, 31 flags all true. Additive, idempotent,
+order-free, NOT deploy-first: both buttons wait for `app_capabilities()` to
 say `deleteAccount`, so the deploy is safe on its own. It restates
 `app_capabilities()` as a superset of the 30 flags live after
 `20261019100000` (31 with `deleteAccount`) and widens the event catalog by
