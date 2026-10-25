@@ -61,11 +61,28 @@ export const strings = {
    * the thing it gates.
    */
   consent: {
+    /*
+     * THE LAWYER'S BANNER (Texty pro web 9.2–9.3, round 40). Shown only while a
+     * GTM container is configured — with only necessary cookies there is
+     * nothing to ask (9.1). The Czech is the lawyer's own; `{policy}` links to
+     * /cookies. Three answers of equal weight, and a settings layer whose
+     * optional categories start OFF.
+     */
     title: "Cookies",
-    body: "We use only what the site needs to work — signing you in, remembering your language, and finishing a payment. We will ask before anything else.",
+    body: "We use cookies. We need the necessary ones for the site to work (signing in, security, payments). With your consent we'll also use analytics and marketing cookies, so we can improve the site and measure our advertising. You can change your consent at any time in Cookie settings in the footer. More in the {policy}.",
+    policyLink: "Cookie Policy",
     acceptAll: "Accept all",
-    onlyNecessary: "Only necessary",
-    /** The footer link that brings the choice back. */
+    rejectAll: "Reject all",
+    openSettings: "Settings",
+    settingsTitle: "Cookie settings",
+    necessaryTitle: "Necessary",
+    necessaryBody: "Signing in, security and payments. The site does not work without them, so they are always on.",
+    analyticsTitle: "Analytics",
+    analyticsBody: "Google Analytics: how the site is used, so we can make it better.",
+    marketingTitle: "Marketing",
+    marketingBody: "Meta Pixel: measuring and targeting our advertising.",
+    alwaysOn: "Always on",
+    saveChoice: "Save my choice",
     settings: "Cookie settings",
   },
 

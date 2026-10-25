@@ -41,9 +41,20 @@ export const ru: StringsOverlay = {
   // DRAFT — flagged for the standing native-review batch.
   consent: {
     title: "Файлы cookie",
-    body: "Мы используем только то, что нужно сайту для работы — вход, запоминание языка и завершение оплаты. Обо всём остальном спросим заранее.",
+    body: "Мы используем cookies. Необходимые cookies нужны, чтобы сайт работал (вход, безопасность, платежи). С твоего согласия мы используем и аналитические и маркетинговые cookies, чтобы улучшать сайт и измерять рекламу. Согласие можно в любой момент изменить в Настройках cookies внизу страницы. Подробнее — в {policy}.",
+    policyLink: "Политике использования cookies",
     acceptAll: "Принять все",
-    onlyNecessary: "Только необходимые",
+    rejectAll: "Отклонить все",
+    openSettings: "Настройки",
+    settingsTitle: "Настройки cookies",
+    necessaryTitle: "Необходимые",
+    necessaryBody: "Вход, безопасность и платежи. Без них сайт не работает, поэтому они включены всегда.",
+    analyticsTitle: "Аналитические",
+    analyticsBody: "Google Analytics: как используется сайт, чтобы мы могли его улучшать.",
+    marketingTitle: "Маркетинговые",
+    marketingBody: "Meta Pixel: измерение и таргетинг нашей рекламы.",
+    alwaysOn: "Всегда включены",
+    saveChoice: "Сохранить выбор",
     settings: "Настройки cookies",
   },
 

@@ -28,6 +28,14 @@
       "replace": "19. 10. 2026",
       "count": 1,
       "why": "Effective date in the header line."
+    },
+    {
+      "document": "zasady-pouzivani-cookies",
+      "when": "analytics",
+      "find": "<td>30 minut</td>\n<td>ne</td>\n</tr>\n</tbody>",
+      "replace": "<td>30 minut</td>\n<td>ne</td>\n</tr>\n<tr>\n<td>Analytické</td>\n<td>_ga, _ga_* – Google Ireland Limited</td>\n<td>analytika, měření návštěvnosti</td>\n<td>2 roky</td>\n<td>ano</td>\n</tr>\n<tr>\n<td>Marketingové</td>\n<td>_fbp, fr – Meta Platforms Ireland Limited</td>\n<td>měření a cílení reklamy</td>\n<td>90 dní</td>\n<td>ano</td>\n</tr>\n</tbody>",
+      "count": 1,
+      "why": "Round 40, owner-approved: Texty pro web 9.2 says the table must list analytics and marketing cookies before they are used. Applied only while NEXT_PUBLIC_GTM_ID is set."
     }
   ]
 }

@@ -15,6 +15,7 @@
  */
 
 import substitutions from "@/content/legal/substitutions.json";
+import { gtmEnabled } from "@/lib/analytics/gtm";
 import { LEGAL_ORIGINALS, type LegalOriginalId } from "@/lib/content/legalOriginals.generated";
 import { parseLegalHtml, type ParsedLegalDocument } from "@/lib/content/legalHtml";
 import { applyLegalSubstitutions } from "@/lib/content/legalSubstitutions";
@@ -34,17 +35,28 @@ export const LEGAL_DOCUMENT_LOCALE = "cs" as const;
 export const TERMS_RULES_ANCHOR = "pravidla";
 
 /** The original HTML with the documented substitutions applied. */
-export function legalDocumentHtml(name: LegalDocumentName): string {
+/**
+ * `analytics` (round 40): whether the `when: "analytics"` rules apply — the
+ * cookie table lists Google's and Meta's cookies only while GTM is configured.
+ */
+export function legalDocumentHtml(
+  name: LegalDocumentName,
+  analytics: boolean = gtmEnabled(),
+): string {
   const id = LEGAL_DOCUMENT_ORIGINAL[name];
-  return applyLegalSubstitutions(id, LEGAL_ORIGINALS[id], substitutions.rules);
+  return applyLegalSubstitutions(id, LEGAL_ORIGINALS[id], substitutions.rules, { analytics });
 }
 
-const parsed = new Map<LegalDocumentName, ParsedLegalDocument>();
+const parsed = new Map<string, ParsedLegalDocument>();
 
-export function loadLegalDocument(name: LegalDocumentName): ParsedLegalDocument {
-  const cached = parsed.get(name);
+export function loadLegalDocument(
+  name: LegalDocumentName,
+  analytics: boolean = gtmEnabled(),
+): ParsedLegalDocument {
+  const key = `${name}:${analytics}`;
+  const cached = parsed.get(key);
   if (cached) return cached;
-  const document = parseLegalHtml(legalDocumentHtml(name));
-  parsed.set(name, document);
+  const document = parseLegalHtml(legalDocumentHtml(name, analytics));
+  parsed.set(key, document);
   return document;
 }

@@ -54,9 +54,20 @@ export const uk: StringsOverlay = {
   // DRAFT — flagged for the standing native-review batch.
   consent: {
     title: "Файли cookie",
-    body: "Ми використовуємо лише те, що потрібно сайту для роботи — вхід, запам'ятовування мови та завершення оплати. Про решту запитаємо заздалегідь.",
+    body: "Ми використовуємо cookies. Необхідні cookies потрібні, щоб сайт працював (вхід, безпека, платежі). З твоєї згоди ми використовуємо також аналітичні та маркетингові cookies, щоб покращувати сайт і вимірювати рекламу. Згоду можна будь-коли змінити в Налаштуваннях cookies внизу сторінки. Докладніше — у {policy}.",
+    policyLink: "Політиці використання cookies",
     acceptAll: "Прийняти всі",
-    onlyNecessary: "Лише необхідні",
+    rejectAll: "Відхилити всі",
+    openSettings: "Налаштування",
+    settingsTitle: "Налаштування cookies",
+    necessaryTitle: "Необхідні",
+    necessaryBody: "Вхід, безпека та платежі. Без них сайт не працює, тому вони ввімкнені завжди.",
+    analyticsTitle: "Аналітичні",
+    analyticsBody: "Google Analytics: як використовується сайт, щоб ми могли його покращувати.",
+    marketingTitle: "Маркетингові",
+    marketingBody: "Meta Pixel: вимірювання й таргетинг нашої реклами.",
+    alwaysOn: "Завжди ввімкнені",
+    saveChoice: "Зберегти вибір",
     settings: "Налаштування cookies",
   },
 

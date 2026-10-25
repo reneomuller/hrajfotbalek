@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { SignupForm } from "./SignupForm";
 import { GoogleAuthBlock } from "@/components/auth/GoogleAuthBlock";
 import { writeProfileFromMetadata } from "./actions";
+import { signedUpDestination } from "@/lib/analytics/gtm";
 import { getSessionUser, getCurrentPlayer } from "@/lib/auth/session";
 import { getLocale, getStrings } from "@/lib/i18n/server";
 import { countryOptions } from "@/lib/auth/countries";
@@ -91,7 +92,8 @@ export default async function SignupPage({
    * that predates this flow entirely.
    */
   const written = await writeProfileFromMetadata();
-  if (written.ok) redirect(next);
+  // The account exists from here: the landing page reports `sign_up` once.
+  if (written.ok) redirect(signedUpDestination(next));
 
   return (
     /*

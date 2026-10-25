@@ -8,6 +8,7 @@ import { parseLegalHtml } from "@/lib/content/legalHtml";
 import {
   LEGAL_DOCUMENT_ORIGINAL,
   TERMS_RULES_ANCHOR,
+  legalDocumentHtml,
   loadLegalDocument,
   type LegalDocumentName,
 } from "@/lib/content/legalDocuments";
@@ -190,5 +191,50 @@ describe("the operator's address", () => {
   it("is the same address in the contact fallback and the legal constants", () => {
     // Assert
     expect(strings.siteFooter.contactEmail).toBe(OPERATOR_CONTACT.email);
+  });
+});
+
+/**
+ * ROUND 40 — the analytics and marketing cookies join the table only while a
+ * GTM container is configured (Texty pro web 9.2: "doplnit tabulku"). Restated
+ * as TEXT, like the edits above, so a rule that matched more than the table
+ * cannot agree with itself.
+ */
+const ANALYTICS_ROWS =
+  "Analytické _ga, _ga_* – Google Ireland Limited analytika, měření návštěvnosti 2 roky ano " +
+  "Marketingové _fbp, fr – Meta Platforms Ireland Limited měření a cílení reklamy 90 dní ano";
+
+describe("the cookie table and analytics", () => {
+  it("lists only the necessary cookies while no tag container is configured", () => {
+    // Arrange
+    const html = legalDocumentHtml("cookies", false);
+
+    // Act
+    const text = visibleText(html);
+
+    // Assert
+    expect(text).not.toContain("_ga");
+    expect(text).not.toContain("_fbp");
+  });
+
+  it("adds exactly the Google and Meta rows, after Stripe's, once one is", () => {
+    // Arrange
+    const original = withPublishedEdits(
+      visibleText(originalBody(LEGAL_DOCUMENT_ORIGINAL.cookies)),
+    );
+    const expected = original.replace("30 minut ne", `30 minut ne ${ANALYTICS_ROWS}`);
+
+    // Act
+    const actual = visibleText(
+      renderToStaticMarkup(
+        <LegalDocumentView
+          document={parseLegalHtml(legalDocumentHtml("cookies", true))}
+          annexAnchor={TERMS_RULES_ANCHOR}
+        />,
+      ),
+    );
+
+    // Assert
+    expect(actual).toBe(expected);
   });
 });

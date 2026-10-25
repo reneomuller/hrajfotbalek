@@ -1,88 +1,174 @@
 import { describe, expect, it } from "vitest";
 import {
   CONSENT_COOKIE,
+  CONSENT_MAX_AGE_SECONDS,
   consentAllows,
+  consentCookieValue,
+  makeConsent,
   parseConsent,
   readConsentFrom,
+  serializeConsent,
 } from "@/lib/consent";
 
 /**
- * ROUND 28, ITEM 1 — the consent decision.
+ * The consent decision (round 28, reworked for analytics in round 40).
  *
- * The banner is UI and the copy is a compliance question, but the RULE is a
- * pure function and it is the half that must not be got wrong: an unanswered
- * banner is not consent, and a garbled cookie is not consent either.
+ * The banner is UI and the copy is the lawyer's, but the RULE is a pure
+ * function and it is the half that must not be got wrong: an unanswered banner
+ * is not consent, a garbled cookie is not consent, and a "yes" given to a banner
+ * that never mentioned analytics is not consent either.
  */
 
-describe("parseConsent", () => {
-  it("reads the two real answers", () => {
-    expect(parseConsent("all")).toBe("all");
-    expect(parseConsent("necessary")).toBe("necessary");
-  });
+const NOW = new Date("2026-10-25T09:30:00Z");
 
-  it("treats an absent, empty or unknown value as unanswered", () => {
+describe("makeConsent", () => {
+  it("stamps the choice with its date and the cookie-policy version", () => {
     // Arrange
-    const junk = [null, undefined, "", "   ", "yes", "true", "1", "ALL-OF-IT"];
+    const categories = { analytics: true, marketing: false };
 
-    // Act / Assert
-    for (const value of junk) {
-      expect(parseConsent(value), `${String(value)} should not count as an answer`).toBeNull();
-    }
+    // Act
+    const consent = makeConsent(categories, NOW);
+
+    // Assert
+    expect(consent).toEqual({
+      analytics: true,
+      marketing: false,
+      date: "2026-10-25",
+      version: "2.0",
+    });
+  });
+});
+
+describe("parseConsent", () => {
+  it("reads back exactly what was stored", () => {
+    // Arrange
+    const stored = makeConsent({ analytics: false, marketing: true }, NOW);
+
+    // Act
+    const parsed = parseConsent(serializeConsent(stored));
+
+    // Assert
+    expect(parsed).toEqual(stored);
   });
 
-  it("is case- and whitespace-insensitive on a real answer", () => {
-    expect(parseConsent(" All ")).toBe("all");
-    expect(parseConsent("NECESSARY")).toBe("necessary");
+  it("keeps an old refusal as a refusal of both new categories", () => {
+    // Arrange
+    const legacy = "necessary";
+
+    // Act
+    const parsed = parseConsent(legacy);
+
+    // Assert
+    expect(parsed).toMatchObject({ analytics: false, marketing: false });
+  });
+
+  it("asks again where the old banner was accepted — that banner never mentioned analytics", () => {
+    // Arrange: the round-28 banner said "we use only what the site needs and
+    // will ask before anything else", so its "Accept all" consented to nothing
+    // we now do.
+    const legacy = "all";
+
+    // Act
+    const parsed = parseConsent(legacy);
+
+    // Assert
+    expect(parsed).toBeNull();
+  });
+
+  it("treats an absent, empty or garbled value as unanswered", () => {
+    // Arrange
+    const junk = [null, undefined, "", "   ", "yes", "%7Bnot-json", '{"analytics":"yes"}'];
+
+    // Act
+    const parsed = junk.map((value) => parseConsent(value));
+
+    // Assert
+    expect(parsed).toEqual(junk.map(() => null));
   });
 });
 
 describe("consentAllows", () => {
   it("never blocks a necessary cookie, whatever the answer", () => {
-    // Necessary means necessary: the site cannot sign anybody in without it,
-    // and a caller that has to special-case it will get the special case wrong.
-    expect(consentAllows("necessary", null)).toBe(true);
-    expect(consentAllows("necessary", "necessary")).toBe(true);
-    expect(consentAllows("necessary", "all")).toBe(true);
+    // Arrange
+    const answers = [null, makeConsent({ analytics: false, marketing: false }, NOW)];
+
+    // Act
+    const allowed = answers.map((answer) => consentAllows("necessary", answer));
+
+    // Assert
+    expect(allowed).toEqual([true, true]);
   });
 
-  it("allows analytics ONLY after accept-all", () => {
-    expect(consentAllows("analytics", "all")).toBe(true);
+  it("refuses analytics and marketing on an unanswered banner", () => {
+    // Arrange
+    const unanswered = null;
+
+    // Act
+    const allowed = [consentAllows("analytics", unanswered), consentAllows("marketing", unanswered)];
+
+    // Assert
+    expect(allowed).toEqual([false, false]);
   });
 
-  it("refuses analytics on an unanswered banner", () => {
-    /*
-     * THE ONE THAT MATTERS. Defaulting the other way makes the banner
-     * decorative, which is the failure that gets products fined — and it is an
-     * easy default to reach for, because "we have not been told no" reads like
-     * permission.
-     */
-    expect(consentAllows("analytics", null)).toBe(false);
-  });
+  it("answers each category on its own", () => {
+    // Arrange
+    const onlyAnalytics = makeConsent({ analytics: true, marketing: false }, NOW);
 
-  it("refuses analytics after only-necessary", () => {
-    expect(consentAllows("analytics", "necessary")).toBe(false);
+    // Act
+    const allowed = [consentAllows("analytics", onlyAnalytics), consentAllows("marketing", onlyAnalytics)];
+
+    // Assert
+    expect(allowed).toEqual([true, false]);
   });
 });
 
 describe("readConsentFrom", () => {
   it("finds the choice among other cookies", () => {
     // Arrange
-    const jar = `sb-access-token=abc; ${CONSENT_COOKIE}=all; NEXT_LOCALE=cs`;
+    const consent = makeConsent({ analytics: true, marketing: true }, NOW);
+    const jar = `sb-access-token=abc; ${CONSENT_COOKIE}=${serializeConsent(consent)}; NEXT_LOCALE=cs`;
 
-    // Act / Assert
-    expect(readConsentFrom(jar)).toBe("all");
+    // Act
+    const found = readConsentFrom(jar);
+
+    // Assert
+    expect(found).toEqual(consent);
   });
 
   it("is unanswered when the cookie is absent", () => {
-    expect(readConsentFrom("sb-access-token=abc; NEXT_LOCALE=cs")).toBeNull();
+    // Arrange
+    const jar = "sb-access-token=abc; NEXT_LOCALE=cs";
+
+    // Act
+    const found = readConsentFrom(jar);
+
+    // Assert
+    expect(found).toBeNull();
   });
 
   it("does not match a cookie whose name merely ends with ours", () => {
-    // `x-hf-consent` is a different cookie and must not answer for this one.
-    expect(readConsentFrom(`x-${CONSENT_COOKIE}=all`)).toBeNull();
-  });
+    // Arrange
+    const jar = `x-${CONSENT_COOKIE}=necessary`;
 
-  it("is unanswered on an empty jar", () => {
-    expect(readConsentFrom("")).toBeNull();
+    // Act
+    const found = readConsentFrom(jar);
+
+    // Assert
+    expect(found).toBeNull();
+  });
+});
+
+describe("consentCookieValue", () => {
+  it("remembers the choice for twelve months (Texty pro web 9.3)", () => {
+    // Arrange
+    const consent = makeConsent({ analytics: false, marketing: false }, NOW);
+
+    // Act
+    const cookie = consentCookieValue(consent);
+
+    // Assert
+    expect(CONSENT_MAX_AGE_SECONDS).toBe(60 * 60 * 24 * 365);
+    expect(cookie).toContain(`max-age=${CONSENT_MAX_AGE_SECONDS}`);
+    expect(cookie.startsWith(`${CONSENT_COOKIE}=`)).toBe(true);
   });
 });

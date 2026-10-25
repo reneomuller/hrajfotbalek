@@ -4,7 +4,13 @@ import { NavPill } from "@/components/chrome/NavPill";
 import { LocaleProvider } from "@/components/LocaleProvider";
 import { SessionProvider } from "@/components/SessionProvider";
 import { SiteBackground } from "@/components/SiteBackground";
+import { Suspense } from "react";
+import Script from "next/script";
+import { GoogleTagManager } from "@next/third-parties/google";
 import { Footer } from "@/components/chrome/Footer";
+import { CookieConsent } from "@/components/consent/CookieConsent";
+import { SignUpEvent } from "@/components/analytics/SignUpEvent";
+import { consentBootstrapScript, gtmContainerId } from "@/lib/analytics/gtm";
 import { Header } from "@/components/chrome/Header";
 import { photoVersionFor } from "@/lib/storage/avatar";
 import { EMPTY_BELL, getBellState } from "@/lib/notifications/queries";
@@ -143,11 +149,34 @@ export default async function RootLayout({
   // wrong language.
   const [locale, t] = await Promise.all([getLocale(), getStrings()]);
 
+  /*
+   * GOOGLE TAG MANAGER, AND EVERYTHING THAT COMES WITH IT (round 40), only
+   * while `NEXT_PUBLIC_GTM_ID` is set: the consent defaults, the container,
+   * the lawyer's banner and the sign-up event. Without a container there is
+   * nothing to consent to, so none of it renders (Texty pro web 9.1).
+   */
+  const gtmId = gtmContainerId();
+
   return (
     <html
       lang={locale}
       className={`${anton.variable} ${barlowCondensed.variable} ${onest.variable} ${jetbrainsMono.variable} h-full`}
     >
+      {/*
+        CONSENT MODE BEFORE THE CONTAINER, AND INSIDE <head>. `beforeInteractive`
+        lands in the initial HTML and runs before any bundle, so every signal is
+        "denied" — or the stored choice — by the time GTM's own script reads
+        them. Rendered as a direct child of <html> it is invalid markup and a
+        hydration error (React says so in dev), hence the explicit <head>.
+      */}
+      <head>
+        {gtmId && (
+          <Script id="consent-default" strategy="beforeInteractive">
+            {consentBootstrapScript()}
+          </Script>
+        )}
+      </head>
+      {gtmId && <GoogleTagManager gtmId={gtmId} />}
       <body className="min-h-full flex flex-col">
         <LocaleProvider locale={locale} t={t}>
           <SessionProvider
@@ -201,16 +230,17 @@ export default async function RootLayout({
               {children}
               <Footer />
               {/*
-                ~~THE CONSENT SHEET~~ IS OFF (2026-10-19), not deleted.
-
-                The site sets only necessary cookies — sign-in, language, and
-                Stripe at payment — and those need no consent, so the lawyer's
-                brief (item 9.1) says no banner should show while that is true;
-                the footer links the cookie policy instead. `CookieConsent` and
-                `lib/consent.ts` stay as they are because analytics is next:
-                the day a script needs consent, the brief's banner (item 9.2)
-                comes back here, mounted where this one was.
+                THE LAWYER'S BANNER (Texty pro web 9.2–9.3), back with the
+                first script that needs it — and only while that script is
+                configured. With no container the site sets only necessary
+                cookies and, per 9.1, shows no banner at all.
               */}
+              {gtmId && <CookieConsent />}
+              {gtmId && (
+                <Suspense fallback={null}>
+                  <SignUpEvent />
+                </Suspense>
+              )}
             </div>
 
             {/* Phone widths only. On a desktop this would be a phone

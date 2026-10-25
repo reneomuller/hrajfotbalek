@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { getStrings } from "@/lib/i18n/server";
 import { OPERATOR_CONTACT } from "@/lib/legal";
+import { gtmEnabled } from "@/lib/analytics/gtm";
+import { CookieSettingsLink } from "@/components/consent/CookieSettingsLink";
 
 /**
  * The slim legal strip, rendered once from the root layout beneath the page.
@@ -85,6 +87,12 @@ export async function Footer() {
             {link.label}
           </Link>
         ))}
+        {/*
+          "NASTAVENÍ COOKIES" COMES BACK WITH THE FIRST OPTIONAL COOKIE (round
+          40, Texty pro web 9.2): once GTM is configured there is a choice to
+          reopen, and the banner tells the reader it lives here.
+        */}
+        {gtmEnabled() && <CookieSettingsLink />}
       </nav>
 
       <address

@@ -42,9 +42,20 @@ export const cs: StringsOverlay = {
   // DRAFT — flagged for the standing native-review batch.
   consent: {
     title: "Soubory cookie",
-    body: "Používáme jen to, co web potřebuje k fungování — přihlášení, zapamatování jazyka a dokončení platby. Na cokoli dalšího se nejdřív zeptáme.",
+    body: "Používáme cookies. Nezbytné cookies potřebujeme, aby web fungoval (přihlášení, bezpečnost, platby). S tvým souhlasem použijeme i analytické a marketingové cookies, abychom mohli web zlepšovat a měřit reklamu. Souhlas můžeš kdykoli změnit v Nastavení cookies v patičce. Více v {policy}.",
+    policyLink: "Zásadách používání cookies",
     acceptAll: "Přijmout vše",
-    onlyNecessary: "Jen nezbytné",
+    rejectAll: "Odmítnout vše",
+    openSettings: "Nastavení",
+    settingsTitle: "Nastavení cookies",
+    necessaryTitle: "Nezbytné",
+    necessaryBody: "Přihlášení, bezpečnost a platby. Bez nich web nefunguje, proto jsou zapnuté vždy.",
+    analyticsTitle: "Analytické",
+    analyticsBody: "Google Analytics: jak se web používá, abychom ho mohli zlepšovat.",
+    marketingTitle: "Marketingové",
+    marketingBody: "Meta Pixel: měření a cílení naší reklamy.",
+    alwaysOn: "Vždy zapnuté",
+    saveChoice: "Uložit výběr",
     settings: "Nastavení cookies",
   },
 

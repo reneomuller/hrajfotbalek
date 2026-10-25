@@ -6,6 +6,7 @@ import { getLocale, getStrings } from "@/lib/i18n/server";
 import { isLocale } from "@/lib/i18n/locales";
 import { recordSignupConsents } from "@/lib/legal/recordConsent";
 import { siteOrigin } from "@/lib/auth/origin";
+import { signedUpDestination } from "@/lib/analytics/gtm";
 import {
   parseSignupForm,
   signupMetadata,
@@ -154,7 +155,7 @@ export async function startSignup(
   // profile can be written now and the player never sees a waiting room.
   if (data.session) {
     const written = await writeProfileFromMetadata();
-    if (written.ok) redirect(next.startsWith("/") ? next : "/games");
+    if (written.ok) redirect(signedUpDestination(next.startsWith("/") ? next : "/games"));
     return {
       status: "error",
       field: written.field,
@@ -340,5 +341,6 @@ export async function finishSignup(
   });
 
   const next = String(formData.get("next") ?? "/games");
-  redirect(next.startsWith("/") ? next : "/games");
+  // The account exists from here: the landing page reports `sign_up` once.
+  redirect(signedUpDestination(next.startsWith("/") ? next : "/games"));
 }

@@ -30,7 +30,7 @@ export function CookieSettingsLink() {
       type="button"
       data-testid="cookie-settings"
       onClick={() => window.dispatchEvent(new Event(CONSENT_REOPEN_EVENT))}
-      className="cursor-pointer border-0 bg-transparent p-0 text-left text-small text-faint underline-offset-2 hover:underline"
+      className="flex min-h-11 cursor-pointer items-center border-0 bg-transparent p-0 text-left text-small text-faint transition hover:text-volt-dim"
     >
       {t.consent.settings}
     </button>
