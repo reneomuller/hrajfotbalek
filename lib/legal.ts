@@ -39,7 +39,7 @@ export const COOKIES_VERSION = "2.0" as const;
  */
 export const OPERATOR_CONTACT = {
   name: "Playllu",
-  email: "info@playllu.com",
+  email: "support@hrajfotbal.com",
   privacyEmail: "privacy@hrajfotbal.com",
   /** Česká obchodní inspekce — the out-of-court body for consumer disputes. */
   adrUrl: "https://coi.gov.cz/mimosoudni-reseni-spotrebitelskych-sporu-adr/",

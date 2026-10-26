@@ -65,7 +65,11 @@ function originalBody(id: string): string {
 
 /** The owner's rulings of 2026-10-19, as the reader sees them. */
 function withPublishedEdits(text: string): string {
-  return text.replaceAll("[●] 2026", "19. 10. 2026").replaceAll(", telefon [●]", "");
+  return text
+    .replaceAll("[●] 2026", "19. 10. 2026")
+    .replaceAll(", telefon [●]", "")
+    // Owner, 2026-10-26: playllu.com receives no mail; the contact is Seznam's.
+    .replaceAll("info@playllu.com", "support@hrajfotbal.com");
 }
 
 function rendered(name: LegalDocumentName): string {

@@ -44,6 +44,13 @@
       "replace": "Vedle nezbytných Cookies používáme s vaším souhlasem analytické a marketingové Cookies uvedené v Článku 3 (Jaké Cookies používáme). Preferenční Cookies nepoužíváme. Souhlas udělujete prostřednictvím lišty, kde lze všechny volitelné Cookies přijmout, všechny odmítnout nebo vybrat jednotlivé kategorie. Udělený souhlas můžete kdykoli stejně snadno odvolat přes odkaz „Nastavení cookies“ v patičce každé stránky.",
       "count": 1,
       "why": "Round 40, owner-approved 2026-10-26: article 2.2 described a site without optional cookies; while NEXT_PUBLIC_GTM_ID is set it states, in the lawyer's own words moved to the present, that analytics and marketing cookies are used with consent given through the banner."
+    },
+    {
+      "document": "obchodni-podminky",
+      "find": "info@playllu.com",
+      "replace": "support@hrajfotbal.com",
+      "count": 14,
+      "why": "Owner, 2026-10-26: the operator's contact and complaints address is support@hrajfotbal.com (Seznam Email Profi); playllu.com receives no mail. Seven places, each written as a mailto link and as its text: clauses 1.2 (twice), 12.5, 14.2, 14.4, 15.2 and Příloha 1 5.1."
     }
   ]
 }

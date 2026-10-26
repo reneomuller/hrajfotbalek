@@ -105,7 +105,7 @@ export const strings = {
      * `OPERATOR_CONTACT.email` in `lib/legal.ts` — a unit test holds the two
      * together.
      */
-    contactEmail: "info@playllu.com",
+    contactEmail: "support@hrajfotbal.com",
     contactTitle: "Get in touch",
   },
 

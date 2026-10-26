@@ -30,7 +30,7 @@ test("the footer's Contact link opens the operator's details", async ({ page }) 
   await page.waitForURL(/\/contact$/);
   const operator = page.getByTestId("contact-operator");
   await expect(operator).toContainText("Playllu");
-  await expect(operator).toContainText("info@playllu.com");
+  await expect(operator).toContainText("support@hrajfotbal.com");
   await expect(operator).toContainText("privacy@hrajfotbal.com");
   await expect(operator.locator('a[href^="https://coi.gov.cz/"]')).toHaveCount(1);
 });
