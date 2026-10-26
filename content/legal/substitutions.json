@@ -1,5 +1,5 @@
 {
-  "comment": "The ONLY edits made to the lawyer's documents in content/legal/original/. Each rule must match exactly `count` times or loading the document throws. Rulings by the owner, 2026-10-19: the effective date is the publication day, and there is no phone number yet.",
+  "comment": "The ONLY edits made to the lawyer's documents in content/legal/original/. Each rule must match exactly `count` times or loading the document throws. Rulings by the owner, 2026-10-19: the effective date is the publication day, and there is no phone number yet. Rules with \"when\": \"analytics\" apply only while a GTM container is configured.",
   "rules": [
     {
       "document": "obchodni-podminky",
@@ -36,6 +36,14 @@
       "replace": "<td>30 minut</td>\n<td>ne</td>\n</tr>\n<tr>\n<td>Analytické</td>\n<td>_ga, _ga_* – Google Ireland Limited</td>\n<td>analytika, měření návštěvnosti</td>\n<td>2 roky</td>\n<td>ano</td>\n</tr>\n<tr>\n<td>Marketingové</td>\n<td>_fbp, fr – Meta Platforms Ireland Limited</td>\n<td>měření a cílení reklamy</td>\n<td>90 dní</td>\n<td>ano</td>\n</tr>\n</tbody>",
       "count": 1,
       "why": "Round 40, owner-approved: Texty pro web 9.2 says the table must list analytics and marketing cookies before they are used. Applied only while NEXT_PUBLIC_GTM_ID is set."
+    },
+    {
+      "document": "zasady-pouzivani-cookies",
+      "when": "analytics",
+      "find": "Platforma v současnosti používá pouze nezbytné Cookies. Analytické, preferenční ani marketingové Cookies nepoužíváme. Pokud je začneme používat, doplníme je do tabulky v Článku 3 (Jaké Cookies používáme) a před jejich použitím si vyžádáme váš souhlas prostřednictvím lišty, kde bude možné všechny volitelné Cookies přijmout, všechny odmítnout nebo vybrat jednotlivé kategorie. Udělený souhlas bude možné kdykoli stejně snadno odvolat přes odkaz „Nastavení cookies“ v patičce každé stránky.",
+      "replace": "Vedle nezbytných Cookies používáme s vaším souhlasem analytické a marketingové Cookies uvedené v Článku 3 (Jaké Cookies používáme). Preferenční Cookies nepoužíváme. Souhlas udělujete prostřednictvím lišty, kde lze všechny volitelné Cookies přijmout, všechny odmítnout nebo vybrat jednotlivé kategorie. Udělený souhlas můžete kdykoli stejně snadno odvolat přes odkaz „Nastavení cookies“ v patičce každé stránky.",
+      "count": 1,
+      "why": "Round 40, owner-approved 2026-10-26: article 2.2 described a site without optional cookies; while NEXT_PUBLIC_GTM_ID is set it states, in the lawyer's own words moved to the present, that analytics and marketing cookies are used with consent given through the banner."
     }
   ]
 }

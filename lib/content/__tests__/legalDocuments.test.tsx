@@ -204,6 +204,17 @@ const ANALYTICS_ROWS =
   "Analytické _ga, _ga_* – Google Ireland Limited analytika, měření návštěvnosti 2 roky ano " +
   "Marketingové _fbp, fr – Meta Platforms Ireland Limited měření a cílení reklamy 90 dní ano";
 
+/**
+ * Article 2.2, owner-approved (2026-10-26): its first three sentences describe a
+ * site WITHOUT optional cookies ("pouze nezbytné… Pokud je začneme používat"),
+ * so while a container is configured they become the present-tense account of
+ * the banner, and the fourth moves from "bude možné" to "můžete".
+ */
+const ARTICLE_2_2_BEFORE =
+  "Platforma v současnosti používá pouze nezbytné Cookies. Analytické, preferenční ani marketingové Cookies nepoužíváme. Pokud je začneme používat, doplníme je do tabulky v Článku 3 (Jaké Cookies používáme) a před jejich použitím si vyžádáme váš souhlas prostřednictvím lišty, kde bude možné všechny volitelné Cookies přijmout, všechny odmítnout nebo vybrat jednotlivé kategorie. Udělený souhlas bude možné kdykoli stejně snadno odvolat přes odkaz „Nastavení cookies“ v patičce každé stránky.";
+const ARTICLE_2_2_AFTER =
+  "Vedle nezbytných Cookies používáme s vaším souhlasem analytické a marketingové Cookies uvedené v Článku 3 (Jaké Cookies používáme). Preferenční Cookies nepoužíváme. Souhlas udělujete prostřednictvím lišty, kde lze všechny volitelné Cookies přijmout, všechny odmítnout nebo vybrat jednotlivé kategorie. Udělený souhlas můžete kdykoli stejně snadno odvolat přes odkaz „Nastavení cookies“ v patičce každé stránky.";
+
 describe("the cookie table and analytics", () => {
   it("lists only the necessary cookies while no tag container is configured", () => {
     // Arrange
@@ -215,14 +226,18 @@ describe("the cookie table and analytics", () => {
     // Assert
     expect(text).not.toContain("_ga");
     expect(text).not.toContain("_fbp");
+    expect(text).toContain(ARTICLE_2_2_BEFORE);
   });
 
-  it("adds exactly the Google and Meta rows, after Stripe's, once one is", () => {
+  it("adds exactly the Google and Meta rows and the new article 2.2, once one is", () => {
     // Arrange
     const original = withPublishedEdits(
       visibleText(originalBody(LEGAL_DOCUMENT_ORIGINAL.cookies)),
     );
-    const expected = original.replace("30 minut ne", `30 minut ne ${ANALYTICS_ROWS}`);
+    expect(original).toContain(ARTICLE_2_2_BEFORE);
+    const expected = original
+      .replace("30 minut ne", `30 minut ne ${ANALYTICS_ROWS}`)
+      .replace(ARTICLE_2_2_BEFORE, ARTICLE_2_2_AFTER);
 
     // Act
     const actual = visibleText(
