@@ -51,6 +51,14 @@
       "replace": "support@hrajfotbal.com",
       "count": 14,
       "why": "Owner, 2026-10-26: the operator's contact and complaints address is support@hrajfotbal.com (Seznam Email Profi); playllu.com receives no mail. Seven places, each written as a mailto link and as its text: clauses 1.2 (twice), 12.5, 14.2, 14.4, 15.2 and Příloha 1 5.1."
+    },
+    {
+      "document": "zasady-pouzivani-cookies",
+      "when": "analytics",
+      "find": "účinné od 19. 10. 2026, verze 2.0",
+      "replace": "účinné od 26. 10. 2026, verze 2.1",
+      "count": 1,
+      "why": "Analytics went live on 2026-10-26 (GTM-KKDRBLJJ), which changed the table and article 2.2 — so the policy carries that day's date and a new version. Applies after the effective-date rule above. lib/legal.ts COOKIES_VERSION_WITH_ANALYTICS must match."
     }
   ]
 }

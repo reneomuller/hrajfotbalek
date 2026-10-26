@@ -1,4 +1,4 @@
-import { COOKIES_VERSION } from "@/lib/legal";
+import { COOKIES_VERSION_WITH_ANALYTICS } from "@/lib/legal";
 
 /**
  * Cookie consent — the decision, its storage, and what it gates (round 28,
@@ -40,7 +40,7 @@ export interface Consent {
   marketing: boolean;
   /** YYYY-MM-DD, the day the choice was made. */
   date: string;
-  /** `COOKIES_VERSION` at the time — the policy the choice was made against. */
+  /** The cookie-policy version at the time — the policy the choice was made against. */
   version: string;
 }
 
@@ -52,7 +52,7 @@ export function makeConsent(
     analytics: categories.analytics,
     marketing: categories.marketing,
     date: now.toISOString().slice(0, 10),
-    version: COOKIES_VERSION,
+    version: COOKIES_VERSION_WITH_ANALYTICS,
   };
 }
 

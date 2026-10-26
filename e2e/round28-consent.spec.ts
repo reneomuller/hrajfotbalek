@@ -125,7 +125,7 @@ if (gtmOn) {
 
     // Assert
     const value = JSON.parse(decodeURIComponent(stored?.value ?? "{}")) as Record<string, unknown>;
-    expect(value).toMatchObject({ analytics: true, marketing: false, version: "2.0" });
+    expect(value).toMatchObject({ analytics: true, marketing: false, version: "2.1" });
     expect(value.date).toMatch(/^\d{4}-\d{2}-\d{2}$/);
     // `objectContaining`: a real container stamps its own `gtm.uniqueEventId`
     // onto every event it processes, which is GTM working, not a difference.

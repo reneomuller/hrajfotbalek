@@ -29,6 +29,15 @@ export const PRIVACY_VERSION = "2.0" as const;
 export const COOKIES_VERSION = "2.0" as const;
 
 /**
+ * The cookie policy's version WHILE analytics runs (2026-10-26): the table
+ * gained Google and Meta and article 2.2 changed, so the page reads "verze 2.1"
+ * (a documented substitution in content/legal/substitutions.json — the two
+ * must match). The consent banner only exists while analytics runs, so this is
+ * the version every stored choice is made against.
+ */
+export const COOKIES_VERSION_WITH_ANALYTICS = "2.1" as const;
+
+/**
  * The operator, from the lawyer's brief (item 1.1) and the owner's ruling of
  * 2026-10-19: the operator is Playllu, the holding company. General and
  * consumer matters go to `email`; personal-data matters to `privacyEmail`.

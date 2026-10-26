@@ -241,7 +241,9 @@ describe("the cookie table and analytics", () => {
     expect(original).toContain(ARTICLE_2_2_BEFORE);
     const expected = original
       .replace("30 minut ne", `30 minut ne ${ANALYTICS_ROWS}`)
-      .replace(ARTICLE_2_2_BEFORE, ARTICLE_2_2_AFTER);
+      .replace(ARTICLE_2_2_BEFORE, ARTICLE_2_2_AFTER)
+      // Analytics went live on 2026-10-26: the policy changed that day.
+      .replace("účinné od 19. 10. 2026, verze 2.0", "účinné od 26. 10. 2026, verze 2.1");
 
     // Act
     const actual = visibleText(
