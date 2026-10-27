@@ -37,7 +37,7 @@ const PLAYER_FACING = [
   "booking",
   /*
    * What a purchase says before it is paid (round 40) — the lawyer's summary,
-   * waiver, booking summary and safety notice. The Czech is the lawyer's own.
+   * waiver and booking summary. The Czech is the lawyer's own.
    */
   "purchase",
   "payment",

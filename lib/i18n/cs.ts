@@ -190,7 +190,7 @@ export const cs: StringsOverlay = {
     phoneHint: "Vidí ho jen organizátor, a jen u zápasů, které máš zarezervované.",
 
     legalGroupLabel: "Než začneš",
-    tosAgreement: "Seznámil(a) jsem se s {terms} a s {rules} a souhlasím s nimi. Beru na vědomí, že Playllu zápasy neorganizuje a že se jich účastním na vlastní nebezpečí. Uděluji svolení k pořizování fotografií a videí ze Zápasů a k jejich užití pro marketing a na sociálních sítích Playllu podle článku 13 Obchodních podmínek.",
+    tosAgreement: "Seznámil(a) jsem se s {terms} a s {rules} a souhlasím s nimi. Uděluji svolení k pořizování fotografií a videí ze Zápasů a k jejich užití pro marketing a na sociálních sítích Playllu podle článku 13 Obchodních podmínek.",
     tosTermsLink: "Obchodními podmínkami",
     tosRulesLink: "Pravidly komunity a hry",
     privacyHowLink: "Jak zpracováváme tvoje údaje",
@@ -721,10 +721,8 @@ export const cs: StringsOverlay = {
     creditSummary: "Kupuješ: {credits} (1 Kredit = 1 místo na jednom Zápase). Cena celkem: {amount}. Platnost Kreditů: {days} dní od připsání, tj. do {date}; nevyčerpané Kredity poté propadají. Kredity lze použít jen na Rezervace Zápasů Playllu, nejsou převoditelné a nelze je vyměnit za peníze. Kredity ti připíšeme okamžitě po zaplacení. Od nákupu Kreditů nelze odstoupit. {terms}",
     termsLinkLabel: "Obchodní podmínky",
     waiver: "Žádám o okamžité dodání Kreditů po zaplacení, tedy ještě před uplynutím 14denní lhůty pro odstoupení od smlouvy. Souhlasím s tím, že připsáním Kreditů na můj účet je plnění poskytnuto v plném rozsahu, a beru na vědomí, že tím ztrácím právo od smlouvy o nákupu Kreditů odstoupit.",
-    reservationSummary: "Rezervuješ místo na Zápase {when}, {venue}. Úhrada: {credits}. Zrušení: Rezervaci můžeš zrušit nejpozději {hours} hodin před začátkem Zápasu, Kredit se ti vrátí. Při pozdějším zrušení nebo neúčasti Kredit propadá. Když Zápas zrušíme my, vrátíme ti Kredit a prodloužíme jeho platnost o {extensionDays} dní. Od Rezervace nelze odstoupit, protože jde o službu volného času poskytovanou v určitý den a čas (§ 1837 písm. j) občanského zákoníku). Zápas neorganizujeme; hraješ na vlastní nebezpečí.",
+    reservationSummary: "Rezervuješ místo na Zápase {when}, {venue}. Úhrada: {credits}. Zrušení: Rezervaci můžeš zrušit nejpozději {hours} hodin před začátkem Zápasu, Kredit se ti vrátí. Při pozdějším zrušení nebo neúčasti Kredit propadá. Když Zápas zrušíme my, vrátíme ti Kredit a prodloužíme jeho platnost o {extensionDays} dní. Od Rezervace nelze odstoupit, protože jde o službu volného času poskytovanou v určitý den a čas (§ 1837 písm. j) občanského zákoníku).",
     reservationTitle: "Tvoje rezervace",
-    safetyTitle: "Bezpečnost",
-    safety: "Fotbal je kontaktní sport a hrozí při něm úraz. Playllu zápasy neorganizuje: na hřišti není rozhodčí, koordinátor, zdravotník ani úschova věcí. Hraješ na vlastní nebezpečí a na vlastní odpovědnost. Hraj jen tehdy, když ti to dovoluje zdravotní stav, nikdy pod vlivem alkoholu nebo drog, ve vhodné obuvi a ideálně s chrániči holení. Doporučujeme mít úrazové pojištění a pojištění odpovědnosti. Při zranění volej 112.",
     lockedHint: "Zaškrtni políčko nahoře a platba se odemkne.",
   },
 

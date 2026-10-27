@@ -3,7 +3,6 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { EmbeddedCheckoutFrame } from "@/components/payment/EmbeddedCheckoutFrame";
 import { CheckoutTermsGate } from "@/components/payment/CheckoutTermsGate";
-import { SafetyNotice } from "@/components/legal/SafetyNotice";
 import { requireCurrentPlayer } from "@/lib/auth/session";
 import { getLocale, getStrings } from "@/lib/i18n/server";
 import {
@@ -395,7 +394,6 @@ export default async function CheckoutPage({
           </p>
         </section>
       )}
-      {reservation && <SafetyNotice title={t.purchase.safetyTitle} body={t.purchase.safety} />}
 
       {/*
         THE BOX IS STRIPE'S, directly above Pay, whenever Stripe will draw it

@@ -440,8 +440,9 @@ export default async function LandingPage() {
           </ol>
           {/*
             ~~The lawyer's item 1.4 note under the three steps~~ — removed by
-            the owner on 2026-10-27. The same message still reaches every player
-            at sign-up (the terms box) and at booking (the safety notice).
+            the owner on 2026-10-27, with every other "we don't organise the
+            games / own risk" line outside the terms: "we have it in the ToS,
+            that's enough" (Obchodní podmínky 3.2 and 12).
           */}
 
           {/*

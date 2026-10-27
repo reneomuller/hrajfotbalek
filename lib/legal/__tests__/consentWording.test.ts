@@ -27,7 +27,7 @@ describe("consent wording", () => {
     }
   });
 
-  it("stores the lawyer's Czech verbatim", () => {
+  it("stores the lawyer's Czech, minus the risk sentence the owner removed", () => {
     // Arrange
     const t = resolveStrings("cs");
 
@@ -36,7 +36,7 @@ describe("consent wording", () => {
 
     // Assert
     expect(wording).toBe(
-      "Seznámil(a) jsem se s Obchodními podmínkami a s Pravidly komunity a hry a souhlasím s nimi. Beru na vědomí, že Playllu zápasy neorganizuje a že se jich účastním na vlastní nebezpečí. Uděluji svolení k pořizování fotografií a videí ze Zápasů a k jejich užití pro marketing a na sociálních sítích Playllu podle článku 13 Obchodních podmínek.",
+      "Seznámil(a) jsem se s Obchodními podmínkami a s Pravidly komunity a hry a souhlasím s nimi. Uděluji svolení k pořizování fotografií a videí ze Zápasů a k jejich užití pro marketing a na sociálních sítích Playllu podle článku 13 Obchodních podmínek.",
     );
   });
 
@@ -51,5 +51,25 @@ describe("consent wording", () => {
     // Assert
     expect(booking).toBe("Souhlasím s Obchodními podmínkami.");
     expect(waiver).toMatch(/^Žádám o okamžité dodání Kreditů po zaplacení/);
+  });
+});
+
+/**
+ * Owner, 2026-10-27: "we have it in the ToS, that's enough". The "we don't
+ * organise the games / own risk" sentence left the sign-up box and the booking
+ * summary in every language; Obchodní podmínky 3.2 and 12 keep it.
+ */
+describe("the risk sentence", () => {
+  const RISK = /neorganizuje|own risk|страх и риск|власний ризик|не организует|не організовує/i;
+
+  it("is in no sign-up box and no booking summary, in any language", () => {
+    // Arrange
+    const tables = LOCALES.map((locale) => resolveStrings(locale));
+
+    // Act
+    const texts = tables.flatMap((t) => [signupTermsWording(t), t.purchase.reservationSummary]);
+
+    // Assert
+    for (const text of texts) expect(text).not.toMatch(RISK);
   });
 });

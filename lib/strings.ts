@@ -360,7 +360,7 @@ export const strings = {
      */
     legalGroupLabel: "Before you start",
     tosAgreement:
-      "I have read and agree to the {terms} and the {rules}. I understand that Playllu does not organise the games and that I take part at my own risk. I allow photos and videos to be taken at games and used for Playllu's marketing and social media, as set out in Article 13 of the Terms and Conditions.",
+      "I have read and agree to the {terms} and the {rules}. I allow photos and videos to be taken at games and used for Playllu's marketing and social media, as set out in Article 13 of the Terms and Conditions.",
     tosTermsLink: "Terms and Conditions",
     tosRulesLink: "Community and Game Rules",
     tosRequired: "Please accept the terms to continue.",
@@ -2409,7 +2409,9 @@ export const strings = {
    */
   /**
    * WHAT A PURCHASE SAYS BEFORE IT IS PAID (round 40) — the lawyer's Texty pro
-   * web 3.2, 3.3, 4.1 and 7, in the player's language. The Czech overlay is the
+   * web 3.2, 3.3 and 4.1, in the player's language (~~7, the safety notice~~ —
+   * removed by the owner on 2026-10-27, as was 4.1's own-risk sentence: "we have
+   * it in the ToS, that's enough"). The Czech overlay is the
    * lawyer's text verbatim; the policy numbers (`{days}`, `{hours}`,
    * `{extensionDays}`) are filled from the policy functions so the sentence can
    * never disagree with what the database does.
@@ -2431,12 +2433,8 @@ export const strings = {
       "I ask for the Credits to be delivered immediately after payment, i.e. before the 14-day withdrawal period ends. I agree that adding the Credits to my account means the service has been provided in full, and I acknowledge that I thereby lose the right to withdraw from the contract for the purchase of Credits.",
     /** Texty 4.1 — before a booking is confirmed. */
     reservationSummary:
-      "You're booking a place at the game on {when}, {venue}. Payment: {credits}. Cancelling: you can cancel up to {hours} hours before kick-off and your Credit comes back. If you cancel later or don't turn up, the Credit is lost. If we cancel the game, we return your Credit and extend its validity by {extensionDays} days. A booking can't be withdrawn from, because it's a leisure service provided on a specific date and time (§ 1837(j) of the Czech Civil Code). We don't organise the games; you play at your own risk.",
+      "You're booking a place at the game on {when}, {venue}. Payment: {credits}. Cancelling: you can cancel up to {hours} hours before kick-off and your Credit comes back. If you cancel later or don't turn up, the Credit is lost. If we cancel the game, we return your Credit and extend its validity by {extensionDays} days. A booking can't be withdrawn from, because it's a leisure service provided on a specific date and time (§ 1837(j) of the Czech Civil Code).",
     reservationTitle: "Your booking",
-    /** Texty 7 — on the booking page and in the booking confirmation. */
-    safetyTitle: "Safety",
-    safety:
-      "Football is a contact sport and injuries happen. Playllu doesn't organise the games: there is no referee, coordinator, medic or place to leave your things. You play at your own risk and on your own responsibility. Only play when your health allows it, never under the influence of alcohol or drugs, in suitable shoes and ideally with shin guards. We recommend accident and liability insurance. If someone is injured, call 112.",
     /** Our own box in front of the form, when Stripe cannot draw its own. */
     lockedHint: "Tick the box above to unlock payment.",
   },

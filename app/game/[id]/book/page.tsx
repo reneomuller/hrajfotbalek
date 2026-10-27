@@ -13,7 +13,6 @@ import { formatCzk, formatGameDateTime } from "@/lib/format";
 import { getGameById } from "@/lib/games/queries";
 import { refundCutoffHours } from "@/lib/policy/refundCutoff";
 import { getLocale, getStrings } from "@/lib/i18n/server";
-import { SafetyNotice } from "@/components/legal/SafetyNotice";
 import { runCreateBooking } from "./actions";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -165,7 +164,6 @@ export default async function BookPage({ params, searchParams }: BookPageProps) 
         />
       </div>
 
-      <SafetyNotice title={t.purchase.safetyTitle} body={t.purchase.safety} />
 
       {/*
         Reassurance before the commit, not after it: the question a player asks
