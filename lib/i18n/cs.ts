@@ -115,8 +115,6 @@ export const cs: StringsOverlay = {
     potmEmpty: "Zatím nikdo — může to být klidně ty.",
     potmHours: "{hours} h na hřišti tenhle měsíc",
     // The lawyer's sentence, verbatim (brief item 1.4).
-    howItWorksNote:
-      "Playllu tě propojí s lidmi, kteří si chtějí zahrát fotbal, a zajistí hřiště, míče, rozlišováky a rukavice. Zápasy ale neorganizujeme – na hřišti není rozhodčí, koordinátor ani zdravotník. Hra je na vás.",
     community: {
       title: "Přidej se k nám",
       body: "Sleduj naše sítě a neuteče ti nic z dění v komunitě",

@@ -118,8 +118,6 @@ export const ru: StringsOverlay = {
     potmEmpty: "Пока никого — может, это будешь ты.",
     potmHours: "{hours} ч на поле в этом месяце",
     // DRAFT — flagged for the standing native-review batch. Translates the lawyer's Czech (brief item 1.4).
-    howItWorksNote:
-      "Playllu сводит тебя с людьми, которые хотят поиграть в футбол, и обеспечивает поле, мячи, манишки и перчатки. Но матчи мы не организуем – на поле нет ни судьи, ни координатора, ни медика. Игра – за вами.",
     community: {
       title: "Присоединяйся к нам",
       body: "Подписывайся на наши соцсети, чтобы быть в курсе новостей сообщества",

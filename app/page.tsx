@@ -439,17 +439,10 @@ export default async function LandingPage() {
             ))}
           </ol>
           {/*
-            WHAT PLAYLLU DOES AND DOES NOT DO (the lawyer's brief, item 1.4):
-            on the home page and with "how it works", which is this strip. It
-            sits directly under the three steps because it qualifies them —
-            "come and play" is followed by who is, and is not, on the pitch.
+            ~~The lawyer's item 1.4 note under the three steps~~ — removed by
+            the owner on 2026-10-27. The same message still reaches every player
+            at sign-up (the terms box) and at booking (the safety notice).
           */}
-          <p
-            data-testid="how-it-works-note"
-            className="m-0 mt-3 px-[18px] text-left text-small text-muted"
-          >
-            {landing.howItWorksNote}
-          </p>
 
           {/*
             COMMUNITY (now carrying the numbers) beside PLAYER OF THE MONTH,

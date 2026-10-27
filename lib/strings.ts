@@ -207,14 +207,6 @@ export const strings = {
      * by `pitchHours`; the string does no arithmetic.
      */
     potmHours: "{hours} h on the pitch this month",
-    /*
-     * The lawyer's brief, item 1.4: said on the home page, under "how it
-     * works". The Czech is the lawyer's sentence verbatim; the rest are
-     * translations of it. It names Playllu, the operator, on purpose.
-     */
-    howItWorksNote:
-      "Playllu connects you with people who want to play football, and provides the pitch, balls, bibs and gloves. But we don't organise the games – there is no referee, coordinator or medic on the pitch. The game is up to you.",
-
 
     community: {
       title: "Join our community",

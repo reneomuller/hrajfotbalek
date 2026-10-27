@@ -109,15 +109,20 @@ test("the footer carries the four legal links and the operator", async ({ page, 
   await expect(footer).not.toContainText(/hrajsport/i);
 });
 
-test("the home page says who is, and is not, on the pitch", async ({ page, context }) => {
+/*
+ * ~~"the home page says who is, and is not, on the pitch"~~ — the owner removed
+ * the lawyer's item 1.4 note from the home page on 2026-10-27. The message
+ * still reaches every player at sign-up and at booking; this pins the removal.
+ */
+test("the home page no longer carries the who-is-on-the-pitch note", async ({ page, context }) => {
   // Arrange
   await useLocale(context, "cs");
 
   // Act
   await page.goto("/");
+  await expect(page.getByTestId("how-it-works")).toBeVisible();
 
   // Assert
-  await expect(page.getByTestId("how-it-works-note")).toContainText(
-    "Zápasy ale neorganizujeme – na hřišti není rozhodčí, koordinátor ani zdravotník.",
-  );
+  await expect(page.getByTestId("how-it-works-note")).toHaveCount(0);
+  await expect(page.locator("body")).not.toContainText("Zápasy ale neorganizujeme", { useInnerText: true });
 });
