@@ -17,7 +17,11 @@ import { players, signInAs } from "./helpers/session";
 
 test.use({ viewport: { width: 390, height: 844 } });
 
-test("the footer's Contact link opens the operator's details", async ({ page }) => {
+/*
+ * ~~Operator, Česká obchodní inspekce and the DSA contact point~~ left the page
+ * on 2026-10-27 (owner's ruling; the terms carry them). The two addresses stay.
+ */
+test("the footer's Contact link opens the two addresses and nothing else", async ({ page }) => {
   // Arrange
   await page.goto("/games");
   const footer = page.getByTestId("site-footer");
@@ -28,11 +32,11 @@ test("the footer's Contact link opens the operator's details", async ({ page }) 
 
   // Assert
   await page.waitForURL(/\/contact$/);
-  const operator = page.getByTestId("contact-operator");
-  await expect(operator).toContainText("Playllu");
-  await expect(operator).toContainText("support@hrajfotbal.com");
-  await expect(operator).toContainText("privacy@hrajfotbal.com");
-  await expect(operator.locator('a[href^="https://coi.gov.cz/"]')).toHaveCount(1);
+  const details = page.getByTestId("contact-details");
+  await expect(details).toContainText("support@hrajfotbal.com");
+  await expect(details).toContainText("privacy@hrajfotbal.com");
+  await expect(details.locator("dt")).toHaveCount(2);
+  await expect(page.locator('a[href^="https://coi.gov.cz/"]')).toHaveCount(0);
 });
 
 test("an admin edits the contact details and the contact page follows", async ({
@@ -66,7 +70,7 @@ test("an admin edits the contact details and the contact page follows", async ({
     await expect(page.getByTestId("contact-saved")).toBeVisible();
 
     await page.goto("/contact");
-    await expect(page.getByTestId("contact-operator")).toBeVisible();
+    await expect(page.getByTestId("contact-details")).toBeVisible();
     await expect(page.getByTestId("contact-phones")).toHaveCount(0);
     await expect(page.getByTestId("contact-emails")).toBeVisible();
   } finally {

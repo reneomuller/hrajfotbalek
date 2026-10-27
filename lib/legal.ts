@@ -47,11 +47,8 @@ export const COOKIES_VERSION_WITH_ANALYTICS = "2.1" as const;
  * `lib/strings.ts`: an address is the same string in every language.
  */
 export const OPERATOR_CONTACT = {
-  name: "Playllu",
   email: "support@hrajfotbal.com",
   privacyEmail: "privacy@hrajfotbal.com",
-  /** Česká obchodní inspekce — the out-of-court body for consumer disputes. */
-  adrUrl: "https://coi.gov.cz/mimosoudni-reseni-spotrebitelskych-sporu-adr/",
 } as const;
 
 /** Where the terms are published as a PDF (the lawyer's brief, item 1.2). */

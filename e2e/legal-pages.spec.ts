@@ -90,7 +90,11 @@ test("a wide table scrolls inside its box, not the page", async ({ page }) => {
   expect(overflow).toBeLessThanOrEqual(0);
 });
 
-test("the footer carries the four legal links and the operator", async ({ page, context }) => {
+/*
+ * ~~"…and the operator"~~ — the operator block left every page on 2026-10-27
+ * (owner's ruling; Obchodní podmínky 1.2 carries it). This pins the removal.
+ */
+test("the footer carries the four legal links and no operator block", async ({ page, context }) => {
   // Arrange
   await useLocale(context, "cs");
 
@@ -103,8 +107,10 @@ test("the footer carries the four legal links and the operator", async ({ page, 
   for (const href of ["/terms", "/privacy", "/cookies", "/contact"]) {
     await expect(footer.locator(`a[href="${href}"]`)).toHaveCount(1);
   }
-  await expect(page.getByTestId("footer-operator")).toContainText("Provozovatel: Playllu");
-  await expect(page.getByTestId("footer-operator")).toContainText("Česká obchodní inspekce");
+  await expect(page.getByTestId("footer-operator")).toHaveCount(0);
+  await expect(footer).not.toContainText("Provozovatel");
+  await expect(footer).not.toContainText("Česká obchodní inspekce");
+  await expect(footer).not.toContainText("support@hrajfotbal.com");
   await expect(footer).toContainText("© Playllu");
   await expect(footer).not.toContainText(/hrajsport/i);
 });

@@ -1426,17 +1426,12 @@ export const strings = {
     downloadPdf: "Download the terms as PDF",
     back: "← Back to the games",
     /*
-     * The operator block — `/contact` and the footer (the lawyer's brief,
-     * item 1.1). The addresses and the link are facts, in `lib/legal.ts`;
-     * these are only their labels.
+     * `/contact`'s labels. The addresses are facts, in `lib/legal.ts`.
+     * ~~Operator, ČOI and the DSA contact point~~ left the site on
+     * 2026-10-27; Obchodní podmínky 1.2 and the disputes article carry them.
      */
-    operatorLabel: "Operator",
     emailLabel: "Email",
     privacyEmailLabel: "Personal data",
-    adrLabel: "Out-of-court resolution of consumer disputes",
-    adrName: "Czech Trade Inspection Authority",
-    dsaLabel: "Single point of contact under Articles 11 and 12 of the Digital Services Act",
-    dsaLanguages: "Czech, English",
     /** The addresses and numbers the owner adds in `/admin`, when there are any. */
     otherContactsLabel: "Other ways to reach us",
     phoneLabel: "Phone",

@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { getStrings } from "@/lib/i18n/server";
-import { OPERATOR_CONTACT } from "@/lib/legal";
 import { gtmEnabled } from "@/lib/analytics/gtm";
 import { CookieSettingsLink } from "@/components/consent/CookieSettingsLink";
 
@@ -9,7 +8,7 @@ import { CookieSettingsLink } from "@/components/consent/CookieSettingsLink";
  *
  * The landing page keeps its own brand footer above this one. They are
  * different things and both earn their place: that one is design, this one is
- * the operator and the legal documents, on every route.
+ * the legal documents, on every route.
  *
  * WHAT THE LAWYER'S BRIEF PUTS HERE (items 1.1 and 1.2, 2026-10-19).
  *
@@ -18,11 +17,10 @@ import { CookieSettingsLink } from "@/components/consent/CookieSettingsLink";
  * at every purchase, so they must be reachable without an account and
  * findable again by someone who wants to check what they agreed to.
  *
- * The operator line — who runs the platform, its address, the out-of-court
- * body for consumer disputes, and the Digital Services Act's single point of
- * contact. Consumer law wants it on every page, not one click away. No phone
- * number: there is none to publish yet. No ODR link: the EU platform it
- * pointed at was abolished on 20 July 2025.
+ * ~~The operator line~~ — operator, address, the out-of-court body and the
+ * Digital Services Act's contact point — left every page on 2026-10-27, by the
+ * owner's ruling over the lawyer's item 1.1: the terms (articles 1.2 and 16)
+ * already carry all of it, and `/contact` keeps the addresses.
  *
  * ~~The Contact DIALOG~~ (round 13) is now the `/contact` page, which also
  * lists whatever the owner adds in `/admin`. ~~"Cookie settings"~~ is now the
@@ -46,7 +44,6 @@ export async function Footer() {
    */
   const linkClass =
     "flex min-h-11 items-center text-small text-faint no-underline transition hover:text-volt-dim";
-  const inlineLink = "text-faint underline-offset-2 hover:text-volt-dim hover:underline";
 
   const links = [
     { href: "/terms", label: legal.termsTitle },
@@ -94,39 +91,6 @@ export async function Footer() {
         */}
         {gtmEnabled() && <CookieSettingsLink />}
       </nav>
-
-      <address
-        data-testid="footer-operator"
-        className="flex flex-wrap gap-x-4 gap-y-1 text-small not-italic text-faint"
-      >
-        <span>
-          {legal.operatorLabel}: {OPERATOR_CONTACT.name}
-        </span>
-        <span>
-          {legal.emailLabel}:{" "}
-          <a href={`mailto:${OPERATOR_CONTACT.email}`} className={inlineLink}>
-            {OPERATOR_CONTACT.email}
-          </a>
-        </span>
-        <span>
-          {legal.adrLabel}:{" "}
-          <a
-            href={OPERATOR_CONTACT.adrUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className={inlineLink}
-          >
-            {legal.adrName}
-          </a>
-        </span>
-        <span>
-          {legal.dsaLabel}:{" "}
-          <a href={`mailto:${OPERATOR_CONTACT.email}`} className={inlineLink}>
-            {OPERATOR_CONTACT.email}
-          </a>{" "}
-          ({legal.dsaLanguages})
-        </span>
-      </address>
 
       <p className="m-0 text-small text-faint">{siteFooter.copyright}</p>
     </footer>

@@ -14,16 +14,18 @@ const LINK = "text-volt underline-offset-4 hover:underline";
 /**
  * `/contact` — Kontakt (the lawyer's brief, item 1.1).
  *
- * WHO RUNS THIS AND HOW TO REACH THEM: the operator, its address, the
- * personal-data address, the out-of-court body for consumer disputes, and the
- * single point of contact the Digital Services Act requires. No phone number
- * yet — the owner has none to publish.
+ * HOW TO REACH US: the support address and the personal-data address. No
+ * phone number yet — the owner has none to publish.
+ *
+ * ~~The operator, the out-of-court body and the DSA contact point~~ left this
+ * page and the footer on 2026-10-27, by the owner's ruling over the lawyer's
+ * item 1.1: Obchodní podmínky 1.2 names the operator and the contact point,
+ * and the disputes article names Česká obchodní inspekce.
  *
  * THE ADMIN'S CONTACT LIST STILL HAS A HOME. Round 13 let the owner edit the
  * footer's contact details in `/admin` without a deploy; that dialog is gone
  * from the footer, so whatever he adds there is listed here under "other ways
- * to reach us" — minus anything the operator block already says, so no
- * address appears twice.
+ * to reach us" — minus either address above, so no address appears twice.
  */
 export default async function ContactPage() {
   const t = await getStrings();
@@ -35,7 +37,6 @@ export default async function ContactPage() {
   const hasOthers = otherEmails.length > 0 || contact.phones.length > 0;
 
   const rows = [
-    { key: "operator", label: legal.operatorLabel, value: OPERATOR_CONTACT.name },
     {
       key: "email",
       label: legal.emailLabel,
@@ -54,34 +55,13 @@ export default async function ContactPage() {
         </a>
       ),
     },
-    {
-      key: "adr",
-      label: legal.adrLabel,
-      value: (
-        <a href={OPERATOR_CONTACT.adrUrl} target="_blank" rel="noopener noreferrer" className={LINK}>
-          {legal.adrName}
-        </a>
-      ),
-    },
-    {
-      key: "dsa",
-      label: legal.dsaLabel,
-      value: (
-        <>
-          <a href={`mailto:${OPERATOR_CONTACT.email}`} className={LINK}>
-            {OPERATOR_CONTACT.email}
-          </a>{" "}
-          ({legal.dsaLanguages})
-        </>
-      ),
-    },
   ];
 
   return (
     <main className="relative z-10 mx-auto w-full max-w-content px-gutter pb-16 pt-24">
       <h1 className="m-0 font-display text-title uppercase text-bone">{t.siteFooter.contact}</h1>
 
-      <dl data-testid="contact-operator" className="m-0 mt-8 flex flex-col gap-5">
+      <dl data-testid="contact-details" className="m-0 mt-8 flex flex-col gap-5">
         {rows.map((row) => (
           <div key={row.key} className="flex flex-col gap-1">
             <dt className="text-eyebrow uppercase text-faint">{row.label}</dt>
