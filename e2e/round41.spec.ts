@@ -198,9 +198,13 @@ test("a game has a short link, and it is what Share sends", async ({ page, conte
     await page.goto(`/game/${game.id}`);
     await expect(page.getByTestId("hero-photo")).toBeVisible();
 
-    // And nonsense is a 404, not an error page.
-    const missing = await page.goto("/game/not-a-game");
-    expect(missing?.status()).toBe(404);
+    // And nonsense is the not-found page, not a database error. (The status
+    // itself is set by `generateMetadata` and is a production-build property —
+    // `next dev` streams a 200 — so this asserts what the reader sees.)
+    await page.goto("/game/not-a-game");
+    await expect(page.getByText("Nothing here")).toBeVisible();
+    await page.goto("/game/999999999");
+    await expect(page.getByText("Nothing here")).toBeVisible();
   } finally {
     await destroyScratchGame(game.id);
   }

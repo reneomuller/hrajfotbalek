@@ -1,0 +1,1 @@
+{{ $l := "en" }}{{ if .Data.consent_locale }}{{ $l = .Data.consent_locale }}{{ end }}{{ if .Data.email_locale }}{{ $l = .Data.email_locale }}{{ end }}{{ if eq $l "cs" }}Potvrď novou e-mailovou adresu{{ else if eq $l "ru" }}Подтверди новый адрес e-mail{{ else if eq $l "uk" }}Підтверди нову адресу e-mail{{ else }}Confirm your new email address{{ end }}

@@ -18,7 +18,8 @@
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:booking": "playwright test e2e/booking.spec.ts",
     "test:e2e:admin": "playwright test e2e/admin.spec.ts",
-    "perf:prod": "playwright test --config=perf/prod.config.ts"
+    "perf:prod": "playwright test --config=perf/prod.config.ts",
+    "email:auth-templates": "vite-node --config vitest.config.ts scripts/email/build-auth-templates.ts"
   },
   "dependencies": {
     "@next/third-parties": "16.2.10",

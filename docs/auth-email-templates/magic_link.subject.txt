@@ -1,0 +1,1 @@
+{{ $l := "en" }}{{ if .Data.consent_locale }}{{ $l = .Data.consent_locale }}{{ end }}{{ if .Data.email_locale }}{{ $l = .Data.email_locale }}{{ end }}{{ if eq $l "cs" }}Přihlášení do Hraj Fotbal{{ else if eq $l "ru" }}Вход в Hraj Fotbal{{ else if eq $l "uk" }}Вхід до Hraj Fotbal{{ else }}Your Hraj Fotbal sign-in{{ end }}

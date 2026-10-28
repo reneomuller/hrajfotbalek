@@ -134,6 +134,11 @@ export interface EmailParts {
   cta?: { href: string; label: string } | null;
   /** One quiet line under the button. */
   ctaNote?: string | null;
+  /**
+   * A code to type, big and spaced (round 41) — the Supabase sign-in email's
+   * six digits, for the link that opens in the wrong app's browser.
+   */
+  code?: { label: string; value: string } | null;
   /** The rule that matters next, with `**bold**` allowed for one phrase. */
   rule?: string | null;
   receipt?: EmailReceipt | null;
@@ -210,6 +215,10 @@ export function renderEmail(parts: EmailParts): RenderedEmail {
             : ""
         }</td></tr>`
       : html`<tr><td style="padding:0 0 24px"></td></tr>`
+  }${
+    parts.code
+      ? html`<tr><td class="px" style="padding:0 28px 30px"><div style="font-family:${BODY_FONT};font-size:11px;letter-spacing:2px;text-transform:uppercase;color:${C.faint};font-weight:600">${parts.code.label}</div><div style="margin-top:8px;font-family:'JetBrains Mono',ui-monospace,Menlo,Consolas,monospace;font-size:30px;letter-spacing:8px;color:${C.white}">${parts.code.value}</div></td></tr>`
+      : ""
   }</table></td></tr>`;
 
   const rule = parts.rule
@@ -247,6 +256,7 @@ export function renderEmail(parts: EmailParts): RenderedEmail {
     parts.cta ? "" : null,
     parts.cta ? `${parts.cta.label}: ${parts.cta.href}` : null,
     parts.ctaNote ?? null,
+    parts.code ? `${parts.code.label}: ${parts.code.value}` : null,
     parts.rule ? "" : null,
     parts.rule ? plain(parts.rule) : null,
     parts.receipt ? "" : null,

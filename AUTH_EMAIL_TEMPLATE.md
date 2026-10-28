@@ -1,13 +1,63 @@
 # Supabase auth email templates — HUMAN STEPS
 
 Three templates carry a credential into a mailbox, and all three are edited in
-the Supabase dashboard rather than in this repository. None of them can be
-verified by reading the dashboard: the failure they share is that a template
+the Supabase dashboard rather than sent from this repository. None of them can
+be verified by reading the dashboard: the failure they share is that a template
 which renders correctly still produces a credential nothing can exchange. They
 are verified on a real phone, and each is a separate line in
 `docs/g1-checklist.md`.
 
 These edits are Oliver's.
+
+## Round 41 — the approved design, in the reader's language
+
+**The HTML is no longer typed into this file.** It is GENERATED from the same
+layout and string table as every other email (`lib/email/templates/authEmails.ts`),
+so the sign-in email looks like the booking confirmation and speaks the
+player's language:
+
+```
+npm run email:auth-templates
+```
+
+writes six files to `docs/auth-email-templates/` — for each template, the
+**message body** (`<name>.html`) and the **subject** (`<name>.subject.txt`).
+Paste each into Authentication → Emails:
+
+| Dashboard template | Body | Subject |
+|---|---|---|
+| **Magic Link** | `magic_link.html` | `magic_link.subject.txt` |
+| **Confirm signup** | `confirm_signup.html` | `confirm_signup.subject.txt` |
+| **Change email address** | `email_change.html` | `email_change.subject.txt` |
+
+**One template, four languages.** Each file opens with a Go-template switch on
+the account's own metadata (`.Data`): the email language chosen at signup or on
+the account page, else the language the terms were read in, else English —
+the same order `lib/email/recipientLocale.ts` uses for every other email.
+**Verified on 2026-10-28 against the local stack's own auth server (GoTrue
+v2.197)**: an account set to Czech got Czech, one with only a signup language
+of Ukrainian got Ukrainian, one with nothing saved got English without an
+error, and a change of email reached both mailboxes naming both addresses.
+The placeholders below are all still present — `lib/email/__tests__/authTemplates.test.ts`
+fails if one goes missing.
+
+**And the sender.** "This email should also come from our email account": in
+Authentication → Emails → **SMTP Settings**, enable custom SMTP with
+
+| Field | Value |
+|---|---|
+| Sender email | `support@hrajfotbal.com` |
+| Sender name | `Hraj Fotbal` |
+| Host | `smtp.resend.com` |
+| Port | `465` |
+| Username | `resend` |
+| Password | a Resend API key (the same kind as `RESEND_API_KEY`) |
+
+Resend is verified for the whole of `hrajfotbal.com` (its DKIM key is at
+`resend._domainkey.hrajfotbal.com`), so it may send as `support@`.
+
+The sections below are what each template must carry and why. The snippets
+are the minimum; the generated files carry all of it.
 
 ---
 

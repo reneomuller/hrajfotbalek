@@ -2458,6 +2458,34 @@ export const strings = {
       expires: "Expires",
       footer: "You're getting this because you have Credits on Hraj Fotbal.",
     },
+
+    /**
+     * The three emails SUPABASE sends (round 41) — sign-in, confirm signup,
+     * change email. Edited in its dashboard, not sent from here: these keys
+     * feed `scripts/email/build-auth-templates.ts`, which writes the HTML the
+     * owner pastes, one template carrying all four languages.
+     */
+    auth: {
+      signInSubject: "Your Hraj Fotbal sign-in",
+      signInEyebrow: "Sign in",
+      signInHeadline: "Here's your link.",
+      signInLede: "Tap the button to sign in. If it opens in the wrong app, type the code on the sign-in page instead.",
+      signInCta: "Sign in",
+      confirmSubject: "Confirm your email",
+      confirmEyebrow: "Almost there",
+      confirmHeadline: "Confirm your email.",
+      confirmLede: "One tap and your Hraj Fotbal account is ready. If the button opens in the wrong app, type the code on the sign-in page instead.",
+      confirmCta: "Confirm email",
+      changeSubject: "Confirm your new email address",
+      changeEyebrow: "Your account",
+      changeHeadline: "New email address?",
+      changeLede: "You asked to change your Hraj Fotbal email from {email} to {newEmail}. Both addresses get this message, and both have to confirm.",
+      changeCta: "Confirm the change",
+      code: "Your code",
+      expiry: "The link and the code expire in one hour.",
+      notYou: "Didn't ask for this? Ignore it — nothing happens.",
+      footer: "You're getting this because this address was used on Hraj Fotbal.",
+    },
   },
 
   /**
