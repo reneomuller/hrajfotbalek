@@ -510,6 +510,17 @@ status. Two specs failed on this since round 37 and were logged as product
 bugs (row 347); one of them, "a checkout opened for a cancelled game", never
 opened anything — the redirect simply arrived after `page.goto` resolved.
 
+**A BUTTON THAT BECOMES A SUBMIT BUTTON DURING ITS OWN CLICK SUBMITS THE FORM.**
+Remove credit had an arm-then-confirm pair rendered as `confirming ? <button
+type="submit"> : <button type="button" onClick={arm}>` — unkeyed, so React
+reused ONE element and flipped its `type` inside the click handler, and the
+browser's default action for that same click was then "submit". Arming took the
+Credits; confirming took them again. It looked right in every screenshot and in
+the component's own comment ("refuses to be a submit button until armed"); only
+reading the ledger back after the clicks showed two rows. **Key the two halves of
+any arm/confirm swap apart**, and assert the arm click by its effect on the
+database, not by what appears on screen.
+
 ## A migration's verification block may not write a row
 
 **Effective 2026-09-12, after it cost a production cleanup.** A migration
