@@ -405,6 +405,12 @@ export interface Database {
       games: {
         Row: {
           id: string;
+          /**
+           * Round 41 — the short number, `/game/<number>`. OPTIONAL because it
+           * arrives with migration 20261028100000: a row read before the owner
+           * applies it has none, and `gamePath` then links by id.
+           */
+          game_number?: number;
           venue: string;
           /** Structured link to `venues`; null for games created before M4. */
           venue_id: string | null;
@@ -927,6 +933,8 @@ export interface Database {
         Returns: undefined;
       };
       dismiss_all_notifications: { Args: Record<string, never>; Returns: number };
+      /** Round 41 — one notification out of the caller's own bell. */
+      dismiss_notification: { Args: { p_notification_id: string }; Returns: boolean };
       admin_remove_booking: { Args: { p_booking_id: string }; Returns: number };
       admin_delete_game: { Args: { p_game_id: string }; Returns: undefined };
       admin_delete_venue: { Args: { p_venue_id: string }; Returns: undefined };

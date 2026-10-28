@@ -23,12 +23,25 @@ export function whatsAppShareUrl(
     venue: string;
     when: string;
     url: string;
+    /**
+     * Round 41 — the places line from the approved draft: "4 spots left" (the
+     * same label the card shows), or `full`. Absent says "Grab a spot".
+     */
+    spots?: string | null;
+    full?: boolean;
   },
   t: Strings = strings,
 ): string {
+  const call = params.full
+    ? t.games.shareCallFull
+    : params.spots
+      ? t.games.shareCallOpen.replace("{spots}", params.spots)
+      : t.games.shareCallDefault;
+
   const text = t.games.shareMessage
     .replace("{venue}", params.venue)
     .replace("{when}", params.when)
+    .replace("{call}", call)
     .replace("{url}", params.url);
 
   return `https://wa.me/?text=${encodeURIComponent(text)}`;

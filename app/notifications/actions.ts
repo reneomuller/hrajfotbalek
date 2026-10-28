@@ -87,3 +87,17 @@ export async function dismissNotificationsAction(): Promise<void> {
   if (error) console.error("dismiss_all_notifications failed", error.message);
   revalidatePath("/", "layout");
 }
+
+/**
+ * One notification out of the reader's own bell (round 41, owner: "add user
+ * option to delete notifications"). Per-player, like Clear all: the
+ * notification and everybody else's bell are untouched.
+ */
+export async function dismissNotificationAction(formData: FormData): Promise<void> {
+  const id = String(formData.get("notificationId") ?? "");
+  if (!id) return;
+  const supabase = await createServerSupabaseClient();
+  const { error } = await supabase.rpc("dismiss_notification", { p_notification_id: id });
+  if (error) console.error("dismiss_notification failed", error.message);
+  revalidatePath("/", "layout");
+}

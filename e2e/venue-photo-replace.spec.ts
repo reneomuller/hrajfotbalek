@@ -132,7 +132,7 @@ test("a replaced venue photo shows on the admin row, the games list and the game
 
     // The player-facing pages load the FIRST photo, so it is in their caches.
     const card = page
-      .locator(`[data-testid="game-row"][href="/game/${gameId}"] [data-testid="card-photo"]`)
+      .locator(`[data-testid="game-row"][data-game-id="${gameId}"] [data-testid="card-photo"]`)
       .first();
     await page.goto(`/games?day=${pragueDayKey(startsAt)}`);
     await expect.poll(() => centreColour(page, card).then((c) => isColour(c, MAGENTA))).toBe(true);

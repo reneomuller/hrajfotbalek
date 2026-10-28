@@ -79,7 +79,7 @@ test("A1-A3-games-list", async ({ page }) => {
 
     // The three-way format, close up, and the amber and red rows.
     await page
-      .locator(`[data-testid="game-row"][href="/game/${critical.id}"]`)
+      .locator(`[data-testid="game-row"][data-game-id="${critical.id}"]`)
       .scrollIntoViewIfNeeded();
     await strip(page, "A3-spots-critical-and-full");
 

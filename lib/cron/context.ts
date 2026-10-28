@@ -4,6 +4,7 @@ import { amountDueCzk } from "@/lib/payments/spd";
 import { siteUrl } from "@/lib/site";
 import { createServiceRoleSupabaseClient } from "@/lib/supabase/clients";
 import { venueMapsHref } from "@/lib/venues/mapsHref";
+import { gamePath } from "@/lib/games/link";
 import type { DispatchContext } from "@/lib/email/dispatch";
 import type { Database } from "@/lib/types/database";
 
@@ -13,6 +14,8 @@ type GameRow = Database["public"]["Tables"]["games"]["Row"];
 export interface GameExtras {
   durationMinutes: number | null;
   mapsUrl: string | null;
+  /** Round 41 — `/game/<number>` once the game has one, `/game/<id>` before. */
+  path: string | null;
 }
 
 /**
@@ -24,13 +27,16 @@ export interface GameExtras {
 export async function gameEmailExtras(gameId: string): Promise<GameExtras> {
   try {
     const supabase = createServiceRoleSupabaseClient();
-    const { data: game } = await supabase
-      .from("games")
-      .select("duration_minutes, venue_id")
-      .eq("id", gameId)
-      .maybeSingle();
-    const row = game as { duration_minutes: number | null; venue_id: string | null } | null;
-    if (!row?.venue_id) return { durationMinutes: row?.duration_minutes ?? null, mapsUrl: null };
+    // `*`, not a list: `game_number` exists only once migration 20261028100000
+    // is applied, and naming a missing column would fail the whole read.
+    const { data: game } = await supabase.from("games").select("*").eq("id", gameId).maybeSingle();
+    const row = game as {
+      duration_minutes: number | null;
+      venue_id: string | null;
+      game_number?: number;
+    } | null;
+    const path = row ? gamePath({ id: gameId, game_number: row.game_number }) : null;
+    if (!row?.venue_id) return { durationMinutes: row?.duration_minutes ?? null, mapsUrl: null, path };
 
     const { data: venue } = await supabase
       .from("venues")
@@ -40,12 +46,13 @@ export async function gameEmailExtras(gameId: string): Promise<GameExtras> {
     const place = venue as { name: string; map_query: string | null; map_url: string | null } | null;
     return {
       durationMinutes: row.duration_minutes,
+      path,
       mapsUrl: place
         ? venueMapsHref({ name: place.name, mapQuery: place.map_query, mapUrl: place.map_url })
         : null,
     };
   } catch {
-    return { durationMinutes: null, mapsUrl: null };
+    return { durationMinutes: null, mapsUrl: null, path: null };
   }
 }
 
@@ -58,12 +65,13 @@ export async function bookingEmailContext(
 ): Promise<DispatchContext> {
   const [base, extras] = await Promise.all([siteUrl(), gameEmailExtras(game.id)]);
   const credited = creditsFromCzk(booking.credit_applied_czk ?? 0);
+  const gameUrl = `${base}${extras.path ?? `/game/${game.id}`}`;
 
   return {
     nickname: player.nickname,
     venue: game.venue,
     startsAt: game.starts_at,
-    gameUrl: `${base}/game/${game.id}`,
+    gameUrl,
     accountUrl: `${base}/account`,
     convertUrl: `${base}/game/${game.id}/waitlist/convert`,
     durationMinutes: extras.durationMinutes,
@@ -78,7 +86,7 @@ export async function bookingEmailContext(
             uid: game.id,
             venue: game.venue,
             startsAt: game.starts_at,
-            url: `${base}/game/${game.id}`,
+            url: gameUrl,
           }),
           contentType: "text/calendar; charset=utf-8",
         }

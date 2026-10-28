@@ -405,7 +405,10 @@ export const cs: StringsOverlay = {
     nextGameStripCta: "Zobrazit rezervaci →",
 
     shareWhatsApp: "Sdílet na WhatsAppu",
-    shareMessage: "{venue} · {when}\nZaber si místo: {url}",
+    shareMessage: "⚽ Fotbal · {when}\n📍 {venue}\n{call} 👉 {url}",
+    shareCallOpen: "{spots} – zaber si místo",
+    shareCallFull: "Plno – přidej se na čekací listinu",
+    shareCallDefault: "Zaber si místo",
   },
 
   booking: {
@@ -775,6 +778,7 @@ export const cs: StringsOverlay = {
   notifications: {
     // Round 16 item 13 — DRAFT.
     clearAll: "Smazat vše",
+    deleteOne: "Smazat toto oznámení",
     // DRAFT — flagged for the standing native-review batch.
     bellLabel: "Oznámení",
     title: "Oznámení",

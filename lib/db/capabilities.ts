@@ -92,6 +92,10 @@ export interface AppCapabilities {
   venueArchive: boolean;
   /** Round 40 — `delete_player_account` exists. */
   deleteAccount: boolean;
+  /** Round 41 — `games.game_number`: `/game/<number>` links resolve. */
+  gameNumbers: boolean;
+  /** Round 41 — `dismiss_notification`: delete one item from the bell. */
+  dismissOneNotification: boolean;
 }
 
 const NONE: AppCapabilities = {
@@ -113,6 +117,8 @@ const NONE: AppCapabilities = {
   priceOneEighty: false,
   venueArchive: false,
   deleteAccount: false,
+  gameNumbers: false,
+  dismissOneNotification: false,
 };
 
 /*
@@ -172,6 +178,8 @@ const readCapabilities = stableRead(
       priceOneEighty: read("priceOneEighty"),
       venueArchive: read("venueArchive"),
       deleteAccount: read("deleteAccount"),
+      gameNumbers: read("gameNumbers"),
+      dismissOneNotification: read("dismissOneNotification"),
     };
   } catch {
     return NONE;

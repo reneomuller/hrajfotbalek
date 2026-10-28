@@ -23,17 +23,22 @@ export async function ShareButton({
   venue,
   when,
   url,
+  spots = null,
+  full = false,
   size = "default",
 }: {
   venue: string;
   when: string;
   url: string;
+  /** Round 41 — "4 spots left", the card's own label, for the message's third line. */
+  spots?: string | null;
+  full?: boolean;
   size?: "default" | "slim";
 }) {
   const t = await getStrings();
   return (
     <a
-      href={whatsAppShareUrl({ venue, when, url }, t)}
+      href={whatsAppShareUrl({ venue, when, url, spots, full }, t)}
       target="_blank"
       rel="noopener noreferrer"
       data-testid="share-whatsapp"

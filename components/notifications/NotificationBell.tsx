@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Icon } from "@/components/Icon";
-import { dismissNotificationsAction } from "@/app/notifications/actions";
+import { dismissNotificationAction, dismissNotificationsAction } from "@/app/notifications/actions";
 import { useStrings } from "@/components/LocaleProvider";
 import { markNotificationsReadAction } from "@/app/notifications/actions";
 import type { NotificationRow } from "@/lib/notifications/queries";
@@ -35,6 +35,7 @@ import type { NotificationRow } from "@/lib/notifications/queries";
 export function NotificationBell({
   items,
   canDismiss = false,
+  canDismissOne = false,
   unread,
   available,
 }: {
@@ -45,6 +46,8 @@ export function NotificationBell({
    * and the code ships first.
    */
   canDismiss?: boolean;
+  /** Round 41 — `dismiss_notification` exists: each item gets its own ×. */
+  canDismissOne?: boolean;
   unread: number;
   available: boolean;
 }) {
@@ -186,8 +189,39 @@ export function NotificationBell({
                     <li
                       key={item.id}
                       data-testid="notification-item"
-                      className="border-b border-hairline py-3 last:border-b-0 last:pb-0"
+                      data-notification-id={item.id}
+                      className={`relative border-b border-hairline py-3 last:border-b-0 last:pb-0 ${
+                        canDismissOne ? "pr-10" : ""
+                      }`}
                     >
+                      {/*
+                        DELETE ONE (round 41) — the owner: "add user option to
+                        delete notifications". Clear all already empties the
+                        list; this takes out just the one. Top-right of the
+                        item, 44px of target around a 14px cross, and no
+                        confirmation for the reason Clear all has none:
+                        nothing is destroyed, only hidden from this reader.
+                      */}
+                      {canDismissOne && (
+                        <form action={dismissNotificationAction} className="absolute right-0 top-1">
+                          <input type="hidden" name="notificationId" value={item.id} />
+                          <button
+                            type="submit"
+                            aria-label={t.notifications.deleteOne}
+                            data-testid="notification-delete"
+                            className="flex h-11 w-11 items-center justify-center rounded-pill text-muted transition-colors hover:text-bone"
+                          >
+                            <svg aria-hidden viewBox="0 0 14 14" width="14" height="14">
+                              <path
+                                d="M2 2l10 10M12 2L2 12"
+                                stroke="currentColor"
+                                strokeWidth="1.8"
+                                strokeLinecap="round"
+                              />
+                            </svg>
+                          </button>
+                        </form>
+                      )}
                       {/*
                         THE READER'S LANGUAGE, NOT THE WRITER'S (round 24,
                         item 2). A notification the PRODUCT wrote carries a

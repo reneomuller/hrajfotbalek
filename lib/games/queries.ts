@@ -1,3 +1,4 @@
+import { parseGameRef } from "@/lib/games/link";
 import { canOfferCancel, isCancellationRefundable } from "@/lib/booking/badges";
 import { isInProgress } from "@/lib/games/duration";
 import { policy } from "@/lib/policy";
@@ -173,12 +174,21 @@ export async function getNextGame(): Promise<GameWithCount | null> {
  * anonymous visitor learns nothing about whether the id exists.
  */
 export async function getGameById(id: string): Promise<GameWithCount | null> {
+  /*
+   * `/game/42` OR `/game/<uuid>` (round 41). A segment that is neither is a
+   * 404 here rather than an invalid-uuid error from PostgREST; a number before
+   * migration 20261028100000 errors on the missing column, which is a 404 too
+   * — and no such link is ever produced until the column exists.
+   */
+  const ref = parseGameRef(id);
+  if (!ref) return null;
+
   const supabase = await createServerSupabaseClient();
 
   const { data: game, error } = await supabase
     .from("games")
     .select("*")
-    .eq("id", id)
+    .eq(ref.kind === "number" ? "game_number" : "id", ref.value)
     .maybeSingle();
 
   if (error || !game) return null;

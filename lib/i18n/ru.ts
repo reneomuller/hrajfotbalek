@@ -408,7 +408,10 @@ export const ru: StringsOverlay = {
     nextGameStripCta: "Открыть бронь →",
 
     shareWhatsApp: "Поделиться в WhatsApp",
-    shareMessage: "{venue} · {when}\nЗайми место: {url}",
+    shareMessage: "⚽ Футбол · {when}\n📍 {venue}\n{call} 👉 {url}",
+    shareCallOpen: "{spots} — займи место",
+    shareCallFull: "Мест нет — встань в лист ожидания",
+    shareCallDefault: "Займи место",
   },
 
   booking: {
@@ -779,6 +782,7 @@ export const ru: StringsOverlay = {
   notifications: {
     // Round 16 item 13 — DRAFT.
     clearAll: "Очистить всё",
+    deleteOne: "Удалить это уведомление",
     // DRAFT — flagged for the standing native-review batch.
     bellLabel: "Уведомления",
     title: "Уведомления",

@@ -297,7 +297,7 @@ test("the game card shows EXACTLY the region the organizer framed", async ({ pag
 
     // ---- Act 2: the card as served -----------------------------------------
     const cardPhoto = page
-      .locator(`[data-testid="game-row"][href="/game/${gameId}"] [data-testid="card-photo"]`)
+      .locator(`[data-testid="game-row"][data-game-id="${gameId}"] [data-testid="card-photo"]`)
       .first();
 
     await expect
@@ -365,7 +365,7 @@ test("the game card shows EXACTLY the region the organizer framed", async ({ pag
      * size it is served at — the filter in front of it is what goes away.
      */
     await page.evaluate((id) => {
-      const row = document.querySelector<HTMLElement>(`[href="/game/${id}"]`)!;
+      const row = document.querySelector<HTMLElement>(`[data-game-id="${id}"]`)!;
       const photo = row.querySelector<HTMLElement>('[data-testid="card-photo"]')!;
       for (const el of row.querySelectorAll<HTMLElement>("*")) {
         if (el === photo || el.contains(photo)) continue;

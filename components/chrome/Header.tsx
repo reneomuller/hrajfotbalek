@@ -251,6 +251,7 @@ export async function Header({
               available={bell.available}
               /* Round 16 item 13 — hidden until the migration exists. */
               canDismiss={capabilities.dismissNotifications}
+              canDismissOne={capabilities.dismissOneNotification}
             />
           )}
           {signedIn ? (

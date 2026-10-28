@@ -11,6 +11,7 @@ import { CancelGuestsPanel } from "@/components/game/CancelGuestsPanel";
 import { refundCutoffHours } from "@/lib/policy/refundCutoff";
 import { ClaimBar } from "@/components/game/ClaimBar";
 import { ShareButton } from "@/components/game/ShareButton";
+import { gamePath } from "@/lib/games/link";
 import { effectivePitchName, venueDisplayName } from "@/lib/venues/displayName";
 import { bookingBadge } from "@/lib/booking/badges";
 import { ToastFromQuery } from "@/components/ToastFromQuery";
@@ -96,7 +97,8 @@ export async function generateMetadata({ params }: GamePageProps): Promise<Metad
     game.price_czk,
   )}`;
 
-  const url = `${await siteUrl()}/game/${game.id}`;
+  // Round 41: the short link, once the game has a number.
+  const url = `${await siteUrl()}${gamePath(game)}`;
 
   return {
     title,
@@ -251,7 +253,8 @@ export default async function GameDetailPage({ params, searchParams }: GamePageP
   const endsAt = gameEndsAt(game.starts_at, game.duration_minutes);
   const isFull = spotsLeft === 0;
   const canAct = !isCancelled && !hasStarted;
-  const shareUrl = `${baseUrl}/game/${game.id}`;
+  // Round 41: what the Share button sends is the short link — `/game/42`.
+  const shareUrl = `${baseUrl}${gamePath(game)}`;
 
   // A holder is never offered a claim (§5.6). Everything below branches on
   // this one value rather than each block deciding for itself.
@@ -306,7 +309,7 @@ export default async function GameDetailPage({ params, searchParams }: GamePageP
   const schema = gameEventSchema({
     game,
     spotsLeft,
-    url: `${baseUrl}/game/${game.id}`,
+    url: shareUrl,
     venueName: venueRow?.name ?? game.venue,
     city: game.city,
   });
@@ -610,6 +613,8 @@ export default async function GameDetailPage({ params, searchParams }: GamePageP
           venue={game.venue}
           when={formatGameDateTime(game.starts_at, locale)}
           url={shareUrl}
+          spots={isFull ? null : spotsLeftLabel(bookedCount, game.capacity, locale, t)}
+          full={isFull}
         />
       </div>
 

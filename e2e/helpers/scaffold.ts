@@ -407,3 +407,18 @@ export async function expireOnlinePayment(bookingId: string): Promise<void> {
     await client.end();
   }
 }
+
+/**
+ * Where a game's card leads (round 41): `/game/<number>` once
+ * `games.game_number` exists, `/game/<id>` before — the same rule `gamePath`
+ * applies, read back from the row so a spec never guesses which it is.
+ */
+export async function gamePathOf(gameId: string): Promise<string> {
+  const { data } = await serviceClient()
+    .from("games")
+    .select("*")
+    .eq("id", gameId)
+    .maybeSingle();
+  const number = (data as { game_number?: number } | null)?.game_number;
+  return `/game/${number ?? gameId}`;
+}

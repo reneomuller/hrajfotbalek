@@ -63,4 +63,28 @@ describe("whatsAppShareUrl", () => {
     expect(url).toContain("%0A");
     expect(decoded(url)).toContain("\n");
   });
+
+  /*
+   * ROUND 41 — the approved draft: what, when, where, how many places, in
+   * three short lines, with the short link last.
+   */
+  it("says how many places are left, in three lines, the link last", () => {
+    // Act
+    const text = decoded(
+      whatsAppShareUrl({ venue: "Prazacka Football", when: "Sunday 1 November 15:00", url: "https://www.hrajfotbal.com/game/42", spots: "4 spots left" }),
+    );
+
+    // Assert
+    expect(text).toBe("⚽ Football on Sunday 1 November 15:00\n📍 Prazacka Football\n4 spots left – grab one 👉 https://www.hrajfotbal.com/game/42");
+  });
+
+  it("sends a full game's sharer to the waitlist", () => {
+    // Act
+    const text = decoded(
+      whatsAppShareUrl({ venue: "Letná", when: "Mon 3 Aug 19:30", url: "https://www.hrajfotbal.com/game/7", full: true }),
+    );
+
+    // Assert
+    expect(text).toContain("Full – join the waitlist 👉 https://www.hrajfotbal.com/game/7");
+  });
 });

@@ -409,7 +409,10 @@ export const uk: StringsOverlay = {
     nextGameStripCta: "Відкрити бронювання →",
 
     shareWhatsApp: "Поділитися у WhatsApp",
-    shareMessage: "{venue} · {when}\nЗайми місце: {url}",
+    shareMessage: "⚽ Футбол · {when}\n📍 {venue}\n{call} 👉 {url}",
+    shareCallOpen: "{spots} — займи місце",
+    shareCallFull: "Місць немає — стань у список очікування",
+    shareCallDefault: "Займи місце",
   },
 
   booking: {
@@ -784,6 +787,7 @@ export const uk: StringsOverlay = {
 
   notifications: {
     clearAll: "Очистити все",
+    deleteOne: "Видалити це сповіщення",
     bellLabel: "Сповіщення",
     title: "Сповіщення",
     empty: "Поки нічого.",

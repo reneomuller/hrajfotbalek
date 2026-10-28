@@ -8,6 +8,7 @@ import { SpotsLeft } from "@/components/game/SpotsLeft";
 import { formatTime } from "@/lib/format";
 import { gameLanguageOf } from "@/lib/games/language";
 import { venuePhotoUrl } from "@/lib/storage/avatar";
+import { gamePath } from "@/lib/games/link";
 import { venuePhotoVersion } from "@/lib/storage/venuePhotoVersions";
 import { getStrings } from "@/lib/i18n/server";
 import type { RosterAvatar } from "@/lib/games/queries";
@@ -20,7 +21,7 @@ type GameRowData = Database["public"]["Tables"]["games"]["Row"];
 
 export type GameCardGame = Pick<
   GameRowData,
-  "id" | "venue" | "starts_at" | "capacity" | "format" | "surface" | "duration_minutes"
+  "id" | "game_number" | "venue" | "starts_at" | "capacity" | "format" | "surface" | "duration_minutes"
 > & {
   /**
    * The language pair (round 18, item 2). Optional because `games.language`
@@ -447,6 +448,7 @@ export async function GameCard({
     return (
       <div
         data-testid="game-row"
+        data-game-id={game.id}
         data-past="true"
         className="game-box relative isolate block overflow-hidden rounded-card px-4 py-3 opacity-45"
       >
@@ -457,8 +459,9 @@ export async function GameCard({
 
   return (
     <Link
-      href={`/game/${game.id}`}
+      href={gamePath(game)}
       data-testid="game-row"
+      data-game-id={game.id}
       data-past="false"
       className="game-box pressable relative isolate block overflow-hidden rounded-card px-4 py-3 no-underline"
     >

@@ -58,10 +58,11 @@ export async function notifyWaitlistForGame(gameId: string): Promise<number> {
         nickname: row.nickname,
         venue: game.venue,
         startsAt: game.starts_at,
-        gameUrl: `${base}/game/${game.id}`,
+        gameUrl: `${base}${extras.path ?? `/game/${game.id}`}`,
         accountUrl: `${base}/account`,
         convertUrl: `${base}/game/${game.id}/waitlist/convert`,
-        ...extras,
+        durationMinutes: extras.durationMinutes,
+        mapsUrl: extras.mapsUrl,
       },
     });
     if (outcome.sent) sent += 1;

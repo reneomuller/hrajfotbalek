@@ -1,6 +1,6 @@
 import { PASS_REFERENCE_PRICE_CZK } from "../lib/pass/creditPrice";
 import { expect, test } from "@playwright/test";
-import { createScratchGame, destroyScratchGame, setWalletTo } from "./helpers/scaffold.ts";
+import { createScratchGame, destroyScratchGame, gamePathOf, setWalletTo } from "./helpers/scaffold.ts";
 import { anonClient, apiClientFor, players, serviceClient, signInAs } from "./helpers/session.ts";
 import { pragueDayKey } from "../lib/games/days.ts";
 
@@ -201,7 +201,7 @@ test("the card shows the time; the heading carries the day; the detail shows the
 
   try {
     await page.goto(listUrlFor(game));
-    const row = page.locator(`[data-testid="game-row"][href="/game/${game.id}"]`);
+    const row = page.locator(`[data-testid="game-row"][data-game-id="${game.id}"]`);
     await expect(row).toHaveCount(1);
 
     /*
@@ -263,13 +263,13 @@ test("no skill badge on an all-levels game, badges on a restricted one", async (
      */
     await page.goto(listUrlFor(restricted));
     const restrictedRow = page.locator(
-      `[data-testid="game-row"][href="/game/${restricted.id}"]`,
+      `[data-testid="game-row"][data-game-id="${restricted.id}"]`,
     );
     await expect(restrictedRow).toHaveCount(1);
     await expect(restrictedRow.getByTestId("skill-badges")).toHaveCount(0);
 
     await page.goto(listUrlFor(open));
-    const openRow = page.locator(`[data-testid="game-row"][href="/game/${open.id}"]`);
+    const openRow = page.locator(`[data-testid="game-row"][data-game-id="${open.id}"]`);
     await expect(openRow).toHaveCount(1);
     await expect(openRow.getByTestId("skill-badges")).toHaveCount(0);
   } finally {
@@ -321,7 +321,7 @@ test("a capacity-12 game entered as 5v5 never renders 6v6", async ({ page }) => 
 
     // The list row.
     await page.goto(listUrlFor(game));
-    const row = page.locator(`[data-testid="game-row"][href="/game/${game.id}"]`);
+    const row = page.locator(`[data-testid="game-row"][data-game-id="${game.id}"]`);
     // Format and surface are BADGES now (ruling 6, 2026-08-10).
     await expect(row.getByTestId("game-format")).toHaveText("5v5");
     await expect(row).not.toContainText("6v6");
@@ -686,8 +686,8 @@ test("the day strip filters the list, by the date on the chip", async ({ page })
     await page.goto("/games");
     await expect(page.getByTestId("day-picker")).toBeVisible();
 
-    const secondDayRow = page.locator(`[data-testid="game-row"][href="/game/${dayTwoA.id}"]`);
-    const firstDayRow = page.locator(`[data-testid="game-row"][href="/game/${dayOne.id}"]`);
+    const secondDayRow = page.locator(`[data-testid="game-row"][data-game-id="${dayTwoA.id}"]`);
+    const firstDayRow = page.locator(`[data-testid="game-row"][data-game-id="${dayOne.id}"]`);
 
     /*
      * The chip is addressed BY ITS DATE, which is the whole point of the
@@ -706,7 +706,7 @@ test("the day strip filters the list, by the date on the chip", async ({ page })
     await page.waitForURL(`**/games?day=${targetDay}`);
 
     await expect(secondDayRow).toBeVisible();
-    await expect(page.locator(`[data-testid="game-row"][href="/game/${dayTwoB.id}"]`)).toBeVisible();
+    await expect(page.locator(`[data-testid="game-row"][data-game-id="${dayTwoB.id}"]`)).toBeVisible();
     await expect(firstDayRow).toHaveCount(0);
 
     // Tapping the selected chip again clears the filter — the gesture people
@@ -750,10 +750,10 @@ test("a game months out appears under All, though the week has no cell for it", 
      * is what keeps a fixed week from being that strip under another name.
      */
     await expect(
-      page.locator(`[data-testid="game-row"][href="/game/${soon.id}"]`),
+      page.locator(`[data-testid="game-row"][data-game-id="${soon.id}"]`),
     ).toBeVisible();
     await expect(
-      page.locator(`[data-testid="game-row"][href="/game/${distant.id}"]`),
+      page.locator(`[data-testid="game-row"][data-game-id="${distant.id}"]`),
     ).toBeVisible();
 
     /*
@@ -773,13 +773,13 @@ test("a game months out appears under All, though the week has no cell for it", 
     await cell.click();
     await page.waitForURL(`**/games?day=${soonDay}`);
     await expect(
-      page.locator(`[data-testid="game-row"][href="/game/${distant.id}"]`),
+      page.locator(`[data-testid="game-row"][data-game-id="${distant.id}"]`),
     ).toHaveCount(0);
 
     await page.getByTestId("day-tab-all").click();
     await page.waitForURL("**/games");
     await expect(
-      page.locator(`[data-testid="game-row"][href="/game/${distant.id}"]`),
+      page.locator(`[data-testid="game-row"][data-game-id="${distant.id}"]`),
     ).toBeVisible();
   } finally {
     await destroyScratchGame(soon.id);
@@ -844,7 +844,7 @@ test("the whole card is the link, with no View game label and no claim", async (
 
   try {
     await page.goto(listUrlFor(game));
-    const row = page.locator(`[data-testid="game-row"][href="/game/${game.id}"]`);
+    const row = page.locator(`[data-testid="game-row"][data-game-id="${game.id}"]`);
     await expect(row).toBeVisible();
     await expect(row).not.toContainText("View game");
     await expect(row).not.toContainText("Claim");
@@ -855,7 +855,7 @@ test("the whole card is the link, with no View game label and no claim", async (
 
     // And it leads to the detail, which is where the claim is.
     await row.click();
-    await page.waitForURL(`**/game/${game.id}`);
+    await page.waitForURL(`**${await gamePathOf(game.id)}`);
     await expect(page.getByTestId("book-cta")).toBeVisible();
   } finally {
     await destroyScratchGame(game.id);
@@ -886,7 +886,7 @@ test("a card carries venue, time, format, surface, bar and spots — no price, n
 
   try {
     await page.goto(listUrlFor(game));
-    const row = page.locator(`[data-testid="game-row"][href="/game/${game.id}"]`);
+    const row = page.locator(`[data-testid="game-row"][data-game-id="${game.id}"]`);
     await expect(row).toBeVisible();
 
     await expect(row.getByTestId("card-when")).toHaveText(/^\d{2}:\d{2}$/);
@@ -938,7 +938,7 @@ test("a card carries venue, time, format, surface, bar and spots — no price, n
 
     // Both of them ARE on the detail, so this is a move rather than a loss.
     await row.click();
-    await page.waitForURL(`**/game/${game.id}`);
+    await page.waitForURL(`**${await gamePathOf(game.id)}`);
     await expect(page.getByTestId("game-subs")).toContainText("2");
     await expect(page.locator("body")).toContainText(String(game.priceCzk));
   } finally {
@@ -986,7 +986,7 @@ test("spots left is coloured by absolute count: volt, amber, then red", async ({
     await page.goto("/games");
 
     const toneOf = (id: string) =>
-      page.locator(`[data-testid="game-row"][href="/game/${id}"]`).getByTestId("spots-left");
+      page.locator(`[data-testid="game-row"][data-game-id="${id}"]`).getByTestId("spots-left");
 
     await expect(toneOf(plenty.id)).toHaveAttribute("data-tone", "plenty");
     await expect(toneOf(few.id)).toHaveAttribute("data-tone", "few");
@@ -1405,7 +1405,7 @@ test("a venue's own photo backs its games on the list and the detail alike", asy
 
   try {
     await page.goto(listUrlFor(game));
-    const row = page.locator(`[data-testid="game-row"][href="/game/${game.id}"]`);
+    const row = page.locator(`[data-testid="game-row"][data-game-id="${game.id}"]`);
     await expect(row).toBeVisible();
 
     const cardPhoto = row.locator('[data-testid="card-photo"]');
@@ -1504,12 +1504,12 @@ test("a booked game shows its avatar stack on the card AND on the detail", async
     await page.goto(listUrlFor(booked));
 
     // The list card carries the stack…
-    const bookedRow = page.locator(`[data-testid="game-row"][href="/game/${booked.id}"]`);
+    const bookedRow = page.locator(`[data-testid="game-row"][data-game-id="${booked.id}"]`);
     await expect(bookedRow.getByTestId("avatar")).toHaveCount(1);
 
     // …and a game nobody has claimed carries none, which is the rule and not
     // a failure.
-    const emptyRow = page.locator(`[data-testid="game-row"][href="/game/${empty.id}"]`);
+    const emptyRow = page.locator(`[data-testid="game-row"][data-game-id="${empty.id}"]`);
     await expect(emptyRow).toHaveCount(1);
     await expect(emptyRow.getByTestId("avatar")).toHaveCount(0);
 

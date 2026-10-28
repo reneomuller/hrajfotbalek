@@ -306,9 +306,9 @@ test("the language pill is identical on the card and the detail", async ({
 
     await page.goto("/games", { waitUntil: "networkidle" });
     await page
-      .locator(`[data-testid="game-row"][href="/game/${game.id}"]`)
+      .locator(`[data-testid="game-row"][data-game-id="${game.id}"]`)
       .scrollIntoViewIfNeeded();
-    const onCard = await measure(`[data-testid="game-row"][href="/game/${game.id}"]`);
+    const onCard = await measure(`[data-testid="game-row"][data-game-id="${game.id}"]`);
 
     await page.goto(`/game/${game.id}`, { waitUntil: "networkidle" });
     const onDetail = await measure('[data-testid="game-info-card"]');

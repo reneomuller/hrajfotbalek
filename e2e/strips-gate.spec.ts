@@ -76,7 +76,7 @@ test.describe("Gate strips", () => {
         );
         
         // --- the card, with every line of the anatomy present ---------------
-        const card = page.locator(`[data-testid="game-row"][href="/game/${game.id}"]`);
+        const card = page.locator(`[data-testid="game-row"][data-game-id="${game.id}"]`);
         await expect(card.getByTestId("card-venue")).toBeVisible();
         await expect(card.getByTestId("card-when")).toBeVisible();
         await expect(card.getByTestId("game-format")).toBeVisible();

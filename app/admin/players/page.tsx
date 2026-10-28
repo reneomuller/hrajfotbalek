@@ -8,6 +8,7 @@ import { ExportCsvLink } from "@/components/admin/ExportCsvLink";
 import { strings } from "@/lib/strings";
 import { creditsFromCzk } from "@/lib/admin/credits";
 import { creditsLabel } from "@/lib/pass/credits";
+import { formatDate, formatTime } from "@/lib/format";
 
 /**
  * A wallet balance as whole credits (round 14, item 9).
@@ -265,6 +266,19 @@ export default async function AdminPlayersPage({
                     .join("  ·  ")}
                 </div>
                 <div className="mt-[2px] flex flex-wrap items-baseline gap-x-3 text-[12px]">
+                  {/* Round 41: when the account was made, to the minute. */}
+                  {!player.isShadow && (
+                    <time
+                      dateTime={player.createdAt}
+                      data-testid="player-joined"
+                      className="tabular-nums text-muted"
+                    >
+                      {strings.admin.playerJoined.replace(
+                        "{date}",
+                        `${formatDate(player.createdAt)}, ${formatTime(player.createdAt)}`,
+                      )}
+                    </time>
+                  )}
                   <span
                     data-testid="player-balance"
                     data-balance={player.balanceCzk}

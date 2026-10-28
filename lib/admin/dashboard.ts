@@ -31,13 +31,25 @@ export interface DashboardGameRow {
   format: string | null;
 }
 
+/** An account, newest first — round 41's "when someone creates an account". */
+export interface DashboardSignup {
+  id: string;
+  nickname: string;
+  createdAt: string;
+  playerNumber: number | null;
+}
+
 export interface AdminDashboard {
   upcomingGames: number;
   totalPlayers: number;
   newPlayers7d: number;
   revenueMonthCzk: number;
   rows: DashboardGameRow[];
+  recentSignups: DashboardSignup[];
 }
+
+/** How many sign-ups the dashboard lists. */
+export const RECENT_SIGNUPS = 8;
 
 /** Confirmed revenue in a period — the same definition the financials page uses. */
 async function revenueBetween(bounds: PeriodBounds): Promise<number> {
@@ -73,17 +85,27 @@ export async function getAdminDashboard(): Promise<AdminDashboard> {
   const nowIso = new Date().toISOString();
   const weekAgo = new Date(Date.now() - 7 * 86_400_000).toISOString();
 
-  const [upcoming, players, recent, revenue, games] = await Promise.all([
+  /*
+   * PLAYERS ARE ACCOUNTS (round 41, owner: "add total player count and when
+   * someone creates an account"). The count used to be every `players` row —
+   * shadow players an admin typed in, who cannot sign in, and accounts that
+   * were deleted and only anonymised. Both are rows, neither is a player.
+   */
+  const accounts = () =>
+    service
+      .from("players")
+      .select("id", { count: "exact", head: true })
+      .not("auth_user_id", "is", null)
+      .is("deleted_at", null);
+
+  const [upcoming, players, recent, revenue, games, signups] = await Promise.all([
     service
       .from("games")
       .select("id", { count: "exact", head: true })
       .gt("starts_at", nowIso)
       .in("status", ["published", "full"]),
-    service.from("players").select("id", { count: "exact", head: true }),
-    service
-      .from("players")
-      .select("id", { count: "exact", head: true })
-      .gte("created_at", weekAgo),
+    accounts(),
+    accounts().gte("created_at", weekAgo),
     revenueBetween(financialBounds("this_month", Date.now())),
     /*
      * SIX ROWS, which is what `p14` draws. Not a page size — a dashboard is a
@@ -97,6 +119,13 @@ export async function getAdminDashboard(): Promise<AdminDashboard> {
       .in("status", ["published", "full"])
       .order("starts_at", { ascending: true })
       .limit(6),
+    service
+      .from("players")
+      .select("*")
+      .not("auth_user_id", "is", null)
+      .is("deleted_at", null)
+      .order("created_at", { ascending: false })
+      .limit(RECENT_SIGNUPS),
   ]);
 
   const rowsRaw = games.data ?? [];
@@ -136,6 +165,12 @@ export async function getAdminDashboard(): Promise<AdminDashboard> {
     totalPlayers: players.count ?? 0,
     newPlayers7d: recent.count ?? 0,
     revenueMonthCzk: revenue,
+    recentSignups: (signups.data ?? []).map((p) => ({
+      id: p.id,
+      nickname: p.nickname,
+      createdAt: p.created_at,
+      playerNumber: p.player_number ?? null,
+    })),
     rows: rowsRaw.map((g) => ({
       id: g.id,
       venue: g.venue,

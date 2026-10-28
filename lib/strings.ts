@@ -842,7 +842,15 @@ export const strings = {
     // The message body. {venue}, {when} and {url} are substituted by
     // `whatsAppShareUrl()`; nothing here may be pre-encoded, since that helper
     // encodes the finished string exactly once.
-    shareMessage: "{venue} · {when}\nGrab a spot: {url}",
+    /**
+     * The WhatsApp message (round 41) — the approved draft of 2026-10-19:
+     * what, when, where and how many places, in three short lines, the short
+     * link last. `{call}` is one of the three below.
+     */
+    shareMessage: "⚽ Football on {when}\n📍 {venue}\n{call} 👉 {url}",
+    shareCallOpen: "{spots} – grab one",
+    shareCallFull: "Full – join the waitlist",
+    shareCallDefault: "Grab a spot",
   },
 
   booking: {
@@ -1572,6 +1580,11 @@ export const strings = {
     tileUpcoming: "Upcoming games",
     tilePlayers: "Total players",
     tileNewPlayers: "New players (7d)",
+    /** Round 41 — the newest accounts, with when each was made. */
+    dashboardSignups: "New sign-ups",
+    dashboardSignupsEmpty: "Nobody has signed up yet.",
+    /** On every row of the players list: when the account was made. */
+    playerJoined: "Joined {date}",
     tileRevenue: "Revenue (month)",
     quickActions: "Quick actions",
     quickCreateGame: "+ Create game",
@@ -2681,6 +2694,8 @@ export const strings = {
   notifications: {
     // Round 16 item 13 — emptying the bell, distinct from marking it read.
     clearAll: "Clear all",
+    /** Round 41 — the × on one notification; read by screen readers. */
+    deleteOne: "Delete this notification",
     /* Round 7, item 5 — the in-app bell. Player-facing, so all three. */
     bellLabel: "Notifications",
     title: "Notifications",

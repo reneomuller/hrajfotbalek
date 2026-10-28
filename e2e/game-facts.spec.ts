@@ -64,7 +64,7 @@ test("a four-way, 120-minute game says so on the list and on the detail", async 
 
     // --- the list card ------------------------------------------------------
     await page.goto("/games", { waitUntil: "networkidle" });
-    const card = page.locator(`[data-testid="game-row"][href="/game/${game.id}"]`);
+    const card = page.locator(`[data-testid="game-row"][data-game-id="${game.id}"]`);
     await expect(card).toHaveCount(1);
 
     await expect(
@@ -154,7 +154,7 @@ test("the card carries the language pill where the surface pill used to be", asy
     await admin.from("games").update({ language: "uk-ru" }).eq("id", game.id);
 
     await page.goto("/games", { waitUntil: "networkidle" });
-    const card = page.locator(`[data-testid="game-row"][href="/game/${game.id}"]`);
+    const card = page.locator(`[data-testid="game-row"][data-game-id="${game.id}"]`);
 
     const pill = card.getByTestId("language-pill");
     await expect(pill).toBeVisible();

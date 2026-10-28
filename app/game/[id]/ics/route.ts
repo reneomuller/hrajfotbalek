@@ -1,3 +1,4 @@
+import { gamePath } from "@/lib/games/link";
 import { NextResponse } from "next/server";
 import { buildIcsEvent, icsFilename } from "@/lib/calendar/ics";
 import { getGameById } from "@/lib/games/queries";
@@ -33,7 +34,7 @@ export async function GET(
     // failure this is guarding; it is also the one a player only notices when
     // they are already standing on the pitch.
     durationMinutes: game.duration_minutes ?? undefined,
-    url: `${await siteUrl()}/game/${game.id}`,
+    url: `${await siteUrl()}${gamePath(game)}`,
   });
 
   return new NextResponse(ics, {

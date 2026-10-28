@@ -58,7 +58,7 @@ test.describe("Day filter strips", () => {
         );
         // THE GUARANTEE, asserted in the strip that claims it.
         await expect(
-          page.locator(`[data-testid="game-row"][href="/game/${distant.id}"]`),
+          page.locator(`[data-testid="game-row"][data-game-id="${distant.id}"]`),
           `${locale}: the far-future game must be in All`,
         ).toBeVisible();
         
@@ -78,7 +78,7 @@ test.describe("Day filter strips", () => {
           page.locator(`[data-testid="day-tab"][data-day="${soonDay}"]`),
         ).toHaveAttribute("data-selected", "true");
         await expect(
-          page.locator(`[data-testid="game-row"][href="/game/${distant.id}"]`),
+          page.locator(`[data-testid="game-row"][data-game-id="${distant.id}"]`),
         ).toHaveCount(0);
               }
     } finally {
