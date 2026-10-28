@@ -8,6 +8,7 @@ import {
   resumeDestination,
 } from "@/lib/auth/postAuth";
 import { createServerSupabaseClient } from "@/lib/supabase/clients";
+import { getLocale } from "@/lib/i18n/server";
 import { siteOrigin } from "@/lib/auth/origin";
 import { PASSWORD_MIN_LENGTH } from "@/lib/auth/signupProfile";
 import { getStrings } from "@/lib/i18n/server";
@@ -143,7 +144,7 @@ export async function verifyEmailOtp(
     return { status: "error", message: t.auth.otpInvalid, email };
   }
 
-  const { hasPlayer } = await completePostAuth(supabase);
+  const { hasPlayer } = await completePostAuth(supabase, await getLocale());
   const resume = resumeDestination({ next, gameId, action });
   const destination = destinationAfterAuth({ hasPlayer, resume });
 
@@ -203,7 +204,7 @@ export async function signInWithPassword(
     return { status: "error", message: t.auth.invalidCredentials, email };
   }
 
-  const { hasPlayer } = await completePostAuth(supabase);
+  const { hasPlayer } = await completePostAuth(supabase, await getLocale());
   const resume = resumeDestination({ next, gameId, action });
 
   // The sign-in toast rides the redirect that already happens (§8). Only on

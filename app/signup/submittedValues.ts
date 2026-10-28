@@ -27,6 +27,10 @@ export interface SubmittedValues {
   country: string;
   skill: string;
   phone: string;
+  /** Round 41 — the phone prefix's country, so an error keeps the choice. */
+  phoneCountry: string;
+  /** Round 41 — the language chosen for emails. */
+  emailLocale: string;
   tos: boolean;
   marketing: boolean;
 }
@@ -48,6 +52,8 @@ export function submittedValues(formData: FormData): SubmittedValues {
     country: text(formData, "country"),
     skill: text(formData, "skill"),
     phone: text(formData, "phone"),
+    phoneCountry: text(formData, "phone_country"),
+    emailLocale: text(formData, "email_locale"),
     tos: ticked(formData, "tos"),
     marketing: ticked(formData, "marketing"),
   };

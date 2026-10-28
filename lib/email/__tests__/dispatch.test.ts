@@ -6,6 +6,29 @@ import {
   type DispatchContext,
 } from "@/lib/email/dispatch";
 
+/*
+ * The two modules that reach the network: the site's origin and the database
+ * cutoff (`env`), and the account's language (`recipientLocale`). Replaced
+ * whole, so a dry-run test still makes no network call at all — and the
+ * language can be chosen per address.
+ */
+vi.mock("@/lib/email/env", async () => {
+  const { resolveStrings } = await import("@/lib/i18n/resolve");
+  const env = (locale: "en" | "cs" | "ru" | "uk") => ({
+    locale,
+    t: resolveStrings(locale),
+    baseUrl: "https://www.hrajfotbal.com",
+    cutoffHours: 12,
+  });
+  return { emailEnv: async (locale: "en" | "cs" | "ru" | "uk") => env(locale), emailEnvFor: async () => env("en") };
+});
+vi.mock("@/lib/email/recipientLocale", () => ({
+  DEFAULT_EMAIL_LOCALE: "en",
+  emailLocalePreference: async () => null,
+  emailLocaleFor: async (to: string | null) => (to?.startsWith("czech") ? "cs" : "en"),
+}));
+
+
 const ctx: DispatchContext = {
   nickname: "Player_1",
   venue: "Pražačka",
@@ -47,7 +70,7 @@ describe("dispatch map", () => {
 
   it.each([
     ["booking_created", "spot_held"],
-    ["payment_confirmed", "payment_confirmed"],
+    ["payment_confirmed", "booking_confirmed"],
     ["nudge_sent", "nudge"],
     ["booking_expired", "expiry"],
     ["waitlist_notified", "waitlist_spot_open"],
@@ -79,7 +102,7 @@ describe("dispatch instant-confirm suppression", () => {
 
   it("still sends the receipt to an instant-confirmed booking", () => {
     expect(resolveTemplate("payment_confirmed", { instantConfirmed: true })).toBe(
-      "payment_confirmed",
+      "booking_confirmed",
     );
   });
 });
@@ -102,6 +125,17 @@ describe("dispatch sending", () => {
 
   afterEach(() => {
     vi.restoreAllMocks();
+  });
+
+  it("writes in the language the reader's account asked for", async () => {
+    // Act
+    await dispatchEmail({ event: "payment_confirmed", to: "czech@example.com", context: ctx });
+    await dispatchEmail({ event: "payment_confirmed", to: "anyone@example.com", context: ctx });
+
+    // Assert
+    const subjects = logs.map((line) => (line[1] as { subject: string }).subject);
+    expect(subjects[0]).toMatch(/^Jsi v sestavě/);
+    expect(subjects[1]).toMatch(/^You're in/);
   });
 
   it("logs instead of sending, making zero network calls", async () => {

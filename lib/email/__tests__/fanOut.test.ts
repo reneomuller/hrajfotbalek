@@ -1,6 +1,29 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { fanOutGameCancelled, resetFanOutGuard } from "@/lib/email/dispatch";
 
+/*
+ * The two modules that reach the network: the site's origin and the database
+ * cutoff (`env`), and the account's language (`recipientLocale`). Replaced
+ * whole, so a dry-run test still makes no network call at all — and the
+ * language can be chosen per address.
+ */
+vi.mock("@/lib/email/env", async () => {
+  const { resolveStrings } = await import("@/lib/i18n/resolve");
+  const env = (locale: "en" | "cs" | "ru" | "uk") => ({
+    locale,
+    t: resolveStrings(locale),
+    baseUrl: "https://www.hrajfotbal.com",
+    cutoffHours: 12,
+  });
+  return { emailEnv: async (locale: "en" | "cs" | "ru" | "uk") => env(locale), emailEnvFor: async () => env("en") };
+});
+vi.mock("@/lib/email/recipientLocale", () => ({
+  DEFAULT_EMAIL_LOCALE: "en",
+  emailLocalePreference: async () => null,
+  emailLocaleFor: async (to: string | null) => (to?.startsWith("czech") ? "cs" : "en"),
+}));
+
+
 const logs: unknown[][] = [];
 
 const input = {

@@ -7,6 +7,7 @@ import { ChangeEmailForm } from "@/components/account/SecurityForms";
 import { useStrings } from "@/components/LocaleProvider";
 import { POSITIONS, type Position } from "@/lib/players/positions";
 import type { CountryOption } from "@/lib/auth/countries";
+import { PhoneField, type PhoneCountryChoice } from "@/components/form/PhoneField";
 import type { SkillLevel } from "@/lib/auth/signupProfile";
 
 const INITIAL: ProfileActionState = { status: "idle" };
@@ -21,6 +22,9 @@ export interface ProfileDetailsProps {
   positions: string[];
   email: string | null;
   countries: CountryOption[];
+  /** Round 41 — the prefix picker's choices, and the stored number split for it. */
+  phoneCountries: PhoneCountryChoice[];
+  phoneParts: { country: string; national: string };
 }
 
 /**
@@ -271,13 +275,13 @@ export function ProfileDetails(props: ProfileDetailsProps) {
           hint={t.profile.phoneHint}
           error={fieldError(state, "phone", t)}
         >
-          <input
-            id="phone"
-            name="phone"
-            type="tel"
-            autoComplete="tel"
-            defaultValue={props.phone ?? ""}
-            className={FIELD}
+          <PhoneField
+            inputId="phone"
+            options={props.phoneCountries}
+            defaultCountry={props.phoneParts.country}
+            defaultNumber={props.phoneParts.national}
+            countryLabel={t.auth.phoneCountryLabel}
+            inputClassName={FIELD}
           />
         </Field>
 

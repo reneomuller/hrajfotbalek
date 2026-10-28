@@ -1,112 +1,107 @@
-import { formatCzk, formatGameDateTime } from "@/lib/format";
-import { strings } from "@/lib/strings";
+import { policy } from "@/lib/policy";
+import { renderEmail, type EmailRow, type RenderedEmail } from "./layout";
 import {
-  button,
-  emailShell,
-  fact,
-  join,
-  paragraph,
-  textBody,
-  type RenderedEmail,
-} from "./layout";
+  credits,
+  fill,
+  plainSmallPrint,
+  when,
+  whenRow,
+  whereRow,
+  type EmailEnv,
+  type GameFacts,
+} from "./parts";
 
-const { emails } = strings;
+/**
+ * Why nothing came back, when nothing did — the old copy had one sentence for
+ * both, "nothing had been paid", which round 40's "I can't make it" made wrong:
+ * a late cancellation of a PAID place returns nothing because of the rule, not
+ * because nothing was paid.
+ */
+export type CancelOutcome = "credited" | "late" | "unpaid";
 
-export interface CancellationEmailProps {
-  nickname: string;
-  venue: string;
-  startsAt: string;
-  /** Credit issued by the cancellation. Zero for an unpaid reservation. */
-  creditCzk: number;
-  accountUrl: string;
+export interface CancellationEmailProps extends GameFacts {
+  /** Credits this cancellation returned. Zero for a late or unpaid one. */
+  creditsReturned: number;
+  outcome: CancelOutcome;
+}
+
+function returnedRow(env: EmailEnv, count: number): EmailRow[] {
+  return count > 0 ? [{ label: env.t.emails.common.returned, value: credits(env, count) }] : [];
+}
+
+/** The player cancelled their own place. */
+export function cancellationCreditEmail(
+  props: CancellationEmailProps,
+  env: EmailEnv,
+): RenderedEmail {
+  const e = env.t.emails;
+  const copy = e.cancellationCredit;
+  const values = {
+    when: when(env, props.startsAt),
+    venue: props.venue,
+    credits: credits(env, props.creditsReturned),
+    hours: env.cutoffHours,
+  };
+  const lede =
+    props.outcome === "credited"
+      ? copy.ledeCredit
+      : props.outcome === "late"
+        ? copy.ledeLate
+        : copy.ledeUnpaid;
+
+  return renderEmail({
+    locale: env.locale,
+    baseUrl: env.baseUrl,
+    subject: fill(copy.subject, values),
+    preheader: fill(props.outcome === "credited" ? copy.preheaderCredit : copy.preheaderNone, values),
+    eyebrow: copy.eyebrow,
+    headline: copy.headline,
+    lede: fill(lede, values),
+    rows: [whenRow(env, props), whereRow(env, props), ...returnedRow(env, props.creditsReturned)],
+    cta: { href: `${env.baseUrl}/games`, label: e.common.findAnother },
+    smallPrint: plainSmallPrint(env),
+    footer: copy.footer,
+  });
+}
+
+export interface GameCancelledProps extends GameFacts {
+  creditsReturned: number;
   /**
-   * The organizer's own words for why (round 16, item 19).
-   *
-   * OPTIONAL, and absent is a real state rather than a gap to fill: a game
-   * cancelled before the round-16 migration has no reason recorded, and
-   * inventing one would be worse than the silence the email always had.
+   * The organizer's own words for why (round 16, item 19). Optional, and
+   * absent is a real state: a game cancelled before reasons existed has none,
+   * and inventing one would be worse than the silence.
    */
   reason?: string | null;
 }
 
 /**
- * Cancellation + credit receipt.
- *
- * Money never leaves the system, so this is a receipt for a wallet movement
- * rather than a refund notice. When nothing had been paid the copy says so
- * instead of announcing a credit of zero — a "0 CZK credited" receipt reads
- * like a bug even though the arithmetic is right.
+ * The game is off. THE REASON SITS RIGHT UNDER THE HEADLINE, set apart as a
+ * quote — it is what the reader opened the email to find out. Obchodní
+ * podmínky 11.3: what was paid comes back as Credit with seven extra days.
  */
-export function cancellationCreditEmail(props: CancellationEmailProps): RenderedEmail {
-  const when = formatGameDateTime(props.startsAt);
-  const hasCredit = props.creditCzk > 0;
-  const body = hasCredit
-    ? emails.cancellationCredit.body
-    : emails.cancellationCredit.noCreditBody;
-
-  return {
-    subject: emails.cancellationCredit.subject,
-    html: emailShell(
-      emails.cancellationCredit.heading,
-      join([
-        paragraph(body),
-        fact(emails.common.where, props.venue),
-        fact(emails.common.when, when),
-        hasCredit ? fact(emails.common.credit, formatCzk(props.creditCzk)) : null,
-        button(props.accountUrl, emails.common.viewAccount),
-      ]),
-    ),
-    text: textBody([
-      emails.cancellationCredit.heading,
-      body,
-      `${emails.common.where}: ${props.venue}`,
-      `${emails.common.when}: ${when}`,
-      hasCredit ? `${emails.common.credit}: ${formatCzk(props.creditCzk)}` : null,
-      props.accountUrl,
-    ]),
+export function gameCancelledEmail(props: GameCancelledProps, env: EmailEnv): RenderedEmail {
+  const e = env.t.emails;
+  const copy = e.gameCancelled;
+  const values = {
+    when: when(env, props.startsAt),
+    venue: props.venue,
+    credits: credits(env, props.creditsReturned),
+    extensionDays: policy.credits.cancelledGameExtensionDays,
   };
-}
+  const credited = props.creditsReturned > 0;
 
-/** Game-cancelled notice — sent to everyone who held an active booking. */
-export function gameCancelledEmail(props: CancellationEmailProps): RenderedEmail {
-  const when = formatGameDateTime(props.startsAt);
-  const hasCredit = props.creditCzk > 0;
-  const body = hasCredit ? emails.gameCancelled.body : emails.gameCancelled.noCreditBody;
-
-  /*
-   * THE REASON GOES ABOVE THE FACTS, not below them (round 16, item 19).
-   *
-   * It is the thing the reader opened the email to find out. Putting it under
-   * where/when/credit would make them scroll past three fields they can guess
-   * to reach the one they cannot — and on a phone the credit line is often the
-   * fold.
-   *
-   * `reason` IS THE ORGANIZER'S FREE TEXT. `paragraph` escapes it for the HTML
-   * body; the text body needs no escaping.
-   */
-  const reason = props.reason?.trim() || null;
-
-  return {
-    subject: emails.gameCancelled.subject,
-    html: emailShell(
-      emails.gameCancelled.heading,
-      join([
-        paragraph(body),
-        reason ? paragraph(reason) : null,
-        fact(emails.common.where, props.venue),
-        fact(emails.common.when, when),
-        hasCredit ? fact(emails.common.credit, formatCzk(props.creditCzk)) : null,
-        button(props.accountUrl, emails.common.findAnother),
-      ]),
-    ),
-    text: textBody([
-      emails.gameCancelled.heading,
-      body,
-      reason,
-      `${emails.common.where}: ${props.venue}`,
-      `${emails.common.when}: ${when}`,
-      hasCredit ? `${emails.common.credit}: ${formatCzk(props.creditCzk)}` : null,
-      props.accountUrl,
-    ]),
-  };
+  return renderEmail({
+    locale: env.locale,
+    baseUrl: env.baseUrl,
+    subject: fill(copy.subject, values),
+    preheader: fill(credited ? copy.preheaderCredit : copy.preheaderNone, values),
+    eyebrow: copy.eyebrow,
+    headline: copy.headline,
+    lede: `${fill(copy.lede, values)} ${fill(credited ? copy.creditLine : copy.noCreditLine, values)}`,
+    quote: props.reason?.trim() || null,
+    rows: [whenRow(env, props), whereRow(env, props), ...returnedRow(env, props.creditsReturned)],
+    cta: { href: `${env.baseUrl}/games`, label: e.common.findAnother },
+    smallPrint: plainSmallPrint(env),
+    footer: copy.footer,
+  });
 }

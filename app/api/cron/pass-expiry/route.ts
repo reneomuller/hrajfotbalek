@@ -1,15 +1,16 @@
 import { NextResponse } from "next/server";
 import { rejectUnauthorizedCron } from "@/lib/cron/guard";
-import { sendRenderedEmail } from "@/lib/email/sendEmail";
-import { passExpiringEmail } from "@/lib/email/templates/topupEmails";
-import { gamesEquivalent } from "@/lib/pass/queries";
-import { siteUrl } from "@/lib/site";
+import { creditsFromCzk } from "@/lib/admin/credits";
+import { sendCreditsExpiringEmail } from "@/lib/email/dispatch";
+import { policy } from "@/lib/policy";
 import { createServiceRoleSupabaseClient } from "@/lib/supabase/clients";
 
 export const dynamic = "force-dynamic";
 
 /**
- * The pass sweep — the expiry, and the three-day heads-up (§4.2).
+ * The pass sweep — the expiry, and the heads-up a week before it (§4.2;
+ * Obchodní podmínky 5.4 — `policy.credits.expiryWarningDays`, three days
+ * before round 41).
  *
  * TWO JOBS, ONE ROUTE, AND THE ORDER MATTERS. The heads-up runs FIRST: sweeping
  * first would expire a batch and then decline to warn about it, which is the
@@ -43,7 +44,7 @@ export async function GET(request: Request) {
 
   // --- 1. the heads-up, before anything is expired --------------------------
   const { data: due, error: dueError } = await supabase.rpc("batches_expiring_soon", {
-    p_days: 3,
+    p_days: policy.credits.expiryWarningDays,
   });
 
   if (dueError) {
@@ -51,7 +52,6 @@ export async function GET(request: Request) {
   }
 
   let warned = 0;
-  const base = await siteUrl();
 
   for (const batch of due ?? []) {
     const { data: player } = await supabase
@@ -63,16 +63,11 @@ export async function GET(request: Request) {
     if (!player?.email) continue;
 
     try {
-      await sendRenderedEmail(
-        player.email,
-        passExpiringEmail({
-          nickname: player.nickname,
-          remainingCzk: batch.remaining_czk,
-          gamesLeft: gamesEquivalent(batch.remaining_czk),
-          expiresAt: batch.expires_at,
-          gamesUrl: `${base}/games`,
-        }),
-      );
+      // In the player's own language, and in Credits — never crowns.
+      await sendCreditsExpiringEmail(player.email, {
+        credits: creditsFromCzk(batch.remaining_czk),
+        expiresAt: batch.expires_at,
+      });
       warned += 1;
     } catch (cause) {
       // Logged, never thrown. The stamp is already written, so this batch will

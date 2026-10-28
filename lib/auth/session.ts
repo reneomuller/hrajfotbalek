@@ -16,6 +16,8 @@ type PlayerRow = Database["public"]["Tables"]["players"]["Row"];
 export interface SessionUser {
   id: string;
   email: string | null;
+  /** The auth user's own metadata — round 41 reads the email language from it. */
+  metadata: Record<string, unknown>;
 }
 
 /**
@@ -52,7 +54,11 @@ export const getSessionUser = cache(async (): Promise<SessionUser | null> => {
   const supabase = await createServerSupabaseClient();
   const { data, error } = await supabase.auth.getUser();
   if (error || !data.user) return null;
-  return { id: data.user.id, email: data.user.email ?? null };
+  return {
+    id: data.user.id,
+    email: data.user.email ?? null,
+    metadata: (data.user.user_metadata as Record<string, unknown> | undefined) ?? {},
+  };
 });
 
 /** The player row for the current session, or null if there is none yet. */

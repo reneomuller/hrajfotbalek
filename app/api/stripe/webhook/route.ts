@@ -9,6 +9,7 @@ import { expireOpenCheckouts } from "@/lib/payments/activeExpiry";
 import { parseCheckoutConsent } from "@/lib/payments/checkoutConsent";
 import { waiverWording } from "@/lib/legal/consentWording";
 import { resolveStrings } from "@/lib/i18n/resolve";
+import { sendPurchaseEmails } from "@/lib/payments/purchaseEmails";
 
 export const dynamic = "force-dynamic";
 
@@ -150,6 +151,13 @@ export async function POST(request: Request) {
     }
 
     await recordWaiver(supabase, payload, settled.data);
+    await sendPurchaseEmails(supabase, {
+      payload,
+      outcome: settled.data,
+      sessionId: session.id,
+      reference: session.clientReferenceId,
+      amountCzk,
+    });
     return NextResponse.json({ ok: true, outcome: settled.data });
   }
 
@@ -187,6 +195,13 @@ export async function POST(request: Request) {
   }
 
   await recordWaiver(supabase, payload, outcome);
+  await sendPurchaseEmails(supabase, {
+    payload,
+    outcome,
+    sessionId: session.id,
+    reference: session.clientReferenceId,
+    amountCzk,
+  });
   return NextResponse.json({ ok: true, outcome });
 }
 

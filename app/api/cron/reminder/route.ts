@@ -46,7 +46,7 @@ export async function GET(request: Request) {
   for (const game of games ?? []) {
     const { data: bookings } = await supabase
       .from("bookings")
-      .select("id, game_id, player_id, price_czk, credit_applied_czk")
+      .select("id, game_id, player_id, price_czk, credit_applied_czk, guest_count")
       .eq("game_id", game.id)
       .in("status", ["reserved", "confirmed"])
       .is("reminder_sent_at", null);

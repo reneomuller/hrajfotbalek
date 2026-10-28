@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import type { EmailOtpType } from "@supabase/supabase-js";
 import { createServerSupabaseClient } from "@/lib/supabase/clients";
+import { getLocale } from "@/lib/i18n/server";
 import {
   completePostAuth,
   destinationAfterAuth,
@@ -77,7 +78,7 @@ export async function GET(request: NextRequest) {
 
   // Funnel completion, shadow claim and destination — shared with the
   // six-digit code path in `app/login/actions.ts`, so the two cannot drift.
-  const { hasPlayer } = await completePostAuth(supabase);
+  const { hasPlayer } = await completePostAuth(supabase, await getLocale());
   const resume = resumeDestination({ next, gameId, action });
 
   return NextResponse.redirect(

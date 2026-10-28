@@ -195,7 +195,7 @@ export default async function RootLayout({
                 `auth.uid()`, so calling it anonymously is a round trip that
                 can only return an empty list.
               */
-              bell={player ? await getBellState() : EMPTY_BELL}
+              bell={player ? await getBellState({ joinedAt: player.created_at }) : EMPTY_BELL}
               nickname={player?.nickname ?? null}
               isAdmin={player?.is_admin ?? false}
               photoPath={player?.photo_path ?? null}

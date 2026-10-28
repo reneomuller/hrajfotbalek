@@ -8,6 +8,7 @@ import { signedUpDestination } from "@/lib/analytics/gtm";
 import { getSessionUser, getCurrentPlayer } from "@/lib/auth/session";
 import { getLocale, getStrings } from "@/lib/i18n/server";
 import { countryOptions } from "@/lib/auth/countries";
+import { DEFAULT_PHONE_COUNTRY, phoneCountryOptions } from "@/lib/auth/phone";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getStrings();
@@ -45,6 +46,8 @@ export default async function SignupPage({
   if (existing) redirect(next);
 
   const countries = countryOptions(locale);
+  // Round 41: the same list with each calling code, for the phone prefix.
+  const phoneCountries = phoneCountryOptions(countries);
 
   if (!user) {
     return (
@@ -63,7 +66,14 @@ export default async function SignupPage({
             next={next}
           />
 
-          <SignupForm next={next} countries={countries} mode="create" />
+          <SignupForm
+            next={next}
+            countries={countries}
+            phoneCountries={phoneCountries}
+            defaultPhoneCountry={DEFAULT_PHONE_COUNTRY}
+            defaultEmailLocale={locale}
+            mode="create"
+          />
 
           {/* The way back, in the same volt-link idiom the rest of the
               product uses for a secondary destination. */}
@@ -119,7 +129,14 @@ export default async function SignupPage({
           </p>
         ) : null}
 
-        <SignupForm next={next} countries={countries} mode="finish" />
+        <SignupForm
+          next={next}
+          countries={countries}
+          phoneCountries={phoneCountries}
+          defaultPhoneCountry={DEFAULT_PHONE_COUNTRY}
+          defaultEmailLocale={locale}
+          mode="finish"
+        />
       </div>
     </main>
   );

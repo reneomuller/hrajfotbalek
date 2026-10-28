@@ -1,5 +1,6 @@
 import { createServerSupabaseClient } from "@/lib/supabase/clients";
 import { isNotificationKind, type NotificationKind } from "@/lib/types/database";
+import { sinceJoined } from "@/lib/notifications/visibility";
 
 /**
  * The bell's data (round 7, item 5).
@@ -44,7 +45,18 @@ export interface BellState {
 
 export const EMPTY_BELL: BellState = { items: [], unread: 0, available: false };
 
-export async function getBellState(limit = 20): Promise<BellState> {
+export async function getBellState({
+  limit = 20,
+  joinedAt = null,
+}: {
+  limit?: number;
+  /**
+   * When the reader's account was created (round 41). Nothing older shows —
+   * a new player starts with an empty bell rather than every announcement
+   * ever sent. See `sinceJoined`.
+   */
+  joinedAt?: string | null;
+} = {}): Promise<BellState> {
   const supabase = await createServerSupabaseClient();
   const { data, error } = await supabase.rpc("my_notifications", { p_limit: limit });
 
@@ -76,8 +88,8 @@ export async function getBellState(limit = 20): Promise<BellState> {
     is_read: boolean;
   }[];
 
-  return {
-    items: rows.map((row) => ({
+  const items = sinceJoined(
+    rows.map((row) => ({
       id: row.id,
       title: row.title,
       body: row.body,
@@ -91,7 +103,12 @@ export async function getBellState(limit = 20): Promise<BellState> {
       createdAt: row.created_at,
       isRead: row.is_read,
     })),
-    unread: rows.filter((row) => !row.is_read).length,
+    joinedAt,
+  );
+
+  return {
+    items,
+    unread: items.filter((item) => !item.isRead).length,
     available: true,
   };
 }

@@ -1,3 +1,5 @@
+import { OPERATOR_CONTACT } from "@/lib/legal";
+
 /**
  * The single email seam.
  *
@@ -12,12 +14,17 @@
  * means a misconfigured environment mails real players.
  */
 
-export interface EmailAttachment {
-  filename: string;
-  /** UTF-8 content. The only attachment type in Phase 1 is a `.ics` file. */
-  content: string;
-  contentType: string;
-}
+/**
+ * A file sent with an email: inline UTF-8 `content` (the calendar invite), or
+ * a public `path` Resend fetches itself (round 41 — the terms PDF, which then
+ * never has to travel in a serverless bundle).
+ */
+export type EmailAttachment =
+  | { filename: string; content: string; contentType: string }
+  | { filename: string; path: string; contentType: string };
+
+/** Used when `EMAIL_FROM` is unset. */
+export const DEFAULT_FROM = `Hraj Fotbal <${OPERATOR_CONTACT.email}>`;
 
 export interface EmailPayload {
   to: string;
@@ -65,7 +72,14 @@ export async function sendEmail(payload: EmailPayload): Promise<SendEmailResult>
     );
   }
 
-  const from = process.env.EMAIL_FROM ?? "Hraj Fotbal <noreply@hrajfotbal.com>";
+  /*
+   * FROM AND REPLY-TO ARE THE PUBLISHED MAILBOX (round 41, owner: "this email
+   * should also come from our email account"). Resend is verified for the whole
+   * of hrajfotbal.com, so it may send as support@; and every reply lands in the
+   * Seznam inbox whatever `EMAIL_FROM` says, because a reply to a no-reply
+   * address is a player shouting into nothing.
+   */
+  const from = process.env.EMAIL_FROM ?? DEFAULT_FROM;
 
   const response = await fetch("https://api.resend.com/emails", {
     method: "POST",
@@ -79,12 +93,14 @@ export async function sendEmail(payload: EmailPayload): Promise<SendEmailResult>
       subject: payload.subject,
       html: payload.html,
       ...(payload.text ? { text: payload.text } : {}),
-      ...(payload.replyTo ? { reply_to: payload.replyTo } : {}),
+      reply_to: payload.replyTo ?? OPERATOR_CONTACT.email,
       ...(payload.attachments?.length
         ? {
             attachments: payload.attachments.map((a) => ({
               filename: a.filename,
-              content: Buffer.from(a.content, 'utf8').toString('base64'),
+              ...("path" in a
+                ? { path: a.path }
+                : { content: Buffer.from(a.content, "utf8").toString("base64") }),
               content_type: a.contentType,
             })),
           }

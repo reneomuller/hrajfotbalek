@@ -1,53 +1,39 @@
-import { formatGameDateTime } from "@/lib/format";
-import { strings } from "@/lib/strings";
+import { renderEmail, type RenderedEmail } from "./layout";
 import {
-  button,
-  emailShell,
-  fact,
-  join,
-  paragraph,
-  textBody,
-  type RenderedEmail,
-} from "./layout";
+  fill,
+  plainSmallPrint,
+  when,
+  whenRow,
+  whereRow,
+  type EmailEnv,
+  type GameFacts,
+} from "./parts";
 
-const { emails } = strings;
-
-export interface WaitlistEmailProps {
-  nickname: string;
-  venue: string;
-  startsAt: string;
-  /** Deep link that converts the waitlist row into a booking. */
+export interface WaitlistSpotOpenProps extends GameFacts {
+  /** Straight to the claim, not to the game page. */
   convertUrl: string;
 }
 
 /**
- * Waitlist spot-open.
- *
- * Every active waitlisted player receives this at the same moment — the race
- * is settled by `create_booking`'s transactional capacity check, not by a
- * queue. The copy says so plainly, because losing the race is a normal outcome
- * that many recipients will hit, and a surprise refusal reads as a bug.
+ * "A spot just opened." Notify-all, first come first served: everyone on the
+ * waitlist gets this at once and `create_booking`'s capacity check settles the
+ * race — so the copy says so rather than implying the spot is reserved.
  */
-export function waitlistSpotOpenEmail(props: WaitlistEmailProps): RenderedEmail {
-  const when = formatGameDateTime(props.startsAt);
+export function waitlistSpotOpenEmail(props: WaitlistSpotOpenProps, env: EmailEnv): RenderedEmail {
+  const e = env.t.emails;
+  const values = { when: when(env, props.startsAt), venue: props.venue };
 
-  return {
-    subject: emails.waitlistSpotOpen.subject,
-    html: emailShell(
-      emails.waitlistSpotOpen.heading,
-      join([
-        paragraph(emails.waitlistSpotOpen.body),
-        fact(emails.common.where, props.venue),
-        fact(emails.common.when, when),
-        button(props.convertUrl, emails.waitlistSpotOpen.cta),
-      ]),
-    ),
-    text: textBody([
-      emails.waitlistSpotOpen.heading,
-      emails.waitlistSpotOpen.body,
-      `${emails.common.where}: ${props.venue}`,
-      `${emails.common.when}: ${when}`,
-      props.convertUrl,
-    ]),
-  };
+  return renderEmail({
+    locale: env.locale,
+    baseUrl: env.baseUrl,
+    subject: fill(e.waitlistSpotOpen.subject, values),
+    preheader: fill(e.waitlistSpotOpen.preheader, values),
+    eyebrow: e.waitlistSpotOpen.eyebrow,
+    headline: e.waitlistSpotOpen.headline,
+    lede: fill(e.waitlistSpotOpen.lede, values),
+    rows: [whenRow(env, props), whereRow(env, props)],
+    cta: { href: props.convertUrl, label: e.waitlistSpotOpen.cta },
+    smallPrint: plainSmallPrint(env),
+    footer: e.waitlistSpotOpen.footer,
+  });
 }

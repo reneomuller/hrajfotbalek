@@ -14,7 +14,7 @@ import { strings } from "@/lib/strings";
 /**
  * The sections that MUST be fully translated.
  *
- * This list is the contract. `admin` and `emails` are absent on purpose — see
+ * This list is the contract. `admin` is absent on purpose — see
  * lib/i18n/locales.ts — and `brand` is a name, not copy. (`privacy` was here
  * too until 2026-10-19, when its DRAFT placeholder gave way to the lawyer's
  * Czech document and the section was deleted.)
@@ -40,6 +40,13 @@ const PLAYER_FACING = [
    * waiver and booking summary. The Czech is the lawyer's own.
    */
   "purchase",
+  /*
+   * Every email (round 41). ~~English only — no per-player language in the
+   * database~~: the language now lives on the account (chosen at signup,
+   * changeable, recorded at sign-in), so the emails are as player-facing as
+   * any page and walked like one.
+   */
+  "emails",
   "payment",
   "account",
   /*
@@ -99,6 +106,14 @@ const INTENTIONALLY_UNTRANSLATED = new Set([
   // Money. `formatCzk()` renders CZK in every language, and the amount has to
   // match what the Czech banking app shows.
   "common.czk",
+  /*
+   * The bank's own words in every email (round 41): the player is about to
+   * type them into a Czech banking app, so a translated label is a payment
+   * that arrives unmatched — CLAUDE.md's money rule.
+   */
+  "emails.common.variableSymbol",
+  "emails.spotHeld.spdLabel",
+  "emails.spotHeld.preheader",
   // Brand and design furniture, identical in all three languages.
   "siteFooter.copyright",
   "siteFooter.contactEmail",
@@ -230,7 +245,8 @@ describe("resolveStrings", () => {
     expect(t.games.listTitle).toBe("Nadcházející zápasy");
     // Admin is deliberately not translated — it must still be there, in English.
     expect(t.admin.gamesTitle).toBe(strings.admin.gamesTitle);
-    expect(t.emails.spotHeld.subject).toBe(strings.emails.spotHeld.subject);
+    // Emails are translated since round 41 — and still fall back to English.
+    expect(t.emails.spotHeld.subject).not.toBe(strings.emails.spotHeld.subject);
   });
 
   it("keeps money in CZK in every language", () => {

@@ -6,6 +6,7 @@ import { appCapabilities } from "@/lib/db/capabilities";
 import { toBookingErrorCode, type BookingErrorCode } from "@/lib/booking/errors";
 import { collectCancelledRecipients } from "@/lib/email/cancelFanOut";
 import { fanOutGameCancelled } from "@/lib/email/dispatch";
+import { gameEmailExtras } from "@/lib/cron/context";
 import { createServerSupabaseClient, createServiceRoleSupabaseClient } from "@/lib/supabase/clients";
 import { siteUrl } from "@/lib/site";
 
@@ -103,11 +104,12 @@ export async function cancelGameAction(
   // a second implementation of it.
   const recipients = await collectCancelledRecipients(service, gameId);
 
-  const base = await siteUrl();
+  const [base, extras] = await Promise.all([siteUrl(), gameEmailExtras(gameId)]);
   const summary = await fanOutGameCancelled({
     gameId,
     venue: game?.venue ?? "",
     startsAt: game?.starts_at ?? new Date().toISOString(),
+    ...extras,
     gameUrl: `${base}/games`,
     accountUrl: `${base}/account`,
     recipients,

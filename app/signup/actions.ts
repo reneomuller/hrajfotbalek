@@ -3,7 +3,7 @@
 import { redirect } from "next/navigation";
 import { createServerSupabaseClient } from "@/lib/supabase/clients";
 import { getLocale, getStrings } from "@/lib/i18n/server";
-import { isLocale } from "@/lib/i18n/locales";
+import { isLocale, type Locale } from "@/lib/i18n/locales";
 import { recordSignupConsents } from "@/lib/legal/recordConsent";
 import { siteOrigin } from "@/lib/auth/origin";
 import { signedUpDestination } from "@/lib/analytics/gtm";
@@ -36,6 +36,7 @@ import {
  * one that is never exercised locally is the one that runs in production.
  */
 
+import { withComposedPhone } from "@/lib/auth/phone";
 import { submittedValues, type SubmittedValues } from "./submittedValues";
 
 export interface SignupFormState {
@@ -90,7 +91,8 @@ export async function startSignup(
 ): Promise<SignupFormState> {
   const t = await getStrings();
 
-  const parsed = parseSignupForm(formData);
+  // Round 41: the prefix and the number arrive as two fields; one is stored.
+  const parsed = parseSignupForm(withComposedPhone(formData));
   if (!parsed.ok) {
     return {
       status: "error",
@@ -118,7 +120,12 @@ export async function startSignup(
       emailRedirectTo: callback.toString(),
       // The language the boxes were READ in travels with the profile, because
       // the verification link may open in another browser (round 40).
-      data: { ...signupMetadata(submission), consent_locale: await getLocale() },
+      data: {
+        ...signupMetadata(submission),
+        consent_locale: await getLocale(),
+        // Round 41: the language its emails are written in, chosen on the form.
+        email_locale: await chosenEmailLocale(formData),
+      },
     },
   });
 
@@ -265,8 +272,9 @@ export async function finishSignup(
   // The email and password are already settled, so the shared parser is fed the
   // address from the session and a placeholder secret it will not look at.
   const proxy = new FormData();
+  const composed = withComposedPhone(formData);
   for (const key of ["nickname", "country", "skill", "phone", "tos", "marketing"]) {
-    const value = formData.get(key);
+    const value = composed.get(key);
     if (value !== null) proxy.set(key, value);
   }
   proxy.set("email", user.email ?? "");
@@ -340,7 +348,20 @@ export async function finishSignup(
     marketingOptIn: parsed.value.marketingOptIn,
   });
 
+  // Round 41: this path (Google, or a session from before the form) never put
+  // the email language into the metadata at `signUp()`, so it goes in now.
+  const { error: localeError } = await supabase.auth.updateUser({
+    data: { email_locale: await chosenEmailLocale(formData) },
+  });
+  if (localeError) console.error("saving the email language failed", localeError.message);
+
   const next = String(formData.get("next") ?? "/games");
   // The account exists from here: the landing page reports `sign_up` once.
   redirect(signedUpDestination(next.startsWith("/") ? next : "/games"));
+}
+
+/** The form's email language, or the page's when the field is absent or odd. */
+async function chosenEmailLocale(formData: FormData): Promise<Locale> {
+  const chosen = formData.get("email_locale");
+  return isLocale(chosen) ? chosen : getLocale();
 }

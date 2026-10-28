@@ -12,7 +12,9 @@ import {
 } from "@/lib/auth/signupProfile";
 import type { CountryOption } from "@/lib/auth/countries";
 import { useStrings } from "@/components/LocaleProvider";
+import { LOCALES, LOCALE_LABELS, type Locale } from "@/lib/i18n/locales";
 import { LinkedText } from "@/components/form/LinkedText";
+import { PhoneField, type PhoneCountryChoice } from "@/components/form/PhoneField";
 
 const initialState: SignupFormState = { status: "idle" };
 
@@ -43,10 +45,18 @@ function FieldError({ show, message }: { show: boolean; message?: string }) {
 export function SignupForm({
   next,
   countries,
+  phoneCountries,
+  defaultPhoneCountry,
+  defaultEmailLocale,
   mode = "create",
 }: {
   next: string;
   countries: CountryOption[];
+  /** Round 41 — the phone prefix's choices, each with its calling code. */
+  phoneCountries: PhoneCountryChoice[];
+  defaultPhoneCountry: string;
+  /** Round 41 — the language the site is showing: the browser's, unless chosen. */
+  defaultEmailLocale: Locale;
   mode?: "create" | "finish";
 }) {
   const t = useStrings();
@@ -212,27 +222,36 @@ export function SignupForm({
         <FieldError show={state.field === "skill"} message={state.message} />
       </fieldset>
 
-      <label className="flex flex-col gap-2">
-        <span className={LABEL_CLASS}>{t.auth.phoneLabel}</span>
+      <div className="flex flex-col gap-2">
+        {/*
+          A DIV, NOT A LABEL, since round 41: a <label> wrapping two controls
+          names the FIRST one, which is now the country code. The number gets
+          its label by id; the select carries its own aria-label.
+        */}
+        <label htmlFor="signup-phone" className={LABEL_CLASS}>
+          {t.auth.phoneLabel}
+        </label>
         {/*
           `required` AND `minLength` MIRROR THE SERVER (round 7, item 7). The
           browser check is a courtesy that saves a round trip; the rule that
           counts is in `parseSignupForm`, which is what a curl request meets.
           Both are stated so the two cannot silently disagree.
         */}
-        <input
-          type="tel"
-          name="phone"
+        <PhoneField
+          key={`phone-${valuesKey}`}
+          options={phoneCountries}
+          defaultCountry={v?.phoneCountry || defaultPhoneCountry}
+          defaultNumber={v?.phone ?? ""}
+          countryLabel={t.auth.phoneCountryLabel}
+          inputId="signup-phone"
           required
           minLength={PHONE_MIN_LENGTH}
           maxLength={PHONE_MAX_LENGTH}
-          autoComplete="tel"
-          defaultValue={v?.phone ?? ""}
-          className={FIELD_CLASS}
+          inputClassName={FIELD_CLASS}
         />
         <span className="text-xs opacity-50">{t.auth.phoneHint}</span>
         <FieldError show={state.field === "phone"} message={state.message} />
-      </label>
+      </div>
 
       {/*
         THE LEGAL ACT, APART FROM THE PREFERENCE (round 40, the lawyer's Texty
@@ -288,6 +307,30 @@ export function SignupForm({
             className="mt-1 accent-volt"
           />
           <span>{t.auth.marketingLabel}</span>
+        </label>
+
+        {/*
+          THE LANGUAGE EMAILS ARE WRITTEN IN (round 41). Pre-set to the
+          language this page is in — the browser's, unless the switcher said
+          otherwise — so most people never touch it; each option is named in
+          its own language, like the switcher's.
+        */}
+        <label className="mt-2 flex flex-col gap-2">
+          <span className={LABEL_CLASS}>{t.auth.emailLocaleLabel}</span>
+          <select
+            key={`email-locale-${valuesKey}`}
+            name="email_locale"
+            data-testid="signup-email-locale"
+            defaultValue={v?.emailLocale || defaultEmailLocale}
+            className={FIELD_CLASS}
+          >
+            {LOCALES.map((locale) => (
+              <option key={locale} value={locale}>
+                {LOCALE_LABELS[locale].full}
+              </option>
+            ))}
+          </select>
+          <span className="text-xs opacity-50">{t.auth.emailLocaleHint}</span>
         </label>
       </div>
 

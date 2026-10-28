@@ -1,4 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { emailLocaleToRecord } from "@/lib/email/recipientLocale";
+import type { Locale } from "@/lib/i18n/locales";
 
 /**
  * What happens immediately after a credential is accepted — for BOTH ways in.
@@ -23,7 +25,15 @@ export async function completePostAuth(
   // that has no opinion about the schema.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   supabase: SupabaseClient<any, any, any>,
+  /**
+   * The language the site is showing (round 41). An account with no email
+   * language yet gets this one, so a player who signed up before the choice
+   * existed is written to in their browser's language from the next sign-in.
+   */
+  siteLocale?: Locale,
 ): Promise<PostAuthResult> {
+  if (siteLocale) await rememberEmailLocale(supabase, siteLocale);
+
   // `record_auth_completed` returns whether a player row already exists. It is
   // the denominator half of the magic-link drop-off funnel Phase 26 reports on
   // — and it must be recorded for the code path too, or switching people onto
@@ -96,4 +106,22 @@ export function destinationAfterAuth({
 }): string {
   if (hasPlayer) return resume;
   return `/signup?next=${encodeURIComponent(resume)}`;
+}
+
+/** Best-effort: a sign-in never fails because a preference could not be saved. */
+async function rememberEmailLocale(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  supabase: SupabaseClient<any, any, any>,
+  siteLocale: Locale,
+): Promise<void> {
+  try {
+    const { data } = await supabase.auth.getUser();
+    if (!data.user) return;
+    const locale = emailLocaleToRecord(data.user.user_metadata, siteLocale);
+    if (!locale) return;
+    const { error } = await supabase.auth.updateUser({ data: { email_locale: locale } });
+    if (error) console.error("remembering the email language failed", error.message);
+  } catch (error) {
+    console.error("remembering the email language failed", error);
+  }
 }

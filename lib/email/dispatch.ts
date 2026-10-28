@@ -1,20 +1,25 @@
+import { creditsFromCzk } from "@/lib/admin/credits";
+import { emailEnv, emailEnvFor } from "@/lib/email/env";
+import { emailLocaleFor } from "@/lib/email/recipientLocale";
 import { sendRenderedEmail, type SendEmailResult } from "@/lib/email/sendEmail";
-import {
-  paymentConfirmedEmail,
-  spotHeldEmail,
-} from "@/lib/email/templates/bookingEmails";
+import type { EmailAttachment } from "@/lib/email/sendEmail";
+import { bookingConfirmedEmail, spotHeldEmail } from "@/lib/email/templates/bookingEmails";
 import {
   cancellationCreditEmail,
   gameCancelledEmail,
+  type CancelOutcome,
 } from "@/lib/email/templates/cancellationEmails";
 import {
-  expiryEmail,
-  nudgeEmail,
-  reminderEmail,
-} from "@/lib/email/templates/lifecycleEmails";
-import { waitlistSpotOpenEmail } from "@/lib/email/templates/waitlistEmail";
+  creditsExpiringEmail,
+  creditsPurchasedEmail,
+  type CreditsExpiringProps,
+  type CreditsPurchasedProps,
+} from "@/lib/email/templates/creditEmails";
+import { expiryEmail, nudgeEmail, reminderEmail } from "@/lib/email/templates/lifecycleEmails";
 import type { RenderedEmail } from "@/lib/email/templates/layout";
-import type { EmailAttachment } from "@/lib/email/sendEmail";
+import type { EmailEnv, GameFacts, PaymentReceipt } from "@/lib/email/templates/parts";
+import { waitlistSpotOpenEmail } from "@/lib/email/templates/waitlistEmail";
+import type { Locale } from "@/lib/i18n/locales";
 
 /**
  * Event → template dispatch.
@@ -30,7 +35,7 @@ import type { EmailAttachment } from "@/lib/email/sendEmail";
 
 export type TemplateId =
   | "spot_held"
-  | "payment_confirmed"
+  | "booking_confirmed"
   | "nudge"
   | "expiry"
   | "waitlist_spot_open"
@@ -50,7 +55,7 @@ export type DispatchableEvent =
 
 export const TEMPLATE_BY_EVENT: Record<DispatchableEvent, TemplateId> = {
   booking_created: "spot_held",
-  payment_confirmed: "payment_confirmed",
+  payment_confirmed: "booking_confirmed",
   nudge_sent: "nudge",
   booking_expired: "expiry",
   waitlist_notified: "waitlist_spot_open",
@@ -67,13 +72,28 @@ export interface DispatchContext {
   gameUrl: string;
   accountUrl: string;
   convertUrl?: string;
+  /** Round 41 — the game's length, for the When row's span. */
+  durationMinutes?: number | null;
+  /** Round 41 — the venue's Maps link, for the Where row. */
+  mapsUrl?: string | null;
+  /** Round 41 — the player plus guests on this booking. */
+  places?: number;
+  /** Round 41 — Credits the booking spent, shown as "Paid". */
+  creditsPaid?: number | null;
   amountDueCzk?: number;
   variableSymbol?: number;
   spdString?: string;
+  /** Crowns a cancellation returned to the wallet; shown as Credits, never as CZK. */
   creditCzk?: number;
+  /** Round 41 — why nothing came back, when nothing did. */
+  cancelOutcome?: CancelOutcome;
   /** Round 16 item 19 — the organizer's written reason for a cancellation. */
   reason?: string | null;
   ics?: EmailAttachment;
+  /** Round 41 — money moved: the card receipt, the waiver and the terms. */
+  receipt?: PaymentReceipt | null;
+  /** Round 41 — guests added to a booking rather than a booking made. */
+  bookingKind?: "booking" | "guests";
   /**
    * True when `create_booking` derived `credit` or `seed_free` — the booking
    * was confirmed in the same transaction that created it.
@@ -106,54 +126,72 @@ export function resolveTemplate(
   return TEMPLATE_BY_EVENT[event as DispatchableEvent];
 }
 
-/** Renders a resolved template against the context. */
+/** Renders a resolved template against the context, in the reader's language. */
 export function renderTemplate(
   template: TemplateId,
   ctx: DispatchContext,
+  env: EmailEnv,
 ): RenderedEmail {
-  const base = {
-    nickname: ctx.nickname,
+  const game: GameFacts = {
     venue: ctx.venue,
     startsAt: ctx.startsAt,
+    durationMinutes: ctx.durationMinutes ?? null,
+    mapsUrl: ctx.mapsUrl ?? null,
     gameUrl: ctx.gameUrl,
   };
+  const creditsReturned = creditsFromCzk(ctx.creditCzk ?? 0);
 
   switch (template) {
     case "spot_held":
-      return spotHeldEmail({
-        ...base,
-        amountDueCzk: ctx.amountDueCzk ?? 0,
-        variableSymbol: ctx.variableSymbol ?? 0,
-        spdString: ctx.spdString ?? "",
-        ics: ctx.ics,
-      });
-    case "payment_confirmed":
-      return paymentConfirmedEmail({ ...base, ics: ctx.ics });
+      return spotHeldEmail(
+        {
+          ...game,
+          amountDueCzk: ctx.amountDueCzk ?? 0,
+          variableSymbol: ctx.variableSymbol ?? 0,
+          spdString: ctx.spdString ?? "",
+          ics: ctx.ics,
+        },
+        env,
+      );
+    case "booking_confirmed":
+      return bookingConfirmedEmail(
+        {
+          ...game,
+          kind: ctx.bookingKind ?? "booking",
+          places: ctx.places ?? 1,
+          creditsPaid: ctx.creditsPaid ?? null,
+          ics: ctx.ics,
+          receipt: ctx.receipt ?? null,
+        },
+        env,
+      );
     case "nudge":
-      return nudgeEmail({ ...base, amountDueCzk: ctx.amountDueCzk ?? 0 });
+      return nudgeEmail({ ...game, amountDueCzk: ctx.amountDueCzk ?? 0 }, env);
     case "expiry":
-      return expiryEmail(base);
+      return expiryEmail(game, env);
     case "reminder":
-      return reminderEmail(base);
+      return reminderEmail({ ...game, places: ctx.places }, env);
     case "waitlist_spot_open":
-      return waitlistSpotOpenEmail({
-        ...base,
-        convertUrl: ctx.convertUrl ?? ctx.gameUrl,
-      });
+      return waitlistSpotOpenEmail({ ...game, convertUrl: ctx.convertUrl ?? ctx.gameUrl }, env);
     case "cancellation_credit":
-      return cancellationCreditEmail({
-        ...base,
-        creditCzk: ctx.creditCzk ?? 0,
-        accountUrl: ctx.accountUrl,
-      });
+      return cancellationCreditEmail(
+        {
+          ...game,
+          creditsReturned,
+          outcome: ctx.cancelOutcome ?? (creditsReturned > 0 ? "credited" : "unpaid"),
+        },
+        env,
+      );
     case "game_cancelled":
-      return gameCancelledEmail({
-        ...base,
-        creditCzk: ctx.creditCzk ?? 0,
-        accountUrl: ctx.accountUrl,
-        // Round 16 item 19. Null on a game cancelled before reasons existed.
-        reason: ctx.reason ?? null,
-      });
+      return gameCancelledEmail(
+        {
+          ...game,
+          creditsReturned,
+          // Round 16 item 19. Null on a game cancelled before reasons existed.
+          reason: ctx.reason ?? null,
+        },
+        env,
+      );
   }
 }
 
@@ -162,6 +200,8 @@ export interface DispatchInput {
   /** Null for a shadow player with no email — nothing to send, not an error. */
   to: string | null;
   context: DispatchContext;
+  /** The reader's language, when the caller already knows it. Looked up otherwise. */
+  locale?: Locale;
 }
 
 export type DispatchOutcome =
@@ -186,9 +226,33 @@ export async function dispatchEmail(input: DispatchInput): Promise<DispatchOutco
   // A shadow player booked by an admin may have no email address at all.
   if (!input.to) return { sent: false, reason: "no_recipient" };
 
-  const rendered = renderTemplate(template, input.context);
+  const env = await emailEnv(input.locale ?? (await emailLocaleFor(input.to)));
+  const rendered = renderTemplate(template, input.context, env);
   const result = await sendRenderedEmail(input.to, rendered);
   return { sent: true, template, result };
+}
+
+/**
+ * The two Credit emails, which no booking event triggers: a purchase receipt
+ * (the Stripe webhook, the admin's transfer confirmation) and the warning
+ * before Credits lapse (the nightly sweep). Same seam, same language lookup.
+ */
+export async function sendCreditsPurchasedEmail(
+  to: string,
+  props: CreditsPurchasedProps,
+  locale?: Locale,
+): Promise<SendEmailResult> {
+  const env = locale ? await emailEnv(locale) : await emailEnvFor(to);
+  return sendRenderedEmail(to, creditsPurchasedEmail(props, env));
+}
+
+export async function sendCreditsExpiringEmail(
+  to: string,
+  props: CreditsExpiringProps,
+  locale?: Locale,
+): Promise<SendEmailResult> {
+  const env = locale ? await emailEnv(locale) : await emailEnvFor(to);
+  return sendRenderedEmail(to, creditsExpiringEmail(props, env));
 }
 
 // -----------------------------------------------------------------------------
@@ -208,6 +272,9 @@ export interface FanOutInput {
   gameId: string;
   venue: string;
   startsAt: string;
+  /** Round 41 — the length and the Maps link, for the When and Where rows. */
+  durationMinutes?: number | null;
+  mapsUrl?: string | null;
   gameUrl: string;
   accountUrl: string;
   recipients: CancelledRecipient[];
@@ -277,6 +344,8 @@ export async function fanOutGameCancelled(input: FanOutInput): Promise<FanOutSum
       accountUrl: input.accountUrl,
       creditCzk: recipient.creditCzk,
       reason: input.reason ?? null,
+      durationMinutes: input.durationMinutes ?? null,
+      mapsUrl: input.mapsUrl ?? null,
     };
 
     const sends: { event: DispatchableEvent; key: string }[] = [

@@ -8,13 +8,21 @@ import { CreditBatches } from "@/components/account/CreditBatches";
 import { PlayerHistory } from "@/components/account/PlayerHistory";
 import { ProfileDetails } from "@/components/account/ProfileDetails";
 import { MarketingPreference } from "@/components/account/MarketingPreference";
+import { EmailLanguagePreference } from "@/components/account/EmailLanguagePreference";
+import { DEFAULT_EMAIL_LOCALE, localeFromMetadata } from "@/lib/email/recipientLocale";
 import { ProfileCover } from "@/components/account/ProfileCover";
 import { ProfileIdentity } from "@/components/account/ProfileIdentity";
 import { ProfileStats } from "@/components/account/ProfileStats";
 import { ProfileTabs, parseProfileTab } from "@/components/account/ProfileTabs";
 import { SecurityLinks } from "@/components/account/SecurityLinks";
 import { countryName, countryOptions } from "@/lib/auth/countries";
-import { requireCurrentPlayer } from "@/lib/auth/session";
+import {
+  DEFAULT_PHONE_COUNTRY,
+  formatPhone,
+  phoneCountryOptions,
+  splitPhone,
+} from "@/lib/auth/phone";
+import { getSessionUser, requireCurrentPlayer } from "@/lib/auth/session";
 import { splitHistory } from "@/lib/booking/history";
 import {
   getOwnCreditBalance,
@@ -87,6 +95,9 @@ export default async function AccountPage({
   const query = searchParams ? await searchParams : {};
   const tab = parseProfileTab(query.tab);
   const player = await requireCurrentPlayer("/account");
+  // Round 41: the email language, from the session already loaded (cached).
+  const emailLocale =
+    localeFromMetadata((await getSessionUser())?.metadata) ?? DEFAULT_EMAIL_LOCALE;
   // Read off the row already loaded rather than through `isAdminSession()`,
   // which would be a second round trip for a boolean this page is holding.
   const isAdmin = player.is_admin === true;
@@ -308,12 +319,14 @@ export default async function AccountPage({
           <div className="mt-4">
             <ProfileDetails
               nickname={player.nickname}
-              phone={player.phone}
+              phone={formatPhone(player.phone)}
               country={player.country}
               skillLevel={player.skill_level}
               positions={player.positions ?? []}
               email={player.email}
               countries={countryOptions(locale)}
+              phoneCountries={phoneCountryOptions(countryOptions(locale))}
+              phoneParts={splitPhone(player.phone, DEFAULT_PHONE_COUNTRY)}
             />
           </div>
 
@@ -327,6 +340,9 @@ export default async function AccountPage({
           </h2>
           <div className="mt-4">
             <MarketingPreference optedIn={player.marketing_opt_in} />
+          </div>
+          <div className="mt-3">
+            <EmailLanguagePreference current={emailLocale} />
           </div>
 
           {/*

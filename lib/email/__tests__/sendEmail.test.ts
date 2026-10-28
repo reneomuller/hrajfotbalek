@@ -160,4 +160,58 @@ describe("sendEmail", () => {
       expect(JSON.parse(init.body).from).toBe("Hraj Fotbal <noreply@hrajfotbal.com>");
     });
   });
+
+  /**
+   * ROUND 41 — "this email should also come from our email account". Resend
+   * is verified for the whole of hrajfotbal.com, so support@ can send; and
+   * replies always reach the Seznam mailbox whatever EMAIL_FROM says.
+   */
+  describe("the published mailbox", () => {
+    beforeEach(() => {
+      process.env.EMAIL_DRY_RUN = "off";
+      process.env.RESEND_API_KEY = "re_test_key";
+      fetchSpy.mockResolvedValue({ ok: true, json: async () => ({ id: "email_mailbox" }) });
+    });
+
+    it("sends from support@hrajfotbal.com when EMAIL_FROM is unset", async () => {
+      // Arrange
+      delete process.env.EMAIL_FROM;
+
+      // Act
+      await sendEmail(payload);
+
+      // Assert
+      const [, init] = fetchSpy.mock.calls[0];
+      expect(JSON.parse(init.body).from).toBe("Hraj Fotbal <support@hrajfotbal.com>");
+    });
+
+    it("directs replies to support@ even when EMAIL_FROM is a no-reply address", async () => {
+      // Arrange
+      process.env.EMAIL_FROM = "Hraj Fotbal <noreply@hrajfotbal.com>";
+
+      // Act
+      await sendEmail(payload);
+
+      // Assert
+      const [, init] = fetchSpy.mock.calls[0];
+      expect(JSON.parse(init.body).reply_to).toBe("support@hrajfotbal.com");
+    });
+
+    it("hands Resend a public file by its URL instead of inlining it", async () => {
+      // Arrange
+      const terms = {
+        filename: "Hraj-Fotbal-obchodni-podminky.pdf",
+        path: "https://www.hrajfotbal.com/legal/obchodni-podminky.pdf",
+        contentType: "application/pdf",
+      };
+
+      // Act
+      await sendEmail({ ...payload, attachments: [terms] });
+
+      // Assert
+      const [, init] = fetchSpy.mock.calls[0];
+      const [sent] = JSON.parse(init.body).attachments;
+      expect(sent).toEqual({ filename: terms.filename, path: terms.path, content_type: "application/pdf" });
+    });
+  });
 });

@@ -1,4 +1,5 @@
 import { dispatchEmail } from "@/lib/email/dispatch";
+import { gameEmailExtras } from "@/lib/cron/context";
 import { siteUrl } from "@/lib/site";
 import { createServiceRoleSupabaseClient } from "@/lib/supabase/clients";
 
@@ -46,7 +47,7 @@ export async function notifyWaitlistForGame(gameId: string): Promise<number> {
 
   if (!game) return 0;
 
-  const base = await siteUrl();
+  const [base, extras] = await Promise.all([siteUrl(), gameEmailExtras(game.id)]);
   let sent = 0;
 
   for (const row of rows) {
@@ -60,6 +61,7 @@ export async function notifyWaitlistForGame(gameId: string): Promise<number> {
         gameUrl: `${base}/game/${game.id}`,
         accountUrl: `${base}/account`,
         convertUrl: `${base}/game/${game.id}/waitlist/convert`,
+        ...extras,
       },
     });
     if (outcome.sent) sent += 1;

@@ -1,120 +1,103 @@
-import { formatCzk, formatGameDateTime } from "@/lib/format";
+import { formatCzk, formatTime } from "@/lib/format";
 import { policy } from "@/lib/policy";
-import { strings } from "@/lib/strings";
+import { renderEmail, type RenderedEmail } from "./layout";
 import {
-  button,
-  emailShell,
-  fact,
-  join,
-  paragraph,
-  textBody,
-  type RenderedEmail,
-} from "./layout";
+  cancelRule,
+  fill,
+  plainSmallPrint,
+  playersRow,
+  when,
+  whenRow,
+  whereRow,
+  type EmailEnv,
+  type GameFacts,
+} from "./parts";
 
-const { emails } = strings;
-
-/**
- * The three cron-triggered notices, sharing one layout.
- *
- * The hour figures come from `lib/policy.ts` through `{hours}` interpolation —
- * never written into the strings as literals. A v2 policy that moves the nudge
- * grace to 6h therefore moves this copy with it, instead of leaving the emails
- * quietly lying about the deadline.
- */
-function withHours(template: string, hours: number): string {
-  return template.replace("{hours}", String(hours));
-}
-
-export interface LifecycleEmailProps {
-  nickname: string;
-  venue: string;
-  startsAt: string;
-  gameUrl: string;
-}
-
-export interface NudgeEmailProps extends LifecycleEmailProps {
+export interface NudgeEmailProps extends GameFacts {
   amountDueCzk: number;
 }
 
-/** Scarcity nudge: pay within the grace window or lose the spot. */
-export function nudgeEmail(props: NudgeEmailProps): RenderedEmail {
-  const when = formatGameDateTime(props.startsAt);
+/** "Pay now or lose your spot" — the morning sweep, on a full game. */
+export function nudgeEmail(props: NudgeEmailProps, env: EmailEnv): RenderedEmail {
+  const e = env.t.emails;
   const amount = formatCzk(props.amountDueCzk);
   // The deadline is the post-nudge grace, which is exactly what `mark_nudged`
   // writes into `expires_at` and what the expiry sweep later acts on.
-  const body = withHours(emails.nudge.body, policy.expiry.graceHoursAfterNudge);
-
-  return {
-    subject: emails.nudge.subject,
-    html: emailShell(
-      emails.nudge.heading,
-      join([
-        paragraph(body),
-        fact(emails.common.where, props.venue),
-        fact(emails.common.when, when),
-        fact(emails.common.amountDue, amount),
-        button(props.gameUrl, emails.common.viewGame),
-      ]),
-    ),
-    text: textBody([
-      emails.nudge.heading,
-      body,
-      `${emails.common.where}: ${props.venue}`,
-      `${emails.common.when}: ${when}`,
-      `${emails.common.amountDue}: ${amount}`,
-      props.gameUrl,
-    ]),
+  const values = {
+    when: when(env, props.startsAt),
+    venue: props.venue,
+    hours: policy.expiry.graceHoursAfterNudge,
   };
+
+  return renderEmail({
+    locale: env.locale,
+    baseUrl: env.baseUrl,
+    subject: fill(e.nudge.subject, values),
+    preheader: fill(e.nudge.preheader, values),
+    eyebrow: e.nudge.eyebrow,
+    headline: e.nudge.headline,
+    lede: fill(e.nudge.lede, values),
+    rows: [whenRow(env, props), whereRow(env, props), { label: e.common.toPay, value: amount }],
+    cta: { href: props.gameUrl, label: e.nudge.cta },
+    smallPrint: plainSmallPrint(env),
+    footer: e.common.footerBooked,
+  });
 }
 
-/** Expiry notice: the unpaid reservation lapsed and the spot went back. */
-export function expiryEmail(props: LifecycleEmailProps): RenderedEmail {
-  const when = formatGameDateTime(props.startsAt);
+/** "Your spot has gone." — an unpaid reservation the sweep released. */
+export function expiryEmail(props: GameFacts, env: EmailEnv): RenderedEmail {
+  const e = env.t.emails;
+  const values = { when: when(env, props.startsAt), venue: props.venue };
 
-  return {
-    subject: emails.expiry.subject,
-    html: emailShell(
-      emails.expiry.heading,
-      join([
-        paragraph(emails.expiry.body),
-        fact(emails.common.where, props.venue),
-        fact(emails.common.when, when),
-        button(props.gameUrl, emails.common.findAnother),
-      ]),
-    ),
-    text: textBody([
-      emails.expiry.heading,
-      emails.expiry.body,
-      `${emails.common.where}: ${props.venue}`,
-      `${emails.common.when}: ${when}`,
-      props.gameUrl,
-    ]),
-  };
+  return renderEmail({
+    locale: env.locale,
+    baseUrl: env.baseUrl,
+    subject: fill(e.expiry.subject, values),
+    preheader: fill(e.expiry.preheader, values),
+    eyebrow: e.expiry.eyebrow,
+    headline: e.expiry.headline,
+    lede: fill(e.expiry.lede, values),
+    rows: [whenRow(env, props), whereRow(env, props)],
+    cta: { href: `${env.baseUrl}/games`, label: e.common.findAnother },
+    smallPrint: plainSmallPrint(env),
+    footer: e.common.footerBooked,
+  });
 }
 
-/** 24h reminder to everyone holding an active spot. */
-export function reminderEmail(props: LifecycleEmailProps): RenderedEmail {
-  const when = formatGameDateTime(props.startsAt);
-  const body = withHours(emails.reminder.body, policy.reminder.hoursBeforeStart);
+export interface ReminderEmailProps extends GameFacts {
+  /** The player plus guests, when known. */
+  places?: number;
+}
 
-  return {
-    subject: emails.reminder.subject,
-    html: emailShell(
-      emails.reminder.heading,
-      join([
-        paragraph(body),
-        fact(emails.common.where, props.venue),
-        fact(emails.common.when, when),
-        button(props.gameUrl, emails.common.viewGame),
-        paragraph(emails.common.signOff),
-      ]),
-    ),
-    text: textBody([
-      emails.reminder.heading,
-      body,
-      `${emails.common.where}: ${props.venue}`,
-      `${emails.common.when}: ${when}`,
-      props.gameUrl,
-    ]),
+/**
+ * "See you tomorrow" — the afternoon sweep, to everyone holding a place on a
+ * game within `policy.reminder.hoursBeforeStart`. It restates the cancel rule
+ * because this is the email somebody reads when they realise they cannot go.
+ */
+export function reminderEmail(props: ReminderEmailProps, env: EmailEnv): RenderedEmail {
+  const e = env.t.emails;
+  const values = {
+    when: when(env, props.startsAt),
+    time: formatTime(props.startsAt, env.locale),
+    venue: props.venue,
   };
+
+  return renderEmail({
+    locale: env.locale,
+    baseUrl: env.baseUrl,
+    subject: fill(e.reminder.subject, values),
+    preheader: fill(e.reminder.preheader, values),
+    eyebrow: e.reminder.eyebrow,
+    headline: e.reminder.headline,
+    lede: fill(e.reminder.lede, values),
+    rows: [
+      whenRow(env, props),
+      whereRow(env, props),
+      ...(props.places ? [playersRow(env, props.places)] : []),
+    ],
+    cta: { href: props.gameUrl, label: e.common.seeLineup },
+    rule: cancelRule(env),
+    smallPrint: plainSmallPrint(env),
+    footer: e.common.footerBooked,
+  });
 }

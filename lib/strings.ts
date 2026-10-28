@@ -341,6 +341,8 @@ export const strings = {
      * worst of both, and it is the label people read, not the asterisk.
      */
     phoneLabel: "Phone",
+    /** Round 41 — the prefix picker beside the number; read by screen readers. */
+    phoneCountryLabel: "Country code",
     phoneHint: "Only the organizer sees it, and only for games you have booked.",
     phoneRequired: "We need a phone number so the organizer can reach you about a game.",
     phoneInvalid: "A phone number is between 3 and 32 characters.",
@@ -366,7 +368,10 @@ export const strings = {
     tosRequired: "Please accept the terms to continue.",
     privacyHowLink: "How we handle your data",
     preferencesGroupLabel: "Optional",
-    marketingLabel: "I want to receive the Playllu newsletter and news by email. I can unsubscribe at any time.",
+    marketingLabel: "I want to receive the Hraj Fotbal newsletter and news by email. I can unsubscribe at any time.",
+    /** Round 41 — the language a player's emails are written in. */
+    emailLocaleLabel: "Emails in",
+    emailLocaleHint: "Booking confirmations, receipts and reminders arrive in this language.",
     createAccount: "Create my account",
 
     emailTaken:
@@ -1171,6 +1176,7 @@ export const strings = {
      */
     emailPrefsTitle: "Email preferences",
     marketingToggle: "News about new games and offers",
+    emailLocaleSaved: "Saved",
     positions: {
       gk: "Goalkeeper",
       def: "Defender",
@@ -2254,138 +2260,190 @@ export const strings = {
   },
 
   /**
-   * Transactional email copy.
+   * EVERY EMAIL, IN THE READER'S LANGUAGE (round 41).
    *
-   * EIGHT in-app templates live here. The ninth transactional email in the
-   * spec — the magic link — is delivered by Supabase's own mailer and has
-   * deliberately NO entry in this table and no template in the codebase.
+   * ~~Emails stay English — there is no per-player language in the database,
+   * only a cookie.~~ The language now travels with the ACCOUNT: chosen at
+   * signup (pre-set from the browser), changeable on the account page, and read
+   * at send time — see `lib/email/recipientLocale.ts`. So this section is
+   * player-facing and translated like every other, and the overlays carry it.
    *
-   * Window figures (12h / 24h) are never written as literals here: the
-   * templates interpolate them from lib/policy.ts so a v2 policy bump moves
-   * the copy with it.
+   * THE SHAPE IS THE APPROVED DRAFT'S (2026-10-19): a subject, the inbox
+   * preheader, a volt eyebrow, one big headline, one sentence, the facts as
+   * rows, one button, the rule that matters next. `{placeholders}` are filled
+   * at send time; `**bold**` marks the one phrase the rule leans on.
+   *
+   * MONEY STAYS CZECH IN EVERY LANGUAGE: `Variabilní symbol` and `QR platba`
+   * are what the player's Czech banking app says, so they are not translated.
+   * CREDITS NEVER WEAR CROWNS — the only CZK on any email is money that really
+   * moved, on a receipt.
    */
   emails: {
-    /**
-     * Top-up receipt. Emails stay English — there is no per-player language in
-     * the database, only a cookie (see lib/i18n/locales.ts).
-     */
-    topupReceipt: {
-      subject: "Your credits have been topped up",
-      heading: "Credits added",
-      body: "We received {amount} and added {credits} to your account.",
-      /*
-       * RECEIVED IS THE ONLY CROWNS FIGURE ON THIS EMAIL, and that is the
-       * vocabulary law (round 35): a card or a bank transfer really does move
-       * crowns, so the money that ARRIVED is priced in them. Everything the
-       * player then HOLDS is credits — what was credited, and the balance.
-       */
-      receivedLabel: "Received",
-      creditedLabel: "Credited",
-      expiresLabel: "Expires",
-      noExpiry: "Never",
-      balanceLabel: "New balance",
-      spendNote:
-        "It applies automatically to your next booking — no code to enter.",
-      cta: "Open my account",
-    },
-
-    /**
-     * The three-day heads-up (§4.2, REQ-PASS-004).
-     *
-     * Links to the GAMES LIST, not to the account page. Someone told their
-     * credit is running out does not need to look at a balance — they need to
-     * book something, and there is still time.
-     */
-    passExpiring: {
-      subject: "Your credit runs out in 3 days",
-      heading: "Use it before it goes",
-      body: "You have {credits} of pass credit left and it expires on {date}.",
-      remainingLabel: "Left",
-      expiresLabel: "Expires",
-      cta: "Find a game",
-    },
-
-  common: {
+    common: {
       when: "When",
       where: "Where",
-      amountDue: "Amount due",
-      variableSymbol: "Variable symbol",
-      account: "Account",
-      credit: "Credit",
-      viewGame: "View the game",
-      viewAccount: "Open my account",
+      players: "Players",
+      paid: "Paid",
+      returned: "Returned",
+      toPay: "To pay",
+      /** Czech in every language — it is matched against a Czech bank statement. */
+      variableSymbol: "Variabilní symbol",
+      openMaps: "Open in Maps",
+      seeLineup: "See the lineup",
+      findGame: "Find a game",
       findAnother: "Find another game",
-      signOff: "See you on the pitch.",
+      calendarNote: "Add it to your calendar — the invite is attached.",
+      you: "You",
+      placesOne: "{n} place",
+      placesFew: "{n} places",
+      placesMany: "{n} places",
+      guestsOne: "{n} guest",
+      guestsFew: "{n} guests",
+      guestsMany: "{n} guests",
+      /** `{hours}` is the database's cutoff; `{cantMakeIt}` is the button's own label. */
+      cancelRule:
+        "Can't make it? Cancel at least **{hours} hours before kick-off** and your Credit comes back. After that, tap “{cantMakeIt}” so someone from the waitlist can play.",
+      noWithdrawal:
+        "A booking can't be withdrawn from, because it's a leisure service on a fixed date and time (§ 1837(j) of the Czech Civil Code).",
+      rulesLink: "Community and Game Rules",
+      questions: "Questions or complaints: {email}",
+      termsAttached: "The Terms and Conditions in force today are attached as a PDF.",
+      /** Why a booking-related email arrived — six emails share it. */
+      footerBooked: "You're getting this because you booked a game.",
     },
 
+    /** Only when money moved — Texty pro web 5.1. */
+    receipt: {
+      title: "Receipt",
+      order: "Order",
+      validUntil: "Valid until",
+      usedForGame: "used for this game",
+      paidBy: "Paid by",
+      card: "Card, via Stripe",
+      bankTransfer: "Bank transfer",
+      waiverNote:
+        "Before paying, you asked for the Credits straight away and confirmed: “{waiver}” Ticked {time}.",
+    },
+
+    bookingConfirmed: {
+      subject: "You're in · {when} · {venue}",
+      preheader: "Cancel up to {hours} hours before kick-off and your Credit comes back.",
+      eyebrow: "Booking confirmed",
+      headline: "You're in.",
+      lede: "{when} at {venue}. See you on the pitch.",
+    },
+
+    guestsAdded: {
+      subject: "Guests added · {when} · {venue}",
+      preheader: "{places} at {venue}, {when}.",
+      eyebrow: "Guests added",
+      headline: "They're in.",
+      lede: "Your guests are on the lineup for {when} at {venue}.",
+    },
+
+    /** The pay-later booking (QR / bank transfer) — a payment REQUEST, not a receipt. */
     spotHeld: {
-      subject: "Spot held — pay with this QR",
-      heading: "Your spot is held",
-      body:
-        "Scan the QR in your banking app, or pay by hand using the details below. " +
-        "Your spot is held until the payment lands.",
-      spdLabel: "Payment string (SPD)",
-    },
-
-    paymentConfirmed: {
-      subject: "Payment confirmed — you are in",
-      heading: "Payment confirmed",
-      body: "You are in the lineup. The calendar invite is attached.",
+      subject: "Pay to keep your spot · {when}",
+      preheader: "{amount}, variabilní symbol {vs}.",
+      eyebrow: "Payment needed",
+      headline: "Your spot is held.",
+      lede: "Pay {amount} to keep it — the QR code is on the game page, or use the details below.",
+      spdLabel: "QR platba (SPD)",
+      cta: "Open the QR code",
     },
 
     nudge: {
-      subject: "Pay now or lose your spot",
-      heading: "Someone is waiting for your spot",
+      subject: "Pay now or lose your spot · {when}",
+      preheader: "Players are waiting. Pay within {hours} hours.",
+      eyebrow: "Payment needed",
+      headline: "Someone wants your spot.",
       // {hours} is interpolated from lib/policy.ts, never hardcoded.
-      body:
-        "This game is full and players are on the waitlist. Pay online within " +
-        "{hours}h or the spot goes to the next player.",
+      lede:
+        "The game is full and players are on the waitlist. Pay within {hours} hours or the spot goes to the next one.",
+      cta: "Pay now",
     },
 
     expiry: {
-      subject: "Your unpaid spot has expired",
-      heading: "Spot released",
-      body:
-        "The reservation went unpaid, so the spot has been released to the " +
-        "waitlist. You can still grab another game.",
+      subject: "Your unpaid spot was released · {when}",
+      preheader: "It wasn't paid in time, so it went to the waitlist.",
+      eyebrow: "Spot released",
+      headline: "Your spot has gone.",
+      lede:
+        "The reservation for {when} at {venue} wasn't paid in time, so the spot went to someone on the waitlist.",
     },
 
     reminder: {
-      subject: "See you tomorrow",
-      heading: "Your game is coming up",
-      // {hours} is interpolated from lib/policy.ts, never hardcoded.
-      body: "Kick-off is within {hours}h. Here are the details again.",
+      subject: "Tomorrow · {time} · {venue}",
+      preheader: "Kick-off {when}. Here are the details again.",
+      eyebrow: "See you tomorrow",
+      headline: "Game day is close.",
+      lede: "Kick-off is {when} at {venue}. Here are the details again.",
     },
 
     waitlistSpotOpen: {
-      subject: "A spot just opened",
-      heading: "A spot just opened",
-      body:
-        "A spot has come free and everyone on the waitlist has been told at the " +
-        "same time — first to claim it gets it.",
+      subject: "A spot just opened · {when}",
+      preheader: "First to claim it gets it.",
+      eyebrow: "Waitlist",
+      headline: "A spot just opened.",
+      lede:
+        "A place at {venue} on {when} has come free. Everyone on the waitlist was told at the same time — the first to claim it gets it.",
       cta: "Claim the spot",
+      footer: "You're getting this because you're on the waitlist for this game.",
     },
 
+    /** The player cancelled. Three endings, because "nothing was paid" is not "too late". */
     cancellationCredit: {
-      subject: "Booking cancelled — credit added",
-      heading: "Booking cancelled",
-      body:
-        "Your booking is cancelled and what you paid is back as " +
-        "credit. It applies automatically to your next booking.",
-      noCreditBody:
-        "Your booking is cancelled. Nothing had been paid, so there is no " +
-        "credit to return.",
+      subject: "Booking cancelled · {when}",
+      preheaderCredit: "Back in your account: {credits}.",
+      preheaderNone: "Your place has been released.",
+      eyebrow: "Booking cancelled",
+      headline: "Booking cancelled.",
+      ledeCredit: "Your place at {venue} on {when} is released. Back in your account: {credits}.",
+      ledeLate:
+        "Your place at {venue} on {when} is released. It was less than {hours} hours before kick-off, so the Credit doesn't come back.",
+      ledeUnpaid:
+        "Your place at {venue} on {when} is released. Nothing had been paid, so there's nothing to return.",
+      footer: "You're getting this because you cancelled a booking.",
     },
 
+    /** We cancelled. Obchodní podmínky 11.3 — the Credit comes back with extra days. */
     gameCancelled: {
-      subject: "Game cancelled",
-      heading: "This game is off",
-      body:
-        "The organizer cancelled this game. Anything you had paid is back in " +
-        "credits and applies automatically to your next booking.",
-      noCreditBody:
-        "The organizer cancelled this game. Nothing had been paid, so there is " +
-        "no credit to return.",
+      subject: "Game cancelled · {when}",
+      preheaderCredit: "Your Credit is back, valid {extensionDays} days longer.",
+      preheaderNone: "Nothing had been paid.",
+      eyebrow: "Game cancelled",
+      headline: "This game is off.",
+      lede: "The organizer cancelled {when} at {venue}.",
+      creditLine:
+        "Back in your account: {credits}, with its validity extended by {extensionDays} days.",
+      noCreditLine: "Nothing had been paid, so there's nothing to return.",
+      footer: "You're getting this because you had a place in this game.",
+    },
+
+    /** A purchase of Credits — a pass, or a single game whose seat had gone. */
+    creditsPurchased: {
+      subject: "Receipt · {credits}",
+      preheader: "Valid until {date}. Book any game with them.",
+      eyebrow: "Payment received",
+      headline: "Credits added.",
+      lede: "Added to your account: {credits}, valid until {date}.",
+      ledeGameFull:
+        "The game filled up while you were paying, so your payment became Credits instead: {credits}, valid until {date}, for any game you like.",
+      balance: "Balance",
+      footer: "You're getting this because you bought Credits.",
+    },
+
+    /** Obchodní podmínky 5.4 — the warning a week before Credits lapse. */
+    creditsExpiring: {
+      subject: "Your Credits expire on {date}",
+      preheader: "Left: {credits}. Book a game before then.",
+      eyebrow: "Credits expiring",
+      headline: "Use them before they go.",
+      lede:
+        "Your Credits ({credits}) expire on {date}. Book a game before then and they're spent, not lost.",
+      left: "Left",
+      expires: "Expires",
+      footer: "You're getting this because you have Credits on Hraj Fotbal.",
     },
   },
 

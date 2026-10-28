@@ -180,6 +180,7 @@ export const cs: StringsOverlay = {
 
     // DRAFT — flagged for the standing native-review batch.
     phoneLabel: "Telefon",
+    phoneCountryLabel: "Předvolba",
     phoneRequired: "Potřebujeme telefon, aby se ti organizátor mohl ozvat kvůli zápasu.",
     phoneInvalid: "Telefonní číslo má 3 až 32 znaků.",
     phoneHint: "Vidí ho jen organizátor, a jen u zápasů, které máš zarezervované.",
@@ -216,7 +217,9 @@ export const cs: StringsOverlay = {
     nicknameInvalid: "Použij jen písmena, číslice, mezery, _ a - (max. 20 znaků).",
     phoneRefused: "Tohle telefonní číslo nejde použít. Zkus jiné, nebo nám napiš.",
     nicknameTaken: "Tahle přezdívka je zabraná. Zkus jinou.",
-    marketingLabel: "Chci dostávat newsletter a novinky Playllu e-mailem. Odhlásit se můžu kdykoli.",
+    marketingLabel: "Chci dostávat newsletter a novinky Hraj Fotbal e-mailem. Odhlásit se můžu kdykoli.",
+    emailLocaleLabel: "Jazyk e-mailů",
+    emailLocaleHint: "V tomto jazyce ti budou chodit potvrzení rezervací, doklady a připomínky.",
     createAccount: "Založit účet",
   },
 
@@ -548,6 +551,7 @@ export const cs: StringsOverlay = {
     saveFailed: "Uložení se nepovedlo. Zkus to prosím znovu.",
     emailPrefsTitle: "Nastavení e-mailů",
     marketingToggle: "Novinky o nových zápasech a nabídkách",
+    emailLocaleSaved: "Uloženo",
     positions: {
       gk: "Brankář",
       def: "Obránce",
@@ -823,5 +827,156 @@ export const cs: StringsOverlay = {
         a: "Vůbec ne. Vítáme všechny úrovně. Zápasy jsou přátelské, pokud odznak úrovně neříká jinak.",
       },
     ],
+  },
+
+  /**
+   * E-maily (round 41) — informal "ty", like the rest of the Czech site.
+   * `Variabilní symbol` and `QR platba` are the bank's own words in every
+   * language; Credits are never written in crowns.
+   */
+  emails: {
+    common: {
+      when: "Kdy",
+      where: "Kde",
+      players: "Hráči",
+      paid: "Zaplaceno",
+      returned: "Vráceno",
+      toPay: "K úhradě",
+      variableSymbol: "Variabilní symbol",
+      openMaps: "Otevřít v Mapách",
+      seeLineup: "Zobrazit sestavu",
+      findGame: "Najít zápas",
+      findAnother: "Najít jiný zápas",
+      calendarNote: "Přidej si ho do kalendáře — pozvánka je v příloze.",
+      you: "Ty",
+      placesOne: "{n} místo",
+      placesFew: "{n} místa",
+      placesMany: "{n} míst",
+      guestsOne: "{n} host",
+      guestsFew: "{n} hosté",
+      guestsMany: "{n} hostů",
+      cancelRule:
+        "Nemůžeš přijít? Zruš rezervaci nejpozději **{hours} hodin před výkopem** a Kredit se ti vrátí. Později klikni na „{cantMakeIt}“, ať může hrát někdo z čekací listiny.",
+      noWithdrawal:
+        "Od Rezervace nelze odstoupit, protože jde o službu volného času poskytovanou v určitý den a čas (§ 1837 písm. j) občanského zákoníku).",
+      rulesLink: "Pravidla komunity a hry",
+      questions: "Dotazy a reklamace: {email}",
+      termsAttached: "Obchodní podmínky platné ke dni objednávky najdeš v příloze (PDF).",
+      footerBooked: "Tento e-mail ti přišel, protože sis rezervoval(a) Zápas.",
+    },
+    receipt: {
+      title: "Doklad",
+      order: "Objednávka",
+      validUntil: "Platnost do",
+      usedForGame: "použit na tento Zápas",
+      paidBy: "Způsob platby",
+      card: "kartou přes Stripe",
+      bankTransfer: "bankovním převodem",
+      waiverNote:
+        "Před platbou jsi požádal(a) o okamžité dodání Kreditů a potvrdil(a): „{waiver}“ Zaškrtnuto {time}.",
+    },
+    bookingConfirmed: {
+      subject: "Jsi v sestavě · {when} · {venue}",
+      preheader: "Zruš nejpozději {hours} hodin před výkopem a Kredit se ti vrátí.",
+      eyebrow: "Rezervace potvrzena",
+      headline: "Jsi v sestavě.",
+      lede: "{when}, {venue}. Uvidíme se na hřišti.",
+    },
+    guestsAdded: {
+      subject: "Hosté přidáni · {when} · {venue}",
+      preheader: "{places} · {venue}, {when}.",
+      eyebrow: "Hosté přidáni",
+      headline: "Jsou v sestavě.",
+      lede: "{when}, {venue}: tvoji hosté jsou v sestavě.",
+    },
+    spotHeld: {
+      subject: "Zaplať a místo je tvoje · {when}",
+      preheader: "{amount}, variabilní symbol {vs}.",
+      eyebrow: "Čeká na platbu",
+      headline: "Místo je zamluvené.",
+      lede: "Zaplať {amount} a zůstane tvoje — QR kód najdeš u zápasu, nebo použij údaje níže.",
+      spdLabel: "QR platba (SPD)",
+      cta: "Otevřít QR kód",
+    },
+    nudge: {
+      subject: "Zaplať, jinak místo dostane jiný · {when}",
+      preheader: "Další hráči čekají. Zaplať do {hours} hodin.",
+      eyebrow: "Čeká na platbu",
+      headline: "Na tvoje místo se čeká.",
+      lede:
+        "Zápas je plný a na čekací listině jsou další hráči. Zaplať do {hours} hodin, jinak místo dostane další v pořadí.",
+      cta: "Zaplatit",
+    },
+    expiry: {
+      subject: "Nezaplacené místo bylo uvolněno · {when}",
+      preheader: "Nebylo zaplaceno včas, a tak přešlo na čekací listinu.",
+      eyebrow: "Místo uvolněno",
+      headline: "Místo propadlo.",
+      lede:
+        "{when}, {venue}: rezervace nebyla zaplacena včas, takže místo dostal někdo z čekací listiny.",
+    },
+    reminder: {
+      subject: "Zítra · {time} · {venue}",
+      preheader: "Výkop: {when}. Tady jsou podrobnosti ještě jednou.",
+      eyebrow: "Uvidíme se zítra",
+      headline: "Zápas se blíží.",
+      lede: "Výkop: {when}, {venue}. Tady jsou podrobnosti ještě jednou.",
+    },
+    waitlistSpotOpen: {
+      subject: "Uvolnilo se místo · {when}",
+      preheader: "Kdo si ho zabere první, hraje.",
+      eyebrow: "Čekací listina",
+      headline: "Uvolnilo se místo.",
+      lede:
+        "{when}, {venue}: uvolnilo se místo. Všichni z čekací listiny se to dozvěděli současně — kdo si ho zabere první, hraje.",
+      cta: "Zabrat místo",
+      footer: "Tento e-mail ti přišel, protože jsi na čekací listině tohoto Zápasu.",
+    },
+    cancellationCredit: {
+      subject: "Rezervace zrušena · {when}",
+      preheaderCredit: "Vráceno na účet: {credits}.",
+      preheaderNone: "Tvoje místo je uvolněné.",
+      eyebrow: "Rezervace zrušena",
+      headline: "Rezervace zrušena.",
+      ledeCredit: "{when}, {venue}: tvoje místo je uvolněné. Vráceno na účet: {credits}.",
+      ledeLate:
+        "{when}, {venue}: tvoje místo je uvolněné. Bylo to méně než {hours} hodin před výkopem, takže se Kredit nevrací.",
+      ledeUnpaid:
+        "{when}, {venue}: tvoje místo je uvolněné. Nic nebylo zaplaceno, takže není co vracet.",
+      footer: "Tento e-mail ti přišel, protože jsi zrušil(a) Rezervaci.",
+    },
+    gameCancelled: {
+      subject: "Zápas zrušen · {when}",
+      preheaderCredit: "Kredit je zpět, s platností o {extensionDays} dní delší.",
+      preheaderNone: "Nic nebylo zaplaceno.",
+      eyebrow: "Zápas zrušen",
+      headline: "Zápas se nehraje.",
+      lede: "{when}, {venue}: organizátor zápas zrušil.",
+      creditLine: "Vráceno na účet: {credits}, s platností prodlouženou o {extensionDays} dní.",
+      noCreditLine: "Nic nebylo zaplaceno, takže není co vracet.",
+      footer: "Tento e-mail ti přišel, protože jsi měl(a) v tomto Zápase místo.",
+    },
+    creditsPurchased: {
+      subject: "Doklad · {credits}",
+      preheader: "Platnost do {date}. Použij je na jakýkoli Zápas.",
+      eyebrow: "Platba přijata",
+      headline: "Kredity připsány.",
+      lede: "Připsáno na účet: {credits}, s platností do {date}.",
+      ledeGameFull:
+        "Zápas se zaplnil dřív, než jsi dokončil(a) platbu, takže z ní jsou Kredity: {credits}, s platností do {date}, na jakýkoli jiný Zápas.",
+      balance: "Zůstatek",
+      footer: "Tento e-mail ti přišel, protože sis koupil(a) Kredity.",
+    },
+    creditsExpiring: {
+      subject: "Tvoje Kredity vyprší {date}",
+      preheader: "Zbývá: {credits}. Zarezervuj si Zápas do té doby.",
+      eyebrow: "Kredity brzy vyprší",
+      headline: "Využij je, než propadnou.",
+      lede:
+        "Tvoje Kredity ({credits}) vyprší {date}. Zarezervuj si do té doby Zápas a nepropadnou.",
+      left: "Zbývá",
+      expires: "Platnost do",
+      footer: "Tento e-mail ti přišel, protože máš na Hraj Fotbal Kredity.",
+    },
   },
 };

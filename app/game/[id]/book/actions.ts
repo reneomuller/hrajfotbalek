@@ -378,7 +378,7 @@ async function dispatchBookingEmails(result: BookingResult): Promise<void> {
 
     const { data: booking } = await supabase
       .from("bookings")
-      .select("id, game_id, player_id, price_czk, credit_applied_czk, payment_code")
+      .select("id, game_id, player_id, price_czk, credit_applied_czk, payment_code, guest_count")
       .eq("id", result.id)
       .maybeSingle();
     if (!booking) return;

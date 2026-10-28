@@ -6,6 +6,10 @@ import { redirect } from "next/navigation";
 import { notifyWaitlistForGame } from "@/lib/cron/waitlistRelease";
 import { bookingEmailContext } from "@/lib/cron/context";
 import { dispatchEmail } from "@/lib/email/dispatch";
+import { withComposedPhone } from "@/lib/auth/phone";
+import { isLocale } from "@/lib/i18n/locales";
+import type { CancelResult } from "@/lib/types/database";
+import { refundCutoffHours } from "@/lib/policy/refundCutoff";
 import { createServerSupabaseClient, createServiceRoleSupabaseClient } from "@/lib/supabase/clients";
 import { getSessionUser } from "@/lib/auth/session";
 import { toBookingErrorCode, type BookingErrorCode } from "@/lib/booking/errors";
@@ -89,11 +93,9 @@ export async function cancelBookingAction(
   // than being recomputed here — the function decides how much a cancellation
   // is worth, and a second opinion in TypeScript is a second answer waiting to
   // disagree.
-  const credited = Number(
-    (cancelResult as unknown as { credit_issued_czk?: number } | null)
-      ?.credit_issued_czk ?? 0,
-  );
-  await dispatchCancellationEmail(bookingId, credited);
+  const result = cancelResult as unknown as Partial<CancelResult> | null;
+  const credited = Number(result?.credit_issued_czk ?? 0);
+  await dispatchCancellationEmail(bookingId, credited, Number(result?.cancel_lead_hours ?? 0));
 
   // A cancellation releases a spot, and `cancel_booking` emits `spot_released`
   // to say so. Notifying here rather than waiting for the next cron tick is
@@ -150,13 +152,14 @@ export async function cancelBookingAction(
 async function dispatchCancellationEmail(
   bookingId: string,
   creditCzk: number,
+  leadHours: number,
 ): Promise<void> {
   try {
     const service = createServiceRoleSupabaseClient();
 
     const { data: booking } = await service
       .from("bookings")
-      .select("id, game_id, player_id, price_czk, credit_applied_czk")
+      .select("id, game_id, player_id, price_czk, credit_applied_czk, guest_count")
       .eq("id", bookingId)
       .maybeSingle();
     if (!booking) return;
@@ -168,10 +171,23 @@ async function dispatchCancellationEmail(
     if (!game || !player) return;
 
     const context = await bookingEmailContext(booking, game, player);
+    /*
+     * WHY NOTHING CAME BACK, when nothing did (round 41). A Credit had been
+     * spent and the cancellation fell inside the cutoff: the rule kept it.
+     * Otherwise nothing had been paid. The old email said "nothing had been
+     * paid" to both — wrong for every "I can't make it" since round 40.
+     */
+    const cutoff = await refundCutoffHours();
+    const outcome =
+      creditCzk > 0
+        ? "credited"
+        : booking.credit_applied_czk > 0 && leadHours < cutoff
+          ? "late"
+          : "unpaid";
     await dispatchEmail({
       event: "booking_cancelled",
       to: player.email,
-      context: { ...context, creditCzk },
+      context: { ...context, creditCzk, cancelOutcome: outcome },
     });
   } catch (error) {
     console.error("cancellation email dispatch failed", error);
@@ -338,7 +354,8 @@ export async function updateProfileAction(
   // Empty clears it. A phone is optional and always has been, so "" and null
   // must mean the same thing rather than storing a zero-length string that
   // every later `is not null` check would treat as a number.
-  const rawPhone = String(formData.get("phone") ?? "").trim();
+  // Round 41: a prefix and a number arrive; one international number is kept.
+  const rawPhone = String(withComposedPhone(formData).get("phone") ?? "").trim();
   const phone = rawPhone === "" ? null : rawPhone;
 
   const country = normaliseCountry(String(formData.get("country") ?? ""));
@@ -454,4 +471,34 @@ export async function deleteOwnAccountAction(
   if (result) await finishAccountDeletion(player.id, result);
 
   redirect("/");
+}
+
+export interface EmailLocaleActionState {
+  status: "idle" | "saved" | "error";
+  message?: string;
+}
+
+/**
+ * The language a player's emails are written in (round 41) — kept on the
+ * account, in the auth user's metadata, where `lib/email/recipientLocale.ts`
+ * reads it at send time. Written by the player's own session, so nobody can
+ * set another account's.
+ */
+export async function setEmailLocaleAction(
+  _prev: EmailLocaleActionState,
+  formData: FormData,
+): Promise<EmailLocaleActionState> {
+  const t = await getStrings();
+  const chosen = formData.get("email_locale");
+  if (!isLocale(chosen)) return { status: "error", message: t.profile.saveFailed };
+
+  const supabase = await createServerSupabaseClient();
+  const { error } = await supabase.auth.updateUser({ data: { email_locale: chosen } });
+  if (error) {
+    console.error("email language update failed", error.message);
+    return { status: "error", message: t.profile.saveFailed };
+  }
+
+  revalidatePath("/account");
+  return { status: "saved" };
 }

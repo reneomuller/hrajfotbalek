@@ -95,6 +95,12 @@ export const policy = {
   credits: {
     validityDays: 60,
     cancelledGameExtensionDays: 7,
+    /**
+     * How far ahead the "your Credits expire" email goes out — Obchodní
+     * podmínky 5.4 says seven days (round 41; it was three). The nightly sweep
+     * stamps each batch when it warns, so nobody is told twice.
+     */
+    expiryWarningDays: 7,
   },
 
   /**

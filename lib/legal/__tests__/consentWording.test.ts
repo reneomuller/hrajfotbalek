@@ -73,3 +73,23 @@ describe("the risk sentence", () => {
     for (const text of texts) expect(text).not.toMatch(RISK);
   });
 });
+
+/**
+ * Owner, 2026-10-28: "playllu -> hrajfotbal newsletter". Players sign up to
+ * Hraj Fotbal; Playllu is the operator the terms name, not a brand they know.
+ */
+describe("the newsletter box", () => {
+  it("names Hraj Fotbal, not Playllu, in every language", () => {
+    // Arrange
+    const tables = LOCALES.map((locale) => resolveStrings(locale));
+
+    // Act
+    const labels = tables.map((t) => t.auth.marketingLabel);
+
+    // Assert
+    for (const label of labels) {
+      expect(label).toContain("Hraj Fotbal");
+      expect(label).not.toMatch(/playllu/i);
+    }
+  });
+});
