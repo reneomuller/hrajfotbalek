@@ -4,7 +4,7 @@ import { dispatchEmail, sendCreditsPurchasedEmail } from "@/lib/email/dispatch";
 import { emailLocalePreference } from "@/lib/email/recipientLocale";
 import type { PaymentReceipt } from "@/lib/email/templates/parts";
 import { resolveStrings } from "@/lib/i18n/resolve";
-import { waiverWording } from "@/lib/legal/consentWording";
+import { termsAgreementWording } from "@/lib/legal/consentWording";
 import { creditsValidUntil } from "@/lib/legal/purchaseSummary";
 import { parseCheckoutConsent } from "@/lib/payments/checkoutConsent";
 import type { createServiceRoleSupabaseClient } from "@/lib/supabase/clients";
@@ -18,7 +18,7 @@ type Service = ReturnType<typeof createServiceRoleSupabaseClient>;
  * sends no email at all", and no Credit purchase had ever sent a receipt — the
  * template existed and nothing called it. Under the terms every card payment
  * buys Credits (Obchodní podmínky 5.1), so every one of them now gets a receipt
- * with the waiver exactly as ticked and the terms attached (Texty 5.1):
+ * with the box above Pay exactly as ticked and the terms attached (Texty 5.1):
  *
  *   booked     a single game, or guests added — "You're in." plus the receipt
  *   credited   the seat went while they paid — the Credits receipt, explained
@@ -48,11 +48,11 @@ export async function sendPurchaseEmails(
   }
 }
 
-/** The waiver as ticked, in the language it was ticked in, and when. */
-function waiverFrom(payload: string): PaymentReceipt["waiver"] {
+/** The terms box as ticked, in the language it was ticked in, and when. */
+function termsFrom(payload: string): PaymentReceipt["terms"] {
   const consent = parseCheckoutConsent(payload);
   if (!consent) return null;
-  return { wording: waiverWording(resolveStrings(consent.locale)), acceptedAt: consent.acceptedAt };
+  return { wording: termsAgreementWording(resolveStrings(consent.locale)), acceptedAt: consent.acceptedAt };
 }
 
 function cardReceipt(
@@ -67,7 +67,7 @@ function cardReceipt(
     amountCzk: input.amountCzk,
     method: "card",
     validUntil: creditsValidUntil(paidAt).toISOString(),
-    waiver: waiverFrom(input.payload),
+    terms: termsFrom(input.payload),
     ...extra,
   };
 }

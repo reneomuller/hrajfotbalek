@@ -25,7 +25,7 @@ export interface CreditsPurchasedProps {
 
 /**
  * The receipt for a purchase of Credits (Texty pro web 5.1): what was bought,
- * for how much, until when, the waiver exactly as ticked — and the terms in
+ * for how much, until when, the box above Pay exactly as ticked — and the terms in
  * force, attached.
  *
  * ~~Written, translated, and never sent~~ (the outbound map, 2026-09-23: "it

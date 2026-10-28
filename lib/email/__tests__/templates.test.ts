@@ -50,7 +50,7 @@ const paid: PaymentReceipt = {
   method: "card",
   validUntil: "2026-09-18T12:03:00.000Z",
   usedForGame: true,
-  waiver: { wording: "I ask for the Credits to be delivered immediately.", acceptedAt: "2026-07-20T12:02:00.000Z" },
+  terms: { wording: "I agree to the Terms and Conditions.", acceptedAt: "2026-07-20T12:02:00.000Z" },
 };
 
 /** Every template, rendered for one language. */
@@ -182,14 +182,14 @@ describe("the booking confirmation — the approved template", () => {
     expect(email.text).toContain(`„${resolveStrings("cs").booking.cantMakeIt}“`);
   });
 
-  it("adds the receipt, the waiver as ticked and the terms PDF when money moved", () => {
+  it("adds the receipt, the terms box as ticked and the terms PDF when money moved", () => {
     // Act
     const email = bookingConfirmedEmail({ ...game, places: 1, creditsPaid: 1, ics, receipt: paid }, env("en"));
 
     // Assert
     expect(email.text).toContain("HF-E5F6G7H8");
     expect(email.text).toContain("180 CZK");
-    expect(email.text).toContain(paid.waiver!.wording);
+    expect(email.text).toContain(paid.terms!.wording);
     expect(email.attachments?.map((a) => a.filename)).toContain("Hraj-Fotbal-obchodni-podminky.pdf");
     const pdf = email.attachments?.find((a) => a.filename.endsWith(".pdf"));
     expect(pdf && "path" in pdf ? pdf.path : null).toBe(`${BASE_URL}/legal/obchodni-podminky.pdf`);

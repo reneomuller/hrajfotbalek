@@ -19,7 +19,7 @@ const STRIPE_METADATA = {
 };
 
 describe("parseCheckoutConsent", () => {
-  it("reads a waiver ticked inside Stripe's form", () => {
+  it("reads the box ticked inside Stripe's form", () => {
     // Arrange
     const payload = completed({
       metadata: STRIPE_METADATA,

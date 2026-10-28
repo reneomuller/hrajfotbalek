@@ -3,12 +3,13 @@
 import { useState, type ReactNode } from "react";
 
 /**
- * OUR WAIVER BOX, ONLY WHEN STRIPE CANNOT DRAW ITS OWN (rounds 38 and 40).
+ * OUR TERMS BOX, ONLY WHEN STRIPE CANNOT DRAW ITS OWN (rounds 38 and 40).
  *
  * The normal case has no use for this: the session asks Stripe to require its
- * box directly above Pay, worded as the lawyer's waiver (Texty 3.3). It renders
- * only when Stripe refused that for want of a Terms of Service URL in the
- * Dashboard, so checkout keeps working and the waiver is still given.
+ * box directly above Pay, worded as the terms sentence (the withdrawal waiver
+ * until 2026-10-28). It renders only when Stripe refused that for want of a
+ * Terms of Service URL in the Dashboard, so checkout keeps working and the
+ * terms are still accepted.
  *
  * VISIBLE, BUT LOCKED (round 40, the owner). ~~Tick, and the payment form
  * appears.~~ The form is on screen from the start so the player can see what
@@ -35,7 +36,7 @@ export function CheckoutTermsGate({
           type="checkbox"
           checked={accepted}
           onChange={(event) => setAccepted(event.target.checked)}
-          data-testid="checkout-waiver"
+          data-testid="checkout-terms"
           className="mt-1 accent-volt"
         />
         <span>{label}</span>

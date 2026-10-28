@@ -1,11 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { LOCALES } from "@/lib/i18n/locales";
 import { resolveStrings } from "@/lib/i18n/resolve";
-import {
-  bookingTermsWording,
-  signupTermsWording,
-  waiverWording,
-} from "@/lib/legal/consentWording";
+import { signupTermsWording, termsAgreementWording } from "@/lib/legal/consentWording";
 
 /**
  * A consent record stores the WORDS the player saw (Texty 2.4), so each one
@@ -40,17 +36,34 @@ describe("consent wording", () => {
     );
   });
 
-  it("fills the booking box and leaves the waiver as written", () => {
+  it("fills the terms box that stands above Book and above Pay", () => {
     // Arrange
     const t = resolveStrings("cs");
 
     // Act
-    const booking = bookingTermsWording(t);
-    const waiver = waiverWording(t);
+    const wording = termsAgreementWording(t);
 
     // Assert
-    expect(booking).toBe("Souhlasím s Obchodními podmínkami.");
-    expect(waiver).toMatch(/^Žádám o okamžité dodání Kreditů po zaplacení/);
+    expect(wording).toBe("Souhlasím s Obchodními podmínkami.");
+  });
+});
+
+/**
+ * Owner, 2026-10-28: "remove this tick box during check out: Žádám o okamžité
+ * dodání Kreditů… Instead change it to Souhlasím s obchodními podmínkami". The
+ * checkout now asks the booking box's one sentence, and no language keeps the
+ * waiver — a key left behind is a box somebody can put back by accident.
+ */
+describe("the withdrawal waiver", () => {
+  it("is gone from every language", () => {
+    // Arrange
+    const tables = LOCALES.map((locale) => resolveStrings(locale));
+
+    // Act
+    const carrying = tables.filter((t) => "waiver" in t.purchase);
+
+    // Assert
+    expect(carrying).toEqual([]);
   });
 });
 

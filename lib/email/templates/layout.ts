@@ -114,7 +114,7 @@ export interface EmailRow {
 export interface EmailReceipt {
   title: string;
   rows: EmailRow[];
-  /** The waiver as the player ticked it, with the time — Texty 5.1. */
+  /** The box above Pay as the player ticked it, with the time — Texty 5.1. */
   note?: string | null;
 }
 

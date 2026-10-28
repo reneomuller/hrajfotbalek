@@ -457,7 +457,11 @@ what was spent, not what is still owed; a refund must read both.**
 **EVERY CARD PAYMENT BUYS CREDITS (round 40, Obchodní podmínky 5.1).** A single
 game is one Credit spent at once, so a refunded card payment is a CREDIT valid
 `credit_validity_days()` (60) from the payment — never unexpiring money — and
-every checkout carries the Credit summary above Pay and the waiver box. The
+every checkout carries the Credit summary above Pay and a required box. ~~The
+waiver box~~ — **since 2026-10-28 the box is "Souhlasím s Obchodními
+podmínkami", the owner's call against Obchodní podmínky 10.3**, which still
+describes an express waiver at checkout. Recorded as `terms_at_booking`; older
+purchases keep their `withdrawal_waiver` rows. The
 legal documents live in `content/legal/original/` VERBATIM and a test fails on
 any drift; the lawyer's `Texty pro web` file is an instruction list, recorded
 row by row in `docs/REQUESTS.md` 367–382.

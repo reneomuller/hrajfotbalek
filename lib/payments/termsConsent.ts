@@ -2,9 +2,10 @@
  * THE TERMS BOX, INSIDE STRIPE'S FORM (round 38).
  *
  * ROUND 40: its words are replaced through
- * `custom_text.terms_of_service_acceptance` with the lawyer's withdrawal waiver
- * (Texty 3.3), and the Credit summary goes above Pay through
- * `custom_text.submit` — see `createEmbeddedSession`. Stripe records the tick as
+ * `custom_text.terms_of_service_acceptance` — ~~with the lawyer's withdrawal
+ * waiver (Texty 3.3)~~ with the terms sentence since 2026-10-28 — and the
+ * Credit summary goes above Pay through `custom_text.submit` — see
+ * `createEmbeddedSession`. Stripe records the tick as
  * `consent.terms_of_service = "accepted"`, which the webhook writes to
  * `consent_records`.
  *

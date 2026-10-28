@@ -94,7 +94,7 @@ export interface DispatchContext {
   /** Round 16 item 19 — the organizer's written reason for a cancellation. */
   reason?: string | null;
   ics?: EmailAttachment;
-  /** Round 41 — money moved: the card receipt, the waiver and the terms. */
+  /** Round 41 — money moved: the card receipt, the terms box as ticked and the terms. */
   receipt?: PaymentReceipt | null;
   /** Round 41 — guests added to a booking rather than a booking made. */
   bookingKind?: "booking" | "guests";

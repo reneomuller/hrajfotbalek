@@ -1,8 +1,9 @@
 import { isLocale, type Locale } from "@/lib/i18n/locales";
 
 /**
- * The withdrawal waiver a completed checkout carries (round 40, Texty 2.4 and
- * 3.3), read off the signed `checkout.session.completed` event.
+ * The box above Pay a completed checkout carries (round 40, Texty 2.4), read
+ * off the signed `checkout.session.completed` event — the withdrawal waiver
+ * until 2026-10-28, the terms sentence since.
  *
  * TWO WAYS IT WAS GIVEN, and both are evidence:
  *
@@ -18,7 +19,7 @@ import { isLocale, type Locale } from "@/lib/i18n/locales";
  * which is the moment the ticked box was submitted with it.
  *
  * A session created before round 40 carries none of this metadata and records
- * nothing: a waiver nobody was shown is not one to write down.
+ * nothing: a box nobody was shown is not one to write down.
  */
 export interface CheckoutConsent {
   sessionId: string;

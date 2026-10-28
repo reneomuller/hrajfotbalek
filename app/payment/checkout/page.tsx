@@ -13,7 +13,8 @@ import { siteUrl } from "@/lib/site";
 import { createServerSupabaseClient } from "@/lib/supabase/clients";
 import { formatCzk, formatGameDateTime } from "@/lib/format";
 import { TERMS_VERSION } from "@/lib/legal";
-import { waiverWording } from "@/lib/legal/consentWording";
+import { termsAgreementWording } from "@/lib/legal/consentWording";
+import { fillTemplate } from "@/lib/i18n/template";
 import {
   creditPurchaseSummary,
   reservationSummary,
@@ -264,7 +265,7 @@ export default async function CheckoutPage({
     kind: gameId || addGuestsBookingId ? "booking" : "pass",
     customerEmail: player.email ?? null,
     returnUrl,
-    // The player on every kind: the webhook records the waiver against them.
+    // The player on every kind: the webhook records the tick against them.
     playerId: player.id,
     ...(gameId ? { gameId, guestCount: guests } : {}),
     legal: {
@@ -279,7 +280,9 @@ export default async function CheckoutPage({
         locale,
         t,
       ),
-      waiver: waiverWording(t),
+      termsBox: fillTemplate(t.booking.termsAgree, {
+        terms: `[${t.auth.tosTermsLink}](${origin}/terms)`,
+      }),
       locale,
       termsVersion: TERMS_VERSION,
     },
@@ -397,10 +400,11 @@ export default async function CheckoutPage({
 
       {/*
         THE BOX IS STRIPE'S, directly above Pay, whenever Stripe will draw it
-        (round 38) — worded since round 40 as the lawyer's withdrawal waiver
-        (Texty 3.3). `termsInStripe` is false only when the Dashboard has no
-        Terms of Service URL; then our own box stands in front of the form,
-        which is visible but inert until it is ticked.
+        (round 38) — ~~worded since round 40 as the lawyer's withdrawal waiver
+        (Texty 3.3)~~ the terms sentence since 2026-10-28, the owner's call.
+        `termsInStripe` is false only when the Dashboard has no Terms of
+        Service URL; then our own box stands in front of the form, which is
+        visible but inert until it is ticked.
       */}
       <div className="mt-6">
         {session.termsInStripe ? (
@@ -409,7 +413,7 @@ export default async function CheckoutPage({
             publishableKey={process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!}
           />
         ) : (
-          <CheckoutTermsGate label={waiverWording(t)} lockedHint={t.purchase.lockedHint}>
+          <CheckoutTermsGate label={termsAgreementWording(t)} lockedHint={t.purchase.lockedHint}>
             <EmbeddedCheckoutFrame
               clientSecret={session.clientSecret}
               publishableKey={process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!}

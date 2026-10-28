@@ -51,8 +51,8 @@ export interface PaymentReceipt {
   validUntil: string;
   /** A single-game purchase: the Credit was spent on the spot. */
   usedForGame?: boolean;
-  /** The waiver exactly as ticked, and when — from the consent record. */
-  waiver?: { wording: string; acceptedAt: string } | null;
+  /** The box above Pay exactly as ticked, and when — from the checkout's consent. */
+  terms?: { wording: string; acceptedAt: string } | null;
   variableSymbol?: number | null;
 }
 
@@ -186,8 +186,8 @@ export function receipt(env: EmailEnv, paid: PaymentReceipt): EmailReceipt {
       { label: r.validUntil, value: paid.usedForGame ? `${valid} · ${r.usedForGame}` : valid },
       { label: r.paidBy, value: method },
     ],
-    note: paid.waiver
-      ? fill(r.waiverNote, { waiver: paid.waiver.wording, time: stamp(env, paid.waiver.acceptedAt) })
+    note: paid.terms
+      ? fill(r.termsNote, { wording: paid.terms.wording, time: stamp(env, paid.terms.acceptedAt) })
       : null,
   };
 }

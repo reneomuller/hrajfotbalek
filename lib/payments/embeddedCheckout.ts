@@ -156,17 +156,18 @@ export interface EmbeddedSessionInput {
   playerId?: string;
   guestCount?: number;
   /**
-   * THE LAWYER'S TWO TEXTS, INSIDE STRIPE'S FORM (round 40). Every card
-   * payment buys Credits (Obchodní podmínky 5.1), so every session carries
-   * the Credit summary directly above Pay (Texty 3.2) and the withdrawal
-   * waiver as the box Stripe draws above it (Texty 3.3) — Pay stays disabled
-   * until it is ticked, which no box on our own page can promise about a form
-   * inside an iframe.
+   * THE LEGAL TEXT, INSIDE STRIPE'S FORM (round 40). Every card payment buys
+   * Credits (Obchodní podmínky 5.1), so every session carries the Credit
+   * summary directly above Pay (Texty 3.2) and a box Stripe draws above it —
+   * Pay stays disabled until it is ticked, which no box on our own page can
+   * promise about a form inside an iframe. ~~The box was the withdrawal waiver
+   * (Texty 3.3).~~ Since 2026-10-28 it is the terms box, on the owner's word.
    */
   legal: {
     /** Markdown: Stripe renders the terms link. ≤ 1200 characters. */
     summary: string;
-    waiver: string;
+    /** Markdown: the terms box's sentence, its link rendered by Stripe. */
+    termsBox: string;
     /** Our locale; Stripe has no Ukrainian, so that one falls back to the browser. */
     locale: Locale;
     termsVersion: string;
@@ -284,7 +285,7 @@ export async function createEmbeddedSession(
     metadata: {
       kind: input.kind,
       reference: input.reference,
-      // What the webhook needs to RECORD the waiver (Texty 2.4, round 40).
+      // What the webhook needs to RECORD the tick (Texty 2.4, round 40).
       consent_locale: input.legal.locale,
       terms_version: input.legal.termsVersion,
       ...(input.gameId ? { game_id: input.gameId } : {}),
@@ -328,7 +329,7 @@ export async function createEmbeddedSession(
       consent_collection: CHECKOUT_TERMS_CONSENT,
       custom_text: {
         ...params.custom_text,
-        terms_of_service_acceptance: { message: input.legal.waiver },
+        terms_of_service_acceptance: { message: input.legal.termsBox },
       },
       metadata: { ...params.metadata, consent_via: "stripe" },
     });

@@ -2336,8 +2336,7 @@ export const strings = {
       paidBy: "Paid by",
       card: "Card, via Stripe",
       bankTransfer: "Bank transfer",
-      waiverNote:
-        "Before paying, you asked for the Credits straight away and confirmed: “{waiver}” Ticked {time}.",
+      termsNote: "Before paying, you confirmed: “{wording}” Ticked {time}.",
     },
 
     bookingConfirmed: {
@@ -2513,8 +2512,9 @@ export const strings = {
    * never disagree with what the database does.
    *
    * Every purchase is a purchase of Credits (Obchodní podmínky 5.1): a single
-   * game is one Credit spent at once, so the Credit summary and the waiver
-   * apply to every checkout, and a game checkout adds the booking summary.
+   * game is one Credit spent at once, so the Credit summary and the terms box
+   * (the withdrawal waiver until 2026-10-28) apply to every checkout, and a
+   * game checkout adds the booking summary.
    */
   purchase: {
     creditsOne: "{n} Credit",
@@ -2524,9 +2524,6 @@ export const strings = {
     creditSummary:
       "You're buying: {credits} (1 Credit = 1 place in one game). Total price: {amount}. Credits are valid for {days} days from when they're added, i.e. until {date}; unused Credits then expire. Credits can only be used to book Playllu games, can't be transferred and can't be exchanged for money. We add them to your account as soon as you pay. A purchase of Credits can't be withdrawn from. {terms}",
     termsLinkLabel: "Terms and Conditions",
-    /** Texty 3.3 — the separate box; inside Stripe's form, or ours in front of it. */
-    waiver:
-      "I ask for the Credits to be delivered immediately after payment, i.e. before the 14-day withdrawal period ends. I agree that adding the Credits to my account means the service has been provided in full, and I acknowledge that I thereby lose the right to withdraw from the contract for the purchase of Credits.",
     /** Texty 4.1 — before a booking is confirmed. */
     reservationSummary:
       "You're booking a place at the game on {when}, {venue}. Payment: {credits}. Cancelling: you can cancel up to {hours} hours before kick-off and your Credit comes back. If you cancel later or don't turn up, the Credit is lost. If we cancel the game, we return your Credit and extend its validity by {extensionDays} days. A booking can't be withdrawn from, because it's a leisure service provided on a specific date and time (§ 1837(j) of the Czech Civil Code).",

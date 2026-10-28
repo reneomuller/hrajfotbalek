@@ -721,7 +721,6 @@ export const cs: StringsOverlay = {
     creditsMany: "{n} Kreditů",
     creditSummary: "Kupuješ: {credits} (1 Kredit = 1 místo na jednom Zápase). Cena celkem: {amount}. Platnost Kreditů: {days} dní od připsání, tj. do {date}; nevyčerpané Kredity poté propadají. Kredity lze použít jen na Rezervace Zápasů Playllu, nejsou převoditelné a nelze je vyměnit za peníze. Kredity ti připíšeme okamžitě po zaplacení. Od nákupu Kreditů nelze odstoupit. {terms}",
     termsLinkLabel: "Obchodní podmínky",
-    waiver: "Žádám o okamžité dodání Kreditů po zaplacení, tedy ještě před uplynutím 14denní lhůty pro odstoupení od smlouvy. Souhlasím s tím, že připsáním Kreditů na můj účet je plnění poskytnuto v plném rozsahu, a beru na vědomí, že tím ztrácím právo od smlouvy o nákupu Kreditů odstoupit.",
     reservationSummary: "Rezervuješ místo na Zápase {when}, {venue}. Úhrada: {credits}. Zrušení: Rezervaci můžeš zrušit nejpozději {hours} hodin před začátkem Zápasu, Kredit se ti vrátí. Při pozdějším zrušení nebo neúčasti Kredit propadá. Když Zápas zrušíme my, vrátíme ti Kredit a prodloužíme jeho platnost o {extensionDays} dní. Od Rezervace nelze odstoupit, protože jde o službu volného času poskytovanou v určitý den a čas (§ 1837 písm. j) občanského zákoníku).",
     reservationTitle: "Tvoje rezervace",
     lockedHint: "Zaškrtni políčko nahoře a platba se odemkne.",
@@ -875,8 +874,7 @@ export const cs: StringsOverlay = {
       paidBy: "Způsob platby",
       card: "kartou přes Stripe",
       bankTransfer: "bankovním převodem",
-      waiverNote:
-        "Před platbou jsi požádal(a) o okamžité dodání Kreditů a potvrdil(a): „{waiver}“ Zaškrtnuto {time}.",
+      termsNote: "Před platbou jsi potvrdil(a): „{wording}“ Zaškrtnuto {time}.",
     },
     bookingConfirmed: {
       subject: "Jsi v sestavě · {when} · {venue}",

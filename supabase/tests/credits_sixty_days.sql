@@ -396,6 +396,13 @@ select pg_temp.ok_probe(
        'withdrawal_waiver', 'Žádám o okamžité dodání Kreditů…', 'cs', '2.0',
        '{"stripe_session_id":"cs_test_x"}'::jsonb, now())$q$,
   'rows:1', 'the webhook records the waiver ticked inside Stripe');
+-- 2026-10-28: the box above Pay is the terms sentence now, recorded as the
+-- booking box's own kind. A purchase before that keeps its waiver row.
+select pg_temp.ok_probe(
+  $q$select public.record_consent_for('4ccc0000-0000-0000-0000-000000000012'::uuid,
+       'terms_at_booking', 'Souhlasím s Obchodními podmínkami.', 'cs', '2.0',
+       '{"stripe_session_id":"cs_test_y","via":"stripe"}'::jsonb, now())$q$,
+  'rows:1', 'the webhook records the terms box ticked inside Stripe');
 reset role;
 
 select pg_temp.act_as('40000000-0000-0000-0000-000000000011');

@@ -13,7 +13,7 @@ import { buildResumeUrl } from "@/lib/booking/resume";
 import { policy } from "@/lib/policy";
 import { PASS_REFERENCE_PRICE_CZK } from "@/lib/pass/creditPrice";
 import { acceptedTerms } from "@/lib/legal/terms";
-import { bookingTermsWording } from "@/lib/legal/consentWording";
+import { termsAgreementWording } from "@/lib/legal/consentWording";
 import { recordOwnConsent } from "@/lib/legal/recordConsent";
 import { getLocale, getStrings } from "@/lib/i18n/server";
 import { rememberPendingPurchase } from "@/lib/payments/pendingPurchaseCookie";
@@ -349,7 +349,7 @@ export async function runCreateBooking(
   // Texty 2.4 — the box above "Book for 1 Credit", recorded once it is booked.
   await recordOwnConsent(supabase, {
     kind: "terms_at_booking",
-    wording: bookingTermsWording(await getStrings()),
+    wording: termsAgreementWording(await getStrings()),
     locale: await getLocale(),
     context: { booking_id: result.id, game_id: gameId },
   });

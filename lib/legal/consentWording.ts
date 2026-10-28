@@ -10,7 +10,7 @@ import type { Strings } from "@/lib/strings";
  * against a version of the copy that may since have changed.
  */
 
-/** The sign-up box: terms, community rules, the risk notice, the photo permission. */
+/** The sign-up box: the terms and the community rules. */
 export function signupTermsWording(t: Strings): string {
   return fillTemplate(t.auth.tosAgreement, {
     terms: t.auth.tosTermsLink,
@@ -18,12 +18,11 @@ export function signupTermsWording(t: Strings): string {
   });
 }
 
-/** The box above "Book for 1 Credit" (round 38). */
-export function bookingTermsWording(t: Strings): string {
+/**
+ * The terms box — above "Book for 1 Credit" (round 38) and, since 2026-10-28,
+ * above Pay, where it replaced the withdrawal waiver on the owner's word. One
+ * sentence for both, so the two boxes cannot drift.
+ */
+export function termsAgreementWording(t: Strings): string {
   return fillTemplate(t.booking.termsAgree, { terms: t.auth.tosTermsLink });
-}
-
-/** Texty 3.3 — the separate waiver box on every purchase of Credits. */
-export function waiverWording(t: Strings): string {
-  return t.purchase.waiver;
 }
