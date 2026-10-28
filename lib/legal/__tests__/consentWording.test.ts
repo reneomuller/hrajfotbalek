@@ -27,7 +27,7 @@ describe("consent wording", () => {
     }
   });
 
-  it("stores the lawyer's Czech, minus the risk sentence the owner removed", () => {
+  it("stores the lawyer's Czech, minus the sentences the owner removed", () => {
     // Arrange
     const t = resolveStrings("cs");
 
@@ -36,7 +36,7 @@ describe("consent wording", () => {
 
     // Assert
     expect(wording).toBe(
-      "Seznámil(a) jsem se s Obchodními podmínkami a s Pravidly komunity a hry a souhlasím s nimi. Uděluji svolení k pořizování fotografií a videí ze Zápasů a k jejich užití pro marketing a na sociálních sítích Playllu podle článku 13 Obchodních podmínek.",
+      "Seznámil(a) jsem se s Obchodními podmínkami a s Pravidly komunity a hry a souhlasím s nimi.",
     );
   });
 
@@ -71,6 +71,26 @@ describe("the risk sentence", () => {
 
     // Assert
     for (const text of texts) expect(text).not.toMatch(RISK);
+  });
+});
+
+/**
+ * Owner, 2026-10-28: "remove this text during sign up for the tick box: I allow
+ * photos and videos to be taken at games…". The permission itself stays where
+ * the box points — Obchodní podmínky článek 13 — and the box no longer repeats it.
+ */
+describe("the photo sentence", () => {
+  const PHOTO = /photos and videos|fotografií a videí|фото- и видеосъёмку|фото- і відеозйомку|Playllu/i;
+
+  it("is in no sign-up box, in any language", () => {
+    // Arrange
+    const tables = LOCALES.map((locale) => resolveStrings(locale));
+
+    // Act
+    const wordings = tables.map((t) => signupTermsWording(t));
+
+    // Assert
+    for (const wording of wordings) expect(wording).not.toMatch(PHOTO);
   });
 });
 

@@ -1,3 +1,4 @@
+import { profilePhotoVersion } from "@/lib/storage/photoVersions";
 import Link from "next/link";
 import { requireAdmin } from "@/lib/auth/requireAdmin";
 import { listPlayers } from "@/lib/admin/queries";
@@ -51,6 +52,13 @@ export default async function AdminPlayersPage({
   // Whose session is acting. Used only to decide which row renders no rights
   // control — `set_player_admin` refuses a self-change on its own.
   const [acting, players] = await Promise.all([requireAdmin(), listPlayers()]);
+  // Round 41: each photo's own version — `createdAt` never moved, so a
+  // replaced photo kept its URL here for a year.
+  const photoVersions = new Map(
+    await Promise.all(
+      players.map(async (p) => [p.id, await profilePhotoVersion(p.photoPath)] as const),
+    ),
+  );
 
   /*
    * THE SEARCH IS A GET FORM AND A `?q=`, not client state.
@@ -181,10 +189,10 @@ export default async function AdminPlayersPage({
                 data-testid="admin-player-tile"
                 className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-control border border-hairline-volt bg-volt/[.08] text-body font-bold text-volt"
               >
-                {avatarUrl(supabaseUrl, player.photoPath, player.createdAt) ? (
+                {avatarUrl(supabaseUrl, player.photoPath, photoVersions.get(player.id)) ? (
                   /* eslint-disable-next-line @next/next/no-img-element */
                   <img
-                    src={avatarUrl(supabaseUrl, player.photoPath, player.createdAt)!}
+                    src={avatarUrl(supabaseUrl, player.photoPath, photoVersions.get(player.id))!}
                     alt=""
                     data-testid="admin-player-list-photo"
                     className="h-full w-full object-cover"

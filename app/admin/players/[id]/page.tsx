@@ -1,3 +1,4 @@
+import { profilePhotoVersion } from "@/lib/storage/photoVersions";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PlayerAttendanceRow } from "@/components/admin/PlayerAttendanceRow";
@@ -57,7 +58,8 @@ export default async function AdminPlayerPage({
   const photo = avatarUrl(
     process.env.NEXT_PUBLIC_SUPABASE_URL ?? "",
     player.photo_path,
-    player.created_at,
+    // Round 41: the bytes' own version — `created_at` never moved.
+    await profilePhotoVersion(player.photo_path),
   );
 
   return (

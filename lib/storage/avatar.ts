@@ -207,26 +207,9 @@ export function venuePhotoUrl(
   return null;
 }
 
-/**
- * The cache-busting suffix for a player's photo URLs.
- *
- * ONE PLACE, BECAUSE THE WRONG ANSWER LOOKED RIGHT IN FOUR (round 16, item 2).
- * Every caller passed `player.created_at` — the header avatar, the account
- * identity, the account cover — and each looked reasonable on its own. The
- * parameter it feeds is named `updatedAt` and its docstring promises the value
- * "moves whenever the row does"; `created_at` is the one timestamp that
- * cannot. A replaced photo therefore kept its URL and browsers kept the old
- * bytes, measurably: magenta then yellow left the screen magenta.
- *
- * `updated_at` IS OPTIONAL BECAUSE THE MIGRATION IS QUEUED. Until
- * `20260823100000_players_updated_at` is applied the column is absent and this
- * returns `created_at`, which is exactly today's behaviour — the surface
- * degrades to the old bug rather than to an error. The moment it is applied,
- * every photo URL in the product starts moving with its bytes, with no deploy.
- */
-export function photoVersionFor(player: {
-  created_at: string;
-  updated_at?: string;
-}): string {
-  return player.updated_at ?? player.created_at;
-}
+// ~~`photoVersionFor(player)` — `players.updated_at` as the photo version~~
+// (round 16). Replaced in round 41 by `profilePhotoVersion` in
+// `lib/storage/photoVersions.ts`: the STORAGE OBJECT's own `updated_at`, which
+// moves when the bytes do rather than when the upload is merely claimed, and
+// which every surface can use — the rosters had no `updated_at` to pass, so
+// they passed nothing and kept old faces for a year.

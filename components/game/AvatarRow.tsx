@@ -1,3 +1,4 @@
+import { profilePhotoVersion } from "@/lib/storage/photoVersions";
 import Image from "next/image";
 import Link from "next/link";
 import { initials } from "@/lib/roster/initials";
@@ -94,6 +95,13 @@ export async function AvatarRow({
 }) {
   const t = await getStrings();
   const shown = players.slice(0, max);
+  // Round 41: each face's version, so a replaced photo is a new URL (one
+  // cached storage listing answers all of them).
+  const versions = new Map<string, string | null>(
+    await Promise.all(
+      shown.map(async (p) => [p.photoPath ?? "", await profilePhotoVersion(p.photoPath)] as const),
+    ),
+  );
   const overflow = players.length - shown.length;
   const dim = {
     slim: "h-[26px] w-[26px] text-[11px]",
@@ -108,7 +116,9 @@ export async function AvatarRow({
           highlight != null && player.nickname != null && player.nickname === highlight;
         const label = guestLabel(player, t);
         const photo =
-          supabaseUrl && !player.isGuest ? avatarUrl(supabaseUrl, player.photoPath) : null;
+          supabaseUrl && !player.isGuest
+            ? avatarUrl(supabaseUrl, player.photoPath, versions.get(player.photoPath ?? ""))
+            : null;
 
         /*
           A REAL PLAYER'S FACE OPENS THEIR PROFILE (round 14, item 13); a

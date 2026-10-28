@@ -9,7 +9,7 @@ import { formatTime } from "@/lib/format";
 import { gameLanguageOf } from "@/lib/games/language";
 import { venuePhotoUrl } from "@/lib/storage/avatar";
 import { gamePath } from "@/lib/games/link";
-import { venuePhotoVersion } from "@/lib/storage/venuePhotoVersions";
+import { venuePhotoVersion } from "@/lib/storage/photoVersions";
 import { getStrings } from "@/lib/i18n/server";
 import type { RosterAvatar } from "@/lib/games/queries";
 import type { Database } from "@/lib/types/database";

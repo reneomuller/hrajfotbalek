@@ -1,3 +1,4 @@
+import { profilePhotoVersion } from "@/lib/storage/photoVersions";
 import { initials } from "@/lib/roster/initials";
 import { avatarUrl } from "@/lib/storage/avatar";
 import { getStrings } from "@/lib/i18n/server";
@@ -24,7 +25,9 @@ export async function PublicIdentity({
 }) {
   const t = await getStrings();
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const photo = supabaseUrl ? avatarUrl(supabaseUrl, photoPath) : null;
+  const photo = supabaseUrl
+    ? avatarUrl(supabaseUrl, photoPath, await profilePhotoVersion(photoPath))
+    : null;
 
   return (
     /*

@@ -60,6 +60,8 @@ export const STABLE_TAGS = {
   policy: "stable:policy",
   /** Round 41 — expired by `venuePhotoChangedAction` the moment a photo lands. */
   venuePhotos: "stable:venue-photos",
+  /** Round 41 — expired by `profilePhotoChangedAction` when an avatar or cover lands. */
+  profilePhotos: "stable:profile-photos",
 } as const;
 
 /**

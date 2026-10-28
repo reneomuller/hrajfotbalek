@@ -4,7 +4,7 @@ import { Icon } from "@/components/Icon";
 import { getStrings } from "@/lib/i18n/server";
 import { venueAddressLine } from "@/lib/venues/mapsHref";
 import { venuePhotoUrl } from "@/lib/storage/avatar";
-import { venuePhotoVersion } from "@/lib/storage/venuePhotoVersions";
+import { venuePhotoVersion } from "@/lib/storage/photoVersions";
 import type { Database } from "@/lib/types/database";
 
 type VenueRow = Database["public"]["Tables"]["venues"]["Row"];

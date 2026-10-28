@@ -476,11 +476,28 @@ changes when the photo changes (the uploader writes a new object key)". It does
 not: `set_venue_photo` writes `venues/<venue id>.<ext>` every time. So every
 replaced venue photo kept its URL and production served the old one — the owner
 reported it as "the change doesn't register", and it HAD registered (three
-objects re-uploaded, `updated_at` moved on each). Avatars were safe only because
-they carry `?v=<updated_at>`. **Any image source must version its URL before it
-reaches the optimizer**; venue photos now carry the storage object's own
-`updated_at` (`lib/storage/venuePhotoVersions.ts`), and
-`e2e/venue-photo-replace.spec.ts` fails when that version is removed.
+objects re-uploaded, `updated_at` moved on each). ~~Avatars were safe only
+because they carry `?v=<updated_at>`.~~ **They were not** — only the account
+page versioned them; rosters, avatar stacks, the public profile and the player
+of the month passed no version and the admin passed `created_at`. A friend of
+the owner's saw his OLD face everywhere while everyone else saw the new one:
+the optimizer had cached his widths before the change and theirs after.
+**Any image source must version its URL before it reaches the optimizer**;
+every venue and profile photo now carries the storage object's own `updated_at`
+(`lib/storage/photoVersions.ts`), and `e2e/venue-photo-replace.spec.ts` and
+`e2e/avatar-replace.spec.ts` fail when it is removed.
+
+**AND SUPABASE'S STORAGE CDN IGNORES THE QUERY STRING** (measured 2026-10-28: a
+never-seen `?v=` answered `cf-cache-status: HIT`). So a version only helps if
+the CDN is not holding the old bytes when the optimizer fetches the new
+version — which is why `PhotoUpload` uploads with `cacheControl: "0"`. Objects
+uploaded before that carry an hour of CDN caching until they are next replaced.
+
+**A TEST THAT LEAVES THE PAGE AS A CROPPER CLOSES CANCELS THE UPLOAD'S LAST
+STEP.** The cropper hides before the upload ends, and the last step is the
+server action that expires the cached versions. Navigating at once cancelled
+it one run in three, and the next render kept the old version for its minute.
+Wait for the `next-action` POST's response.
 
 **THE EMAIL LANGUAGE LIVES IN THE AUTH USER'S METADATA, NOT IN A COLUMN**
 (round 41). `email_locale` — chosen at signup, changed on the account page,

@@ -186,7 +186,7 @@ export const cs: StringsOverlay = {
     phoneHint: "Vidí ho jen organizátor, a jen u zápasů, které máš zarezervované.",
 
     legalGroupLabel: "Než začneš",
-    tosAgreement: "Seznámil(a) jsem se s {terms} a s {rules} a souhlasím s nimi. Uděluji svolení k pořizování fotografií a videí ze Zápasů a k jejich užití pro marketing a na sociálních sítích Playllu podle článku 13 Obchodních podmínek.",
+    tosAgreement: "Seznámil(a) jsem se s {terms} a s {rules} a souhlasím s nimi.",
     tosTermsLink: "Obchodními podmínkami",
     tosRulesLink: "Pravidly komunity a hry",
     privacyHowLink: "Jak zpracováváme tvoje údaje",

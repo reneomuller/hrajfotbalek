@@ -1,8 +1,15 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
-import { PNG } from "pngjs";
 import { LOCALE_COOKIE } from "../lib/i18n/locales";
 import { pragueDayKey } from "../lib/games/days";
 import { apiClientFor, players, serviceClient, signInAs } from "./helpers/session";
+import {
+  centreColour,
+  isColour,
+  MAGENTA,
+  solidImage,
+  uploadThroughCropper,
+  YELLOW,
+} from "./helpers/solidPhoto";
 
 /**
  * ROUND 41 — "Venue picture doesn't update when changing it or the change
@@ -14,69 +21,15 @@ import { apiClientFor, players, serviceClient, signInAs } from "./helpers/sessio
  * no version, so the browser, the storage CDN and the optimizer (which keeps an
  * image for a year) all answered with the bytes they already had.
  *
- * DECODED, NOT INFERRED FROM `src`: a new query string proves a new URL, not a
- * new picture. Each surface is screenshotted in memory and its centre must be
- * the colour of the SECOND upload. Solid colours, so the crop cannot matter.
+ * DECODED, NOT INFERRED FROM `src` (`helpers/solidPhoto.ts`): each surface is
+ * screenshotted in memory and its centre must be the colour of the SECOND
+ * upload.
  */
 
 test.use({ viewport: { width: 390, height: 844 } });
 
-const MAGENTA = [255, 0, 255] as const;
-const YELLOW = [255, 255, 0] as const;
-
-async function solidImage(page: Page, rgb: readonly number[]): Promise<Buffer> {
-  const dataUrl = await page.evaluate((fill) => {
-    const canvas = document.createElement("canvas");
-    canvas.width = 1600;
-    canvas.height = 900;
-    const ctx = canvas.getContext("2d")!;
-    ctx.fillStyle = `rgb(${fill.join(",")})`;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    return canvas.toDataURL("image/png");
-  }, [...rgb]);
-  return Buffer.from(dataUrl.split(",")[1]!, "base64");
-}
-
-/** The average colour of the middle of an element, read from a fresh capture. */
-async function centreColour(page: Page, target: Locator): Promise<number[]> {
-  await target.scrollIntoViewIfNeeded();
-  await expect
-    .poll(() => target.evaluate((el: HTMLImageElement) => el.complete && el.naturalWidth > 0))
-    .toBe(true);
-  const box = (await target.boundingBox())!;
-  const png = PNG.sync.read(
-    await page.screenshot({
-      clip: { x: box.x + box.width / 2 - 4, y: box.y + box.height / 2 - 4, width: 8, height: 8 },
-    }),
-  );
-  const sum = [0, 0, 0];
-  for (let i = 0; i < png.data.length; i += 4) {
-    sum[0]! += png.data[i]!;
-    sum[1]! += png.data[i + 1]!;
-    sum[2]! += png.data[i + 2]!;
-  }
-  const pixels = png.data.length / 4;
-  return sum.map((channel) => Math.round(channel / pixels));
-}
-
-/**
- * By hue, not by value: the card and the hero lay a dark gradient over the
- * photograph, which scales every channel down but keeps their order.
- */
-function isColour(actual: number[], expected: readonly number[]): boolean {
-  const [r, g, b] = actual as [number, number, number];
-  return expected === MAGENTA ? r > g + 40 && b > g + 40 : r > b + 40 && g > b + 40;
-}
-
 async function uploadVenuePhoto(page: Page, row: Locator, image: Buffer): Promise<void> {
-  await row.locator('[data-testid="venue-photo-input"]').setInputFiles({
-    name: "solid.png",
-    mimeType: "image/png",
-    buffer: image,
-  });
-  await expect(page.getByTestId("photo-cropper-frame")).toBeVisible();
-  await page.getByTestId("photo-cropper-save").click();
-  await expect(page.getByTestId("photo-cropper")).toBeHidden();
+  await uploadThroughCropper(page, row.locator('[data-testid="venue-photo-input"]'), image);
 }
 
 test("a replaced venue photo shows on the admin row, the games list and the game page", async ({

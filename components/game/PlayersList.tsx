@@ -1,3 +1,4 @@
+import { profilePhotoVersion } from "@/lib/storage/photoVersions";
 import Image from "next/image";
 import Link from "next/link";
 import { GuestIcon } from "@/components/game/GuestIcon";
@@ -221,7 +222,10 @@ async function Avatar({
   const t = await getStrings();
   // A guest has no account and therefore no photograph. Not a fallback: there
   // is nothing to look up.
-  const photo = supabaseUrl && !seat.isGuest ? avatarUrl(supabaseUrl, seat.photoPath) : null;
+  const photo =
+    supabaseUrl && !seat.isGuest
+      ? avatarUrl(supabaseUrl, seat.photoPath, await profilePhotoVersion(seat.photoPath))
+      : null;
 
   return (
     <span

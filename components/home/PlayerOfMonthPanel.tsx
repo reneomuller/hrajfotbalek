@@ -1,3 +1,4 @@
+import { profilePhotoVersion } from "@/lib/storage/photoVersions";
 import Image from "next/image";
 import { getStrings } from "@/lib/i18n/server";
 import { initials } from "@/lib/roster/initials";
@@ -28,7 +29,10 @@ export async function PlayerOfMonthPanel({
   supabaseUrl?: string;
 }) {
   const t = await getStrings();
-  const photo = supabaseUrl && player ? avatarUrl(supabaseUrl, player.photoPath) : null;
+  const photo =
+    supabaseUrl && player
+      ? avatarUrl(supabaseUrl, player.photoPath, await profilePhotoVersion(player.photoPath))
+      : null;
 
   return (
     <div

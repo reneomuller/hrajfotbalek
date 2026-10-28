@@ -1,6 +1,7 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { STABLE_TAGS } from "@/lib/db/stableRead";
+import { revalidatePath, updateTag } from "next/cache";
 import { withToast } from "@/lib/ux/toast";
 import { redirect } from "next/navigation";
 import { notifyWaitlistForGame } from "@/lib/cron/waitlistRelease";
@@ -501,4 +502,16 @@ export async function setEmailLocaleAction(
 
   revalidatePath("/account");
   return { status: "saved" };
+}
+
+/**
+ * A profile photo or cover was just replaced (round 41). The upload goes
+ * straight from the browser to Storage; this expires the cached listing every
+ * avatar's URL version comes from (`profilePhotoVersion`), so the refresh that
+ * follows — and everyone else's next page — shows the new picture at a new URL.
+ */
+export async function profilePhotoChangedAction(): Promise<void> {
+  if (!(await getSessionUser())) return;
+  updateTag(STABLE_TAGS.profilePhotos);
+  revalidatePath("/", "layout");
 }

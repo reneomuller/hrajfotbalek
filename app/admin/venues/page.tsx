@@ -12,7 +12,7 @@ import { partitionVenues } from "@/lib/venues/archive";
 import { appCapabilities } from "@/lib/db/capabilities";
 import { VenuePhotoUpload } from "@/components/admin/VenuePhotoUpload";
 import { venuePhotoUrl } from "@/lib/storage/avatar";
-import { venuePhotoVersion } from "@/lib/storage/venuePhotoVersions";
+import { venuePhotoVersion } from "@/lib/storage/photoVersions";
 import { requireAdmin } from "@/lib/auth/requireAdmin";
 import { countGamesByVenue, listVenues } from "@/lib/admin/queries";
 import { strings } from "@/lib/strings";

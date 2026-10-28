@@ -103,9 +103,10 @@ const nextConfig: NextConfig = {
      * writes a new object key)"~~ was FALSE: `set_venue_photo` derives
      * `venues/<venue id>.<ext>`, the same key every time. So a replaced venue
      * photo kept its URL and this cache served the old one for a year — the
-     * owner's "venue picture doesn't update". Avatars carry
-     * `?v=<players.updated_at>`; venue photos now carry
-     * `?v=<storage object updated_at>` (`lib/storage/venuePhotoVersions.ts`).
+     * owner's "venue picture doesn't update" — and avatars were no better:
+     * only the account page versioned them, so a friend kept his old face on
+     * every roster. Every venue AND profile photo URL now carries
+     * `?v=<storage object updated_at>` (`lib/storage/photoVersions.ts`).
      * ANY NEW IMAGE SOURCE MUST VERSION ITS URL BEFORE IT IS OPTIMIZED, or it
      * inherits this year.
      */

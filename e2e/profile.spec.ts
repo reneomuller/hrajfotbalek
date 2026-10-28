@@ -399,7 +399,16 @@ test("the account actions are reachable with the page scrolled to the bottom", a
 }) => {
   await signInAs(context, players.runner);
   await page.goto("/account", { waitUntil: "networkidle" });
-  await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+  /*
+   * INSTANT, because `<html>` scrolls smoothly: the poll below passed the
+   * moment the button ENTERED the viewport — at its bottom edge, still sliding
+   * up behind the nav pill — and the probe then reported the pill's icon on
+   * top of "Delete my account" (round 41, intermittent). The resting position
+   * is the one this asserts.
+   */
+  await page.evaluate(() =>
+    window.scrollTo({ top: document.body.scrollHeight, behavior: "instant" }),
+  );
 
   /*
    * WAIT FOR THE SCROLL TO SETTLE. `elementFromPoint` answers null for any

@@ -1,3 +1,4 @@
+import { profilePhotoVersion } from "@/lib/storage/photoVersions";
 import type { Metadata, Viewport } from "next";
 import { Anton, Barlow_Condensed, JetBrains_Mono, Onest } from "next/font/google";
 import { NavPill } from "@/components/chrome/NavPill";
@@ -12,7 +13,6 @@ import { CookieConsent } from "@/components/consent/CookieConsent";
 import { SignUpEvent } from "@/components/analytics/SignUpEvent";
 import { consentBootstrapScript, gtmContainerId } from "@/lib/analytics/gtm";
 import { Header } from "@/components/chrome/Header";
-import { photoVersionFor } from "@/lib/storage/avatar";
 import { EMPTY_BELL, getBellState } from "@/lib/notifications/queries";
 import { getCurrentPlayer } from "@/lib/auth/session";
 import { getLocale, getStrings } from "@/lib/i18n/server";
@@ -201,7 +201,7 @@ export default async function RootLayout({
               photoPath={player?.photo_path ?? null}
               /* `created_at` moves when the row does, which is when the photo
                  bytes changed — the same cache-busting value `/account` uses. */
-              photoVersion={player ? photoVersionFor(player) : null}
+              photoVersion={player ? await profilePhotoVersion(player.photo_path) : null}
             />
             {/*
               `--tabbar-h` is the bottom bar's footprint including the iPhone

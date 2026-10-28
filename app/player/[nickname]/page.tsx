@@ -1,3 +1,4 @@
+import { profilePhotoVersion } from "@/lib/storage/photoVersions";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { BadgeGrid } from "@/components/account/BadgeGrid";
@@ -94,7 +95,11 @@ export default async function PublicPlayerPage({
         up rendering the other's tabs.
       */}
       <div className="relative pt-[104px]">
-        <ProfileCover coverPath={profile.coverPath} photoVersion={null} t={t} />
+        <ProfileCover
+          coverPath={profile.coverPath}
+          photoVersion={await profilePhotoVersion(profile.coverPath)}
+          t={t}
+        />
         <PublicIdentity nickname={profile.nickname} photoPath={profile.photoPath} />
         <ProfileStats stats={stats} playersMet={profile.playersMet} locale={locale} t={t} />
       </div>

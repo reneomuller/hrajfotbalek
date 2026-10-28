@@ -352,7 +352,9 @@ export const strings = {
      *
      * ~~Three boxes: terms, privacy, reminders.~~ The lawyer's wording puts the
      * terms, the community rules, the "we do not organise the games" notice
-     * and the photo permission in ONE required box, and makes the privacy
+     * and the photo permission in ONE required box (the owner has since taken
+     * the notice and the photo sentence out — the terms keep both, 3.2 and
+     * 13 — 2026-10-27 and 2026-10-28), and makes the privacy
      * policy a LINK beneath it: processing rests on the contract, not on a
      * consent, and a box that pretends otherwise is the wrong legal basis. The
      * newsletter stays apart and unticked.
@@ -362,7 +364,7 @@ export const strings = {
      */
     legalGroupLabel: "Before you start",
     tosAgreement:
-      "I have read and agree to the {terms} and the {rules}. I allow photos and videos to be taken at games and used for Playllu's marketing and social media, as set out in Article 13 of the Terms and Conditions.",
+      "I have read and agree to the {terms} and the {rules}.",
     tosTermsLink: "Terms and Conditions",
     tosRulesLink: "Community and Game Rules",
     tosRequired: "Please accept the terms to continue.",

@@ -15,6 +15,7 @@ import {
 import { PhotoCropper, type CropRect } from "@/components/account/PhotoCropper";
 import { useStrings } from "@/components/LocaleProvider";
 import { venuePhotoChangedAction } from "@/app/admin/venues/actions";
+import { profilePhotoChangedAction } from "@/app/account/actions";
 
 /**
  * Crops to a centred square and re-encodes, in the browser.
@@ -208,7 +209,14 @@ export function PhotoUpload({
 
       const { error: uploadError } = await supabase.storage
         .from(target === "venue" ? VENUE_PHOTOS_BUCKET : PROFILE_PHOTOS_BUCKET)
-        .upload(path, cropped, { contentType: "image/webp", upsert: true });
+        /*
+         * NO CDN CACHING (round 41). Supabase's storage CDN ignores the
+         * `?v=` the page puts on a photo URL, so with the default hour of
+         * caching a NEW version could be served the OLD bytes — and the
+         * optimizer would keep that for a year. The optimizer caches each
+         * version itself; the CDN in front of storage adds nothing but risk.
+         */
+        .upload(path, cropped, { contentType: "image/webp", upsert: true, cacheControl: "0" });
       if (uploadError) throw new Error(uploadError.message);
 
       /*
@@ -251,6 +259,8 @@ export function PhotoUpload({
         router.refresh();
         return;
       }
+      // An avatar or a cover: the same, for the profile photos' listing.
+      await profilePhotoChangedAction();
 
       const rendered = avatarUrl(
         process.env.NEXT_PUBLIC_SUPABASE_URL ?? "",

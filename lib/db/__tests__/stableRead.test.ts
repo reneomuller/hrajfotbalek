@@ -61,7 +61,7 @@ describe("the stable-read cache", () => {
   it("offers a tag per cached value, so a writer can expire its own", () => {
     // A TTL is the backstop; a tag is the mechanism. Every value cached here
     // must be expirable by whatever surface changes it.
-    expect(Object.keys(STABLE_TAGS).sort()).toEqual(["capabilities", "policy", "siteSettings", "venuePhotos"]);
+    expect(Object.keys(STABLE_TAGS).sort()).toEqual(["capabilities", "policy", "profilePhotos", "siteSettings", "venuePhotos"]);
     for (const tag of Object.values(STABLE_TAGS)) expect(tag).toMatch(/^stable:/);
   });
 
@@ -77,9 +77,9 @@ describe("the stable-read cache", () => {
       readFileSync("lib/db/capabilities.ts", "utf8"),
       readFileSync("lib/home/queries.ts", "utf8"),
       readFileSync("lib/policy/refundCutoff.ts", "utf8"),
-      // Round 41: the venue photos' versions — one public listing, the same
-      // answer for everyone, read on every games-list and game page.
-      readFileSync("lib/storage/venuePhotoVersions.ts", "utf8"),
+      // Round 41: the photos' versions — public listings, the same answer
+      // for everyone, read on every games-list, game and profile page.
+      readFileSync("lib/storage/photoVersions.ts", "utf8"),
     ];
     for (const src of users) expect(src).toContain("stableRead(");
     expect(
