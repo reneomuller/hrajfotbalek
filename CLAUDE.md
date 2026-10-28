@@ -497,6 +497,16 @@ the CDN is not holding the old bytes when the optimizer fetches the new
 version — which is why `PhotoUpload` uploads with `cacheControl: "0"`. Objects
 uploaded before that carry an hour of CDN caching until they are next replaced.
 
+**A DOMAIN MOVE IS NOT FINISHED UNTIL SUPABASE'S SITE URL MOVES TOO.** Three
+days after `www.hrajfotbal.com` went live, players browsing it kept "ending up
+on the hrajfotbalek web": Supabase's Site URL still said
+`hrajfotbalek-wlya.vercel.app`, and every auth email's link is
+`{{ .SiteURL }}/auth/callback…`. `NEXT_PUBLIC_SITE_URL`, the og tags and the
+app's own emails were all right — the one setting outside the repo was not.
+The old production aliases now FORWARD to the new address (`lib/legacyHost.ts`,
+first in `proxy.ts`), except `/api/`, because Stripe does not follow a redirect
+to a webhook.
+
 **A SIZE LIMIT BELONGS TO THE THING THAT IS STORED, NOT THE THING THAT IS
 PICKED.** For ten weeks the photo picker refused any original over the bucket's
 2 MB — but the original never leaves the phone; the crop does, at a few hundred
