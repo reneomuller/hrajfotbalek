@@ -470,6 +470,46 @@ every completed game (41 confirmed rows) and six "empty" ones held by legacy
 `reserved` holds nothing can expire. Round 39 asks both. When a status test
 looks right and the guard still fires, look one table up.
 
+**A CACHE TTL RESTS ON A PROPERTY SOMEBODY WROTE DOWN, AND NOBODY CHECKED IT.**
+`next.config.ts` kept optimized images for a year "because a venue's photo path
+changes when the photo changes (the uploader writes a new object key)". It does
+not: `set_venue_photo` writes `venues/<venue id>.<ext>` every time. So every
+replaced venue photo kept its URL and production served the old one — the owner
+reported it as "the change doesn't register", and it HAD registered (three
+objects re-uploaded, `updated_at` moved on each). Avatars were safe only because
+they carry `?v=<updated_at>`. **Any image source must version its URL before it
+reaches the optimizer**; venue photos now carry the storage object's own
+`updated_at` (`lib/storage/venuePhotoVersions.ts`), and
+`e2e/venue-photo-replace.spec.ts` fails when that version is removed.
+
+**THE EMAIL LANGUAGE LIVES IN THE AUTH USER'S METADATA, NOT IN A COLUMN**
+(round 41). `email_locale` — chosen at signup, changed on the account page,
+recorded from the browser at the next sign-in for older accounts — falls back to
+`consent_locale` (round 40) and then English, in `lib/email/recipientLocale.ts`.
+Metadata because it needed no migration and the feature had to be live with the
+deploy; the cost is one lookup per email. Supabase's own templates read the same
+keys as `.Data`, so a sign-in email and a booking email agree about the reader's
+language.
+
+**A SUPABASE EMAIL TEMPLATE IS VERIFIED BY THE LOCAL AUTH SERVER, NOT BY READING
+IT.** The local stack runs GoTrue; pointing `supabase/config.toml` at a template
+(`[auth.email.template.magic_link] content_path = …`), restarting, sending a real
+OTP and reading the message back from the mail catcher
+(`http://127.0.0.1:54324/api/v1/messages`) is the only way to know a Go template
+renders — `eq` on a MISSING metadata key is a template error, which is why the
+generated templates guard every read with `if`. Revert the config afterwards.
+
+**A MISSING PAGE ANSWERS 200, TO EVERYONE, AND `notFound()` IN `generateMetadata`
+NO LONGER CHANGES THAT** (re-measured 2026-10-28). Audit F10 fixed the game
+page's status by calling `notFound()` in `generateMetadata`, "awaited before the
+stream opens". On Next 16 metadata is streamed too: production returns **200**
+for `/game/<missing>` and `/player/<missing>`, to a phone and to Googlebot alike
+— a soft 404, the right page with the wrong code. Nothing leaks (the data
+functions return null); what a spec can assert is the not-found PAGE, not the
+status. Two specs failed on this since round 37 and were logged as product
+bugs (row 347); one of them, "a checkout opened for a cancelled game", never
+opened anything — the redirect simply arrived after `page.goto` resolved.
+
 ## A migration's verification block may not write a row
 
 **Effective 2026-09-12, after it cost a production cleanup.** A migration
@@ -726,6 +766,22 @@ node scripts/apply-migration.mjs \
   supabase/migrations/20261019110000_delete_account.sql --production
 ```
 
+**OUTSTANDING — round 41's one. Additive, idempotent, NOT deploy-first,
+order-free; validated by a clean `supabase db reset` and applied twice.** The
+deploy is safe without it: game links stay `/game/<uuid>` and the bell keeps
+only Clear all until `app_capabilities()` says `gameNumbers` /
+`dismissOneNotification`.
+
+```
+node scripts/apply-migration.mjs \
+  supabase/migrations/20261028100000_game_numbers_dismiss_one.sql --production
+```
+
+It adds `games.game_number` (backfilled in creation order, then an identity —
+production's first game will be 1), `dismiss_notification(uuid)`, and restates
+`app_capabilities()` as the 31 flags live on 2026-10-28 PROBED, plus its two
+(33). `round41.sql` drills both.
+
 When a UI failure looks inexplicable and the code reads correctly, check this
 list before debugging the component.
 
@@ -847,9 +903,8 @@ with "Request rate limit reached", which reads exactly like a broken product.
 - **No `ends_at` column.** `policy.game.durationMinutes` is display-only;
   nothing transitions on it. Revisit when a game of a different length is
   actually scheduled.
-- **Emails are English only.** There is no per-player language in the database
-  — the locale is a cookie, which is a fact about a browser, not a person.
-  Doing it properly needs a `players.locale` column.
+- ~~**Emails are English only.**~~ Since round 41 every email is in the
+  reader's language, kept in the auth user's metadata — see the lesson above.
 - **Waitlist is notify-all FCFS.** Everyone is told at once and the race is
   settled by `create_booking`'s capacity check. Ordered-priority is a v2
   candidate, to be revisited with real data.

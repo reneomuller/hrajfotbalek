@@ -135,8 +135,19 @@ export function RemoveCreditForm({
         property with one fewer stacking context to get wrong.
       */}
       <div className="flex flex-wrap gap-2">
+        {/*
+          THE TWO BUTTONS ARE KEYED APART, AND THAT IS THE FIX FOR A DOUBLE
+          REMOVAL (round 41). Unkeyed, React reused ONE <button> for both and
+          flipped its `type` from "button" to "submit" inside the arm click —
+          so the browser's default action for that same click submitted the
+          form. Arming removed the Credits; confirming removed them AGAIN.
+          Found by `e2e/actions-admin.spec.ts`, which reads the ledger back and
+          saw two −180 rows for one removal of one Credit. Distinct keys make
+          the confirm button a NEW element the arm click never touches.
+        */}
         {confirming ? (
           <button
+            key="submit"
             type="submit"
             data-testid="remove-credit-submit"
             className="inline-flex min-h-11 items-center rounded-pill bg-danger px-4 text-small font-bold text-white"
@@ -145,6 +156,7 @@ export function RemoveCreditForm({
           </button>
         ) : (
           <button
+            key="arm"
             type="button"
             onClick={() => setConfirming(true)}
             data-testid="remove-credit-arm"

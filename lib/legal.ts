@@ -51,5 +51,11 @@ export const OPERATOR_CONTACT = {
   privacyEmail: "privacy@hrajfotbal.com",
 } as const;
 
+/**
+ * The rules annex inside the terms — `/terms#pravidla`. Linked from signup,
+ * from the booking emails and from the page itself.
+ */
+export const TERMS_RULES_ANCHOR = "pravidla";
+
 /** Where the terms are published as a PDF (the lawyer's brief, item 1.2). */
 export const TERMS_PDF_PATH = "/legal/obchodni-podminky.pdf";

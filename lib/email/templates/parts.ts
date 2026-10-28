@@ -1,4 +1,3 @@
-import { TERMS_RULES_ANCHOR } from "@/lib/content/legalDocuments";
 import type { EmailAttachment } from "@/lib/email/sendEmail";
 import {
   formatCzk,
@@ -11,7 +10,7 @@ import {
 import type { Locale } from "@/lib/i18n/locales";
 import { pluralise } from "@/lib/i18n/plural";
 import { fillTemplate } from "@/lib/i18n/template";
-import { OPERATOR_CONTACT, TERMS_PDF_PATH } from "@/lib/legal";
+import { OPERATOR_CONTACT, TERMS_PDF_PATH, TERMS_RULES_ANCHOR } from "@/lib/legal";
 import { creditCount } from "@/lib/legal/purchaseSummary";
 import type { Strings } from "@/lib/strings";
 import { emailLink, html, join, type EmailReceipt, type EmailRow, type SafeHtml } from "./layout";

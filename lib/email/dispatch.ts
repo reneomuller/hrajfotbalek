@@ -24,10 +24,14 @@ import type { Locale } from "@/lib/i18n/locales";
 /**
  * Event → template dispatch.
  *
- * NINE transactional emails exist. EIGHT are in-app templates and each is
- * mapped here, one event to one template. The ninth — `magic_link` — is
- * delivered by Supabase's built-in mailer, is deliberately absent from this
- * map, and stays outside the sendEmail()/dry-run seam for all of Phase 1.
+ * EIGHT EVENT-DRIVEN EMAILS are mapped here, one event to one template. Two
+ * more go out by name rather than by event — the Credits receipt and the
+ * expiry warning, `sendCredits*Email` at the bottom — and three are Supabase's
+ * own (sign-in, confirm signup, change email), built in
+ * `templates/authEmails.ts` but sent by its mailer, outside this seam.
+ *
+ * ROUND 41: every one is in the approved design and in the reader's language,
+ * looked up per recipient (`lib/email/recipientLocale.ts`).
  *
  * The map is DATA, not a chain of conditionals, so a test can enumerate it and
  * assert one template per event without touching an RPC or the network.

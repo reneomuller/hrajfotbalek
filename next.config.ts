@@ -96,9 +96,18 @@ const nextConfig: NextConfig = {
     deviceSizes: [390, 640, 828, 1080, 1200],
     imageSizes: [32, 48, 64, 96, 128, 256],
     /*
-     * A YEAR, because these URLs are CONTENT-ADDRESSED in practice: a venue's
-     * photo path changes when the photo changes (the uploader writes a new
-     * object key), so a stale optimized copy cannot outlive the image it is of.
+     * A YEAR, because these URLs are CONTENT-ADDRESSED — but only because the
+     * URL carries a VERSION, and for venue photos it did not until round 41.
+     *
+     * ~~"a venue's photo path changes when the photo changes (the uploader
+     * writes a new object key)"~~ was FALSE: `set_venue_photo` derives
+     * `venues/<venue id>.<ext>`, the same key every time. So a replaced venue
+     * photo kept its URL and this cache served the old one for a year — the
+     * owner's "venue picture doesn't update". Avatars carry
+     * `?v=<players.updated_at>`; venue photos now carry
+     * `?v=<storage object updated_at>` (`lib/storage/venuePhotoVersions.ts`).
+     * ANY NEW IMAGE SOURCE MUST VERSION ITS URL BEFORE IT IS OPTIMIZED, or it
+     * inherits this year.
      */
     minimumCacheTTL: 31536000,
     /*

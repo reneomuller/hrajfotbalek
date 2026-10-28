@@ -987,7 +987,7 @@ export const cs: StringsOverlay = {
       signInSubject: "Přihlášení do Hraj Fotbal",
       signInEyebrow: "Přihlášení",
       signInHeadline: "Tady je tvůj odkaz.",
-      signInLede: "Klepni na tlačítko a jsi přihlášený. Když se otevře ve špatné aplikaci, zadej na přihlašovací stránce kód.",
+      signInLede: "Klepnutím na tlačítko se přihlásíš. Když se otevře ve špatné aplikaci, zadej na přihlašovací stránce kód.",
       signInCta: "Přihlásit se",
       confirmSubject: "Potvrď svůj e-mail",
       confirmEyebrow: "Skoro hotovo",

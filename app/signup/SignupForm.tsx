@@ -14,6 +14,7 @@ import type { CountryOption } from "@/lib/auth/countries";
 import { useStrings } from "@/components/LocaleProvider";
 import { LOCALES, LOCALE_LABELS, type Locale } from "@/lib/i18n/locales";
 import { LinkedText } from "@/components/form/LinkedText";
+import { TERMS_RULES_ANCHOR } from "@/lib/legal";
 import { PhoneField, type PhoneCountryChoice } from "@/components/form/PhoneField";
 
 const initialState: SignupFormState = { status: "idle" };
@@ -278,7 +279,7 @@ export function SignupForm({
               template={t.auth.tosAgreement}
               links={{
                 terms: { href: "/terms", label: t.auth.tosTermsLink },
-                rules: { href: "/terms#pravidla", label: t.auth.tosRulesLink },
+                rules: { href: `/terms#${TERMS_RULES_ANCHOR}`, label: t.auth.tosRulesLink },
               }}
             />
           </span>

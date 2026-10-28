@@ -1126,7 +1126,11 @@ test("the detail shares to WhatsApp, and copy link is gone", async ({ page }) =>
     await expect(whatsapp).toBeVisible();
     // The link carries this game, not the list — a share that lands on /games
     // is a share nobody can act on.
-    await expect(whatsapp).toHaveAttribute("href", new RegExp(game.id));
+    // Round 41: the short path, once the game has a number — encoded, and last.
+    await expect(whatsapp).toHaveAttribute(
+      "href",
+      new RegExp(`${encodeURIComponent(await gamePathOf(game.id))}$`),
+    );
   } finally {
     await destroyScratchGame(game.id);
   }

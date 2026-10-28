@@ -280,7 +280,15 @@ test("the profile block edits all six fields, positions as multi-select chips", 
   await expect(page.getByTestId("edit-details")).toBeVisible();
   await expect(block.getByTestId("profile-positions")).toContainText("Goalkeeper");
   await expect(block.getByTestId("profile-positions")).toContainText("Attacker");
-  await expect(block.getByTestId("profile-phone")).toContainText("+420777000111");
+  // Round 41: shown grouped as its country writes it, stored as one
+  // international number.
+  await expect(block.getByTestId("profile-phone")).toContainText("+420 777 000 111");
+  const { data: stored } = await serviceClient()
+    .from("players")
+    .select("phone")
+    .eq("id", players.runner.id)
+    .maybeSingle();
+  expect(stored?.phone).toBe("+420777000111");
 
   // And it survives a fresh request, which is the difference between a saved
   // row and a client-side illusion.

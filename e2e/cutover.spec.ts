@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { createScratchGame, destroyScratchGame } from "./helpers/scaffold.ts";
+import { createScratchGame, destroyScratchGame, gamePathOf } from "./helpers/scaffold.ts";
 
 /**
  * G3 cutover specs — THE CODE HALF ONLY (§9, Phase 21).
@@ -178,7 +178,8 @@ test("the calendar file carries the serving origin, not a baked-in one", async (
     const body = await response.text();
     const expectedOrigin = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ?? baseURL!;
 
-    expect(body).toContain(`${new URL(expectedOrigin).origin}/game/${game.id}`);
+    // Round 41: the game's own short path once it has a number.
+    expect(body).toContain(`${new URL(expectedOrigin).origin}${await gamePathOf(game.id)}`);
   } finally {
     await destroyScratchGame(game.id);
   }

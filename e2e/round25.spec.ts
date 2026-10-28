@@ -89,10 +89,24 @@ test("the checkout page refuses a game it cannot sell", async ({ page, context }
 
     await page.goto(`/payment/checkout?game=${game.id}&guests=0`);
 
-    expect(
-      page.url(),
-      "a checkout opened for a cancelled game",
-    ).not.toContain("/payment/checkout");
+    /*
+     * WAIT FOR THE REDIRECT, then assert the guard that is about money (round
+     * 41, closing row 347's half). This failed since round 37 and was logged
+     * as "a checkout opened for a cancelled game" — it never did. `app/loading.tsx`
+     * streams a skeleton, so `page.goto` resolved while the URL still read
+     * `/payment/checkout`, and the page's `redirect()` arrived a moment later
+     * (CLAUDE.md: "adding a loading boundary also makes page.goto resolve while
+     * the skeleton is up"). Probed: the browser lands on `/games`, no Stripe
+     * form renders, and no checkout session is created.
+     */
+    await page.waitForURL((url) => !url.pathname.startsWith("/payment/checkout"), {
+      timeout: 15_000,
+    });
+    const { data: sessions } = await serviceClient()
+      .from("checkout_sessions")
+      .select("id")
+      .eq("game_id", game.id);
+    expect(sessions, "a checkout session was opened for a cancelled game").toEqual([]);
   } finally {
     await destroyScratchGame(game.id);
   }

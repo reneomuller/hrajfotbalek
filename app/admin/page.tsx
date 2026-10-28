@@ -207,43 +207,6 @@ export default async function AdminDashboardPage() {
         ))}
       </section>
 
-      {/*
-        NEW SIGN-UPS (round 41) — the owner: "add total player count and when
-        someone creates an account — date/time of account creation". The
-        newest accounts, each with the minute it was made, in Prague time.
-        Accounts only: a shadow player typed in by an admin never signed up.
-      */}
-      <section data-testid="dashboard-signups" className="mt-5">
-        <h3 className="m-0 font-display text-body-lg uppercase tracking-wide text-white">
-          {strings.admin.dashboardSignups}
-        </h3>
-        {d.recentSignups.length === 0 ? (
-          <p className="mt-4 text-small text-faint">{strings.admin.dashboardSignupsEmpty}</p>
-        ) : (
-          <ul className="lifted mt-3 list-none rounded-card p-0">
-            {d.recentSignups.map((signup) => (
-              <li key={signup.id} className="border-b border-hairline last:border-b-0">
-                <Link
-                  href={`/admin/players/${signup.id}`}
-                  data-testid="dashboard-signup"
-                  className="flex min-h-11 items-baseline justify-between gap-3 px-4 py-3 no-underline"
-                >
-                  <span className="truncate text-body font-semibold text-white">
-                    {signup.nickname}
-                  </span>
-                  <time
-                    dateTime={signup.createdAt}
-                    data-testid="dashboard-signup-at"
-                    className="shrink-0 tabular-nums text-small text-muted"
-                  >
-                    {formatDate(signup.createdAt)}, {formatTime(signup.createdAt)}
-                  </time>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
 
       <section className="mt-5">
         {/*
@@ -331,6 +294,48 @@ export default async function AdminDashboardPage() {
                       {strings.admin.dashboardStatus[row.status] ?? row.status}
                     </span>
                   </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
+      {/*
+        NEW SIGN-UPS (round 41) — the owner: "add total player count and when
+        someone creates an account — date/time of account creation". The
+        newest accounts, each with the minute it was made, in Prague time.
+        Accounts only: a shadow player typed in by an admin never signed up.
+
+        BELOW the upcoming games, not between them and the tiles: the games
+        are p14's subject and `strips-admin-dashboard.spec.ts` holds their
+        panel to the frame's position.
+      */}
+      <section data-testid="dashboard-signups" className="mt-5">
+        <h3 className="m-0 font-display text-body-lg uppercase tracking-wide text-white">
+          {strings.admin.dashboardSignups}
+        </h3>
+        {d.recentSignups.length === 0 ? (
+          <p className="mt-4 text-small text-faint">{strings.admin.dashboardSignupsEmpty}</p>
+        ) : (
+          <ul className="lifted mt-3 list-none rounded-card p-0">
+            {d.recentSignups.map((signup) => (
+              <li key={signup.id} className="border-b border-hairline last:border-b-0">
+                <Link
+                  href={`/admin/players/${signup.id}`}
+                  data-testid="dashboard-signup"
+                  className="flex min-h-11 items-baseline justify-between gap-3 px-4 py-3 no-underline"
+                >
+                  <span className="truncate text-body font-semibold text-white">
+                    {signup.nickname}
+                  </span>
+                  <time
+                    dateTime={signup.createdAt}
+                    data-testid="dashboard-signup-at"
+                    className="shrink-0 tabular-nums text-small text-muted"
+                  >
+                    {formatDate(signup.createdAt)}, {formatTime(signup.createdAt)}
+                  </time>
                 </Link>
               </li>
             ))}
