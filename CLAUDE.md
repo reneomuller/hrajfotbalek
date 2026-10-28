@@ -777,8 +777,11 @@ node scripts/apply-migration.mjs \
   supabase/migrations/20261019110000_delete_account.sql --production
 ```
 
-**OUTSTANDING — round 41's one. Additive, idempotent, NOT deploy-first,
-order-free; validated by a clean `supabase db reset` and applied twice.** The
+**~~OUTSTANDING~~ APPLIED, verified 2026-10-28 — round 41's one, applied by me on
+the owner's explicit instruction (he sent the command); the Oliver-applies rule
+stands.** Probed: 33 flags all true, `games.game_number` an identity (production's
+games are 1–3), `dismiss_notification` with no anon execute. Additive, idempotent,
+NOT deploy-first, order-free; validated by a clean `supabase db reset` and applied twice. The
 deploy is safe without it: game links stay `/game/<uuid>` and the bell keeps
 only Clear all until `app_capabilities()` says `gameNumbers` /
 `dismissOneNotification`.
