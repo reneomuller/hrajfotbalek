@@ -11,8 +11,8 @@ import { useStrings } from "@/components/LocaleProvider";
 const INITIAL: MarketingActionState = { status: "idle" };
 
 /**
- * Email preferences — the one switch behind the signup box's "You can
- * unsubscribe at any time" (round 38).
+ * Email preferences — where the signup box's marketing consent is withdrawn
+ * (round 38; the right the privacy policy's 3.4 promises).
  *
  * A SUBMIT BUTTON WITH `role="switch"`, not a checkbox that saves on change.
  * It works with no JavaScript, announces itself as on/off, and each press is

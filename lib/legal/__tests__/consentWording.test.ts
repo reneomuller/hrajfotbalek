@@ -95,21 +95,35 @@ describe("the photo sentence", () => {
 });
 
 /**
- * Owner, 2026-10-28: "playllu -> hrajfotbal newsletter". Players sign up to
- * Hraj Fotbal; Playllu is the operator the terms name, not a brand they know.
+ * Owner, 2026-10-28, twice: "playllu -> hrajfotbal newsletter", then "change it
+ * to: I agree to receive marketing material by email". It is the marketing
+ * consent and says so — never the booking emails, which every player gets
+ * whether the box is ticked or not.
  */
-describe("the newsletter box", () => {
-  it("names Hraj Fotbal, not Playllu, in every language", () => {
+describe("the marketing box", () => {
+  it("says the owner's words in English", () => {
     // Arrange
-    const tables = LOCALES.map((locale) => resolveStrings(locale));
+    const t = resolveStrings("en");
 
     // Act
-    const labels = tables.map((t) => t.auth.marketingLabel);
+    const label = t.auth.marketingLabel;
+
+    // Assert
+    expect(label).toBe("I agree to receive marketing material by email.");
+  });
+
+  it("is translated, names no operator and promises no booking email, in every language", () => {
+    // Arrange
+    const english = resolveStrings("en").auth.marketingLabel;
+    const others = LOCALES.filter((locale) => locale !== "en").map((locale) => resolveStrings(locale));
+
+    // Act
+    const labels = others.map((t) => t.auth.marketingLabel);
 
     // Assert
     for (const label of labels) {
-      expect(label).toContain("Hraj Fotbal");
-      expect(label).not.toMatch(/playllu/i);
+      expect(label).not.toBe(english);
+      expect(label).not.toMatch(/playllu|newsletter|rezervac|бронир|бронюв/i);
     }
   });
 });

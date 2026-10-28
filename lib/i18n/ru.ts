@@ -194,7 +194,6 @@ export const ru: StringsOverlay = {
     tosRulesLink: "Правилами сообщества и игры",
     privacyHowLink: "Как мы обрабатываем твои данные",
     tosRequired: "Чтобы продолжить, прими условия.",
-    preferencesGroupLabel: "Необязательно",
 
     emailTaken:
       "Аккаунт с такой почтой уже есть. Войди — или воспользуйся кодом, если пароля ещё нет.",
@@ -220,7 +219,7 @@ export const ru: StringsOverlay = {
     nicknameInvalid: "Только буквы, цифры, пробелы, _ и - (до 20 символов).",
     phoneRefused: "Этот номер телефона использовать нельзя. Попробуй другой или напиши нам.",
     nicknameTaken: "Такой ник уже занят. Попробуй другой.",
-    marketingLabel: "Хочу получать рассылку и новости Hraj Fotbal по e-mail. Отписаться можно в любой момент.",
+    marketingLabel: "Я согласен(-на) получать маркетинговые материалы по e-mail.",
     emailLocaleLabel: "Язык писем",
     emailLocaleHint: "На этом языке будут приходить подтверждения брони, чеки и напоминания.",
     createAccount: "Создать аккаунт",

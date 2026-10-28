@@ -212,7 +212,7 @@ test("the reset link carries the booking intent with it", async ({ page }) => {
   expect(href).toContain("action=book");
 });
 
-test("signup collects the profile and both legal acts, grouped apart from the preference", async ({
+test("signup collects the profile, the terms and an optional, unticked marketing consent", async ({
   page,
 }) => {
   await page.goto("/signup");
@@ -223,11 +223,13 @@ test("signup collects the profile and both legal acts, grouped apart from the pr
   await expect(page.locator('input[name="skill"]').first()).toBeVisible();
 
   // ~~Three boxes~~ — round 40, the lawyer's Texty 2.2: ONE legal box, the
-  // privacy policy as a link beneath it, and the newsletter apart.
+  // privacy policy as a link beneath it; ~~and the newsletter apart~~ — the
+  // owner moved the marketing consent into that box (2026-10-28), unticked.
   await expect(page.locator('input[name="tos"]')).toBeVisible();
   await expect(page.locator('input[name="gdpr"]')).toHaveCount(0);
   await expect(page.getByTestId("privacy-how")).toHaveAttribute("href", "/privacy");
   await expect(page.locator('input[name="marketing"]')).toBeVisible();
+  await expect(page.locator('input[name="marketing"]')).not.toBeChecked();
 });
 
 test("the terms are readable without an account", async ({ page }) => {

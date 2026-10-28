@@ -395,8 +395,8 @@ export async function updateProfileAction(
 /**
  * The marketing opt-in, after signup (round 38).
  *
- * The signup box says "You can unsubscribe at any time"; this is what makes
- * that true. `marketing_opt_in` has carried an own-row UPDATE grant since
+ * The signup box asks for marketing consent; this is what makes withdrawing
+ * it as easy as giving it (privacy policy 3.4). `marketing_opt_in` has carried an own-row UPDATE grant since
  * migration 1, so it takes the same path as the profile fields above — the
  * grant and `players_update_own` are the enforcement, not this action.
  *

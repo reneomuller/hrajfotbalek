@@ -8,8 +8,8 @@ import { apiClientFor, players, serviceClient, signInAs } from "./helpers/sessio
  * ROUND 41 — the owner's overnight list, driven through the browser.
  *
  *   · signup: a country-code picker beside the number, the email language
- *     pre-set from the page and changeable, the newsletter in Hraj Fotbal's
- *     name — and a new account's bell starts empty
+ *     pre-set from the page and changeable, the marketing consent in the
+ *     owner's words — and a new account's bell starts empty
  *   · one notification can be deleted, the rest stay
  *   · a game has a short link, and it is what Share sends
  *   · the account page sets the email language
@@ -97,9 +97,14 @@ test("signup: the phone takes a country code, emails take a language, and the be
     await expect(page.getByTestId("signup-email-locale")).toHaveValue("cs");
     await page.getByTestId("signup-email-locale").selectOption("uk");
 
-    // The newsletter is Hraj Fotbal's, not the operator's.
-    await expect(page.locator('input[name="marketing"]').locator("..")).toContainText("Hraj Fotbal");
-    await expect(page.locator('input[name="marketing"]').locator("..")).not.toContainText("Playllu");
+    // The owner's words, 2026-10-28: the marketing consent, IN the terms box,
+    // unticked — and the terms box no longer carries the photo sentence.
+    const legal = page.locator("fieldset").filter({ has: page.locator('input[name="tos"]') });
+    const marketing = legal.getByTestId("signup-marketing");
+    await expect(marketing).not.toBeChecked();
+    await expect(marketing.locator("..")).toHaveText("Souhlasím se zasíláním marketingových materiálů e-mailem.");
+    await expect(page.getByTestId("tos-agreement")).not.toContainText("fotografií");
+    await expect(page.getByTestId("tos-agreement")).not.toContainText("Playllu");
 
     await page.check('input[name="tos"]');
 

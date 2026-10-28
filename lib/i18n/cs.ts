@@ -191,7 +191,6 @@ export const cs: StringsOverlay = {
     tosRulesLink: "Pravidly komunity a hry",
     privacyHowLink: "Jak zpracováváme tvoje údaje",
     tosRequired: "Pro pokračování prosím potvrď podmínky.",
-    preferencesGroupLabel: "Nepovinné",
 
     emailTaken:
       "Účet s tímto e-mailem už existuje. Přihlas se — nebo použij kód, pokud ještě nemáš heslo.",
@@ -217,7 +216,7 @@ export const cs: StringsOverlay = {
     nicknameInvalid: "Použij jen písmena, číslice, mezery, _ a - (max. 20 znaků).",
     phoneRefused: "Tohle telefonní číslo nejde použít. Zkus jiné, nebo nám napiš.",
     nicknameTaken: "Tahle přezdívka je zabraná. Zkus jinou.",
-    marketingLabel: "Chci dostávat newsletter a novinky Hraj Fotbal e-mailem. Odhlásit se můžu kdykoli.",
+    marketingLabel: "Souhlasím se zasíláním marketingových materiálů e-mailem.",
     emailLocaleLabel: "Jazyk e-mailů",
     emailLocaleHint: "V tomto jazyce ti budou chodit potvrzení rezervací, doklady a připomínky.",
     createAccount: "Založit účet",

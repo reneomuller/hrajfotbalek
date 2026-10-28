@@ -357,7 +357,8 @@ export const strings = {
      * 13 — 2026-10-27 and 2026-10-28), and makes the privacy
      * policy a LINK beneath it: processing rests on the contract, not on a
      * consent, and a box that pretends otherwise is the wrong legal basis. The
-     * newsletter stays apart and unticked.
+     * marketing consent sits in the same box since 2026-10-28 (owner), optional
+     * and unticked, worded as exactly what it is.
      *
      * `{terms}` and `{rules}` are links, and the translation decides where they
      * sit — see `lib/i18n/template.ts`. The Czech is the lawyer's own.
@@ -369,8 +370,7 @@ export const strings = {
     tosRulesLink: "Community and Game Rules",
     tosRequired: "Please accept the terms to continue.",
     privacyHowLink: "How we handle your data",
-    preferencesGroupLabel: "Optional",
-    marketingLabel: "I want to receive the Hraj Fotbal newsletter and news by email. I can unsubscribe at any time.",
+    marketingLabel: "I agree to receive marketing material by email.",
     /** Round 41 — the language a player's emails are written in. */
     emailLocaleLabel: "Emails in",
     emailLocaleHint: "Booking confirmations, receipts and reminders arrive in this language.",
@@ -1180,9 +1180,9 @@ export const strings = {
     saved: "Profile saved",
     saveFailed: "We could not save that. Please try again.",
     /*
-     * EMAIL PREFERENCES (round 38) — the switch behind signup's "You can
-     * unsubscribe at any time". Same subject as `auth.marketingLabel`, said as
-     * a setting rather than a request.
+     * EMAIL PREFERENCES (round 38) — where signup's marketing consent is
+     * withdrawn. Same subject as `auth.marketingLabel`, said as a setting
+     * rather than a request.
      */
     emailPrefsTitle: "Email preferences",
     marketingToggle: "News about new games and offers",

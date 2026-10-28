@@ -262,6 +262,12 @@ export function SignupForm({
         because processing rests on the contract and not on a consent. The
         grouping still matters: a preference that looks like a legal act gets
         ticked unread.
+
+        ~~THE NEWSLETTER STAYS APART~~ — the owner's call (2026-10-28) put the
+        marketing box IN this box, still optional and still unticked: the
+        legend is "Before you start", not "required", and the refusal for a
+        missing tick names the terms only. It is the only consent here and its
+        label says exactly what it is.
       */}
       <fieldset className="flex flex-col gap-3 rounded-card border border-hairline-strong p-4">
         <legend className={`px-2 ${LABEL_CLASS}`}>{t.auth.legalGroupLabel}</legend>
@@ -295,28 +301,28 @@ export function SignupForm({
         >
           {t.auth.privacyHowLink}
         </Link>
-      </fieldset>
 
-      <div className="flex flex-col gap-2">
-        <span className={LABEL_CLASS}>{t.auth.preferencesGroupLabel}</span>
-        <label className="flex items-start gap-3 text-sm">
+        <label className="mt-1 flex items-start gap-3 text-sm">
           <input
             key={`marketing-${valuesKey}`}
             type="checkbox"
             name="marketing"
+            data-testid="signup-marketing"
             defaultChecked={v?.marketing ?? false}
             className="mt-1 accent-volt"
           />
           <span>{t.auth.marketingLabel}</span>
         </label>
+      </fieldset>
 
+      <div className="flex flex-col gap-2">
         {/*
           THE LANGUAGE EMAILS ARE WRITTEN IN (round 41). Pre-set to the
           language this page is in — the browser's, unless the switcher said
           otherwise — so most people never touch it; each option is named in
           its own language, like the switcher's.
         */}
-        <label className="mt-2 flex flex-col gap-2">
+        <label className="flex flex-col gap-2">
           <span className={LABEL_CLASS}>{t.auth.emailLocaleLabel}</span>
           <select
             key={`email-locale-${valuesKey}`}
