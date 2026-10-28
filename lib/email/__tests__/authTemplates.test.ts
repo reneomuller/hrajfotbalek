@@ -53,3 +53,28 @@ describe("the Supabase templates", () => {
     expect(template).not.toMatch(/\{[a-zA-Z]+\}/);
   });
 });
+
+/**
+ * Owner, 2026-10-28, on the sign-up email: remove "If the button opens in the
+ * wrong app, type the code on the sign-in page instead" ENTIRELY — and in
+ * Czech, "kliknutí", not "klepnutí".
+ */
+describe("the owner's wording", () => {
+  const WRONG_APP = /wrong app|špatné aplikaci|не в том приложении|не в тому застосунку/i;
+
+  it.each(AUTH_TEMPLATES)("%s no longer tells the reader about the wrong app, in any language", (kind) => {
+    // Act
+    const template = supabaseTemplate(kind);
+
+    // Assert
+    expect(template).not.toMatch(WRONG_APP);
+  });
+
+  it.each(AUTH_TEMPLATES)("%s says kliknutí in Czech, never klepnutí", (kind) => {
+    // Act
+    const template = supabaseTemplate(kind);
+
+    // Assert
+    expect(template).not.toMatch(/klepn/i);
+  });
+});
