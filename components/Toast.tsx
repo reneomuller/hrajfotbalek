@@ -28,10 +28,13 @@ export function Toast({
   message,
   durationMs = 4000,
   closeLabel,
+  testId = "toast",
 }: {
   message: string | null;
   durationMs?: number;
   closeLabel: string;
+  /** For a toast a spec must tell apart from the page's own. */
+  testId?: string;
 }) {
   return (
     <div
@@ -55,6 +58,7 @@ export function Toast({
           message={message}
           durationMs={durationMs}
           closeLabel={closeLabel}
+          testId={testId}
         />
       )}
     </div>
@@ -65,10 +69,12 @@ function ToastBody({
   message,
   durationMs,
   closeLabel,
+  testId,
 }: {
   message: string;
   durationMs: number;
   closeLabel: string;
+  testId: string;
 }) {
   const [dismissed, setDismissed] = useState(false);
 
@@ -83,7 +89,7 @@ function ToastBody({
 
   return (
     <div
-      data-testid="toast"
+      data-testid={testId}
       className="pointer-events-auto flex max-w-[420px] items-center gap-3 rounded-card bg-surface-overlay px-4 py-3"
     >
       <span aria-hidden className="h-2 w-2 shrink-0 rounded-pill bg-volt" />

@@ -651,7 +651,7 @@ export const cs: StringsOverlay = {
     photoUpload: "Nahrát fotku",
     photoReplace: "Vyměnit fotku",
     photoBadType: "Použij JPG, PNG nebo WebP.",
-    photoTooBig: "Obrázek má přes 2 MB. Vyber menší.",
+    photoTooBig: "Fotka má přes {mb} MB. Vyber menší.",
     photoUploadFailed: "Fotka se nenahrála. Zkus to znovu.",
     photoUploading: "Nahrávám fotku…",
 

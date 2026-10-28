@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { createBrowserSupabaseClient } from "@/lib/supabase/browser";
 import {
@@ -9,9 +10,14 @@ import {
   type CropTarget,
   PROFILE_PHOTOS_BUCKET,
   extensionForMimeType,
+  MAX_PICKED_PHOTO_BYTES,
   rejectPhoto,
+  UPLOAD_TARGET_BYTES,
   VENUE_PHOTOS_BUCKET,
 } from "@/lib/storage/avatar";
+import { encodeWithinBudget } from "@/lib/storage/encodePhoto";
+import { fillTemplate } from "@/lib/i18n/template";
+import { Toast } from "@/components/Toast";
 import { PhotoCropper, type CropRect } from "@/components/account/PhotoCropper";
 import { useStrings } from "@/components/LocaleProvider";
 import { venuePhotoChangedAction } from "@/app/admin/venues/actions";
@@ -77,11 +83,11 @@ async function cropToRatio(
   context.drawImage(bitmap, area.sx, area.sy, area.sw, area.sh, 0, 0, outW, outH);
   bitmap.close();
 
-  const blob = await new Promise<Blob | null>((resolve) =>
-    canvas.toBlob(resolve, "image/webp", 0.9),
+  // Shrunk to fit, as WebP or JPEG — see `encodeWithinBudget`.
+  return encodeWithinBudget(
+    (type, quality) => new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, type, quality)),
+    UPLOAD_TARGET_BYTES,
   );
-  if (!blob) throw new Error("encode failed");
-  return blob;
 }
 
 /**
@@ -156,7 +162,11 @@ export function PhotoUpload({
     // before a slow upload rather than after it.
     const rejection = rejectPhoto(file);
     if (rejection) {
-      setError(rejection.reason === "type" ? t.account.photoBadType : t.account.photoTooBig);
+      setError(
+        rejection.reason === "type"
+          ? t.account.photoBadType
+          : fillTemplate(t.account.photoTooBig, { mb: String(MAX_PICKED_PHOTO_BYTES / 1024 / 1024) }),
+      );
       event.target.value = "";
       return;
     }
@@ -187,7 +197,8 @@ export function PhotoUpload({
        * would mean a failed RPC leaves an orphan object in a public bucket with
        * no row pointing at it and nothing to clean it up.
        */
-      const extension = extensionForMimeType("image/webp");
+      // WebP, or JPEG where the browser cannot write WebP — the key says which.
+      const extension = extensionForMimeType(cropped.type);
 
       /*
        * THE PATH IS CLAIMED FROM THE DATABASE FIRST, for all three targets.
@@ -216,7 +227,7 @@ export function PhotoUpload({
          * optimizer would keep that for a year. The optimizer caches each
          * version itself; the CDN in front of storage adds nothing but risk.
          */
-        .upload(path, cropped, { contentType: "image/webp", upsert: true, cacheControl: "0" });
+        .upload(path, cropped, { contentType: cropped.type, upsert: true, cacheControl: "0" });
       if (uploadError) throw new Error(uploadError.message);
 
       /*
@@ -391,6 +402,18 @@ export function PhotoUpload({
             {error}
           </span>
         ) : null}
+        {/*
+          ON SCREEN TOO (2026-10-28). The refusal was `sr-only` here, so a
+          photo the picker turned away closed the picker and nothing visibly
+          happened — the owner's "it just glitches and jumps back to profile".
+          A toast, portalled so the nav pill cannot cover it (CLAUDE.md).
+        */}
+        {error
+          ? createPortal(
+              <Toast message={error} closeLabel={t.common.close} testId="photo-error-toast" />,
+              document.body,
+            )
+          : null}
         {cropper}
       </label>
     );

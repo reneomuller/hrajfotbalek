@@ -1353,7 +1353,7 @@ export const strings = {
     photoUpload: "Upload a photo",
     photoReplace: "Replace photo",
     photoBadType: "Use a JPG, PNG or WebP image.",
-    photoTooBig: "That image is over 2 MB. Pick a smaller one.",
+    photoTooBig: "That photo is over {mb} MB. Pick a smaller one.",
     photoUploadFailed: "The photo didn't upload. Try again.",
     /*
      * The UPLOADING state (§3 screen 7, §4). It was `common.loading` — the

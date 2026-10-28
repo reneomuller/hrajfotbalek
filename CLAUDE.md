@@ -497,6 +497,16 @@ the CDN is not holding the old bytes when the optimizer fetches the new
 version — which is why `PhotoUpload` uploads with `cacheControl: "0"`. Objects
 uploaded before that carry an hour of CDN caching until they are next replaced.
 
+**A SIZE LIMIT BELONGS TO THE THING THAT IS STORED, NOT THE THING THAT IS
+PICKED.** For ten weeks the photo picker refused any original over the bucket's
+2 MB — but the original never leaves the phone; the crop does, at a few hundred
+kilobytes — so four phone photos in five were turned away, and on the avatar the
+refusal was `sr-only`: "it just glitches and jumps back to profile". The pick
+limit is now 15 MB and the crop is shrunk to fit 512 KB. **And Safari cannot
+WRITE WebP**: `canvas.toBlob(cb, "image/webp")` silently hands back a PNG, which
+for a photograph is several times larger. `encodeWithinBudget` treats a produced
+type that is not the requested one as "try JPEG".
+
 **A TEST THAT LEAVES THE PAGE AS A CROPPER CLOSES CANCELS THE UPLOAD'S LAST
 STEP.** The cropper hides before the upload ends, and the last step is the
 server action that expires the cached versions. Navigating at once cancelled

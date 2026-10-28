@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
-  MAX_PHOTO_BYTES,
+  MAX_PICKED_PHOTO_BYTES,
   avatarUrl,
   extensionForMimeType,
   rejectPhoto,
@@ -65,16 +65,25 @@ describe("rejectPhoto", () => {
     expect(rejectPhoto({ type: "image/svg+xml", size: 1000 })).toEqual({ reason: "type" });
   });
 
-  it("rejects anything over the bucket's own limit", () => {
-    expect(rejectPhoto({ type: "image/png", size: MAX_PHOTO_BYTES + 1 })).toEqual({
+  /*
+   * Owner, 2026-10-28: "i can't select many of my photos. only like 1 in 5 it
+   * registers". The picker compared the ORIGINAL against the bucket's 2 MB —
+   * but the original never leaves the phone; the crop does, at a few hundred
+   * kilobytes. An ordinary phone photo is 2–6 MB, so most were refused.
+   */
+  it("accepts an ordinary phone photo of several megabytes", () => {
+    expect(rejectPhoto({ type: "image/jpeg", size: 6 * 1024 * 1024 })).toBeNull();
+  });
+
+  it("refuses only a file too large to decode safely on a phone", () => {
+    expect(rejectPhoto({ type: "image/jpeg", size: MAX_PICKED_PHOTO_BYTES + 1 })).toEqual({
       reason: "size",
     });
-    // Exactly at the limit is fine: the bucket compares the same way.
-    expect(rejectPhoto({ type: "image/png", size: MAX_PHOTO_BYTES })).toBeNull();
+    expect(rejectPhoto({ type: "image/jpeg", size: MAX_PICKED_PHOTO_BYTES })).toBeNull();
   });
 
   it("checks the type before the size, so the message names the real problem", () => {
-    expect(rejectPhoto({ type: "application/pdf", size: MAX_PHOTO_BYTES * 10 })).toEqual({
+    expect(rejectPhoto({ type: "application/pdf", size: MAX_PICKED_PHOTO_BYTES * 10 })).toEqual({
       reason: "type",
     });
   });

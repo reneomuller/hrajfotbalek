@@ -655,7 +655,7 @@ export const uk: StringsOverlay = {
     photoUpload: "Завантажити фото",
     photoReplace: "Замінити фото",
     photoBadType: "Підійде JPG, PNG або WebP.",
-    photoTooBig: "Зображення більше за 2 МБ. Обери менше.",
+    photoTooBig: "Фото більше за {mb} МБ. Обери менше.",
     photoUploadFailed: "Фото не завантажилося. Спробуй ще раз.",
     photoUploading: "Завантажуємо фото…",
 

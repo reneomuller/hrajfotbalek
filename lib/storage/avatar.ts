@@ -16,8 +16,27 @@ export const ACCEPTED_IMAGE_TYPES: Record<string, string> = {
   "image/webp": "webp",
 };
 
-/** 2 MiB, matching `storage.buckets.file_size_limit` on the bucket itself. */
+/**
+ * 2 MiB, matching `storage.buckets.file_size_limit` on the bucket itself. It
+ * bounds what is UPLOADED — the crop — and never what is picked: the original
+ * never leaves the phone.
+ */
 export const MAX_PHOTO_BYTES = 2 * 1024 * 1024;
+
+/**
+ * THE LARGEST PHOTO THE PICKER TAKES (owner, 2026-10-28: "don't allow sizes
+ * that'd slow things down or overwhelm"). ~~The bucket's 2 MB~~ refused most
+ * phone photos outright — one in five got through. 15 MB covers what a phone
+ * camera ordinarily saves and stops what a phone would struggle to decode.
+ */
+export const MAX_PICKED_PHOTO_BYTES = 15 * 1024 * 1024;
+
+/**
+ * WHAT A CROP IS SHRUNK TO before upload — quality lowered step by step until
+ * it fits (`lib/storage/encodePhoto.ts`). Small enough to load fast on a
+ * roster; an avatar fits at full quality, a cover or venue photo may not.
+ */
+export const UPLOAD_TARGET_BYTES = 512 * 1024;
 
 /** The side length every upload is cropped to before it leaves the browser. */
 export const AVATAR_SIDE_PX = 512;
@@ -154,17 +173,17 @@ export interface PhotoRejection {
 }
 
 /**
- * Whether a chosen file is worth sending.
+ * Whether a picked file is worth cropping.
  *
- * The bucket enforces both of these too, and that is the enforcement — this is
- * the part that tells someone what went wrong before they spend a slow mobile
- * upload finding out. Client checks are a courtesy; the reason they are not
+ * The type is enforced by the bucket too; the size here is the PICK limit, not
+ * the bucket's — what is uploaded is the crop, shrunk to `UPLOAD_TARGET_BYTES`,
+ * and the bucket's own limit still stands behind it. Client checks are a courtesy; the reason they are not
  * security is that anything can call the API directly, which is why the bucket
  * carries the same limits.
  */
 export function rejectPhoto(file: { type: string; size: number }): PhotoRejection | null {
   if (!extensionForMimeType(file.type)) return { reason: "type" };
-  if (file.size > MAX_PHOTO_BYTES) return { reason: "size" };
+  if (file.size > MAX_PICKED_PHOTO_BYTES) return { reason: "size" };
   return null;
 }
 
