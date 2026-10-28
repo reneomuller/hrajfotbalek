@@ -58,6 +58,8 @@ export const STABLE_TAGS = {
   capabilities: "stable:capabilities",
   siteSettings: "stable:site-settings",
   policy: "stable:policy",
+  /** Round 41 — expired by `venuePhotoChangedAction` the moment a photo lands. */
+  venuePhotos: "stable:venue-photos",
 } as const;
 
 /**

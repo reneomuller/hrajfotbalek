@@ -8,6 +8,7 @@ import { SpotsLeft } from "@/components/game/SpotsLeft";
 import { formatTime } from "@/lib/format";
 import { gameLanguageOf } from "@/lib/games/language";
 import { venuePhotoUrl } from "@/lib/storage/avatar";
+import { venuePhotoVersion } from "@/lib/storage/venuePhotoVersions";
 import { getStrings } from "@/lib/i18n/server";
 import type { RosterAvatar } from "@/lib/games/queries";
 import type { Database } from "@/lib/types/database";
@@ -153,7 +154,9 @@ export async function GameCard({
    * recognised shape, so a malformed `image_path` falls back to the default
    * rather than rendering a broken image on every card for that ground.
    */
-  const photo = venuePhotoUrl(supabaseUrl ?? "", venueImagePath) ?? DEFAULT_PITCH;
+  const photo =
+    venuePhotoUrl(supabaseUrl ?? "", venueImagePath, await venuePhotoVersion(venueImagePath)) ??
+    DEFAULT_PITCH;
 
   const body = (
     <>

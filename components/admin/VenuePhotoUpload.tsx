@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { PhotoUpload } from "@/components/account/PhotoUpload";
 import { strings } from "@/lib/strings";
 
@@ -27,15 +28,34 @@ import { strings } from "@/lib/strings";
 export function VenuePhotoUpload({
   venueId,
   hasPhoto,
+  photoUrl = null,
 }: {
   venueId: string;
   hasPhoto: boolean;
+  /**
+   * The photo as players see it, version and all (round 41). Without it the
+   * row said only "Photo set", so an organizer who replaced a photo had to
+   * open a game to find out whether it took.
+   */
+  photoUrl?: string | null;
 }) {
   return (
     <div data-testid="venue-photo-upload">
       <p className="m-0 text-[10px] uppercase tracking-eyebrow text-muted">
         {strings.admin.venuePhotoTitle}
       </p>
+
+      {photoUrl ? (
+        <Image
+          src={photoUrl}
+          alt=""
+          width={320}
+          height={148}
+          sizes="320px"
+          data-testid="venue-photo-preview"
+          className="mt-2 aspect-[1600/740] w-full max-w-[320px] rounded-control object-cover"
+        />
+      ) : null}
 
       <div className="mt-2">
         <PhotoUpload target="venue" venueId={venueId} hasPhoto={hasPhoto}>

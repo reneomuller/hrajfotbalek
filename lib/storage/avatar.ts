@@ -186,6 +186,12 @@ export const VENUE_PHOTOS_BUCKET = "venue-photos";
 export function venuePhotoUrl(
   supabaseUrl: string,
   imagePath: string | null | undefined,
+  /**
+   * When the stored bytes last changed (round 41) — see `venuePhotoVersion`.
+   * A bucket key is replaced IN PLACE, so without this a new photo is the old
+   * URL, and the optimizer holds an image for a year.
+   */
+  version?: string | null,
 ): string | null {
   if (!imagePath) return null;
 
@@ -194,7 +200,8 @@ export function venuePhotoUrl(
   if (imagePath.startsWith("venues/")) {
     if (!supabaseUrl) return null;
     const base = supabaseUrl.replace(/\/$/, "");
-    return `${base}/storage/v1/object/public/${VENUE_PHOTOS_BUCKET}/${imagePath}`;
+    const url = `${base}/storage/v1/object/public/${VENUE_PHOTOS_BUCKET}/${imagePath}`;
+    return version ? `${url}?v=${encodeURIComponent(version)}` : url;
   }
 
   return null;

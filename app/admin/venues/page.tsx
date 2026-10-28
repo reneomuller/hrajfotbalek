@@ -11,6 +11,8 @@ import { VenueArchiveButton } from "@/components/admin/VenueArchiveButton";
 import { partitionVenues } from "@/lib/venues/archive";
 import { appCapabilities } from "@/lib/db/capabilities";
 import { VenuePhotoUpload } from "@/components/admin/VenuePhotoUpload";
+import { venuePhotoUrl } from "@/lib/storage/avatar";
+import { venuePhotoVersion } from "@/lib/storage/venuePhotoVersions";
 import { requireAdmin } from "@/lib/auth/requireAdmin";
 import { countGamesByVenue, listVenues } from "@/lib/admin/queries";
 import { strings } from "@/lib/strings";
@@ -58,6 +60,19 @@ export default async function AdminVenuesPage() {
     countGamesByVenue(),
   ]);
   const { active: venues, archived } = partitionVenues(all);
+  // Each photo as players see it — versioned, so a replacement shows at once.
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
+  const photoUrls = new Map(
+    await Promise.all(
+      venues.map(
+        async (venue) =>
+          [
+            venue.id,
+            venuePhotoUrl(supabaseUrl, venue.image_path, await venuePhotoVersion(venue.image_path)),
+          ] as const,
+      ),
+    ),
+  );
   /*
    * DELETE ONLY WHERE IT CAN SUCCEED once archive exists. Before the migration
    * the old control stays exactly as it was — offered everywhere, refused in
@@ -170,7 +185,11 @@ export default async function AdminVenuesPage() {
                 </h4>
 
                 <div className="mt-4">
-                  <VenuePhotoUpload venueId={venue.id} hasPhoto={venue.image_path !== null} />
+                  <VenuePhotoUpload
+                    venueId={venue.id}
+                    hasPhoto={venue.image_path !== null}
+                    photoUrl={photoUrls.get(venue.id) ?? null}
+                  />
                 </div>
 
                 <div className="mt-6">

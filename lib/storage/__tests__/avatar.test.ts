@@ -4,6 +4,7 @@ import {
   avatarUrl,
   extensionForMimeType,
   rejectPhoto,
+  venuePhotoUrl,
 } from "@/lib/storage/avatar";
 
 const SUPABASE = "http://127.0.0.1:54321";
@@ -76,5 +77,40 @@ describe("rejectPhoto", () => {
     expect(rejectPhoto({ type: "application/pdf", size: MAX_PHOTO_BYTES * 10 })).toEqual({
       reason: "type",
     });
+  });
+});
+
+/**
+ * ROUND 41 — "venue picture doesn't update when changing it". A replaced photo
+ * lands at the same key, and the optimizer keeps an image for a year, so the
+ * URL itself has to move when the bytes do.
+ */
+describe("venuePhotoUrl", () => {
+  const KEY = "venues/2af42ddb-8c93-49a2-b9cd-18d128dbb3f3.webp";
+
+  it("carries the object's version, so a replacement is a new URL", () => {
+    // Act
+    const before = venuePhotoUrl(SUPABASE, KEY, "2026-10-27T15:21:06.249Z");
+    const after = venuePhotoUrl(SUPABASE, KEY, "2026-10-27T16:57:39.779Z");
+
+    // Assert
+    expect(before).toContain("?v=");
+    expect(after).not.toBe(before);
+  });
+
+  it("leaves the URL bare when no version is known", () => {
+    // Act
+    const url = venuePhotoUrl(SUPABASE, KEY, null);
+
+    // Assert
+    expect(url).toBe(`${SUPABASE}/storage/v1/object/public/venue-photos/${KEY}`);
+  });
+
+  it("never versions a committed repo asset, whose URL moves with the deploy", () => {
+    // Act
+    const url = venuePhotoUrl(SUPABASE, "/venues/korab.jpg", "2026-10-27T16:57:39.779Z");
+
+    // Assert
+    expect(url).toBe("/venues/korab.jpg");
   });
 });

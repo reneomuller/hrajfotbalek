@@ -1,6 +1,7 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, updateTag } from "next/cache";
+import { STABLE_TAGS } from "@/lib/db/stableRead";
 import { requireAdmin } from "@/lib/auth/requireAdmin";
 import {
   isMapsUrl,
@@ -233,4 +234,20 @@ async function setVenueArchived(
 
   revalidatePath("/", "layout");
   return { status: "idle" };
+}
+
+/**
+ * A venue photo was just replaced (round 41, "venue picture doesn't update").
+ *
+ * The upload goes straight from the browser to Storage, so no server code
+ * sees it — and the photo's URL version is a CACHED listing
+ * (`venuePhotoVersion`, sixty seconds). `updateTag` expires that listing NOW,
+ * so the `router.refresh()` that follows renders the new URL rather than the
+ * one the optimizer already holds. Every page carries venue photos, hence the
+ * whole layout.
+ */
+export async function venuePhotoChangedAction(): Promise<void> {
+  await requireAdmin();
+  updateTag(STABLE_TAGS.venuePhotos);
+  revalidatePath("/", "layout");
 }

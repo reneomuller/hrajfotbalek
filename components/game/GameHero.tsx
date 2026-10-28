@@ -4,6 +4,7 @@ import { Icon } from "@/components/Icon";
 import { getStrings } from "@/lib/i18n/server";
 import { venueAddressLine } from "@/lib/venues/mapsHref";
 import { venuePhotoUrl } from "@/lib/storage/avatar";
+import { venuePhotoVersion } from "@/lib/storage/venuePhotoVersions";
 import type { Database } from "@/lib/types/database";
 
 type VenueRow = Database["public"]["Tables"]["venues"]["Row"];
@@ -66,7 +67,12 @@ export async function GameHero({
 
   // Two shapes, one reader: a committed repo asset or a bucket key. The leading
   // slash is what tells them apart — see `venuePhotoUrl`.
-  const ownPhoto = venuePhotoUrl(supabaseUrl, venueRow?.image_path);
+  // ROUND 41: versioned, or a replaced photo is the old URL for a year.
+  const ownPhoto = venuePhotoUrl(
+    supabaseUrl,
+    venueRow?.image_path,
+    await venuePhotoVersion(venueRow?.image_path),
+  );
   const image = ownPhoto ?? DEFAULT_PITCH;
   const isRemote = !image.startsWith("/");
 

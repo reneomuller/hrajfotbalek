@@ -14,6 +14,7 @@ import {
 } from "@/lib/storage/avatar";
 import { PhotoCropper, type CropRect } from "@/components/account/PhotoCropper";
 import { useStrings } from "@/components/LocaleProvider";
+import { venuePhotoChangedAction } from "@/app/admin/venues/actions";
 
 /**
  * Crops to a centred square and re-encodes, in the browser.
@@ -239,6 +240,18 @@ export function PhotoUpload({
        * stays afterwards: it costs one request and removes the round trip
        * between uploading and seeing.
        */
+      /*
+       * A VENUE PHOTO IS VERSIONED BY ITS OBJECT (round 41), so the next render
+       * is already a NEW URL once the cached version listing is expired — which
+       * is what this action does. The reload below is the avatar's remedy and
+       * would point at the wrong bucket for a venue key.
+       */
+      if (target === "venue") {
+        await venuePhotoChangedAction();
+        router.refresh();
+        return;
+      }
+
       const rendered = avatarUrl(
         process.env.NEXT_PUBLIC_SUPABASE_URL ?? "",
         path as string,
