@@ -36,7 +36,7 @@ import { isKnownCountry } from "@/lib/auth/countries";
 export const FLAG_CIRCLE_PX = {
   /** Beside a name on a public profile. */
   profile: 18,
-  /** In an admin list row, where it sits with 12px type. */
+  /** In an admin list row, and on your own profile's meta line: 12–13px type. */
   compact: 14,
 } as const;
 

@@ -15,7 +15,7 @@ import { ProfileIdentity } from "@/components/account/ProfileIdentity";
 import { ProfileStats } from "@/components/account/ProfileStats";
 import { ProfileTabs, parseProfileTab } from "@/components/account/ProfileTabs";
 import { SecurityLinks } from "@/components/account/SecurityLinks";
-import { countryName, countryOptions } from "@/lib/auth/countries";
+import { countryOptions } from "@/lib/auth/countries";
 import {
   DEFAULT_PHONE_COUNTRY,
   formatPhone,
@@ -175,7 +175,7 @@ export default async function AccountPage({
           nickname={player.nickname}
           photoPath={player.photo_path}
           photoVersion={await profilePhotoVersion(player.photo_path)}
-          countryName={countryName(player.country, locale)}
+          country={player.country}
           createdAt={player.created_at}
           locale={locale}
           t={t}

@@ -1,7 +1,7 @@
 import { PhotoUpload } from "@/components/account/PhotoUpload";
+import { ProfileMeta } from "@/components/account/ProfileMeta";
 import { initials } from "@/lib/roster/initials";
 import { avatarUrl } from "@/lib/storage/avatar";
-import { DATE_LOCALE } from "@/lib/games/days";
 import type { Locale } from "@/lib/i18n/locales";
 import type { Strings } from "@/lib/strings";
 
@@ -34,10 +34,7 @@ import type { Strings } from "@/lib/strings";
  *
  *   2. THE META LINE IS COUNTRY, NOT CITY. The reference says "Bangkok". The
  *      schema holds `players.country` as an ISO 3166 code and nothing finer.
- *
- * A player with neither country nor a formattable join date shows the meta line
- * with whatever half exists, and no line at all if neither does — a lone
- * separator under a name is worse than a missing sentence.
+ *      `ProfileMeta` draws it, flag first.
  *
  * THE AVATAR OVERLAPS THE COVER'S LOWER EDGE, which is the reference's
  * composition and is doing real work: it ties the two bands into one object, so
@@ -49,7 +46,7 @@ export function ProfileIdentity({
   nickname,
   photoPath,
   photoVersion,
-  countryName,
+  country,
   createdAt,
   locale,
   t,
@@ -58,8 +55,8 @@ export function ProfileIdentity({
   photoPath: string | null;
   /** Changes when the photo does, so a re-upload is not served from cache. */
   photoVersion: string | null;
-  /** Already resolved to the reader's language, or null when unset. */
-  countryName: string | null;
+  /** ISO 3166-1 alpha-2, or null when unset. */
+  country: string | null;
   createdAt: string;
   locale: Locale;
   t: Strings;
@@ -69,31 +66,6 @@ export function ProfileIdentity({
     photoPath,
     photoVersion,
   );
-
-  /*
-   * "Aug 2026", IN THE READER'S LANGUAGE, from `Intl` rather than from a
-   * translated month table. Czech and Russian both decline month names and
-   * both abbreviate differently from English; a hand-written list would be
-   * three lists to maintain and one of them would be wrong.
-   *
-   * `DATE_LOCALE` maps `en` to `en-GB`, which is the same mapping the day
-   * headings and the calendar cells use — so a profile and a fixture list
-   * never disagree about what a month is called.
-   *
-   * An unparseable date yields null rather than "Invalid Date", which is a
-   * string this product should never render.
-   */
-  const joined = Number.isNaN(Date.parse(createdAt))
-    ? null
-    : new Intl.DateTimeFormat(DATE_LOCALE[locale], {
-        month: "short",
-        year: "numeric",
-      }).format(new Date(createdAt));
-
-  const meta = [
-    countryName,
-    joined ? t.profile.memberSince.replace("{date}", joined) : null,
-  ].filter((part): part is string => part !== null);
 
   return (
     <section data-testid="profile-identity" className="-mt-8">
@@ -155,11 +127,7 @@ export function ProfileIdentity({
           >
             {nickname}
           </h1>
-          {meta.length > 0 && (
-            <p data-testid="profile-meta" className="m-0 truncate text-small text-muted">
-              {meta.join(" · ")}
-            </p>
-          )}
+          <ProfileMeta country={country} createdAt={createdAt} locale={locale} t={t} />
         </div>
       </div>
     </section>
