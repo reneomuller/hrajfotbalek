@@ -1,6 +1,6 @@
 import { ImageResponse } from "next/og";
 import { OG_MARK_DATA_URI } from "@/lib/og/mark";
-import tailwindConfig from "@/tailwind.config";
+import { COLORS, OG_SIZE } from "@/lib/og/theme";
 import { formatCzk, formatGameDateTime } from "@/lib/format";
 import { pluralise } from "@/lib/i18n/plural";
 import { strings } from "@/lib/strings";
@@ -9,26 +9,10 @@ import { strings } from "@/lib/strings";
  * Open Graph share card — the volt-on-black preview WhatsApp renders.
  *
  * Game links are shared almost exclusively in WhatsApp, so this is an
- * acquisition surface rather than decoration.
- *
- * COLOURS COME FROM `tailwind.config.ts`, read at module load. Satori (which
- * backs `ImageResponse`) does not run Tailwind, so the classes used elsewhere
- * are unavailable here and the values must be inlined — but they are inlined
- * FROM THE TOKEN TABLE, not retyped. A theme change therefore moves this card
- * with it, which is the property the no-inline-hex rule exists to protect.
+ * acquisition surface rather than decoration. Colours come from the token
+ * table by way of `lib/og/theme.ts`.
  */
-const themeColors = (tailwindConfig.theme?.extend?.colors ?? {}) as Record<string, string>;
-
-const COLORS = {
-  volt: themeColors.volt,
-  ink: themeColors.ink,
-  bone: themeColors.bone,
-  muted: themeColors.muted,
-  hairline: "rgba(255,255,255,.12)",
-};
-
-export const OG_SIZE = { width: 1200, height: 630 };
-export const OG_CONTENT_TYPE = "image/png";
+export { OG_CONTENT_TYPE, OG_SIZE } from "@/lib/og/theme";
 
 export interface ShareImageProps {
   venue: string;

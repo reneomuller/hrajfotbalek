@@ -23,6 +23,7 @@ export const ru: StringsOverlay = {
   meta: {
     title: "Hraj Fotbal — футбол без обязательств в Праге",
     description: "Один матч, который повторяется. Найди игру, займи место, приходи.",
+    shareTagline: "Футбол без обязательств в Праге",
   },
 
   nav: {

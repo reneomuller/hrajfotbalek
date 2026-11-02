@@ -24,6 +24,7 @@ export const cs: StringsOverlay = {
   meta: {
     title: "Hraj Fotbal — pickup fotbal v Praze",
     description: "Jeden zápas, který se opakuje. Najdi hru, zaber si místo, přijď.",
+    shareTagline: "Pickup fotbal v Praze",
   },
 
   nav: {

@@ -11,6 +11,8 @@ export const strings = {
     title: "Hraj Fotbal — pickup football in Prague",
     description:
       "One match that repeats itself. Find a game, claim your spot, show up.",
+    /** The small line under the brand share card (`lib/og/brandImage.tsx`). */
+    shareTagline: "Pickup football in Prague",
   },
 
   brand: {
