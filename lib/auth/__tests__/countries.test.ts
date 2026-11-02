@@ -75,10 +75,9 @@ describe("countryFlag", () => {
     expect(countryFlag("CZE")).toBe("");
   });
 
-  it("draws Iran as the lion and the sun, not the Islamic Republic's flag", () => {
-    // Unicode has no Lion and Sun flag; 🇮🇷 is the post-1980 one.
-    expect(countryFlag("IR")).toBe("\u{1F981}\u{2600}\u{FE0F}");
-    expect(countryFlag("IR")).not.toBe("\u{1F1EE}\u{1F1F7}");
+  it("gives Iran no emoji: Unicode's only Iran flag is the Islamic Republic's", () => {
+    // The drawn flag is the Lion and Sun (content/flags/IR.svg); no emoji is.
+    expect(countryFlag("IR")).toBe("");
   });
 });
 
@@ -97,10 +96,10 @@ describe("countryOptions", () => {
     expect(names).toEqual(sorted);
   });
 
-  it("gives every option a code and a flag", () => {
+  it("gives every option a code and a flag, except Iran's", () => {
     for (const option of countryOptions("en")) {
       expect(option.code).toMatch(/^[A-Z]{2}$/);
-      expect(option.flag.length).toBeGreaterThan(0);
+      expect(option.flag.length > 0).toBe(option.code !== "IR");
       expect(option.name.length).toBeGreaterThan(0);
     }
   });

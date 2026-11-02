@@ -69,18 +69,16 @@ export function normaliseCountry(value: string | null | undefined): string | nul
  * notably) fall back to showing the two letters, which is a perfectly usable
  * outcome and the reason the code is never the *only* label.
  *
- * IRAN IS THE LION AND THE SUN (2026-11-02, the owner's call), matching the
- * drawn flag in `content/flags/IR.svg`. Unicode has no Lion and Sun flag and
- * 🇮🇷 is the Islamic Republic's, so the two emoji stand in for it.
+ * IRAN HAS NO EMOJI (2026-11-02, the owner's call). Its flag is the Lion and
+ * Sun, drawn from `content/flags/IR.svg`; Unicode's only Iran flag, 🇮🇷, is the
+ * Islamic Republic's, so a list built from emoji names Iran without one. A
+ * 🦁☀️ stand-in shipped for one deploy and the owner rejected it.
  */
-const FLAG_EMOJI_OVERRIDES: Readonly<Record<string, string>> = {
-  IR: "\u{1F981}\u{2600}\u{FE0F}",
-};
+const NO_FLAG_EMOJI: ReadonlySet<string> = new Set(["IR"]);
 
 export function countryFlag(code: string): string {
   if (!isCountryCodeShape(code)) return "";
-  const override = FLAG_EMOJI_OVERRIDES[code];
-  if (override) return override;
+  if (NO_FLAG_EMOJI.has(code)) return "";
   const A = 0x1f1e6;
   return String.fromCodePoint(
     A + (code.charCodeAt(0) - 65),
