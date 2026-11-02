@@ -593,7 +593,7 @@ export const ru: StringsOverlay = {
     badges: {
       firstGame: "Первая игра",
       firstGameHint: "Сыграй одну игру",
-      regular: "Завсегдатай",
+      regular: "Постоянный",
       regularHint: "Сыграй 5 игр",
       veteran: "Ветеран",
       veteranHint: "Сыграй 20 игр",

@@ -595,7 +595,7 @@ export const uk: StringsOverlay = {
     badges: {
       firstGame: "Перша гра",
       firstGameHint: "Зіграй одну гру",
-      regular: "Завсідник",
+      regular: "Постійний",
       regularHint: "Зіграй 5 ігор",
       veteran: "Ветеран",
       veteranHint: "Зіграй 20 ігор",
