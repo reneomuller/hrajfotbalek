@@ -48,7 +48,9 @@ test("the admin game form, with organizer, duration and skill", async ({ page, c
 // --- Phase 14 ----------------------------------------------------------------
 
 test("the time span on the list and on the detail", async ({ page }) => {
-  const game = await createScratchGame({ durationMinutes: 90, hoursFromNow: 24 * 18 });
+  // Inside the eight days the lists show (2026-11-02), so the list strip has
+  // this game on it.
+  const game = await createScratchGame({ durationMinutes: 90, hoursFromNow: 24 * 3 });
 
   try {
     await page.goto("/games", { waitUntil: "networkidle" });
@@ -67,8 +69,10 @@ test("the time span on the list and on the detail", async ({ page }) => {
 test("the games list at row density, with the day picker", async ({ page }) => {
   // Six on one Prague day, so the strip shows the density criterion being met
   // rather than whatever the seed happens to hold. Pinned mid-afternoon UTC,
-  // which is comfortably inside one local day at either DST offset.
-  const day = pragueDayKey(new Date(Date.now() + 21 * 24 * 3600_000));
+  // which is comfortably inside one local day at either DST offset. Three and
+  // five days out, inside the eight the list shows (2026-11-02) — at 21 and 23
+  // neither day was on it.
+  const day = pragueDayKey(new Date(Date.now() + 3 * 24 * 3600_000));
   const games = await Promise.all(
     ["14:00", "14:30", "15:00", "15:30", "16:00", "16:30"].map((time) =>
       createScratchGame({
@@ -82,7 +86,7 @@ test("the games list at row density, with the day picker", async ({ page }) => {
   // One restricted game on a second day, so the strip carries both a badge and
   // a second day tab.
   const other = await createScratchGame({
-    startsAt: `${pragueDayKey(new Date(Date.now() + 23 * 24 * 3600_000))}T16:00:00.000Z`,
+    startsAt: `${pragueDayKey(new Date(Date.now() + 5 * 24 * 3600_000))}T16:00:00.000Z`,
     allowedSkillLevels: ["advanced"],
   });
 
@@ -107,6 +111,8 @@ test("a restricted game, its organizer, and the roster", async ({ page, context 
     allowedSkillLevels: ["intermediate", "advanced"],
     organizerName: "Jindra",
     organizerPhone: "+420777654321",
+    // On the list strip below, so inside the eight days it shows (2026-11-02).
+    hoursFromNow: 24 * 3,
   });
 
   try {
@@ -292,7 +298,9 @@ test("the pass tiers, the panel above the list, and the wallet in batches", asyn
   page,
   context,
 }) => {
-  const game = await createScratchGame({ hoursFromNow: 24 * 26 });
+  // Inside the eight days the list shows (2026-11-02), so the panel sits above
+  // a list with this game on it.
+  const game = await createScratchGame({ hoursFromNow: 24 * 3 });
 
   try {
     // The panel, in its contracted position between the day-picker and the

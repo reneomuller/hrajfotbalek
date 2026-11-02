@@ -1,5 +1,6 @@
 import { parseGameRef } from "@/lib/games/link";
 import { canOfferCancel, isCancellationRefundable } from "@/lib/booking/badges";
+import { isWithinVisibleDays } from "@/lib/games/days";
 import { isInProgress } from "@/lib/games/duration";
 import { policy } from "@/lib/policy";
 import { refundCutoffHours } from "@/lib/policy/refundCutoff";
@@ -119,8 +120,22 @@ export interface UpcomingGames {
   now: number;
 }
 
+/** A day and a half: past the far edge of any Prague day, in either offset. */
+const VISIBLE_WINDOW_MARGIN_MS = 36 * 3600_000;
+const DAY_MS = 24 * 3600_000;
+
 /**
- * Upcoming publicly-visible games, soonest first.
+ * Upcoming publicly-visible games, soonest first — and only as far ahead as
+ * players see the schedule (`policy.schedule.visibleDays`: today and the next
+ * seven, 2026-11-02). Games further out exist and are bookable by their link;
+ * they join the lists when their day comes into range.
+ *
+ * TWO CUTS. SQL drops anything clearly beyond the window, so a schedule built
+ * months ahead is not fetched on every page view; `isWithinVisibleDays` then
+ * cuts exactly at Prague midnight, which SQL here cannot say without the zone
+ * arithmetic `lib/games/days.ts` already owns. Soonest-first makes the order
+ * safe: with a `limit`, anything the exact cut removes was later than
+ * everything it kept.
  *
  * The `status` filter is defence in depth, not the enforcement point: the
  * `games_select_public` RLS policy already hides draft and cancelled games
@@ -134,23 +149,29 @@ export async function listUpcomingGames(
   const now = Date.now();
 
   /*
-   * `null` MEANS NO LIMIT, for the games page's `All` view: the owner's ruling
-   * of 2026-08-10 makes "every upcoming game, any distance out" a guarantee,
-   * and a default cap is a truncation nobody sees. Callers that genuinely want
-   * a few — home's three, the next-game strip's one — still pass a number.
+   * `null` MEANS NO LIMIT, for the games page's `All` view: a default cap is
+   * a truncation nobody sees. ~~"Every upcoming game, any distance out"
+   * (2026-08-10)~~ — since 2026-11-02 `All` means every game in the visible
+   * window, and the window is the only bound. Home passes a number.
    */
   let query = supabase
     .from("games")
     .select("*")
     .in("status", ["published", "full"])
     .gte("starts_at", new Date(now).toISOString())
+    .lt(
+      "starts_at",
+      new Date(now + policy.schedule.visibleDays * DAY_MS + VISIBLE_WINDOW_MARGIN_MS).toISOString(),
+    )
     .order("starts_at", { ascending: true });
 
   if (limit !== null) query = query.limit(limit);
 
-  const { data: games, error } = await query;
+  const { data, error } = await query;
 
-  if (error || !games) return { games: [], now };
+  if (error || !data) return { games: [], now };
+
+  const games = data.filter((game) => isWithinVisibleDays(game.starts_at, now));
 
   const counts = await countRosterByGame(games.map((g) => g.id));
 
@@ -158,12 +179,6 @@ export async function listUpcomingGames(
     games: games.map((game) => decorate(game, counts.get(game.id) ?? 0, now)),
     now,
   };
-}
-
-/** The soonest upcoming game, for the landing next-match block. */
-export async function getNextGame(): Promise<GameWithCount | null> {
-  const { games } = await listUpcomingGames(1);
-  return games[0] ?? null;
 }
 
 /**

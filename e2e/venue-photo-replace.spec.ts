@@ -53,7 +53,9 @@ test("a replaced venue photo shows on the admin row, the games list and the game
     if (venue.error) throw new Error(`admin_create_venue: ${venue.error.message}`);
     venueId = venue.data as string;
 
-    const startsAt = new Date(Date.now() + 24 * 27 * 3600_000).toISOString();
+    // Inside the eight days the lists show (2026-11-02): the card is read off
+    // `/games` twice below, and twenty-seven days out it has none.
+    const startsAt = new Date(Date.now() + 24 * 3 * 3600_000).toISOString();
     const game = await organizer.rpc("admin_create_game_v2", {
       p_venue_id: venueId,
       p_starts_at: startsAt,

@@ -98,7 +98,13 @@ test("every primary tap on the five journeys answers within 100ms", async ({ pag
     durationMinutes: 90,
     priceCzk: 180,
     surface: "turf",
-    hoursFromNow: 24 * 13,
+    /*
+     * Inside the eight days the lists show (2026-11-02). Journeys 1 and 2 press
+     * the first `game-row` on home and on `/games`, and a page with no row is
+     * reported as "skipped" rather than failed — thirteen days out this game
+     * was on neither, and both checks could pass by not running.
+     */
+    hoursFromNow: 24 * 3,
   });
   await asPlayer(context);
 

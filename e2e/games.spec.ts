@@ -7,9 +7,11 @@ import { pragueDayKey } from "../lib/games/days.ts";
 /**
  * The list URL for the day a given game falls on.
  *
- * The list now defaults to EVERY upcoming game, so this is no longer needed to
- * make a game two weeks out visible — a plain `/games` finds it. It is kept
- * because it still isolates one game's row from a board that grows as specs
+ * ~~The list now defaults to EVERY upcoming game, so this is no longer needed
+ * to make a game two weeks out visible — a plain `/games` finds it.~~ NOTHING
+ * MAKES A GAME TWO WEEKS OUT VISIBLE ANY MORE (2026-11-02, the owner: lists
+ * show 8 days incl. today), so every caller's game sits inside that window. It
+ * is kept because it isolates one game's row from a board that grows as specs
  * add scratch games, which is what most of the callers actually wanted.
  *
  * Deriving the key from the stored kick-off rather than from the offset the
@@ -197,7 +199,9 @@ test("a game with no duration falls back to the standard length on every surface
 test("the card shows the time; the heading carries the day; the detail shows the span", async ({
   page,
 }) => {
-  const game = await createScratchGame({ durationMinutes: 90, hoursFromNow: 24 * 20 });
+  // Inside the eight days the list shows (2026-11-02), and clear of every
+  // policy window.
+  const game = await createScratchGame({ durationMinutes: 90, hoursFromNow: 24 * 3 });
 
   try {
     await page.goto(listUrlFor(game));
@@ -241,8 +245,13 @@ test("the card shows the time; the heading carries the day; the detail shows the
 test("no skill badge on an all-levels game, badges on a restricted one", async ({
   page,
 }) => {
-  const open = await createScratchGame({ allowedSkillLevels: null });
-  const restricted = await createScratchGame({ allowedSkillLevels: ["advanced"] });
+  // Both are looked for on the list below, so both sit inside its eight days —
+  // the scaffold's thirty-day default is on no list since 2026-11-02.
+  const open = await createScratchGame({ allowedSkillLevels: null, hoursFromNow: 24 * 3 });
+  const restricted = await createScratchGame({
+    allowedSkillLevels: ["advanced"],
+    hoursFromNow: 24 * 3,
+  });
 
   try {
     await page.goto(`/game/${open.id}`);
@@ -310,7 +319,13 @@ test("skill restriction never blocks a booking", async ({}) => {
  * by looking at it.
  */
 test("a capacity-12 game entered as 5v5 never renders 6v6", async ({ page }) => {
-  const game = await createScratchGame({ capacity: 12, format: "5v5", subsPerTeam: 2 });
+  // Inside the list's eight days, because the row is asserted below.
+  const game = await createScratchGame({
+    capacity: 12,
+    format: "5v5",
+    subsPerTeam: 2,
+    hoursFromNow: 24 * 3,
+  });
 
   try {
     // The detail page, including the chips above the map.
@@ -675,8 +690,9 @@ test("the day strip filters the list, by the date on the chip", async ({ page })
    * — and BOTH INSIDE THE EIGHT-DAY WINDOW, which is what ruling H made a
    * requirement of this fixture. At ten and twelve days out these games had no
    * chip at all, and the spec failed looking for one. That is the strip
-   * behaving correctly: a game outside the window is still on the default
-   * list, which the last assertion here checks.
+   * behaving correctly. ~~A game outside the window is still on the default
+   * list.~~ Since 2026-11-02 it is on no list at all (the owner: lists show 8
+   * days incl. today) — asserted in the test after this one.
    */
   const dayOne = await createScratchGame({ hoursFromNow: 24 * 3 });
   const dayTwoA = await createScratchGame({ hoursFromNow: 24 * 5 });
@@ -723,64 +739,58 @@ test("the day strip filters the list, by the date on the chip", async ({ page })
 });
 
 /*
- * THE DAY FILTER REACHES EVERY GAME, however far out.
+ * ~~THE DAY FILTER REACHES EVERY GAME, however far out.~~ REVERSED 2026-11-02,
+ * the owner: lists show 8 days incl. today ("this way we can pre-populate the
+ * web-app with games and they'll only show up to the users in that
+ * timeframe").
  *
- * This replaces the eight-box calendar spec. The ruling of 2026-08-10 reversed
- * that control because a fixed window cannot cover an unbounded schedule: a
- * game published for late August fell outside the eight days and became
- * unreachable from `/games` — the invisible truncation ruling H forbade in its
- * own text.
+ * ~~The ruling of 2026-08-10 made `All` unbounded, so a game months out was
+ * listed under it, with no cell of its own in the week.~~ `All` now means
+ * every game in the window, and the window is the only bound. The other half
+ * of the owner's sentence is what keeps this from being the invisible
+ * truncation ruling H forbade: a game further out is PUBLISHED, not hidden —
+ * its own link opens and offers the booking — so a schedule built weeks ahead
+ * is a list that fills in day by day, not a set of games nobody can reach.
  *
- * So the assertions are the guarantee rather than the geometry: `All` is the
- * default and lists a far-future game, and that game has a tab of its own.
+ * TWELVE DAYS OUT, well clear of the edge, so a run near Prague midnight
+ * cannot move it. The exact cut at midnight is `isWithinVisibleDays`, pinned
+ * by `lib/games/__tests__/days.test.ts`.
  */
-test("a game months out appears under All, though the week has no cell for it", async ({
+test("a game beyond the eight days is on no list, and its own page still opens", async ({
   page,
 }) => {
-  const soon = await createScratchGame({ hoursFromNow: 24 * 2 });
-  // Far beyond the seven-day row — reachable only because `All` is unbounded.
-  const distant = await createScratchGame({ hoursFromNow: 24 * 96 });
+  // Arrange
+  const soon = await createScratchGame({ hoursFromNow: 24 * 3 });
+  const distant = await createScratchGame({ hoursFromNow: 24 * 12 });
+  const soonRow = page.locator(`[data-testid="game-row"][data-game-id="${soon.id}"]`);
+  const distantRow = page.locator(`[data-testid="game-row"][data-game-id="${distant.id}"]`);
+  const distantDay = pragueDayKey(distant.startsAt);
 
   try {
+    // Act
     await page.goto("/games");
 
     /*
-     * THE GUARANTEE. `All` is the default view and lists every upcoming game
-     * whatever its distance — this is what the eight-box strip broke, and it
-     * is what keeps a fixed week from being that strip under another name.
+     * Assert — THE NEAR GAME FIRST. It is what proves the real list rendered,
+     * so the absence after it is read off the page and not off a loading
+     * skeleton, which holds no rows at all.
      */
-    await expect(
-      page.locator(`[data-testid="game-row"][data-game-id="${soon.id}"]`),
-    ).toBeVisible();
-    await expect(
-      page.locator(`[data-testid="game-row"][data-game-id="${distant.id}"]`),
-    ).toBeVisible();
-
-    /*
-     * AND THE WEEK DOES NOT PRETEND OTHERWISE. There is no cell for a day 96
-     * days out, which is honest: the row is a convenience for the days people
-     * are choosing between, not the only route to a game.
-     */
-    const distantDay = pragueDayKey(distant.startsAt);
+    await expect(soonRow).toBeVisible();
+    await expect(distantRow).toHaveCount(0);
     await expect(
       page.locator(`[data-testid="day-tab"][data-day="${distantDay}"]`),
     ).toHaveCount(0);
 
-    // A day inside the week still filters, and `All` still returns.
-    const soonDay = pragueDayKey(soon.startsAt);
-    const cell = page.locator(`[data-testid="day-tab"][data-day="${soonDay}"]`);
-    await expect(cell).toHaveCount(1);
-    await cell.click();
-    await page.waitForURL(`**/games?day=${soonDay}`);
-    await expect(
-      page.locator(`[data-testid="game-row"][data-game-id="${distant.id}"]`),
-    ).toHaveCount(0);
+    // Nor by asking for its day in the URL: the strip offers no such day, so
+    // the page falls back to `All` — which still leaves it out.
+    await page.goto(`/games?day=${distantDay}`);
+    await expect(page.getByTestId("day-tab-all")).toHaveAttribute("data-selected", "true");
+    await expect(soonRow).toBeVisible();
+    await expect(distantRow).toHaveCount(0);
 
-    await page.getByTestId("day-tab-all").click();
-    await page.waitForURL("**/games");
-    await expect(
-      page.locator(`[data-testid="game-row"][data-game-id="${distant.id}"]`),
-    ).toBeVisible();
+    // Its own link still opens, and still offers the booking.
+    await page.goto(await gamePathOf(distant.id));
+    await expect(page.getByTestId("book-cta")).toBeVisible();
   } finally {
     await destroyScratchGame(soon.id);
     await destroyScratchGame(distant.id);
@@ -840,7 +850,8 @@ test("the day row is always eight cells, today first, empty days included", asyn
 test("the whole card is the link, with no View game label and no claim", async ({
   page,
 }) => {
-  const game = await createScratchGame({ hoursFromNow: 24 * 16 });
+  // Inside the list's eight days (2026-11-02); sixteen days out it has no row.
+  const game = await createScratchGame({ hoursFromNow: 24 * 3 });
 
   try {
     await page.goto(listUrlFor(game));
@@ -870,7 +881,8 @@ test("a card carries venue, time, format, surface, bar and spots — no price, n
   page,
 }) => {
   const game = await createScratchGame({
-    hoursFromNow: 24 * 17,
+    // Inside the list's eight days (2026-11-02), clear of every policy window.
+    hoursFromNow: 24 * 4,
     capacity: 12,
     /*
      * ~~250, a price chosen to be unmistakable in a page of numbers.~~ THE
@@ -962,10 +974,12 @@ test("spots left is coloured by absolute count: volt, amber, then red", async ({
    * the amber line and 3 exactly the red one, so an off-by-one in either
    * comparison fails this rather than passing by luck.
    */
-  const plenty = await createScratchGame({ hoursFromNow: 24 * 18, capacity: 20 });
-  const few = await createScratchGame({ hoursFromNow: 24 * 18 + 1, capacity: 10 });
-  const critical = await createScratchGame({ hoursFromNow: 24 * 18 + 2, capacity: 3 });
-  const full = await createScratchGame({ hoursFromNow: 24 * 18 + 3, capacity: 1 });
+  // Four days out, an hour apart: all four are read off `All`, which holds only
+  // the eight days players see (2026-11-02).
+  const plenty = await createScratchGame({ hoursFromNow: 24 * 4, capacity: 20 });
+  const few = await createScratchGame({ hoursFromNow: 24 * 4 + 1, capacity: 10 });
+  const critical = await createScratchGame({ hoursFromNow: 24 * 4 + 2, capacity: 3 });
+  const full = await createScratchGame({ hoursFromNow: 24 * 4 + 3, capacity: 1 });
 
   try {
     const organizer = await apiClientFor(players.organizer);
@@ -1405,7 +1419,8 @@ test("a venue with a photo renders it full-bleed, with the name over it", async 
 test("a venue's own photo backs its games on the list and the detail alike", async ({
   page,
 }) => {
-  const game = await createScratchGame({ withVenuePhoto: true, hoursFromNow: 24 * 22 });
+  // Inside the list's eight days (2026-11-02), because the card is read first.
+  const game = await createScratchGame({ withVenuePhoto: true, hoursFromNow: 24 * 3 });
 
   try {
     await page.goto(listUrlFor(game));
@@ -1493,8 +1508,13 @@ test("the claim bar shows the credit equivalence at the rate, and not at any oth
 test("a booked game shows its avatar stack on the card AND on the detail", async ({
   page,
 }) => {
-  const empty = await createScratchGame({ hoursFromNow: 24 * 7, capacity: 12 });
-  const booked = await createScratchGame({ hoursFromNow: 24 * 7 + 1, capacity: 12 });
+  /*
+   * FIVE DAYS, NOT SEVEN. Seven is the last day the list shows (2026-11-02,
+   * eight days incl. today), and the second game's extra hour carried it into
+   * the ninth — off every list — whenever the run started after 23:00 Prague.
+   */
+  const empty = await createScratchGame({ hoursFromNow: 24 * 5, capacity: 12 });
+  const booked = await createScratchGame({ hoursFromNow: 24 * 5 + 1, capacity: 12 });
 
   try {
     const organizer = await apiClientFor(players.organizer);

@@ -1,5 +1,6 @@
 import { DATE_LOCALE, DISPLAY_TIME_ZONE } from "@/lib/format";
 import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/locales";
+import { policy } from "@/lib/policy";
 import { strings, type Strings } from "@/lib/strings";
 
 /**
@@ -122,6 +123,22 @@ export function buildDayTabs(
       count: counts.get(key) ?? 0,
     };
   });
+}
+
+/**
+ * Whether a game falls inside the window players see: its Prague day is today
+ * or one of the next `days - 1` (`policy.schedule.visibleDays`, eight).
+ *
+ * By DAY KEY, not by adding hours to `now`: the window ends at midnight in
+ * Prague, so a game at 23:30 on the eighth day is in and one at 00:30 on the
+ * ninth is out, whatever UTC thinks the date is.
+ */
+export function isWithinVisibleDays(
+  startsAt: Date | string | number,
+  now: Date | string | number,
+  days: number = policy.schedule.visibleDays,
+): boolean {
+  return pragueDayKey(startsAt) < addDays(pragueDayKey(now), days);
 }
 
 /**

@@ -197,7 +197,9 @@ test("the number reaches NO player-facing surface", async ({ page, context }) =>
    * the product, stated rather than disguised.
    */
   const needleNumber = 987654;
-  const game = await createScratchGame({ withVenuePhoto: false, hoursFromNow: 24 * 19 });
+  // Inside the eight days the list shows (2026-11-02): the games list is one of
+  // the surfaces read below, and nineteen days out the game is not on it.
+  const game = await createScratchGame({ withVenuePhoto: false, hoursFromNow: 24 * 5 });
   try {
     await admin
       .from("players")

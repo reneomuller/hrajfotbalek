@@ -109,7 +109,9 @@ test("a one-game pass cannot be bought through the RPC either", async () => {
 test("a signed-out visitor can read the tiers and reach them from the games list", async ({
   page,
 }) => {
-  const game = await createScratchGame({ hoursFromNow: 24 * 25 });
+  // Inside the eight days the list shows (2026-11-02), so the list the panel
+  // sits above has this game on it; twenty-five days out it would be empty.
+  const game = await createScratchGame({ hoursFromNow: 24 * 3 });
 
   try {
     await page.goto(`/games?day=${pragueDayKey(game.startsAt)}`);

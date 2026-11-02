@@ -121,6 +121,23 @@ export const policy = {
     graceHoursAfterNudge: 12,
   },
 
+  /**
+   * HOW FAR AHEAD PLAYERS SEE GAMES: today plus the next seven, eight Prague
+   * calendar days (2026-11-02, the owner — "this way we can pre-populate the
+   * web-app with games and they'll only show up to the users in that
+   * timeframe"). A game further out is published and bookable by its link,
+   * and appears in the lists — the games page, its `All` view, the home
+   * page — on the morning its day comes into range. Admin lists everything.
+   *
+   * It overrules the ruling of 2026-08-10 that `All` was unbounded. It equals
+   * `DAY_TAB_DAYS` in `lib/games/days.ts` and is not that constant: the strip
+   * is eight cells because eight fit at 390px, and this is how far the
+   * schedule is shown.
+   */
+  schedule: {
+    visibleDays: 8,
+  },
+
   /** Pre-game reminder to everyone holding a confirmed spot. */
   reminder: {
     hoursBeforeStart: 24,

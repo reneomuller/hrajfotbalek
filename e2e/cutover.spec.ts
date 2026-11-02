@@ -34,7 +34,10 @@ import { createScratchGame, destroyScratchGame, gamePathOf } from "./helpers/sca
 const COLD_COMPILE_MS = 30_000;
 
 test("the football namespace serves the home page, the list and a game", async ({ page }) => {
-  const game = await createScratchGame({});
+  // Inside the eight days the lists show (2026-11-02), so `game-list` below has
+  // a row to render whatever the seed's age; the scaffold's thirty-day default
+  // is on no list.
+  const game = await createScratchGame({ hoursFromNow: 24 * 3 });
 
   try {
     /*

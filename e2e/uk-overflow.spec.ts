@@ -154,6 +154,10 @@ test.describe("Ukrainian at 390px", () => {
         subsPerTeam: 2,
         format: "6v6",
         surface: "turf",
+        // Inside the eight days the lists show (2026-11-02), so this dense
+        // card is on home and the games list too; at the scaffold's thirty
+        // days it is on neither.
+        hoursFromNow: 24 * 3,
       });
 
     try {

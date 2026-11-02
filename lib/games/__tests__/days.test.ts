@@ -2,9 +2,11 @@ import { describe, expect, it } from "vitest";
 import {
   buildDayTabs,
   groupByDay,
+  isWithinVisibleDays,
   pragueDayKey,
   resolveSelectedDay,
 } from "@/lib/games/days";
+import { policy } from "@/lib/policy";
 import { strings } from "@/lib/strings";
 import { resolveStrings } from "@/lib/i18n/resolve";
 
@@ -244,5 +246,41 @@ describe("resolveSelectedDay", () => {
 
   it("selects nothing when there is nothing to select", () => {
     expect(resolveSelectedDay("2026-08-03", [])).toBeNull();
+  });
+});
+
+/**
+ * HOW FAR AHEAD PLAYERS SEE GAMES (2026-11-02, the owner): eight days, today
+ * included, so games can be scheduled further out and appear as their day
+ * comes into range. Prague days, like everything else in this file.
+ */
+describe("isWithinVisibleDays", () => {
+  // Monday 2 November 2026, 11:00 in Prague (CET, UTC+1).
+  const now = "2026-11-02T10:00:00Z";
+
+  it("is eight days, today included", () => {
+    expect(policy.schedule.visibleDays).toBe(8);
+  });
+
+  it("shows a game later today", () => {
+    expect(isWithinVisibleDays("2026-11-02T19:00:00Z", now)).toBe(true);
+  });
+
+  it("shows a game late on the eighth day", () => {
+    // 23:30 on Monday 9 November in Prague.
+    expect(isWithinVisibleDays("2026-11-09T22:30:00Z", now)).toBe(true);
+  });
+
+  it("hides a game on the ninth day, even while it is still the eighth in UTC", () => {
+    // 00:30 on Tuesday 10 November in Prague — 23:30 on the 9th in UTC.
+    expect(isWithinVisibleDays("2026-11-09T23:30:00Z", now)).toBe(false);
+  });
+
+  it("counts today from Prague's date, not UTC's, just after midnight", () => {
+    // 00:30 Tuesday 3 November in Prague is still Monday in UTC; the eighth
+    // day is then Tuesday 10 November.
+    const justAfterMidnight = "2026-11-02T23:30:00Z";
+    expect(isWithinVisibleDays("2026-11-10T20:00:00Z", justAfterMidnight)).toBe(true);
+    expect(isWithinVisibleDays("2026-11-11T08:00:00Z", justAfterMidnight)).toBe(false);
   });
 });

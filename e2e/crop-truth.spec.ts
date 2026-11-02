@@ -193,7 +193,9 @@ test("the game card shows EXACTLY the region the organizer framed", async ({ pag
     if (venue.error) throw new Error(`admin_create_venue: ${venue.error.message}`);
     venueId = venue.data as string;
 
-    const startsAt = new Date(Date.now() + 24 * 26 * 3600_000).toISOString();
+    // Inside the eight days the lists show (2026-11-02): Act 2 reads this
+    // game's card off `/games`, and twenty-six days out it has none.
+    const startsAt = new Date(Date.now() + 24 * 3 * 3600_000).toISOString();
     const game = await organizer.rpc("admin_create_game_v2", {
       p_venue_id: venueId,
       p_starts_at: startsAt,
