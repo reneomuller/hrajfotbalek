@@ -1,4 +1,7 @@
-import { initials } from "@/lib/roster/initials";
+import Link from "next/link";
+import { OrganizerAvatar } from "@/components/game/OrganizerAvatar";
+import { avatarUrl } from "@/lib/storage/avatar";
+import { profilePhotoVersion } from "@/lib/storage/photoVersions";
 import {
   DEFAULT_GAME_LANGUAGE,
   messagingAppFor,
@@ -36,12 +39,14 @@ import { getStrings } from "@/lib/i18n/server";
  * week gets "Hi, about Praha 7 • Letná on Thu 20 Aug" instead of "Hi", which
  * is the difference between answering and asking which game.
  *
- * INITIALS, NOT A PHOTOGRAPH, and that is a correctness decision rather than a
- * missing feature. `game_organizer_contacts.organizer_name` is free text — it
- * is whoever the admin typed, who may not be a player row at all. Matching it
- * against `players.nickname` to find an avatar would be display-grade guessing
- * about identity, and the one it guessed wrong would be a stranger's face
- * beside a stranger's contact button.
+ * ~~INITIALS, NOT A PHOTOGRAPH~~ — A PHOTOGRAPH WHEN AN ADMIN PICKED THE
+ * PLAYER (round 42, the owner: "it currently doesn't show an image/profile
+ * pic. I'd like that to be visible"). `game_organizer_contacts.organizer_name`
+ * is still free text, and matching it against `players.nickname` would still
+ * be guessing about identity — so the face comes only from
+ * `organizer_player_id`, which an admin sets by choosing the player. Then the
+ * name and face link to that player's profile, as a roster row does. An
+ * organizer who is only a typed name keeps their initials.
  */
 export async function OrganizerCard({
   name,
@@ -49,8 +54,14 @@ export async function OrganizerCard({
   hasTelegram = false,
   gameId,
   language = DEFAULT_GAME_LANGUAGE,
+  profile = null,
 }: {
   name: string;
+  /**
+   * The player an admin linked as organizer (round 42), or null. Their photo
+   * replaces the initials, and the name and face link to their profile.
+   */
+  profile?: { nickname: string; photoPath: string | null } | null;
   /**
    * Whether a number is recorded — NOT the number (round 9, item 2).
    *
@@ -77,6 +88,13 @@ export async function OrganizerCard({
   language?: GameLanguage;
 }) {
   const t = await getStrings();
+  // Versioned before it reaches the optimizer, like every profile photo —
+  // see CLAUDE.md on the cached old face.
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const photoUrl =
+    supabaseUrl && profile?.photoPath
+      ? avatarUrl(supabaseUrl, profile.photoPath, await profilePhotoVersion(profile.photoPath))
+      : null;
 
   /*
    * THE HREF IS OUR OWN ROUTE, which 302s to `wa.me` with the number and the
@@ -132,14 +150,10 @@ export async function OrganizerCard({
         there is nothing here to branch on. A viewer without a booking sees the
         name and the role line exactly as before.
       */}
-      <div className="mt-3 flex items-center gap-3">
-        <span
-          data-testid="organizer-avatar"
-          aria-hidden
-          className="flex h-12 w-12 shrink-0 items-center justify-center rounded-pill border-2 border-volt bg-surface-avatar text-[15px] font-bold text-volt"
-        >
-          {initials(name, t)}
-        </span>
+      <OrganizerRow
+        href={profile ? `/player/${encodeURIComponent(profile.nickname)}` : null}
+      >
+        <OrganizerAvatar name={name} photoUrl={photoUrl} t={t} />
 
         <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-1">
           {/*
@@ -155,7 +169,7 @@ export async function OrganizerCard({
           </p>
 
         </div>
-      </div>
+      </OrganizerRow>
 
       {/*
         THE ONE CONTROL. Full width and beneath the name rather than squeezed
@@ -192,5 +206,20 @@ export async function OrganizerCard({
         </a>
       )}
     </section>
+  );
+}
+
+/**
+ * The avatar-and-name row: a link to the organizer's profile when an admin
+ * linked a player, a plain row otherwise. The whole row is the target, as on
+ * a roster row — a 48px circle alone is a small thing to tap.
+ */
+function OrganizerRow({ href, children }: { href: string | null; children: React.ReactNode }) {
+  const className = "mt-3 flex items-center gap-3";
+  if (!href) return <div className={className}>{children}</div>;
+  return (
+    <Link href={href} data-testid="organizer-profile-link" className={`${className} no-underline`}>
+      {children}
+    </Link>
   );
 }

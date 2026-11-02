@@ -96,6 +96,8 @@ export interface AppCapabilities {
   gameNumbers: boolean;
   /** Round 41 — `dismiss_notification`: delete one item from the bell. */
   dismissOneNotification: boolean;
+  /** Round 42 — `set_game_organizer_player`: the organizer is a picked player. */
+  organizerPlayer: boolean;
 }
 
 const NONE: AppCapabilities = {
@@ -119,6 +121,7 @@ const NONE: AppCapabilities = {
   deleteAccount: false,
   gameNumbers: false,
   dismissOneNotification: false,
+  organizerPlayer: false,
 };
 
 /*
@@ -180,6 +183,7 @@ const readCapabilities = stableRead(
       deleteAccount: read("deleteAccount"),
       gameNumbers: read("gameNumbers"),
       dismissOneNotification: read("dismissOneNotification"),
+      organizerPlayer: read("organizerPlayer"),
     };
   } catch {
     return NONE;

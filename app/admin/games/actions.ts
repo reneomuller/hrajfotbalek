@@ -152,6 +152,24 @@ export async function createGameAction(
     }
   }
 
+  /*
+   * THE ORGANIZER'S PLAYER, ITS OWN CALL (round 42) — whose photo the game
+   * page shows. After `set_game_organizer` above, whose upsert never names
+   * the column, so re-saving the name and number cannot clear the link.
+   *
+   * A FAILURE HERE IS NOT A FAILED SAVE, for the Telegram handle's reason: the
+   * game is stored, and the card falls back to the organizer's initials.
+   */
+  if (capabilities.organizerPlayer) {
+    const { error: organizerPlayerError } = await supabase.rpc("set_game_organizer_player", {
+      p_game_id: gameId,
+      p_player_id: values.organizerPlayerId,
+    });
+    if (organizerPlayerError) {
+      console.error("set_game_organizer_player failed", organizerPlayerError.message);
+    }
+  }
+
   if (capabilities.gameLanguage) {
     const { error: languageError } = await supabase.rpc("set_game_language", {
       p_game_id: gameId,
@@ -319,6 +337,24 @@ export async function updateGameAction(
     });
     if (telegramError) {
       console.error("set_game_organizer (telegram) failed", telegramError.message);
+    }
+  }
+
+  /*
+   * THE ORGANIZER'S PLAYER, ITS OWN CALL (round 42) — whose photo the game
+   * page shows. After `set_game_organizer` above, whose upsert never names
+   * the column, so re-saving the name and number cannot clear the link.
+   *
+   * A FAILURE HERE IS NOT A FAILED SAVE, for the Telegram handle's reason: the
+   * game is stored, and the card falls back to the organizer's initials.
+   */
+  if (capabilities.organizerPlayer) {
+    const { error: organizerPlayerError } = await supabase.rpc("set_game_organizer_player", {
+      p_game_id: gameId,
+      p_player_id: values.organizerPlayerId,
+    });
+    if (organizerPlayerError) {
+      console.error("set_game_organizer_player failed", organizerPlayerError.message);
     }
   }
 

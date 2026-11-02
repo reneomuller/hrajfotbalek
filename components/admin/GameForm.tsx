@@ -71,6 +71,8 @@ export function GameForm({
   defaultOrganizerName,
   canSetLanguage = false,
   canSetTelegram = false,
+  organizerPlayers,
+  defaultOrganizerPlayerId,
 }: {
   action: (state: AdminActionState, formData: FormData) => Promise<AdminActionState>;
   venues: VenueRow[];
@@ -107,7 +109,12 @@ export function GameForm({
    * client, because `game_organizer_contacts` grants nothing to a session —
    * which is the whole point of the table (§5.1).
    */
-  organizer?: { organizer_name: string; organizer_phone: string | null; organizer_telegram?: string | null } | null;
+  organizer?: {
+    organizer_name: string;
+    organizer_phone: string | null;
+    organizer_telegram?: string | null;
+    organizer_player_id?: string | null;
+  } | null;
   /**
    * The creating admin's nickname (REQ-GAME-001). A default, not a lock: the
    * person filling in the form is usually but not always the person running
@@ -118,6 +125,13 @@ export function GameForm({
   canSetLanguage?: boolean;
   /** Whether `organizer_telegram` exists yet (round 19, item 2). */
   canSetTelegram?: boolean;
+  /**
+   * Round 42 — the players an admin can pick as organizer, or absent before
+   * `20261102100000` lands; the picker renders only when this is given.
+   */
+  organizerPlayers?: { id: string; nickname: string }[];
+  /** The creating admin's player id — the picker's default on a new game. */
+  defaultOrganizerPlayerId?: string;
   /*
    * ~~`initialVenueChoice`, which pre-selected "new" for the dashboard's
    * `+ Add venue`.~~ REMOVED (round 14, item 2): there is no "new" option any
@@ -181,6 +195,11 @@ export function GameForm({
     organizer?.organizer_name ?? defaultOrganizerName ?? "",
   );
   const [organizerPhone, setOrganizerPhone] = useState(organizer?.organizer_phone ?? "");
+  // Editing keeps what is stored, including "not linked"; a new game starts on
+  // the creating admin, the same default the name field has.
+  const [organizerPlayerId, setOrganizerPlayerId] = useState(
+    organizer ? (organizer.organizer_player_id ?? "") : (defaultOrganizerPlayerId ?? ""),
+  );
   // ~~Blank when creating~~ — ROUND 40: a NEW game starts at the standard
   // ninety minutes, because the owner's standard game is 90 and a blank box
   // still means the 60-minute fallback history was written under. Editing a
@@ -602,6 +621,36 @@ export function GameForm({
           {errors.organizerTelegram && (
             <p className={ERROR}>{errors.organizerTelegram}</p>
           )}
+        </div>
+      )}
+
+      {/*
+        THE ORGANIZER'S PROFILE (round 42) — whose photo the game page shows.
+        Picked, never matched from the typed name: a wrong guess would put a
+        stranger's face beside the contact button. Gated on the migration like
+        the Telegram field above.
+      */}
+      {organizerPlayers && (
+        <div>
+          <label className={LABEL} htmlFor="organizerPlayerId">
+            {strings.admin.organizerPlayerLabel}
+          </label>
+          <select
+            id="organizerPlayerId"
+            name="organizerPlayerId"
+            data-testid="organizer-player"
+            className={FIELD}
+            value={organizerPlayerId}
+            onChange={(event) => setOrganizerPlayerId(event.target.value)}
+          >
+            <option value="">{strings.admin.organizerPlayerNone}</option>
+            {organizerPlayers.map((player) => (
+              <option key={player.id} value={player.id}>
+                {player.nickname}
+              </option>
+            ))}
+          </select>
+          <p className={HINT}>{strings.admin.organizerPlayerHint}</p>
         </div>
       )}
       </fieldset>

@@ -573,6 +573,11 @@ export interface Database {
            * when `npm run db:types` regenerates this after the apply.
            */
           organizer_telegram?: string | null;
+          /**
+           * Round 42 — the player who runs the game, picked by an admin.
+           * Optional until `20261102100000` lands, for the reason above.
+           */
+          organizer_player_id?: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -930,6 +935,11 @@ export interface Database {
           p_organizer_phone: string | null;
           p_organizer_telegram: string | null;
         };
+        Returns: undefined;
+      };
+      /** Round 42 — link a game's organizer to a player; null clears. Admin only. */
+      set_game_organizer_player: {
+        Args: { p_game_id: string; p_player_id: string | null };
         Returns: undefined;
       };
       dismiss_all_notifications: { Args: Record<string, never>; Returns: number };
@@ -1624,6 +1634,14 @@ export interface Database {
       game_organizer_public: {
         Args: { p_game_id: string };
         Returns: string | null;
+      };
+      /**
+       * Round 42 — the linked organizer's nickname and photo, for a game
+       * anyone may see. Empty for a typed-name organizer or a deleted account.
+       */
+      game_organizer_profile: {
+        Args: { p_game_id: string };
+        Returns: { nickname: string; photo_path: string | null }[];
       };
       /**
        * The organizer PHONE, only for a caller holding a reserved/confirmed

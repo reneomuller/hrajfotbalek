@@ -335,6 +335,12 @@ export interface GameOrganizer {
    * what sends a Ukrainian/Russian game back to the WhatsApp button.
    */
   telegram: string | null;
+  /**
+   * The player an admin linked as organizer (round 42): their nickname and
+   * photo path. Null for an organizer who is only a typed name, for a deleted
+   * account, and on a database without `game_organizer_profile` yet.
+   */
+  profile: { nickname: string; photoPath: string | null } | null;
 }
 
 /**
@@ -357,15 +363,20 @@ export async function getGameOrganizer(gameId: string): Promise<GameOrganizer> {
     p_game_id: gameId,
   });
 
-  const [phone, telegram] = await Promise.all([
+  const [phone, telegram, profileResult] = await Promise.all([
     organizerWhatsAppNumber(gameId),
     organizerTelegramHandle(gameId),
+    // An error — the function missing before `20261102100000` lands — is
+    // initials, not a broken page.
+    supabase.rpc("game_organizer_profile", { p_game_id: gameId }),
   ]);
+  const linked = profileResult.error ? null : (profileResult.data?.[0] ?? null);
 
   return {
     name: nameResult.error ? null : ((nameResult.data as string | null) ?? null),
     phone,
     telegram,
+    profile: linked ? { nickname: linked.nickname, photoPath: linked.photo_path } : null,
   };
 }
 

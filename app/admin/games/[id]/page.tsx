@@ -15,6 +15,7 @@ import {
   seatsTaken,
   getAdminGame,
   getGameOrganizer,
+  listOrganizerCandidates,
   listGameBookings,
   listVenues,
   unpaidBookings,
@@ -77,10 +78,11 @@ export default async function AdminGamePage({
   const [admin, game] = await Promise.all([requireAdmin(), getAdminGame(id)]);
   if (!game) notFound();
 
-  const [bookings, venues, organizer] = await Promise.all([
+  const [bookings, venues, organizer, organizerPlayers] = await Promise.all([
     listGameBookings(game.id),
     listVenues(),
     getGameOrganizer(game.id),
+    listOrganizerCandidates(),
   ]);
 
   const venueRow = venues.find((venue) => venue.id === game.venue_id) ?? null;
@@ -490,6 +492,7 @@ export default async function AdminGamePage({
             defaultOrganizerName={admin.nickname}
             canSetLanguage={capabilities.gameLanguage}
             canSetTelegram={capabilities.organizerTelegram}
+            organizerPlayers={capabilities.organizerPlayer ? organizerPlayers : undefined}
           />
         </section>
       )}

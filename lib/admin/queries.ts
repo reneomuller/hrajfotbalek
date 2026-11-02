@@ -197,6 +197,24 @@ export async function getGameOrganizer(gameId: string): Promise<GameOrganizerRow
   return error || !data ? null : data;
 }
 
+/**
+ * The players an admin can pick as a game's organizer (round 42): every live
+ * account, by nickname. A guest row and a deleted account have no profile, so
+ * `set_game_organizer_player` would refuse them; they are not offered.
+ */
+export async function listOrganizerCandidates(): Promise<{ id: string; nickname: string }[]> {
+  const service = createServiceRoleSupabaseClient();
+
+  const { data, error } = await service
+    .from("players")
+    .select("id, nickname")
+    .not("auth_user_id", "is", null)
+    .is("deleted_at", null)
+    .order("nickname", { ascending: true });
+
+  return error || !data ? [] : data;
+}
+
 export interface AdminBookingRow {
   id: string;
   playerId: string;

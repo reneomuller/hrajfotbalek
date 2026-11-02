@@ -1756,6 +1756,10 @@ export const strings = {
       "With one, a Ukrainian/Russian game's contact button becomes Telegram instead of WhatsApp. Paste @name or a t.me link — either is fine.",
     organizerTelegramInvalid:
       "That is not a Telegram username. Five to thirty-two letters, digits or underscores, starting with a letter.",
+    organizerPlayerLabel: "Organizer's profile (optional)",
+    organizerPlayerNone: "Not linked — show initials",
+    organizerPlayerHint:
+      "Pick the player running this game and the game page shows their profile photo, linked to their profile. The name above is still what the card prints.",
     languageLabel: "Language on the pitch",
     languageEnCs: "English / Czech",
     languageUkRu: "Ukrainian / Russian",

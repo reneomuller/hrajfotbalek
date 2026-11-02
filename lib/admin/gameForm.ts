@@ -49,6 +49,7 @@ export const SURFACES: GameSurface[] = ["turf", "grass", "indoor", "sand"];
  */
 /** Telegram's own rule, mirroring `organizer_telegram_format`. */
 const TELEGRAM_HANDLE_RE = /^[A-Za-z][A-Za-z0-9_]{4,31}$/;
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 const FORMAT_RE = /^[0-9]{1,2}v[0-9]{1,2}(v[0-9]{1,2}){0,2}$/;
 
@@ -110,6 +111,11 @@ export interface GameFormValues {
   language: GameLanguage;
   /** Round 19 item 2. Bare handle, or null. */
   organizerTelegram: string | null;
+  /**
+   * Round 42 — the player picked as organizer, whose photo the game page
+   * shows; null when none is picked. The RPC checks the id is a live account.
+   */
+  organizerPlayerId: string | null;
   notes: string | null;
   /** Required (§5). The form pre-fills the creating admin's nickname. */
   organizerName: string;
@@ -251,6 +257,11 @@ export function parseGameForm(form: FormData): GameFormResult {
     fieldErrors.organizerTelegram = strings.admin.organizerTelegramInvalid;
   }
 
+  // Anything but an id is "none picked": the picker only ever sends an id, and
+  // `set_game_organizer_player` is the authority on whether it is a player.
+  const organizerPlayerRaw = text(form, "organizerPlayerId");
+  const organizerPlayerId = UUID_RE.test(organizerPlayerRaw) ? organizerPlayerRaw : null;
+
   const surfaceRaw = text(form, "surface");
   const surface = SURFACES.includes(surfaceRaw as GameSurface)
     ? (surfaceRaw as GameSurface)
@@ -350,6 +361,7 @@ export function parseGameForm(form: FormData): GameFormResult {
       surface,
       language,
       organizerTelegram,
+      organizerPlayerId,
       notes: notes || null,
       organizerName,
       organizerPhone: organizerPhone || null,

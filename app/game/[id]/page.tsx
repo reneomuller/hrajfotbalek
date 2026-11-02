@@ -511,6 +511,8 @@ export default async function GameDetailPage({ params, searchParams }: GamePageP
           gameId={game.id}
           /* Round 18 item 8 — which app the button offers follows the game. */
           language={gameLanguageOf(game.language)}
+          /* Round 42 — the picked player's photo and profile link. */
+          profile={organizer.profile}
         />
       )}
 

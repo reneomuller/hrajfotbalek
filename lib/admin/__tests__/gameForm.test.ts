@@ -49,6 +49,21 @@ describe("parseGameForm", () => {
     expect(result.values.organizerPhone).toBeNull();
   });
 
+  it("reads the organizer picked from the players, and none when left unpicked", () => {
+    // Round 42 — the game page shows the picked player's photo.
+    const picked = parseGameForm(form({ ...VALID, organizerPlayerId: "4e420000-0000-0000-0000-000000000002" }));
+    const unpicked = parseGameForm(form({ ...VALID, organizerPlayerId: "" }));
+
+    expect(picked.ok && picked.values.organizerPlayerId).toBe("4e420000-0000-0000-0000-000000000002");
+    expect(unpicked.ok && unpicked.values.organizerPlayerId).toBeNull();
+  });
+
+  it("drops an organizer player that is not an id rather than sending it on", () => {
+    const result = parseGameForm(form({ ...VALID, organizerPlayerId: "Oliver" }));
+
+    expect(result.ok && result.values.organizerPlayerId).toBeNull();
+  });
+
   it("requires a venue choice", () => {
     const result = parseGameForm(form({ ...VALID, venueId: "" }));
     expect(result.ok).toBe(false);
@@ -289,6 +304,7 @@ describe("parseGameForm", () => {
         language: "uk-ru",
         // Round 19 item 2 — pasted the way an admin actually pastes it.
         organizerTelegram: "https://t.me/@jindra_hf",
+        organizerPlayerId: "4e420000-0000-0000-0000-000000000002",
       }),
     );
 
@@ -317,6 +333,7 @@ describe("parseGameForm", () => {
        * exception.
        */
       organizerTelegram: "jindra_hf",
+      organizerPlayerId: "4e420000-0000-0000-0000-000000000002",
       notes: "Gate code 4417, park on the north side.",
       organizerName: "Jindra",
       organizerPhone: "+420 601 002 003",
