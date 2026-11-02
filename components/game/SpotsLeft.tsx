@@ -30,9 +30,9 @@ import { getLocale, getStrings } from "@/lib/i18n/server";
  * this one" is the single most actionable thing a card can tell them. Grey
  * said it in the colour the product uses for asides.
  *
- * The BAR keeps its grey (`TONE_FILL` below) — a full bar painted `danger`
+ * ~~The BAR keeps its grey (`TONE_FILL` below) — a full bar painted `danger`
  * would be a solid red block the width of the card, which is a different claim
- * from a red two-word label.
+ * from a red two-word label.~~ The bar is red too now — see `TONE_FILL`.
  */
 const TONE_TEXT: Record<SpotsTone, string> = {
   plenty: "text-volt",
@@ -44,17 +44,18 @@ const TONE_TEXT: Record<SpotsTone, string> = {
 /**
  * Bar fill per rung, same ladder. Imported by `CapacityBar`.
  *
- * `full` is grey but NOT the unfilled grey. A full game has every segment
- * filled, so painting the fill `surface-seg` would render a complete bar as an
- * empty one — the two states would be pixel-identical and the reader would
- * conclude nobody had signed up. `subtle` reads as filled against
- * `surface-seg` while carrying none of the urgency the other three do.
+ * `full` IS RED, LIKE `critical` (2026-11-02, the owner: "when a game is full,
+ * the player count line turns gray. I'd like it to stay red, even when full").
+ * It was `muted`, so a filling game went red and then grey at the moment it
+ * was most worth noticing. Whatever it is, it may never be the UNFILLED grey
+ * `surface-seg`: a full game has every segment filled, and the two states
+ * would be pixel-identical.
  */
 export const TONE_FILL: Record<SpotsTone, string> = {
   plenty: "bg-volt",
   few: "bg-warn",
   critical: "bg-danger",
-  full: "bg-muted",
+  full: "bg-danger",
 };
 
 export async function SpotsLeft({

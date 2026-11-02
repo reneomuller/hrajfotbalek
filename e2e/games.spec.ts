@@ -1014,13 +1014,13 @@ test("spots left is coloured by absolute count: volt, amber, then red", async ({
     // and an empty one render identically and the reader concludes nobody
     // signed up.
     //
-    // `bg-muted` since ruling A: `subtle` was one of the six greys that
-    // collapsed into `muted`. The assertion that CARRIES the meaning is the
-    // second one — that the filled notch differs from the unfilled track —
-    // and it survives any renaming. The first names a token and therefore
-    // fails whenever the palette moves, which is what happened here.
+    // `bg-danger` since 2026-11-02 — the owner: a full game's bar stays red,
+    // like the rung before it (it was `bg-muted`). The assertion that CARRIES
+    // the meaning is the second one — that the filled notch differs from the
+    // unfilled track — and it survives any renaming. The first names a token
+    // and therefore fails whenever the palette moves.
     const fullSegment = await filledSegment(full.id);
-    await expect(fullSegment).toHaveClass(/bg-muted/);
+    await expect(fullSegment).toHaveClass(/bg-danger/);
     await expect(fullSegment).not.toHaveClass(/bg-surface-seg/);
   } finally {
     await destroyScratchGame(plenty.id);
