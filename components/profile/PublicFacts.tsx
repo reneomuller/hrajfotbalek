@@ -1,39 +1,28 @@
-import { CountryFlag } from "@/components/flags/CountryFlag";
-import { countryName } from "@/lib/auth/countries";
 import { POSITIONS, type Position } from "@/lib/players/positions";
-import type { Locale } from "@/lib/i18n/locales";
 import type { Strings } from "@/lib/strings";
 
 /**
- * Country, preferred position and level, on a stranger's profile
- * (round 28, item 4 — the owner's amendment to round 14's scope).
+ * Preferred position and level, on a stranger's profile (round 28, item 4 —
+ * the owner's amendment to round 14's scope). ~~Country~~ moved up under the
+ * player's name on 2026-11-02 (`PublicIdentity`), with its flag.
  *
- * WHAT MAKES THIS IN SCOPE where an email address is not: all three are facts
+ * WHAT MAKES THIS IN SCOPE where an email address is not: both are facts
  * a player states about their FOOTBALL, on a page that exists to answer "who
  * is this in the lineup". Round 14 drew the boundary at identity and contact,
  * and that half is untouched — no email, no phone, no join date.
  *
- * AN UNSET FIELD RENDERS NOTHING AT ALL. Not "Not set", not a grey dash, not a
- * placeholder flag. The own-profile page shows `notSet` because it is a form
- * and the reader can fix it; here the reader is a stranger who cannot, so the
+ * AN UNSET FIELD RENDERS NOTHING AT ALL. Not "Not set", not a grey dash. The
+ * own-profile page shows `notSet` because it is a form and the reader can fix it; here the reader is a stranger who cannot, so the
  * row would be a fact about our database rather than about the player. A
- * profile with none of the three set renders no block, not an empty card.
- *
- * THE FLAG IS DECORATION AND THE NAME IS THE CONTENT. `CountryFlag` returns
- * null for the 245 countries with no drawing, so the row degrades to the
- * country's name alone — see that file for why emoji were not an option.
+ * profile with neither set renders no block, not an empty card.
  */
 export function PublicFacts({
-  country,
   skillLevel,
   positions,
-  locale,
   t,
 }: {
-  country: string | null;
   skillLevel: string | null;
   positions: string[];
-  locale: Locale;
   t: Strings;
 }) {
   const known = positions.filter((p): p is Position =>
@@ -50,19 +39,6 @@ export function PublicFacts({
           : null;
 
   const rows: { key: string; label: string; value: React.ReactNode }[] = [];
-
-  if (country) {
-    rows.push({
-      key: "country",
-      label: t.profile.nationality,
-      value: (
-        <span className="flex items-center gap-2">
-          <CountryFlag code={country} size="profile" />
-          <span>{countryName(country, locale)}</span>
-        </span>
-      ),
-    });
-  }
 
   if (known.length > 0) {
     rows.push({

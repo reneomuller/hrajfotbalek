@@ -100,22 +100,25 @@ export default async function PublicPlayerPage({
           photoVersion={await profilePhotoVersion(profile.coverPath)}
           t={t}
         />
-        <PublicIdentity nickname={profile.nickname} photoPath={profile.photoPath} />
+        <PublicIdentity
+          nickname={profile.nickname}
+          photoPath={profile.photoPath}
+          country={profile.country}
+        />
         <ProfileStats stats={stats} playersMet={profile.playersMet} locale={locale} t={t} />
       </div>
 
       {/*
-        COUNTRY, POSITION AND LEVEL — round 28 item 4, the owner's amendment to
-        round 14's scope. Above the accomplishments because it answers the
-        question the roster tap asked ("who is this") while the grid answers a
-        slower one ("what have they done"). Renders nothing at all when the
-        player has set none of the three.
+        POSITION AND LEVEL — round 28 item 4, the owner's amendment to round
+        14's scope. Above the accomplishments because it answers the question
+        the roster tap asked ("who is this") while the grid answers a slower
+        one ("what have they done"). Renders nothing at all when the player has
+        set neither. ~~COUNTRY~~ moved up under the name (2026-11-02), with its
+        flag, as on your own profile.
       */}
       <PublicFacts
-        country={profile.country}
         skillLevel={profile.skillLevel}
         positions={profile.positions}
-        locale={locale}
         t={t}
       />
 

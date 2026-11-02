@@ -200,7 +200,9 @@ test("a country outside the original four renders a flag, in a circle", async ({
       waitUntil: "networkidle",
     });
 
-    const flag = page.getByTestId("country-flag").first();
+    // Under the player's name since 2026-11-02, as on your own profile; it
+    // used to sit in the facts card below the stats at the 18px size.
+    const flag = page.getByTestId("public-country").getByTestId("country-flag");
     await expect(flag).toBeVisible();
     await expect(flag).toHaveAttribute("data-country", "PT");
 
@@ -215,7 +217,7 @@ test("a country outside the original four renders a flag, in a circle", async ({
       return { w: r.width, h: r.height, radius: s.borderRadius, overflow: s.overflow };
     });
     expect(Math.round(box.w), "the flag is not square").toBe(Math.round(box.h));
-    expect(box.w, "the pinned profile size is 18px").toBe(18);
+    expect(box.w, "the pinned compact size is 14px").toBe(14);
     expect(box.overflow, "nothing clips the flag to the circle").toBe("hidden");
     expect(parseFloat(box.radius), "the radius is not at least half the width")
       .toBeGreaterThanOrEqual(box.w / 2);

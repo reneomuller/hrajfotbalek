@@ -1,7 +1,8 @@
+import { CountryWithFlag } from "@/components/flags/CountryWithFlag";
 import { profilePhotoVersion } from "@/lib/storage/photoVersions";
 import { initials } from "@/lib/roster/initials";
 import { avatarUrl } from "@/lib/storage/avatar";
-import { getStrings } from "@/lib/i18n/server";
+import { getLocale, getStrings } from "@/lib/i18n/server";
 
 /**
  * The name and face on a public profile.
@@ -13,17 +14,22 @@ import { getStrings } from "@/lib/i18n/server";
  * to suppress them would leave that component one careless default away from
  * publishing a join date.
  *
- * So this is the same composition with only the two fields the scope allows:
- * an 80px avatar and the nickname.
+ * So this is the same composition with only the fields the scope allows: an
+ * 80px avatar, the nickname and — since 2026-11-02, the owner's request — the
+ * country with its flag under it, as your own profile has it. Still no join
+ * date. The country moved up out of `PublicFacts` rather than appearing twice.
  */
 export async function PublicIdentity({
   nickname,
   photoPath,
+  country,
 }: {
   nickname: string;
   photoPath: string | null;
+  /** ISO 3166-1 alpha-2, or null when unset. */
+  country: string | null;
 }) {
-  const t = await getStrings();
+  const [t, locale] = await Promise.all([getStrings(), getLocale()]);
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const photo = supabaseUrl
     ? avatarUrl(supabaseUrl, photoPath, await profilePhotoVersion(photoPath))
@@ -70,13 +76,14 @@ export async function PublicIdentity({
 
       {/* `pb-1` lifts the name off the circle's optical baseline, exactly as
           the owner's own profile does it. */}
-      <div className="min-w-0 pb-1">
+      <div className="flex min-w-0 flex-col gap-[2px] pb-1">
         <h1
           data-testid="public-nickname"
           className="m-0 truncate text-[26px] font-bold leading-tight text-white"
         >
           {nickname}
         </h1>
+        <CountryWithFlag country={country} locale={locale} />
       </div>
     </section>
   );
