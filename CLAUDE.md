@@ -837,6 +837,21 @@ production's first game will be 1), `dismiss_notification(uuid)`, and restates
 `app_capabilities()` as the 31 flags live on 2026-10-28 PROBED, plus its two
 (33). `round41.sql` drills both.
 
+**OUTSTANDING — round 42's one, the organizer's photo.** Additive, idempotent,
+NOT deploy-first, order-free; applied twice against the local stack and
+drilled (`organizer_player.sql`, 56/56 suites pass with it). The deploy is safe
+without it: the game page asks `game_organizer_profile` and shows initials when
+the function is missing, and the admin form offers the player picker only once
+`app_capabilities()` says `organizerPlayer`. It restates `app_capabilities()`
+with all 33 earlier flags PROBED — `gameNumbers` and `dismissOneNotification`
+included — plus its own (34), and BACKFILLS: a game whose typed organizer name
+is exactly one live player's nickname is linked to that player.
+
+```
+node scripts/apply-migration.mjs \
+  supabase/migrations/20261102100000_organizer_player.sql --production
+```
+
 When a UI failure looks inexplicable and the code reads correctly, check this
 list before debugging the component.
 
