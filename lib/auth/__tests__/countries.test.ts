@@ -74,6 +74,12 @@ describe("countryFlag", () => {
     expect(countryFlag("cz")).toBe("");
     expect(countryFlag("CZE")).toBe("");
   });
+
+  it("draws Iran as the lion and the sun, not the Islamic Republic's flag", () => {
+    // Unicode has no Lion and Sun flag; 🇮🇷 is the post-1980 one.
+    expect(countryFlag("IR")).toBe("\u{1F981}\u{2600}\u{FE0F}");
+    expect(countryFlag("IR")).not.toBe("\u{1F1EE}\u{1F1F7}");
+  });
 });
 
 describe("countryOptions", () => {

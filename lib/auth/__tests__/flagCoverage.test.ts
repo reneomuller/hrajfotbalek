@@ -1,4 +1,4 @@
-import { existsSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { COUNTRY_CODES } from "@/lib/auth/countries";
 
@@ -31,5 +31,29 @@ describe("flag coverage", () => {
       expect(COUNTRY_CODES).toContain(code);
       expect(existsSync(`public/flags/3x2/${code}.svg`), `${code} has no flag`).toBe(true);
     }
+  });
+});
+
+/**
+ * THE FLAGS THIS PRODUCT DRAWS DIFFERENTLY FROM THE PACKAGE (2026-11-02).
+ *
+ * `content/flags/` holds them and `scripts/sync-flags.mjs` copies them over
+ * the package's drawing. Re-running the script without that step would put the
+ * package's flag back silently, which is what the first assertion catches.
+ */
+describe("flag overrides", () => {
+  it("serves every drawing in content/flags in place of the package's", () => {
+    for (const file of readdirSync("content/flags")) {
+      const served = readFileSync(`public/flags/3x2/${file}`);
+      const override = readFileSync(`content/flags/${file}`);
+      expect(served.equals(override), `${file} is not the override — run node scripts/sync-flags.mjs`).toBe(true);
+    }
+  });
+
+  it("draws Iran as the Lion and Sun, not the Islamic Republic's flag", () => {
+    const served = readFileSync("public/flags/3x2/IR.svg", "utf8");
+    const islamicRepublic = readFileSync("node_modules/country-flag-icons/3x2/IR.svg", "utf8");
+    expect(served).toContain('id="lion_and_sun"');
+    expect(served).not.toBe(islamicRepublic);
   });
 });

@@ -68,9 +68,19 @@ export function normaliseCountry(value: string | null | undefined): string | nul
  * computed, never stored. Platforms that cannot render a flag (Windows, most
  * notably) fall back to showing the two letters, which is a perfectly usable
  * outcome and the reason the code is never the *only* label.
+ *
+ * IRAN IS THE LION AND THE SUN (2026-11-02, the owner's call), matching the
+ * drawn flag in `content/flags/IR.svg`. Unicode has no Lion and Sun flag and
+ * 🇮🇷 is the Islamic Republic's, so the two emoji stand in for it.
  */
+const FLAG_EMOJI_OVERRIDES: Readonly<Record<string, string>> = {
+  IR: "\u{1F981}\u{2600}\u{FE0F}",
+};
+
 export function countryFlag(code: string): string {
   if (!isCountryCodeShape(code)) return "";
+  const override = FLAG_EMOJI_OVERRIDES[code];
+  if (override) return override;
   const A = 0x1f1e6;
   return String.fromCodePoint(
     A + (code.charCodeAt(0) - 65),
