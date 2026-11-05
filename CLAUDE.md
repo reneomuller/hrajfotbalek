@@ -837,7 +837,7 @@ production's first game will be 1), `dismiss_notification(uuid)`, and restates
 `app_capabilities()` as the 31 flags live on 2026-10-28 PROBED, plus its two
 (33). `round41.sql` drills both.
 
-**OUTSTANDING — round 42's one, organizers and their photo.** Additive,
+**~~OUTSTANDING~~ APPLIED, verified 2026-11-06 — round 42's one, organizers and their photo, applied BY ME on the owner's explicit "Yes, apply both now"; the Oliver-applies rule stands.** Probed through the public API: `app_capabilities()` returns 35 flags, all true, and `game_organizer_profile` links game #14 to Artem — the backfill's one match. Additive,
 idempotent, NOT deploy-first, order-free against `20261105100000` (each probes
 the other's flag); applied twice against the local stack and drilled
 (`organizer_player.sql`, 57/57 suites pass with both files). REWORKED before it
@@ -857,7 +857,7 @@ node scripts/apply-migration.mjs \
   supabase/migrations/20261102100000_organizer_player.sql --production
 ```
 
-**OUTSTANDING — round 42's second, removal with or without the Credit.**
+**~~OUTSTANDING~~ APPLIED, verified 2026-11-06 — round 42's second, removal with or without the Credit, applied in the same go** (`adminRemoveCreditChoice: true`).
 Idempotent, NOT deploy-first, order-free against `20261102100000` (each file
 probes the other's flag). It DROPS the one-argument `admin_remove_booking` and
 creates the two-argument one with `p_return_credit default true`, so the live
