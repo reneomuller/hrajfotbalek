@@ -198,21 +198,50 @@ export async function getGameOrganizer(gameId: string): Promise<GameOrganizerRow
 }
 
 /**
- * The players an admin can pick as a game's organizer (round 42): every live
- * account, by nickname. A guest row and a deleted account have no profile, so
- * `set_game_organizer_player` would refuse them; they are not offered.
+ * The game form's organizer dropdown (round 42): the live accounts an admin
+ * made organizers, by nickname — and, when editing, whoever runs the game now
+ * even if their status has since been taken away, so opening the form never
+ * silently changes who runs it.
  */
-export async function listOrganizerCandidates(): Promise<{ id: string; nickname: string }[]> {
+export async function listOrganizerCandidates(
+  currentPlayerId: string | null = null,
+): Promise<{ id: string; nickname: string }[]> {
   const service = createServiceRoleSupabaseClient();
 
-  const { data, error } = await service
+  let query = service
     .from("players")
     .select("id, nickname")
     .not("auth_user_id", "is", null)
     .is("deleted_at", null)
     .order("nickname", { ascending: true });
+  query = currentPlayerId
+    ? query.or(`is_organizer.eq.true,id.eq.${currentPlayerId}`)
+    : query.eq("is_organizer", true);
 
+  const { data, error } = await query;
   return error || !data ? [] : data;
+}
+
+/**
+ * The nickname of the player chosen to run a game, read from the database
+ * rather than trusted from the form — or null when they may not run it: not a
+ * live account, or not an organizer and not the one already running this game
+ * (round 42).
+ */
+export async function organizerNicknameFor(
+  playerId: string,
+  currentPlayerId: string | null = null,
+): Promise<string | null> {
+  const service = createServiceRoleSupabaseClient();
+
+  const { data, error } = await service
+    .from("players")
+    .select("nickname, is_organizer, auth_user_id, deleted_at")
+    .eq("id", playerId)
+    .maybeSingle();
+
+  if (error || !data || !data.auth_user_id || data.deleted_at) return null;
+  return data.is_organizer || playerId === currentPlayerId ? data.nickname : null;
 }
 
 export interface AdminBookingRow {

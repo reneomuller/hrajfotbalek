@@ -7,6 +7,7 @@ import { appCapabilities } from "@/lib/db/capabilities";
 import { parseGameForm, type GameFormValues } from "@/lib/admin/gameForm";
 import type { TransitionState } from "@/lib/admin/actionState";
 import { toAdminErrorMessage } from "@/lib/admin/errors";
+import { getGameOrganizer, organizerNicknameFor } from "@/lib/admin/queries";
 import { createServerSupabaseClient } from "@/lib/supabase/clients";
 
 /**
@@ -63,6 +64,21 @@ export async function createGameAction(
   const capabilities = await appCapabilities();
   const values = parsed.values;
 
+  /*
+   * THE ORGANIZER, FROM THE DROPDOWN (round 42). The form posts a player and
+   * the nickname with it; the nickname printed on the card is read back from
+   * the database instead, and anyone who is not an organizer is refused before
+   * anything is written.
+   */
+  let organizerName = values.organizerName;
+  if (capabilities.organizerPlayer && values.organizerPlayerId) {
+    const nickname = await organizerNicknameFor(values.organizerPlayerId, null);
+    if (!nickname) {
+      return { status: "error", fieldErrors: { organizerName: toAdminErrorMessage("PLAYER_NOT_ORGANIZER") } };
+    }
+    organizerName = nickname;
+  }
+
   let venueId = values.venueId;
 
   if (values.newVenueName) {
@@ -94,7 +110,7 @@ export async function createGameAction(
     p_starts_at: values.startsAt,
     p_capacity: values.capacity,
     p_price_czk: values.priceCzk,
-    p_organizer_name: values.organizerName,
+    p_organizer_name: organizerName,
     p_format: values.format,
     p_surface: values.surface,
     p_notes: values.notes,
@@ -143,7 +159,7 @@ export async function createGameAction(
   if (capabilities.organizerTelegram) {
     const { error: telegramError } = await supabase.rpc("set_game_organizer", {
       p_game_id: gameId,
-      p_organizer_name: values.organizerName,
+      p_organizer_name: organizerName,
       p_organizer_phone: values.organizerPhone,
       p_organizer_telegram: values.organizerTelegram,
     });
@@ -257,6 +273,24 @@ export async function updateGameAction(
   const capabilities = await appCapabilities();
   const values = parsed.values;
 
+  /*
+   * THE ORGANIZER, FROM THE DROPDOWN (round 42). The form posts a player and
+   * the nickname with it; the nickname printed on the card is read back from
+   * the database instead, and anyone who is not an organizer is refused before
+   * anything is written.
+   */
+  const currentOrganizerId = capabilities.organizerPlayer
+    ? ((await getGameOrganizer(gameId))?.organizer_player_id ?? null)
+    : null;
+  let organizerName = values.organizerName;
+  if (capabilities.organizerPlayer && values.organizerPlayerId) {
+    const nickname = await organizerNicknameFor(values.organizerPlayerId, currentOrganizerId);
+    if (!nickname) {
+      return { status: "error", fieldErrors: { organizerName: toAdminErrorMessage("PLAYER_NOT_ORGANIZER") } };
+    }
+    organizerName = nickname;
+  }
+
   let venueId = values.venueId;
   if (values.newVenueName) {
     const { data, error } = await supabase.rpc("admin_create_venue", {
@@ -282,7 +316,7 @@ export async function updateGameAction(
     p_venue_id: venueId,
     p_starts_at: values.startsAt,
     p_price_czk: values.priceCzk,
-    p_organizer_name: values.organizerName,
+    p_organizer_name: organizerName,
     p_format: values.format,
     p_surface: values.surface,
     p_notes: values.notes,
@@ -331,7 +365,7 @@ export async function updateGameAction(
   if (capabilities.organizerTelegram) {
     const { error: telegramError } = await supabase.rpc("set_game_organizer", {
       p_game_id: gameId,
-      p_organizer_name: values.organizerName,
+      p_organizer_name: organizerName,
       p_organizer_phone: values.organizerPhone,
       p_organizer_telegram: values.organizerTelegram,
     });
@@ -348,7 +382,9 @@ export async function updateGameAction(
    * A FAILURE HERE IS NOT A FAILED SAVE, for the Telegram handle's reason: the
    * game is stored, and the card falls back to the organizer's initials.
    */
-  if (capabilities.organizerPlayer) {
+  // Only when it changes: someone whose organizer status was taken away still
+  // runs the games they ran, and re-saving one of those must not be refused.
+  if (capabilities.organizerPlayer && values.organizerPlayerId !== currentOrganizerId) {
     const { error: organizerPlayerError } = await supabase.rpc("set_game_organizer_player", {
       p_game_id: gameId,
       p_player_id: values.organizerPlayerId,

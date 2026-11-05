@@ -247,6 +247,11 @@ export interface Database {
           phone: string | null;
           auth_user_id: string | null;
           is_admin: boolean;
+          /**
+           * Round 42 — offered in the game form's organizer dropdown. Optional
+           * until `20261102100000` lands, like `organizer_telegram` was.
+           */
+          is_organizer?: boolean;
           is_seed: boolean;
           marketing_opt_in: boolean;
           created_at: string;
@@ -936,6 +941,11 @@ export interface Database {
           p_organizer_telegram: string | null;
         };
         Returns: undefined;
+      };
+      /** Round 42 — make a player an organizer, or take it away. Admin only. */
+      admin_set_organizer: {
+        Args: { p_player_id: string; p_is_organizer: boolean };
+        Returns: boolean;
       };
       /** Round 42 — link a game's organizer to a player; null clears. Admin only. */
       set_game_organizer_player: {

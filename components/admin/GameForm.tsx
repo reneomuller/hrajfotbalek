@@ -195,11 +195,14 @@ export function GameForm({
     organizer?.organizer_name ?? defaultOrganizerName ?? "",
   );
   const [organizerPhone, setOrganizerPhone] = useState(organizer?.organizer_phone ?? "");
-  // Editing keeps what is stored, including "not linked"; a new game starts on
-  // the creating admin, the same default the name field has.
-  const [organizerPlayerId, setOrganizerPlayerId] = useState(
-    organizer ? (organizer.organizer_player_id ?? "") : (defaultOrganizerPlayerId ?? ""),
-  );
+  // Round 42 — the dropdown. Editing keeps who runs the game; a new game starts
+  // on the creating admin when they are an organizer, otherwise on "Choose".
+  const pickable = organizerPlayers ?? [];
+  const [organizerPlayerId, setOrganizerPlayerId] = useState(() => {
+    const wanted = organizer ? (organizer.organizer_player_id ?? "") : (defaultOrganizerPlayerId ?? "");
+    return pickable.some((player) => player.id === wanted) ? wanted : "";
+  });
+  const pickedNickname = pickable.find((player) => player.id === organizerPlayerId)?.nickname ?? "";
   // ~~Blank when creating~~ — ROUND 40: a NEW game starts at the standard
   // ninety minutes, because the owner's standard game is 90 and a blank box
   // still means the 60-minute fallback history was written under. Editing a
@@ -556,22 +559,62 @@ export function GameForm({
       <fieldset className="rounded-card p-4">
         <legend className={LABEL}>{strings.admin.organizerHeading}</legend>
 
-        <div className="mt-2">
-          <label className={LABEL} htmlFor="organizerName">
-            {strings.admin.organizerNameLabel}
-          </label>
-          <input
-            id="organizerName"
-            name="organizerName"
-            className={FIELD}
-            maxLength={ORGANIZER_NAME_MAX}
-            data-testid="organizer-name"
-            value={organizerName}
-            onChange={(event) => setOrganizerName(event.target.value)}
-          />
-          <p className={HINT}>{strings.admin.organizerNameHint}</p>
-          {errors.organizerName && <p className={ERROR}>{errors.organizerName}</p>}
-        </div>
+        {/*
+          A DROPDOWN OF ORGANIZERS (round 42, the owner: "for each game we
+          create, there should simply be a dropdown of the users we gave
+          organizer status to"). The card prints the chosen player's nickname,
+          posted as `organizerName` and re-read on the server, and the game
+          page shows their photo. The typed name is what remains before the
+          migration, and while nobody has been made an organizer yet — a form
+          that cannot name anyone would be a form that cannot make a game.
+        */}
+        {pickable.length > 0 ? (
+          <div className="mt-2">
+            <label className={LABEL} htmlFor="organizerPlayerId">
+              {strings.admin.organizerPlayerLabel}
+            </label>
+            <select
+              id="organizerPlayerId"
+              name="organizerPlayerId"
+              data-testid="organizer-player"
+              required
+              className={FIELD}
+              value={organizerPlayerId}
+              onChange={(event) => setOrganizerPlayerId(event.target.value)}
+            >
+              <option value="" disabled>
+                {strings.admin.organizerPlayerChoose}
+              </option>
+              {pickable.map((player) => (
+                <option key={player.id} value={player.id}>
+                  {player.nickname}
+                </option>
+              ))}
+            </select>
+            <input type="hidden" name="organizerName" value={pickedNickname} />
+            <p className={HINT}>{strings.admin.organizerPlayerHint}</p>
+            {errors.organizerName && <p className={ERROR}>{errors.organizerName}</p>}
+          </div>
+        ) : (
+          <div className="mt-2">
+            <label className={LABEL} htmlFor="organizerName">
+              {strings.admin.organizerNameLabel}
+            </label>
+            <input
+              id="organizerName"
+              name="organizerName"
+              className={FIELD}
+              maxLength={ORGANIZER_NAME_MAX}
+              data-testid="organizer-name"
+              value={organizerName}
+              onChange={(event) => setOrganizerName(event.target.value)}
+            />
+            <p className={HINT}>
+              {organizerPlayers ? strings.admin.organizerPlayerNoneYet : strings.admin.organizerNameHint}
+            </p>
+            {errors.organizerName && <p className={ERROR}>{errors.organizerName}</p>}
+          </div>
+        )}
 
         <div className="mt-4">
           <label className={LABEL} htmlFor="organizerPhone">
@@ -624,35 +667,6 @@ export function GameForm({
         </div>
       )}
 
-      {/*
-        THE ORGANIZER'S PROFILE (round 42) — whose photo the game page shows.
-        Picked, never matched from the typed name: a wrong guess would put a
-        stranger's face beside the contact button. Gated on the migration like
-        the Telegram field above.
-      */}
-      {organizerPlayers && (
-        <div>
-          <label className={LABEL} htmlFor="organizerPlayerId">
-            {strings.admin.organizerPlayerLabel}
-          </label>
-          <select
-            id="organizerPlayerId"
-            name="organizerPlayerId"
-            data-testid="organizer-player"
-            className={FIELD}
-            value={organizerPlayerId}
-            onChange={(event) => setOrganizerPlayerId(event.target.value)}
-          >
-            <option value="">{strings.admin.organizerPlayerNone}</option>
-            {organizerPlayers.map((player) => (
-              <option key={player.id} value={player.id}>
-                {player.nickname}
-              </option>
-            ))}
-          </select>
-          <p className={HINT}>{strings.admin.organizerPlayerHint}</p>
-        </div>
-      )}
       </fieldset>
 
       {/* --- notes -------------------------------------------------------------- */}

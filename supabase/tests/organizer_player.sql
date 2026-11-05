@@ -2,11 +2,16 @@
 -- ROUND 42 — the organizer is a player, and the game page shows their photo.
 --
 -- The owner: "on every game card we have an organizer. it currently doesn't
--- show an image/profile pic. I'd like that to be visible" — and he chose to
--- PICK the organizer from the players rather than match a typed name.
+-- show an image/profile pic. I'd like that to be visible" — and then: "in the
+-- player admin view ... 'make organizer' next to the option of making the user
+-- admin. then, for each game we create, there should simply be a dropdown of
+-- the users we gave organizer status to."
 --
---   * only an admin links a game's organizer to a player, or clears the link
+--   * only an admin makes a player an organizer, or takes it away, and both
+--     are logged like admin rights are
+--   * only an admin links a game's organizer, and only to an ORGANIZER
 --   * the link is to a live account: not a deleted one, not a guest row
+--   * taking organizer status away keeps the games they already ran
 --   * anyone who may see the game may see the organizer's nickname and photo,
 --     and nobody may see them for a draft or a cancelled game
 --   * re-saving the organizer's name, phone or handle keeps the link
@@ -86,6 +91,47 @@ insert into public.games (id, venue, starts_at, capacity, price_czk, status, dur
 insert into public.game_organizer_contacts (game_id, organizer_name, organizer_phone) values
   ('94242000-0000-0000-0000-0000000000a1', 'Runner', '+420600000000'),
   ('94242000-0000-0000-0000-0000000000a2', 'Runner', null);
+
+-- =============================================================================
+-- MAKE ORGANIZER
+-- =============================================================================
+
+select pg_temp.act_as_anon();
+select pg_temp.ok_probe(
+  $q$select public.admin_set_organizer('4e420000-0000-0000-0000-000000000002'::uuid, true)$q$,
+  'denied', 'a signed-out visitor cannot make anyone an organizer');
+reset role;
+
+select pg_temp.act_as('42420000-0000-0000-0000-000000000002');
+select pg_temp.ok_probe(
+  $q$select public.admin_set_organizer('4e420000-0000-0000-0000-000000000002'::uuid, true)$q$,
+  'raise:INSUFFICIENT_PERMISSION', 'a player cannot make themselves an organizer');
+reset role;
+
+select pg_temp.act_as('42420000-0000-0000-0000-000000000001');
+select pg_temp.ok_probe(
+  $q$select public.set_game_organizer_player('94242000-0000-0000-0000-0000000000a1'::uuid, '4e420000-0000-0000-0000-000000000002'::uuid)$q$,
+  'raise:PLAYER_NOT_ORGANIZER', 'a player who is not an organizer cannot run a game');
+select pg_temp.ok_probe(
+  $q$select public.admin_set_organizer('4e420000-0000-0000-0000-000000000004'::uuid, true)$q$,
+  'raise:PLAYER_NOT_FOUND', 'a guest row has no account to make an organizer');
+select pg_temp.ok_probe(
+  $q$select public.admin_set_organizer('4e420000-0000-0000-0000-000000000002'::uuid, true)$q$,
+  'rows:1', 'an admin makes a player an organizer');
+select pg_temp.ok_probe(
+  $q$select public.admin_set_organizer('4e420000-0000-0000-0000-000000000003'::uuid, true)$q$,
+  'rows:1', 'and a second one');
+reset role;
+
+select pg_temp.ok(
+  (select is_organizer from public.players where id = '4e420000-0000-0000-0000-000000000002'),
+  'the player is an organizer');
+select pg_temp.ok(
+  exists (select 1 from public.events
+           where event_type = 'organizer_granted'
+             and player_id = '4e420000-0000-0000-0000-000000000002'
+             and metadata ->> 'by_player_id' = '4e420000-0000-0000-0000-000000000001'),
+  'and the log says who made them one, as it does for admin rights');
 
 -- =============================================================================
 -- WHO MAY LINK
@@ -184,6 +230,29 @@ reset role;
 -- =============================================================================
 -- CAPABILITIES
 -- =============================================================================
+
+-- =============================================================================
+-- TAKING ORGANIZER STATUS AWAY
+-- =============================================================================
+
+select pg_temp.act_as('42420000-0000-0000-0000-000000000001');
+select pg_temp.ok_probe(
+  $q$select public.set_game_organizer_player('94242000-0000-0000-0000-0000000000a2'::uuid, '4e420000-0000-0000-0000-000000000002'::uuid)$q$,
+  'rows:1', 'Runner runs the draft game again');
+select pg_temp.ok_probe(
+  $q$select public.admin_set_organizer('4e420000-0000-0000-0000-000000000002'::uuid, false)$q$,
+  'rows:1', 'an admin takes organizer status away');
+reset role;
+select pg_temp.ok(
+  not (select is_organizer from public.players where id = '4e420000-0000-0000-0000-000000000002')
+  and exists (select 1 from public.events
+               where event_type = 'organizer_revoked'
+                 and player_id = '4e420000-0000-0000-0000-000000000002'),
+  'they are no longer an organizer, and the log says so');
+select pg_temp.ok(
+  (select count(*) from public.game_organizer_contacts
+    where organizer_player_id = '4e420000-0000-0000-0000-000000000002') = 1,
+  'and the game they already run keeps them — history is not rewritten');
 
 select pg_temp.ok(
   (public.app_capabilities() ->> 'organizerPlayer')::boolean,

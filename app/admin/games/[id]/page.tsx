@@ -78,12 +78,14 @@ export default async function AdminGamePage({
   const [admin, game] = await Promise.all([requireAdmin(), getAdminGame(id)]);
   if (!game) notFound();
 
-  const [bookings, venues, organizer, organizerPlayers] = await Promise.all([
+  const [bookings, venues, organizer] = await Promise.all([
     listGameBookings(game.id),
     listVenues(),
     getGameOrganizer(game.id),
-    listOrganizerCandidates(),
   ]);
+  // After the organizer row: whoever runs the game now stays in the dropdown
+  // even if their organizer status has since been taken away.
+  const organizerPlayers = await listOrganizerCandidates(organizer?.organizer_player_id ?? null);
 
   const venueRow = venues.find((venue) => venue.id === game.venue_id) ?? null;
   const venuePhoto = venueRow?.image_path ?? null;

@@ -1756,10 +1756,16 @@ export const strings = {
       "With one, a Ukrainian/Russian game's contact button becomes Telegram instead of WhatsApp. Paste @name or a t.me link — either is fine.",
     organizerTelegramInvalid:
       "That is not a Telegram username. Five to thirty-two letters, digits or underscores, starting with a letter.",
-    organizerPlayerLabel: "Organizer's profile (optional)",
-    organizerPlayerNone: "Not linked — show initials",
+    organizerPlayerLabel: "Who runs this game",
+    organizerPlayerChoose: "Choose an organizer",
     organizerPlayerHint:
-      "Pick the player running this game and the game page shows their profile photo, linked to their profile. The name above is still what the card prints.",
+      "Only players you made organizers are listed — Make organizer is on each player's admin page. Their name and photo show on the game page.",
+    organizerPlayerNoneYet:
+      "No organizers yet — make one on a player's admin page. Until then, type the organizer's name.",
+    organizerNotOrganizer:
+      "That player is not an organizer. Make them one on their admin page first.",
+    makeOrganizer: "Make organizer",
+    revokeOrganizer: "Remove organizer",
     languageLabel: "Language on the pitch",
     languageEnCs: "English / Czech",
     languageUkRu: "Ukrainian / Russian",

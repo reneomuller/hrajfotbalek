@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PlayerAttendanceRow } from "@/components/admin/PlayerAttendanceRow";
 import { AdminRightsButton } from "@/components/admin/AdminRightsButton";
+import { OrganizerRightsButton } from "@/components/admin/OrganizerRightsButton";
 import { GrantCreditForm } from "@/components/admin/GrantCreditForm";
 import { RemoveCreditForm } from "@/components/admin/RemoveCreditForm";
 import { RemovePhotoButton } from "@/components/admin/RemovePhotoButton";
@@ -284,6 +285,10 @@ export default async function AdminPlayerPage({
         */}
         <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-3 border-b border-hairline pb-4">
           <AdminRightsButton playerId={player.id} isAdmin={player.is_admin} />
+          {/* Round 42 — beside admin rights, as the owner asked. */}
+          {capabilities.organizerPlayer && !player.deleted_at && (
+            <OrganizerRightsButton playerId={player.id} isOrganizer={Boolean(player.is_organizer)} />
+          )}
           {/* A DELETED account has nothing left to ban or delete (round 40). */}
           {capabilities.banProfile && !player.deleted_at && (
             <BanPlayerButton playerId={player.id} isBanned={Boolean(player.banned_at)} />

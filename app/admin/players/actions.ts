@@ -205,3 +205,40 @@ export async function setPlayerAdminAction(
   revalidatePath("/admin/players");
   return { status: "changed", isAdmin: (data as boolean | null) ?? isAdmin };
 }
+
+export interface OrganizerRightsState {
+  status: "idle" | "changed" | "error";
+  /** The flag as it stands after the change, straight from the RPC. */
+  isOrganizer?: boolean;
+  message?: string;
+}
+
+/**
+ * Make a player an organizer, or take it away (round 42) — the people the game
+ * form's organizer dropdown offers. Like admin rights, the form carries the
+ * flag being MOVED TO, so a stale page cannot flip the wrong way; and
+ * `admin_set_organizer` re-checks that the caller is an admin, because a route
+ * guard is skipped by anyone using curl.
+ */
+export async function setPlayerOrganizerAction(
+  _prevState: OrganizerRightsState,
+  formData: FormData,
+): Promise<OrganizerRightsState> {
+  await requireAdmin();
+
+  const playerId = String(formData.get("playerId") ?? "");
+  const isOrganizer = formData.get("isOrganizer") === "true";
+
+  if (!playerId) return { status: "error", message: toAdminErrorMessage("PLAYER_NOT_FOUND") };
+
+  const supabase = await createServerSupabaseClient();
+  const { data, error } = await supabase.rpc("admin_set_organizer", {
+    p_player_id: playerId,
+    p_is_organizer: isOrganizer,
+  });
+
+  if (error) return { status: "error", message: toAdminErrorMessage(error.message) };
+
+  revalidatePath(`/admin/players/${playerId}`);
+  return { status: "changed", isOrganizer: (data as boolean | null) ?? isOrganizer };
+}
