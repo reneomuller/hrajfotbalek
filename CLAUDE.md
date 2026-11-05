@@ -852,6 +852,20 @@ node scripts/apply-migration.mjs \
   supabase/migrations/20261102100000_organizer_player.sql --production
 ```
 
+**OUTSTANDING — round 42's second, removal with or without the Credit.**
+Idempotent, NOT deploy-first, order-free against `20261102100000` (each file
+probes the other's flag). It DROPS the one-argument `admin_remove_booking` and
+creates the two-argument one with `p_return_credit default true`, so the live
+build — which calls it with one argument — keeps refunding exactly as before;
+the new dialog's switch appears only once `app_capabilities()` says
+`adminRemoveCreditChoice`. A returned Credit now follows round 40's rules,
+which this function had missed.
+
+```
+node scripts/apply-migration.mjs \
+  supabase/migrations/20261105100000_admin_remove_credit_choice.sql --production
+```
+
 When a UI failure looks inexplicable and the code reads correctly, check this
 list before debugging the component.
 

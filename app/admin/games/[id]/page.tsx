@@ -356,6 +356,7 @@ export default async function AdminGamePage({
                 gameId={game.id}
                 /* Round 16 item 17 — hidden until the migration exists. */
                 canRemove={capabilities.adminRemoveBooking}
+                canChooseCredit={capabilities.adminRemoveCreditChoice}
               />
             ))}
           </ul>

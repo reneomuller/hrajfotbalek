@@ -945,7 +945,11 @@ export interface Database {
       dismiss_all_notifications: { Args: Record<string, never>; Returns: number };
       /** Round 41 — one notification out of the caller's own bell. */
       dismiss_notification: { Args: { p_notification_id: string }; Returns: boolean };
-      admin_remove_booking: { Args: { p_booking_id: string }; Returns: number };
+      /** Round 42 — `p_return_credit` defaults to true in SQL; the dialog always sends it. */
+      admin_remove_booking: {
+        Args: { p_booking_id: string; p_return_credit?: boolean };
+        Returns: number;
+      };
       admin_delete_game: { Args: { p_game_id: string }; Returns: undefined };
       admin_delete_venue: { Args: { p_venue_id: string }; Returns: undefined };
       admin_archive_venue: { Args: { p_venue_id: string }; Returns: undefined };

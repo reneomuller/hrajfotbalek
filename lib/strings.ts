@@ -2146,6 +2146,13 @@ export const strings = {
     rosterRemoveConfirmTitle: "Remove this player?",
     rosterRemoveConfirmBody:
       "Their seat is released and their credit is returned in full — the same rule a cancelled game uses, because they did not choose this.",
+    /** Round 42 — the dialog once the admin chooses whether the Credit returns. */
+    rosterRemoveSeatReleased: "Their seat is released.",
+    rosterRemoveReturnCredit: "Return their Credit",
+    rosterRemoveCreditOff:
+      "No Credit goes back — for a player who pulled out late by message instead of cancelling in the app.",
+    rosterRemoveCreditOn:
+      "Their Credit comes back in full: a spent Credit to the batch it came from, money paid as a Credit valid 60 days.",
     rosterRemoveConfirm: "Yes — remove them",
     rosterRemoved: "Removed",
     rosterRemoveFailed: "We could not remove that booking.",

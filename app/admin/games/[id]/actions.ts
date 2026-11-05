@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireAdmin } from "@/lib/auth/requireAdmin";
 import { parseUnderpayment, toAdminErrorMessage } from "@/lib/admin/errors";
+import { appCapabilities } from "@/lib/db/capabilities";
 import { createServerSupabaseClient } from "@/lib/supabase/clients";
 import { strings } from "@/lib/strings";
 import type { ConfirmResult } from "@/lib/types/database";
@@ -122,10 +123,20 @@ export async function removeBookingAction(
     return { status: "error", message: strings.admin.rosterRemoveFailed };
   }
 
+  /*
+   * WITH OR WITHOUT THE CREDIT (round 42). The dialog's switch starts off, so
+   * an unticked box — absent from the form — means no Credit. Sent only once
+   * the database has the two-argument function: before that, a second
+   * argument would match nothing and the removal would fail outright.
+   */
+  const capabilities = await appCapabilities();
   const supabase = await createServerSupabaseClient();
-  const { error } = await supabase.rpc("admin_remove_booking", {
-    p_booking_id: bookingId,
-  });
+  const { error } = await supabase.rpc(
+    "admin_remove_booking",
+    capabilities.adminRemoveCreditChoice
+      ? { p_booking_id: bookingId, p_return_credit: formData.get("returnCredit") === "on" }
+      : { p_booking_id: bookingId },
+  );
 
   if (error) return { status: "error", message: toAdminErrorMessage(error.message) };
 

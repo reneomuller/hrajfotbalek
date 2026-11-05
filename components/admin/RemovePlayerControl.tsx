@@ -28,18 +28,25 @@ const INITIAL: RemoveBookingState = { status: "idle" };
  * "are you sure" that does not name the consequence is a speed bump rather
  * than a decision.
  *
- * THE MONEY IS THE `cancel_game` RULE. Credit in full whatever the lead time,
- * because the player did not choose this; the lateness forfeit exists to price
- * a late CHOICE. Decided in SQL, stated here.
+ * ~~THE MONEY IS THE `cancel_game` RULE. Credit in full whatever the lead
+ * time.~~ THE ADMIN CHOOSES (round 42, the owner): a switch, OFF by default —
+ * no Credit, for the player who pulled out late by message — and on to return
+ * it in full, by round 40's rules. Reset to off every time the dialog opens, so
+ * a refund is always a decision made for THIS player. Rendered only once
+ * `admin_remove_booking` takes the choice; before that the old body stands.
  */
 export function RemovePlayerControl({
   booking,
   gameId,
+  canChooseCredit = false,
 }: {
   booking: AdminBookingRow;
   gameId: string;
+  /** Round 42 — whether `admin_remove_booking` takes `p_return_credit` yet. */
+  canChooseCredit?: boolean;
 }) {
   const [open, setOpen] = useState(false);
+  const [returnCredit, setReturnCredit] = useState(false);
   const [state, action] = useActionState(removeBookingAction, INITIAL);
 
   if (state.status === "removed") {
@@ -54,7 +61,10 @@ export function RemovePlayerControl({
     <>
       <button
         type="button"
-        onClick={() => setOpen(true)}
+        onClick={() => {
+          setReturnCredit(false);
+          setOpen(true);
+        }}
         data-testid="roster-remove"
         className="rounded-control border border-hairline px-3 py-2 text-[10px] uppercase tracking-eyebrow text-muted transition-colors hover:border-hairline-strong hover:text-bone"
       >
@@ -87,12 +97,18 @@ export function RemovePlayerControl({
                 {strings.admin.rosterRemoveConfirmTitle}
               </h2>
               <p className="mt-2 text-[13px] leading-relaxed text-bone">
-                {booking.nickname} — {strings.admin.rosterRemoveConfirmBody}
+                {booking.nickname} —{" "}
+                {canChooseCredit
+                  ? strings.admin.rosterRemoveSeatReleased
+                  : strings.admin.rosterRemoveConfirmBody}
               </p>
 
               <form action={action} className="mt-5 flex flex-wrap gap-3">
                 <input type="hidden" name="bookingId" value={booking.id} />
                 <input type="hidden" name="gameId" value={gameId} />
+                {canChooseCredit && (
+                  <CreditSwitch checked={returnCredit} onChange={setReturnCredit} />
+                )}
                 <ConfirmButton />
                 <button
                   type="button"
@@ -121,5 +137,52 @@ function ConfirmButton() {
     >
       {pending ? strings.common.loading : strings.admin.rosterRemoveConfirm}
     </button>
+  );
+}
+
+/**
+ * The pill: volt when the Credit goes back, the empty-segment grey when it
+ * does not. A real checkbox underneath (`role="switch"`), so the form posts
+ * `returnCredit=on` only when it is on, and keyboard and screen reader get a
+ * switch for free; the line beneath says what will happen in words, because
+ * a colour alone is not a sentence.
+ */
+function CreditSwitch({
+  checked,
+  onChange,
+}: {
+  checked: boolean;
+  onChange: (next: boolean) => void;
+}) {
+  return (
+    <div className="w-full">
+      <label data-testid="roster-remove-credit-toggle" className="flex cursor-pointer items-center gap-3">
+        <input
+          type="checkbox"
+          name="returnCredit"
+          role="switch"
+          checked={checked}
+          onChange={(event) => onChange(event.target.checked)}
+          data-testid="roster-remove-credit"
+          className="peer sr-only"
+        />
+        <span
+          aria-hidden
+          className={`relative h-6 w-11 shrink-0 rounded-pill transition-colors peer-focus-visible:ring-2 peer-focus-visible:ring-volt ${
+            checked ? "bg-volt" : "bg-surface-seg"
+          }`}
+        >
+          <span
+            className={`absolute top-0.5 h-5 w-5 rounded-pill bg-white transition-transform ${
+              checked ? "translate-x-[22px]" : "translate-x-0.5"
+            }`}
+          />
+        </span>
+        <span className="text-[13px] font-bold text-bone">{strings.admin.rosterRemoveReturnCredit}</span>
+      </label>
+      <p data-testid="roster-remove-credit-note" className="m-0 mt-2 text-[12px] leading-relaxed text-muted">
+        {checked ? strings.admin.rosterRemoveCreditOn : strings.admin.rosterRemoveCreditOff}
+      </p>
+    </div>
   );
 }

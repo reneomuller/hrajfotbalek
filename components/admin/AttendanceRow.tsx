@@ -25,6 +25,7 @@ export function AttendanceRow({
   booking,
   gameId,
   canRemove = false,
+  canChooseCredit = false,
 }: {
   booking: AdminBookingRow;
   gameId: string;
@@ -34,6 +35,8 @@ export function AttendanceRow({
    * ships first, so false hides the control rather than offering a 404.
    */
   canRemove?: boolean;
+  /** Round 42 — the remove dialog offers the Credit switch. */
+  canChooseCredit?: boolean;
 }) {
   const [state, formAction] = useActionState(markAttendanceAction, INITIAL);
 
@@ -107,7 +110,7 @@ export function AttendanceRow({
         seat and moves credit, and there is no button that puts it back.
       */}
       {canRemove && isActive && (
-        <RemovePlayerControl booking={booking} gameId={gameId} />
+        <RemovePlayerControl booking={booking} gameId={gameId} canChooseCredit={canChooseCredit} />
       )}
 
       {state.status === "error" && state.message && (

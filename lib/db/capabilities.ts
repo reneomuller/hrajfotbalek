@@ -98,6 +98,8 @@ export interface AppCapabilities {
   dismissOneNotification: boolean;
   /** Round 42 — `set_game_organizer_player`: the organizer is a picked player. */
   organizerPlayer: boolean;
+  /** Round 42 — `admin_remove_booking(booking, return_credit)`: removal with or without a refund. */
+  adminRemoveCreditChoice: boolean;
 }
 
 const NONE: AppCapabilities = {
@@ -122,6 +124,7 @@ const NONE: AppCapabilities = {
   gameNumbers: false,
   dismissOneNotification: false,
   organizerPlayer: false,
+  adminRemoveCreditChoice: false,
 };
 
 /*
@@ -184,6 +187,7 @@ const readCapabilities = stableRead(
       gameNumbers: read("gameNumbers"),
       dismissOneNotification: read("dismissOneNotification"),
       organizerPlayer: read("organizerPlayer"),
+      adminRemoveCreditChoice: read("adminRemoveCreditChoice"),
     };
   } catch {
     return NONE;
