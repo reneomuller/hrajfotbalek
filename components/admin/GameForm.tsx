@@ -17,6 +17,7 @@ import {
 import { LanguagePill } from "@/components/game/LanguagePill";
 import { gameLanguageOf, type GameLanguage } from "@/lib/games/language";
 import { priceForDurationCzk } from "@/lib/games/price";
+import { phoneAfterOrganizerChange } from "@/lib/admin/organizerPhone";
 import { strings } from "@/lib/strings";
 import type { Database, GameSurface, SkillLevel } from "@/lib/types/database";
 
@@ -129,7 +130,7 @@ export function GameForm({
    * Round 42 — the players an admin can pick as organizer, or absent before
    * `20261102100000` lands; the picker renders only when this is given.
    */
-  organizerPlayers?: { id: string; nickname: string }[];
+  organizerPlayers?: { id: string; nickname: string; phone: string | null }[];
   /** The creating admin's player id — the picker's default on a new game. */
   defaultOrganizerPlayerId?: string;
   /*
@@ -194,7 +195,6 @@ export function GameForm({
   const [organizerName, setOrganizerName] = useState(
     organizer?.organizer_name ?? defaultOrganizerName ?? "",
   );
-  const [organizerPhone, setOrganizerPhone] = useState(organizer?.organizer_phone ?? "");
   // Round 42 — the dropdown. Editing keeps who runs the game; a new game starts
   // on the creating admin when they are an organizer, otherwise on "Choose".
   const pickable = organizerPlayers ?? [];
@@ -203,6 +203,12 @@ export function GameForm({
     return pickable.some((player) => player.id === wanted) ? wanted : "";
   });
   const pickedNickname = pickable.find((player) => player.id === organizerPlayerId)?.nickname ?? "";
+  const phoneOf = (playerId: string) => pickable.find((player) => player.id === playerId)?.phone ?? null;
+  // Editing keeps the stored number; a new game starts on the preselected
+  // organizer's own (round 42 — "pre-fill their phone number").
+  const [organizerPhone, setOrganizerPhone] = useState(
+    () => (organizer ? (organizer.organizer_phone ?? "") : (phoneOf(organizerPlayerId) ?? "")),
+  );
   // ~~Blank when creating~~ — ROUND 40: a NEW game starts at the standard
   // ninety minutes, because the owner's standard game is 90 and a blank box
   // still means the 60-minute fallback history was written under. Editing a
@@ -580,7 +586,13 @@ export function GameForm({
               required
               className={FIELD}
               value={organizerPlayerId}
-              onChange={(event) => setOrganizerPlayerId(event.target.value)}
+              onChange={(event) => {
+                const next = event.target.value;
+                setOrganizerPhone((current) =>
+                  phoneAfterOrganizerChange(current, phoneOf(organizerPlayerId), phoneOf(next)),
+                );
+                setOrganizerPlayerId(next);
+              }}
             >
               <option value="" disabled>
                 {strings.admin.organizerPlayerChoose}
@@ -630,7 +642,9 @@ export function GameForm({
             value={organizerPhone}
             onChange={(event) => setOrganizerPhone(event.target.value)}
           />
-          <p className={HINT}>{strings.admin.organizerPhoneHint}</p>
+          <p className={HINT}>
+            {pickable.length > 0 ? strings.admin.organizerPhonePrefilled : strings.admin.organizerPhoneHint}
+          </p>
           {errors.organizerPhone && <p className={ERROR}>{errors.organizerPhone}</p>}
         </div>
 

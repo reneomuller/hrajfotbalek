@@ -1762,6 +1762,8 @@ export const strings = {
       "Only players you made organizers are listed — Make organizer is on each player's admin page. Their name and photo show on the game page.",
     organizerPlayerNoneYet:
       "No organizers yet — make one on a player's admin page. Until then, type the organizer's name.",
+    organizerPhonePrefilled:
+      "Filled in from the organizer's profile when you choose them — change it if they use another number for games.",
     organizerNotOrganizer:
       "That player is not an organizer. Make them one on their admin page first.",
     makeOrganizer: "Make organizer",

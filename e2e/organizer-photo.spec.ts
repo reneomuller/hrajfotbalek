@@ -186,3 +186,52 @@ test("a game created through the form runs under the chosen organizer's nickname
     await setOrganizer(players.organizer.id, false);
   }
 });
+
+test("choosing an organizer fills in their phone, and clears the last one's when they have none", async ({
+  page,
+  context,
+}) => {
+  // Arrange — three organizers: two with a number on their profile, one without.
+  const admin = serviceClient();
+  const cast = [players.organizer, players.runner, players.creditRich];
+  const { data: before } = await admin
+    .from("players")
+    .select("id, phone")
+    .in("id", cast.map((player) => player.id));
+  const phones: Record<string, string | null> = {
+    [players.organizer.id]: "+420601000001",
+    [players.runner.id]: "+420602000002",
+    [players.creditRich.id]: null,
+  };
+
+  try {
+    for (const player of cast) {
+      await admin.from("players").update({ phone: phones[player.id] }).eq("id", player.id);
+      await setOrganizer(player.id, true);
+    }
+    await signInAs(context, players.organizer);
+
+    // Act + Assert — a new game starts on the admin, with the admin's number.
+    await page.goto("/admin/games/new", { waitUntil: "networkidle" });
+    const picker = page.getByTestId("organizer-player");
+    const phone = page.getByTestId("organizer-phone");
+    await expect(picker).toHaveValue(players.organizer.id);
+    await expect(phone).toHaveValue("+420601000001");
+
+    // Choosing somebody else brings their number…
+    await expect(async () => {
+      await picker.selectOption(players.runner.id);
+      await expect(phone).toHaveValue("+420602000002", { timeout: 1_000 });
+    }).toPass({ timeout: 15_000 });
+
+    // …and choosing somebody with none clears it, rather than leaving the
+    // last organizer's number on a game they no longer run.
+    await picker.selectOption(players.creditRich.id);
+    await expect(phone).toHaveValue("");
+  } finally {
+    for (const row of (before ?? []) as { id: string; phone: string | null }[]) {
+      await admin.from("players").update({ phone: row.phone }).eq("id", row.id);
+    }
+    for (const player of cast) await setOrganizer(player.id, false);
+  }
+});

@@ -205,12 +205,13 @@ export async function getGameOrganizer(gameId: string): Promise<GameOrganizerRow
  */
 export async function listOrganizerCandidates(
   currentPlayerId: string | null = null,
-): Promise<{ id: string; nickname: string }[]> {
+): Promise<{ id: string; nickname: string; phone: string | null }[]> {
   const service = createServiceRoleSupabaseClient();
 
+  // The phone too: picking an organizer fills in the game's contact number.
   let query = service
     .from("players")
-    .select("id, nickname")
+    .select("id, nickname, phone")
     .not("auth_user_id", "is", null)
     .is("deleted_at", null)
     .order("nickname", { ascending: true });
