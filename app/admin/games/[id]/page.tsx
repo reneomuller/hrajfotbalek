@@ -8,6 +8,7 @@ import { ConfirmPaymentRow } from "@/components/admin/ConfirmPaymentRow";
 import { GameForm } from "@/components/admin/GameForm";
 import { TransitionButton } from "@/components/admin/TransitionButton";
 import { ExportCsvLink } from "@/components/admin/ExportCsvLink";
+import { StoryDownloadLink } from "@/components/admin/StoryDownloadLink";
 import { requireAdmin } from "@/lib/auth/requireAdmin";
 import {
   activeBookings,
@@ -172,6 +173,8 @@ export default async function AdminGamePage({
             >
               {strings.admin.gamePublishedBackToAdmin}
             </Link>
+            {/* Round 42 — the story to post, while the game is fresh. */}
+            <StoryDownloadLink gameId={game.id} testId="published-story" emphasis />
           </span>
         </div>
       )}
@@ -181,7 +184,10 @@ export default async function AdminGamePage({
         <h2 className="m-0 text-[22px] font-bold uppercase tracking-wide text-white">
           {game.venue}
         </h2>
-        <div className="flex items-center gap-3">
+        {/* WRAPS: with the story link beside the CSV export (round 42) the row
+            outgrew a 390px screen and pushed the whole page sideways, which
+            moved every button under the thumb mid-tap. */}
+        <div className="flex flex-wrap items-center gap-3">
           <span
             data-testid="admin-game-status"
             className="text-[11px] uppercase tracking-eyebrow text-volt-dim"
@@ -192,6 +198,7 @@ export default async function AdminGamePage({
               their banking app. VS-ordered, with what is actually outstanding
               after wallet credit. */}
           <ExportCsvLink href={`/admin/games/${game.id}/export`} testId="export-roster" />
+          <StoryDownloadLink gameId={game.id} testId="story-download" />
         </div>
       </div>
 

@@ -33,6 +33,11 @@ import type { StringsOverlay } from "@/lib/i18n/resolve";
  * Russian.
  */
 export const uk: StringsOverlay = {
+  story: {
+    formatLabel: "Формат",
+    durationLabel: "Тривалість",
+    minutes: "{n} хв",
+  },
   meta: {
     title: "Hraj Fotbal — футбол без зобов’язань у Празі",
     description:

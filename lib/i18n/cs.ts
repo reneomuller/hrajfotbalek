@@ -21,6 +21,11 @@ import type { StringsOverlay } from "@/lib/i18n/resolve";
  * "vy"). This is a pickup football crew, not a bank.
  */
 export const cs: StringsOverlay = {
+  story: {
+    formatLabel: "Formát",
+    durationLabel: "Délka",
+    minutes: "{n} min",
+  },
   meta: {
     title: "Hraj Fotbal — pickup fotbal v Praze",
     description:

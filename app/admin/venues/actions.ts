@@ -10,6 +10,7 @@ import {
   toMapQuery,
 } from "@/lib/venues/mapsLink";
 import { toAdminErrorMessage } from "@/lib/admin/errors";
+import { appCapabilities } from "@/lib/db/capabilities";
 import type { DeleteState } from "@/app/admin/games/[id]/actions";
 import type { TransitionState } from "@/lib/admin/actionState";
 import { createServerSupabaseClient } from "@/lib/supabase/clients";
@@ -69,6 +70,24 @@ async function resolveMapField(
   };
 }
 
+/**
+ * THE ADDRESS, ITS OWN CALL (round 42), after the venue is saved — the
+ * `set_venue_amenities` shape, so neither venue writer is restated. Sent only
+ * once the database has it; before that the form does not render the field.
+ */
+async function saveVenueAddress(
+  supabase: Awaited<ReturnType<typeof createServerSupabaseClient>>,
+  venueId: string,
+  formData: FormData,
+): Promise<string | null> {
+  if (!formData.has("address") || !(await appCapabilities()).venueAddress) return null;
+  const { error } = await supabase.rpc("set_venue_address", {
+    p_venue_id: venueId,
+    p_address: String(formData.get("address") ?? ""),
+  });
+  return error ? toAdminErrorMessage(error.message) : null;
+}
+
 export interface VenueFormState {
   status: "idle" | "saved" | "created" | "error";
   message?: string;
@@ -118,6 +137,11 @@ export async function createVenueAction(
 
   if (error) return { status: "error", message: toAdminErrorMessage(error.message) };
 
+  if (typeof created === "string") {
+    const addressError = await saveVenueAddress(supabase, created, formData);
+    if (addressError) return { status: "error", message: addressError, venueId: created };
+  }
+
   revalidatePath("/admin/venues");
   return {
     status: "created",
@@ -152,6 +176,9 @@ export async function updateVenueAction(
   });
 
   if (error) return { status: "error", message: toAdminErrorMessage(error.message) };
+
+  const addressError = await saveVenueAddress(supabase, venueId, formData);
+  if (addressError) return { status: "error", message: addressError };
 
   /*
    * THE WHOLE SITE, not just this page. A venue's name and photo reach every

@@ -871,6 +871,18 @@ node scripts/apply-migration.mjs \
   supabase/migrations/20261105100000_admin_remove_credit_choice.sql --production
 ```
 
+**OUTSTANDING — round 42's third, a venue's address** (for the game's story
+image). Additive, idempotent, NOT deploy-first, order-free; applied twice
+locally and drilled (`venue_address.sql`, 58/58 suites). The deploy is safe
+without it: the venue page shows the Address field only once
+`app_capabilities()` says `venueAddress`, and the story leaves the line out.
+It restates `app_capabilities()` as 36 flags, every earlier one probed.
+
+```
+node scripts/apply-migration.mjs \
+  supabase/migrations/20261106110000_venue_address.sql --production
+```
+
 When a UI failure looks inexplicable and the code reads correctly, check this
 list before debugging the component.
 

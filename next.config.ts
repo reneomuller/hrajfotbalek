@@ -51,6 +51,12 @@ const nextConfig: NextConfig = {
    */
   outputFileTracingIncludes: {
     "/terms": ["./content/**"],
+    /*
+     * The game story image (round 42) — same failure, same fix. Its fonts and
+     * a venue's repo photo are read with `readFileSync` per request; the
+     * brand card reads the fonts too but only at build, where the repo is on disk.
+     */
+    "/admin/games/[id]/story": ["./lib/og/fonts/**", "./public/venues/**"],
   },
 
   /**

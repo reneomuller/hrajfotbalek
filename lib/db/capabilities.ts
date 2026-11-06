@@ -100,6 +100,8 @@ export interface AppCapabilities {
   organizerPlayer: boolean;
   /** Round 42 — `admin_remove_booking(booking, return_credit)`: removal with or without a refund. */
   adminRemoveCreditChoice: boolean;
+  /** Round 42 — `venues.address` and `set_venue_address`, for the story image. */
+  venueAddress: boolean;
 }
 
 const NONE: AppCapabilities = {
@@ -125,6 +127,7 @@ const NONE: AppCapabilities = {
   dismissOneNotification: false,
   organizerPlayer: false,
   adminRemoveCreditChoice: false,
+  venueAddress: false,
 };
 
 /*
@@ -188,6 +191,7 @@ const readCapabilities = stableRead(
       dismissOneNotification: read("dismissOneNotification"),
       organizerPlayer: read("organizerPlayer"),
       adminRemoveCreditChoice: read("adminRemoveCreditChoice"),
+      venueAddress: read("venueAddress"),
     };
   } catch {
     return NONE;

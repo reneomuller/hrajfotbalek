@@ -52,6 +52,7 @@ const CODES: Array<[string, string]> = [
   // Round 42 — the organizer dropdown offers only organizers; a stale form
   // or a hand-made call can still name somebody else.
   ["PLAYER_NOT_ORGANIZER", strings.admin.organizerNotOrganizer],
+  ["ADDRESS_TOO_LONG", strings.admin.venueAddressTooLong],
   ["INVALID_GUEST_COUNT", strings.admin.guestsInvalid],
   /*
    * Round 33, item 1. `admin_set_display_name` raises these rather than letting

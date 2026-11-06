@@ -97,7 +97,7 @@ export default async function AdminVenuesPage() {
           {strings.admin.venueNewHeading}
         </h3>
         <div className="mt-4">
-          <VenueForm />
+          <VenueForm canSetAddress={capabilities.venueAddress} />
         </div>
       </section>
 
@@ -168,7 +168,7 @@ export default async function AdminVenuesPage() {
                 </summary>
 
                 <div className="border-t border-hairline px-5 pb-5 pt-5">
-              <VenueForm venue={venue} />
+              <VenueForm venue={venue} canSetAddress={capabilities.venueAddress} />
 
               {/*
                 THE PRESETS, BENEATH THE FIELDS AND LABELLED AS INHERITED.

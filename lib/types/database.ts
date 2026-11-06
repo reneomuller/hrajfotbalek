@@ -518,6 +518,8 @@ export interface Database {
            * coordinates extracted from it for everything internal.
            */
           map_url: string | null;
+          /** Round 42 — optional until `20261106110000` lands. */
+          address?: string | null;
           /**
            * Closed catalog (migration 38) — `venues_amenities_catalog` is the
            * enforcement and `lib/venues/amenities.ts` is the render list. Never
@@ -942,6 +944,8 @@ export interface Database {
         };
         Returns: undefined;
       };
+      /** Round 42 — a venue's address line; empty clears it. Admin only. */
+      set_venue_address: { Args: { p_venue_id: string; p_address: string | null }; Returns: string | null };
       /** Round 42 — make a player an organizer, or take it away. Admin only. */
       admin_set_organizer: {
         Args: { p_player_id: string; p_is_organizer: boolean };

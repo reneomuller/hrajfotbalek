@@ -20,6 +20,11 @@ import type { StringsOverlay } from "@/lib/i18n/resolve";
  * Register: "ты", matching the familiar tone of the English and Czech.
  */
 export const ru: StringsOverlay = {
+  story: {
+    formatLabel: "Формат",
+    durationLabel: "Длительность",
+    minutes: "{n} мин",
+  },
   meta: {
     title: "Hraj Fotbal — футбол без обязательств в Праге",
     description:

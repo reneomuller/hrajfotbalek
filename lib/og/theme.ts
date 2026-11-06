@@ -17,6 +17,11 @@ export const COLORS = {
   ink: themeColors.ink,
   bone: themeColors.bone,
   muted: themeColors.muted,
+  faint: themeColors.faint,
+  surface: themeColors.surface,
+  surfaceSeg: themeColors["surface-seg"],
+  warn: themeColors.warn,
+  danger: themeColors.danger,
   hairline: "rgba(255,255,255,.12)",
 };
 

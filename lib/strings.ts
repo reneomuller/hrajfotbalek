@@ -7,6 +7,12 @@
  * nested by surface so a future i18n layer can swap the table wholesale.
  */
 export const strings = {
+  /** The game's 9:16 story image an admin downloads (round 42). */
+  story: {
+    formatLabel: "Format",
+    durationLabel: "Duration",
+    minutes: "{n} min",
+  },
   meta: {
     title: "Hraj Fotbal — pickup football in Prague",
     /**
@@ -1771,6 +1777,11 @@ export const strings = {
       "No organizers yet — make one on a player's admin page. Until then, type the organizer's name.",
     organizerPhonePrefilled:
       "Filled in from the organizer's profile when you choose them — change it if they use another number for games.",
+    venueAddressLabel: "Address",
+    venueAddressHint:
+      "Street and district, as people say it — printed under the venue's name on a game's story image.",
+    venueAddressTooLong: "That is longer than an address — keep it to a street, number and district.",
+    storyDownload: "Story image (9:16)",
     organizerNotOrganizer:
       "That player is not an organizer. Make them one on their admin page first.",
     makeOrganizer: "Make organizer",

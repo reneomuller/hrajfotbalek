@@ -29,8 +29,18 @@ const INITIAL: VenueFormState = { status: "idle" };
  */
 export function VenueForm({
   venue,
+  canSetAddress = false,
 }: {
-  venue?: { id: string; name: string; map_query: string | null; pitch_name: string | null };
+  venue?: {
+    id: string;
+    name: string;
+    map_query: string | null;
+    pitch_name: string | null;
+    /** Round 42 — absent on a database without `20261106110000`. */
+    address?: string | null;
+  };
+  /** Round 42 — whether `set_venue_address` exists yet. */
+  canSetAddress?: boolean;
 }) {
   const isEdit = venue !== undefined;
   const [state, formAction] = useActionState(
@@ -66,6 +76,29 @@ export function VenueForm({
         className="field mt-1 w-full"
       />
       <p className="mt-1 text-[13px] text-muted">{strings.admin.venueMapQueryHint}</p>
+
+      {/*
+        THE ADDRESS (round 42) — the line under the venue's name on a game's
+        story image, as people say it. The map field above may hold
+        coordinates, which is right for a map and wrong for a caption.
+      */}
+      {canSetAddress && (
+        <>
+          <label className="field-label mt-4 block" htmlFor={`address-${venue?.id ?? "new"}`}>
+            {strings.admin.venueAddressLabel}
+          </label>
+          <input
+            id={`address-${venue?.id ?? "new"}`}
+            name="address"
+            maxLength={120}
+            placeholder="Dubečská 9, Praha 10"
+            defaultValue={venue?.address ?? ""}
+            data-testid="venue-address-input"
+            className="field mt-1 w-full"
+          />
+          <p className="mt-1 text-[13px] text-muted">{strings.admin.venueAddressHint}</p>
+        </>
+      )}
 
       {/*
         THE PITCH NAME IS EDIT-ONLY. On a create form it is a field for a fact

@@ -85,6 +85,9 @@ const PLAYER_FACING = [
   // it. The MESSAGES inside it are admin free text and are not translated —
   // that is a copy decision the owner makes per message, not a table.
   "notifications",
+  // The game's 9:16 story image (round 42): made by an admin, posted for
+  // players, so its labels are in the language they are posted in.
+  "story",
 ] as const;
 
 /**
@@ -94,6 +97,11 @@ const PLAYER_FACING = [
  * is deliberately short and every entry is a decision, not an omission.
  */
 const INTENTIONALLY_UNTRANSLATED = new Set([
+  /*
+   * `{n} min` — the story image's length (round 42). Czech abbreviates
+   * minutes as "min" too; Russian and Ukrainian do not, and are translated.
+   */
+  "story.minutes",
   /*
    * `+1`, `+2`, `+3` — the add-guest picker (round 27, item 2). The only
    * letter in it is the `{n}` placeholder's own name, which is why the
