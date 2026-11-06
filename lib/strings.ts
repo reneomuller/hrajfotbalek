@@ -9,8 +9,15 @@
 export const strings = {
   meta: {
     title: "Hraj Fotbal — pickup football in Prague",
+    /**
+     * The text under the link in a search result (2026-11-06, the owner: "an
+     * anytime anywhere type of text that would be reflective and good for
+     * SEO"). 110–160 characters in every language — the length a result shows
+     * whole; `lib/seo/__tests__/seo.test.ts` holds every locale to it. Also the
+     * og/twitter description, so a shared link says the same.
+     */
     description:
-      "One match that repeats itself. Find a game, claim your spot, show up.",
+      "Pickup football in Prague, anytime, anywhere. Pick a game, grab your spot online and just show up — no team, no commitment. New games every week.",
     /** The small line under the brand share card (`lib/og/brandImage.tsx`). */
     shareTagline: "Pickup football in Prague",
   },

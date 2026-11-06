@@ -23,7 +23,8 @@ import type { StringsOverlay } from "@/lib/i18n/resolve";
 export const cs: StringsOverlay = {
   meta: {
     title: "Hraj Fotbal — pickup fotbal v Praze",
-    description: "Jeden zápas, který se opakuje. Najdi hru, zaber si místo, přijď.",
+    description:
+      "Pickup fotbal v Praze, kdykoli a kdekoli. Vyber si zápas, zaber si místo online a přijď hrát — bez týmu, bez závazků. Nové hry každý týden.",
     shareTagline: "Pickup fotbal v Praze",
   },
 

@@ -16,6 +16,7 @@ import { DayHeading } from "@/components/game/DayHeading";
 import { groupByDay } from "@/lib/games/days";
 import { getLocale } from "@/lib/i18n/server";
 import { siteUrl } from "@/lib/site";
+import { homeStructuredData } from "@/lib/seo/site";
 import { getStrings } from "@/lib/i18n/server";
 
 
@@ -25,6 +26,8 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     title: t.meta.title,
     description: t.meta.description,
+    // The one address a result should show — the old Vercel alias forwards here.
+    alternates: { canonical: `${url}/` },
     openGraph: {
       title: t.meta.title,
       description: t.meta.description,
@@ -48,6 +51,7 @@ export default async function LandingPage() {
   const t = await getStrings();
   const { landing } = t;
   const locale = await getLocale();
+  const structuredData = homeStructuredData(await siteUrl());
 
   /*
    * THREE GAMES, NOT ONE (v1.2 §6). This page showed a single "NEXT MATCH"
@@ -107,6 +111,18 @@ export default async function LandingPage() {
 
   return (
     <>
+      {/*
+        THE SITE'S NAME AND LOGO FOR SEARCH (2026-11-06) — see
+        `lib/seo/site.ts`. Every value is a constant, but the payload goes
+        through the same `<` escape the game page's JSON-LD uses, so a later
+        edit cannot open a `</script>`.
+      */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(structuredData).replace(/</g, "\\u003c"),
+        }}
+      />
       {/* Pitch, grain and vignette are the shared SiteBackground, mounted once
           from the root layout. This route is what puts it at full strength —
           see components/SiteBackground.tsx. */}

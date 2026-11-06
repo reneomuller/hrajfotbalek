@@ -35,7 +35,8 @@ import type { StringsOverlay } from "@/lib/i18n/resolve";
 export const uk: StringsOverlay = {
   meta: {
     title: "Hraj Fotbal — футбол без зобов’язань у Празі",
-    description: "Один матч, що повторюється. Знайди гру, займи місце, приходь.",
+    description:
+      "Футбол у Празі — будь-коли й будь-де. Обери гру, займи місце онлайн і просто приходь: без команди й зобов’язань. Нові ігри щотижня.",
     shareTagline: "Футбол без зобов’язань у Празі",
   },
 

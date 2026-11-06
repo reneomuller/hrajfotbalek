@@ -121,6 +121,45 @@ for (const { file, size, safe } of targets) {
 }
 
 // -----------------------------------------------------------------------------
+// `app/favicon.ico` — 16, 32 and 48 pixels in one file (2026-11-06).
+//
+// Search results draw a site's icon from its favicon and want a multiple of
+// 48px; `/favicon.ico` is also where crawlers and older browsers look first,
+// and it answered 404. Next serves `app/favicon.ico` at that path and links it.
+//
+// PNG ENTRIES, not bitmaps: an ICO may carry PNG data per image (every browser
+// since 2007 reads it), so each size is the same renderer's output as above,
+// packed behind a 6-byte header and one 16-byte directory entry per image.
+// -----------------------------------------------------------------------------
+const FAVICON_SIZES = [16, 32, 48];
+const icoImages = [];
+for (const size of FAVICON_SIZES) {
+  const response = new ImageResponse(mark(size, 1), { width: size, height: size });
+  icoImages.push({ size, data: Buffer.from(await response.arrayBuffer()) });
+}
+const icoHeader = Buffer.alloc(6);
+icoHeader.writeUInt16LE(0, 0); // reserved
+icoHeader.writeUInt16LE(1, 2); // type: icon
+icoHeader.writeUInt16LE(icoImages.length, 4);
+let icoOffset = 6 + 16 * icoImages.length;
+const icoEntries = icoImages.map(({ size, data }) => {
+  const entry = Buffer.alloc(16);
+  entry.writeUInt8(size, 0); // width
+  entry.writeUInt8(size, 1); // height
+  entry.writeUInt8(0, 2); // no palette
+  entry.writeUInt8(0, 3); // reserved
+  entry.writeUInt16LE(1, 4); // colour planes
+  entry.writeUInt16LE(32, 6); // bits per pixel
+  entry.writeUInt32LE(data.length, 8);
+  entry.writeUInt32LE(icoOffset, 12);
+  icoOffset += data.length;
+  return entry;
+});
+const ico = Buffer.concat([icoHeader, ...icoEntries, ...icoImages.map(({ data }) => data)]);
+writeFileSync(path.resolve(process.cwd(), 'app/favicon.ico'), ico);
+console.log(`WROTE  app/favicon.ico  (${FAVICON_SIZES.join(', ')} px, ${ico.length} bytes)`);
+
+// -----------------------------------------------------------------------------
 // The share card's copy of the mark, as a module rather than a file.
 //
 // The OG card is rendered by Satori inside a server route, and Satori needs the
