@@ -21,7 +21,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const t = await getStrings();
   return {
     title: t.games.listTitle,
-    description: t.meta.description,
+    description: t.meta.gamesDescription,
   };
 }
 

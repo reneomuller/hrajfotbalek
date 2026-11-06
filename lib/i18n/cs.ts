@@ -31,6 +31,10 @@ export const cs: StringsOverlay = {
     description:
       "Pickup fotbal v Praze, kdykoli a kdekoli. Vyber si zápas, zaber si místo online a přijď hrát — bez týmu, bez závazků. Nové hry každý týden.",
     shareTagline: "Pickup fotbal v Praze",
+    passTitle: "Game Pass",
+    passDescription: "Objev Game Pass a získej výhodnější nabídku",
+    gamesDescription: "Najdi si zápas a přijď si zahrát",
+    loginDescription: "Přihlas se",
   },
 
   nav: {

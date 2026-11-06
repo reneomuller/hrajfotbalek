@@ -6,7 +6,12 @@ import { OPERATOR_CONTACT } from "@/lib/legal";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getStrings();
-  return { title: t.siteFooter.contact };
+  /*
+   * NOINDEX (2026-11-06, the owner): kept out of the sub-links under the site's
+   * Google result, which is the only way to keep a page out of them. Still
+   * linked from the footer, and still followed.
+   */
+  return { title: t.siteFooter.contact, robots: { index: false, follow: true } };
 }
 
 const LINK = "text-volt underline-offset-4 hover:underline";

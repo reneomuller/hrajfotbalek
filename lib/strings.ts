@@ -26,6 +26,15 @@ export const strings = {
       "Pickup football in Prague, anytime, anywhere. Pick a game, grab your spot online and just show up — no team, no commitment. New games every week.",
     /** The small line under the brand share card (`lib/og/brandImage.tsx`). */
     shareTagline: "Pickup football in Prague",
+    /**
+     * The result's sub-links (2026-11-06, the owner): each page's own title and
+     * line, so Google's sitelinks under the result say what the page is.
+     * "Game Pass" in every language — the owner's name for the pass page in search.
+     */
+    passTitle: "Game Pass",
+    passDescription: "Explore Game Pass and get a better deal",
+    gamesDescription: "Find a game and come play",
+    loginDescription: "Sign in",
   },
 
   brand: {

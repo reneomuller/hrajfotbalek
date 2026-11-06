@@ -48,8 +48,10 @@ export function robotsFor(site: string): MetadataRoute.Robots {
 /**
  * The public pages a search engine should know about. Game pages are not
  * listed: they live a week and are reached from the games list, which is.
+ * `/contact` and `/terms` are noindex (the owner kept them out of the
+ * result's sub-links), so they are not listed either.
  */
-const PUBLIC_PATHS = ["/", "/games", "/pass", "/signup", "/contact", "/terms", "/privacy", "/cookies"];
+const PUBLIC_PATHS = ["/", "/games", "/pass", "/signup", "/privacy", "/cookies"];
 
 export function sitemapFor(site: string): MetadataRoute.Sitemap {
   return PUBLIC_PATHS.map((path) => ({

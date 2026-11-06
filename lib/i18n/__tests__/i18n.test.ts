@@ -102,6 +102,8 @@ const INTENTIONALLY_UNTRANSLATED = new Set([
    * minutes as "min" too; Russian and Ukrainian do not, and are translated.
    */
   "story.minutes",
+  // "Game Pass" — the owner's name for the pass page in search, in every language.
+  "meta.passTitle",
   /*
    * `+1`, `+2`, `+3` — the add-guest picker (round 27, item 2). The only
    * letter in it is the `{n}` placeholder's own name, which is why the

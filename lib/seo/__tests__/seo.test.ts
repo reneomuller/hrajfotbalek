@@ -46,8 +46,36 @@ describe("the sitemap", () => {
   it("lists the public pages and none of the private ones", () => {
     const urls = sitemapFor(SITE).map((entry) => entry.url);
 
-    expect(urls).toEqual(expect.arrayContaining([`${SITE}/`, `${SITE}/games`, `${SITE}/pass`, `${SITE}/terms`]));
+    expect(urls).toEqual(expect.arrayContaining([`${SITE}/`, `${SITE}/games`, `${SITE}/pass`]));
     expect(urls.some((url) => /\/(admin|account|my-games|login|api)/.test(url))).toBe(false);
+  });
+
+  it("leaves out Kontakt and Obchodní podmínky, which are noindex — kept out of the result's sub-links", () => {
+    const urls = sitemapFor(SITE).map((entry) => entry.url);
+
+    expect(urls).not.toContain(`${SITE}/contact`);
+    expect(urls).not.toContain(`${SITE}/terms`);
+  });
+});
+
+/**
+ * The result's sub-links (2026-11-06, the owner): "Herní permanentka" reads
+ * "Game Pass", and each of the three carries its own line.
+ */
+describe("the sub-links' titles and lines", () => {
+  it("are the owner's words in Czech", () => {
+    // Act
+    const { meta } = resolveStrings("cs");
+
+    // Assert
+    expect(meta.passTitle).toBe("Game Pass");
+    expect(meta.passDescription).toBe("Objev Game Pass a získej výhodnější nabídku");
+    expect(meta.gamesDescription).toBe("Najdi si zápas a přijď si zahrát");
+    expect(meta.loginDescription).toBe("Přihlas se");
+  });
+
+  it("explore, in English", () => {
+    expect(resolveStrings("en").meta.passDescription).toBe("Explore Game Pass and get a better deal");
   });
 });
 

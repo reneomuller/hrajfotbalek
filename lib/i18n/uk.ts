@@ -43,6 +43,10 @@ export const uk: StringsOverlay = {
     description:
       "Футбол у Празі — будь-коли й будь-де. Обери гру, займи місце онлайн і просто приходь: без команди й зобов’язань. Нові ігри щотижня.",
     shareTagline: "Футбол без зобов’язань у Празі",
+    passTitle: "Game Pass",
+    passDescription: "Відкрий Game Pass і отримай вигіднішу пропозицію",
+    gamesDescription: "Знайди гру й приходь пограти",
+    loginDescription: "Увійди в акаунт",
   },
 
   nav: {

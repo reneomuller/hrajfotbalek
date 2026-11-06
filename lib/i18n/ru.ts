@@ -30,6 +30,10 @@ export const ru: StringsOverlay = {
     description:
       "Футбол в Праге — когда угодно и где угодно. Выбери игру, займи место онлайн и просто приходи: без команды и обязательств. Новые игры каждую неделю.",
     shareTagline: "Футбол без обязательств в Праге",
+    passTitle: "Game Pass",
+    passDescription: "Открой Game Pass и получи более выгодное предложение",
+    gamesDescription: "Найди игру и приходи поиграть",
+    loginDescription: "Войди в аккаунт",
   },
 
   nav: {

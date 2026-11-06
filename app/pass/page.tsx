@@ -6,7 +6,8 @@ import { getStrings } from "@/lib/i18n/server";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getStrings();
-  return { title: t.pass.title, description: t.pass.lede };
+  // "Game Pass" in search (2026-11-06, the owner); the page's own heading is unchanged.
+  return { title: t.meta.passTitle, description: t.meta.passDescription };
 }
 
 export const dynamic = "force-dynamic";

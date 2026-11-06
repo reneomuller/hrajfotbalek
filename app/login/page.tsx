@@ -6,7 +6,7 @@ import { getStrings } from "@/lib/i18n/server";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getStrings();
-  return { title: t.auth.loginTitle };
+  return { title: t.auth.loginTitle, description: t.meta.loginDescription };
 }
 
 /**
