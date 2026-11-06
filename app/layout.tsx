@@ -7,6 +7,7 @@ import { SessionProvider } from "@/components/SessionProvider";
 import { SiteBackground } from "@/components/SiteBackground";
 import { Suspense } from "react";
 import Script from "next/script";
+import { Analytics } from "@vercel/analytics/next";
 import { GoogleTagManager } from "@next/third-parties/google";
 import { Footer } from "@/components/chrome/Footer";
 import { CookieConsent } from "@/components/consent/CookieConsent";
@@ -250,6 +251,16 @@ export default async function RootLayout({
             <NavPill />
           </SessionProvider>
         </LocaleProvider>
+        {/*
+          VERCEL WEB ANALYTICS — ALWAYS ON, OUTSIDE THE CONSENT GATE (2026-11-06,
+          the owner's choice). It stores nothing on the visitor's device: no
+          cookie, no local storage — page views counted by a same-origin script
+          (`/_vercel/insights`). The banner above governs what DOES store
+          something (GTM: GA4 and the Meta Pixel), and this does not. The
+          published privacy policy does not name it; that is flagged in
+          docs/REQUESTS.md, not edited here — the legal text is verbatim.
+        */}
+        <Analytics />
       </body>
     </html>
   );
