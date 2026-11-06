@@ -871,8 +871,8 @@ node scripts/apply-migration.mjs \
   supabase/migrations/20261105100000_admin_remove_credit_choice.sql --production
 ```
 
-**OUTSTANDING — round 42's third, a venue's address** (for the game's story
-image). Additive, idempotent, NOT deploy-first, order-free; applied twice
+**~~OUTSTANDING~~ APPLIED, verified 2026-11-06 — round 42's third, a venue's address** (for the game's story
+image), on the owner's explicit "deploy and apply to prod": 36 flags, all true; `venues.address` readable. Additive, idempotent, NOT deploy-first, order-free; applied twice
 locally and drilled (`venue_address.sql`, 58/58 suites). The deploy is safe
 without it: the venue page shows the Address field only once
 `app_capabilities()` says `venueAddress`, and the story leaves the line out.
