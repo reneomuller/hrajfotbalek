@@ -2277,6 +2277,18 @@ export const strings = {
     /* Round 42 — pitch costs. */
     pitchCostOutOfRange: "A pitch cost is a whole number of crowns, from 0 to 100,000.",
     pitchSeasonInvalid: "The season is summer or winter.",
+    /* Round 42 rebuild — the seat bar every games surface draws. */
+    seatKinds: {
+      single: "Single game",
+      pass: "Game Pass",
+      credit: "Credit",
+      free: "Free",
+      house: "House guest",
+      unpaid: "Unpaid",
+    },
+    breakEven: "Break-even",
+    breakEvenAt: "Break-even at {n} seats",
+    seatBarLabel: "{taken} of {capacity} seats taken",
 
     /*
      * ROUND 42, THE ADMIN REBUILD. One block per surface, so the pieces of the
