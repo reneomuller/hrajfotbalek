@@ -1,3 +1,6 @@
+import { paymentsBetween, totalCzk } from "@/lib/admin/money/payments";
+import { readAllByIds, readAllPages, readByIds } from "@/lib/admin/money/readAll";
+import { COUNTED_PLAYER_FILTER } from "@/lib/admin/playerScope";
 import { createServiceRoleSupabaseClient } from "@/lib/supabase/clients";
 import { statRange, type StatRange, type StatWindow } from "@/lib/stats/window";
 
@@ -43,7 +46,7 @@ export interface NoShowStats {
 }
 
 export interface FillRateStats {
-  /** Active bookings on games in range. */
+  /** Seats taken on games in range — the SQL seat counter's figure. */
   sold: number;
   /** Total capacity of those games. */
   capacity: number;
@@ -101,13 +104,20 @@ async function getNoShowRate(range: StatRange): Promise<NoShowStats> {
 /**
  * Fill rate.
  *
- *   sum(active bookings) / sum(capacity)
+ *   sum(seats taken) / sum(capacity)
  *   over games with starts_at in range
  *
- * Active = `confirmed` + `reserved`, which is the same definition
- * `create_booking`'s capacity check uses. Counting only `confirmed` would make
- * a game full of unpaid holds look empty, and counting cancelled bookings
- * would let one indecisive player fill a pitch.
+ * SEATS, NOT BOOKING ROWS (round 42, the admin rebuild). ~~`count(bookings
+ * where status in ('reserved','confirmed'))`~~ counted a party of three as one
+ * and house guests as nobody — the bug the games list had in round 35 v2, on
+ * the one figure that says whether the pitches are full. The answer comes
+ * from `game_seats_taken_many`, which wraps `game_seats_taken`: the counter
+ * `create_booking` refuses against. "One counter, and it lives in SQL" — this
+ * asks it rather than restating its arithmetic.
+ *
+ * A FAILED COUNT THROWS rather than reading as zero. An empty map here would
+ * render an empty week, which is the missing-GRANT trap: a read that comes
+ * back empty looks like missing data, not like a broken read.
  */
 async function getFillRate(range: StatRange): Promise<FillRateStats> {
   const service = createServiceRoleSupabaseClient();
@@ -121,17 +131,15 @@ async function getFillRate(range: StatRange): Promise<FillRateStats> {
 
   if (!games || games.length === 0) return { sold: 0, capacity: 0 };
 
-  const { data: bookings } = await service
-    .from("bookings")
-    .select("id")
-    .in(
-      "game_id",
-      games.map((g) => g.id),
-    )
-    .in("status", ["reserved", "confirmed"]);
+  const { data: seats, error } = await service.rpc("game_seats_taken_many", {
+    p_game_ids: games.map((g) => g.id),
+  });
+  if (error) {
+    throw new Error(`game_seats_taken_many failed: ${error.message}`, { cause: error });
+  }
 
   return {
-    sold: (bookings ?? []).length,
+    sold: (seats ?? []).reduce((total, row) => total + row.seats_taken, 0),
     capacity: games.reduce((total, game) => total + game.capacity, 0),
   };
 }
@@ -149,30 +157,9 @@ async function getFillRate(range: StatRange): Promise<FillRateStats> {
  * the same crown twice.
  */
 async function getConfirmedRevenue(range: StatRange): Promise<number> {
-  const service = createServiceRoleSupabaseClient();
-
-  const { data: events } = await service
-    .from("events")
-    .select("booking_id")
-    .eq("event_type", "payment_confirmed")
-    .gte("created_at", range.from)
-    .lt("created_at", range.to)
-    .not("booking_id", "is", null);
-
-  const bookingIds = [...new Set((events ?? []).map((row) => row.booking_id))].filter(
-    (id): id is string => id !== null,
-  );
-  if (bookingIds.length === 0) return 0;
-
-  const { data: bookings } = await service
-    .from("bookings")
-    .select("price_czk, credit_applied_czk")
-    .in("id", bookingIds);
-
-  return (bookings ?? []).reduce(
-    (total, row) => total + Math.max(0, row.price_czk - row.credit_applied_czk),
-    0,
-  );
+  // The money page's own reading (round 42): one definition of "money that
+  // arrived", paged, so the Revenue tile and this one cannot drift.
+  return totalCzk(await paymentsBetween(range));
 }
 
 /**
@@ -190,41 +177,76 @@ async function getConfirmedRevenue(range: StatRange): Promise<number> {
 async function getNewReturning(range: StatRange): Promise<NewReturningStats> {
   const service = createServiceRoleSupabaseClient();
 
-  const { data: inRange } = await service
-    .from("events")
-    .select("player_id, created_at")
-    .eq("event_type", "booking_created")
-    .gte("created_at", range.from)
-    .lt("created_at", range.to)
-    .not("player_id", "is", null);
+  // In time order, every page of them — see `lib/admin/money/readAll.ts`.
+  const inRange = await readAllPages("booking_created events", (from, to) =>
+    service
+      .from("events")
+      .select("id, player_id, created_at")
+      .eq("event_type", "booking_created")
+      .gte("created_at", range.from)
+      .lt("created_at", range.to)
+      .not("player_id", "is", null)
+      .order("created_at")
+      .order("id")
+      .range(from, to),
+  );
 
-  const rows = (inRange ?? []).filter(
-    (row): row is { player_id: string; created_at: string } => row.player_id !== null,
+  const rows = inRange.filter(
+    (row): row is typeof row & { player_id: string } => row.player_id !== null,
   );
   if (rows.length === 0) return { newPlayers: 0, returning: 0 };
 
-  const playerIds = [...new Set(rows.map((row) => row.player_id))];
+  /*
+   * PLAYERS ONLY (round 42, the admin rebuild). The owner: "don't count shadow
+   * accounts". A shadow is a name the admin books a friend onto, with no
+   * login; a deleted account and a seed fixture are not players either. The
+   * filter is `isCountedPlayer`'s, as a query — `COUNTED_PLAYER_FILTER`.
+   */
+  const counted = await readByIds("counted players", [...new Set(rows.map((row) => row.player_id))], (ids) =>
+    service
+      .from("players")
+      .select("id")
+      .in("id", ids)
+      .not(COUNTED_PLAYER_FILTER.notNull, "is", null)
+      .is(COUNTED_PLAYER_FILTER.isNull, null)
+      .eq(COUNTED_PLAYER_FILTER.isFalse, false),
+  );
+  const isCounted = new Set(counted.map((row) => row.id));
+  if (isCounted.size === 0) return { newPlayers: 0, returning: 0 };
 
-  // The first `booking_created` each of those players ever wrote.
-  const { data: history } = await service
-    .from("events")
-    .select("player_id, created_at")
-    .eq("event_type", "booking_created")
-    .in("player_id", playerIds);
+  /*
+   * WHO HAD BOOKED BEFORE THE WINDOW OPENED. ~~Every `booking_created` those
+   * players ever wrote, in one request~~ — a regular's history outgrows one
+   * 1000-row response, the rest was dropped without a word, and a booking
+   * whose earlier sibling fell off the end read as a first. Only the earlier
+   * rows are asked for now, every page of them.
+   */
+  const earlier = await readAllByIds("earlier booking_created events", [...isCounted], (ids, from, to) =>
+    service
+      .from("events")
+      .select("id, player_id")
+      .eq("event_type", "booking_created")
+      .in("player_id", ids)
+      .lt("created_at", range.from)
+      .order("id")
+      .range(from, to),
+  );
+  const hasBooked = new Set(earlier.map((row) => row.player_id));
 
-  const firstEver = new Map<string, string>();
-  for (const row of history ?? []) {
-    if (!row.player_id) continue;
-    const seen = firstEver.get(row.player_id);
-    if (!seen || row.created_at < seen) firstEver.set(row.player_id, row.created_at);
-  }
-
+  // A player's first booking in the window is new if they had none before it.
   let newPlayers = 0;
+  let returning = 0;
   for (const row of rows) {
-    if (firstEver.get(row.player_id) === row.created_at) newPlayers += 1;
+    if (!isCounted.has(row.player_id)) continue;
+    if (hasBooked.has(row.player_id)) {
+      returning += 1;
+      continue;
+    }
+    hasBooked.add(row.player_id);
+    newPlayers += 1;
   }
 
-  return { newPlayers, returning: rows.length - newPlayers };
+  return { newPlayers, returning };
 }
 
 /**

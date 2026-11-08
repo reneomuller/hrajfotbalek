@@ -1,4 +1,10 @@
+import { paymentsBetween, totalCzk, type Payment } from "@/lib/admin/money/payments";
+import { bucketByWeek, pragueMonth, type WeekBar } from "@/lib/admin/money/periods";
+import { readAllPages } from "@/lib/admin/money/readAll";
+import { strings } from "@/lib/strings";
 import { createServiceRoleSupabaseClient } from "@/lib/supabase/clients";
+
+export type { WeekBar } from "@/lib/admin/money/periods";
 
 /**
  * The Financials page's numbers (round 7, item 8) — `p19`.
@@ -42,12 +48,6 @@ export interface PeriodBounds {
   to: string | null;
 }
 
-export interface WeekBar {
-  /** `W1`…`W5` — the frame's own labels. */
-  label: string;
-  revenueCzk: number;
-}
-
 export interface Transaction {
   id: string;
   /** Player nickname, or a dash when the row outlived its player. */
@@ -89,89 +89,27 @@ export interface Financials {
  * exact bounds the numbers were computed against so its label and its figures
  * describe the same month.
  *
- * Months are UTC. The product's other date arithmetic is Prague-local because
- * it decides which DAY a game belongs to, and being an hour out puts a Sunday
- * evening kick-off on Monday. A revenue month is not that: a booking an hour
- * either side of midnight on the 1st lands in a different month under either
- * rule, and no reader is counting.
+ * ~~Months are UTC~~ — PRAGUE CALENDAR MONTHS since the round 42 rebuild. The
+ * old note said a booking an hour either side of midnight on the 1st "lands
+ * in a different month under either rule, and no reader is counting"; the
+ * owner is, and a payment at 00:30 on the 1st is that month's money. See
+ * `lib/admin/money/periods.ts`. The dashboard's month tile reads this too.
  */
 export function financialBounds(
   period: FinancialPeriod,
-  now: Date | number,
+  now: Date | number | string,
 ): PeriodBounds {
   if (period === "all_time") return { from: null, to: null };
-
-  const at = new Date(now);
-  const year = at.getUTCFullYear();
-  const month = at.getUTCMonth();
-  const offset = period === "last_month" ? -1 : 0;
-
-  const from = new Date(Date.UTC(year, month + offset, 1));
-  const to = new Date(Date.UTC(year, month + offset + 1, 1));
-  return { from: from.toISOString(), to: to.toISOString() };
+  return pragueMonth(now, period === "last_month" ? 1 : 0);
 }
 
 /** The period immediately before this one, for the comparison figure. */
 function previousBounds(
   period: FinancialPeriod,
-  now: Date | number,
+  now: Date | number | string,
 ): PeriodBounds | null {
   if (period === "all_time") return null;
-  const at = new Date(now);
-  const shifted = new Date(
-    Date.UTC(at.getUTCFullYear(), at.getUTCMonth() - 1, 15),
-  );
-  return financialBounds(period, shifted);
-}
-
-/**
- * Money actually collected in a period.
- *
- * THROUGH `payment_confirmed` EVENTS, which is how `lib/stats/queries.ts`
- * already computes revenue — and reusing that definition is the point. Two
- * revenue figures on two admin pages that disagree is worse than one page.
- *
- * The event carries WHEN the organizer confirmed the money arrived, so the sum
- * counts what was RECEIVED rather than what was owed. A reserved-but-unpaid
- * spot is not revenue; counting it would make the figure disagree with the
- * bank.
- *
- * `credit_applied_czk` is SUBTRACTED, and this is the subtle one. A booking
- * paid from a wallet moved no new money: the cash came in earlier as a top-up
- * and is counted in the period it arrived. Counting it again here would
- * double-count every pass.
- *
- * There is no `bookings.paid_at` — the first draft of this file assumed one,
- * and the generated types refused it. Left as a note because "surely there is
- * a paid timestamp" is the obvious wrong guess.
- */
-async function revenueBetween(bounds: PeriodBounds): Promise<number> {
-  const service = createServiceRoleSupabaseClient();
-
-  let events = service
-    .from("events")
-    .select("booking_id")
-    .eq("event_type", "payment_confirmed")
-    .not("booking_id", "is", null);
-
-  if (bounds.from) events = events.gte("created_at", bounds.from);
-  if (bounds.to) events = events.lt("created_at", bounds.to);
-
-  const { data: rows } = await events;
-  const bookingIds = [...new Set((rows ?? []).map((row) => row.booking_id))].filter(
-    (id): id is string => id !== null,
-  );
-  if (bookingIds.length === 0) return 0;
-
-  const { data: bookings } = await service
-    .from("bookings")
-    .select("price_czk,credit_applied_czk")
-    .in("id", bookingIds);
-
-  return (bookings ?? []).reduce(
-    (total, row) => total + Math.max(0, row.price_czk - row.credit_applied_czk),
-    0,
-  );
+  return pragueMonth(now, period === "last_month" ? 2 : 1);
 }
 
 /** Games whose books are closed in the period. */
@@ -203,12 +141,16 @@ async function settledBetween(bounds: PeriodBounds): Promise<number> {
  */
 async function outstanding(): Promise<{ czk: number; spots: number }> {
   const service = createServiceRoleSupabaseClient();
-  const { data } = await service
-    .from("bookings")
-    .select("price_czk,credit_applied_czk,games!inner(status)")
-    .eq("status", "reserved");
+  const data = await readAllPages("unpaid bookings", (from, to) =>
+    service
+      .from("bookings")
+      .select("id,price_czk,credit_applied_czk,guest_count,games!inner(status)")
+      .eq("status", "reserved")
+      .order("id")
+      .range(from, to),
+  );
 
-  const rows = (data ?? []).filter((row) => {
+  const rows = data.filter((row) => {
     const game = row.games as unknown as { status: string } | null;
     return game !== null && game.status !== "cancelled";
   });
@@ -218,62 +160,32 @@ async function outstanding(): Promise<{ czk: number; spots: number }> {
       (sum, row) => sum + Math.max(0, row.price_czk - row.credit_applied_czk),
       0,
     ),
-    spots: rows.length,
+    /*
+     * SPOTS ARE SEATS (round 42, the admin rebuild). ~~`rows.length`~~ called
+     * an unpaid party of three "1 unpaid spot" — the row-for-seat bug the fill
+     * rate had. The booker plus their guests; the money above is already the
+     * party's, because a booking's price is the whole party's.
+     */
+    spots: rows.reduce((sum, row) => sum + 1 + row.guest_count, 0),
   };
 }
 
 /**
- * The frame's four bars: revenue by week within the period.
+ * The frame's bars: revenue by week within the period.
  *
  * EMPTY FOR ALL TIME. A bar per week across the product's whole history is a
- * chart nobody can read, and the frame draws four bars labelled W1-W4 — which
- * is a month. The page renders no chart rather than a wrong one.
+ * chart nobody can read, and the frame draws a bar a week — which is a month.
+ * The page renders no chart rather than a wrong one.
  *
  * Calendar weeks FROM THE 1st, not ISO weeks: the reader is dividing a month
- * into quarters, not looking up a week number.
+ * into quarters, not looking up a week number. Bucketed by the PRAGUE day of
+ * the month (`bucketByWeek`), not by milliseconds since the 1st, which an
+ * hour of clock change was enough to push across a week. The SAME payments
+ * as the Revenue figure, so the bars always add up to it.
  */
-async function weeklyRevenue(bounds: PeriodBounds): Promise<WeekBar[]> {
+function weeklyRevenue(bounds: PeriodBounds, payments: readonly Payment[]): WeekBar[] {
   if (!bounds.from || !bounds.to) return [];
-
-  const service = createServiceRoleSupabaseClient();
-  const { data: rows } = await service
-    .from("events")
-    .select("booking_id,created_at")
-    .eq("event_type", "payment_confirmed")
-    .not("booking_id", "is", null)
-    .gte("created_at", bounds.from)
-    .lt("created_at", bounds.to);
-
-  const paidAt = new Map<string, string>();
-  for (const row of rows ?? []) {
-    if (row.booking_id) paidAt.set(row.booking_id, row.created_at);
-  }
-  if (paidAt.size === 0) return [];
-
-  const { data: bookings } = await service
-    .from("bookings")
-    .select("id,price_czk,credit_applied_czk")
-    .in("id", [...paidAt.keys()]);
-
-  const start = Date.parse(bounds.from);
-  const WEEK = 7 * 86_400_000;
-  const buckets = new Map<number, number>();
-
-  for (const row of bookings ?? []) {
-    const at = paidAt.get(row.id);
-    if (!at) continue;
-    const week = Math.min(4, Math.floor((Date.parse(at) - start) / WEEK));
-    buckets.set(
-      week,
-      (buckets.get(week) ?? 0) + Math.max(0, row.price_czk - row.credit_applied_czk),
-    );
-  }
-
-  const weeks = Math.min(5, Math.ceil((Date.parse(bounds.to) - start) / WEEK));
-  return Array.from({ length: weeks }, (_, i) => ({
-    label: `W${i + 1}`,
-    revenueCzk: buckets.get(i) ?? 0,
-  }));
+  return bucketByWeek(payments, { from: bounds.from, to: bounds.to });
 }
 
 /**
@@ -291,19 +203,19 @@ async function recentTransactions(limit: number): Promise<Transaction[]> {
     .order("created_at", { ascending: false })
     .limit(limit);
 
-  const REASON: Record<string, string> = {
-    cancellation_credit: "Refund — cancelled",
-    admin_grant: "Credit granted",
-    redemption: "Credit spent on a game",
-    adjustment: "Adjustment",
-  };
+  /*
+   * THE WORDS LIVE IN `lib/strings.ts`, and all six reasons have one. The
+   * table that used to sit here named four, so a pass purchase printed the
+   * enum — `topup` — on the one list an admin reads to see money arrive.
+   */
+  const reasons: Record<string, string> = strings.admin.money.ledgerReason;
 
   return (data ?? []).map((row) => {
     const player = row.players as unknown as { nickname: string } | null;
     return {
       id: row.id,
       who: player?.nickname ?? "—",
-      what: REASON[row.reason] ?? row.reason,
+      what: reasons[row.reason] ?? row.reason,
       amountCzk: row.delta_czk,
       at: row.created_at,
     };
@@ -326,20 +238,30 @@ export async function getFinancials(period: FinancialPeriod): Promise<Financials
 /** The bounded form, kept separate so a test can supply the instant. */
 export async function getFinancialsAt(
   period: FinancialPeriod,
-  now: Date | number,
+  now: Date | number | string,
 ): Promise<Financials> {
   const bounds = financialBounds(period, now);
   const prev = previousBounds(period, now);
 
-  const [revenueCzk, previousRevenueCzk, gamesSettled, owed, weeks, transactions] =
-    await Promise.all([
-      revenueBetween(bounds),
-      prev ? revenueBetween(prev) : Promise.resolve(null),
-      settledBetween(bounds),
-      outstanding(),
-      weeklyRevenue(bounds),
-      recentTransactions(8),
-    ]);
+  /*
+   * Money actually collected comes from `paymentsBetween` — the one reading
+   * behind this page's Revenue, its week chart and Operations' confirmed
+   * revenue (round 42; there were three copies). The week chart is cut from
+   * the SAME payments, so its bars always add up to the Revenue tile. See
+   * `lib/admin/money/payments.ts` for what counts and why credit applied is
+   * subtracted.
+   */
+  const [payments, previousPayments, gamesSettled, owed, transactions] = await Promise.all([
+    paymentsBetween(bounds),
+    prev ? paymentsBetween(prev) : Promise.resolve(null),
+    settledBetween(bounds),
+    outstanding(),
+    recentTransactions(8),
+  ]);
+
+  const revenueCzk = totalCzk(payments);
+  const previousRevenueCzk = previousPayments === null ? null : totalCzk(previousPayments);
+  const weeks = weeklyRevenue(bounds, payments);
 
   return {
     period,
