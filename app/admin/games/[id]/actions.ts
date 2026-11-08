@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireAdmin } from "@/lib/auth/requireAdmin";
 import { parseUnderpayment, toAdminErrorMessage } from "@/lib/admin/errors";
+import { parsePitchCostInput } from "@/lib/admin/games/pitchCost";
 import { appCapabilities } from "@/lib/db/capabilities";
 import { createServerSupabaseClient } from "@/lib/supabase/clients";
 import { strings } from "@/lib/strings";
@@ -184,4 +185,49 @@ export async function deleteGameAction(
   revalidatePath("/admin/games");
   revalidatePath("/games");
   redirect("/admin/games");
+}
+
+export interface PitchCostState {
+  status: "idle" | "saved" | "error";
+  /** What the game's pitch cost is now — null when it has none. */
+  costCzk?: number | null;
+  message?: string;
+}
+
+/**
+ * Correct THIS game's pitch cost (round 42, the admin rebuild).
+ *
+ * A game keeps the cost it was created with, from its venue and the season;
+ * the owner's ruling is that an admin may correct it. An EMPTY box sends null,
+ * which `set_game_pitch_cost` reads as "back to the venue's current price" —
+ * so a mistyped correction is undone by clearing it, not by remembering the
+ * venue's number.
+ *
+ * On the ADMIN'S OWN session, after `requireAdmin()`: a service-role write
+ * would satisfy the RPC's admin check whoever pressed the button. The ceiling
+ * is the RPC's (`PITCH_COST_OUT_OF_RANGE`); only the shape is checked here.
+ */
+export async function setPitchCostAction(
+  _prevState: PitchCostState,
+  formData: FormData,
+): Promise<PitchCostState> {
+  await requireAdmin();
+
+  const gameId = String(formData.get("gameId") ?? "");
+  if (!gameId) return { status: "error", message: toAdminErrorMessage("GAME_NOT_FOUND") };
+
+  const input = parsePitchCostInput(formData.get("costCzk"));
+  if (!input.ok) return { status: "error", message: strings.admin.pitchCostOutOfRange };
+
+  const supabase = await createServerSupabaseClient();
+  const { data, error } = await supabase.rpc("set_game_pitch_cost", {
+    p_game_id: gameId,
+    p_cost_czk: input.costCzk,
+  });
+
+  if (error) return { status: "error", message: toAdminErrorMessage(error.message) };
+
+  revalidatePath(`/admin/games/${gameId}`);
+  revalidatePath("/admin/games");
+  return { status: "saved", costCzk: data ?? null };
 }

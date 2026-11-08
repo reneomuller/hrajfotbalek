@@ -15,7 +15,7 @@ function ConfirmButton() {
       type="submit"
       disabled={pending}
       data-testid="cancel-game-confirm"
-      className="w-full rounded-control border border-hairline-strong bg-transparent px-6 py-4 text-cta font-extrabold uppercase tracking-wide text-bone disabled:opacity-60"
+      className="min-h-[52px] w-full rounded-control border border-danger bg-danger/[.12] px-6 text-cta font-extrabold uppercase tracking-wide text-danger disabled:opacity-60"
     >
       {pending ? strings.common.loading : strings.admin.cancelGameConfirm}
     </button>
@@ -29,6 +29,10 @@ function ConfirmButton() {
  * moves every affected player's money into their wallet, clears the waitlist
  * and mails everyone. There is no undo — `cancel_game` refuses to run twice,
  * and nothing restores a cancelled game.
+ *
+ * THE TWO HALVES ARE KEYED APART (CLAUDE.md): an unkeyed swap from a
+ * `type="button"` to a submit can let React reuse one element and flip its type
+ * inside the very click that armed it, which then submits.
  */
 export function CancelGameButton({
   gameId,
@@ -38,12 +42,9 @@ export function CancelGameButton({
   gameId: string;
   venue: string;
   /**
-   * Whether this database can RECORD a reason (round 16, item 19).
-   *
-   * The field is not shown when it cannot be stored: asking somebody to
-   * explain themselves and then discarding what they wrote is worse than not
-   * asking. `cancel_game_with_reason` arrives with the round-16 migration and
-   * this code ships first.
+   * Whether this database can RECORD a reason (round 16, item 19). The field
+   * is not shown when it cannot be stored: asking somebody to explain
+   * themselves and then discarding what they wrote is worse than not asking.
    */
   needsReason?: boolean;
 }) {
@@ -52,24 +53,19 @@ export function CancelGameButton({
 
   if (state.status === "cancelled") {
     return (
-      <div
-        data-testid="cancel-game-result"
-        className="rounded-card bg-surface p-5"
-      >
-        <div className=" text-[17px] font-bold uppercase tracking-wide text-volt">
-          {strings.admin.cancelGameDone}
-        </div>
+      <div key="done" data-testid="cancel-game-result" className="rounded-card bg-surface p-5">
+        <div className="text-[17px] font-bold uppercase tracking-wide text-volt">{strings.admin.cancelGameDone}</div>
         <dl className="mt-3 grid grid-cols-[1fr_auto] gap-x-4 gap-y-1 text-[13px]">
           <dt className="text-muted">{strings.admin.cancelledBookings}</dt>
-          <dd className="m-0 text-right text-bone">{state.bookingsCancelled}</dd>
+          <dd className="m-0 text-right tabular-nums text-bone">{state.bookingsCancelled}</dd>
           <dt className="text-muted">{strings.admin.creditsIssued}</dt>
-          <dd className="m-0 text-right text-bone">{state.creditsIssued}</dd>
+          <dd className="m-0 text-right tabular-nums text-bone">{state.creditsIssued}</dd>
           <dt className="text-muted">{strings.admin.waitlistCleared}</dt>
-          <dd className="m-0 text-right text-bone">{state.waitlistCleared}</dd>
+          <dd className="m-0 text-right tabular-nums text-bone">{state.waitlistCleared}</dd>
           <dt className="text-muted">{strings.admin.noticesSent}</dt>
-          <dd className="m-0 text-right text-bone">{state.noticesSent}</dd>
+          <dd className="m-0 text-right tabular-nums text-bone">{state.noticesSent}</dd>
           <dt className="text-muted">{strings.admin.receiptsSent}</dt>
-          <dd className="m-0 text-right text-bone">{state.receiptsSent}</dd>
+          <dd className="m-0 text-right tabular-nums text-bone">{state.receiptsSent}</dd>
         </dl>
       </div>
     );
@@ -78,10 +74,11 @@ export function CancelGameButton({
   if (!armed) {
     return (
       <button
+        key="arm"
         type="button"
         data-testid="cancel-game"
         onClick={() => setArmed(true)}
-        className="w-full rounded-control border border-hairline-strong px-6 py-4 text-cta font-extrabold uppercase tracking-wide text-muted"
+        className="min-h-[52px] w-full rounded-control border border-hairline-strong px-6 text-cta font-extrabold uppercase tracking-wide text-muted transition-colors hover:border-danger/60 hover:text-danger"
       >
         {strings.admin.cancelGame}
       </button>
@@ -89,24 +86,16 @@ export function CancelGameButton({
   }
 
   return (
-    <form action={formAction}>
+    <form key="confirm" action={formAction} className="rounded-card border border-danger/40 p-4">
       <input type="hidden" name="gameId" value={gameId} />
-      <p className="mb-4 text-[14px] leading-relaxed text-bone">
+      <p className="m-0 mb-4 text-[14px] leading-relaxed text-bone">
         {strings.admin.cancelGameWarning} <strong>{venue}</strong>
       </p>
 
       {/*
-        THE REASON, REQUIRED (round 16, item 19).
-
-        `required` on the element AND checked in the action AND validated in
-        SQL. The first is the courtesy — it stops the submit before a round
-        trip; the second is the one that holds, because a server action is a
-        POST endpoint reachable without this form; the third is the authority,
-        because an action is skipped by anyone using curl.
-
-        THE LABEL SAYS WHO READS IT. An organizer typing "can't make it" into
-        an unlabelled box writes something different from one who knows every
-        booked player is about to receive it verbatim.
+        THE REASON, REQUIRED (round 16, item 19) — `required` here, checked in
+        the action, validated in SQL. THE LABEL SAYS WHO READS IT: every booked
+        player receives it verbatim.
       */}
       {needsReason && (
         <label className="mb-4 block">
@@ -120,9 +109,7 @@ export function CancelGameButton({
             className="field mt-1 w-full"
             placeholder={strings.admin.cancelReasonPlaceholder}
           />
-          <span className="mt-1 block text-[12px] text-muted">
-            {strings.admin.cancelReasonHint}
-          </span>
+          <span className="mt-1 block text-[12px] text-muted">{strings.admin.cancelReasonHint}</span>
         </label>
       )}
 
@@ -130,7 +117,7 @@ export function CancelGameButton({
       <button
         type="button"
         onClick={() => setArmed(false)}
-        className="mt-3 w-full bg-transparent text-[11px] uppercase tracking-eyebrow text-muted"
+        className="mt-3 min-h-11 w-full bg-transparent text-[11px] uppercase tracking-eyebrow text-muted"
       >
         {strings.common.close}
       </button>

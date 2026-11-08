@@ -66,7 +66,7 @@ export function RemovePlayerControl({
           setOpen(true);
         }}
         data-testid="roster-remove"
-        className="rounded-control border border-hairline px-3 py-2 text-[10px] uppercase tracking-eyebrow text-muted transition-colors hover:border-hairline-strong hover:text-bone"
+        className="inline-flex min-h-10 items-center rounded-control border border-hairline px-3 text-[10px] uppercase tracking-eyebrow text-muted transition-colors hover:border-danger/50 hover:text-danger"
       >
         {strings.admin.rosterRemove}
       </button>
@@ -113,7 +113,7 @@ export function RemovePlayerControl({
                 <button
                   type="button"
                   onClick={() => setOpen(false)}
-                  className="rounded-control border border-hairline-strong px-4 py-2 text-[13px] text-bone"
+                  className="min-h-11 rounded-control border border-hairline-strong px-4 text-[13px] text-bone"
                 >
                   {strings.common.close}
                 </button>
@@ -133,7 +133,7 @@ function ConfirmButton() {
       type="submit"
       disabled={pending}
       data-testid="roster-remove-confirm"
-      className="rounded-control bg-volt px-4 py-2 text-[13px] font-bold text-ink disabled:opacity-60"
+      className="min-h-11 rounded-control bg-volt px-4 text-[13px] font-bold text-ink disabled:opacity-60"
     >
       {pending ? strings.common.loading : strings.admin.rosterRemoveConfirm}
     </button>

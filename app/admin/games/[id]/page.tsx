@@ -1,62 +1,74 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AttendanceRow } from "@/components/admin/AttendanceRow";
-import { DeleteControl } from "@/components/admin/DeleteControl";
-import { appCapabilities } from "@/lib/db/capabilities";
 import { CancelGameButton } from "@/components/admin/CancelGameButton";
 import { ConfirmPaymentRow } from "@/components/admin/ConfirmPaymentRow";
-import { GameForm } from "@/components/admin/GameForm";
-import { TransitionButton } from "@/components/admin/TransitionButton";
+import { DeleteControl } from "@/components/admin/DeleteControl";
 import { ExportCsvLink } from "@/components/admin/ExportCsvLink";
+import { GameForm } from "@/components/admin/GameForm";
+import { GuestControl } from "@/components/admin/GuestControl";
+import { NotifyForm } from "@/components/admin/NotifyForm";
 import { StoryDownloadLink } from "@/components/admin/StoryDownloadLink";
-import { requireAdmin } from "@/lib/auth/requireAdmin";
+import { BreakEvenLine } from "@/components/admin/games/BreakEvenLine";
+import { CloseOutPanel } from "@/components/admin/games/CloseOutPanel";
+import { MoneyPanel } from "@/components/admin/games/MoneyPanel";
+import { PublishedBanner } from "@/components/admin/games/PublishedBanner";
+import { SeatMap } from "@/components/admin/games/SeatMap";
+import { StatusChip } from "@/components/admin/games/StatusChip";
+import { Tile, TileRow } from "@/components/admin/games/Tile";
+import { SignedCzk } from "@/components/admin/ui/Money";
+import { PageHeader } from "@/components/admin/ui/PageHeader";
+import { Panel } from "@/components/admin/ui/Panel";
+import { deleteErasesHistory } from "@/lib/admin/gameDelete";
+import { breakEvenOutlook } from "@/lib/admin/games/breakEven";
+import { getCancelReasons, getGameMoney, type GameMoney } from "@/lib/admin/games/queries";
+import { seatBarFromHolders, seatGrid, seatHolders } from "@/lib/admin/games/seatGrid";
+import { gameTabOf, gamesListHref } from "@/lib/admin/games/tabs";
+import { DEFAULT_GAME_SORT } from "@/lib/admin/gameSort";
 import {
   activeBookings,
   availableTransitions,
-  seatsTaken,
   getAdminGame,
   getGameOrganizer,
-  listOrganizerCandidates,
   listGameBookings,
+  listOrganizerCandidates,
   listVenues,
+  seatsTaken,
   unpaidBookings,
 } from "@/lib/admin/queries";
-import { formatCzk, formatGameTimeSpan } from "@/lib/format";
+import { requireAdmin } from "@/lib/auth/requireAdmin";
+import { appCapabilities } from "@/lib/db/capabilities";
+import { formatCzk, formatGameDateTime, formatGameTimeSpan } from "@/lib/format";
 import { gameEndsAt } from "@/lib/games/duration";
 import { strings } from "@/lib/strings";
-import { GuestControl } from "@/components/admin/GuestControl";
-import { NotifyForm } from "@/components/admin/NotifyForm";
-import { formatGameDateTime } from "@/lib/format";
-import { venueDisplayName } from "@/lib/venues/displayName";
 import { pickableVenues } from "@/lib/venues/archive";
-import { deleteErasesHistory } from "@/lib/admin/gameDelete";
+import { venueDisplayName } from "@/lib/venues/displayName";
 import { updateGameAction } from "../actions";
-import { markPlayedAction } from "./attendance/actions";
 import { deleteGameAction } from "./actions";
 
 export const metadata = { title: strings.admin.manageGame };
 
 export const dynamic = "force-dynamic";
 
+const hub = strings.admin.gamesHub;
+
+/** The statuses a player can open the public page of. */
+const PUBLIC_STATUSES = new Set(["published", "full", "played", "settled"]);
+
 /**
- * THE game surface (§7, REQ-ADMIN-003). Manage and Edit are one page now.
+ * THE game surface (§7, REQ-ADMIN-003; rebuilt in round 42).
  *
- * WHAT WAS WRONG WITH THREE PAGES. The organizer's actual task is "deal with
- * Sunday's game", and that meant: open the game, notice the time is wrong, go
- * to Edit, come back, confirm two payments, go to Attendance, mark a no-show,
- * settle. Every one of those hops was a page load holding the same game, and
- * the split was along OUR boundaries — which RPC does the write — rather than
- * along anything the organizer was doing.
+ * Everything that acts on one game is here, in the order the organizer meets
+ * it: what the game is and how it stands (the header and its figures), who is
+ * on it and what they paid (the seat map and the money), the roster where
+ * payments are confirmed and attendance is marked, then close-out, the venue,
+ * editing, and last the two things with no undo.
  *
- * So everything that acts on one game is here, in the order the organizer
- * meets it: what this game is → change it → who has paid → who turned up →
- * close it out → cancel it. Add-player stays a sub-route because it is a
- * creation flow with its own form and its own failure modes, and it is linked
- * from the top of this page rather than buried.
+ * `/edit` and `/attendance` redirect here, so every bookmark, every link in
+ * the E2E suite and every URL typed from memory still lands somewhere correct.
  *
- * `/edit` and `/attendance` now redirect here, so every bookmark, every link
- * in the E2E suite and every URL an organizer typed from memory still lands
- * somewhere correct.
+ * EVERYTHING PITCH OR PROFIT WAITS FOR `pitchCosts`. Before the migration the
+ * money panel is absent and the seat map is coloured from the bookings alone.
  */
 export default async function AdminGamePage({
   params,
@@ -66,502 +78,330 @@ export default async function AdminGamePage({
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const { id } = await params;
-  /*
-   * ~~`query.add === "1"` opened the add-player disclosure on arrival from the
-   * old `/add-player` route.~~ That flow went in round 11 with shadow players,
-   * so nothing reads the search params any more. The PROP stays because the
-   * route still accepts them and removing it from the signature would be a
-   * change to the page's contract for no gain.
-   */
   const query = searchParams ? await searchParams : {};
   // Set by `createGameAction`'s redirect, and by nothing else.
   const justCreated = query.created === "1";
   const [admin, game] = await Promise.all([requireAdmin(), getAdminGame(id)]);
   if (!game) notFound();
 
-  const [bookings, venues, organizer] = await Promise.all([
+  const [bookings, venues, organizer, capabilities, cancelReasons] = await Promise.all([
     listGameBookings(game.id),
     listVenues(),
     getGameOrganizer(game.id),
+    appCapabilities(),
+    game.status === "cancelled" ? getCancelReasons([game.id]) : Promise.resolve(new Map<string, string>()),
   ]);
-  // After the organizer row: whoever runs the game now stays in the dropdown
-  // even if their organizer status has since been taken away.
-  const organizerPlayers = await listOrganizerCandidates(organizer?.organizer_player_id ?? null);
+  const [organizerPlayers, money] = await Promise.all([
+    // Whoever runs the game now stays in the dropdown even if their organizer
+    // status has since been taken away.
+    listOrganizerCandidates(organizer?.organizer_player_id ?? null),
+    capabilities.pitchCosts ? getGameMoney(game.id) : Promise.resolve<GameMoney | null>(null),
+  ]);
 
   const venueRow = venues.find((venue) => venue.id === game.venue_id) ?? null;
-  const venuePhoto = venueRow?.image_path ?? null;
-
   const roster = activeBookings(bookings);
   const seatsTakenNow = seatsTaken(bookings, game.guest_count);
-  // Already VS-sorted by the query — the order the organizer's banking app
-  // lists incoming payments in.
+  // Already VS-sorted by the query — the order the banking app lists payments in.
   const pending = unpaidBookings(bookings);
-
-  const capabilities = await appCapabilities();
-  const { canEdit, canPlay, canSettle, canCancel } = availableTransitions(
-    game.status,
-  );
+  const { canEdit, canPlay, canSettle, canCancel } = availableTransitions(game.status);
   const erasesHistory = deleteErasesHistory(game);
+  const tab = gameTabOf(game);
+  const upcoming = tab === "upcoming";
+
+  const economics = money?.economics ?? null;
+  const holders = seatHolders(bookings, money?.seatValues ?? null);
+  const cells = seatGrid({ capacity: game.capacity, houseGuests: game.guest_count, holders });
+  const bar = economics ?? seatBarFromHolders({ capacity: game.capacity, houseGuests: game.guest_count, holders });
+  const openSeats = Math.max(0, game.capacity - game.activeCount);
+  const amenityCount = venueRow?.amenities?.length ?? 0;
+
+  // Under the profit tile: how far an upcoming game is from its pitch, or
+  // where a played one's break-even sat.
+  let profitDetail: React.ReactNode;
+  if (economics && upcoming) {
+    profitDetail = <BreakEvenLine outlook={breakEvenOutlook(economics)} testId="game-tile-break-even" />;
+  } else if (economics?.breakEvenSeats != null) {
+    profitDetail = strings.admin.breakEvenAt.replace("{n}", String(economics.breakEvenSeats));
+  }
 
   return (
     <>
+      {/* Back to the tab this game is listed under, so a played game returns
+          to the played ones rather than to next week's. */}
       <Link
-        href="/admin/games"
+        href={gamesListHref({ tab, sort: DEFAULT_GAME_SORT })}
+        data-testid="admin-game-back"
         className="text-[11px] uppercase tracking-eyebrow text-muted no-underline"
       >
         {strings.games.backToGames}
       </Link>
 
-      {/*
-        AN UNMISTAKABLE PUBLISHED STATE (round 24, item 5), and it is the
-        SIBLING of the booking confirmation rather than a new idea: the same
-        volt panel, the same 2px border, the same tick in a volt disc, the same
-        display face. A player who pays and an organizer who publishes are both
-        being told "the thing you just did worked", and the product should say
-        it the same way twice.
-      */}
-      {/*
-        NOT A TOAST, WHICH THE ITEM ASKS FOR EXPLICITLY AND CLAUDE.md AGREES
-        WITH. A toast is rendered from a client result and can be unmounted by
-        the revalidation that follows the action — the codebase has a rule
-        about exactly this ("client-state success markers do not survive
-        `revalidatePath`"). This is server-rendered from the URL the redirect
-        landed on, so it is still there when the page settles, and it survives
-        a refresh.
-
-        IT RIDES `?created=1`, which already existed for the notify offer and
-        already means "you arrived here by publishing this". No new parameter,
-        and the two things that should appear together do.
-      */}
       {justCreated && game.status !== "cancelled" && (
-        <div
-          data-testid="game-published"
-          className="mt-4 flex flex-wrap items-center gap-3 rounded-card border-2 border-volt bg-volt/[.08] px-5 py-4"
-        >
-          <span
-            aria-hidden="true"
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-pill bg-volt text-[20px] font-bold leading-none text-ink"
-          >
-            ✓
-          </span>
-          <span className="min-w-0 flex-1">
-            <span className="block font-display text-title uppercase leading-none tracking-wide text-volt">
-              {strings.admin.gamePublishedTitle}
-            </span>
-            <span className="mt-1 block text-[13px] leading-snug text-bone">
-              {strings.admin.gamePublishedBody}
-            </span>
-          </span>
-
+        <>
+          <PublishedBanner gameId={game.id} />
           {/*
-            TWO WAYS OUT, because there are exactly two things anyone does
-            next: look at what the players will see, or make another game.
-            Both at the 44px floor.
+            THE NOTIFICATION OFFER (round 7 item 5; post-publish only since
+            round 14 item 11) — prefilled from the row just written, sent only
+            when the owner presses the button.
           */}
-          <span className="flex flex-wrap items-center gap-2">
-            <Link
-              href={`/game/${game.id}`}
-              data-testid="published-view-game"
-              className="inline-flex min-h-11 items-center rounded-control bg-volt px-4 text-[13px] font-bold uppercase tracking-wide text-ink no-underline"
-            >
-              {strings.admin.gamePublishedViewGame}
-            </Link>
-            <Link
-              href="/admin/games"
-              data-testid="published-back-to-admin"
-              className="inline-flex min-h-11 items-center rounded-control border border-hairline-strong px-4 text-[13px] font-bold uppercase tracking-wide text-bone no-underline"
-            >
-              {strings.admin.gamePublishedBackToAdmin}
-            </Link>
-            {/* Round 42 — the story to post, while the game is fresh. */}
-            <StoryDownloadLink gameId={game.id} testId="published-story" emphasis />
-          </span>
-        </div>
+          <div className="mt-4">
+            <NotifyForm
+              asOffer
+              defaultTitle={strings.admin.notifyDraftGameTitle}
+              defaultBody={strings.admin.notifyDraftGameBody
+                .replace("{name}", venueDisplayName(game.venue, venueRow?.pitch_name))
+                .replace("{when}", formatGameDateTime(game.starts_at))}
+            />
+          </div>
+        </>
       )}
 
-      <div className="mt-4 flex flex-wrap items-baseline justify-between gap-3">
-        {/* Free text, escaped by JSX. */}
-        <h2 className="m-0 text-[22px] font-bold uppercase tracking-wide text-white">
-          {game.venue}
-        </h2>
-        {/* WRAPS: with the story link beside the CSV export (round 42) the row
-            outgrew a 390px screen and pushed the whole page sideways, which
-            moved every button under the thumb mid-tap. */}
-        <div className="flex flex-wrap items-center gap-3">
-          <span
-            data-testid="admin-game-status"
-            className="text-[11px] uppercase tracking-eyebrow text-volt-dim"
-          >
-            {strings.admin.status[game.status]}
-          </span>
-          {/* The roster and its payments — the file an organizer opens beside
-              their banking app. VS-ordered, with what is actually outstanding
-              after wallet credit. */}
-          <ExportCsvLink href={`/admin/games/${game.id}/export`} testId="export-roster" />
-          <StoryDownloadLink gameId={game.id} testId="story-download" />
-        </div>
+      <div className="mt-4">
+        <PageHeader
+          title={game.venue}
+          testId="admin-game-header"
+          lede={
+            <span className="flex flex-wrap items-center gap-x-3 gap-y-1">
+              <span className="tabular-nums text-bone">
+                {formatGameTimeSpan(game.starts_at, gameEndsAt(game.starts_at, game.duration_minutes))}
+              </span>
+              <StatusChip status={game.status} testId="admin-game-status" />
+            </span>
+          }
+          actions={
+            <>
+              <StoryDownloadLink gameId={game.id} testId="story-download" />
+              {/* The roster and its payments — the file an organizer opens
+                  beside their banking app. */}
+              <ExportCsvLink href={`/admin/games/${game.id}/export`} testId="export-roster" />
+              {PUBLIC_STATUSES.has(game.status) && (
+                <Link
+                  href={`/game/${game.id}`}
+                  data-testid="game-player-page"
+                  className="inline-flex min-h-11 shrink-0 items-center rounded-control border border-hairline-strong px-4 text-[11px] uppercase tracking-[1px] text-muted no-underline transition hover:border-hairline-volt hover:text-volt"
+                >
+                  {strings.admin.gamePublishedViewGame}
+                </Link>
+              )}
+              {canEdit && (
+                <a
+                  href="#edit-game"
+                  data-testid="game-edit-link"
+                  className="inline-flex min-h-11 shrink-0 items-center rounded-control border border-hairline-volt px-4 text-[11px] uppercase tracking-[1px] text-volt no-underline transition hover:border-volt"
+                >
+                  {hub.editLink}
+                </a>
+              )}
+            </>
+          }
+        />
       </div>
 
-      <dl className="mt-4 grid max-w-[420px] grid-cols-[auto_1fr] gap-x-6 gap-y-1 text-[12px]">
-        <dt className="text-muted">{strings.games.startsLabel}</dt>
-        <dd className="m-0 text-bone">
-          {formatGameTimeSpan(
-            game.starts_at,
-            gameEndsAt(game.starts_at, game.duration_minutes),
+      <div className="mt-5">
+        <TileRow testId="game-tiles">
+          <Tile
+            label={hub.tileSeats}
+            value={`${game.activeCount}/${game.capacity}`}
+            valueTestId="admin-capacity"
+            detail={openSeats > 0 ? hub.seatsOpen.replace("{n}", String(openSeats)) : hub.seatsNoneOpen}
+          />
+          <Tile
+            label={hub.tilePrice}
+            value={formatCzk(game.price_czk)}
+            detail={
+              game.duration_minutes ? hub.durationMinutes.replace("{n}", String(game.duration_minutes)) : undefined
+            }
+          />
+          <Tile
+            label={strings.admin.waitlistLabel}
+            value={game.waitlistCount}
+            valueTestId="admin-waitlist-depth"
+            detail={hub.tileWaitingOne}
+          />
+          {economics && economics.profitCzk !== null ? (
+            <Tile
+              label={hub.profit}
+              value={<SignedCzk amount={economics.profitCzk} testId="game-tile-profit" />}
+              detail={profitDetail}
+            />
+          ) : (
+            <Tile label={hub.tileUnpaid} value={pending.length} detail={hub.tileUnpaidDetail} />
           )}
-        </dd>
-        <dt className="text-muted">{strings.games.capacityLabel}</dt>
-        <dd data-testid="admin-capacity" className="m-0 text-bone">
-          {game.activeCount}/{game.capacity}
-        </dd>
-        <dt className="text-muted">{strings.games.priceLabel}</dt>
-        <dd className="m-0 text-bone">{formatCzk(game.price_czk)}</dd>
-        <dt className="text-muted">{strings.admin.waitlistLabel}</dt>
-        <dd data-testid="admin-waitlist-depth" className="m-0 text-bone">
-          {game.waitlistCount}
-        </dd>
-      </dl>
+        </TileRow>
+      </div>
 
-      {/*
-        THE DRAFT NOTIFICATION OFFER (round 7, item 5).
-
-        Shown on a PUBLISHED game, prefilled from the row that was just
-        written. It is an offer and nothing more: editable, dismissible, and
-        it sends only when the owner presses the button. Publishing a game
-        does not queue a message — there is no code path anywhere that calls
-        `publishNotificationAction` without a click.
-
-        WHY HERE RATHER THAN A TOAST. Creating a game redirects to this page,
-        so this is where the owner lands with the game fresh in mind. A toast
-        would vanish, and a message worth sending is worth more than three
-        seconds to decide about.
-      */}
-      {/*
-        ~~Rendered on any published game.~~ POST-PUBLISH ONLY (round 14,
-        item 11).
-
-        Round 7's reasoning is intact and is the reason this still exists: a
-        message worth sending is worth more than a toast's three seconds, and
-        creating a game redirects HERE, so this is where the owner lands with
-        it fresh in mind.
-
-        What was wrong is that the condition was "the game is published" rather
-        than "the game was just created", so an organizer opening a fixture
-        from three weeks ago got a prefilled offer to announce it as new. The
-        standing composer on `/admin/site` is the one place to write a message
-        that is not about a game you just made.
-      */}
-      {justCreated && game.status !== "cancelled" && (
-        <div className="mt-6">
-          <NotifyForm
-            asOffer
-            defaultTitle={strings.admin.notifyDraftGameTitle}
-            defaultBody={strings.admin.notifyDraftGameBody
-              .replace("{name}", venueDisplayName(game.venue, venueRow?.pitch_name))
-              .replace("{when}", formatGameDateTime(game.starts_at))}
-          />
-        </div>
-      )}
-
-      {/*
-        ~~"This game is not public yet" for a draft.~~ REMOVED with the concept
-        (round 14, item 1).
-      */}
-
-      <div className="mt-6 flex flex-wrap gap-3">
-        {/*
-          ~~Publish, for a draft.~~ REMOVED (round 14, item 1). There is one
-          path now: create a game and it is published. A button whose only
-          reachable state is a row nobody can create any more is a button that
-          teaches a concept the product no longer has.
-
-          `publish_game` SURVIVES AS AN RPC. It is the only way to move a
-          pre-existing draft onto the board, and deleting the repair because
-          its button went is the mistake `merge_players` is a standing note
-          about.
-        */}
-
+      <div className={`mt-4 grid gap-4 ${economics ? "md:grid-cols-2" : ""}`}>
+        <SeatMap bar={bar} seatsTaken={economics?.seatsTaken ?? seatsTakenNow} cells={cells} />
+        {economics && (
+          <MoneyPanel gameId={game.id} economics={economics} pitch={money?.pitch ?? null} upcoming={upcoming} />
+        )}
       </div>
 
       {/*
-        --- add a player ------------------------------------------------------
-
-        FOLDED IN FROM ITS OWN PAGE (round 9, item 6). It was the last per-game
-        admin surface still sitting on a route of its own — Phase 18 merged
-        Edit and Attendance into this page and left this one behind, so "deal
-        with Sunday's game" still meant one hop out and back.
-
-        It is the same reasoning that merged the other two: the split was along
-        OUR boundary — which RPC does the write — rather than along anything
-        the organizer is doing. Adding someone who booked over WhatsApp is part
-        of managing the game, and it belongs beside the roster it changes.
-
-        BEHIND A DISCLOSURE, because it is a form with four fields and most
-        visits to this page do not need it. The roster is what the organizer
-        came to read; this opens under it when they need it.
+        THE ROSTER, with payments and attendance on the same rows (Phase 18):
+        "did they turn up" and "did they pay" are answered on one line. What is
+        still owed sits at its top — present when there is something to
+        reconcile, absent when there is not (round 16, item 16).
       */}
-      {canEdit && (
-        <section className="mt-12" data-testid="guests-section">
-          <h3 className="m-0 text-[18px] font-bold uppercase tracking-wide text-bone">
-            {strings.admin.guestsTitle}
-          </h3>
-          <p className="mt-2 max-w-[480px] text-[13px] leading-relaxed text-muted">
-            {strings.admin.guestsLede}
-          </p>
-          <GuestControl
-            gameId={game.id}
-            count={game.guest_count}
-            seatsLeft={Math.max(0, game.capacity - seatsTakenNow)}
-          />
-        </section>
-      )}
-
-      {/*
-        ~~"Awaiting payment" — a section of its own listing every unpaid
-        booking, above the roster that lists the same people again with a
-        payment badge on each.~~ THE SECTION IS GONE (round 16, item 16).
-
-        IT WAS A SUMMARY OF THE LIST UNDERNEATH IT. Every name in it appeared
-        again twenty pixels lower with its payment state already shown, so an
-        organizer read the same roster twice — once filtered, once whole — and
-        the filtered copy was the one with the controls on it.
-
-        THE CONTROLS DID NOT GO WITH IT. Confirming a cash payment is still the
-        only way a cash booking gets settled, and "amount differs" is still the
-        only way an underpayment is recorded. Those rows now render inside the
-        roster section with no heading of their own — present when there is
-        something to reconcile, absent when there is not, rather than a section
-        that exists to say "nothing".
-      */}
-      {/* --- roster, with attendance on the same rows ---------------------------
-          Merged in Phase 18. The two questions at close-out are "did they turn
-          up" and "did they pay", and settle is blocked on the second — so the
-          payment badge and the attendance controls belong on one row rather
-          than one screen apart. */}
-      <section className="mt-10">
-        <h3 className="m-0 text-[18px] font-bold uppercase tracking-wide text-bone">
-          {strings.admin.rosterTitle}
-        </h3>
-
-        {/* What is still owed, where the roster is — see the note above. */}
+      <Panel
+        title={strings.admin.rosterTitle}
+        testId="game-roster"
+        className="mt-4"
+        action={
+          <span className="text-[12px] tabular-nums text-muted">
+            {roster.length === 1
+              ? hub.rosterBookingsOne
+              : hub.rosterBookings.replace("{n}", String(roster.length))}
+          </span>
+        }
+      >
         {pending.length > 0 && (
-          <ul className="mt-4 list-none space-y-3 p-0">
-            {pending.map((booking) => (
-              <ConfirmPaymentRow key={booking.id} booking={booking} gameId={game.id} />
-            ))}
-          </ul>
+          <div className="mb-4">
+            <h3 className="m-0 text-[10px] font-normal uppercase tracking-eyebrow text-warn">{hub.toConfirm}</h3>
+            <ul className="mt-2 list-none space-y-2 p-0">
+              {pending.map((booking) => (
+                <ConfirmPaymentRow key={booking.id} booking={booking} gameId={game.id} />
+              ))}
+            </ul>
+          </div>
         )}
 
         {roster.length === 0 ? (
-          <p className="mt-3 text-[12px] tracking-[1px] text-faint">
-            {strings.admin.rosterEmpty}
-          </p>
+          <p className="m-0 text-[12px] tracking-[1px] text-faint">{strings.admin.rosterEmpty}</p>
         ) : (
-          <ul className="mt-4 list-none space-y-2 p-0">
+          <ul className="list-none space-y-2 p-0">
             {roster.map((booking) => (
               <AttendanceRow
                 key={booking.id}
                 booking={booking}
                 gameId={game.id}
-                /* Round 16 item 17 — hidden until the migration exists. */
                 canRemove={capabilities.adminRemoveBooking}
                 canChooseCredit={capabilities.adminRemoveCreditChoice}
               />
             ))}
           </ul>
         )}
-      </section>
 
-      {/* --- close-out ---------------------------------------------------------
-          The unpaid list is rendered ABOVE the settle button rather than being
-          discovered by pressing it: a `reserved` booking surviving into
-          `settled` is an unreconciled debt with no surface that will ever raise
-          it again. */}
-      {/*
-        ~~A section headed "Attendance", holding Mark played and Settle.~~ THE
-        HEADING IS GONE (round 16, item 16) and so is its placeholder line.
-
-        IT NAMED THE WRONG THING. Attendance is marked on the roster rows
-        above, one player at a time; this block has never contained an
-        attendance control. What it holds is CLOSE-OUT — the two buttons that
-        end a game's life — and on a published game it rendered a heading, no
-        buttons and a sentence explaining that there was nothing to do yet.
-
-        THE BUTTONS STAY, bare. They are the only way a game becomes played and
-        then settled, and removing them would strand every fixture in
-        `published` forever. What went is the chrome around them.
-      */}
-      <section className="mt-10 border-t border-hairline pt-6">
-
-        {canPlay && (
-          <TransitionButton
-            action={markPlayedAction}
-            gameId={game.id}
-            label={strings.admin.markPlayed}
-            testId="mark-played"
-            tone="secondary"
-          />
+        {/* House guests: seats for people with no account (round 11). */}
+        {canEdit && (
+          <section data-testid="guests-section" className="mt-5 border-t border-hairline pt-4">
+            <h3 className="m-0 text-[10px] font-normal uppercase tracking-eyebrow text-volt-dim">
+              {strings.admin.guestsTitle}
+            </h3>
+            <p className="mt-2 max-w-[520px] text-[12px] leading-relaxed text-muted">{strings.admin.guestsLede}</p>
+            <GuestControl
+              gameId={game.id}
+              count={game.guest_count}
+              seatsLeft={Math.max(0, game.capacity - seatsTakenNow)}
+            />
+          </section>
         )}
+      </Panel>
+
+      <div className="mt-4 grid gap-4 md:grid-cols-2">
+        <CloseOutPanel
+          gameId={game.id}
+          status={game.status}
+          canPlay={canPlay}
+          canSettle={canSettle}
+          pending={pending}
+          cancelReason={cancelReasons.get(game.id) ?? null}
+        />
 
         {/*
-          ~~THE SETTLE BUTTON.~~ GONE (round 29). The sweep closes a game the
-          same night it is played, so there is nothing here to press — and
-          `settle_game` no longer exists to be pressed.
-
-          THE OUTSTANDING LIST STAYS, and it now means something sharper than
-          it did. A `played` game still showing names is one the sweep TRIED to
-          close and SKIPPED, because a `reserved` hold is on it. Under pay-first
-          that should never happen outside an admin-created booking, so this
-          box appearing at all is news — the same news the cron logs.
+          WHAT THE GAME INHERITS FROM ITS VENUE, read-only (round 14, item 2):
+          the photo and amenities belong to the venue and are edited there,
+          because changing them here would silently change every other game
+          at that ground.
         */}
-        {canSettle && pending.length > 0 && (
-          <div
-            data-testid="settle-outstanding"
-            className="mb-4 rounded-card border border-hairline-strong p-4"
-          >
-            <p className="m-0 text-[13px] text-bone">{strings.admin.settleBlocked}</p>
-            <ul className="mt-2 list-none p-0 text-[12px] text-volt">
-              {pending.map((booking) => (
-                <li key={booking.id}>{booking.nickname}</li>
-              ))}
-            </ul>
-            <p className="mt-2 text-[12px] text-muted">
-              {strings.admin.settleBlockedHint}
+        {game.venue_id && (
+          <Panel title={strings.admin.venueInheritedTitle} testId="venue-inherited">
+            <p className="m-0 max-w-[520px] text-[12px] leading-snug text-muted">
+              {strings.admin.venueInheritedLede}
             </p>
-          </div>
+            <dl className="mt-3 grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-small">
+              <dt className="text-muted">{strings.admin.venuePhotoTitle}</dt>
+              <dd className="m-0 text-bone">
+                {venueRow?.image_path ? strings.admin.venueHasPhoto : strings.admin.venueNoPhoto}
+              </dd>
+              <dt className="text-muted">{strings.admin.venueAmenitiesTitle}</dt>
+              <dd className="m-0 text-bone">
+                {amenityCount > 0 ? String(amenityCount) : strings.admin.venueNoAmenities}
+              </dd>
+            </dl>
+            <Link
+              href="/admin/venues"
+              data-testid="edit-venue-link"
+              className="mt-4 inline-flex min-h-11 items-center rounded-pill border-2 border-hairline-volt px-4 text-small font-bold text-volt no-underline transition-colors hover:border-volt"
+            >
+              {strings.admin.venueEditLink}
+            </Link>
+          </Panel>
         )}
+      </div>
 
-        {game.status === "settled" && (
-          <p className=" text-[17px] font-bold uppercase tracking-wide text-volt">
-            {strings.admin.settled}
-          </p>
-        )}
-      </section>
-
-      {/* --- edit ---------------------------------------------------------------
-          Below the operational surfaces, because changing a game is what an
-          organizer does occasionally and reconciling one is what they do every
-          week. A terminal game shows no form: its time and price are what the
-          roster and the ledger already agreed on. */}
-      {/*
-        ~~The pitch photograph and the amenity boxes, beside the game they
-        belong to — "add a photo of this pitch" is a thought the organizer has
-        while looking at the game.~~ MOVED (round 14, item 2).
-
-        They always wrote to the VENUE, which is what made them confusing here:
-        editing them from one game silently changed every other game at that
-        ground, and the surface gave no hint of that. `/admin/venues` says so
-        in its own heading — "Inherited by every game here".
-
-        WHAT REPLACES THEM IS A READ-ONLY SUMMARY. The organizer standing on a
-        game still needs to know what it will show, and now gets that without a
-        control that edits eleven other games.
-      */}
-      {game.venue_id && (
-        <section className="mt-12 border-t border-hairline pt-6" data-testid="venue-inherited">
-          <h3 className="m-0 text-[18px] font-bold uppercase tracking-wide text-bone">
-            {strings.admin.venueInheritedTitle}
-          </h3>
-          <p className="mt-2 max-w-[520px] text-[12px] leading-snug text-muted">
-            {strings.admin.venueInheritedLede}
-          </p>
-
-          <dl className="mt-4 grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-small">
-            <dt className="text-muted">{strings.admin.venuePhotoTitle}</dt>
-            <dd className="m-0 text-bone">
-              {venuePhoto ? strings.admin.venueHasPhoto : strings.admin.venueNoPhoto}
-            </dd>
-            <dt className="text-muted">{strings.admin.venueAmenitiesTitle}</dt>
-            <dd className="m-0 text-bone">
-              {(venueRow?.amenities?.length ?? 0) > 0
-                ? String(venueRow!.amenities.length)
-                : strings.admin.venueNoAmenities}
-            </dd>
-          </dl>
-
-          <Link
-            href="/admin/venues"
-            data-testid="edit-venue-link"
-            className="mt-4 inline-flex min-h-11 items-center rounded-pill border-2 border-hairline-volt px-4 text-small font-bold text-volt no-underline transition-colors hover:border-volt"
-          >
-            {strings.admin.venueEditLink}
-          </Link>
-        </section>
-      )}
-
+      {/* A terminal game shows no form: its time and price are what the roster
+          and the ledger already agreed on. */}
       {canEdit && (
-        <section className="mt-12 border-t border-hairline pt-6">
-          <h3 className="m-0 text-[18px] font-bold uppercase tracking-wide text-bone">
-            {strings.admin.editGameTitle}
-          </h3>
-          <GameForm
-            action={updateGameAction}
-            venues={pickableVenues(venues, game.venue_id)}
-            game={game}
-            organizer={organizer}
-            defaultOrganizerName={admin.nickname}
-            canSetLanguage={capabilities.gameLanguage}
-            canSetTelegram={capabilities.organizerTelegram}
-            organizerPlayers={capabilities.organizerPlayer ? organizerPlayers : undefined}
-          />
-        </section>
-      )}
-
-      {canCancel && (
-        <div className="mt-10 border-t border-hairline pt-6">
-          <CancelGameButton
-            gameId={game.id}
-            venue={game.venue}
-            needsReason={capabilities.cancelWithReason}
-          />
+        <div id="edit-game" className="mt-4 scroll-mt-24">
+          <Panel title={strings.admin.editGameTitle} testId="game-edit">
+            <GameForm
+              action={updateGameAction}
+              venues={pickableVenues(venues, game.venue_id)}
+              game={game}
+              organizer={organizer}
+              defaultOrganizerName={admin.nickname}
+              canSetLanguage={capabilities.gameLanguage}
+              canSetTelegram={capabilities.organizerTelegram}
+              organizerPlayers={capabilities.organizerPlayer ? organizerPlayers : undefined}
+            />
+          </Panel>
         </div>
       )}
 
       {/*
-        DELETE IS NOT A CHILD OF CANCEL, and round 16 put it inside
-        `canCancel` — which was wrong and is the whole of round 17 item 1.
-        
-        `canCancel` is `draft | published | full`. So a PLAYED, SETTLED or
-        CANCELLED game rendered no delete control at all, while
-        `admin_delete_game` refused on BOOKINGS and never on status: an empty
-        cancelled game, or a test fixture somebody marked played, is exactly
-        what you would want to remove and exactly what the UI never offered.
-        Measured across one game of every status before it was changed —
-        published 1, full 1, draft 1, played 0, settled 0, cancelled 0.
-        
-        The two conditions were never the same question. Cancel asks "does
-        this game still have a future"; delete asks "is there anything here to
-        lose", and only the RPC can answer that — which is why the control is
-        now offered unconditionally and the refusal names the next step.
-        
-        IT STAYS BELOW CANCEL where both render, because the order is still
-        the advice: cancelling is what you do to a game with people on it.
-
-        A PAST GAME SAYS WHAT IT COSTS (round 39, item 1). Since round 39 the
-        RPC refuses only an UPCOMING game with players still on it, so a played
-        or settled game deletes — and its bookings cascade with it, out of
-        every player's stats and history. The confirm states that plainly.
+        CANCEL, THEN DELETE — the order is the advice: cancelling is what you do
+        to a game with people on it. DELETE IS NOT A CHILD OF CANCEL (round 17,
+        item 1): it is offered in every status and the RPC refuses only an
+        upcoming game with players still on it. A past game's confirm says it
+        leaves every player's stats (round 39, item 1).
       */}
-      {capabilities.adminDelete && (
-        <div className={canCancel ? "mt-6" : "mt-10 border-t border-hairline pt-6"}>
-          <DeleteControl
-            action={deleteGameAction}
-            hiddenFields={{ gameId: game.id }}
-            label={strings.admin.deleteGame}
-            title={
-              erasesHistory
-                ? strings.admin.deleteGamePastConfirmTitle
-                : strings.admin.deleteGameConfirmTitle
-            }
-            body={
-              erasesHistory
-                ? strings.admin.deleteGamePastConfirmBody
-                : strings.admin.deleteGameConfirmBody
-            }
-            confirmLabel={strings.admin.deleteGameConfirm}
-            testId="game-delete"
-          />
-        </div>
+      {(canCancel || capabilities.adminDelete) && (
+        <Panel title={hub.dangerTitle} testId="game-danger" className="mt-4">
+          {canCancel && <p className="m-0 mb-4 max-w-[560px] text-[12px] leading-snug text-muted">{hub.dangerLede}</p>}
+          <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-start">
+            {canCancel && (
+              <div className="min-w-0">
+                <CancelGameButton
+                  gameId={game.id}
+                  venue={game.venue}
+                  needsReason={capabilities.cancelWithReason}
+                />
+              </div>
+            )}
+            {capabilities.adminDelete && (
+              <div>
+                <DeleteControl
+                  action={deleteGameAction}
+                  hiddenFields={{ gameId: game.id }}
+                  label={strings.admin.deleteGame}
+                  title={
+                    erasesHistory
+                      ? strings.admin.deleteGamePastConfirmTitle
+                      : strings.admin.deleteGameConfirmTitle
+                  }
+                  body={
+                    erasesHistory
+                      ? strings.admin.deleteGamePastConfirmBody
+                      : strings.admin.deleteGameConfirmBody
+                  }
+                  confirmLabel={strings.admin.deleteGameConfirm}
+                  testId="game-delete"
+                />
+              </div>
+            )}
+          </div>
+        </Panel>
       )}
     </>
   );

@@ -14,14 +14,15 @@ import { strings } from "@/lib/strings";
 const INITIAL: ConfirmPaymentState = { status: "idle" };
 
 /**
- * One row of the awaiting-payment list: who, what VS, how much, ✓ Paid.
+ * One payment still to confirm: who, what VS, how much, ✓ Paid.
  *
  * THE ≤5s TARGET IS WHY THIS IS SHAPED LIKE THIS. The organizer is reading
  * their banking app and tapping matches, so the tap is one form post with two
- * hidden fields and no intermediate screen — no confirmation dialog, no
- * navigation, no modal. The amount-differs field is collapsed behind a toggle
- * because it is the rare case; making it always-visible would put a text input
- * between the admin and the common path.
+ * hidden fields and no intermediate screen. The amount-differs field is
+ * collapsed behind a toggle because it is the rare case.
+ *
+ * ROUND 42: a warn edge, because this is the one row on the page that asks for
+ * something — the same colour as the unpaid seats on the seat bar and the map.
  */
 export function ConfirmPaymentRow({
   booking,
@@ -37,27 +38,26 @@ export function ConfirmPaymentRow({
     <li
       data-testid="pending-booking"
       data-vs={booking.paymentCode ?? ""}
-      className="rounded-card bg-surface px-5 py-4"
+      className="rounded-card border border-warn/30 bg-surface px-4 py-3"
     >
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div className="min-w-[180px] flex-1">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="min-w-[160px] flex-1">
           {/* Nickname is player-supplied free text; JSX escapes it. */}
-          <div className=" text-[17px] font-bold text-white">
-            {booking.nickname}
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-body font-bold text-white">{booking.nickname}</span>
+            <PaymentBadge status={booking.status} method={booking.paymentMethod} />
           </div>
           <div className="mt-1 font-mono text-[11px] tracking-[1px] text-muted">
             {booking.paymentCode !== null && (
               <>
-                {strings.admin.vsLabel} {booking.paymentCode} ·{" "}
+                {strings.admin.vsLabel} <span className="text-bone">{booking.paymentCode}</span> ·{" "}
               </>
             )}
-            {strings.admin.amountDueLabel} {formatCzk(booking.amountDueCzk)}
+            {strings.admin.amountDueLabel} <span className="text-warn">{formatCzk(booking.amountDueCzk)}</span>
           </div>
         </div>
 
-        <PaymentBadge status={booking.status} method={booking.paymentMethod} />
-
-        <form action={formAction} className="flex items-center gap-3">
+        <form action={formAction} className="flex flex-wrap items-center gap-2">
           <input type="hidden" name="bookingId" value={booking.id} />
           <input type="hidden" name="gameId" value={gameId} />
           {showAmount && (
@@ -71,7 +71,7 @@ export function ConfirmPaymentRow({
                 min={0}
                 defaultValue={booking.amountDueCzk}
                 data-testid="received-amount"
-                className="w-[110px] rounded-control border border-hairline-strong bg-surface px-3 py-2 text-[13px] text-bone"
+                className="min-h-11 w-[110px] rounded-control border border-hairline-strong bg-surface px-3 py-2 text-[13px] tabular-nums text-bone outline-none focus:border-volt"
               />
             </label>
           )}
@@ -84,16 +84,14 @@ export function ConfirmPaymentRow({
           type="button"
           onClick={() => setShowAmount((open) => !open)}
           data-testid="amount-differs"
-          className="bg-transparent text-[10px] uppercase tracking-eyebrow text-muted"
+          className="min-h-8 bg-transparent text-[10px] uppercase tracking-eyebrow text-muted transition-colors hover:text-bone"
         >
           {showAmount ? strings.common.close : strings.admin.amountDiffers}
         </button>
 
         {state.status === "confirmed" && (
           <span data-testid="confirm-result" className="text-[12px] text-volt">
-            {state.wasExpired
-              ? strings.admin.expiredCreditedNotice
-              : strings.admin.paymentConfirmed}
+            {state.wasExpired ? strings.admin.expiredCreditedNotice : strings.admin.paymentConfirmed}
             {state.creditIssuedCzk ? (
               <>
                 {" "}
@@ -105,8 +103,7 @@ export function ConfirmPaymentRow({
 
         {state.status === "underpaid" && (
           <span role="alert" data-testid="underpaid-result" className="text-[12px] text-bone">
-            {strings.admin.underpaidNotice} {formatCzk(state.shortfallCzk ?? 0)} —{" "}
-            {strings.admin.underpaidHint}
+            {strings.admin.underpaidNotice} {formatCzk(state.shortfallCzk ?? 0)} — {strings.admin.underpaidHint}
           </span>
         )}
 
@@ -127,13 +124,9 @@ function ConfirmButton({ showAmount }: { showAmount: boolean }) {
       type="submit"
       disabled={pending}
       data-testid="mark-paid"
-      className="rounded-control bg-volt px-5 py-3 text-[15px] font-extrabold uppercase tracking-wide text-surface disabled:opacity-60"
+      className="min-h-11 rounded-control bg-volt px-5 text-[14px] font-extrabold uppercase tracking-wide text-surface disabled:opacity-60"
     >
-      {pending
-        ? strings.common.loading
-        : showAmount
-          ? strings.admin.confirmReceived
-          : strings.admin.markPaid}
+      {pending ? strings.common.loading : showAmount ? strings.admin.confirmReceived : strings.admin.markPaid}
     </button>
   );
 }

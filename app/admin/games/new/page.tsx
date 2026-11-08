@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { GameForm } from "@/components/admin/GameForm";
+import { PageHeader } from "@/components/admin/ui/PageHeader";
+import { Panel } from "@/components/admin/ui/Panel";
 import {
   listOrganizerCandidates,
   listVenues,
@@ -62,9 +64,14 @@ export default async function NewGamePage({
         {strings.games.backToGames}
       </Link>
 
-      <h2 className="mt-4 text-[22px] font-bold uppercase tracking-wide text-bone">
-        {strings.admin.newGameTitle}
-      </h2>
+      {/* Round 42 — the rebuild's header, and the form in a panel. */}
+      <div className="mt-4">
+        <PageHeader
+          title={strings.admin.newGameTitle}
+          lede={strings.admin.gamesHub.newGameLede}
+          testId="admin-new-game-header"
+        />
+      </div>
 
       {/*
         ~~UNFINISHED GAMES (round 9, item 7) — a list of drafts, here because
@@ -81,15 +88,17 @@ export default async function NewGamePage({
         `docs/ops/delete-draft-games.sql`, handed over rather than run.
       */}
 
-      <GameForm
-        action={createGameAction}
-        venues={pickableVenues(venues, null)}
-        defaultOrganizerName={admin.nickname}
-        canSetLanguage={capabilities.gameLanguage}
-        canSetTelegram={capabilities.organizerTelegram}
-        organizerPlayers={capabilities.organizerPlayer ? organizerPlayers : undefined}
-        defaultOrganizerPlayerId={admin.id}
-      />
+      <Panel testId="admin-new-game" className="mt-5">
+        <GameForm
+          action={createGameAction}
+          venues={pickableVenues(venues, null)}
+          defaultOrganizerName={admin.nickname}
+          canSetLanguage={capabilities.gameLanguage}
+          canSetTelegram={capabilities.organizerTelegram}
+          organizerPlayers={capabilities.organizerPlayer ? organizerPlayers : undefined}
+          defaultOrganizerPlayerId={admin.id}
+        />
+      </Panel>
     </>
   );
 }
