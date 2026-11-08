@@ -339,6 +339,13 @@ at naming the host, the port, and then any host at all failed identically. It is
 off outside production (`images.unoptimized`), which is why local behaviour is
 unchanged and why no spec exercises the optimizer path.
 
+**A LAYOUT'S AUTH CHECK DOES NOT GATE ITS PAGE.** The App Router renders a
+layout and its page IN PARALLEL, so `requireAdmin()` in `app/admin/layout.tsx`
+redirects while the page's service-role read is already streaming. Found on
+production on 2026-11-08: a signed-out `curl /admin/games` carried every game
+row behind the `NEXT_REDIRECT`. **Every admin page calls `requireAdmin()`
+itself, before it reads** — `lib/auth/__tests__/adminPagesGuarded.test.ts`.
+
 **A GRID WITH NO COLUMN TEMPLATE SIZES ITS ONE TRACK TO ITS WIDEST ROW.** The
 rebuilt dashboard's `grid lg:grid-cols-5` had nothing below `lg`, so at 390px
 the implicit track was `auto` and a row that would not wrap pushed the page 2px
@@ -894,7 +901,7 @@ node scripts/apply-migration.mjs \
 ```
 
 **OUTSTANDING — round 42's fourth, pitch costs and what each seat earned (the
-admin rebuild, ledger rows 429–435).** Waits for the owner's go; the
+admin rebuild, ledger rows 429–435; the code is deployed, `bnj3wlmvk`).** Waits for the owner's go; the
 Oliver-applies rule stands. Additive, idempotent, NOT deploy-first, order-free;
 applied twice locally and drilled (`pitch_costs.sql`, 59/59 suites). The deploy
 is safe without it: every pitch, profit and break-even control waits for
