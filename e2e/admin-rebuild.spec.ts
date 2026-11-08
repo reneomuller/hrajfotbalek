@@ -180,3 +180,30 @@ test("one game's pitch cost is corrected by hand, and an empty box puts it back"
     await destroyScratchGame(game.id);
   }
 });
+
+/*
+ * The owner, 2026-11-08: "in the players admin tab, please have the player
+ * country graph and their skill level graph above the long player list". It
+ * was above on a desktop and below on a phone; now above at both widths.
+ */
+for (const viewport of [
+  { width: 390, height: 844 },
+  { width: 1280, height: 900 },
+]) {
+  test(`the country and skill graphs sit above the players list at ${viewport.width}px`, async ({ page }) => {
+    // Arrange
+    await page.setViewportSize(viewport);
+
+    // Act
+    await page.goto("/admin/players");
+    const list = page.getByTestId("players-list");
+    await expect(list).toBeVisible();
+
+    // Assert
+    const listTop = (await list.boundingBox())!.y;
+    for (const graph of ["players-by-country", "players-by-skill"]) {
+      const box = (await page.getByTestId(graph).boundingBox())!;
+      expect(box.y + box.height, `${graph} ends above the list`).toBeLessThanOrEqual(listTop);
+    }
+  });
+}

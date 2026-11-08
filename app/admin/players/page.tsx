@@ -107,11 +107,10 @@ export default async function AdminPlayersPage({
       </div>
 
       <div className="mt-8 flex flex-col gap-6">
-        {/* Who the players are. Above the list where there is room for both,
-            below it on a phone, where the list is what an admin came for. */}
-        <div className="order-last md:order-none">
-          <PlayerBreakdowns players={players} />
-        </div>
+        {/* Who the players are — country and skill — ABOVE the list at every
+            width (the owner, 2026-11-08: "have the player country graph and
+            their skill level graph above the long player list"). */}
+        <PlayerBreakdowns players={players} />
 
         <section data-testid="players-list" className="flex flex-col gap-3">
           <SegmentTabs tabs={tabs} current={segment} label={t.segmentsLabel} testId="player-segments" />

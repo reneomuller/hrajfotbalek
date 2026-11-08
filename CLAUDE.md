@@ -900,9 +900,9 @@ node scripts/apply-migration.mjs \
   supabase/migrations/20261106110000_venue_address.sql --production
 ```
 
-**OUTSTANDING — round 42's fourth, pitch costs and what each seat earned (the
-admin rebuild, ledger rows 429–435; the code is deployed, `bnj3wlmvk`).** Waits for the owner's go; the
-Oliver-applies rule stands. Additive, idempotent, NOT deploy-first, order-free;
+**~~OUTSTANDING~~ APPLIED, verified 2026-11-08 — round 42's fourth, pitch costs and what each seat earned (the
+admin rebuild, ledger rows 429–435; the code is deployed, `bnj3wlmvk`), applied BY ME on the owner's explicit instruction (he sent the command); the
+Oliver-applies rule stands.** Probed through the public API as a signed-out visitor: 37 flags, all true, `pitchCosts` among them; the three pitch tables, `game_economics` and `set_pitch_season` all answer 42501. The live list was diffed against the file first: all 36 live flags kept. Additive, idempotent, NOT deploy-first, order-free;
 applied twice locally and drilled (`pitch_costs.sql`, 59/59 suites). The deploy
 is safe without it: every pitch, profit and break-even control waits for
 `app_capabilities()` to say `pitchCosts`, and the seat bars draw one plain fill.
