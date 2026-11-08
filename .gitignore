@@ -73,3 +73,6 @@ docs/**/strips/
 screenshots/
 test-results/
 playwright-report/
+
+# Parallel builders' git worktrees (round 42)
+.claude/worktrees/

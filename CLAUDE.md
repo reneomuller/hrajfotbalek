@@ -339,6 +339,16 @@ at naming the host, the port, and then any host at all failed identically. It is
 off outside production (`images.unoptimized`), which is why local behaviour is
 unchanged and why no spec exercises the optimizer path.
 
+**A GRID WITH NO COLUMN TEMPLATE SIZES ITS ONE TRACK TO ITS WIDEST ROW.** The
+rebuilt dashboard's `grid lg:grid-cols-5` had nothing below `lg`, so at 390px
+the implicit track was `auto` and a row that would not wrap pushed the page 2px
+wider than the phone. `grid-cols-1` is `minmax(0, 1fr)`, which cannot grow.
+`e2e/admin-rebuild.spec.ts` checks every admin page at 390px.
+
+**AND A PARALLEL BUILD'S WORKTREES LIVE INSIDE THE REPO**, under
+`.claude/worktrees/` — so the unit runner collected five copies of the suite
+(15,471 tests) until `vitest.config.ts` excluded the folder.
+
 **AND `next/image` IS LAZY BY DEFAULT, WHICH IS WRONG FOR THE TOP CARD.** The
 first game card's photo is the Largest Contentful Paint on both the home page
 and the games list, and moving from `<img>` to `<Image>` silently made it
@@ -881,6 +891,25 @@ It restates `app_capabilities()` as 36 flags, every earlier one probed.
 ```
 node scripts/apply-migration.mjs \
   supabase/migrations/20261106110000_venue_address.sql --production
+```
+
+**OUTSTANDING — round 42's fourth, pitch costs and what each seat earned (the
+admin rebuild, ledger rows 429–435).** Waits for the owner's go; the
+Oliver-applies rule stands. Additive, idempotent, NOT deploy-first, order-free;
+applied twice locally and drilled (`pitch_costs.sql`, 59/59 suites). The deploy
+is safe without it: every pitch, profit and break-even control waits for
+`app_capabilities()` to say `pitchCosts`, and the seat bars draw one plain fill.
+It adds `venue_pitch_costs` (800 summer / 1200 winter for every venue),
+`pitch_settings` (winter) and `game_pitch_costs` — **none readable by anon or
+authenticated, because `games`, `venues` and `site_settings` are**, so a column
+there would have published the owner's margin — three admin writers,
+`booking_seat_values` / `game_economics` (a seat valued at what was PAID), and
+restates `app_capabilities()` as 37 flags, every earlier one probed. It
+BACKFILLS every existing game at the current season's price.
+
+```
+node scripts/apply-migration.mjs \
+  supabase/migrations/20261108100000_pitch_costs.sql --production
 ```
 
 When a UI failure looks inexplicable and the code reads correctly, check this

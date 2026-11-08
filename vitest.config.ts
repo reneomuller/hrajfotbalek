@@ -14,6 +14,6 @@ export default defineConfig({
     // `scripts/**/*.check.ts` talks to the live database and needs .env.local;
     // it runs from vitest.integration.config.ts instead. This suite must stay
     // runnable with no credentials.
-    exclude: ["node_modules/**", ".next/**", "e2e/**", "scripts/**"],
+    exclude: ["node_modules/**", ".next/**", "e2e/**", "scripts/**", ".claude/**"],
   },
 });
