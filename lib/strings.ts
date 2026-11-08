@@ -2317,6 +2317,32 @@ export const strings = {
     /** Copy the restyle of the other admin pages needed. */
     shell: {
       overview: "Overview",
+
+      /*
+       * THE DASHBOARD. The line under the title answers "does anything need
+       * me" before the page has been read — the one thing on it that needs a
+       * human is a payment with no seat.
+       */
+      dashboardClear: "No payments are waiting on you.",
+      dashboardAttentionOne: "1 payment needs you — it is at the top.",
+      dashboardAttentionMany: "{n} payments need you — they are at the top.",
+      attentionEyebrow: "Needs you",
+      /*
+       * Under each tile, WHAT IT COUNTS. "Total players" meant signed-up
+       * accounts here and every row on the players page, and nothing on
+       * either page said which.
+       */
+      tileUpcomingDetail: "{taken} of {capacity} seats booked",
+      tilePlayersDetail: "Signed-up accounts only",
+      tileNewPlayersDetail: "Since {date}",
+      tileRevenueDetail: "Confirmed in {month}",
+      /* Under a game's seat bar, once pitch costs exist. */
+      breakEvenShort: "{n} more paid seats to break even",
+      breakEvenPast: "Past break-even",
+
+      /* THE HOME-PAGE SETTINGS. */
+      siteNumbersTitle: "On the home page",
+      notifyCount: "{n} / {max}",
     },
   },
 
