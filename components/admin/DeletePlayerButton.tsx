@@ -4,6 +4,7 @@ import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
 import { deletePlayerAction, type PlayerAdminState } from "@/app/admin/players/[id]/actions";
 import { strings } from "@/lib/strings";
+import { chipDanger } from "@/components/admin/players/controlStyles";
 
 const INITIAL: PlayerAdminState = { status: "idle" };
 
@@ -41,7 +42,7 @@ function Submit() {
       type="submit"
       disabled={pending}
       data-testid="delete-player"
-      className="rounded-control border border-danger/60 px-3 py-2 text-[10px] uppercase tracking-eyebrow text-danger disabled:opacity-50"
+      className={chipDanger}
     >
       {pending ? strings.common.loading : strings.admin.deletePlayer}
     </button>

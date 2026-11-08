@@ -1,23 +1,30 @@
-import { profilePhotoVersion } from "@/lib/storage/photoVersions";
-import Link from "next/link";
 import { notFound } from "next/navigation";
-import { PlayerAttendanceRow } from "@/components/admin/PlayerAttendanceRow";
 import { AdminRightsButton } from "@/components/admin/AdminRightsButton";
-import { OrganizerRightsButton } from "@/components/admin/OrganizerRightsButton";
+import { BanPlayerButton } from "@/components/admin/BanPlayerButton";
+import { ChangeNameForm } from "@/components/admin/ChangeNameForm";
+import { DeletePlayerButton } from "@/components/admin/DeletePlayerButton";
 import { GrantCreditForm } from "@/components/admin/GrantCreditForm";
+import { OrganizerRightsButton } from "@/components/admin/OrganizerRightsButton";
+import { PlayerAttendanceRow } from "@/components/admin/PlayerAttendanceRow";
+import { RemoveCoverButton } from "@/components/admin/RemoveCoverButton";
 import { RemoveCreditForm } from "@/components/admin/RemoveCreditForm";
 import { RemovePhotoButton } from "@/components/admin/RemovePhotoButton";
-import { RemoveCoverButton } from "@/components/admin/RemoveCoverButton";
-import { ChangeNameForm } from "@/components/admin/ChangeNameForm";
-import { BanPlayerButton } from "@/components/admin/BanPlayerButton";
-import { DeletePlayerButton } from "@/components/admin/DeletePlayerButton";
-import { appCapabilities } from "@/lib/db/capabilities";
-import { requireAdmin } from "@/lib/auth/requireAdmin";
-import { getAdminPlayer } from "@/lib/admin/queries";
-import { formatCzk } from "@/lib/format";
+import { KpiTile } from "@/components/admin/players/KpiTile";
+import { MoneySpentPanel } from "@/components/admin/players/MoneySpentPanel";
+import { PlayerHeader } from "@/components/admin/players/PlayerHeader";
+import { SectionHeading } from "@/components/admin/players/SectionHeading";
+import { Panel } from "@/components/admin/ui/Panel";
 import { adminWallet } from "@/lib/admin/credits";
-import { initials } from "@/lib/roster/initials";
+import { getBookingSeatValues } from "@/lib/admin/economics";
+import { historyFigures } from "@/lib/admin/players/activity";
+import { CAME_BACK_GAMES } from "@/lib/admin/players/segments";
+import { playerSpend } from "@/lib/admin/players/spend";
+import { getAdminPlayer } from "@/lib/admin/queries";
+import { requireAdmin } from "@/lib/auth/requireAdmin";
+import { appCapabilities } from "@/lib/db/capabilities";
+import { formatCzk, formatDate } from "@/lib/format";
 import { avatarUrl } from "@/lib/storage/avatar";
+import { profilePhotoVersion } from "@/lib/storage/photoVersions";
 import { strings } from "@/lib/strings";
 
 export const metadata = {
@@ -27,362 +34,205 @@ export const metadata = {
 
 export const dynamic = "force-dynamic";
 
+const t = strings.admin.playersHub;
+
+/** Under the last game: whether they came back, in words. */
+function cameBackLine(gamesPlayed: number): string {
+  if (gamesPlayed >= CAME_BACK_GAMES) return t.playerKpis.cameBack.replace("{n}", String(gamesPlayed));
+  if (gamesPlayed === 1) return t.playerKpis.oneGame;
+  return t.playerKpis.notPlayed;
+}
+
 /**
- * One player, everything the organizer needs about them (REQ-ADMIN-001).
+ * One player, everything the organizer needs about them (REQ-ADMIN-001;
+ * rebuilt round 42).
  *
- * WHY A PAGE RATHER THAN AN EXPANDING ROW. The list answers "who is here and
- * what do they owe"; this answers "who is this person" — history, attendance,
- * the wallet behind the number. Those are different questions asked at
- * different moments, and cramming the second into the first is what made the
- * list unreadable before it existed.
+ * WHO, THEN THE NUMBERS, THEN WHAT YOU CAN DO, THEN WHAT HAPPENED. The header
+ * says who this is and how to reach them; four figures say how they play and
+ * what they hold (and, once the pitch-cost migration is live, what they have
+ * paid); the controls sit in three panels by what they change — rights, the
+ * account, the Credit — and the history closes the page with its attendance
+ * controls.
  *
- * EVERYTHING SHOWN HERE IS PII an admin is entitled to see and nobody else is:
- * email, country, skill. The page is under `app/admin/layout.tsx`, which runs
- * `requireAdmin()` before any of this is reached, and every read goes through
- * the service-role client for the reason `lib/admin/queries.ts` documents.
+ * EVERY CONTROL IS THE ONE THAT WAS HERE, with its own confirm step, its own
+ * capability gate and its own RPC — `set_player_admin`, `admin_set_organizer`,
+ * `grant_credit` and the rest re-check authorization inside the function, so
+ * these panels are controls over a boundary that was already there. The
+ * panels only regroup them.
+ *
+ * EVERYTHING SHOWN HERE IS PII an admin is entitled to see and nobody else is.
+ * The page is under `app/admin/layout.tsx`, which runs `requireAdmin()` first,
+ * and every read goes through the service-role client.
  */
-export default async function AdminPlayerPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
-  await requireAdmin();
+export default async function AdminPlayerPage({ params }: { params: Promise<{ id: string }> }) {
+  const acting = await requireAdmin();
   const { id } = await params;
   const detail = await getAdminPlayer(id);
   if (!detail) notFound();
 
-  // The rename is an RPC, so it is gated: a control whose function does not
+  // Every control below an RPC is gated: a control whose function does not
   // exist is a button that 404s, which round 12 ruled against.
   const capabilities = await appCapabilities();
 
-  const { player, balanceCzk, gamesPlayed, noShowCount, games } = detail;
-  const photo = avatarUrl(
-    process.env.NEXT_PUBLIC_SUPABASE_URL ?? "",
-    player.photo_path,
-    // Round 41: the bytes' own version — `created_at` never moved.
-    await profilePhotoVersion(player.photo_path),
-  );
+  const { player, balanceCzk, games } = detail;
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
+  const [photoVersion, coverVersion] = await Promise.all([
+    profilePhotoVersion(player.photo_path),
+    profilePhotoVersion(player.cover_path ?? null),
+  ]);
+  // Round 41: the bytes' own version — `created_at` never moved.
+  const photo = avatarUrl(supabaseUrl, player.photo_path, photoVersion);
+  const cover = avatarUrl(supabaseUrl, player.cover_path ?? null, coverVersion);
+
+  const figures = historyFigures(games);
+  const wallet = adminWallet(balanceCzk);
+  const spend = capabilities.pitchCosts
+    ? playerSpend(await getBookingSeatValues([...new Set(games.map((row) => row.gameId))]), player.id)
+    : null;
+
+  const isDeleted = Boolean(player.deleted_at);
+  const canBan = capabilities.banProfile && !isDeleted;
+  const canDelete = capabilities.deleteAccount && !isDeleted && !player.is_admin;
 
   return (
     <>
-      <Link
-        href="/admin/players"
-        className="text-[11px] uppercase tracking-eyebrow text-muted no-underline"
-      >
-        {strings.common.back}
-      </Link>
+      <PlayerHeader player={player} photoUrl={photo} coverUrl={cover} />
 
-      {/*
-        --- identity: the OWN-PROFILE SHAPE (round 7, item 9) ----------------
-
-        Cover photograph, avatar overlapping its lower edge, name, meta line,
-        three stat tiles. Deliberately the same composition as
-        `components/account/ProfileIdentity.tsx` and `ProfileStats.tsx` rather
-        than a second arrangement of the same facts: an admin looking at a
-        player and that player looking at themselves should be looking at the
-        same page, so "what does this person see" needs no translation.
-
-        NOT THE SAME COMPONENTS, and that is a real decision rather than
-        laziness. `ProfileIdentity` renders a PhotoUpload wrapper and reads the
-        session's own row; making it serve both would mean a component that
-        branches on who is looking, which is how an admin-only fact reaches a
-        player's page. Two renderings of one composition, and the tokens keep
-        them in step.
-      */}
-      <div aria-hidden className="relative -mx-gutter mt-4 h-[132px] overflow-hidden">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src="/pitch-default.jpg"
-          alt=""
-          className="h-full w-full object-cover object-center"
-        />
-        <span className="absolute inset-0 bg-gradient-to-b from-ink/[.45] via-ink/[.70] via-50% to-ink to-90%" />
-      </div>
-
-      {/* `relative`, or the positioned cover above paints over this row — the
-          stacking bug round 6 hit on the player's own profile. */}
-      <div className="relative -mt-10 flex items-end gap-4">
-        <span
-          data-testid="admin-player-avatar"
-          className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-pill border-2 border-volt bg-surface-avatar text-2xl font-extrabold text-volt"
+      {/* --- the figures ------------------------------------------------------ */}
+      <section data-testid="admin-player-stats" className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-4">
+        <KpiTile label={t.playerKpis.gamesPlayed} value={String(figures.gamesPlayed)} valueTestId="admin-player-games-played">
+          <span>
+            {strings.admin.bookingsLabel} {games.length}
+          </span>
+        </KpiTile>
+        <KpiTile
+          label={t.playerKpis.lastGame}
+          value={figures.lastGameAt ? formatDate(figures.lastGameAt) : t.noGameYet}
+          valueTestId="admin-player-last-game"
+          size="md"
+          tone="white"
         >
-          {photo ? (
-            /* Plain <img>, like every other avatar in this product: a public
-               bucket and a small circle do not need the optimizer. */
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={photo}
-              alt=""
-              data-testid="admin-player-photo"
-              className="h-full w-full object-cover"
-            />
-          ) : (
-            initials(player.nickname, strings)
+          <span data-testid="admin-player-came-back" className={figures.gamesPlayed >= CAME_BACK_GAMES ? "text-volt" : undefined}>
+            {cameBackLine(figures.gamesPlayed)}
+          </span>
+        </KpiTile>
+        <KpiTile label={t.playerKpis.noShows} value={String(figures.noShows)} valueTestId="admin-player-no-shows" tone="white">
+          <span>{t.playerKpis.noShowsDetail}</span>
+        </KpiTile>
+        {/*
+          THE WALLET READS IN CREDITS, EXACTLY AS THE PLAYER SEES IT (round 31,
+          item 3), and the ragged case is handled rather than rounded: the count
+          is a FLOOR, so a balance that does not divide into whole Credits shows
+          its exact crowns beneath.
+        */}
+        <KpiTile label={t.playerKpis.credit} value={String(wallet.credits)} valueTestId="admin-player-balance">
+          {wallet.remainderCzk !== null && (
+            <span data-testid="admin-player-balance-exact" className="text-faint">
+              {strings.admin.walletExactCzk.replace("{czk}", formatCzk(wallet.remainderCzk))}
+            </span>
           )}
-        </span>
+        </KpiTile>
+      </section>
 
-        <div className="flex min-w-0 flex-col gap-[2px] pb-1">
-          {/* Nickname is free text; JSX escapes it. */}
-          <h2 className="m-0 flex items-baseline gap-2 truncate text-[26px] font-bold leading-tight text-white">
-            {/*
-              THE PERMANENT NUMBER (round 33, item 2) — beside the name, and
-              deliberately the quietest thing in the heading. Inside the `h2` so
-              a screen reader reads "No. 14, Oliver" as one heading rather than
-              announcing a stray number, and `player_number` is optional in the
-              type so this simply is not there until the migration is applied.
-            */}
-            {player.player_number !== undefined && (
-              <span
-                data-testid="admin-player-number"
-                title={strings.admin.playerNumberTitle}
-                className="shrink-0 tabular-nums text-[13px] font-semibold text-faint"
-              >
-                {strings.admin.playerNumber}
-                {player.player_number}
-              </span>
+      {spend && (
+        <div className="mt-3">
+          <MoneySpentPanel spend={spend} />
+        </div>
+      )}
+
+      {/* --- the controls, by what they change -------------------------------- */}
+      <div data-testid="admin-actions" className="mt-6 grid gap-4 md:grid-cols-2 md:items-start">
+        <Panel testId="admin-player-rights">
+          <SectionHeading title={t.rightsTitle} lede={t.rightsLede} />
+          <div className="flex flex-wrap items-center gap-3">
+            <AdminRightsButton playerId={player.id} isAdmin={player.is_admin} />
+            {/* Round 42 — beside admin rights, as the owner asked. */}
+            {capabilities.organizerPlayer && !isDeleted && (
+              <OrganizerRightsButton playerId={player.id} isOrganizer={Boolean(player.is_organizer)} />
             )}
-            <span className="truncate">{player.nickname}</span>
-          </h2>
-          <p className="m-0 truncate text-small text-muted">
-            {[
-              player.country ?? null,
-              player.skill_level ? strings.admin.skillOptions[player.skill_level] : null,
-            ]
-              .filter(Boolean)
-              .join(" · ") || strings.admin.playerNoEmail}
-          </p>
-        </div>
-      </div>
+          </div>
+          {player.id === acting.id && (
+            <p data-testid="admin-rights-self-note" className="m-0 mt-3 text-[12px] text-faint">
+              {strings.admin.adminSelfNote}
+            </p>
+          )}
+        </Panel>
 
-      {/* The three figures, as the profile lays them out. */}
-      <section data-testid="admin-player-stats" className="mt-7 grid grid-cols-3 gap-3">
-        <div>
-          <div
-            data-testid="admin-player-games-played"
-            className="font-display text-[30px] leading-none text-white"
-          >
-            {gamesPlayed}
+        <Panel testId="admin-player-account">
+          <SectionHeading title={t.accountTitle} />
+
+          {/*
+            HOW THEY APPEAR. The rename is always offered — a name always exists
+            (round 33, item 1) — and each image removal only when there is an
+            image to remove, because an enabled button for an absent photo is a
+            promise the page cannot keep.
+          */}
+          <h4 className="m-0 text-[10px] font-normal uppercase tracking-eyebrow text-faint">{t.accountProfile}</h4>
+          <div className="mt-2 flex flex-wrap items-start gap-3">
+            {capabilities.adminRenamePlayer && <ChangeNameForm playerId={player.id} name={player.nickname} />}
+            {player.photo_path && <RemovePhotoButton playerId={player.id} />}
+            {player.cover_path && <RemoveCoverButton playerId={player.id} />}
           </div>
-          <div className="mt-[6px] text-eyebrow font-semibold uppercase leading-tight text-muted">
-            {strings.admin.playerGamesPlayed}
-          </div>
-        </div>
-        <div>
-          <div
-            data-testid="admin-player-no-shows"
-            className="font-display text-[30px] leading-none text-white"
-          >
-            {noShowCount}
-          </div>
-          <div className="mt-[6px] text-eyebrow font-semibold uppercase leading-tight text-muted">
-            {strings.admin.playerNoShows}
-          </div>
-        </div>
-        <div>
-          <div
-            data-testid="admin-player-balance"
-            className="font-display text-[30px] leading-none text-volt"
-          >
-            {/*
-              THE WALLET READS IN CREDITS, EXACTLY AS THE PLAYER SEES IT
-              (round 31, item 3). It said crowns while the player's own account
-              page said credits — one wallet, two units, and the organizer
-              doing the division by hand to check they matched.
-            */}
-            {adminWallet(balanceCzk).credits}
-          </div>
-          {adminWallet(balanceCzk).remainderCzk !== null && (
-            /*
-              THE RAGGED CASE, HANDLED RATHER THAN ROUNDED. The count above is
-              a FLOOR, so when a balance does not divide into whole credits the
-              difference is real money and has to be visible — three of four
-              production wallets are in this state, left by arbitrary-CZK
-              grants made before the credits ruling existed.
-            */
-            <div
-              data-testid="admin-player-balance-exact"
-              className="mt-1 text-[11px] leading-tight text-faint"
-            >
-              {strings.admin.walletExactCzk.replace(
-                "{czk}",
-                formatCzk(adminWallet(balanceCzk).remainderCzk!),
+
+          {/*
+            ACCESS — what the account IS. A deleted account has nothing left to
+            ban or delete (round 40), so only its notice remains.
+          */}
+          {(canBan || canDelete || player.banned_at) && (
+            <div className="mt-4 border-t border-hairline pt-4">
+              <h4 className="m-0 text-[10px] font-normal uppercase tracking-eyebrow text-faint">{t.accountAccess}</h4>
+              {(canBan || canDelete) && <p className="m-0 mt-1 text-[12px] text-muted">{t.accountAccessLede}</p>}
+              {(canBan || canDelete) && (
+                <div className="mt-3 flex flex-wrap items-center gap-3">
+                  {canBan && <BanPlayerButton playerId={player.id} isBanned={Boolean(player.banned_at)} />}
+                  {canDelete && <DeletePlayerButton playerId={player.id} />}
+                </div>
+              )}
+              {/*
+                THE STATE ITSELF, said once and plainly: a banned account is a
+                fact about the person, not a property of one button — an
+                organizer scrolling to the history needs to know why it stops.
+              */}
+              {player.banned_at && (
+                <p
+                  data-testid={isDeleted ? "player-deleted-notice" : "player-banned-notice"}
+                  className="m-0 mt-3 text-[11px] uppercase tracking-eyebrow text-danger"
+                >
+                  {isDeleted ? strings.admin.deleted : strings.admin.banned}
+                </p>
               )}
             </div>
           )}
-          <div className="mt-[6px] text-eyebrow font-semibold uppercase leading-tight text-muted">
-            {strings.admin.playerBalance}
+        </Panel>
+
+        {/*
+          THE CREDIT, BOTH DIRECTIONS (round 28, item 5b) — one act with a sign,
+          side by side and alike, but only the removal arms itself before it
+          will submit. The floor that stops a wallet going negative is
+          `grant_credit`'s, under the player's advisory lock.
+        */}
+        <Panel testId="admin-player-credit" className="md:col-span-2">
+          <SectionHeading title={t.creditTitle} lede={t.creditLede} />
+          <div className="flex flex-wrap items-start gap-x-5 gap-y-3">
+            <GrantCreditForm playerId={player.id} />
+            <RemoveCreditForm playerId={player.id} balanceCzk={balanceCzk} />
           </div>
-        </div>
-      </section>
-
-      {/*
-        --- contact ------------------------------------------------------------
-
-        EMAIL AND PHONE, WHICH IS WHY AN ADMIN OPENS THIS PAGE. Both are PII
-        the admin surface is entitled to and nobody else is; the page sits
-        under `app/admin/layout.tsx`, which gates before a row is read.
-
-        The phone is here rather than on the player's own profile view of this
-        page because the organizer's reason for wanting it — reaching someone
-        about tonight's game — is an admin reason. Item 7 made it required at
-        signup precisely so this field stops being empty.
-      */}
-      <section data-testid="admin-player-contact" className="lifted mt-6 rounded-card p-5">
-        <h3 className="m-0 text-eyebrow font-semibold uppercase text-volt">
-          {strings.admin.contactTitle}
-        </h3>
-        <dl className="m-0 mt-3 flex flex-col gap-3">
-          <div className="flex flex-col gap-[2px]">
-            <dt className="field-label m-0">{strings.admin.contactEmail}</dt>
-            <dd
-              data-testid="admin-player-email"
-              className={`m-0 text-body-lg font-semibold ${player.email ? "text-white" : "text-faint"}`}
-            >
-              {player.email ?? strings.admin.playerNoEmail}
-            </dd>
-          </div>
-          <div className="flex flex-col gap-[2px]">
-            <dt className="field-label m-0">{strings.admin.contactPhone}</dt>
-            <dd
-              data-testid="admin-player-phone"
-              className={`m-0 text-body-lg font-semibold ${player.phone ? "text-white" : "text-faint"}`}
-            >
-              {player.phone ?? strings.admin.contactNone}
-            </dd>
-          </div>
-        </dl>
-      </section>
-
-      {/*
-        --- ADMIN ACTIONS -------------------------------------------------------
-
-        ONE PANEL, AND IT IS BUILT TO GROW. Item 9 names three actions and says
-        more are coming, so they sit in a labelled panel with a rule between
-        rows rather than being scattered down the page — a fourth action is a
-        new row, not a new layout decision.
-
-        THEY MOVED HERE FROM THE LIST ROWS, which is the other half. The rights
-        control and the credit form were on every row of `/admin/players`,
-        interleaved with the facts — so the thing you could accidentally tap
-        sat between two things you were only reading, on a list you scroll
-        fast. An action that changes someone's rights or their money belongs on
-        the page you opened deliberately.
-
-        EVERY ONE OF THEM IS AN EXISTING RPC. `set_player_admin` and
-        `grant_credit` both re-check authorization inside the function, so this
-        panel is a set of controls over a boundary that was already there.
-      */}
-      <section data-testid="admin-actions" className="lifted mt-4 rounded-card p-5">
-        <h3 className="m-0 text-eyebrow font-semibold uppercase text-volt">
-          {strings.admin.adminActionsTitle}
-        </h3>
-
-        {/*
-          WHAT THIS ACCOUNT *IS* — the two controls that change it, together
-          (round 35 v2, item 8). Admin rights and the ban are the same kind of
-          act; Remove photo and Remove banner are one row down, where the acts
-          about appearance live.
-        */}
-        <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-3 border-b border-hairline pb-4">
-          <AdminRightsButton playerId={player.id} isAdmin={player.is_admin} />
-          {/* Round 42 — beside admin rights, as the owner asked. */}
-          {capabilities.organizerPlayer && !player.deleted_at && (
-            <OrganizerRightsButton playerId={player.id} isOrganizer={Boolean(player.is_organizer)} />
-          )}
-          {/* A DELETED account has nothing left to ban or delete (round 40). */}
-          {capabilities.banProfile && !player.deleted_at && (
-            <BanPlayerButton playerId={player.id} isBanned={Boolean(player.banned_at)} />
-          )}
-          {capabilities.deleteAccount && !player.deleted_at && !player.is_admin && (
-            <DeletePlayerButton playerId={player.id} />
-          )}
-        </div>
-
-        {/*
-          THE STATE ITSELF, said once and plainly. The toggle's label already
-          reads "Unban profile", but a banned account is a fact about the person
-          whose page this is rather than a property of one button — an organizer
-          scrolling to the history needs to know why it stops.
-        */}
-        {player.banned_at && (
-          <p
-            data-testid={player.deleted_at ? "player-deleted-notice" : "player-banned-notice"}
-            className="mt-3 mb-0 text-[11px] uppercase tracking-eyebrow text-danger"
-          >
-            {player.deleted_at ? strings.admin.deleted : strings.admin.banned}
-          </p>
-        )}
-
-        {/*
-          THE WALLET, BOTH DIRECTIONS (round 28, item 5b). Side by side and
-          alike, because they are one act with a sign — but only the removal
-          arms itself before it will submit, and only the removal insists on a
-          note. The balance travels to the remove form for CONTEXT; the floor
-          that stops a wallet going negative is `grant_credit`'s, under the
-          player's advisory lock, where two concurrent removals can be made to
-          agree.
-        */}
-        {/*
-          CENTRED BETWEEN THEIR DIVIDERS (round 30, item 2). The two wallet
-          controls are one pair — the same act with a sign — and left-aligning
-          them put the pair against one edge of a band that runs the full width,
-          which reads as two unrelated buttons that happen to be adjacent.
-          `justify-center` on the row and `items-start` retained so an OPEN form
-          grows downward without dragging its sibling's baseline with it.
-        */}
-        <div className="flex flex-wrap items-start justify-center gap-x-5 gap-y-3 py-4">
-          <GrantCreditForm playerId={player.id} />
-          <RemoveCreditForm playerId={player.id} balanceCzk={balanceCzk} />
-        </div>
-
-        {/*
-          THE TWO IMAGES, SIDE BY SIDE (round 30, item 2). Each renders only
-          when there is something to remove, so a player with a photo and no
-          banner sees one button rather than one enabled and one dead. They
-          share a divider because they are one kind of act.
-        */}
-        {/*
-          THE IDENTITY ROW (round 33, item 1). The rename joins the two image
-          removals because all three act on how this player APPEARS, and the
-          owner asked for it "alongside Remove photo / Remove banner".
-
-          THE ROW IS NO LONGER CONDITIONAL, AND THAT IS THE ITEM. It used to
-          render only when there was an image to remove, which was right while
-          every control in it was about an image. A name always exists, so the
-          rename is always offered — and the two removals keep their own
-          conditions, because an enabled button for an absent photo would be a
-          promise the page cannot keep.
-        */}
-        <div className="flex flex-wrap items-start gap-3 border-t border-hairline pt-4">
-          {capabilities.adminRenamePlayer && (
-            <ChangeNameForm playerId={player.id} name={player.nickname} />
-          )}
-          {player.photo_path && <RemovePhotoButton playerId={player.id} />}
-          {player.cover_path && <RemoveCoverButton playerId={player.id} />}
-        </div>
-      </section>
+        </Panel>
+      </div>
 
       {/* --- history, with the no-show control -------------------------------- */}
-      <section className="mt-10">
-        <h3 className="m-0 text-[18px] font-bold uppercase tracking-wide text-bone">
-          {strings.admin.playerGamesTitle}
-        </h3>
-        <p className="mt-1 max-w-[520px] text-[13px] leading-relaxed text-muted">
-          {strings.admin.playerGamesLede}
-        </p>
-
+      <Panel testId="admin-player-history" className="mt-6">
+        <SectionHeading title={strings.admin.playerGamesTitle} lede={strings.admin.playerGamesLede} />
         {games.length === 0 ? (
-          <p className="mt-4 text-[12px] tracking-[1px] text-faint">
-            {strings.admin.playerGamesEmpty}
-          </p>
+          <p className="m-0 text-small text-faint">{strings.admin.playerGamesEmpty}</p>
         ) : (
-          <ul className="mt-4 list-none space-y-2 p-0">
+          <ul className="m-0 list-none p-0">
             {games.map((row) => (
               <PlayerAttendanceRow key={row.bookingId} row={row} />
             ))}
           </ul>
         )}
-      </section>
+      </Panel>
     </>
   );
 }

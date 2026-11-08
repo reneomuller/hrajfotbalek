@@ -4,6 +4,7 @@ import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
 import { removePhotoAction, type PlayerAdminState } from "@/app/admin/players/[id]/actions";
 import { strings } from "@/lib/strings";
+import { chipQuiet } from "@/components/admin/players/controlStyles";
 
 const INITIAL: PlayerAdminState = { status: "idle" };
 
@@ -22,7 +23,7 @@ export function RemovePhotoButton({ playerId }: { playerId: string }) {
     return (
       <p
         data-testid="photo-removed"
-        className="m-0 text-[11px] uppercase tracking-eyebrow text-volt-dim"
+        className="m-0 flex min-h-11 items-center text-[11px] uppercase tracking-eyebrow text-volt-dim"
       >
         {strings.admin.photoRemoved}
       </p>
@@ -54,7 +55,7 @@ function Submit() {
       type="submit"
       disabled={pending}
       data-testid="remove-photo"
-      className="rounded-control border border-hairline-strong px-3 py-2 text-[10px] uppercase tracking-eyebrow text-muted disabled:opacity-50"
+      className={chipQuiet}
     >
       {pending ? strings.common.loading : strings.admin.photoRemove}
     </button>

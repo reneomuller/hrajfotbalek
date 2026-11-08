@@ -7,6 +7,7 @@ import {
   type OrganizerRightsState,
 } from "@/app/admin/players/actions";
 import { strings } from "@/lib/strings";
+import { chipQuiet, chipVolt } from "@/components/admin/players/controlStyles";
 
 const INITIAL: OrganizerRightsState = { status: "idle" };
 
@@ -38,7 +39,7 @@ export function OrganizerRightsButton({
       <SubmitButton isOrganizer={current} />
 
       {state.status === "error" && state.message && (
-        <span role="alert" className="text-[10px] tracking-[1px] text-muted">
+        <span role="alert" className="text-[12px] text-muted">
           {state.message}
         </span>
       )}
@@ -54,9 +55,7 @@ function SubmitButton({ isOrganizer }: { isOrganizer: boolean }) {
       type="submit"
       disabled={pending}
       data-testid={isOrganizer ? "revoke-organizer" : "make-organizer"}
-      className={`inline-flex min-h-11 items-center rounded-pill border border-hairline-strong px-3 text-small font-semibold transition-colors hover:border-volt disabled:opacity-50 ${
-        isOrganizer ? "text-muted hover:text-white" : "text-volt"
-      }`}
+      className={isOrganizer ? chipQuiet : chipVolt}
     >
       {pending
         ? strings.common.loading
