@@ -102,6 +102,8 @@ export interface AppCapabilities {
   adminRemoveCreditChoice: boolean;
   /** Round 42 — `venues.address` and `set_venue_address`, for the story image. */
   venueAddress: boolean;
+  /** Round 42 — pitch costs (summer / winter, one season switch) and `game_economics`. */
+  pitchCosts: boolean;
 }
 
 const NONE: AppCapabilities = {
@@ -128,6 +130,7 @@ const NONE: AppCapabilities = {
   organizerPlayer: false,
   adminRemoveCreditChoice: false,
   venueAddress: false,
+  pitchCosts: false,
 };
 
 /*
@@ -192,6 +195,7 @@ const readCapabilities = stableRead(
       organizerPlayer: read("organizerPlayer"),
       adminRemoveCreditChoice: read("adminRemoveCreditChoice"),
       venueAddress: read("venueAddress"),
+      pitchCosts: read("pitchCosts"),
     };
   } catch {
     return NONE;

@@ -2274,6 +2274,38 @@ export const strings = {
     waitlistCleared: "Waitlist rows cleared",
     noticesSent: "Notices sent",
     receiptsSent: "Credit receipts sent",
+    /* Round 42 — pitch costs. */
+    pitchCostOutOfRange: "A pitch cost is a whole number of crowns, from 0 to 100,000.",
+    pitchSeasonInvalid: "The season is summer or winter.",
+
+    /*
+     * ROUND 42, THE ADMIN REBUILD. One block per surface, so the pieces of the
+     * rebuild could be written side by side without touching each other.
+     */
+    /** The games list and a game's page. */
+    gamesHub: {
+      profit: "Profit",
+    },
+
+    /** The players list and a player's page. */
+    playersHub: {
+      title: "Players",
+    },
+
+    /** The money page: revenue by how it was paid, profit per game. */
+    money: {
+      title: "Money",
+    },
+
+    /** The venues page: the pitch cost area and the season switch. */
+    pitch: {
+      costHeading: "Pitch cost",
+    },
+
+    /** Copy the restyle of the other admin pages needed. */
+    shell: {
+      overview: "Overview",
+    },
   },
 
   errors: {

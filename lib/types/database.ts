@@ -236,6 +236,58 @@ export interface TopupResult {
   balance_czk: number;
 }
 
+/** Round 42 — which of a venue's two pitch prices new games take. */
+export type PitchSeason = "summer" | "winter";
+
+/**
+ * Round 42 — one booking's worth, from `booking_seat_values`. "single" is a
+ * game paid on its own (card, QR, cash) at the game's price; "pass" and
+ * "credit" are Credits valued at what was PAID for them; "free" is a gift or a
+ * seed booking. A cancelled booking holds no seats and its kept money is
+ * `kept_czk`; an unpaid one is `owed_czk`.
+ */
+export interface BookingSeatValue {
+  booking_id: string;
+  game_id: string;
+  player_id: string;
+  status: BookingStatus;
+  seats: number;
+  single_seats: number;
+  pass_seats: number;
+  credit_seats: number;
+  free_seats: number;
+  unpaid_seats: number;
+  single_czk: number;
+  pass_czk: number;
+  credit_czk: number;
+  kept_czk: number;
+  owed_czk: number;
+}
+
+/** Round 42 — one game's economics, from `game_economics`. */
+export interface GameEconomicsRow {
+  game_id: string;
+  price_czk: number;
+  capacity: number;
+  seats_taken: number;
+  house_guests: number;
+  unpaid_seats: number;
+  single_seats: number;
+  pass_seats: number;
+  credit_seats: number;
+  free_seats: number;
+  single_czk: number;
+  pass_czk: number;
+  credit_czk: number;
+  kept_czk: number;
+  owed_czk: number;
+  revenue_czk: number;
+  /** Null for a game with no venue — no cost, so no profit and no break-even. */
+  pitch_cost_czk: number | null;
+  profit_czk: number | null;
+  break_even_seats: number | null;
+}
+
 export interface Database {
   public: {
     Tables: {
@@ -632,6 +684,39 @@ export interface Database {
         Relationships: [];
       };
 
+      /**
+       * Round 42 — what the owner pays for one game at a venue, in summer and
+       * in winter. NOT PUBLIC: no grant to anon or authenticated, so it is read
+       * through the service role. Every venue has a row (a trigger adds one).
+       */
+      venue_pitch_costs: {
+        Row: { venue_id: string; summer_czk: number; winter_czk: number; updated_at: string };
+        /** Written only by `set_venue_pitch_costs`. */
+        Insert: never;
+        Update: never;
+        Relationships: [];
+      };
+      /** Round 42 — the one season switch. One row; not public. */
+      pitch_settings: {
+        Row: { id: string; season: PitchSeason; updated_at: string; updated_by: string | null };
+        /** Written only by `set_pitch_season`. */
+        Insert: never;
+        Update: never;
+        Relationships: [];
+      };
+      /**
+       * Round 42 — the pitch cost a game was created with (its venue, the
+       * season), or what an admin typed (`set_by_hand`). A game with no venue
+       * has no row. Not public.
+       */
+      game_pitch_costs: {
+        Row: { game_id: string; cost_czk: number; set_by_hand: boolean; updated_at: string };
+        /** Written by a trigger on `games` and by `set_game_pitch_cost`. */
+        Insert: never;
+        Update: never;
+        Relationships: [];
+      };
+
       events: {
         Row: {
           id: string;
@@ -944,6 +1029,24 @@ export interface Database {
         };
         Returns: undefined;
       };
+      /** Round 42 — a venue's summer and winter pitch cost. Admin only. */
+      set_venue_pitch_costs: {
+        Args: { p_venue_id: string; p_summer_czk: number; p_winter_czk: number };
+        Returns: Json;
+      };
+      /** Round 42 — the season every venue is priced for, from now on. Admin only. */
+      set_pitch_season: { Args: { p_season: PitchSeason }; Returns: PitchSeason };
+      /** Round 42 — correct one game's pitch cost; null puts it back on its venue. Admin only. */
+      set_game_pitch_cost: { Args: { p_game_id: string; p_cost_czk: number | null }; Returns: number | null };
+      pitch_season: { Args: Record<string, never>; Returns: PitchSeason };
+      /**
+       * Round 42 — what every booking on these games earned, by how it was
+       * paid. Seats and crowns are numerics (PostgREST sends them as numbers).
+       * Admin only.
+       */
+      booking_seat_values: { Args: { p_game_ids: string[] }; Returns: BookingSeatValue[] };
+      /** Round 42 — per game: seats, revenue at what was paid, pitch cost, profit, break-even. Admin only. */
+      game_economics: { Args: { p_game_ids: string[] }; Returns: GameEconomicsRow[] };
       /** Round 42 — a venue's address line; empty clears it. Admin only. */
       set_venue_address: { Args: { p_venue_id: string; p_address: string | null }; Returns: string | null };
       /** Round 42 — make a player an organizer, or take it away. Admin only. */

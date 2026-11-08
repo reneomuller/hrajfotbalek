@@ -53,6 +53,9 @@ const CODES: Array<[string, string]> = [
   // or a hand-made call can still name somebody else.
   ["PLAYER_NOT_ORGANIZER", strings.admin.organizerNotOrganizer],
   ["ADDRESS_TOO_LONG", strings.admin.venueAddressTooLong],
+  // Round 42 — pitch costs and the season switch.
+  ["PITCH_COST_OUT_OF_RANGE", strings.admin.pitchCostOutOfRange],
+  ["INVALID_PITCH_SEASON", strings.admin.pitchSeasonInvalid],
   ["INVALID_GUEST_COUNT", strings.admin.guestsInvalid],
   /*
    * Round 33, item 1. `admin_set_display_name` raises these rather than letting
