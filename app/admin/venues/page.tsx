@@ -1,20 +1,17 @@
 import type { Metadata } from "next";
-import { VenueAmenities } from "@/components/admin/VenueAmenities";
-import { DeleteControl } from "@/components/admin/DeleteControl";
+import { Panel } from "@/components/admin/ui/Panel";
+import { PageHeader } from "@/components/admin/ui/PageHeader";
 import { VenueForm } from "@/components/admin/VenueForm";
-import {
-  archiveVenueAction,
-  deleteVenueAction,
-  restoreVenueAction,
-} from "@/app/admin/venues/actions";
-import { VenueArchiveButton } from "@/components/admin/VenueArchiveButton";
+import { ArchivedVenues } from "@/components/admin/venues/ArchivedVenues";
+import { PitchSeasonSwitch } from "@/components/admin/venues/PitchSeasonSwitch";
+import { VenueCard } from "@/components/admin/venues/VenueCard";
 import { partitionVenues } from "@/lib/venues/archive";
 import { appCapabilities } from "@/lib/db/capabilities";
-import { VenuePhotoUpload } from "@/components/admin/VenuePhotoUpload";
 import { venuePhotoUrl } from "@/lib/storage/avatar";
 import { venuePhotoVersion } from "@/lib/storage/photoVersions";
 import { requireAdmin } from "@/lib/auth/requireAdmin";
 import { countGamesByVenue, listVenues } from "@/lib/admin/queries";
+import { getPitchSeason, getVenuePitchCosts } from "@/lib/admin/economics";
 import { strings } from "@/lib/strings";
 
 export const metadata: Metadata = { title: strings.admin.venuesTitle };
@@ -41,23 +38,31 @@ export const dynamic = "force-dynamic";
  * ~~EXPANDED, because there are a handful of grounds.~~ THERE ARE ELEVEN, and
  * each carries a form, a photo control and a ten-box amenity grid. Rendered
  * open that is roughly 3,000px per venue and a THIRTY-TWO-THOUSAND-PIXEL page
- * — measured, an hour after this page first shipped, by screenshotting it.
+ * — measured, an hour after this page first shipped, by screenshotting it. So
+ * each venue is a `<details>` card (`VenueCard`), closed by default.
  *
- * `<details>` RATHER THAN STATE. Server-rendered, no JavaScript, keyboard and
- * screen-reader behaviour for free, and the browser keeps one open while you
- * work in it. The summary carries the two facts you scan a venue list for:
- * its name, and whether it has a photograph yet.
+ * THE ORDER (round 42, the admin rebuild): the page header, the one season
+ * switch that prices every venue's new games, adding a venue, then the
+ * venues — each closed row showing its photo and what a game created there now
+ * costs — and the archive, collapsed, last.
  *
- * ARCHIVED VENUES SIT BELOW, COLLAPSED (round 39, item 2). Archive replaced
- * delete for any venue with games: it leaves the picker, never a game. A
- * venue nobody has played at can still be deleted outright.
+ * PITCH COSTS WAIT FOR THE DATABASE. Before `20261108100000` none of the pitch
+ * tables exist, so the switch, the cost on each row and the cost area inside
+ * it render only once `app_capabilities()` says `pitchCosts` — the
+ * `venueAddress` / `venueArchive` pattern.
  */
 export default async function AdminVenuesPage() {
   await requireAdmin();
-  const [all, capabilities, gameCounts] = await Promise.all([
+  const capabilities = await appCapabilities();
+  const [all, gameCounts, pitch] = await Promise.all([
     listVenues(),
-    appCapabilities(),
     countGamesByVenue(),
+    capabilities.pitchCosts
+      ? Promise.all([getPitchSeason(), getVenuePitchCosts()]).then(([season, costs]) => ({
+          season,
+          costs,
+        }))
+      : Promise.resolve(null),
   ]);
   const { active: venues, archived } = partitionVenues(all);
   // Each photo as players see it — versioned, so a replacement shows at once.
@@ -85,236 +90,55 @@ export default async function AdminVenuesPage() {
 
   return (
     <>
-      <h2 className="m-0 font-display text-page-title uppercase tracking-wide text-white">
-        {strings.admin.venuesTitle}
-      </h2>
-      <p className="mt-2 max-w-[560px] text-[13px] leading-relaxed text-muted">
-        {strings.admin.venuesLede}
-      </p>
+      <PageHeader title={strings.admin.venuesTitle} lede={strings.admin.venuesLede} />
 
-      <section className="lifted mt-6 rounded-card p-5" data-testid="venue-create-section">
-        <h3 className="m-0 font-display text-body-lg uppercase tracking-wide text-white">
-          {strings.admin.venueNewHeading}
-        </h3>
-        <div className="mt-4">
-          <VenueForm canSetAddress={capabilities.venueAddress} />
-        </div>
-      </section>
+      {pitch && <PitchSeasonSwitch current={pitch.season} className="mt-6" />}
+
+      <Panel
+        title={strings.admin.venueNewHeading}
+        testId="venue-create-section"
+        className={pitch ? "mt-4" : "mt-6"}
+      >
+        <VenueForm canSetAddress={capabilities.venueAddress} />
+      </Panel>
 
       {venues.length === 0 ? (
-        <p className="mt-8 text-[12px] tracking-[1px] text-faint">
-          {strings.admin.venuesEmpty}
-        </p>
+        <p className="mt-8 text-small text-faint">{strings.admin.venuesEmpty}</p>
       ) : (
-        <ul className="mt-8 list-none space-y-4 p-0">
-          {venues.map((venue) => (
-            <li
-              key={venue.id}
-              data-testid="venue-row"
-              data-venue-id={venue.id}
-              className="lifted rounded-card"
+        <section aria-labelledby="venues-list-heading" className="mt-8">
+          <div className="mb-3 flex items-baseline justify-between gap-3 px-1">
+            <h3
+              id="venues-list-heading"
+              className="m-0 text-[10px] font-normal uppercase tracking-eyebrow text-volt-dim"
             >
-              <details className="group">
-                <summary
-                  data-testid="venue-summary"
-                  className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 px-5 py-4 marker:content-none"
-                >
-                  <span className="min-w-0">
-                    <span className="block truncate text-body font-semibold text-white">
-                      {venue.name}
-                    </span>
-                    <span className="mt-[1px] block truncate text-[12px] text-muted">
-                      {venue.pitch_name ?? strings.admin.venueNoPitchName}
-                    </span>
-                  </span>
-                  <span
-                    className={`shrink-0 text-[12px] font-semibold ${
-                      venue.image_path ? "text-volt-dim" : "text-faint"
-                    }`}
-                  >
-                    {venue.image_path
-                      ? strings.admin.venueHasPhoto
-                      : strings.admin.venueNoPhoto}
-                  </span>
-
-                  {/*
-                    A DISCLOSURE MARKER, AND ITS ABSENCE WAS A REAL BUG
-                    (round 17, item 1).
-
-                    `marker:content-none` strips the browser's default triangle
-                    — correct, because the default is a tiny grey wedge that
-                    belongs to no design — and round 13 put nothing back. So a
-                    venue row read as a static list item: name, pitch, photo
-                    state, and no signal at all that it opens.
-
-                    EVERY CONTROL ON THIS PAGE IS INSIDE ONE OF THESE. Rename,
-                    map link, pitch name, photo, amenities and (round 16)
-                    delete are all behind a row nobody could tell was a door.
-                    The owner reported the delete as missing; it was rendering
-                    the whole time, at y≈1756 of an expanded panel, behind a
-                    summary that did not invite a tap.
-
-                    `group-open:rotate-180` on the parent `<details className="group">`
-                    — a chevron that turns is the one disclosure idiom that
-                    needs no label, in any of three languages.
-                  */}
-                  <span
-                    aria-hidden
-                    data-testid="venue-disclosure"
-                    className="shrink-0 text-[12px] text-muted transition-transform group-open:rotate-180"
-                  >
-                    ▾
-                  </span>
-                </summary>
-
-                <div className="border-t border-hairline px-5 pb-5 pt-5">
-              <VenueForm venue={venue} canSetAddress={capabilities.venueAddress} />
-
-              {/*
-                THE PRESETS, BENEATH THE FIELDS AND LABELLED AS INHERITED.
-
-                Both write immediately through their own RPCs rather than
-                riding this form's submit — `set_venue_photo` needs an upload
-                to have happened and `set_venue_amenities` replaces a whole
-                set. Putting them inside the form would mean one button with
-                three different failure modes behind it.
-              */}
-              <div className="mt-6 border-t border-hairline pt-5">
-                <h4 className="m-0 text-[10px] uppercase tracking-eyebrow text-volt-dim">
-                  {strings.admin.venuePresetsHeading}
-                </h4>
-
-                <div className="mt-4">
-                  <VenuePhotoUpload
-                    venueId={venue.id}
-                    hasPhoto={venue.image_path !== null}
-                    photoUrl={photoUrls.get(venue.id) ?? null}
-                  />
-                </div>
-
-                <div className="mt-6">
-                  <VenueAmenities venueId={venue.id} current={venue.amenities} />
-                </div>
-              </div>
-
-              {/*
-                ARCHIVE, THEN DELETE, LAST AND QUIETEST (round 16 item 18,
-                round 39 item 2).
-
-                Below the presets rather than beside the name: putting a
-                destructive control next to Save is how somebody removes a
-                venue they meant to rename.
-
-                ARCHIVE is what retiring a ground means — it leaves the picker
-                and every game at it keeps it. DELETE survives only for a venue
-                no game references, which is the only one `admin_delete_venue`
-                accepts; the refusal in SQL is still the safety.
-              */}
-              {(capabilities.venueArchive || canHardDelete(venue.id)) && (
-                <div className="mt-8 flex flex-wrap items-start gap-3 border-t border-hairline pt-4">
-                  {capabilities.venueArchive && (
-                    <div>
-                      <VenueArchiveButton
-                        action={archiveVenueAction}
-                        venueId={venue.id}
-                        label={strings.admin.archiveVenue}
-                        testId="venue-archive"
-                      />
-                      <p className="mt-2 max-w-[360px] text-[12px] text-muted">
-                        {strings.admin.archiveVenueHint}
-                      </p>
-                    </div>
-                  )}
-                  {canHardDelete(venue.id) && (
-                    <DeleteControl
-                      action={deleteVenueAction}
-                      hiddenFields={{ venueId: venue.id }}
-                      label={strings.admin.deleteVenue}
-                      title={strings.admin.deleteVenueConfirmTitle}
-                      body={strings.admin.deleteVenueConfirmBody}
-                      confirmLabel={strings.admin.deleteVenueConfirm}
-                      testId="venue-delete"
-                    />
-                  )}
-                </div>
-              )}
-                </div>
-              </details>
-            </li>
-          ))}
-        </ul>
-      )}
-
-      {archived.length > 0 && (
-        <details className="group mt-10 border-t border-hairline pt-6" data-testid="venues-archived">
-          <summary
-            data-testid="venues-archived-summary"
-            className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 marker:content-none"
-          >
-            <h3 className="m-0 font-display text-body-lg uppercase tracking-wide text-muted">
-              {strings.admin.venuesArchivedHeading.replace("{count}", String(archived.length))}
+              {strings.admin.pitch.listHeading.replace("{count}", String(venues.length))}
             </h3>
-            <ChevronDown />
-          </summary>
-          <p className="mt-2 max-w-[560px] text-[12px] leading-relaxed text-muted">
-            {strings.admin.venuesArchivedLede}
-          </p>
-          <ul className="mt-4 list-none space-y-2 p-0">
-            {archived.map((venue) => (
-              <li
+            {pitch && (
+              <span className="text-[10px] uppercase tracking-eyebrow text-muted">
+                {strings.admin.pitch.listCostColumn.replace(
+                  "{season}",
+                  strings.admin.pitch.seasons[pitch.season],
+                )}
+              </span>
+            )}
+          </div>
+          <ul className="m-0 list-none space-y-3 p-0">
+            {venues.map((venue) => (
+              <VenueCard
                 key={venue.id}
-                data-testid="venue-archived-row"
-                data-venue-id={venue.id}
-                className="flex flex-wrap items-center justify-between gap-3 rounded-card border border-hairline px-5 py-3"
-              >
-                <span className="min-w-0">
-                  <span className="block truncate text-body font-semibold text-bone">
-                    {venue.name}
-                  </span>
-                  <span className="mt-[1px] block truncate text-[12px] text-muted">
-                    {venue.pitch_name ?? strings.admin.venueNoPitchName}
-                  </span>
-                </span>
-                <span className="flex flex-wrap items-start gap-3">
-                  <VenueArchiveButton
-                    action={restoreVenueAction}
-                    venueId={venue.id}
-                    label={strings.admin.restoreVenue}
-                    testId="venue-restore"
-                  />
-                  {canHardDelete(venue.id) && (
-                    <DeleteControl
-                      action={deleteVenueAction}
-                      hiddenFields={{ venueId: venue.id }}
-                      label={strings.admin.deleteVenue}
-                      title={strings.admin.deleteVenueConfirmTitle}
-                      body={strings.admin.deleteVenueConfirmBody}
-                      confirmLabel={strings.admin.deleteVenueConfirm}
-                      testId="venue-delete"
-                    />
-                  )}
-                </span>
-              </li>
+                venue={venue}
+                photoUrl={photoUrls.get(venue.id) ?? null}
+                canSetAddress={capabilities.venueAddress}
+                canArchive={capabilities.venueArchive}
+                canDelete={canHardDelete(venue.id)}
+                pitch={pitch && { season: pitch.season, costs: pitch.costs.get(venue.id) ?? null }}
+              />
             ))}
           </ul>
-        </details>
+        </section>
       )}
-    </>
-  );
-}
 
-/**
- * The disclosure cue, DRAWN rather than typed — CLAUDE.md's glyph rule: `▾`
- * renders as a dot in several fallback faces on this type stack.
- */
-function ChevronDown() {
-  return (
-    <svg
-      aria-hidden
-      viewBox="0 0 12 8"
-      className="h-2 w-3 shrink-0 text-muted transition-transform group-open:rotate-180"
-    >
-      <path d="M1 1.5 6 6.5 11 1.5" fill="none" stroke="currentColor" strokeWidth="1.6" />
-    </svg>
+      <ArchivedVenues venues={archived} canDelete={canHardDelete} pitch={pitch} />
+    </>
   );
 }

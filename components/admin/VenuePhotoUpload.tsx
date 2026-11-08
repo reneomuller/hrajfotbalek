@@ -23,12 +23,19 @@ import { strings } from "@/lib/strings";
  * and none of the fifth. Two implementations of "upload an image" is how one
  * of them ends up without a crop for a year.
  *
+ * RESTYLED, NOT REWIRED (round 42, the admin rebuild): the preview is drawn at
+ * the card's own 1600×740 frame across its column, with an empty frame of the
+ * same shape when there is no photo yet. The upload itself — `PhotoUpload`,
+ * its cropper, `cacheControl: "0"`, the versioned URL and the
+ * `venuePhotoChangedAction` it waits for — is untouched.
+ *
  * Admin copy is English only — see `lib/i18n/locales.ts`.
  */
 export function VenuePhotoUpload({
   venueId,
   hasPhoto,
   photoUrl = null,
+  emptyFrame = true,
 }: {
   venueId: string;
   hasPhoto: boolean;
@@ -38,37 +45,45 @@ export function VenuePhotoUpload({
    * open a game to find out whether it took.
    */
   photoUrl?: string | null;
+  /**
+   * Whether to draw the empty frame when there is no photo. False on the
+   * create form, which is never handed a preview — a frame saying "no photo
+   * yet" would go on saying it after the upload.
+   */
+  emptyFrame?: boolean;
 }) {
   return (
     <div data-testid="venue-photo-upload">
-      <p className="m-0 text-[10px] uppercase tracking-eyebrow text-muted">
-        {strings.admin.venuePhotoTitle}
-      </p>
+      <p className="m-0 text-small font-semibold text-bone">{strings.admin.venuePhotoTitle}</p>
 
       {photoUrl ? (
         <Image
           src={photoUrl}
           alt=""
-          width={320}
-          height={148}
-          sizes="320px"
+          width={440}
+          height={204}
+          sizes="(min-width: 768px) 440px, 100vw"
           data-testid="venue-photo-preview"
-          className="mt-2 aspect-[1600/740] w-full max-w-[320px] rounded-control object-cover"
+          className="mt-2 aspect-[1600/740] w-full rounded-control border border-hairline object-cover"
         />
+      ) : emptyFrame ? (
+        <div className="mt-2 flex aspect-[1600/740] w-full items-center justify-center rounded-control border border-dashed border-hairline-strong bg-surface text-[12px] text-faint">
+          {strings.admin.pitch.photoEmpty}
+        </div>
       ) : null}
 
-      <div className="mt-2">
+      <div className="mt-3 flex flex-wrap items-center gap-3">
         <PhotoUpload target="venue" venueId={venueId} hasPhoto={hasPhoto}>
           <span
             data-testid="venue-photo-control"
-            className="inline-flex min-h-11 items-center rounded-control border border-hairline-strong px-3 text-small font-semibold text-volt"
+            className="inline-flex min-h-11 items-center rounded-control border border-hairline-strong px-4 text-small font-semibold text-volt transition-colors hover:border-hairline-volt active:border-hairline-volt"
           >
             {hasPhoto ? strings.admin.venuePhotoReplace : strings.admin.venuePhotoUpload}
           </span>
         </PhotoUpload>
       </div>
 
-      <p className="mt-2 mb-0 text-[12px] leading-snug text-muted">
+      <p className="mb-0 mt-2 text-[12px] leading-snug text-muted">
         {strings.admin.venuePhotoHint}
       </p>
     </div>

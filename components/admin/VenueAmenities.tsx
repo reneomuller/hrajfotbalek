@@ -94,12 +94,18 @@ export function VenueAmenities({
   }
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-4">
+      <p className="m-0 text-small font-semibold text-bone">{strings.admin.venueAmenitiesTitle}</p>
+
       {/*
         TWO LABELLED GROUPS, matching the game page (Section 4, item 2). The
         admin picks from one array and always has; what changed is that the
         form now shows the same division the player sees, so an organizer is
         not guessing which heading a tick will land under.
+
+        EACH BOX IS A CHIP (round 42, the admin rebuild) that takes a volt
+        hairline when ticked, so the set reads at a glance. The checkbox stays
+        a real, visible checkbox inside its label.
       */}
       {(
         [
@@ -107,42 +113,49 @@ export function VenueAmenities({
           { title: strings.admin.venueAmenitiesPitch, keys: PITCH_AMENITIES },
         ] as const
       ).map((group) => (
-        <fieldset key={group.title} className="m-0 border-0 p-0">
-          <legend className="mb-2 p-0 text-[12px] font-semibold uppercase tracking-[1px] text-bone">
+        <fieldset key={group.title} className="m-0 min-w-0 border-0 p-0">
+          <legend className="mb-2 p-0 text-[10px] uppercase tracking-eyebrow text-muted">
             {group.title}
           </legend>
-          <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+          <div className="grid grid-cols-2 gap-2">
             {group.keys.map((key) => (
               <label
                 key={key}
-                className="flex min-h-11 cursor-pointer items-center gap-2 text-[13px] text-bone"
+                className="flex min-h-11 min-w-0 cursor-pointer items-center gap-2 rounded-control border border-hairline bg-surface px-3 text-[13px] text-bone transition-colors hover:border-hairline-strong has-[:checked]:border-hairline-volt has-[:checked]:text-white"
               >
                 <input
                   type="checkbox"
                   data-testid={`amenity-${key}`}
                   checked={selected.has(key)}
                   onChange={() => toggle(key)}
-                  className="accent-volt"
+                  className="shrink-0 accent-volt"
                 />
-                {strings.games.amenities[key]}
+                <span className="min-w-0">{strings.games.amenities[key]}</span>
               </label>
             ))}
           </div>
         </fieldset>
       ))}
 
-      <div className="flex items-center gap-3">
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
         <button
           type="button"
           onClick={save}
           disabled={pending}
+          aria-busy={pending || undefined}
           data-testid="amenities-submit"
-          className="w-fit rounded-control bg-volt px-5 py-3 text-[15px] font-extrabold uppercase tracking-wide text-surface disabled:opacity-60"
+          className="inline-flex min-h-[52px] items-center justify-center gap-2 rounded-control bg-volt px-6 text-body-lg font-bold text-ink transition-colors hover:bg-volt-dim active:bg-volt-dim disabled:pointer-events-none disabled:bg-volt-dim disabled:opacity-90"
         >
-          {pending ? strings.common.loading : strings.admin.venueAmenitiesSubmit}
+          {pending && (
+            <span
+              aria-hidden
+              className="h-4 w-4 shrink-0 animate-spin rounded-pill border-2 border-current border-t-transparent motion-reduce:animate-none"
+            />
+          )}
+          {strings.admin.venueAmenitiesSubmit}
         </button>
         {saved && (
-          <span data-testid="amenities-saved" className="text-[13px] text-volt">
+          <span data-testid="amenities-saved" role="status" className="text-small text-volt">
             {strings.admin.saved}
           </span>
         )}

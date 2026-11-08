@@ -2312,6 +2312,33 @@ export const strings = {
     /** The venues page: the pitch cost area and the season switch. */
     pitch: {
       costHeading: "Pitch cost",
+      costLede:
+        "What one game here costs you, flat. The season switch at the top picks which of the two new games take.",
+      seasons: {
+        winter: "Winter",
+        summer: "Summer",
+      },
+      /** Beside the one of a venue's two prices that new games take. */
+      inForce: "Now",
+      currency: "CZK",
+      costSave: "Save pitch cost",
+      costSaved: "Saved. A game created here now costs {amount}; games already created keep theirs.",
+      /** The one season switch, at the top of the page. */
+      seasonHeading: "Pitch season",
+      seasonLegend: "Price new games for",
+      seasonHint:
+        "One switch for every venue. It prices the games you create from now on — games already created keep the pitch cost they were made with.",
+      seasonSaved: {
+        winter: "Switched to winter. New games take each venue's winter cost.",
+        summer: "Switched to summer. New games take each venue's summer cost.",
+      },
+      /** The list's heading row: how many venues, and what the figure on each row is. */
+      listHeading: "In use ({count})",
+      listCostColumn: "{season} cost",
+      /** An open venue's sections. */
+      detailsHeading: "Details",
+      openMap: "Open in Maps",
+      photoEmpty: "No photo yet",
     },
 
     /** Copy the restyle of the other admin pages needed. */

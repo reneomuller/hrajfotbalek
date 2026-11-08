@@ -14,6 +14,12 @@ import { appCapabilities } from "@/lib/db/capabilities";
 import type { DeleteState } from "@/app/admin/games/[id]/actions";
 import type { TransitionState } from "@/lib/admin/actionState";
 import { createServerSupabaseClient } from "@/lib/supabase/clients";
+import {
+  parsePitchCostForm,
+  parsePitchSeason,
+  type PitchCostField,
+} from "@/lib/admin/venues/pitchCosts";
+import type { PitchSeason } from "@/lib/types/database";
 import { strings } from "@/lib/strings";
 
 /**
@@ -277,4 +283,84 @@ export async function venuePhotoChangedAction(): Promise<void> {
   await requireAdmin();
   updateTag(STABLE_TAGS.venuePhotos);
   revalidatePath("/", "layout");
+}
+
+export interface PitchCostState {
+  status: "idle" | "saved" | "error";
+  message?: string;
+  /** The boxes that did not hold a whole crown amount, so each can say so. */
+  invalid?: PitchCostField[];
+  /** What was saved — the confirmation names the one new games take. */
+  summerCzk?: number;
+  winterCzk?: number;
+}
+
+/**
+ * A venue's summer and winter pitch cost (round 42, the admin rebuild).
+ *
+ * The owner's ruling: the cost is per game, flat, and a game keeps the cost it
+ * was created with — so this changes what games created FROM NOW ON cost, and
+ * nothing already on the calendar. `set_venue_pitch_costs` is admin-only and
+ * re-checks the range; it is called on the admin's own session, like every
+ * other admin write here.
+ *
+ * THE ADMIN LAYOUT, NOT THE SITE: the pitch tables are not readable by players
+ * at all, so nothing outside `/admin` can be showing a stale cost.
+ */
+export async function saveVenuePitchCostsAction(
+  _prev: PitchCostState,
+  formData: FormData,
+): Promise<PitchCostState> {
+  await requireAdmin();
+
+  const venueId = String(formData.get("venueId") ?? "");
+  if (!venueId) return { status: "error", message: toAdminErrorMessage("VENUE_NOT_FOUND") };
+
+  const parsed = parsePitchCostForm({
+    summer: formData.get("summerCzk"),
+    winter: formData.get("winterCzk"),
+  });
+  if (!parsed.ok) {
+    return { status: "error", message: strings.admin.pitchCostOutOfRange, invalid: parsed.invalid };
+  }
+
+  const supabase = await createServerSupabaseClient();
+  const { error } = await supabase.rpc("set_venue_pitch_costs", {
+    p_venue_id: venueId,
+    p_summer_czk: parsed.summerCzk,
+    p_winter_czk: parsed.winterCzk,
+  });
+  if (error) return { status: "error", message: toAdminErrorMessage(error.message) };
+
+  revalidatePath("/admin", "layout");
+  return { status: "saved", summerCzk: parsed.summerCzk, winterCzk: parsed.winterCzk };
+}
+
+export interface PitchSeasonState {
+  status: "idle" | "saved" | "error";
+  message?: string;
+  season?: PitchSeason;
+}
+
+/**
+ * The one season switch for every venue (round 42, the admin rebuild).
+ *
+ * Reversible with the next tap, so there is no dialog: it moves which of each
+ * venue's two prices a game created from now on takes, and no existing game's.
+ */
+export async function setPitchSeasonAction(
+  _prev: PitchSeasonState,
+  formData: FormData,
+): Promise<PitchSeasonState> {
+  await requireAdmin();
+
+  const season = parsePitchSeason(formData.get("season"));
+  if (!season) return { status: "error", message: strings.admin.pitchSeasonInvalid };
+
+  const supabase = await createServerSupabaseClient();
+  const { error } = await supabase.rpc("set_pitch_season", { p_season: season });
+  if (error) return { status: "error", message: toAdminErrorMessage(error.message) };
+
+  revalidatePath("/admin", "layout");
+  return { status: "saved", season };
 }
