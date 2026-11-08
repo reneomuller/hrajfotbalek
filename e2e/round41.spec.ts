@@ -262,12 +262,15 @@ test("the dashboard lists new sign-ups with the minute each was made", async ({ 
     /^\d{1,2} [A-Z][a-z]{2} \d{4}, \d{2}:\d{2}$/,
   );
 
-  // The count is of accounts: a shadow player cannot sign in, so is not one.
+  // The count is of accounts: a shadow player cannot sign in, so is not one —
+  // and since round 42 neither is a seed fixture (lib/admin/playerScope.ts,
+  // the one rule every admin count follows).
   const admin = serviceClient();
   const { count } = await admin
     .from("players")
     .select("id", { count: "exact", head: true })
     .not("auth_user_id", "is", null)
-    .is("deleted_at", null);
+    .is("deleted_at", null)
+    .eq("is_seed", false);
   await expect(page.getByTestId("tile-players")).toContainText(String(count));
 });

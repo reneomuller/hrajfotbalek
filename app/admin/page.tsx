@@ -72,7 +72,7 @@ export default async function AdminDashboardPage() {
           the two the sign-ups and the actions sit side by side under the games
           instead.
         */}
-        <div className="grid items-start gap-4 lg:grid-cols-5">
+        <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-5">
           {/*
             SIX ROWS, which is what `p14` draws — a dashboard is a glance, and
             "the next six" is the glance. NO `All games →`: the rows are the way
@@ -99,7 +99,7 @@ export default async function AdminDashboardPage() {
             )}
           </Panel>
 
-          <div className="grid items-start gap-4 md:grid-cols-2 lg:col-span-2 lg:grid-cols-1">
+          <div className="grid grid-cols-1 items-start gap-4 md:grid-cols-2 lg:col-span-2 lg:grid-cols-1">
             <RecentSignups signups={d.recentSignups} />
             <QuickActions />
           </div>

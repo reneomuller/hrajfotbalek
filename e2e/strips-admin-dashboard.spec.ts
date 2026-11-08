@@ -43,80 +43,71 @@ test.beforeEach(async ({ context }) => {
   await signInAs(context, players.organizer);
 });
 
-test("the dashboard matches p14's geometry", async ({ page }) => {
+/*
+ * ~~THE DASHBOARD MATCHES p14'S GEOMETRY~~ — RETIRED IN ROUND 42, on the
+ * owner's word: "update the design of all the pages in admin. all of them.
+ * yet ... retain the visual for the most part of the web's current". The
+ * rebuilt dashboard puts what needs a human first, gives every tile a line
+ * saying what it counts, and draws a seat bar under every game row — so p14's
+ * tile height, tile bottom and row pitch are no longer the design, and holding
+ * them would hold the old page.
+ *
+ * WHAT STAYS PINNED is what the redesign kept on purpose: the page title where
+ * p14 put its cap, two tiles to a row at phone width, nothing wider than the
+ * screen, and a seat bar on every row.
+ */
+test("the dashboard keeps p14's title and lays out at 390px", async ({ page }) => {
   await page.goto("/admin", { waitUntil: "networkidle" });
   await page.evaluate(() => document.fonts.ready);
   await page.addStyleTag({
     content: "nextjs-portal,[data-nextjs-toast],#__next-build-watcher{display:none !important}",
   });
 
-  const box = async (sel: string) => {
-    const r = await page.locator(sel).first().boundingBox();
-    if (!r) throw new Error(`${sel} is not on the page`);
-    return r;
-  };
-
-  /*
-   * CAP TO CAP, not box to cap (fixed in round 12).
-   *
-   * `P14.titleTop` is where the frame's INK starts. A DOM box starts above
-   * its ink by half the leading plus the gap between the em box and the cap,
-   * and this assertion was comparing the two directly — which passed at 24px
-   * only because the two errors happened to cancel. The corrected step made
-   * them stop cancelling, which is the spec catching a latent fault rather
-   * than a regression.
-   *
-   * `ANTON_CAP_RATIO` is the measured 0.86 — the same number R28 turns on.
-   */
-  const title = await box("main h2");
-  const titleSize = await page
-    .locator("main h2")
-    .evaluate((el) => parseFloat(getComputedStyle(el).fontSize));
+  // The page title, cap to cap — see round 12's note in the history.
+  const heading = page.getByTestId("admin-page-header").locator("h2");
+  const title = (await heading.boundingBox())!;
+  const titleSize = await heading.evaluate((el) => parseFloat(getComputedStyle(el).fontSize));
   const capTop = title.y + (title.height - titleSize * ANTON_CAP_RATIO) / 2;
   expect(Math.abs(capTop - P14.titleTop), `page title cap at ${capTop.toFixed(1)}`).toBeLessThan(
     TOLERANCE,
   );
 
-  const tile = await box("[data-testid='dashboard-tiles'] a");
-  expect(Math.abs(tile.height - P14.tileHeight), `tile ${tile.height}px tall`).toBeLessThan(TOLERANCE);
+  // Four tiles, two to a row: read against each other, as the reference has them.
+  const tiles = page.getByTestId("dashboard-tiles").locator(":scope > a");
+  await expect(tiles).toHaveCount(4);
+  const boxes = await Promise.all([0, 1, 2].map(async (i) => (await tiles.nth(i).boundingBox())!));
+  expect(Math.abs(boxes[0]!.y - boxes[1]!.y), "first two tiles share a row").toBeLessThan(1);
+  expect(Math.abs(boxes[0]!.width - boxes[1]!.width), "and a width").toBeLessThan(1);
+  expect(boxes[2]!.y, "the third starts a second row").toBeGreaterThan(boxes[0]!.y + boxes[0]!.height - 1);
 
-  const tiles = await box("[data-testid='dashboard-tiles']");
-  expect(Math.abs(tiles.y + tiles.height - P14.tilesBottom)).toBeLessThan(TOLERANCE);
+  // Nothing is wider than the phone.
+  const overflow = await page.evaluate(
+    () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+  );
+  expect(overflow, "no horizontal page scroll").toBeLessThanOrEqual(0);
 
+  // Every upcoming game row carries its seat bar.
   const rows = page.getByTestId("dashboard-game-row");
-  expect(await rows.count(), "p14 draws six upcoming rows").toBeGreaterThan(1);
-  const first = (await rows.nth(0).boundingBox())!;
-  const second = (await rows.nth(1).boundingBox())!;
-  expect(Math.abs(second.y - first.y - P14.rowPitch), `row pitch ${second.y - first.y}`).toBeLessThan(TOLERANCE);
-  expect(Math.abs(first.y - P14.rowPanelTop)).toBeLessThan(TOLERANCE + 2);
-
-  });
+  expect(await rows.count(), "the seed has upcoming games").toBeGreaterThan(1);
+  for (const i of [0, 1]) {
+    await expect(rows.nth(i).getByTestId("dashboard-seat-bar")).toBeVisible();
+  }
+});
 
 /*
- * THE TYPE STEPS, WHICH ARE WHAT DRIFTED. `p14`'s caps measure 23.4 for the
- * page title, 16.4 for a section heading and 26.9 for a tile numeral; against
- * Anton's rendered cap ratio of ~0.86 those are the three sizes below. Round 8
- * shipped 32 / 24 / 32 — two steps too loud at the top and, once corrected,
- * exactly right at the bottom.
- *
- * ROUND 12 moved the page title again, upward from 24 to 27.3, and that is
- * not a reversal: round 10 chose `title` because it was the closest step to
- * 23.4 that the scale HAD, and round 12 fixed the scale. Same target, better
- * token.
+ * THE TYPE STEPS. `p14`'s caps measure 23.4 for the page title and 26.9 for a
+ * tile numeral; against Anton's rendered cap ratio of ~0.86 those are 27.3px
+ * and 32px, and both are kept. ~~A section heading at 17px (`main h3`)~~ —
+ * since round 42 every section is a `Panel`, titled by the eyebrow label the
+ * rest of admin uses, at 10px.
  */
-test("the dashboard's type steps are p14's", async ({ page }) => {
+test("the dashboard's type steps are p14's, with round 42's section labels", async ({ page }) => {
   await page.goto("/admin", { waitUntil: "networkidle" });
   const size = (sel: string) =>
     page.locator(sel).first().evaluate((el) => getComputedStyle(el).fontSize);
 
-    /*
-   * ~~24px.~~ ROUND 12: `page-title` was corrected to the frames' own cap
-   * (R28), so the closest-available token round 10 settled for became the
-   * correct one and admin went back to it. p14's cap is 23.4; 27.3px of Anton
-   * renders 23.5.
-   */
-  expect(await size("main h2"), "page title").toBe("27.3px");
-  expect(await size("main h3"), "section heading").toBe("17px");
+  expect(await size("[data-testid='admin-page-header'] h2"), "page title").toBe("27.3px");
+  expect(await size("main section h2"), "section label").toBe("10px");
   expect(await size("[data-testid='tile-upcoming'] > div + div"), "tile numeral").toBe("32px");
   expect(await size("[data-testid='tile-upcoming'] > div"), "tile label").toBe("10px");
 });
