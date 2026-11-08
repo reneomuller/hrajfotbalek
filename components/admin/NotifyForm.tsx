@@ -2,9 +2,14 @@
 
 import { useActionState, useState } from "react";
 import { publishNotificationAction, type NotifyState } from "@/app/notifications/actions";
+import { PendingButton } from "@/components/form/PendingButton";
 import { strings } from "@/lib/strings";
 
 const INITIAL: NotifyState = { status: "idle" };
+
+/** The input limits — the same numbers the fields carry as `maxLength`. */
+const TITLE_MAX = 120;
+const BODY_MAX = 1000;
 
 /**
  * "Notify players" (round 7, item 5).
@@ -22,6 +27,12 @@ const INITIAL: NotifyState = { status: "idle" };
  * `dismissed` IS LOCAL AND UNPERSISTED. Dismissing hides the offer for this
  * render; navigating back to the page offers it again. Persisting "he said no
  * to this one" would need a per-admin-per-game row to record a non-event.
+ *
+ * CONTROLLED (round 42). The fields were `defaultValue`, and React resets an
+ * uncontrolled `<form action={…}>` once the action returns — a refused send
+ * included — so a message that failed to go out was wiped with the error still
+ * on screen. Now a refused send keeps every word, and a SENT one clears the
+ * standing box, which the reset used to do by accident.
  */
 export function NotifyForm({
   defaultTitle = "",
@@ -33,7 +44,19 @@ export function NotifyForm({
   defaultBody?: string;
   asOffer?: boolean;
 }) {
-  const [state, formAction, pending] = useActionState(publishNotificationAction, INITIAL);
+  const [title, setTitle] = useState(defaultTitle);
+  const [body, setBody] = useState(defaultBody);
+  const [state, formAction] = useActionState(
+    async (previous: NotifyState, formData: FormData): Promise<NotifyState> => {
+      const result = await publishNotificationAction(previous, formData);
+      if (result.status === "sent") {
+        setTitle("");
+        setBody("");
+      }
+      return result;
+    },
+    INITIAL,
+  );
   const [dismissed, setDismissed] = useState(false);
 
   if (dismissed) return null;
@@ -44,50 +67,51 @@ export function NotifyForm({
   return (
     <section
       data-testid={asOffer ? "notify-offer" : "notify-form"}
-      className={`rounded-card p-5 ${asOffer ? "border-2 border-hairline-volt bg-surface-raised" : "lifted"}`}
+      className={`rounded-card p-4 sm:p-5 ${asOffer ? "border-2 border-hairline-volt bg-surface-raised" : "lifted"}`}
     >
-      <h3 className="m-0 text-eyebrow font-semibold uppercase text-volt">
+      <h3 className="m-0 text-[10px] font-normal uppercase tracking-eyebrow text-volt-dim">
         {asOffer ? strings.admin.notifyOfferTitle : strings.admin.notifyTitle}
       </h3>
       <p className="m-0 mt-2 text-small text-muted">
         {asOffer ? strings.admin.notifyOfferLede : strings.admin.notifyLede}
       </p>
 
-      <form action={formAction} className="mt-4 flex flex-col gap-3">
+      <form action={formAction} className="mt-4 flex flex-col gap-4">
         <label className="flex flex-col gap-2">
-          <span className="field-label">{strings.admin.notifyTitleLabel}</span>
+          <span className="flex items-baseline justify-between gap-3">
+            <span className="field-label">{strings.admin.notifyTitleLabel}</span>
+            <Count length={title.length} max={TITLE_MAX} />
+          </span>
           <input
             name="title"
             required
-            maxLength={120}
-            defaultValue={defaultTitle}
+            maxLength={TITLE_MAX}
+            value={title}
+            onChange={(event) => setTitle(event.target.value)}
             data-testid="notify-title"
             className="field"
           />
         </label>
 
         <label className="flex flex-col gap-2">
-          <span className="field-label">{strings.admin.notifyBodyLabel}</span>
+          <span className="flex items-baseline justify-between gap-3">
+            <span className="field-label">{strings.admin.notifyBodyLabel}</span>
+            <Count length={body.length} max={BODY_MAX} />
+          </span>
           <textarea
             name="body"
             required
-            rows={3}
-            maxLength={1000}
-            defaultValue={defaultBody}
+            rows={4}
+            maxLength={BODY_MAX}
+            value={body}
+            onChange={(event) => setBody(event.target.value)}
             data-testid="notify-body"
             className="field resize-y"
           />
         </label>
 
-        <div className="flex flex-wrap items-center gap-3">
-          <button
-            type="submit"
-            disabled={pending}
-            data-testid="notify-submit"
-            className="inline-flex min-h-11 items-center rounded-pill bg-volt px-5 text-body font-bold text-ink transition-colors hover:bg-volt-dim disabled:opacity-50"
-          >
-            {pending ? strings.common.loading : strings.admin.notifySend}
-          </button>
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+          <PendingButton label={strings.admin.notifySend} testId="notify-submit" />
 
           {asOffer && (
             <button
@@ -99,19 +123,28 @@ export function NotifyForm({
               {strings.admin.notifyDismiss}
             </button>
           )}
-        </div>
 
-        {state.status === "sent" && (
-          <p data-testid="notify-sent" className="m-0 text-small text-volt">
-            {strings.admin.notifySent}
-          </p>
-        )}
-        {state.status === "error" && state.message && (
-          <p role="alert" data-testid="notify-error" className="m-0 text-small text-warn">
-            {state.message}
-          </p>
-        )}
+          {state.status === "sent" && (
+            <p data-testid="notify-sent" className="m-0 text-small text-volt">
+              {strings.admin.notifySent}
+            </p>
+          )}
+          {state.status === "error" && state.message && (
+            <p role="alert" data-testid="notify-error" className="m-0 text-small text-warn">
+              {state.message}
+            </p>
+          )}
+        </div>
       </form>
     </section>
+  );
+}
+
+/** `12 / 120` beside a field's label — how much room the message has left. */
+function Count({ length, max }: { length: number; max: number }) {
+  return (
+    <span aria-hidden className="text-[12px] tabular-nums text-faint">
+      {strings.admin.shell.notifyCount.replace("{n}", String(length)).replace("{max}", String(max))}
+    </span>
   );
 }
