@@ -1,6 +1,11 @@
 import { createServiceRoleSupabaseClient } from "@/lib/supabase/clients";
 import { countSeatsTaken } from "@/lib/admin/queries";
-import { financialBounds, type PeriodBounds } from "@/lib/admin/financials";
+import { getGameEconomics } from "@/lib/admin/economics";
+import { COUNTED_PLAYER_FILTER } from "@/lib/admin/playerScope";
+import type { RowEconomics } from "@/lib/admin/shell/dashboardRows";
+import type { DashboardWindow } from "@/lib/admin/shell/dashboardView";
+import { appCapabilities } from "@/lib/db/capabilities";
+import { statRange } from "@/lib/stats/window";
 
 /**
  * The admin dashboard's four figures and its upcoming rows (round 8, item 2).
@@ -29,6 +34,12 @@ export interface DashboardGameRow {
    * printing an empty separator (round 10, item 1).
    */
   format: string | null;
+  /**
+   * How the seats were paid and where break-even sits (round 42). NULL until
+   * `app_capabilities()` says `pitchCosts` — before the migration the SQL does
+   * not exist and the row's bar is a plain fill.
+   */
+  economics: RowEconomics | null;
 }
 
 /** An account, newest first — round 41's "when someone creates an account". */
@@ -41,9 +52,13 @@ export interface DashboardSignup {
 
 export interface AdminDashboard {
   upcomingGames: number;
+  /** Seats taken and offered over EVERY upcoming game, not only the listed six. */
+  upcomingSeats: { taken: number; capacity: number };
   totalPlayers: number;
   newPlayers7d: number;
   revenueMonthCzk: number;
+  /** The bounds the figures above were computed against, for their labels. */
+  window: DashboardWindow;
   rows: DashboardGameRow[];
   recentSignups: DashboardSignup[];
 }
@@ -51,19 +66,27 @@ export interface AdminDashboard {
 /** How many sign-ups the dashboard lists. */
 export const RECENT_SIGNUPS = 8;
 
+/**
+ * SIX ROWS, which is what `p14` draws. Not a page size — a dashboard is a
+ * glance, and "the next six" is the glance. The chip row above it is how you
+ * get to all of them.
+ */
+export const DASHBOARD_GAME_ROWS = 6;
+
+const WEEK_MS = 7 * 86_400_000;
+
 /** Confirmed revenue in a period — the same definition the financials page uses. */
-async function revenueBetween(bounds: PeriodBounds): Promise<number> {
+async function revenueBetween(from: string, to: string): Promise<number> {
   const service = createServiceRoleSupabaseClient();
 
-  let events = service
+  const { data: rows } = await service
     .from("events")
     .select("booking_id")
     .eq("event_type", "payment_confirmed")
-    .not("booking_id", "is", null);
-  if (bounds.from) events = events.gte("created_at", bounds.from);
-  if (bounds.to) events = events.lt("created_at", bounds.to);
+    .not("booking_id", "is", null)
+    .gte("created_at", from)
+    .lt("created_at", to);
 
-  const { data: rows } = await events;
   const ids = [...new Set((rows ?? []).map((r) => r.booking_id))].filter(
     (id): id is string => id !== null,
   );
@@ -74,69 +97,83 @@ async function revenueBetween(bounds: PeriodBounds): Promise<number> {
     .select("price_czk,credit_applied_czk")
     .in("id", ids);
 
+  /*
+   * `credit_applied_czk` IS SUBTRACTED: a booking paid from Credits moved no
+   * new money — the cash came in earlier, when the Credits were bought.
+   */
   return (bookings ?? []).reduce(
     (sum, r) => sum + Math.max(0, r.price_czk - r.credit_applied_czk),
     0,
   );
 }
 
-export async function getAdminDashboard(): Promise<AdminDashboard> {
+export async function getAdminDashboard({
+  now = Date.now(),
+}: { now?: number } = {}): Promise<AdminDashboard> {
   const service = createServiceRoleSupabaseClient();
-  const nowIso = new Date().toISOString();
-  const weekAgo = new Date(Date.now() - 7 * 86_400_000).toISOString();
+  const nowIso = new Date(now).toISOString();
+  const weekFrom = new Date(now - WEEK_MS).toISOString();
 
   /*
-   * PLAYERS ARE ACCOUNTS (round 41, owner: "add total player count and when
-   * someone creates an account"). The count used to be every `players` row —
-   * shadow players an admin typed in, who cannot sign in, and accounts that
-   * were deleted and only anonymised. Both are rows, neither is a player.
+   * THE REVENUE MONTH IS PRAGUE'S (round 42). It was a UTC month, borrowed
+   * from the financials page, so a payment confirmed at 00:30 on the 1st in
+   * Prague — 23:30Z the night before — counted towards the month that had
+   * just ended. The stats window already does Prague calendar months, DST
+   * and all; this asks it rather than doing the arithmetic a second time.
    */
-  const accounts = () =>
+  const month = statRange("month", now);
+
+  /*
+   * PLAYERS ARE `lib/admin/playerScope.ts`'S PLAYERS (round 42, the owner:
+   * "don't count shadow accounts that we regularly use for booking games and
+   * other stuff"). Round 41 already left out shadows and deleted accounts; the
+   * seed fixtures still counted, so this tile and the players page disagreed.
+   * ONE definition, and the filter is that file's own.
+   */
+  const countedPlayers = () =>
     service
       .from("players")
       .select("id", { count: "exact", head: true })
-      .not("auth_user_id", "is", null)
-      .is("deleted_at", null);
+      .not(COUNTED_PLAYER_FILTER.notNull, "is", null)
+      .is(COUNTED_PLAYER_FILTER.isNull, null)
+      .eq(COUNTED_PLAYER_FILTER.isFalse, false);
 
-  const [upcoming, players, recent, revenue, games, signups] = await Promise.all([
-    service
-      .from("games")
-      .select("id", { count: "exact", head: true })
-      .gt("starts_at", nowIso)
-      .in("status", ["published", "full"]),
-    accounts(),
-    accounts().gte("created_at", weekAgo),
-    revenueBetween(financialBounds("this_month", Date.now())),
+  const [capabilities, upcoming, players, recent, revenue, signups] = await Promise.all([
+    appCapabilities(),
     /*
-     * SIX ROWS, which is what `p14` draws. Not a page size — a dashboard is a
-     * glance, and "the next six" is the glance. The chip row above it is how
-     * you get to all of them.
+     * EVERY UPCOMING GAME, NOT A COUNT (round 42). The tile says how full the
+     * board is, and that needs each game's seats — one batched counter call
+     * over a list that is a few weeks of fixtures long.
      */
     service
       .from("games")
       .select("id,venue,starts_at,capacity,status,format")
       .gt("starts_at", nowIso)
       .in("status", ["published", "full"])
-      .order("starts_at", { ascending: true })
-      .limit(6),
+      .order("starts_at", { ascending: true }),
+    countedPlayers(),
+    countedPlayers().gte("created_at", weekFrom),
+    revenueBetween(month.from, month.to),
     service
       .from("players")
       .select("*")
-      .not("auth_user_id", "is", null)
-      .is("deleted_at", null)
+      .not(COUNTED_PLAYER_FILTER.notNull, "is", null)
+      .is(COUNTED_PLAYER_FILTER.isNull, null)
+      .eq(COUNTED_PLAYER_FILTER.isFalse, false)
       .order("created_at", { ascending: false })
       .limit(RECENT_SIGNUPS),
   ]);
 
-  const rowsRaw = games.data ?? [];
+  const upcomingGames = upcoming.data ?? [];
+  const rowsRaw = upcomingGames.slice(0, DASHBOARD_GAME_ROWS);
 
   /*
-   * Booked counts and organizers in TWO queries for the whole set, not one
-   * pair per row. Six games would otherwise be twelve round trips on a page
+   * Seats, organizers and economics in ONE query each for the whole set, not
+   * one per row. Six games would otherwise be a dozen round trips on a page
    * whose entire job is to load fast.
    */
   const ids = rowsRaw.map((g) => g.id);
-  const [booked, organizers] = await Promise.all([
+  const [booked, organizers, economics] = await Promise.all([
     /*
      * SEATS, THROUGH THE ONE COUNTER (round 35, item 5).
      *
@@ -147,13 +184,14 @@ export async function getAdminDashboard(): Promise<AdminDashboard> {
      * first and seat arithmetic as the bridge, so this page cannot drift from
      * that one again.
      */
-    countSeatsTaken(ids),
+    countSeatsTaken(upcomingGames.map((g) => g.id)),
     ids.length
       ? service
           .from("game_organizer_contacts")
           .select("game_id,organizer_name")
           .in("game_id", ids)
       : Promise.resolve({ data: [] as { game_id: string; organizer_name: string }[] }),
+    capabilities.pitchCosts ? getGameEconomics(ids) : Promise.resolve(null),
   ]);
 
   const organizerOf = new Map(
@@ -161,10 +199,15 @@ export async function getAdminDashboard(): Promise<AdminDashboard> {
   );
 
   return {
-    upcomingGames: upcoming.count ?? 0,
+    upcomingGames: upcomingGames.length,
+    upcomingSeats: {
+      taken: upcomingGames.reduce((sum, g) => sum + (booked.get(g.id) ?? 0), 0),
+      capacity: upcomingGames.reduce((sum, g) => sum + g.capacity, 0),
+    },
     totalPlayers: players.count ?? 0,
     newPlayers7d: recent.count ?? 0,
     revenueMonthCzk: revenue,
+    window: { weekFrom, monthFrom: month.from, monthTo: month.to },
     recentSignups: (signups.data ?? []).map((p) => ({
       id: p.id,
       nickname: p.nickname,
@@ -180,6 +223,7 @@ export async function getAdminDashboard(): Promise<AdminDashboard> {
       status: g.status,
       format: g.format,
       organizer: organizerOf.get(g.id) ?? null,
+      economics: economics?.get(g.id) ?? null,
     })),
   };
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { setContactAction, type SiteSettingState } from "@/app/admin/site/actions";
 import { PendingButton } from "@/components/form/PendingButton";
 import { strings } from "@/lib/strings";
@@ -18,6 +18,12 @@ const INITIAL: SiteSettingState = { status: "idle" };
  * reach us" — and two buttons would let the page sit in a state where the
  * emails are saved and the phones are not, with nothing on screen saying so.
  *
+ * CONTROLLED (round 42). They were `defaultValue` fields, and React resets an
+ * uncontrolled `<form action={…}>` once the action returns — a REFUSED save
+ * included — so an address the RPC turned down put the old lists back and the
+ * admin's edit was gone with the error still showing.
+ * `lib/admin/shell/__tests__/siteForms.test.ts` holds the line.
+ *
  * ENGLISH, like the rest of the panel (R22).
  */
 export function ContactForm({
@@ -28,49 +34,60 @@ export function ContactForm({
   phones: string[];
 }) {
   const [state, formAction] = useActionState(setContactAction, INITIAL);
+  const [emailsText, setEmailsText] = useState(emails.join("\n"));
+  const [phonesText, setPhonesText] = useState(phones.join("\n"));
 
   return (
-    <form action={formAction} data-testid="contact-form" className="mt-4">
-      <label className="field-label" htmlFor="contactEmails">
-        {strings.admin.siteContactEmailsLabel}
-      </label>
-      <textarea
-        id="contactEmails"
-        name="contactEmails"
-        rows={3}
-        defaultValue={emails.join("\n")}
-        data-testid="contact-emails-input"
-        className="field mt-1 w-full"
-      />
-      <p className="mt-1 text-[13px] text-muted">{strings.admin.siteContactEmailsHint}</p>
-
-      <label className="field-label mt-4 block" htmlFor="contactPhones">
-        {strings.admin.siteContactPhonesLabel}
-      </label>
-      <textarea
-        id="contactPhones"
-        name="contactPhones"
-        rows={3}
-        defaultValue={phones.join("\n")}
-        data-testid="contact-phones-input"
-        className="field mt-1 w-full"
-      />
-      <p className="mt-1 text-[13px] text-muted">{strings.admin.siteContactPhonesHint}</p>
-
-      <div className="mt-4">
-        <PendingButton label={strings.admin.siteContactSave} testId="contact-save" />
+    <form action={formAction} data-testid="contact-form" className="flex flex-col gap-4">
+      <div>
+        <label className="field-label" htmlFor="contactEmails">
+          {strings.admin.siteContactEmailsLabel}
+        </label>
+        <textarea
+          id="contactEmails"
+          name="contactEmails"
+          rows={3}
+          value={emailsText}
+          onChange={(event) => setEmailsText(event.target.value)}
+          data-testid="contact-emails-input"
+          className="field mt-2 w-full resize-y"
+        />
+        <p className="mt-1 text-[12px] leading-snug text-muted">
+          {strings.admin.siteContactEmailsHint}
+        </p>
       </div>
 
-      {state.status === "saved" && (
-        <p data-testid="contact-saved" className="mt-3 text-[13px] text-volt">
-          {strings.admin.siteContactSaved}
+      <div>
+        <label className="field-label" htmlFor="contactPhones">
+          {strings.admin.siteContactPhonesLabel}
+        </label>
+        <textarea
+          id="contactPhones"
+          name="contactPhones"
+          rows={3}
+          value={phonesText}
+          onChange={(event) => setPhonesText(event.target.value)}
+          data-testid="contact-phones-input"
+          className="field mt-2 w-full resize-y"
+        />
+        <p className="mt-1 text-[12px] leading-snug text-muted">
+          {strings.admin.siteContactPhonesHint}
         </p>
-      )}
-      {state.status === "error" && state.message && (
-        <p role="alert" data-testid="contact-error" className="mt-3 text-[13px] text-bone">
-          {state.message}
-        </p>
-      )}
+      </div>
+
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+        <PendingButton label={strings.admin.siteContactSave} testId="contact-save" />
+        {state.status === "saved" && (
+          <p data-testid="contact-saved" className="m-0 text-small text-volt">
+            {strings.admin.siteContactSaved}
+          </p>
+        )}
+        {state.status === "error" && state.message && (
+          <p role="alert" data-testid="contact-error" className="m-0 text-small text-warn">
+            {state.message}
+          </p>
+        )}
+      </div>
     </form>
   );
 }
