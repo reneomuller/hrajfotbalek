@@ -1,6 +1,7 @@
-import { paymentsBetween, totalCzk, type Payment } from "@/lib/admin/money/payments";
 import { bucketByWeek, pragueMonth, type WeekBar } from "@/lib/admin/money/periods";
-import { readAllPages } from "@/lib/admin/money/readAll";
+import { playedGamesBetween } from "@/lib/admin/money/playedGames";
+import { chunk } from "@/lib/admin/money/readAll";
+import { revenueBetween, type RevenueSplit } from "@/lib/admin/money/revenue";
 import { strings } from "@/lib/strings";
 import { createServiceRoleSupabaseClient } from "@/lib/supabase/clients";
 
@@ -62,7 +63,10 @@ export interface Transaction {
 export interface Financials {
   period: FinancialPeriod;
   bounds: PeriodBounds;
+  /** Everything that arrived — games, Game Passes, top-ups (2026-11-08). */
   revenueCzk: number;
+  /** The same money, by what it paid for. */
+  revenueSplit: RevenueSplit;
   /**
    * The comparable figure for the period before this one, for the frame's
    * "+12% vs July".
@@ -72,12 +76,26 @@ export interface Financials {
    * when this is null instead of printing a zero that reads as "flat".
    */
   previousRevenueCzk: number | null;
-  gamesSettled: number;
-  /** Revenue divided by settled games, or null when nothing settled. */
+  /**
+   * Games that KICKED OFF in the period, cancelled ones aside — not
+   * `status = settled`, which the nightly sweep reaches the next morning
+   * (`lib/admin/money/playedGames.ts`).
+   */
+  gamesPlayed: number;
+  /**
+   * Each played game's OWN revenue (`game_economics`, pass seats at what the
+   * pass cost), averaged — or null when there is none to average or the
+   * economics are not there to read. ~~Revenue divided by settled games~~ —
+   * that divided money paid UP FRONT for games still ahead by the games
+   * already finished.
+   */
   avgPerGameCzk: number | null;
   weeks: WeekBar[];
-  outstandingCzk: number;
-  unpaidSpots: number;
+  /*
+   * ~~outstandingCzk / unpaidSpots~~ — removed 2026-11-08, the owner: "it is
+   * redundant. everyone pays up front." Unpaid seats still show on each
+   * game's page.
+   */
   transactions: Transaction[];
 }
 
@@ -113,79 +131,22 @@ function previousBounds(
 }
 
 /** Games whose books are closed in the period. */
-async function settledBetween(bounds: PeriodBounds): Promise<number> {
+/** Each played game's own revenue, averaged; null when it cannot be read. */
+async function averagePerPlayedGame(gameIds: readonly string[]): Promise<number | null> {
+  if (gameIds.length === 0) return null;
   const service = createServiceRoleSupabaseClient();
-  let query = service
-    .from("games")
-    .select("id", { count: "exact", head: true })
-    .eq("status", "settled");
-
-  if (bounds.from) query = query.gte("starts_at", bounds.from);
-  if (bounds.to) query = query.lt("starts_at", bounds.to);
-
-  const { count } = await query;
-  return count ?? 0;
+  let total = 0;
+  for (const ids of chunk(gameIds)) {
+    const { data, error } = await service.rpc("game_economics", { p_game_ids: ids });
+    if (error) throw new Error(`game_economics failed: ${error.message}`, { cause: error });
+    for (const row of data ?? []) total += Number(row.revenue_czk);
+  }
+  return Math.round(total / gameIds.length);
 }
 
-/**
- * Money owed right now — NOT scoped to the period, deliberately.
- *
- * "Outstanding" is a question about the present: what is still to collect. A
- * period-scoped version would show 0 while browsing last month and read as
- * "nothing owed" rather than "nothing owed in a window you are not standing
- * in".
- *
- * `reserved` IS THE UNPAID STATE — the same definition `unpaidBookings()` uses
- * on the admin game page, so the two surfaces cannot disagree about who owes.
- * A cancelled game owes nothing; a played-but-unsettled one still does.
- */
-async function outstanding(): Promise<{ czk: number; spots: number }> {
-  const service = createServiceRoleSupabaseClient();
-  const data = await readAllPages("unpaid bookings", (from, to) =>
-    service
-      .from("bookings")
-      .select("id,price_czk,credit_applied_czk,guest_count,games!inner(status)")
-      .eq("status", "reserved")
-      .order("id")
-      .range(from, to),
-  );
-
-  const rows = data.filter((row) => {
-    const game = row.games as unknown as { status: string } | null;
-    return game !== null && game.status !== "cancelled";
-  });
-
-  return {
-    czk: rows.reduce(
-      (sum, row) => sum + Math.max(0, row.price_czk - row.credit_applied_czk),
-      0,
-    ),
-    /*
-     * SPOTS ARE SEATS (round 42, the admin rebuild). ~~`rows.length`~~ called
-     * an unpaid party of three "1 unpaid spot" — the row-for-seat bug the fill
-     * rate had. The booker plus their guests; the money above is already the
-     * party's, because a booking's price is the whole party's.
-     */
-    spots: rows.reduce((sum, row) => sum + 1 + row.guest_count, 0),
-  };
-}
-
-/**
- * The frame's bars: revenue by week within the period.
- *
- * EMPTY FOR ALL TIME. A bar per week across the product's whole history is a
- * chart nobody can read, and the frame draws a bar a week — which is a month.
- * The page renders no chart rather than a wrong one.
- *
- * Calendar weeks FROM THE 1st, not ISO weeks: the reader is dividing a month
- * into quarters, not looking up a week number. Bucketed by the PRAGUE day of
- * the month (`bucketByWeek`), not by milliseconds since the 1st, which an
- * hour of clock change was enough to push across a week. The SAME payments
- * as the Revenue figure, so the bars always add up to it.
- */
-function weeklyRevenue(bounds: PeriodBounds, payments: readonly Payment[]): WeekBar[] {
+function weeklyRevenue(bounds: PeriodBounds, entries: readonly { at: string; czk: number }[]): WeekBar[] {
   if (!bounds.from || !bounds.to) return [];
-  return bucketByWeek(payments, { from: bounds.from, to: bounds.to });
+  return bucketByWeek(entries, { from: bounds.from, to: bounds.to });
 }
 
 /**
@@ -231,50 +192,50 @@ async function recentTransactions(limit: number): Promise<Transaction[]> {
  * the first version of this page. The bounds come back so the label and the
  * figures describe the same month.
  */
-export async function getFinancials(period: FinancialPeriod): Promise<Financials> {
-  return getFinancialsAt(period, Date.now());
+export interface FinancialsOptions {
+  /** Whether `game_economics` exists (`app_capabilities().pitchCosts`). */
+  economics?: boolean;
+}
+
+export async function getFinancials(period: FinancialPeriod, options: FinancialsOptions = {}): Promise<Financials> {
+  return getFinancialsAt(period, Date.now(), options);
 }
 
 /** The bounded form, kept separate so a test can supply the instant. */
 export async function getFinancialsAt(
   period: FinancialPeriod,
   now: Date | number | string,
+  options: FinancialsOptions = {},
 ): Promise<Financials> {
   const bounds = financialBounds(period, now);
   const prev = previousBounds(period, now);
 
   /*
-   * Money actually collected comes from `paymentsBetween` — the one reading
-   * behind this page's Revenue, its week chart and Operations' confirmed
-   * revenue (round 42; there were three copies). The week chart is cut from
-   * the SAME payments, so its bars always add up to the Revenue tile. See
-   * `lib/admin/money/payments.ts` for what counts and why credit applied is
-   * subtracted.
+   * Money that arrived comes from `revenueBetween` — games, Game Passes and
+   * top-ups (2026-11-08) — the one reading behind this page's Revenue, its
+   * split, its week chart, Operations' confirmed revenue and the dashboard's
+   * month. The week chart is cut from the SAME entries, so its bars always add
+   * up to the Revenue tile.
    */
-  const [payments, previousPayments, gamesSettled, owed, transactions] = await Promise.all([
-    paymentsBetween(bounds),
-    prev ? paymentsBetween(prev) : Promise.resolve(null),
-    settledBetween(bounds),
-    outstanding(),
+  const nowMs = new Date(now).getTime();
+  const [revenue, previous, played, transactions] = await Promise.all([
+    revenueBetween(bounds),
+    prev ? revenueBetween(prev) : Promise.resolve(null),
+    playedGamesBetween(bounds, nowMs),
     recentTransactions(8),
   ]);
 
-  const revenueCzk = totalCzk(payments);
-  const previousRevenueCzk = previousPayments === null ? null : totalCzk(previousPayments);
-  const weeks = weeklyRevenue(bounds, payments);
+  const avgPerGameCzk = options.economics ? await averagePerPlayedGame(played.map((game) => game.id)) : null;
 
   return {
     period,
     bounds,
-    revenueCzk,
-    previousRevenueCzk,
-    gamesSettled,
-    // Guarded rather than rendered as a NaN or an Infinity, both of which
-    // reach the screen as text.
-    avgPerGameCzk: gamesSettled > 0 ? Math.round(revenueCzk / gamesSettled) : null,
-    weeks,
-    outstandingCzk: owed.czk,
-    unpaidSpots: owed.spots,
+    revenueCzk: revenue.totalCzk,
+    revenueSplit: { gamesCzk: revenue.gamesCzk, passCzk: revenue.passCzk, topupCzk: revenue.topupCzk },
+    previousRevenueCzk: previous === null ? null : previous.totalCzk,
+    gamesPlayed: played.length,
+    avgPerGameCzk,
+    weeks: weeklyRevenue(bounds, revenue.entries),
     transactions,
   };
 }

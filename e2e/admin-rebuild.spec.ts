@@ -207,3 +207,42 @@ for (const viewport of [
     }
   });
 }
+
+/*
+ * The owner, 2026-11-08: "revenue should count all the revenue including game
+ * pass … one box with total and the other with the split of the two … instead
+ * of 'outstanding' … the two revenue boxes the two on top and the other two
+ * boxes (avg per game and games settled) as the bottom two".
+ */
+test("the money page leads with revenue and its split, then the average and the games played", async ({ page }) => {
+  // Act
+  await page.goto("/admin/stats");
+  await expect(page.getByTestId("financials-revenue")).toBeVisible();
+
+  // Assert — two by two, in that order, and no Outstanding box.
+  const [revenue, split, average, played] = await Promise.all(
+    ["financials-revenue", "financials-revenue-split", "financials-average", "financials-settled"].map(
+      async (id) => (await page.getByTestId(id).boundingBox())!,
+    ),
+  );
+  expect(Math.abs(revenue!.y - split!.y), "the two revenue boxes share the top row").toBeLessThan(1);
+  expect(Math.abs(average!.y - played!.y), "average and games played share the next").toBeLessThan(1);
+  expect(average!.y).toBeGreaterThan(revenue!.y + revenue!.height - 1);
+  expect(revenue!.x).toBeLessThan(split!.x);
+  expect(average!.x).toBeLessThan(played!.x);
+  await expect(page.getByTestId("revenue-split-games")).toBeVisible();
+  await expect(page.getByTestId("revenue-split-pass")).toBeVisible();
+  await expect(page.getByTestId("financials-outstanding")).toHaveCount(0);
+});
+
+test("the games list sorts by date, venue and fill — no Unpaid, no Status", async ({ page }) => {
+  // Act
+  await page.goto("/admin/games");
+
+  // Assert
+  await expect(page.getByTestId("games-sort-date")).toBeVisible();
+  await expect(page.getByTestId("games-sort-venue")).toBeVisible();
+  await expect(page.getByTestId("games-sort-filled")).toBeVisible();
+  await expect(page.getByTestId("games-sort-unpaid")).toHaveCount(0);
+  await expect(page.getByTestId("games-sort-status")).toHaveCount(0);
+});

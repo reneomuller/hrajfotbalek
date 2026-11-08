@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   DEFAULT_GAME_SORT,
+  GAME_SORTS,
   parseGameSort,
   sortGames,
   type SortableGame,
@@ -32,7 +33,16 @@ describe("parseGameSort", () => {
 
   it("accepts the real keys, case-insensitively", () => {
     expect(parseGameSort("venue")).toBe("venue");
-    expect(parseGameSort(" UNPAID ")).toBe("unpaid");
+    expect(parseGameSort(" FILLED ")).toBe("filled");
+  });
+
+  it("no longer offers Unpaid or Status, and an old link to either falls back to date", () => {
+    // The owner, 2026-11-08: "please also remove the 'unpaid' and 'status'
+    // pills for the games sorting" — everyone pays up front, and the tabs
+    // already split games by where they stand.
+    expect(GAME_SORTS).toEqual(["date", "venue", "filled"]);
+    expect(parseGameSort("unpaid")).toBe(DEFAULT_GAME_SORT);
+    expect(parseGameSort("status")).toBe(DEFAULT_GAME_SORT);
   });
 });
 
@@ -108,39 +118,13 @@ describe("sortGames", () => {
     expect(sorted[0]).toBe(half);
   });
 
-  it("orders by unpaid seats, most first — the chase list", () => {
-    // Arrange
-    const clean = game({ starts_at: "2026-09-08T18:00:00Z", unpaidCount: 0 });
-    const messy = game({ starts_at: "2026-09-01T18:00:00Z", unpaidCount: 4 });
-
-    // Act
-    const sorted = sortGames([clean, messy], "unpaid");
-
-    // Assert
-    expect(sorted[0]).toBe(messy);
-  });
-
-  it("orders by status in attention order, not alphabetically", () => {
-    // Arrange
-    const settled = game({ starts_at: "2026-09-08T18:00:00Z", status: "settled" });
-    const full = game({ starts_at: "2026-09-01T18:00:00Z", status: "full" });
-    const published = game({ starts_at: "2026-09-02T18:00:00Z", status: "published" });
-
-    // Act
-    const sorted = sortGames([settled, published, full], "status");
-
-    // Assert: alphabetically this would be cancelled/full/published/settled;
-    // what an admin wants is what needs them first.
-    expect(sorted.map((g) => g.status)).toEqual(["full", "published", "settled"]);
-  });
-
   it("breaks every tie on kick-off, so a refresh cannot reshuffle the list", () => {
     // Arrange — identical on every sortable dimension but the date.
     const a = game({ starts_at: "2026-09-01T18:00:00Z" });
     const b = game({ starts_at: "2026-09-07T18:00:00Z" });
 
     // Act / Assert
-    for (const key of ["venue", "filled", "unpaid", "status"] as const) {
+    for (const key of ["venue", "filled"] as const) {
       expect(sortGames([a, b], key)[0], `${key} left a tie unresolved`).toBe(b);
       expect(sortGames([b, a], key)[0], `${key} depended on input order`).toBe(b);
     }

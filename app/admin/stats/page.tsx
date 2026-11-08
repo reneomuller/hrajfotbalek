@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { StatCard } from "@/components/admin/StatCard";
+import { RevenueSplitCard } from "@/components/admin/money/RevenueSplitCard";
 import { ChipLinks } from "@/components/admin/money/ChipLinks";
 import { LedgerPanel } from "@/components/admin/money/LedgerPanel";
 import { OperationsSection } from "@/components/admin/money/OperationsSection";
@@ -85,9 +86,9 @@ export default async function FinancialsPage({
   // The clock is read in the data layer, which hands back the bounds it used —
   // the page cannot read it during render, and the label and the figures must
   // describe the same month. The economics are read against THOSE bounds.
-  const [caps, f, stats] = await Promise.all([
-    appCapabilities(),
-    getFinancials(period),
+  const caps = await appCapabilities();
+  const [f, stats] = await Promise.all([
+    getFinancials(period, { economics: caps.pitchCosts }),
     getAdminStats(window),
   ]);
   const economics = caps.pitchCosts ? await getPeriodEconomics(f.bounds) : null;
@@ -126,7 +127,13 @@ export default async function FinancialsPage({
         }
       />
 
-      <div className="mt-5 grid grid-cols-2 gap-3 md:grid-cols-4">
+      {/*
+        TWO BY TWO (the owner, 2026-11-08): the two revenue boxes on top — the
+        total and what it paid for — and the average per game and the games
+        played beneath. ~~Outstanding~~ is gone: "it is redundant. everyone
+        pays up front."
+      */}
+      <div className="mt-5 grid grid-cols-2 gap-3">
         <StatCard
           testId="financials-revenue"
           label={strings.admin.revenueLabel}
@@ -144,14 +151,8 @@ export default async function FinancialsPage({
           }
           hint={strings.admin.money.revenueHint}
         />
-        <StatCard
-          testId="financials-settled"
-          tone="white"
-          label={strings.admin.gamesSettledLabel}
-          value={String(f.gamesSettled)}
-          hint={strings.admin.money.settledHint}
-        />
-        {/* A dash rather than 0 when nothing settled. "0 CZK average" reads
+        <RevenueSplitCard split={f.revenueSplit} />
+        {/* A dash rather than 0 when nothing was played. "0 CZK average" reads
             as a business problem; "—" reads as an empty window. */}
         <StatCard
           testId="financials-average"
@@ -160,16 +161,12 @@ export default async function FinancialsPage({
           value={f.avgPerGameCzk === null ? "—" : formatCzk(f.avgPerGameCzk)}
           hint={strings.admin.money.avgHint}
         />
-        {/* NOT scoped to the period: "outstanding" is a question about the
-            present. The frame's `View unpaid →` has no destination — unpaid
-            bookings are settled per game — so the tile says where instead. */}
         <StatCard
-          testId="financials-outstanding"
-          tone={f.outstandingCzk > 0 ? "warn" : "white"}
-          label={strings.admin.outstandingLabel}
-          value={formatCzk(f.outstandingCzk)}
-          detail={strings.admin.unpaidSpots.replace("{count}", String(f.unpaidSpots))}
-          hint={strings.admin.unpaidWhere}
+          testId="financials-settled"
+          tone="white"
+          label={strings.admin.money.gamesPlayedLabel}
+          value={String(f.gamesPlayed)}
+          hint={strings.admin.money.playedHint}
         />
       </div>
 

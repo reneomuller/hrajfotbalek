@@ -40,6 +40,9 @@ function economicsRow(gameId: string): GameEconomicsRow {
   };
 }
 
+/** Mid-November: the 4th and the 11th are behind, the 20th ahead. */
+const NOW = Date.parse("2026-11-15T12:00:00.000Z");
+
 let tables: Tables;
 let client: FakeServiceClient;
 
@@ -61,9 +64,20 @@ beforeEach(() => {
 });
 
 describe("getPeriodEconomics", () => {
+  it("includes the evening's game before the morning sweep marks it played", async () => {
+    // Arrange — production's #10 on 2026-11-08: kicked off at 17:00, still "full".
+    tables.games!.push({ id: "tonight", status: "full", starts_at: "2026-11-15T10:00:00.000Z", venue: "Strahov", price_czk: 180 });
+
+    // Act
+    const period = await getPeriodEconomics(NOVEMBER, NOW);
+
+    // Assert
+    expect(period.rows.map((row) => row.game.id)).toEqual(["tonight", "settled", "played"]);
+  });
+
   it("is about the games played in the period, newest first", async () => {
     // Act
-    const period = await getPeriodEconomics(NOVEMBER);
+    const period = await getPeriodEconomics(NOVEMBER, NOW);
 
     // Assert
     expect(period.rows.map((row) => row.game.id)).toEqual(["settled", "played"]);
@@ -71,7 +85,7 @@ describe("getPeriodEconomics", () => {
 
   it("asks SQL for those games' economics and nothing else", async () => {
     // Act
-    await getPeriodEconomics(NOVEMBER);
+    await getPeriodEconomics(NOVEMBER, NOW);
 
     // Assert
     expect(client.rpcCalls).toContainEqual({
@@ -82,7 +96,7 @@ describe("getPeriodEconomics", () => {
 
   it("reads every played game for all time", async () => {
     // Act
-    const period = await getPeriodEconomics({ from: null, to: null });
+    const period = await getPeriodEconomics({ from: null, to: null }, NOW);
 
     // Assert
     expect(period.rows.map((row) => row.game.id)).toEqual(["settled", "played", "october"]);
@@ -93,7 +107,7 @@ describe("getPeriodEconomics", () => {
     tables.games = [];
 
     // Act
-    const period = await getPeriodEconomics(NOVEMBER);
+    const period = await getPeriodEconomics(NOVEMBER, NOW);
 
     // Assert
     expect(period.rows).toEqual([]);

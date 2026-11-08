@@ -1,6 +1,7 @@
 import { createServiceRoleSupabaseClient } from "@/lib/supabase/clients";
 import { countSeatsTaken } from "@/lib/admin/queries";
 import { getGameEconomics } from "@/lib/admin/economics";
+import { revenueBetween } from "@/lib/admin/money/revenue";
 import { COUNTED_PLAYER_FILTER } from "@/lib/admin/playerScope";
 import type { RowEconomics } from "@/lib/admin/shell/dashboardRows";
 import type { DashboardWindow } from "@/lib/admin/shell/dashboardView";
@@ -75,36 +76,14 @@ export const DASHBOARD_GAME_ROWS = 6;
 
 const WEEK_MS = 7 * 86_400_000;
 
-/** Confirmed revenue in a period — the same definition the financials page uses. */
-async function revenueBetween(from: string, to: string): Promise<number> {
-  const service = createServiceRoleSupabaseClient();
-
-  const { data: rows } = await service
-    .from("events")
-    .select("booking_id")
-    .eq("event_type", "payment_confirmed")
-    .not("booking_id", "is", null)
-    .gte("created_at", from)
-    .lt("created_at", to);
-
-  const ids = [...new Set((rows ?? []).map((r) => r.booking_id))].filter(
-    (id): id is string => id !== null,
-  );
-  if (ids.length === 0) return 0;
-
-  const { data: bookings } = await service
-    .from("bookings")
-    .select("price_czk,credit_applied_czk")
-    .in("id", ids);
-
-  /*
-   * `credit_applied_czk` IS SUBTRACTED: a booking paid from Credits moved no
-   * new money — the cash came in earlier, when the Credits were bought.
-   */
-  return (bookings ?? []).reduce(
-    (sum, r) => sum + Math.max(0, r.price_czk - r.credit_applied_czk),
-    0,
-  );
+/**
+ * Revenue in a period — the money page's own reader, so the two agree: games,
+ * Game Passes and top-ups, on the day each arrived (2026-11-08). It replaced a
+ * copy of the game-payments query that left every pass sale out and stopped at
+ * PostgREST's 1000 rows.
+ */
+async function revenueInMonth(from: string, to: string): Promise<number> {
+  return (await revenueBetween({ from, to })).totalCzk;
 }
 
 export async function getAdminDashboard({
@@ -153,7 +132,7 @@ export async function getAdminDashboard({
       .order("starts_at", { ascending: true }),
     countedPlayers(),
     countedPlayers().gte("created_at", weekFrom),
-    revenueBetween(month.from, month.to),
+    revenueInMonth(month.from, month.to),
     service
       .from("players")
       .select("*")

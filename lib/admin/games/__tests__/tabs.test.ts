@@ -200,12 +200,12 @@ describe("gamesListHref", () => {
 
   it("keeps the tab when the sort changes, and the sort when the tab changes", () => {
     // Arrange
-    const state = { tab: "cancelled", sort: "unpaid" } as const;
+    const state = { tab: "cancelled", sort: "venue" } as const;
 
     // Act
     const href = gamesListHref(state);
 
     // Assert
-    expect(href).toBe("/admin/games?tab=cancelled&sort=unpaid");
+    expect(href).toBe("/admin/games?tab=cancelled&sort=venue");
   });
 });

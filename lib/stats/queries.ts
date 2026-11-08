@@ -1,4 +1,4 @@
-import { paymentsBetween, totalCzk } from "@/lib/admin/money/payments";
+import { revenueBetween } from "@/lib/admin/money/revenue";
 import { readAllByIds, readAllPages, readByIds } from "@/lib/admin/money/readAll";
 import { COUNTED_PLAYER_FILTER } from "@/lib/admin/playerScope";
 import { createServiceRoleSupabaseClient } from "@/lib/supabase/clients";
@@ -147,8 +147,10 @@ async function getFillRate(range: StatRange): Promise<FillRateStats> {
 /**
  * Confirmed revenue, in CZK.
  *
- *   sum(price_czk - credit_applied_czk)
- *   over bookings with a payment_confirmed event in range
+ *   sum(price_czk - credit_applied_czk) over bookings with a
+ *   payment_confirmed event in range, plus every Game Pass and top-up
+ *   confirmed in range (2026-11-08: "revenue should count all the revenue
+ *   including game pass")
  *
  * CREDIT APPLIED IS EXPLICITLY EXCLUDED, and that is the whole point of the
  * metric. Credit is not money arriving — it is a liability being discharged,
@@ -157,9 +159,10 @@ async function getFillRate(range: StatRange): Promise<FillRateStats> {
  * the same crown twice.
  */
 async function getConfirmedRevenue(range: StatRange): Promise<number> {
-  // The money page's own reading (round 42): one definition of "money that
-  // arrived", paged, so the Revenue tile and this one cannot drift.
-  return totalCzk(await paymentsBetween(range));
+  // The money page's own reading: one definition of "money that arrived" —
+  // games, Game Passes and top-ups since 2026-11-08 — so the Revenue tile
+  // and this one cannot drift.
+  return (await revenueBetween(range)).totalCzk;
 }
 
 /**

@@ -22,7 +22,13 @@
  * how "the list moved when I refreshed" happens.
  */
 
-export const GAME_SORTS = ["date", "venue", "filled", "unpaid", "status"] as const;
+/*
+ * ~~"unpaid", "status"~~ — removed 2026-11-08, the owner: "please also remove
+ * the 'unpaid' and 'status' pills for the games sorting". Everyone pays up
+ * front, and the Upcoming / Played / Cancelled tabs already split games by
+ * where they stand. An old link to either falls back to date.
+ */
+export const GAME_SORTS = ["date", "venue", "filled"] as const;
 export type GameSort = (typeof GAME_SORTS)[number];
 
 export const DEFAULT_GAME_SORT: GameSort = "date";
@@ -43,21 +49,6 @@ export interface SortableGame {
   activeCount: number;
   unpaidCount: number;
 }
-
-/**
- * The status order a person reading this list cares about, which is NOT
- * alphabetical: what needs attention first, then what is coming, then what is
- * finished. `settled` last because a settled game is the one thing on this
- * page that needs nothing.
- */
-const STATUS_RANK: Record<string, number> = {
-  full: 0,
-  published: 1,
-  played: 2,
-  cancelled: 3,
-  settled: 4,
-  draft: 5,
-};
 
 function kickoffDesc(a: SortableGame, b: SortableGame): number {
   return Date.parse(b.starts_at) - Date.parse(a.starts_at);
@@ -87,16 +78,6 @@ export function sortGames<T extends SortableGame>(rows: readonly T[], sort: Game
         const ratio = (g: SortableGame) => (g.capacity > 0 ? g.activeCount / g.capacity : 0);
         return ratio(b) - ratio(a) || kickoffDesc(a, b);
       });
-
-    case "unpaid":
-      // MOST UNPAID FIRST — this is the "what do I have to chase" ordering.
-      return out.sort((a, b) => b.unpaidCount - a.unpaidCount || kickoffDesc(a, b));
-
-    case "status":
-      return out.sort(
-        (a, b) =>
-          (STATUS_RANK[a.status] ?? 99) - (STATUS_RANK[b.status] ?? 99) || kickoffDesc(a, b),
-      );
 
     case "date":
     default:

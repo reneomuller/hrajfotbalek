@@ -30,6 +30,7 @@ class MemoryQuery implements PromiseLike<MemoryResult> {
   private counted = false;
   private sortBy: { column: string; ascending: boolean } | null = null;
   private max: number | null = null;
+  private offset = 0;
 
   constructor(private readonly rows: Row[]) {}
 
@@ -77,13 +78,21 @@ class MemoryQuery implements PromiseLike<MemoryResult> {
     return this;
   }
 
+  /** The FIRST order is the sort; a later one is only PostgREST's tie-break. */
   order(column: string, options?: { ascending?: boolean }): this {
-    this.sortBy = { column, ascending: options?.ascending ?? true };
+    if (!this.sortBy) this.sortBy = { column, ascending: options?.ascending ?? true };
     return this;
   }
 
   limit(count: number): this {
     this.max = count;
+    return this;
+  }
+
+  /** PostgREST paging: rows `from` to `to`, inclusive. */
+  range(from: number, to: number): this {
+    this.offset = from;
+    this.max = to - from + 1;
     return this;
   }
 
@@ -97,7 +106,7 @@ class MemoryQuery implements PromiseLike<MemoryResult> {
       );
     }
     const count = rows.length;
-    if (this.max !== null) rows = rows.slice(0, this.max);
+    if (this.max !== null) rows = rows.slice(this.offset, this.offset + this.max);
     return {
       data: this.head ? null : rows,
       count: this.counted ? count : null,

@@ -162,6 +162,25 @@ describe("the dashboard's revenue this month", () => {
     // Assert
     expect(dashboard.revenueMonthCzk).toBe(300);
   });
+
+  it("counts a Game Pass bought this month, as the money page does", async () => {
+    // Arrange — the owner, 2026-11-08: "revenue should count all the revenue
+    // including game pass".
+    state.tables.events = [
+      { event_type: "payment_confirmed", booking_id: "b-card", created_at: "2026-11-03T18:00:00.000Z" },
+    ];
+    state.tables.bookings = [{ id: "b-card", price_czk: 180, credit_applied_czk: 0 }];
+    state.tables.credit_topups = [
+      { id: "t-pass", status: "confirmed", amount_czk: 840, received_amount_czk: 840, pass_games: 5, confirmed_at: "2026-11-05T10:00:00.000Z" },
+      { id: "t-unpaid", status: "pending", amount_czk: 840, received_amount_czk: null, pass_games: 5, confirmed_at: null },
+    ];
+
+    // Act
+    const dashboard = await getAdminDashboard({ now: NOW });
+
+    // Assert
+    expect(dashboard.revenueMonthCzk).toBe(1020);
+  });
 });
 
 describe("the dashboard's upcoming games", () => {

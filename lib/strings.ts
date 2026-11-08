@@ -1589,14 +1589,8 @@ export const strings = {
     periodAllTime: "All time",
     revenueLabel: "Revenue",
     revenueVsPrevious: "vs the month before",
-    gamesSettledLabel: "Games settled",
     avgPerGameLabel: "Avg per game",
     revenueByWeek: "Revenue by week",
-    outstandingLabel: "Outstanding",
-    unpaidSpots: "{count} unpaid spots",
-    /* The frame's `View unpaid →` has no route; this says where they are
-       instead of linking nowhere. See the page header. */
-    unpaidWhere: "Settle these on each game's admin page.",
     operationsTitle: "Operations",
     /* --- the dashboard (round 8, item 2, p14) --- */
     dashboardTitle: "Dashboard overview",
@@ -2048,7 +2042,7 @@ export const strings = {
     statRevenue: "Confirmed revenue",
     // The distinction the metric exists to make.
     statRevenueHint:
-      "Money that arrived. Credit applied is excluded — that is a liability being discharged, not a payment.",
+      "Money that arrived — games, Game Passes and top-ups. A game paid from Credits adds nothing: that money arrived when the Credits were bought.",
     statNewReturning: "New vs returning",
     statNewReturningHint:
       "A booking is new if it is that player's first ever, whenever their first was.",
@@ -2138,8 +2132,6 @@ export const strings = {
       date: "Date",
       venue: "Venue",
       filled: "Filled",
-      unpaid: "Unpaid",
-      status: "Status",
     },
     adminConfirmGrant:
       "Give this player the full admin panel — games, payments, players and rights?",
@@ -2507,9 +2499,15 @@ export const strings = {
       periodLabel: "Period",
       windowLabel: "Window",
       /* The four tiles. */
-      revenueHint: "Bookings paid in this period — card, QR and cash.",
-      settledHint: "Games whose books are closed.",
-      avgHint: "Revenue over games settled.",
+      revenueHint: "Everything paid in this period — games, Game Passes and Credit top-ups.",
+      splitLabel: "Revenue split",
+      splitGames: "Single games",
+      splitPass: "Game Pass",
+      splitTopups: "Credit top-ups",
+      splitHint: "What the money paid for, on the day it arrived.",
+      gamesPlayedLabel: "Games played",
+      playedHint: "Games that kicked off in this period; cancelled ones aside.",
+      avgHint: "Each played game's own revenue — Game Pass seats at what the pass cost — averaged.",
       /* Revenue by how it was paid — "single" vs "a credit from a game pass". */
       mixTitle: "Revenue by how it was paid",
       mixLede: "Games played in this period, each seat at what was paid for it.",
