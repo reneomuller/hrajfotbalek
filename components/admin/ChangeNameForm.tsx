@@ -4,6 +4,7 @@ import { useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { setDisplayNameAction, type PlayerAdminState } from "@/app/admin/players/[id]/actions";
 import { strings } from "@/lib/strings";
+import { chipPrimary, chipQuiet } from "@/components/admin/players/controlStyles";
 
 const INITIAL: PlayerAdminState = { status: "idle" };
 
@@ -43,7 +44,7 @@ export function ChangeNameForm({ playerId, name }: { playerId: string; name: str
           type="button"
           onClick={() => setOpen(true)}
           data-testid="change-name"
-          className="rounded-control border border-hairline-strong px-3 py-2 text-[10px] uppercase tracking-eyebrow text-muted"
+          className={chipQuiet}
         >
           {strings.admin.nameChangeOpen}
         </button>
@@ -97,7 +98,7 @@ export function ChangeNameForm({ playerId, name }: { playerId: string; name: str
           type="button"
           onClick={() => setOpen(false)}
           data-testid="change-name-cancel"
-          className="rounded-control border border-hairline-strong px-3 py-2 text-[10px] uppercase tracking-eyebrow text-muted"
+          className={chipQuiet}
         >
           {strings.admin.nameChangeCancel}
         </button>
@@ -112,7 +113,7 @@ export function ChangeNameForm({ playerId, name }: { playerId: string; name: str
         </p>
       )}
       {state.status === "error" && state.message && (
-        <p role="alert" data-testid="change-name-error" className="mt-2 text-[12px] text-muted">
+        <p role="alert" data-testid="change-name-error" className="mt-2 text-[12px] text-danger">
           {state.message}
         </p>
       )}
@@ -127,7 +128,7 @@ function Submit() {
       type="submit"
       disabled={pending}
       data-testid="change-name-save"
-      className="rounded-control bg-volt px-4 py-2 text-[10px] font-bold uppercase tracking-eyebrow text-ink disabled:opacity-50"
+      className={chipPrimary}
     >
       {pending ? strings.common.loading : strings.admin.nameChangeSave}
     </button>

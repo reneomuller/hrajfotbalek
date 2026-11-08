@@ -4,6 +4,7 @@ import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
 import { setPlayerAdminAction, type AdminRightsState } from "@/app/admin/players/actions";
 import { strings } from "@/lib/strings";
+import { chipQuiet, chipVolt } from "@/components/admin/players/controlStyles";
 
 const INITIAL: AdminRightsState = { status: "idle" };
 
@@ -50,7 +51,7 @@ export function AdminRightsButton({
       <SubmitButton isAdmin={isAdmin} />
 
       {state.status === "error" && state.message && (
-        <span role="alert" className="text-[10px] tracking-[1px] text-muted">
+        <span role="alert" className="text-[12px] text-muted">
           {state.message}
         </span>
       )}
@@ -66,11 +67,8 @@ function SubmitButton({ isAdmin }: { isAdmin: boolean }) {
       type="submit"
       disabled={pending}
       data-testid={isAdmin ? "revoke-admin" : "make-admin"}
-      /* A chip, not 10px tracked capitals (admin restyle). These sit on a
-         player row beside another control; both are real targets now. */
-      className={`inline-flex min-h-11 items-center rounded-pill border border-hairline-strong px-3 text-small font-semibold transition-colors hover:border-volt disabled:opacity-50 ${
-        isAdmin ? "text-muted hover:text-white" : "text-volt"
-      }`}
+      /* The player page's chip (round 42): volt to grant, quiet to take away. */
+      className={isAdmin ? chipQuiet : chipVolt}
     >
       {pending
         ? strings.common.loading

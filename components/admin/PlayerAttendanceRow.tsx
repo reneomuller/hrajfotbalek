@@ -13,6 +13,20 @@ import { strings } from "@/lib/strings";
 
 const INITIAL: AttendanceState = { status: "idle" };
 
+const ATTENDANCE_TONE = {
+  no_show: "border-danger/60 text-danger",
+  present: "border-hairline-volt text-volt",
+  unmarked: "border-hairline-strong text-faint",
+} as const;
+
+/** What the row's pill says: the mark, or why there is none. */
+function attendanceLabel(row: AdminPlayerGameRow, isActive: boolean): string {
+  if (row.attendance === "present") return strings.admin.markPresent;
+  if (row.attendance === "no_show") return strings.admin.markNoShow;
+  if (isActive) return strings.admin.attendanceUnmarked;
+  return strings.admin.status[row.status === "cancelled" ? "cancelled" : "draft"];
+}
+
 /**
  * One game in a player's history, with the no-show control (REQ-ADMIN-002).
  *
@@ -25,6 +39,9 @@ const INITIAL: AttendanceState = { status: "idle" };
  * OFFERED ONLY FOR A GAME THAT HAS ALREADY KICKED OFF, mirroring the RPC:
  * attendance on a future game is a statement nobody can make yet. The RPC
  * remains the authority and refuses it regardless of what renders here.
+ *
+ * ROUND 42: rows of one panel rather than a stack of cards, the state as a
+ * pill, and the two marks as chips — the one already recorded drawn as chosen.
  */
 export function PlayerAttendanceRow({ row }: { row: AdminPlayerGameRow }) {
   const [state, formAction] = useActionState(markAttendanceAction, INITIAL);
@@ -35,51 +52,46 @@ export function PlayerAttendanceRow({ row }: { row: AdminPlayerGameRow }) {
   const isActive = row.status === "reserved" || row.status === "confirmed";
   const canMark = isActive && row.hasStarted;
 
+  const label = attendanceLabel(row, isActive);
+  const tone = ATTENDANCE_TONE[row.attendance ?? "unmarked"];
+
   return (
     <li
       data-testid="player-game-row"
       data-attendance={row.attendance ?? ""}
       data-status={row.status}
-      className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 rounded-card bg-surface px-5 py-3"
+      className="flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-hairline py-3 first:border-t-0 first:pt-0"
     >
       <div className="min-w-[180px] flex-1">
         <Link
           href={`/admin/games/${row.gameId}`}
-          className="text-[16px] font-bold text-white no-underline"
+          className="text-body font-bold text-white no-underline transition-colors hover:text-volt"
         >
           {row.venue}
         </Link>
-        <div className="text-[11px] tracking-[1px] text-muted">
+        <div className="text-[12px] tabular-nums text-muted">
           {row.startsAt ? formatGameDateTime(row.startsAt) : "—"}
         </div>
       </div>
 
       <span
         data-testid="player-game-attendance"
-        className={` text-[10px] uppercase tracking-eyebrow ${
-          row.attendance === "no_show" ? "text-volt" : "text-faint"
-        }`}
+        className={`shrink-0 rounded-pill border px-2 py-[2px] text-[9px] uppercase leading-normal tracking-eyebrow ${tone}`}
       >
-        {row.attendance === "present"
-          ? strings.admin.markPresent
-          : row.attendance === "no_show"
-            ? strings.admin.markNoShow
-            : isActive
-              ? strings.admin.attendanceUnmarked
-              : strings.admin.status[row.status === "cancelled" ? "cancelled" : "draft"]}
+        {label}
       </span>
 
       {canMark && (
         <form action={formAction} className="flex gap-2">
           <input type="hidden" name="bookingId" value={row.bookingId} />
           <input type="hidden" name="gameId" value={row.gameId} />
-          <MarkButton value="present" label={strings.admin.markPresent} />
-          <MarkButton value="no_show" label={strings.admin.markNoShow} />
+          <MarkButton value="present" label={strings.admin.markPresent} chosen={row.attendance === "present"} />
+          <MarkButton value="no_show" label={strings.admin.markNoShow} chosen={row.attendance === "no_show"} />
         </form>
       )}
 
       {state.status === "error" && state.message && (
-        <p role="alert" className="w-full text-[12px] text-muted">
+        <p role="alert" className="m-0 w-full text-[12px] text-danger">
           {state.message}
         </p>
       )}
@@ -87,7 +99,15 @@ export function PlayerAttendanceRow({ row }: { row: AdminPlayerGameRow }) {
   );
 }
 
-function MarkButton({ value, label }: { value: "present" | "no_show"; label: string }) {
+function MarkButton({
+  value,
+  label,
+  chosen,
+}: {
+  value: "present" | "no_show";
+  label: string;
+  chosen: boolean;
+}) {
   const { pending } = useFormStatus();
   return (
     <button
@@ -95,8 +115,11 @@ function MarkButton({ value, label }: { value: "present" | "no_show"; label: str
       name="attendance"
       value={value}
       disabled={pending}
+      aria-pressed={chosen}
       data-testid={`player-mark-${value === "no_show" ? "no-show" : "present"}`}
-      className="rounded-control border border-hairline-strong px-3 py-2 text-[10px] uppercase tracking-eyebrow text-bone disabled:opacity-50"
+      className={`inline-flex min-h-11 items-center rounded-pill border px-3 text-[12px] font-semibold transition-colors disabled:opacity-50 ${
+        chosen ? "border-volt text-volt" : "border-hairline-strong text-bone hover:border-volt hover:text-volt"
+      }`}
     >
       {label}
     </button>

@@ -4,6 +4,7 @@ import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
 import { removeCoverAction, type PlayerAdminState } from "@/app/admin/players/[id]/actions";
 import { strings } from "@/lib/strings";
+import { chipQuiet } from "@/components/admin/players/controlStyles";
 
 const INITIAL: PlayerAdminState = { status: "idle" };
 
@@ -29,7 +30,7 @@ export function RemoveCoverButton({ playerId }: { playerId: string }) {
     return (
       <p
         data-testid="cover-removed"
-        className="m-0 text-[11px] uppercase tracking-eyebrow text-volt-dim"
+        className="m-0 flex min-h-11 items-center text-[11px] uppercase tracking-eyebrow text-volt-dim"
       >
         {strings.admin.coverRemoved}
       </p>
@@ -61,7 +62,7 @@ function Submit() {
       type="submit"
       disabled={pending}
       data-testid="remove-cover"
-      className="rounded-control border border-hairline-strong px-3 py-2 text-[10px] uppercase tracking-eyebrow text-muted disabled:opacity-50"
+      className={chipQuiet}
     >
       {pending ? strings.common.loading : strings.admin.coverRemove}
     </button>

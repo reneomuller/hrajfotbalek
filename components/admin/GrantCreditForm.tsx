@@ -6,6 +6,7 @@ import { grantCreditAction, type GrantCreditState } from "@/app/admin/players/ac
 import { formatCzk } from "@/lib/format";
 import { adminWallet } from "@/lib/admin/credits";
 import { strings } from "@/lib/strings";
+import { chipPrimary, chipVolt, fieldInput, fieldLabel } from "@/components/admin/players/controlStyles";
 
 const INITIAL: GrantCreditState = { status: "idle" };
 
@@ -27,7 +28,7 @@ export function GrantCreditForm({ playerId }: { playerId: string }) {
         type="button"
         onClick={() => setOpen(true)}
         data-testid="grant-credit-open"
-        className="inline-flex min-h-11 items-center rounded-pill border border-hairline-strong px-3 text-small font-semibold transition-colors hover:border-volt text-volt"
+        className={chipVolt}
       >
         {strings.admin.grantCredit}
       </button>
@@ -35,12 +36,12 @@ export function GrantCreditForm({ playerId }: { playerId: string }) {
   }
 
   return (
-    <form action={formAction} className="mt-2 w-full space-y-3">
+    <form action={formAction} className="w-full space-y-3 rounded-card border border-hairline-volt p-4">
       <input type="hidden" name="playerId" value={playerId} />
 
       <div className="flex flex-wrap items-end gap-3">
         <label className="block">
-          <span className="block text-[10px] uppercase tracking-eyebrow text-muted">
+          <span className={`block ${fieldLabel}`}>
             {strings.admin.grantAmountLabel}
           </span>
           <input
@@ -49,12 +50,12 @@ export function GrantCreditForm({ playerId }: { playerId: string }) {
             step={1}
             required
             data-testid="grant-amount"
-            className="mt-1 w-[130px] rounded-control border border-hairline-strong bg-surface px-3 py-2 text-[13px] text-bone"
+            className={`mt-1 w-[130px] ${fieldInput}`}
           />
         </label>
 
-        <label className="block flex-1">
-          <span className="block text-[10px] uppercase tracking-eyebrow text-muted">
+        <label className="block min-w-[180px] flex-1">
+          <span className={`block ${fieldLabel}`}>
             {strings.admin.grantNoteLabel}
           </span>
           {/*
@@ -71,7 +72,7 @@ export function GrantCreditForm({ playerId }: { playerId: string }) {
             minLength={3}
             maxLength={200}
             data-testid="grant-note"
-            className="mt-1 w-full rounded-control border border-hairline-strong bg-surface px-3 py-2 text-[13px] text-bone"
+            className={`mt-1 w-full ${fieldInput}`}
           />
         </label>
 
@@ -112,7 +113,7 @@ export function GrantCreditForm({ playerId }: { playerId: string }) {
         </p>
       )}
       {state.status === "error" && state.message && (
-        <p role="alert" className="text-[12px] text-muted">
+        <p role="alert" className="text-[12px] text-danger">
           {state.message}
         </p>
       )}
@@ -127,7 +128,7 @@ function SubmitButton() {
       type="submit"
       disabled={pending}
       data-testid="grant-submit"
-      className="rounded-control bg-volt px-5 py-3 text-[14px] font-extrabold uppercase tracking-wide text-surface disabled:opacity-60"
+      className={chipPrimary}
     >
       {pending ? strings.common.loading : strings.admin.grantSubmit}
     </button>

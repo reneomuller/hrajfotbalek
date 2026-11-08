@@ -4,6 +4,7 @@ import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
 import { setPlayerBannedAction, type PlayerAdminState } from "@/app/admin/players/[id]/actions";
 import { strings } from "@/lib/strings";
+import { chipDanger, chipQuiet } from "@/components/admin/players/controlStyles";
 
 const INITIAL: PlayerAdminState = { status: "idle" };
 
@@ -68,12 +69,7 @@ function Submit({ isBanned }: { isBanned: boolean }) {
       type="submit"
       disabled={pending}
       data-testid={isBanned ? "unban-player" : "ban-player"}
-      className={[
-        "rounded-control px-3 py-2 text-[10px] uppercase tracking-eyebrow disabled:opacity-50",
-        isBanned
-          ? "border border-hairline-strong text-muted"
-          : "border border-danger/60 text-danger",
-      ].join(" ")}
+      className={isBanned ? chipQuiet : chipDanger}
     >
       {pending
         ? strings.common.loading

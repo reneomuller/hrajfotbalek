@@ -2302,6 +2302,113 @@ export const strings = {
     /** The players list and a player's page. */
     playersHub: {
       title: "Players",
+      lede: "Everyone who signed up. Shadow accounts — the names you book onto games — and test accounts are counted nowhere.",
+
+      /* The tiles above the list. Each figure carries its counts beneath it. */
+      kpis: {
+        players: "Players",
+        playersDetail: "signed up · shadow accounts not counted ({shadows})",
+        played: "Played",
+        playedDetail: "at least once · {percent}",
+        cameBack: "Came back",
+        cameBackDetail: "{cameBack} of {played} played again",
+        credit: "Has Credit",
+        creditDetail: "{credits} held",
+        optedIn: "Opted in",
+        optedInDetail: "to marketing · {percent}",
+      },
+      percent: "{n}%",
+      noShare: "—",
+
+      segmentsLabel: "Players by segment",
+      segments: {
+        all: "All",
+        played: "Played",
+        "came-back": "Came back",
+        "never-booked": "Never booked",
+        "has-credit": "Has Credit",
+        "unfinished-checkout": "Unfinished checkout",
+        "opted-in": "Opted in",
+        shadow: "Shadow accounts",
+        "not-counted": "Deleted & test",
+      },
+      /* One line under the tabs saying exactly who is in the current one. */
+      segmentHints: {
+        all: "Every player who signed up.",
+        played: "Played at least one game — kicked off, not cancelled, not a no-show.",
+        "came-back": "Played two games or more.",
+        "never-booked": "Signed up and never booked anything.",
+        "has-credit": "Holding at least one whole Credit.",
+        "unfinished-checkout":
+          "Started paying for a game or a Game Pass and never finished, with nothing paid or booked since.",
+        "opted-in": "Agreed to marketing email.",
+        shadow: "Names booked onto games, with no login. Counted nowhere — find one here to book or merge it.",
+        "not-counted": "Deleted accounts and seed fixtures. Counted nowhere.",
+      },
+
+      tableCaption: "{segment}, sorted by {column}, {direction}",
+      columns: {
+        player: "Player",
+        joined: "Joined",
+        played: "Played",
+        lastGame: "Last game",
+        credit: "Credits",
+        bookings: "Bookings",
+      },
+      sortLabel: "Sort",
+      sortAscending: "ascending",
+      sortDescending: "descending",
+      sortBy: "Sort by {column}",
+      noGameYet: "—",
+      segmentEmpty: "Nobody in this segment yet.",
+      searchEmpty: "Nobody here matches “{q}”. The tab counts show where else it matches.",
+      checkoutStarted: "Checkout started {date}",
+
+      tags: {
+        organizer: "Organizer",
+        banned: "Banned",
+        deleted: "Deleted",
+        you: "You",
+      },
+
+      countryTitle: "Country",
+      skillTitle: "Skill level",
+      breakdownNote: "Counted players",
+      breakdownOther: "Other · {count} countries",
+      breakdownUnset: "Not set",
+      breakdownEmpty: "No players yet.",
+
+      /* --- one player's page ------------------------------------------------ */
+      backToList: "All players",
+      playerKpis: {
+        gamesPlayed: "Games played",
+        lastGame: "Last game",
+        cameBack: "Came back · {n} games",
+        oneGame: "One game so far",
+        notPlayed: "Not played yet",
+        noShows: "No-shows",
+        noShowsDetail: "marked by an organizer",
+        credit: "Credits",
+        spent: "Money spent",
+        spentDetail:
+          "Valued as the games' money is: a single game at its price, a Game Pass Credit at the pass price per game, a gift at nothing.",
+        spentEmpty: "Nothing paid yet.",
+      },
+      spendKinds: {
+        single: "Single games",
+        pass: "Game Pass",
+        credit: "Other Credit",
+        kept: "Kept from cancellations",
+      },
+      rightsTitle: "Rights",
+      rightsLede: "An admin can use every page here. An organizer can be picked to run a game, and their photo shows on it.",
+      accountTitle: "Account",
+      accountProfile: "How they appear",
+      accountAccess: "Access",
+      accountAccessLede: "A ban cancels their future bookings and can be undone. Deleting anonymises the account for good.",
+      creditTitle: "Credit",
+      creditLede:
+        "Give Credit with a note — tick unmatched payment when money arrived with no booking behind it. Taking Credit back asks you to confirm.",
     },
 
     /** The money page: revenue by how it was paid, profit per game. */

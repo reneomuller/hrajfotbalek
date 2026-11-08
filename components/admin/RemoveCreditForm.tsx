@@ -5,6 +5,7 @@ import { removeCreditAction, type GrantCreditState } from "@/app/admin/players/a
 import { formatCzk } from "@/lib/format";
 import { adminWallet } from "@/lib/admin/credits";
 import { strings } from "@/lib/strings";
+import { chipDanger, chipDangerSolid, chipQuiet, fieldInput, fieldLabel } from "@/components/admin/players/controlStyles";
 
 const INITIAL: GrantCreditState = { status: "idle" };
 
@@ -51,7 +52,7 @@ export function RemoveCreditForm({
         type="button"
         onClick={() => setOpen(true)}
         data-testid="remove-credit-open"
-        className="inline-flex min-h-11 items-center rounded-pill border border-hairline-strong px-3 text-small font-semibold text-danger transition-colors hover:border-danger"
+        className={chipDanger}
       >
         {strings.admin.removeCredit}
       </button>
@@ -59,7 +60,7 @@ export function RemoveCreditForm({
   }
 
   return (
-    <form action={formAction} className="mt-2 w-full space-y-3">
+    <form action={formAction} className="w-full space-y-3 rounded-card border border-danger/40 p-4">
       <input type="hidden" name="playerId" value={playerId} />
 
       <p className="m-0 text-[10px] uppercase tracking-eyebrow text-muted">
@@ -82,7 +83,7 @@ export function RemoveCreditForm({
 
       <div className="flex flex-wrap items-end gap-3">
         <label className="flex flex-col gap-1">
-          <span className="text-[10px] uppercase tracking-eyebrow text-muted">
+          <span className={fieldLabel}>
             {strings.admin.removeCreditAmount}
           </span>
           <input
@@ -92,12 +93,12 @@ export function RemoveCreditForm({
             step={1}
             required
             data-testid="remove-amount"
-            className="h-11 w-32 rounded-control border border-hairline bg-transparent px-3 text-body text-white"
+            className={`w-32 ${fieldInput}`}
           />
         </label>
 
         <label className="flex min-w-[180px] flex-1 flex-col gap-1">
-          <span className="text-[10px] uppercase tracking-eyebrow text-muted">
+          <span className={fieldLabel}>
             {strings.admin.removeCreditNote}
           </span>
           <input
@@ -106,7 +107,7 @@ export function RemoveCreditForm({
             required
             minLength={3}
             data-testid="remove-note"
-            className="h-11 w-full rounded-control border border-hairline bg-transparent px-3 text-body text-white"
+            className={`w-full ${fieldInput}`}
           />
         </label>
       </div>
@@ -150,7 +151,7 @@ export function RemoveCreditForm({
             key="submit"
             type="submit"
             data-testid="remove-credit-submit"
-            className="inline-flex min-h-11 items-center rounded-pill bg-danger px-4 text-small font-bold text-white"
+            className={chipDangerSolid}
           >
             {strings.admin.removeCreditConfirm}
           </button>
@@ -160,7 +161,7 @@ export function RemoveCreditForm({
             type="button"
             onClick={() => setConfirming(true)}
             data-testid="remove-credit-arm"
-            className="inline-flex min-h-11 items-center rounded-pill border border-danger px-4 text-small font-bold text-danger"
+            className={chipDanger}
           >
             {strings.admin.removeCredit}
           </button>
@@ -172,7 +173,7 @@ export function RemoveCreditForm({
             setOpen(false);
           }}
           data-testid="remove-credit-cancel"
-          className="inline-flex min-h-11 items-center rounded-pill border border-hairline-strong px-4 text-small font-semibold text-muted"
+          className={chipQuiet}
         >
           {strings.admin.removeCreditCancel}
         </button>

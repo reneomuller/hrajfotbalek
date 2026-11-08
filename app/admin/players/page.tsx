@@ -1,47 +1,51 @@
-import { profilePhotoVersion } from "@/lib/storage/photoVersions";
 import Link from "next/link";
-import { requireAdmin } from "@/lib/auth/requireAdmin";
-import { listPlayers } from "@/lib/admin/queries";
-import { filterPlayers } from "@/lib/admin/playerSearch";
-import { initials } from "@/lib/roster/initials";
-import { avatarUrl } from "@/lib/storage/avatar";
 import { ExportCsvLink } from "@/components/admin/ExportCsvLink";
+import { PlayerBreakdowns } from "@/components/admin/players/PlayerBreakdowns";
+import { PlayerKpiTiles } from "@/components/admin/players/PlayerKpiTiles";
+import { MobileSort, PlayersTable } from "@/components/admin/players/PlayersTable";
+import { PageHeader } from "@/components/admin/ui/PageHeader";
+import { SegmentTabs } from "@/components/admin/ui/SegmentTabs";
+import { listPlayerDirectory } from "@/lib/admin/players/directory";
+import {
+  inSegment,
+  parseSegment,
+  PLAYER_SEGMENTS,
+  playerKpis,
+  segmentCounts,
+} from "@/lib/admin/players/segments";
+import { DEFAULT_SORT, parseSort, playersHref, sortPlayers } from "@/lib/admin/players/sort";
+import { filterPlayers } from "@/lib/admin/playerSearch";
+import { requireAdmin } from "@/lib/auth/requireAdmin";
+import { avatarUrl } from "@/lib/storage/avatar";
+import { profilePhotoVersion } from "@/lib/storage/photoVersions";
 import { strings } from "@/lib/strings";
-import { creditsFromCzk } from "@/lib/admin/credits";
-import { creditsLabel } from "@/lib/pass/credits";
-import { formatDate, formatTime } from "@/lib/format";
-
-/**
- * A wallet balance as whole credits (round 14, item 9).
- *
- * `Math.floor`, exactly as `CreditBalance` does it for the player's own
- * wallet: a partial credit buys no game, so rounding up would tell an admin
- * somebody can book when they cannot.
- */
-/*
- * `"en"` IS HARDCODED at the call site below, and that is R22 rather than an
- * oversight: the admin panel is English, `strings` is the English table, and
- * asking for the reader's locale here would give a Czech plural rule over
- * English words.
- */
-/*
- * ~~A LOCAL `creditsFor`.~~ It is `creditsFromCzk` in `lib/admin/credits.ts`
- * since round 31, item 3 — this file had its own copy of the division, which
- * is the second place the credits rule was written down and would have been
- * the one left behind on the day the rate moves.
- */
 
 export const metadata = { title: strings.admin.playersTitle };
 
 export const dynamic = "force-dynamic";
 
+const t = strings.admin.playersHub;
+
 /**
- * The player list: identities, wallets, and the two money/identity corrections.
+ * The players list, as a CRM (round 42, the admin rebuild).
  *
- * Balances are `SUM(delta_czk)` computed at read time. The ledger is
- * append-only and is the authority — a stored balance column would be a second
- * source of truth, and the first time the two disagreed the ledger would still
- * be right.
+ * THE OWNER: players are "important", the share who came back "should be with
+ * 'Players'", and shadow accounts — the names he books onto games — must not
+ * be counted. So the page leads with five figures over COUNTED players, then
+ * the segments as tabs with their counts, a search, and the list as a table
+ * that sorts by any column.
+ *
+ * EVERYTHING IS IN THE URL — `?segment=`, `?q=`, `?sort=&dir=` — not client
+ * state, as the search always was: the view is shareable, the back button
+ * behaves, and the server renders only the rows the tab shows.
+ *
+ * THE SEARCH NARROWS THE TABS TOO. Each tab's count is the number of matches
+ * in it, so a name that is not in the tab you are on shows you which tab it is
+ * in — a shadow account is found exactly that way.
+ *
+ * The figures and breakdowns ignore the search: they describe the players,
+ * not the query. Balances are summed from the append-only ledger at read time,
+ * as they always were.
  */
 export default async function AdminPlayersPage({
   searchParams,
@@ -49,301 +53,134 @@ export default async function AdminPlayersPage({
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
-  // Whose session is acting. Used only to decide which row renders no rights
-  // control — `set_player_admin` refuses a self-change on its own.
-  const [acting, players] = await Promise.all([requireAdmin(), listPlayers()]);
+  // Whose session is acting: their own row is tagged, because
+  // `set_player_admin` refuses a self-change on its own.
+  const [acting, players] = await Promise.all([requireAdmin(), listPlayerDirectory()]);
+
+  const query = searchParams ? await searchParams : {};
+  const rawQ = query.q;
+  const q = (Array.isArray(rawQ) ? rawQ[0] : rawQ) ?? "";
+  const segment = parseSegment(query.segment);
+  const sort = parseSort(query.sort, query.dir);
+  const view = { segment, sort, q };
+
+  const kpis = playerKpis(players);
+  const matching = filterPlayers(players, q, (player) => player.phone);
+  const counts = segmentCounts(matching);
+  const inTab = players.filter((player) => inSegment(player, segment));
+  const shown = sortPlayers(
+    matching.filter((player) => inSegment(player, segment)),
+    sort,
+  );
+
   // Round 41: each photo's own version — `createdAt` never moved, so a
   // replaced photo kept its URL here for a year.
-  const photoVersions = new Map(
+  const photoUrls = new Map(
     await Promise.all(
-      players.map(async (p) => [p.id, await profilePhotoVersion(p.photoPath)] as const),
+      shown.map(
+        async (player) =>
+          [
+            player.id,
+            avatarUrl(supabaseUrl, player.photoPath, await profilePhotoVersion(player.photoPath)),
+          ] as const,
+      ),
     ),
   );
 
-  /*
-   * THE SEARCH IS A GET FORM AND A `?q=`, not client state.
-   *
-   * Same decision the day filter and the profile tabs make, for the same
-   * reasons: the result is shareable, the back button behaves, and the page
-   * costs no JavaScript. It also means the filtering happens where the data
-   * already is, on the server, rather than shipping the whole roster to a
-   * component to hide most of it.
-   */
-  const query = searchParams ? await searchParams : {};
-  const raw = query.q;
-  const q = (Array.isArray(raw) ? raw[0] : raw) ?? "";
-  const shown = filterPlayers(players, q, (player) => player.phone);
+  const tabs = PLAYER_SEGMENTS.map((key) => ({
+    key,
+    label: t.segments[key],
+    href: playersHref({ segment: key, sort, q }),
+    count: counts[key],
+  }));
 
   return (
     <>
-      <div className="flex flex-wrap items-baseline justify-between gap-3">
-        <h2 className="m-0 font-display text-page-title uppercase tracking-wide text-white">
-          {strings.admin.playersTitle}
-        </h2>
-        {/*
-          THE MERGE LINK IS GONE (round 11). Merging existed to repair the
-          shadow-player flow, and the flow is gone: guests hold seats without
-          creating identities, so there is nothing new to merge. `merge_players`
-          survives as an RPC with no UI, for the split identities that already
-          exist — a repair is not deleted because its button was.
-        */}
-        <ExportCsvLink href="/admin/players/export" testId="export-players" />
+      <PageHeader
+        title={strings.admin.playersTitle}
+        lede={t.lede}
+        actions={<ExportCsvLink href="/admin/players/export" testId="export-players" />}
+      />
+
+      <div className="mt-6">
+        <PlayerKpiTiles kpis={kpis} />
       </div>
 
-      {/*
-        THE SEARCH, styled as the reference draws it: one volt-outlined field,
-        full width, sitting directly under the heading it filters.
+      <div className="mt-8 flex flex-col gap-6">
+        {/* Who the players are. Above the list where there is room for both,
+            below it on a phone, where the list is what an admin came for. */}
+        <div className="order-last md:order-none">
+          <PlayerBreakdowns players={players} />
+        </div>
 
-        `type="search"` rather than `text` — it brings the platform's own clear
-        affordance and the right keyboard, and on iOS a search field in a form
-        gets a "Search" return key rather than "Go".
-      */}
-      <form
-        method="get"
-        role="search"
-        data-testid="player-search"
-        className="mt-5 flex gap-2"
-      >
-        <label htmlFor="player-q" className="sr-only">
-          {strings.admin.playerSearchLabel}
-        </label>
-        <input
-          id="player-q"
-          name="q"
-          type="search"
-          defaultValue={q}
-          placeholder={strings.admin.playerSearchPlaceholder}
-          data-testid="player-search-input"
-          className="min-w-0 flex-1 rounded-control border-[1.5px] border-volt bg-surface px-4 py-3 text-body text-bone placeholder:text-faint"
-        />
-        {q !== "" && (
-          <Link
-            href="/admin/players"
-            data-testid="player-search-clear"
-            className="flex shrink-0 items-center rounded-control border border-hairline-strong px-4 text-small font-semibold text-muted no-underline transition-colors hover:border-volt hover:text-volt"
-          >
-            {strings.admin.playerSearchClear}
-          </Link>
-        )}
-      </form>
+        <section data-testid="players-list" className="flex flex-col gap-3">
+          <SegmentTabs tabs={tabs} current={segment} label={t.segmentsLabel} testId="player-segments" />
+          <p data-testid="player-segment-hint" className="m-0 text-small text-muted">
+            {t.segmentHints[segment]}
+          </p>
 
-      {q !== "" && (
-        <p data-testid="player-search-count" className="mt-2 mb-0 text-small text-muted">
-          {strings.admin.playerSearchCount
-            .replace("{shown}", String(shown.length))
-            .replace("{total}", String(players.length))}
-        </p>
-      )}
-
-      {shown.length === 0 ? (
-        <p data-testid="players-empty" className="mt-8 text-small text-faint">
-          {q === ""
-            ? strings.admin.playersEmpty
-            : strings.admin.playerSearchEmpty.replace("{q}", q)}
-        </p>
-      ) : (
-        <ul className="mt-5 list-none space-y-2 p-0">
-          {shown.map((player) => (
-            <li
-              key={player.id}
-              data-testid="admin-player-row"
-              /*
-                STACKED, WITH THE MARK LEADING (admin restyle).
-
-                The row was one `flex-wrap` line carrying a name, an email, a
-                booking count, a balance, a rights control and a credit form.
-                At 390px those six wrapped into five ragged lines with no
-                visible grouping, and the two CONTROLS ended up interleaved
-                with the facts — so the thing you could accidentally tap sat
-                between two things you were only reading.
-
-                The reference leads each result with an initials tile. It reads
-                as a person rather than a record, and it gives the eye a fixed
-                left edge to run down a long list against.
-              */
-              /*
-                `py-3` and `gap-y-2`, from `py-4` and `gap-y-3` (round 14,
-                item 9). With the identity block down from three lines to two,
-                the padding was the rest of the height the owner asked for.
-              */
-              className="lifted flex flex-wrap items-start gap-x-4 gap-y-2 rounded-card px-4 py-3"
-            >
-              {/*
-                THE TILE, AND SINCE ROUND 35 v2 IT CARRIES THE PHOTOGRAPH.
-
-                The detail page has shown it since Phase 7; the list showed
-                initials for everybody, so the one surface an organizer scans to
-                find somebody was the one that made them all look alike.
-
-                SAME COMPONENT DISCIPLINE AS EVERY OTHER AVATAR HERE: a plain
-                `<img>` over a public bucket — a small tile does not need the
-                optimizer — with `overflow-hidden` doing the clipping and the
-                initials underneath as the fallback rather than beside it. The
-                geometry is untouched: 44px, `rounded-control`, the volt hairline
-                and the volt initials are exactly what this row already drew.
-
-                `aria-hidden` — the nickname is right beside it.
-              */}
-              <span
-                aria-hidden
-                data-testid="admin-player-tile"
-                className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-control border border-hairline-volt bg-volt/[.08] text-body font-bold text-volt"
+          {/*
+            THE SEARCH — a GET form, so it keeps the tab and the sort it was
+            typed under. `type="search"` brings the platform's clear affordance
+            and, on iOS, a "Search" return key.
+          */}
+          <form method="get" role="search" data-testid="player-search" className="flex gap-2">
+            {segment !== "all" && <input type="hidden" name="segment" value={segment} />}
+            {(sort.key !== DEFAULT_SORT.key || sort.dir !== DEFAULT_SORT.dir) && (
+              <>
+                <input type="hidden" name="sort" value={sort.key} />
+                <input type="hidden" name="dir" value={sort.dir} />
+              </>
+            )}
+            <label htmlFor="player-q" className="sr-only">
+              {strings.admin.playerSearchLabel}
+            </label>
+            <input
+              id="player-q"
+              name="q"
+              type="search"
+              defaultValue={q}
+              placeholder={strings.admin.playerSearchPlaceholder}
+              data-testid="player-search-input"
+              className="min-w-0 flex-1 rounded-control border-[1.5px] border-volt bg-surface px-4 py-3 text-body text-bone placeholder:text-faint"
+            />
+            {q !== "" && (
+              <Link
+                href={playersHref({ segment, sort, q: "" })}
+                data-testid="player-search-clear"
+                className="flex shrink-0 items-center rounded-control border border-hairline-strong px-4 text-small font-semibold text-muted no-underline transition-colors hover:border-volt hover:text-volt"
               >
-                {avatarUrl(supabaseUrl, player.photoPath, photoVersions.get(player.id)) ? (
-                  /* eslint-disable-next-line @next/next/no-img-element */
-                  <img
-                    src={avatarUrl(supabaseUrl, player.photoPath, photoVersions.get(player.id))!}
-                    alt=""
-                    data-testid="admin-player-list-photo"
-                    className="h-full w-full object-cover"
-                  />
-                ) : (
-                  initials(player.nickname)
-                )}
-              </span>
+                {strings.admin.playerSearchClear}
+              </Link>
+            )}
+          </form>
 
-              <div className="min-w-[160px] flex-1">
-                {/* Nickname and email are free text; JSX escapes both. */}
-                <div className="flex items-baseline gap-2">
-                  {/* REQ-ADMIN-001 — the row opens the player. The list answers
-                      "who is here and what do they owe"; the page answers "who
-                      is this person", which is a different question asked at a
-                      different moment. */}
-                  {/*
-                    THE PERMANENT NUMBER, SMALL AND QUIET (round 33, item 2).
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <MobileSort view={view} />
+            {q !== "" && (
+              <p data-testid="player-search-count" className="m-0 text-small text-muted">
+                {strings.admin.playerSearchCount
+                  .replace("{shown}", String(shown.length))
+                  .replace("{total}", String(inTab.length))}
+              </p>
+            )}
+          </div>
 
-                    It leads the name rather than trailing it, because the one
-                    thing it is for is finding a row: an admin holding an export
-                    scans a column of numbers, and a number that sits after a
-                    name of unpredictable length is not a column.
-
-                    `tabular-nums` so 9 and 10 line up under each other, and
-                    `text-faint` so it never competes with the name — it is a
-                    key, not a rank. It renders only when the migration has been
-                    applied; before that there is no number to be quiet about.
-                  */}
-                  {player.playerNumber !== null && (
-                    <span
-                      data-testid="admin-player-number"
-                      title={strings.admin.playerNumberTitle}
-                      className="shrink-0 tabular-nums text-[11px] text-faint"
-                    >
-                      {player.playerNumber}
-                    </span>
-                  )}
-                  <Link
-                    href={`/admin/players/${player.id}`}
-                    data-testid="admin-player-link"
-                    className="text-body-lg font-bold text-white no-underline"
-                  >
-                    {player.nickname}
-                  </Link>
-                  {player.isShadow && (
-                    <span className="rounded-pill border border-hairline-strong px-2 py-[2px] text-[9px] uppercase tracking-eyebrow text-muted">
-                      {strings.admin.shadowTag}
-                    </span>
-                  )}
-                  {player.isSeed && (
-                    <span className="rounded-pill border border-hairline-strong px-2 py-[2px] text-[9px] uppercase tracking-eyebrow text-muted">
-                      {strings.admin.seedTag}
-                    </span>
-                  )}
-                  {player.isAdmin && (
-                    <span className="rounded-pill px-2 py-[2px] text-[9px] uppercase tracking-eyebrow text-volt">
-                      {strings.admin.adminTag}
-                    </span>
-                  )}
-                </div>
-                {/*
-                  CONTACT ON ONE LINE, CREDITS ON THE NEXT (round 14, item 9).
-
-                  ~~Email alone, then bookings and a WALLET in crowns.~~ Three
-                  things changed and each was asked for:
-
-                    · THE PHONE IS HERE. An organizer looking somebody up in
-                      this list is usually trying to reach them, and the number
-                      was one more tap away on the player page for no reason.
-                    · CREDITS, NOT "Wallet 600 CZK". The credits ruling's unit,
-                      the same `creditsLabel` the player's own wallet uses, so
-                      the two surfaces cannot describe one balance differently.
-                    · TWO LINES INSTEAD OF THREE, which is most of the height.
-                */}
-                <div className="mt-[2px] truncate text-[12px] text-muted">
-                  {[player.email ?? strings.admin.noEmail, player.phone]
-                    .filter(Boolean)
-                    .join("  ·  ")}
-                </div>
-                <div className="mt-[2px] flex flex-wrap items-baseline gap-x-3 text-[12px]">
-                  {/* Round 41: when the account was made, to the minute. */}
-                  {!player.isShadow && (
-                    <time
-                      dateTime={player.createdAt}
-                      data-testid="player-joined"
-                      className="tabular-nums text-muted"
-                    >
-                      {strings.admin.playerJoined.replace(
-                        "{date}",
-                        `${formatDate(player.createdAt)}, ${formatTime(player.createdAt)}`,
-                      )}
-                    </time>
-                  )}
-                  <span
-                    data-testid="player-balance"
-                    data-balance={player.balanceCzk}
-                    data-credits={creditsFromCzk(player.balanceCzk)}
-                    className="font-semibold text-volt"
-                  >
-                    {creditsLabel(creditsFromCzk(player.balanceCzk), "en", strings)}
-                  </span>
-                  <span className="text-muted">
-                    {strings.admin.bookingsLabel} {player.bookingCount}
-                  </span>
-                </div>
-              </div>
-
-              {/*
-                ONE CONTROL, AND IT IS A DOOR (round 28, item 6).
-
-                ~~`AdminRightsButton` and `GrantCreditForm`, inline on every
-                row.~~ Both moved to the player's own page, which is now the
-                actions surface (item 5). What is left here is the link that
-                takes you there.
-
-                WHY THE LIST STOPPED BEING A CONTROL PANEL. It answers "who is
-                here and what do they owe" — a scanning question, asked over
-                two hundred rows. Every row carrying a promote button and a
-                credit form meant two hundred forms in one document, an admin
-                granting credit to the row above the one they meant, and the
-                two most consequential acts in the panel — making somebody an
-                admin, moving money — sitting one mis-tap apart on a phone.
-
-                The identity, the balance and the contact stay, because those
-                are what the scan is for.
-              */}
-              <div className="flex w-full flex-wrap items-center gap-x-5 gap-y-2 border-t border-hairline pt-3">
-                <Link
-                  href={`/admin/players/${player.id}`}
-                  data-testid="admin-player-edit"
-                  className="text-[11px] uppercase tracking-eyebrow text-volt no-underline"
-                >
-                  {strings.admin.editProfileLink}
-                </Link>
-                {player.id === acting.id && (
-                  /* The acting admin's own row. Stated rather than left blank:
-                     an admin who finds no note where every other row has one
-                     will otherwise wonder whether the panel is broken. */
-                  <span
-                    data-testid="admin-rights-self"
-                    className="text-[10px] uppercase tracking-eyebrow text-faint"
-                  >
-                    {strings.admin.adminSelfNote}
-                  </span>
-                )}
-              </div>
-            </li>
-          ))}
-        </ul>
-      )}
+          {shown.length === 0 ? (
+            <p data-testid="players-empty" className="lifted m-0 rounded-card p-5 text-small text-faint">
+              {q === "" ? t.segmentEmpty : t.searchEmpty.replace("{q}", q)}
+            </p>
+          ) : (
+            <PlayersTable
+              players={shown}
+              view={view}
+              actingId={acting.id}
+              photoUrls={photoUrls}
+              segmentLabel={t.segments[segment]}
+            />
+          )}
+        </section>
+      </div>
     </>
   );
 }
