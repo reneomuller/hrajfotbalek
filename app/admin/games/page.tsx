@@ -1,20 +1,45 @@
 import Link from "next/link";
-import { listAllGames } from "@/lib/admin/queries";
-import { formatCzk, formatGameDateTime } from "@/lib/format";
 import { ExportCsvLink } from "@/components/admin/ExportCsvLink";
-import { strings } from "@/lib/strings";
+import { GameRow } from "@/components/admin/games/GameRow";
+import { GamesTiles } from "@/components/admin/games/GamesTiles";
+import { PageHeader } from "@/components/admin/ui/PageHeader";
+import { SegmentTabs } from "@/components/admin/ui/SegmentTabs";
+import { getGameEconomics, type GameEconomics } from "@/lib/admin/economics";
+import { getCancelReasons } from "@/lib/admin/games/queries";
+import { summariseGames } from "@/lib/admin/games/summary";
+import {
+  GAME_TABS,
+  gamesListHref,
+  groupGamesByTab,
+  parseGameTab,
+  soonestGame,
+} from "@/lib/admin/games/tabs";
 import { GAME_SORTS, parseGameSort, sortGames } from "@/lib/admin/gameSort";
+import { listAllGames } from "@/lib/admin/queries";
+import { appCapabilities } from "@/lib/db/capabilities";
+import { formatGameDateTime } from "@/lib/format";
+import { strings } from "@/lib/strings";
 
 export const metadata = { title: strings.admin.gamesTitle };
 
 export const dynamic = "force-dynamic";
 
+const hub = strings.admin.gamesHub;
+
 /**
- * Every game, drafts and cancelled ones included.
+ * Every game, by where it stands (round 42, the admin rebuild): Upcoming,
+ * Played, Cancelled — tabs in the URL, the sort beside them, and on each row a
+ * seat bar with the break-even line.
  *
  * Read through the service-role client (see `lib/admin/queries.ts`): the public
- * RLS policy hides drafts from every `authenticated` session, admins included,
- * and it is not widened for admins on purpose.
+ * RLS policy hides drafts and cancelled games from every `authenticated`
+ * session, admins included, and it is not widened for admins on purpose.
+ * Drafts stay out of the list (round 9, item 7) — creating a game publishes it.
+ *
+ * THE MONEY WAITS FOR `pitchCosts`. Before the migration `game_economics` does
+ * not exist and PostgREST answers a missing function with a 404, so the bar,
+ * the break-even line and the profit are simply not drawn — the list is then
+ * the list it was, in tabs.
  */
 export default async function AdminGamesPage({
   searchParams,
@@ -23,60 +48,93 @@ export default async function AdminGamesPage({
 }) {
   const query = searchParams ? await searchParams : {};
   /*
-   * THE SORT IS IN THE URL, not in component state (round 28, item 7). It
-   * makes an ordering shareable and bookmarkable, it survives the back button,
-   * and it keeps this page a server component — a `useState` sort would mean
-   * shipping the whole list to the browser to reorder it there.
+   * THE SORT AND THE TAB ARE IN THE URL, not in component state (round 28,
+   * item 7). An ordering is shareable and bookmarkable, it survives the back
+   * button, and the page stays a server component that renders only its rows.
    */
   const sort = parseGameSort(query.sort);
-  const games = sortGames(await listAllGames(), sort);
+  const tab = parseGameTab(query.tab);
+
+  const [allGames, capabilities] = await Promise.all([listAllGames(), appCapabilities()]);
+  const groups = groupGamesByTab(allGames);
+  const games = sortGames(groups[tab], sort);
+  const ids = games.map((game) => game.id);
+
+  const [economics, reasons] = await Promise.all([
+    capabilities.pitchCosts && tab !== "cancelled"
+      ? getGameEconomics(ids)
+      : Promise.resolve<Map<string, GameEconomics> | null>(null),
+    tab === "cancelled" ? getCancelReasons(ids) : Promise.resolve(new Map<string, string>()),
+  ]);
+
+  const next = soonestGame(groups.upcoming);
 
   return (
     <>
-      <div className="flex items-baseline justify-between gap-3">
-        <h2 className="m-0 font-display text-page-title uppercase tracking-wide text-white">
-          {strings.admin.gamesTitle}
-        </h2>
-        <div className="flex items-center gap-2">
-          <ExportCsvLink href="/admin/games/export" testId="export-games" />
-          <Link
-            href="/admin/games/new"
-            data-testid="new-game"
-            className="inline-flex min-h-11 items-center rounded-control bg-volt px-5 text-[15px] font-extrabold uppercase tracking-wide text-surface no-underline"
-          >
-            {strings.admin.newGame}
-          </Link>
-        </div>
+      <PageHeader
+        title={strings.admin.gamesTitle}
+        lede={
+          next
+            ? hub.nextUp
+                .replace("{when}", formatGameDateTime(next.starts_at))
+                .replace("{venue}", next.venue)
+            : hub.nothingNext
+        }
+        actions={
+          <>
+            <ExportCsvLink href="/admin/games/export" testId="export-games" />
+            <Link
+              href="/admin/games/new"
+              data-testid="new-game"
+              className="inline-flex min-h-11 items-center rounded-control bg-volt px-5 text-[15px] font-extrabold uppercase tracking-wide text-surface no-underline"
+            >
+              {strings.admin.newGame}
+            </Link>
+          </>
+        }
+      />
+
+      <div className="mt-5">
+        <SegmentTabs
+          label={hub.tabsLabel}
+          testId="games-tabs"
+          current={tab}
+          tabs={GAME_TABS.map((key) => ({
+            key,
+            label: hub.tabs[key],
+            href: gamesListHref({ tab: key, sort }),
+            count: groups[key].length,
+          }))}
+        />
       </div>
 
-      {/*
-        THE SORT CONTROL — links, not a select (round 28, item 7).
+      {games.length > 0 && (
+        <div className="mt-5">
+          <GamesTiles tab={tab} summary={summariseGames(games, economics)} />
+        </div>
+      )}
 
-        A `<select>` needs JavaScript to navigate on change, which would make
-        this page a client component to move a list it already has. Five links
-        are five URLs an admin can bookmark, share, or reach with the back
-        button, and the CURRENT one is stated rather than implied: "sort choice
-        visible" was the ask, and a control that does not say what it is doing
-        is why somebody sorts twice.
+      {/*
+        THE SORT CONTROL — links, not a select (round 28, item 7). A `<select>`
+        needs JavaScript to navigate on change; five links are five URLs, and
+        the CURRENT one is stated rather than implied. Each keeps the tab.
       */}
       <nav
         aria-label={strings.admin.sortLabel}
         data-testid="games-sort"
         className="mt-5 flex flex-wrap items-center gap-x-3 gap-y-2"
       >
-        <span className="text-[10px] uppercase tracking-eyebrow text-muted">
-          {strings.admin.sortLabel}
-        </span>
+        <span className="text-[10px] uppercase tracking-eyebrow text-muted">{strings.admin.sortLabel}</span>
         {GAME_SORTS.map((key) => (
           <Link
             key={key}
-            href={key === "date" ? "/admin/games" : `/admin/games?sort=${key}`}
+            href={gamesListHref({ tab, sort: key })}
             data-testid={`games-sort-${key}`}
             aria-current={sort === key ? "true" : undefined}
             className={
               sort === key
                 ? "rounded-pill border border-volt bg-volt/[.10] px-3 py-1 text-[11px] uppercase tracking-eyebrow text-volt no-underline"
-                : "rounded-pill border border-hairline px-3 py-1 text-[11px] uppercase tracking-eyebrow text-muted no-underline"
+                : "rounded-pill border border-hairline px-3 py-1 text-[11px] uppercase tracking-eyebrow text-muted no-underline transition-colors hover:border-volt hover:text-volt"
             }
           >
             {strings.admin.sortKeys[key]}
@@ -85,139 +143,22 @@ export default async function AdminGamesPage({
       </nav>
 
       {games.length === 0 ? (
-        <p className="mt-8 text-[12px] tracking-[1px] text-faint">
-          {strings.admin.gamesEmpty}
+        <p data-testid="games-empty" className="mt-8 text-[12px] tracking-[1px] text-faint">
+          {allGames.length === 0 ? strings.admin.gamesEmpty : hub.empty[tab]}
         </p>
       ) : (
-        <ul className="mt-6 list-none space-y-2 p-0">
-          {games.map((game, index) => {
-            // ~~`canEdit` gated the second link.~~ There is one link now
-            // (round 13, item 21) and it is available in every status: the
-            // game surface it opens is where a played game is settled and a
-            // cancelled one is read.
-            return (
-              <li
-                key={game.id}
-                data-testid="admin-game-row"
-                /* Round 35 — a spec has to find THIS game's row rather than
-                   whichever one the sort put on top. */
-                data-game-id={game.id}
-                data-status={game.status}
-                /* Round 19 item 3 — lets a spec check the numbering DIRECTION
-                   against the dates rather than against the row order. */
-                data-starts-at={game.starts_at}
-                /*
-                  ~~A card: venue and count on one row, a detail line beneath,
-                  a waitlist line beneath that, and a link row at the bottom.~~
-                  ONE ROW (round 13, item 20).
-
-                  It was 137px per game. Ten games was fourteen hundred pixels
-                  of scrolling to answer "which of these needs me", and every
-                  one of those rows carried four separate lines to say what the
-                  dashboard says in two.
-
-                  WHAT SURVIVED IS WHAT AN ORGANIZER SCANS FOR: where, when,
-                  how full, and what state it is in. The waitlist depth stays
-                  because it is the expansion-trigger sensor (REQ-UI-018) and
-                  it is the one number on this page that is not on the
-                  dashboard — but it only renders WHEN THERE IS A QUEUE, which
-                  is the difference between a sensor and a column of zeroes.
-
-                  THE WHOLE ROW IS THE LINK, so the separate "Manage" text link
-                  is gone with it (item 21) — a row that navigates does not
-                  need a word telling you it navigates.
-                */
-                className="lifted rounded-card"
-              >
-                <Link
-                  href={`/admin/games/${game.id}`}
-                  data-testid="admin-manage-game"
-                  className="flex items-center justify-between gap-3 px-4 py-3 no-underline"
-                >
-                  {/*
-                    THE ORDINAL (round 18, item 5) — A RENDERED ROW INDEX, and
-                    that is the whole design rather than a shortcut.
-
-                    COUNTED FROM THE OLDEST (round 19, item 3), which is why it
-                    is `games.length - index` rather than `index + 1`. The list
-                    is ordered newest-first and stays that way — that ordering
-                    is what an organizer needs, because the games wanting
-                    attention are the recent ones. Only the NUMBERING runs the
-                    other way, so the bottom row is 1 and the count rises up
-                    the page.
-
-                    THE REASON IS STABILITY. Numbering from the top means every
-                    game's number changes the moment a new one is created —
-                    "the third one" is a different game each week, which makes
-                    it useless for saying out loud. Numbering from the oldest
-                    means a game keeps its number for as long as nothing OLDER
-                    is deleted, and the newest always has the highest, the way
-                    an invoice number behaves.
-
-                    IT IS NOT STORED AND MUST NOT BE. A game has an id, and the
-                    id is a uuid nobody can say out loud; what an organizer
-                    wants on the phone is "the third one down". Persisting a
-                    number would mean deciding what happens to it when a game
-                    is deleted — renumber every row after it, or leave a hole —
-                    and both answers are wrong for something whose only job is
-                    to be countable on a screen.
-                    
-                    So it is `index + 1` of what this page is showing, which
-                    renumbers itself: delete #9 and the old #10 becomes #9,
-                    because it is the ninth row. This is the honest version of
-                    the frame's `#62` rows the audit refused to fake — those
-                    implied a stable identifier the product does not have.
-                    
-                    `tabular-nums` so 9 and 10 do not shift the venue name
-                    beside them, and `aria-hidden` because "3" read out before
-                    every row is noise: the row already announces its venue and
-                    its time.
-                  */}
-                  <span
-                    aria-hidden
-                    data-testid="admin-game-ordinal"
-                    data-ordinal={games.length - index}
-                    className="w-6 shrink-0 text-right text-[13px] tabular-nums text-faint"
-                  >
-                    {games.length - index}
-                  </span>
-
-                  <span className="min-w-0 flex-1">
-                    {/* `venue` is admin-supplied free text; JSX escapes it. */}
-                    <span className="block truncate text-body font-semibold text-white">
-                      {game.venue}
-                    </span>
-                    <span className="mt-[1px] block truncate text-[12px] text-muted">
-                      {formatGameDateTime(game.starts_at)} · {formatCzk(game.price_czk)}
-                      {game.waitlistCount > 0 && (
-                        <>
-                          {" · "}
-                          <span data-testid="admin-waitlist-depth" className="text-volt">
-                            {strings.admin.waitlistLabel} {game.waitlistCount}
-                          </span>
-                        </>
-                      )}
-                    </span>
-                  </span>
-
-                  <span className="shrink-0 text-right">
-                    <span
-                      data-testid="admin-game-capacity"
-                      className="block text-body font-bold text-volt"
-                    >
-                      {game.activeCount}/{game.capacity}
-                    </span>
-                    <span
-                      data-testid="admin-game-status"
-                      className="block text-[12px] text-volt-dim"
-                    >
-                      {strings.admin.status[game.status]}
-                    </span>
-                  </span>
-                </Link>
-              </li>
-            );
-          })}
+        <ul data-testid="admin-game-list" className="mt-4 list-none space-y-2 p-0">
+          {games.map((game, index) => (
+            <GameRow
+              key={game.id}
+              game={game}
+              // Counted from the oldest row on the tab — see GameRow.
+              ordinal={games.length - index}
+              tab={tab}
+              economics={economics?.get(game.id) ?? null}
+              reason={reasons.get(game.id) ?? null}
+            />
+          ))}
         </ul>
       )}
     </>

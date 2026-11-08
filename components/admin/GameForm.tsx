@@ -36,10 +36,24 @@ const INITIAL: AdminActionState = { status: "idle" };
  * name in the select) grows from its content instead of being pinned.
  */
 const FIELD =
-  "mt-1 min-h-11 w-full rounded-control border border-hairline-strong bg-surface px-3 py-2 text-[13px] text-bone";
+  "mt-1 min-h-11 w-full rounded-control border border-hairline-strong bg-surface px-3 py-2 text-[13px] text-bone outline-none transition-colors placeholder:text-faint focus:border-volt";
 const LABEL = "block text-[10px] uppercase tracking-eyebrow text-muted";
 const HINT = "mt-1 text-[12px] leading-snug text-muted";
 const ERROR = "mt-1 text-[12px] text-volt";
+
+/*
+ * ROUND 42 — THE FORM IN SECTIONS. Every field is where it was in meaning and
+ * nowhere new in behaviour; what changed is that the fifteen of them are
+ * grouped by the question each answers (where and when, how long and how much,
+ * what kind of game, who may play, who runs it), and the groups sit two-up
+ * from `md` instead of one 560px column in a 980px shell.
+ *
+ * A FLOATED LEGEND, so it lays out as the group's heading rather than notching
+ * the fieldset's top edge, and the content after it clears the float.
+ */
+const GROUP = "min-w-0 rounded-card bg-surface p-4";
+const LEGEND = "float-left mb-3 w-full text-[10px] uppercase tracking-eyebrow text-volt-dim";
+const hub = strings.admin.gamesHub;
 
 /**
  * Create/edit form for a game.
@@ -267,470 +281,423 @@ export function GameForm({
   }
 
   return (
-    <form action={formAction} className="mt-6 max-w-[560px] space-y-5">
+    <form action={formAction} className="space-y-4">
       {game && <input type="hidden" name="gameId" value={game.id} />}
       <input type="hidden" name="startsAtIso" value={startsAtIso} />
 
-      {/* --- venue ------------------------------------------------------------ */}
-      <div>
-        <label className={LABEL} htmlFor="venueId">
-          {strings.admin.venueLabel}
-        </label>
-        <select
-          id="venueId"
-          name="venueId"
-          value={venueChoice}
-          onChange={(event) => setVenueChoice(event.target.value)}
-          className={FIELD}
-          data-testid="venue-select"
-        >
-          <option value="">—</option>
-          {venues.map((venue) => (
-            <option key={venue.id} value={venue.id}>
-              {venue.name}
-            </option>
-          ))}
-        </select>
-        {errors.venue && <p className={ERROR}>{errors.venue}</p>}
-      </div>
+      <div className="grid gap-4 md:grid-cols-2">
+        {/* --- where and when ------------------------------------------------- */}
+        <fieldset className={GROUP}>
+          <legend className={LEGEND}>{hub.formWhere}</legend>
+          <div className="clear-both space-y-4">
+            <div>
+              <label className={LABEL} htmlFor="venueId">
+                {strings.admin.venueLabel}
+              </label>
+              <select
+                id="venueId"
+                name="venueId"
+                value={venueChoice}
+                onChange={(event) => setVenueChoice(event.target.value)}
+                className={FIELD}
+                data-testid="venue-select"
+              >
+                <option value="">—</option>
+                {venues.map((venue) => (
+                  <option key={venue.id} value={venue.id}>
+                    {venue.name}
+                  </option>
+                ))}
+              </select>
+              {errors.venue && <p className={ERROR}>{errors.venue}</p>}
+            </div>
 
-      {/*
-        ~~PITCH NAME — free text with a datalist of names already in use, empty
-        meaning "use the venue's".~~ REMOVED (round 16, item 20), and it is a
-        reversal of the round 8 / round 9 feature.
+            {/*
+              ~~PITCH NAME~~ and ~~THE NEW-VENUE BLOCK~~ — REMOVED (round 16 item
+              20, round 14 item 2). The venue is the single source of truth: it
+              is created, named and photographed at `/admin/venues`, and a game
+              picks one and inherits all of it.
+            */}
 
-        THE PREMISE MOVED, WHICH IS WHY THE RULING DID (R31). Pitch name was
-        added when a game named its own ground as free text and venues were
-        barely an entity. Round 13 built `/admin/venues` with a `pitch_name` of
-        its own, and round 14 made a game INHERIT its venue — at which point
-        this box was a second place to say a thing the venue already says, on
-        the screen where somebody is least likely to know the ground's real
-        name.
-
-        THE COLUMN AND THE RENDERING STAY. `games.pitch_name` is untouched and
-        `venueDisplayName` still shows one where a game already carries it —
-        deleting the display would blank a name on live fixtures to tidy a
-        form. What is gone is the ability to set a NEW one per game: the venue
-        is where a pitch is named, and `/admin/venues` is where that is edited.
-      */}
-
-      {/*
-        ~~THE NEW-VENUE BLOCK: name, image filename and map query, revealed by
-        picking "new" in the dropdown above.~~ REMOVED (round 14, item 2).
-
-        THE VENUE IS THE SINGLE SOURCE OF TRUTH NOW. It is created and edited
-        at `/admin/venues`, where its photograph is an UPLOAD rather than the
-        name of a file somebody had to commit first, and where its amenities
-        live beside it. A game picks a venue and inherits all of it.
-
-        Two things this removes that were quietly wrong:
-
-          · the image field asked for a filename already committed under
-            `public/venues/`, which meant adding a venue photo was a deploy;
-          · a game form could create a venue as a side effect, so the same
-            ground could be typed twice under two spellings by two people
-            making two games.
-
-        THE PITCH NAME STAYS, directly above. It is the one venue-adjacent
-        fact that belongs to THIS game — migration 41 exists because storing it
-        on the venue would rewrite the pitch of every game ever played there.
-      */}
-
-      {/* --- when ------------------------------------------------------------- */}
-      <div>
-        <label className={LABEL} htmlFor="startsAt">
-          {strings.admin.startsAtLabel}
-        </label>
-        <input
-          id="startsAt"
-          type="datetime-local"
-          className={FIELD}
-          data-testid="starts-at"
-          value={startsAtLocal}
-          onChange={(event) => {
-            const value = event.target.value;
-            setStartsAtLocal(value);
-            const parsed = value ? new Date(value) : null;
-            setStartsAtIso(parsed && !Number.isNaN(parsed.getTime()) ? parsed.toISOString() : "");
-          }}
-        />
-        {errors.startsAt && <p className={ERROR}>{errors.startsAt}</p>}
-      </div>
-
-      {/* --- capacity / price -------------------------------------------------- */}
-      <div className="flex flex-wrap gap-4">
-        <div className="min-w-[160px] flex-1">
-          <label className={LABEL} htmlFor="capacity">
-            {strings.admin.capacityLabel}
-          </label>
-          <input
-            id="capacity"
-            name="capacity"
-            type="number"
-            min={1}
-            className={FIELD}
-            value={capacity}
-            onChange={(event) => setCapacity(event.target.value)}
-          />
-          <p className={HINT}>{strings.admin.capacityHint}</p>
-          {errors.capacity && <p className={ERROR}>{errors.capacity}</p>}
-        </div>
-
-        <div className="min-w-[160px] flex-1">
-          <label className={LABEL} htmlFor="priceCzk">
-            {strings.admin.priceLabel}
-          </label>
-          <input
-            id="priceCzk"
-            name="priceCzk"
-            type="number"
-            min={1}
-            step={1}
-            data-testid="price-czk"
-            className={FIELD}
-            value={priceCzk}
-            onChange={(event) => setPriceCzk(event.target.value)}
-          />
-          <p className={HINT}>{strings.admin.priceDerivedHint}</p>
-          {errors.priceCzk && <p className={ERROR}>{errors.priceCzk}</p>}
-        </div>
-      </div>
-
-      {/* --- format / surface --------------------------------------------------- */}
-      <div className="flex flex-wrap gap-4">
-        <div className="min-w-[160px] flex-1">
-          <label className={LABEL} htmlFor="format">
-            {strings.admin.formatLabel}
-          </label>
-          <input
-            id="format"
-            name="format"
-            className={FIELD}
-            placeholder="6v6"
-            value={format}
-            onChange={(event) => setFormat(event.target.value)}
-          />
-          <p className={HINT}>{strings.admin.formatHint}</p>
-          {errors.format && <p className={ERROR}>{errors.format}</p>}
-        </div>
-
-        <div className="min-w-[160px] flex-1">
-          <label className={LABEL} htmlFor="surface">
-            {strings.admin.surfaceLabel}
-          </label>
-          <select
-            id="surface"
-            name="surface"
-            className={FIELD}
-            value={surface}
-            onChange={(event) => setSurface(event.target.value)}
-          >
-            <option value="">{strings.admin.surfaceNone}</option>
-            {SURFACES.map((surface) => (
-              <option key={surface} value={surface}>
-                {strings.admin.surfaceOptions[surface]}
-              </option>
-            ))}
-          </select>
-          {/* Required since round 16 item 10 — see `lib/admin/gameForm.ts`. */}
-          {errors.surface && <p className={ERROR}>{errors.surface}</p>}
-        </div>
-      </div>
-
-      {/*
-        LANGUAGE, BENEATH SURFACE (round 18, item 2).
-
-        GATED ON THE MIGRATION. `games.language` arrives with round 18's
-        migration and this form ships first, so without the column the field is
-        not rendered at all — a submission then carries no `language` and
-        `gameLanguageOf` resolves it to `en-cs`, which is exactly what every
-        existing game is. Rendering a dropdown whose value the database would
-        drop is the "Confirm is never live with a dead path behind it" rule
-        applied to a select.
-
-        THE OPTIONS ARE FLAG PAIRS, not words, which is the owner's format.
-        A native `<select>` cannot hold SVG, so the flags are drawn ABOVE it as
-        a live preview of the current value and the options carry the plain
-        text a native picker can render. The preview is what the organizer
-        checks; the option text is what the OS shows while choosing.
-      */}
-      {canSetLanguage && (
-        <div className="min-w-[160px] flex-1">
-          <label className={LABEL} htmlFor="language">
-            {strings.admin.languageLabel}
-          </label>
-
-          <div className="mt-1 flex items-center gap-3">
-            <LanguagePill language={language} />
-            <select
-              id="language"
-              name="language"
-              className={`${FIELD} mt-0 flex-1`}
-              value={language}
-              onChange={(event) => setLanguage(gameLanguageOf(event.target.value))}
-            >
-              <option value="en-cs">{strings.admin.languageEnCs}</option>
-              <option value="uk-ru">{strings.admin.languageUkRu}</option>
-            </select>
-          </div>
-
-          <p className={HINT}>{strings.admin.languageHint}</p>
-        </div>
-      )}
-
-      {/* --- duration / substitutes ---------------------------------------------- */}
-      <div className="flex flex-wrap gap-4">
-        <div className="min-w-[160px] flex-1">
-          <label className={LABEL} htmlFor="durationMinutes">
-            {strings.admin.durationLabel}
-          </label>
-          <input
-            id="durationMinutes"
-            name="durationMinutes"
-            type="number"
-            min={DURATION_MIN}
-            max={DURATION_MAX}
-            className={FIELD}
-            data-testid="duration-minutes"
-            placeholder={String(DURATION_DEFAULT)}
-            value={durationMinutes}
-            onChange={(event) => onDurationChange(event.target.value)}
-          />
-          <p className={HINT}>{strings.admin.durationHint}</p>
-          {errors.durationMinutes && <p className={ERROR}>{errors.durationMinutes}</p>}
-        </div>
-
-        <div className="min-w-[160px] flex-1">
-          <label className={LABEL} htmlFor="subsPerTeam">
-            {strings.admin.subsLabel}
-          </label>
-          <input
-            id="subsPerTeam"
-            name="subsPerTeam"
-            type="number"
-            min={SUBS_MIN}
-            max={SUBS_MAX}
-            className={FIELD}
-            data-testid="subs-per-team"
-            value={subsPerTeam}
-            onChange={(event) => setSubsPerTeam(event.target.value)}
-          />
-          <p className={HINT}>{strings.admin.subsHint}</p>
-          {errors.subsPerTeam && <p className={ERROR}>{errors.subsPerTeam}</p>}
-        </div>
-      </div>
-
-      {/* --- skill restriction ---------------------------------------------------- */}
-      {/*
-        CHECKBOXES, NOT A SELECT, and no "All levels" option among them.
-        All-levels is the absence of a selection — the same shape as the NULL
-        column — so there is one way to say it rather than an option that has
-        to be kept in sync with an empty list.
-      */}
-      <fieldset className="rounded-card p-4">
-        <legend className={LABEL}>{strings.admin.skillHeading}</legend>
-        <div className="mt-2 flex flex-wrap gap-4">
-          {SKILL_LEVELS.map((level) => (
-            <label
-              key={level}
-              /*
-                `min-h-11` (audit F14). These labels measured 19.5px while the
-                amenity checkboxes on `/admin/venues` — the same control, three
-                screens away — already carried `min-h-11` and measured 44.
-                Same concept, two hit areas, and this was the small one.
-
-                The BOX stays 16px. What grows is the label wrapping it, which
-                is what a pointer actually hits.
-              */
-              className="flex min-h-11 items-center gap-2 text-[13px] text-bone"
-            >
+            <div>
+              <label className={LABEL} htmlFor="startsAt">
+                {strings.admin.startsAtLabel}
+              </label>
               <input
-                type="checkbox"
-                name="allowedSkillLevels"
-                value={level}
-                data-testid={`skill-${level}`}
-                checked={skillLevels.includes(level)}
-                onChange={() => toggleSkill(level)}
-                className="h-4 w-4 accent-volt"
+                id="startsAt"
+                type="datetime-local"
+                className={FIELD}
+                data-testid="starts-at"
+                value={startsAtLocal}
+                onChange={(event) => {
+                  const value = event.target.value;
+                  setStartsAtLocal(value);
+                  const parsed = value ? new Date(value) : null;
+                  setStartsAtIso(parsed && !Number.isNaN(parsed.getTime()) ? parsed.toISOString() : "");
+                }}
               />
-              {strings.admin.skillOptions[level]}
-            </label>
-          ))}
-        </div>
-        <p className={HINT}>{strings.admin.skillHint}</p>
-        <p className={HINT}>{strings.admin.skillNote}</p>
-      </fieldset>
+              {errors.startsAt && <p className={ERROR}>{errors.startsAt}</p>}
+            </div>
+          </div>
+        </fieldset>
 
-      {/* --- organizer ------------------------------------------------------------ */}
-      <fieldset className="rounded-card p-4">
-        <legend className={LABEL}>{strings.admin.organizerHeading}</legend>
+        {/* --- length, price, seats ------------------------------------------- */}
+        <fieldset className={GROUP}>
+          <legend className={LEGEND}>{hub.formSeats}</legend>
+          {/* The length first, because it refills the price beside it. */}
+          <div className="clear-both grid gap-4 sm:grid-cols-2">
+            <div className="min-w-0">
+              <label className={LABEL} htmlFor="durationMinutes">
+                {strings.admin.durationLabel}
+              </label>
+              <input
+                id="durationMinutes"
+                name="durationMinutes"
+                type="number"
+                min={DURATION_MIN}
+                max={DURATION_MAX}
+                className={FIELD}
+                data-testid="duration-minutes"
+                placeholder={String(DURATION_DEFAULT)}
+                value={durationMinutes}
+                onChange={(event) => onDurationChange(event.target.value)}
+              />
+              <p className={HINT}>{strings.admin.durationHint}</p>
+              {errors.durationMinutes && <p className={ERROR}>{errors.durationMinutes}</p>}
+            </div>
 
+            <div className="min-w-0">
+              <label className={LABEL} htmlFor="priceCzk">
+                {strings.admin.priceLabel}
+              </label>
+              <input
+                id="priceCzk"
+                name="priceCzk"
+                type="number"
+                min={1}
+                step={1}
+                data-testid="price-czk"
+                className={FIELD}
+                value={priceCzk}
+                onChange={(event) => setPriceCzk(event.target.value)}
+              />
+              <p className={HINT}>{strings.admin.priceDerivedHint}</p>
+              {errors.priceCzk && <p className={ERROR}>{errors.priceCzk}</p>}
+            </div>
+
+            <div className="min-w-0">
+              <label className={LABEL} htmlFor="capacity">
+                {strings.admin.capacityLabel}
+              </label>
+              <input
+                id="capacity"
+                name="capacity"
+                type="number"
+                min={1}
+                className={FIELD}
+                value={capacity}
+                onChange={(event) => setCapacity(event.target.value)}
+              />
+              <p className={HINT}>{strings.admin.capacityHint}</p>
+              {errors.capacity && <p className={ERROR}>{errors.capacity}</p>}
+            </div>
+
+            <div className="min-w-0">
+              <label className={LABEL} htmlFor="subsPerTeam">
+                {strings.admin.subsLabel}
+              </label>
+              <input
+                id="subsPerTeam"
+                name="subsPerTeam"
+                type="number"
+                min={SUBS_MIN}
+                max={SUBS_MAX}
+                className={FIELD}
+                data-testid="subs-per-team"
+                value={subsPerTeam}
+                onChange={(event) => setSubsPerTeam(event.target.value)}
+              />
+              <p className={HINT}>{strings.admin.subsHint}</p>
+              {errors.subsPerTeam && <p className={ERROR}>{errors.subsPerTeam}</p>}
+            </div>
+          </div>
+        </fieldset>
+
+        {/* --- the game itself ------------------------------------------------- */}
+        <fieldset className={GROUP}>
+          <legend className={LEGEND}>{hub.formGame}</legend>
+          <div className="clear-both space-y-4">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="min-w-0">
+                <label className={LABEL} htmlFor="format">
+                  {strings.admin.formatLabel}
+                </label>
+                <input
+                  id="format"
+                  name="format"
+                  className={FIELD}
+                  placeholder="6v6"
+                  value={format}
+                  onChange={(event) => setFormat(event.target.value)}
+                />
+                <p className={HINT}>{strings.admin.formatHint}</p>
+                {errors.format && <p className={ERROR}>{errors.format}</p>}
+              </div>
+
+              <div className="min-w-0">
+                <label className={LABEL} htmlFor="surface">
+                  {strings.admin.surfaceLabel}
+                </label>
+                <select
+                  id="surface"
+                  name="surface"
+                  className={FIELD}
+                  value={surface}
+                  onChange={(event) => setSurface(event.target.value)}
+                >
+                  <option value="">{strings.admin.surfaceNone}</option>
+                  {SURFACES.map((surface) => (
+                    <option key={surface} value={surface}>
+                      {strings.admin.surfaceOptions[surface]}
+                    </option>
+                  ))}
+                </select>
+                {/* Required since round 16 item 10 — see `lib/admin/gameForm.ts`. */}
+                {errors.surface && <p className={ERROR}>{errors.surface}</p>}
+              </div>
+            </div>
+
+            {/*
+              LANGUAGE (round 18, item 2), GATED ON THE MIGRATION: without
+              `games.language` the field is not rendered at all, and a submission
+              then resolves to `en-cs`, which is what every existing game is.
+
+              THE OPTIONS ARE FLAG PAIRS, not words, which is the owner's format.
+              A native `<select>` cannot hold SVG, so the flags are drawn beside
+              it as a live preview and the options carry plain text.
+            */}
+            {canSetLanguage && (
+              <div className="min-w-0">
+                <label className={LABEL} htmlFor="language">
+                  {strings.admin.languageLabel}
+                </label>
+                <div className="mt-1 flex items-center gap-3">
+                  <LanguagePill language={language} />
+                  <select
+                    id="language"
+                    name="language"
+                    className={`${FIELD} mt-0 flex-1`}
+                    value={language}
+                    onChange={(event) => setLanguage(gameLanguageOf(event.target.value))}
+                  >
+                    <option value="en-cs">{strings.admin.languageEnCs}</option>
+                    <option value="uk-ru">{strings.admin.languageUkRu}</option>
+                  </select>
+                </div>
+                <p className={HINT}>{strings.admin.languageHint}</p>
+              </div>
+            )}
+          </div>
+        </fieldset>
+
+        {/* --- skill restriction ------------------------------------------------ */}
         {/*
-          A DROPDOWN OF ORGANIZERS (round 42, the owner: "for each game we
-          create, there should simply be a dropdown of the users we gave
-          organizer status to"). The card prints the chosen player's nickname,
-          posted as `organizerName` and re-read on the server, and the game
-          page shows their photo. The typed name is what remains before the
-          migration, and while nobody has been made an organizer yet — a form
-          that cannot name anyone would be a form that cannot make a game.
+          CHECKBOXES, NOT A SELECT, and no "All levels" option among them.
+          All-levels is the absence of a selection — the same shape as the NULL
+          column — so there is one way to say it.
         */}
-        {pickable.length > 0 ? (
-          <div className="mt-2">
-            <label className={LABEL} htmlFor="organizerPlayerId">
-              {strings.admin.organizerPlayerLabel}
-            </label>
-            <select
-              id="organizerPlayerId"
-              name="organizerPlayerId"
-              data-testid="organizer-player"
-              required
-              className={FIELD}
-              value={organizerPlayerId}
-              onChange={(event) => {
-                const next = event.target.value;
-                setOrganizerPhone((current) =>
-                  phoneAfterOrganizerChange(current, phoneOf(organizerPlayerId), phoneOf(next)),
-                );
-                setOrganizerPlayerId(next);
-              }}
-            >
-              <option value="" disabled>
-                {strings.admin.organizerPlayerChoose}
-              </option>
-              {pickable.map((player) => (
-                <option key={player.id} value={player.id}>
-                  {player.nickname}
-                </option>
+        <fieldset className={GROUP}>
+          <legend className={LEGEND}>{strings.admin.skillHeading}</legend>
+          <div className="clear-both">
+            <div className="flex flex-wrap gap-x-4">
+              {SKILL_LEVELS.map((level) => (
+                <label
+                  key={level}
+                  /* `min-h-11` (audit F14): the label is what a pointer hits; the
+                     box stays 16px. */
+                  className="flex min-h-11 items-center gap-2 text-[13px] text-bone"
+                >
+                  <input
+                    type="checkbox"
+                    name="allowedSkillLevels"
+                    value={level}
+                    data-testid={`skill-${level}`}
+                    checked={skillLevels.includes(level)}
+                    onChange={() => toggleSkill(level)}
+                    className="h-4 w-4 accent-volt"
+                  />
+                  {strings.admin.skillOptions[level]}
+                </label>
               ))}
-            </select>
-            <input type="hidden" name="organizerName" value={pickedNickname} />
-            <p className={HINT}>{strings.admin.organizerPlayerHint}</p>
-            {errors.organizerName && <p className={ERROR}>{errors.organizerName}</p>}
+            </div>
+            <p className={HINT}>{strings.admin.skillHint}</p>
+            <p className={HINT}>{strings.admin.skillNote}</p>
           </div>
-        ) : (
-          <div className="mt-2">
-            <label className={LABEL} htmlFor="organizerName">
-              {strings.admin.organizerNameLabel}
-            </label>
-            <input
-              id="organizerName"
-              name="organizerName"
-              className={FIELD}
-              maxLength={ORGANIZER_NAME_MAX}
-              data-testid="organizer-name"
-              value={organizerName}
-              onChange={(event) => setOrganizerName(event.target.value)}
-            />
-            <p className={HINT}>
-              {organizerPlayers ? strings.admin.organizerPlayerNoneYet : strings.admin.organizerNameHint}
-            </p>
-            {errors.organizerName && <p className={ERROR}>{errors.organizerName}</p>}
+        </fieldset>
+
+        {/* --- organizer ---------------------------------------------------------- */}
+        <fieldset className={`${GROUP} md:col-span-2`}>
+          <legend className={LEGEND}>{strings.admin.organizerHeading}</legend>
+
+          <div className="clear-both grid gap-4 md:grid-cols-3">
+            {/*
+              A DROPDOWN OF ORGANIZERS (round 42, the owner: "for each game we
+              create, there should simply be a dropdown of the users we gave
+              organizer status to"). The chosen player's nickname is posted as
+              `organizerName` and re-read on the server. The typed name is what
+              remains before the migration, and while nobody has been made an
+              organizer yet — a form that cannot name anyone cannot make a game.
+            */}
+            {pickable.length > 0 ? (
+              <div className="min-w-0">
+                <label className={LABEL} htmlFor="organizerPlayerId">
+                  {strings.admin.organizerPlayerLabel}
+                </label>
+                <select
+                  id="organizerPlayerId"
+                  name="organizerPlayerId"
+                  data-testid="organizer-player"
+                  required
+                  className={FIELD}
+                  value={organizerPlayerId}
+                  onChange={(event) => {
+                    const next = event.target.value;
+                    setOrganizerPhone((current) =>
+                      phoneAfterOrganizerChange(current, phoneOf(organizerPlayerId), phoneOf(next)),
+                    );
+                    setOrganizerPlayerId(next);
+                  }}
+                >
+                  <option value="" disabled>
+                    {strings.admin.organizerPlayerChoose}
+                  </option>
+                  {pickable.map((player) => (
+                    <option key={player.id} value={player.id}>
+                      {player.nickname}
+                    </option>
+                  ))}
+                </select>
+                <input type="hidden" name="organizerName" value={pickedNickname} />
+                <p className={HINT}>{strings.admin.organizerPlayerHint}</p>
+                {errors.organizerName && <p className={ERROR}>{errors.organizerName}</p>}
+              </div>
+            ) : (
+              <div className="min-w-0">
+                <label className={LABEL} htmlFor="organizerName">
+                  {strings.admin.organizerNameLabel}
+                </label>
+                <input
+                  id="organizerName"
+                  name="organizerName"
+                  className={FIELD}
+                  maxLength={ORGANIZER_NAME_MAX}
+                  data-testid="organizer-name"
+                  value={organizerName}
+                  onChange={(event) => setOrganizerName(event.target.value)}
+                />
+                <p className={HINT}>
+                  {organizerPlayers ? strings.admin.organizerPlayerNoneYet : strings.admin.organizerNameHint}
+                </p>
+                {errors.organizerName && <p className={ERROR}>{errors.organizerName}</p>}
+              </div>
+            )}
+
+            <div className="min-w-0">
+              <label className={LABEL} htmlFor="organizerPhone">
+                {strings.admin.organizerPhoneLabel}
+              </label>
+              <input
+                id="organizerPhone"
+                name="organizerPhone"
+                type="tel"
+                className={FIELD}
+                maxLength={32}
+                data-testid="organizer-phone"
+                value={organizerPhone}
+                onChange={(event) => setOrganizerPhone(event.target.value)}
+              />
+              <p className={HINT}>
+                {pickable.length > 0 ? strings.admin.organizerPhonePrefilled : strings.admin.organizerPhoneHint}
+              </p>
+              {errors.organizerPhone && <p className={ERROR}>{errors.organizerPhone}</p>}
+            </div>
+
+            {/*
+              TELEGRAM USERNAME (round 19, item 2), GATED ON THE MIGRATION — a
+              field whose value is silently discarded is worse than no field.
+              Setting it turns a Ukrainian/Russian game's contact button from
+              WhatsApp into Telegram, which the hint says.
+            */}
+            {canSetTelegram && (
+              <div className="min-w-0">
+                <label className={LABEL} htmlFor="organizerTelegram">
+                  {strings.admin.organizerTelegramLabel}
+                </label>
+                <input
+                  id="organizerTelegram"
+                  name="organizerTelegram"
+                  className={FIELD}
+                  autoComplete="off"
+                  placeholder="@oliver_hf"
+                  value={organizerTelegram}
+                  onChange={(event) => setOrganizerTelegram(event.target.value)}
+                />
+                <p className={HINT}>{strings.admin.organizerTelegramHint}</p>
+                {errors.organizerTelegram && <p className={ERROR}>{errors.organizerTelegram}</p>}
+              </div>
+            )}
           </div>
-        )}
+        </fieldset>
 
-        <div className="mt-4">
-          <label className={LABEL} htmlFor="organizerPhone">
-            {strings.admin.organizerPhoneLabel}
+        {/* --- notes -------------------------------------------------------------- */}
+        <div className={`${GROUP} md:col-span-2`}>
+          <label className={LABEL} htmlFor="notes">
+            {strings.admin.notesLabel}
           </label>
-          <input
-            id="organizerPhone"
-            name="organizerPhone"
-            type="tel"
+          <textarea
+            id="notes"
+            name="notes"
+            rows={3}
+            maxLength={500}
             className={FIELD}
-            maxLength={32}
-            data-testid="organizer-phone"
-            value={organizerPhone}
-            onChange={(event) => setOrganizerPhone(event.target.value)}
+            value={notes}
+            onChange={(event) => setNotes(event.target.value)}
           />
-          <p className={HINT}>
-            {pickable.length > 0 ? strings.admin.organizerPhonePrefilled : strings.admin.organizerPhoneHint}
-          </p>
-          {errors.organizerPhone && <p className={ERROR}>{errors.organizerPhone}</p>}
+          <p className={HINT}>{strings.admin.notesHint}</p>
+          {errors.notes && <p className={ERROR}>{errors.notes}</p>}
         </div>
-
-      {/*
-        TELEGRAM USERNAME (round 19, item 2), beneath the phone.
-
-        GATED ON THE MIGRATION. `organizer_telegram` arrives with
-        `20260826200000` and this form ships first — without the column a
-        submission carries a handle the RPC would drop, and a field whose value
-        is silently discarded is worse than no field.
-
-        THE HINT SAYS WHAT IT DOES, because the consequence is not guessable
-        from the label: setting it is what turns a Ukrainian/Russian game's
-        contact button from WhatsApp into Telegram.
-      */}
-      {canSetTelegram && (
-        <div>
-          <label className={LABEL} htmlFor="organizerTelegram">
-            {strings.admin.organizerTelegramLabel}
-          </label>
-          <input
-            id="organizerTelegram"
-            name="organizerTelegram"
-            className={FIELD}
-            autoComplete="off"
-            placeholder="@oliver_hf"
-            value={organizerTelegram}
-            onChange={(event) => setOrganizerTelegram(event.target.value)}
-          />
-          <p className={HINT}>{strings.admin.organizerTelegramHint}</p>
-          {errors.organizerTelegram && (
-            <p className={ERROR}>{errors.organizerTelegram}</p>
-          )}
-        </div>
-      )}
-
-      </fieldset>
-
-      {/* --- notes -------------------------------------------------------------- */}
-      <div>
-        <label className={LABEL} htmlFor="notes">
-          {strings.admin.notesLabel}
-        </label>
-        <textarea
-          id="notes"
-          name="notes"
-          rows={3}
-          maxLength={500}
-          className={FIELD}
-          value={notes}
-          onChange={(event) => setNotes(event.target.value)}
-        />
-        <p className={HINT}>{strings.admin.notesHint}</p>
-        {errors.notes && <p className={ERROR}>{errors.notes}</p>}
       </div>
 
-      <SubmitButton isEdit={isEdit} />
-      {!isEdit && <p className={HINT}>{strings.admin.createGameHint}</p>}
+      <div className="flex flex-col gap-3 md:flex-row md:items-center md:gap-5">
+        <SubmitButton isEdit={isEdit} />
+        {!isEdit && <p className={`${HINT} md:mt-0`}>{strings.admin.createGameHint}</p>}
 
-      {state.status === "saved" && (
-        <p data-testid="game-form-saved" className="text-[13px] text-volt">
-          {strings.admin.saved}
-        </p>
-      )}
-      {state.status === "error" && state.message && (
-        <p role="alert" className="text-[13px] text-muted">
-          {state.message}
-        </p>
-      )}
-      {/*
-        THE GAME EXISTS BUT IS NOT PUBLISHED (round 7, item 6).
-
-        Creation and publication are two round trips; if the second fails the
-        first still happened. Showing only "something went wrong" here invites
-        a resubmit, which creates a SECOND game — so this says what actually
-        exists and links to it, where one click finishes the job.
-      */}
-      {state.createdGameId && (
-        <a
-          href={`/admin/games/${state.createdGameId}`}
-          data-testid="game-created-unpublished"
-          className="text-[13px] font-semibold text-volt no-underline"
-        >
-          {strings.admin.createdNotPublished}
-        </a>
-      )}
+        {state.status === "saved" && (
+          <p data-testid="game-form-saved" className="m-0 text-[13px] text-volt">
+            {strings.admin.saved}
+          </p>
+        )}
+        {state.status === "error" && state.message && (
+          <p role="alert" className="m-0 text-[13px] text-muted">
+            {state.message}
+          </p>
+        )}
+        {/*
+          THE GAME EXISTS BUT IS NOT PUBLISHED (round 7, item 6). Creation and
+          publication are two round trips; if the second fails the first still
+          happened. "Something went wrong" here would invite a resubmit, which
+          creates a SECOND game — so this says what exists and links to it.
+        */}
+        {state.createdGameId && (
+          <a
+            href={`/admin/games/${state.createdGameId}`}
+            data-testid="game-created-unpublished"
+            className="text-[13px] font-semibold text-volt no-underline"
+          >
+            {strings.admin.createdNotPublished}
+          </a>
+        )}
+      </div>
     </form>
   );
 }
@@ -742,7 +709,7 @@ function SubmitButton({ isEdit }: { isEdit: boolean }) {
       type="submit"
       disabled={pending}
       data-testid="game-form-submit"
-      className="w-full rounded-control bg-volt px-6 py-4 text-cta font-extrabold uppercase tracking-wide text-surface disabled:opacity-60"
+      className="w-full shrink-0 rounded-control bg-volt px-6 py-4 text-cta font-extrabold uppercase tracking-wide text-surface disabled:opacity-60 md:w-auto md:min-w-[280px]"
     >
       {pending
         ? strings.common.loading

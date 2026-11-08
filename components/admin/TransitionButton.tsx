@@ -58,12 +58,14 @@ function Submit({
   tone: "primary" | "secondary";
 }) {
   const { pending } = useFormStatus();
+  // Round 42 — the 44px floor, and the secondary tone lights volt under the
+  // pointer like every other quiet admin control.
   const base =
-    "rounded-control px-5 py-3 text-[15px] font-extrabold uppercase tracking-wide disabled:opacity-60";
+    "inline-flex min-h-11 items-center rounded-control px-5 text-[14px] font-extrabold uppercase tracking-wide transition-colors disabled:opacity-60";
   const skin =
     tone === "primary"
       ? "bg-volt text-surface"
-      : "border border-hairline-strong bg-transparent text-bone";
+      : "border border-hairline-strong bg-transparent text-bone hover:border-hairline-volt hover:text-volt";
 
   return (
     <button type="submit" disabled={pending} data-testid={testId} className={`${base} ${skin}`}>
