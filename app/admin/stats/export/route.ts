@@ -1,7 +1,7 @@
 import { csvDateStamp, csvResponse, toCsv, type CsvColumn } from "@/lib/admin/csv";
 import { requireAdmin } from "@/lib/auth/requireAdmin";
 import { getAdminStats, ratio } from "@/lib/stats/queries";
-import { isStatWindow, type StatWindow } from "@/lib/stats/window";
+import { DEFAULT_STAT_WINDOW, isStatWindow, type StatWindow } from "@/lib/stats/window";
 
 /**
  * `/admin/stats/export` — the numbers for a window, as name/value rows.
@@ -41,9 +41,12 @@ export async function GET(request: Request) {
   await requireAdmin();
 
   const requested = new URL(request.url).searchParams.get("window");
-  // The same guard the page uses, so the file and the screen can never be
-  // reporting different periods from the same query string.
-  const window: StatWindow = isStatWindow(requested) ? requested : "month";
+  // The same guard AND THE SAME DEFAULT the page uses, so the file and the
+  // screen can never be reporting different periods from the same query
+  // string. ~~`: "month"`~~ — the page has defaulted to a week since Phase 19,
+  // so a bare `/admin/stats/export` was a month while a bare `/admin/stats`
+  // showed a week (round 42, the admin rebuild).
+  const window: StatWindow = isStatWindow(requested) ? requested : DEFAULT_STAT_WINDOW;
 
   const stats = await getAdminStats(window);
 

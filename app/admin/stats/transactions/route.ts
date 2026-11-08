@@ -1,4 +1,5 @@
 import { csvDateStamp, csvResponse, toCsv, type CsvColumn } from "@/lib/admin/csv";
+import { readAllPages, readByIds } from "@/lib/admin/money/readAll";
 import { requireAdmin } from "@/lib/auth/requireAdmin";
 import { createServiceRoleSupabaseClient } from "@/lib/supabase/clients";
 
@@ -63,40 +64,48 @@ export async function GET(): Promise<Response> {
 
   const service = createServiceRoleSupabaseClient();
 
-  const [bookingsResult, topupsResult] = await Promise.all([
-    service
-      .from("bookings")
-      .select("id,player_id,game_id,price_czk,credit_applied_czk,payment_method,status,created_at")
-      .order("created_at", { ascending: false }),
-    service
-      .from("credit_topups")
-      .select("id,player_id,amount_czk,received_amount_czk,pass_games,status,created_at")
-      .order("created_at", { ascending: false }),
+  /*
+   * EVERY ROW, PAGE BY PAGE (round 42, the admin rebuild). ~~One request
+   * each~~ — and PostgREST answers no request with more than `max_rows`
+   * (1000) rows, without saying so, so the file ended at the thousandth
+   * booking and named nobody past the thousandth player. See
+   * `lib/admin/money/readAll.ts`. Ordered by `id` after `created_at` so a row
+   * cannot slip between two pages that share a timestamp.
+   */
+  const [bookings, topups] = await Promise.all([
+    readAllPages("bookings", (from, to) =>
+      service
+        .from("bookings")
+        .select("id,player_id,game_id,price_czk,credit_applied_czk,payment_method,status,created_at")
+        .order("created_at", { ascending: false })
+        .order("id")
+        .range(from, to),
+    ),
+    readAllPages("credit_topups", (from, to) =>
+      service
+        .from("credit_topups")
+        .select("id,player_id,amount_czk,received_amount_czk,pass_games,status,created_at")
+        .order("created_at", { ascending: false })
+        .order("id")
+        .range(from, to),
+    ),
   ]);
 
-  const bookings = bookingsResult.data ?? [];
-  const topups = topupsResult.data ?? [];
-
-  // Names and fixtures resolved in two queries for the whole file rather than
-  // one pair per row — this can be thousands of rows.
+  // Names and fixtures resolved for the whole file rather than per row — this
+  // can be thousands of rows — in short runs of ids, because the list travels
+  // in the URL and each answer is capped like any other.
   const playerIds = [
     ...new Set([...bookings.map((b) => b.player_id), ...topups.map((t) => t.player_id)]),
   ];
   const gameIds = [...new Set(bookings.map((b) => b.game_id))];
 
-  const [playersResult, gamesResult] = await Promise.all([
-    playerIds.length
-      ? service.from("players").select("id,nickname").in("id", playerIds)
-      : Promise.resolve({ data: [] as { id: string; nickname: string }[] }),
-    gameIds.length
-      ? service.from("games").select("id,venue,starts_at").in("id", gameIds)
-      : Promise.resolve({
-          data: [] as { id: string; venue: string; starts_at: string }[],
-        }),
+  const [players, games] = await Promise.all([
+    readByIds("players", playerIds, (ids) => service.from("players").select("id,nickname").in("id", ids)),
+    readByIds("games", gameIds, (ids) => service.from("games").select("id,venue,starts_at").in("id", ids)),
   ]);
 
-  const nameById = new Map((playersResult.data ?? []).map((p) => [p.id, p.nickname]));
-  const gameById = new Map((gamesResult.data ?? []).map((g) => [g.id, g]));
+  const nameById = new Map(players.map((p) => [p.id, p.nickname]));
+  const gameById = new Map(games.map((g) => [g.id, g]));
 
   const rows: TransactionRow[] = [
     ...bookings.map((b) => {
