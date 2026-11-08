@@ -11,9 +11,13 @@ import { strings } from "@/lib/strings";
  * Two admin checks is how they drift, and the weaker one is the one that gets
  * found.
  *
- * WHAT THIS GATE DOES AND DOES NOT COVER. It covers page renders: every nested
- * route runs this layout first, so an unlisted URL is still a gated URL —
- * navigation is not access control. It does NOT cover server actions, which
+ * WHAT THIS GATE DOES AND DOES NOT COVER. ~~It covers page renders: every nested
+ * route runs this layout first~~ — IT DOES NOT, found on production 2026-11-08:
+ * the App Router renders a layout and its page IN PARALLEL, so a page that
+ * reads with the service role streams its rows behind this redirect. Every
+ * admin PAGE therefore calls `requireAdmin()` itself before it reads
+ * (`lib/auth/__tests__/adminPagesGuarded.test.ts`); this call stays as the
+ * outer layer. Navigation is not access control. It does NOT cover server actions, which
  * are POST endpoints in their own right and are reachable without ever
  * rendering a page under this layout. Every admin action therefore calls
  * `requireAdmin()` itself, and every admin RPC re-checks inside the function.

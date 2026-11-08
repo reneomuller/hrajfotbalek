@@ -16,6 +16,7 @@ import {
 } from "@/lib/admin/games/tabs";
 import { GAME_SORTS, parseGameSort, sortGames } from "@/lib/admin/gameSort";
 import { listAllGames } from "@/lib/admin/queries";
+import { requireAdmin } from "@/lib/auth/requireAdmin";
 import { appCapabilities } from "@/lib/db/capabilities";
 import { formatGameDateTime } from "@/lib/format";
 import { strings } from "@/lib/strings";
@@ -54,6 +55,16 @@ export default async function AdminGamesPage({
    */
   const sort = parseGameSort(query.sort);
   const tab = parseGameTab(query.tab);
+
+  /*
+   * THE PAGE CHECKS ITS OWN VISITOR, BEFORE IT READS (found on production,
+   * 2026-11-08). The layout's `requireAdmin()` renders IN PARALLEL with this
+   * page, so without this line a signed-out request streamed every game row
+   * — read with the service role — into the response behind the layout's
+   * redirect. `lib/auth/__tests__/adminPagesGuarded.test.ts` holds every
+   * admin page to it.
+   */
+  await requireAdmin();
 
   const [allGames, capabilities] = await Promise.all([listAllGames(), appCapabilities()]);
   const groups = groupGamesByTab(allGames);
