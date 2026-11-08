@@ -14,6 +14,8 @@ const SPLIT = {
   houseGuests: 1,
   unpaidSeats: 1,
   breakEvenSeats: 5,
+  priceCzk: 180,
+  profitCzk: -270,
 };
 
 describe("rowSeatBarInput", () => {
@@ -45,7 +47,17 @@ describe("rowSeatBarInput", () => {
     const input = rowSeatBarInput(row);
 
     // Assert
-    expect(input).toEqual({ capacity: 12, ...SPLIT });
+    expect(input).toEqual({
+      capacity: 12,
+      singleSeats: 2,
+      passSeats: 1,
+      creditSeats: 0.5,
+      freeSeats: 1,
+      houseGuests: 1,
+      unpaidSeats: 1,
+      breakEvenSeats: 5,
+      profitCzk: -270,
+    });
   });
 });
 
@@ -60,26 +72,45 @@ describe("breakEvenNote", () => {
 
   it("says nothing for a game with no pitch cost", () => {
     // Arrange
-    const row: RowSeats = { capacity: 12, booked: 7, economics: { ...SPLIT, breakEvenSeats: null } };
+    const row: RowSeats = {
+      capacity: 12,
+      booked: 7,
+      economics: { ...SPLIT, breakEvenSeats: null, profitCzk: null },
+    };
 
     // Act + Assert
     expect(breakEvenNote(row)).toBeNull();
   });
 
-  it("counts the paid seats still needed — free, house and unpaid seats bring nothing", () => {
-    // Arrange — 2 + 1 + 0.5 paid against a break-even of 5.
+  it("counts the seats still needed in money, at the game's price — 270 short is two seats", () => {
+    // Arrange
     const row: RowSeats = { capacity: 12, booked: 6.5, economics: SPLIT };
 
     // Act
     const note = breakEvenNote(row);
 
-    // Assert
-    expect(note).toEqual({ kind: "short", seats: 1.5 });
+    // Assert — the same answer the games list gives for the same game.
+    expect(note).toEqual({ kind: "short", seats: 2 });
   });
 
-  it("is past break-even once the paid seats reach it", () => {
+  it("is still short when cheaper pass seats reach the line but not the pitch cost", () => {
+    // Arrange — five paid seats is the line, but two are pass seats.
+    const row: RowSeats = {
+      capacity: 12,
+      booked: 8,
+      economics: { ...SPLIT, singleSeats: 3, passSeats: 2, creditSeats: 0, profitCzk: -60 },
+    };
+
+    // Act
+    const note = breakEvenNote(row);
+
+    // Assert
+    expect(note).toEqual({ kind: "short", seats: 1 });
+  });
+
+  it("is past break-even once the profit reaches zero", () => {
     // Arrange
-    const row: RowSeats = { capacity: 12, booked: 8, economics: { ...SPLIT, singleSeats: 3.5 } };
+    const row: RowSeats = { capacity: 12, booked: 8, economics: { ...SPLIT, singleSeats: 3.5, profitCzk: 0 } };
 
     // Act
     const note = breakEvenNote(row);

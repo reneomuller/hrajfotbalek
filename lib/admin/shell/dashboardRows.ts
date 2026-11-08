@@ -19,6 +19,8 @@ export type RowEconomics = Pick<
   | "houseGuests"
   | "unpaidSeats"
   | "breakEvenSeats"
+  | "priceCzk"
+  | "profitCzk"
 >;
 
 export interface RowSeats {
@@ -41,7 +43,7 @@ export function rowSeatBarInput(row: RowSeats): SeatBarInput {
       breakEvenSeats: null,
     };
   }
-  const { singleSeats, passSeats, creditSeats, freeSeats, houseGuests, unpaidSeats, breakEvenSeats } =
+  const { singleSeats, passSeats, creditSeats, freeSeats, houseGuests, unpaidSeats, breakEvenSeats, profitCzk } =
     row.economics;
   return {
     capacity: row.capacity,
@@ -52,6 +54,7 @@ export function rowSeatBarInput(row: RowSeats): SeatBarInput {
     houseGuests,
     unpaidSeats,
     breakEvenSeats,
+    profitCzk,
   };
 }
 
@@ -59,14 +62,16 @@ export type BreakEvenNote = { kind: "past" } | { kind: "short"; seats: number };
 
 /**
  * How far a game is from paying for its pitch, or null when that cannot be
- * said. PAID SEATS ONLY — the same sum `seatBar` draws its line against: a
- * gift, a house guest or a seat still owing brings no money in.
+ * said. COUNTED IN MONEY, at the game's price — the games list's rule
+ * (`lib/admin/games/breakEven.ts`): a pass seat is worth less than a single
+ * game, so seats that reach the line can still leave the pitch unpaid.
  */
 export function breakEvenNote(row: RowSeats): BreakEvenNote | null {
   const economics = row.economics;
-  if (!economics || economics.breakEvenSeats === null) return null;
+  if (!economics || economics.breakEvenSeats === null || economics.profitCzk === null) return null;
+  if (economics.priceCzk <= 0) return null;
 
-  const paid = economics.singleSeats + economics.passSeats + economics.creditSeats;
-  if (paid >= economics.breakEvenSeats) return { kind: "past" };
-  return { kind: "short", seats: economics.breakEvenSeats - paid };
+  const down = -Math.round(economics.profitCzk);
+  if (down <= 0) return { kind: "past" };
+  return { kind: "short", seats: Math.ceil(down / economics.priceCzk) };
 }

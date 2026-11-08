@@ -23,13 +23,19 @@ export interface SeatBarInput {
   houseGuests: number;
   unpaidSeats: number;
   breakEvenSeats: number | null;
+  /**
+   * The game's profit, when known. The LINE is drawn at break-even seats at
+   * the full price, but pass seats are worth less — so whether the game has
+   * actually covered its pitch is a question about money, and this answers it.
+   */
+  profitCzk?: number | null;
 }
 
 export interface SeatBar {
   segments: { kind: SeatKind; seats: number; percent: number }[];
   /** Where the break-even line sits, 0–100; null when the game has no pitch cost. */
   breakEvenPercent: number | null;
-  /** Whether the seats that brought money have reached break-even. */
+  /** Whether the game has covered its pitch: by profit when known, else by paid seats. */
   pastBreakEven: boolean;
 }
 
@@ -41,7 +47,9 @@ function share(seats: number, capacity: number): number {
 
 export function seatBar(game: SeatBarInput): SeatBar {
   const paidSeats = game.singleSeats + game.passSeats + game.creditSeats;
-  const pastBreakEven = game.breakEvenSeats !== null && paidSeats >= game.breakEvenSeats;
+  const pastBreakEven =
+    game.breakEvenSeats !== null &&
+    (game.profitCzk !== undefined && game.profitCzk !== null ? game.profitCzk >= 0 : paidSeats >= game.breakEvenSeats);
 
   if (game.capacity <= 0) {
     return { segments: [], breakEvenPercent: null, pastBreakEven };
