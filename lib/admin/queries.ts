@@ -1,4 +1,5 @@
 import { createServiceRoleSupabaseClient } from "@/lib/supabase/clients";
+import { hasFinished, isInProgress } from "@/lib/games/duration";
 import type { Database, GameStatus } from "@/lib/types/database";
 
 type GameRow = Database["public"]["Tables"]["games"]["Row"];
@@ -271,7 +272,6 @@ export interface AdminBookingRow {
    * party's, so nothing else on this row needs to know.
    */
   guestCount: number;
-  attendance: Database["public"]["Tables"]["bookings"]["Row"]["attendance"];
   isSeed: boolean;
   bookedByAdmin: boolean;
 }
@@ -319,7 +319,6 @@ export async function listGameBookings(gameId: string): Promise<AdminBookingRow[
     priceCzk: booking.price_czk,
     creditAppliedCzk: booking.credit_applied_czk,
     amountDueCzk: Math.max(0, booking.price_czk - booking.credit_applied_czk),
-    attendance: booking.attendance,
     guestCount: booking.guest_count,
     isSeed: booking.is_seed,
     bookedByAdmin: booking.booked_by_admin,
@@ -603,18 +602,15 @@ export interface AdminPlayerGameRow {
   venue: string;
   startsAt: string;
   status: Database["public"]["Tables"]["bookings"]["Row"]["status"];
-  attendance: Database["public"]["Tables"]["bookings"]["Row"]["attendance"];
   priceCzk: number;
   creditAppliedCzk: number;
   /**
-   * Whether kick-off has passed.
-   *
-   * Decided here rather than in the row component: attendance on a future game
-   * is a statement nobody can make yet, and reading the clock during render is
-   * impure — the same rule `lib/games/queries.ts` follows for `hasStarted`.
-   * The RPC remains the authority and refuses it regardless.
+   * Past its final whistle, and kicked off but not yet over — decided here,
+   * where the clock is read once per request, rather than during render
+   * (2026-11-09; ~~`hasStarted`, for the attendance control~~ — gone).
    */
-  hasStarted: boolean;
+  finished: boolean;
+  live: boolean;
 }
 
 export interface AdminPlayerDetail {
@@ -629,7 +625,6 @@ export interface AdminPlayerDetail {
    * the same way (`lib/booking/history.ts`).
    */
   gamesPlayed: number;
-  noShowCount: number;
   /** Every booking, newest kick-off first. */
   games: AdminPlayerGameRow[];
 }
@@ -657,7 +652,7 @@ export async function getAdminPlayer(playerId: string): Promise<AdminPlayerDetai
     service.from("credit_ledger").select("delta_czk").eq("player_id", playerId),
     service
       .from("bookings")
-      .select("id, game_id, status, attendance, price_czk, credit_applied_czk")
+      .select("id, game_id, status, price_czk, credit_applied_czk")
       .eq("player_id", playerId),
   ]);
 
@@ -665,8 +660,8 @@ export async function getAdminPlayer(playerId: string): Promise<AdminPlayerDetai
 
   const gameIds = [...new Set((bookings ?? []).map((b) => b.game_id))];
   const { data: games } = gameIds.length
-    ? await service.from("games").select("id, venue, starts_at").in("id", gameIds)
-    : { data: [] as { id: string; venue: string; starts_at: string }[] };
+    ? await service.from("games").select("id, venue, starts_at, duration_minutes").in("id", gameIds)
+    : { data: [] as { id: string; venue: string; starts_at: string; duration_minutes: number | null }[] };
 
   const gamesById = new Map((games ?? []).map((g) => [g.id, g]));
   const now = Date.now();
@@ -680,26 +675,22 @@ export async function getAdminPlayer(playerId: string): Promise<AdminPlayerDetai
         venue: game?.venue ?? "—",
         startsAt: game?.starts_at ?? "",
         status: booking.status,
-        attendance: booking.attendance,
         priceCzk: booking.price_czk,
         creditAppliedCzk: booking.credit_applied_czk,
-        hasStarted: game ? Date.parse(game.starts_at) <= now : false,
+        finished: game ? hasFinished(game.starts_at, game.duration_minutes, now) : false,
+        live: game ? isInProgress(game.starts_at, game.duration_minutes, now) : false,
       };
     })
     .sort((a, b) => b.startsAt.localeCompare(a.startsAt));
 
-  const active = rows.filter(
-    (row) => row.status === "confirmed" || row.status === "reserved",
-  );
-
   return {
     player,
     balanceCzk,
-    // Un-marked attendance counts as played, matching `lib/booking/history.ts`
-    // — the organizer marks no-shows, not attendance, so an unmarked booking on
-    // a past game means the player turned up and nobody said otherwise.
-    gamesPlayed: active.filter((row) => row.attendance !== "no_show").length,
-    noShowCount: rows.filter((row) => row.attendance === "no_show").length,
+    // A held booking on a finished game, as `lib/booking/history.ts` counts
+    // it (2026-11-09: attendance is gone, and so is the no-show count).
+    gamesPlayed: rows.filter(
+      (row) => row.finished && (row.status === "confirmed" || row.status === "reserved"),
+    ).length,
     games: rows,
   };
 }

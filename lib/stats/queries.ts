@@ -40,11 +40,6 @@ import { statRange, type StatRange, type StatWindow } from "@/lib/stats/window";
  * session reading these directly would see almost nothing.
  */
 
-export interface NoShowStats {
-  marked: number;
-  noShows: number;
-}
-
 export interface FillRateStats {
   /** Seats taken on games in range — the SQL seat counter's figure. */
   sold: number;
@@ -65,41 +60,17 @@ export interface CancellationStats {
 
 export interface AdminStats {
   range: StatRange;
-  noShow: NoShowStats;
   fillRate: FillRateStats;
   confirmedRevenueCzk: number;
   newReturning: NewReturningStats;
   cancellations: CancellationStats;
 }
 
-/**
- * No-show rate.
- *
- *   count(bookings where attendance='no_show')
- *     / count(bookings where attendance is not null)
- *   over games whose starts_at falls in range
- *
- * Over MARKED bookings, not all bookings: an unmarked booking is an unanswered
- * question, and folding it into the denominator would drag the rate toward
- * zero every time an organizer forgot to mark a game.
+/*
+ * ~~No-show rate~~ — removed 2026-11-09 with attendance itself (the owner:
+ * "let's remove the 'present' and 'no-show' function from the web
+ * completely"). Nobody marks who came, so there is no rate to read.
  */
-async function getNoShowRate(range: StatRange): Promise<NoShowStats> {
-  const service = createServiceRoleSupabaseClient();
-  const gameIds = await gamesInRange(range);
-  if (gameIds.length === 0) return { marked: 0, noShows: 0 };
-
-  const { data } = await service
-    .from("bookings")
-    .select("attendance")
-    .in("game_id", gameIds)
-    .not("attendance", "is", null);
-
-  const rows = data ?? [];
-  return {
-    marked: rows.length,
-    noShows: rows.filter((row) => row.attendance === "no_show").length,
-  };
-}
 
 /**
  * Fill rate.
@@ -294,19 +265,6 @@ async function getCancellations(range: StatRange): Promise<CancellationStats> {
   };
 }
 
-/** Ids of games whose kick-off falls in range and that were publicly on. */
-async function gamesInRange(range: StatRange): Promise<string[]> {
-  const service = createServiceRoleSupabaseClient();
-  const { data } = await service
-    .from("games")
-    .select("id")
-    .gte("starts_at", range.from)
-    .lt("starts_at", range.to)
-    .in("status", ["published", "full", "played", "settled"]);
-
-  return (data ?? []).map((row) => row.id);
-}
-
 /**
  * Everything the stats page renders, in one round of parallel reads.
  *
@@ -323,16 +281,15 @@ export async function getAdminStats(window: StatWindow): Promise<AdminStats> {
 
 /** The bounded form, kept separate so the range can be supplied in a test. */
 export async function getAdminStatsForRange(range: StatRange): Promise<AdminStats> {
-  const [noShow, fillRate, confirmedRevenueCzk, newReturning, cancellations] =
+  const [fillRate, confirmedRevenueCzk, newReturning, cancellations] =
     await Promise.all([
-      getNoShowRate(range),
       getFillRate(range),
       getConfirmedRevenue(range),
       getNewReturning(range),
       getCancellations(range),
     ]);
 
-  return { range, noShow, fillRate, confirmedRevenueCzk, newReturning, cancellations };
+  return { range, fillRate, confirmedRevenueCzk, newReturning, cancellations };
 }
 
 /**

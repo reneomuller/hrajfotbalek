@@ -22,9 +22,8 @@ const INITIAL: RemoveBookingState = { status: "idle" };
  * `document.body` is the only thing that lets its z-index compete on equal
  * terms. `CancelBookingForm` is the worked example.
  *
- * A DIALOG AT ALL, unlike present and no-show beside it, because the two
- * attendance marks are reversible by pressing the other one and this is not:
- * the seat goes back to the pool and credit moves. The body says so — an
+ * A DIALOG AT ALL, because this is not reversible: the seat goes back to the
+ * pool and credit moves. The body says so — an
  * "are you sure" that does not name the consequence is a speed bump rather
  * than a decision.
  *

@@ -37,12 +37,11 @@ export function OperationsSection({
   window: StatWindow;
   period: FinancialPeriod;
 }) {
-  const { range, noShow, fillRate, confirmedRevenueCzk, newReturning, cancellations } = stats;
+  const { range, fillRate, confirmedRevenueCzk, newReturning, cancellations } = stats;
   const copy = strings.admin;
 
   const isEmpty =
     fillRate.capacity === 0 &&
-    noShow.marked === 0 &&
     confirmedRevenueCzk === 0 &&
     newReturning.newPlayers + newReturning.returning === 0 &&
     cancellations.total === 0;
@@ -91,12 +90,13 @@ export function OperationsSection({
           {copy.statsEmptyWindow}
         </p>
       ) : (
-        /* Two-up on a phone; on a desktop three across, then the two
-           player-and-cancellation tiles wider beneath them. */
+        /* Two-up on a phone; on a desktop fill and revenue across the top, the
+           player and cancellation tiles beneath them. ~~No-show rate~~ — gone
+           with attendance (2026-11-09). */
         <div className="mt-5 grid grid-cols-2 gap-3 md:grid-cols-6">
           <StatCard
             testId="stat-fill-rate"
-            className="md:col-span-2"
+            className="md:col-span-3"
             label={copy.statFillRate}
             value={ratio(fillRate.sold, fillRate.capacity)}
             detail={`${fillRate.sold} ${copy.statOf} ${fillRate.capacity}`}
@@ -104,22 +104,14 @@ export function OperationsSection({
           />
           <StatCard
             testId="stat-revenue"
-            className="md:col-span-2"
+            className="md:col-span-3"
             label={copy.statRevenue}
             value={formatCzk(confirmedRevenueCzk)}
             hint={copy.statRevenueHint}
           />
           <StatCard
-            testId="stat-no-show"
-            className="md:col-span-2"
-            label={copy.statNoShow}
-            value={ratio(noShow.noShows, noShow.marked)}
-            detail={`${noShow.noShows} ${copy.statOf} ${noShow.marked}`}
-            hint={copy.statNoShowHint}
-          />
-          <StatCard
             testId="stat-new-returning"
-            className="md:col-span-3"
+            className="col-span-2 md:col-span-3"
             label={copy.statNewReturning}
             value={`${newReturning.newPlayers} / ${newReturning.returning}`}
             detail={`${copy.statNew} / ${copy.statReturning}`}

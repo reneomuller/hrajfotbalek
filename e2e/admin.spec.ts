@@ -117,11 +117,9 @@ test("the roster tells paid, holding, cash and free apart", async ({ page, conte
   await signInAs(context, players.organizer);
   await page.goto(`/admin/games/${game.id}`);
 
-  // `attendance-row` since Phase 18: the roster row and the attendance row are
-  // the same row now (REQ-ADMIN-003). The two questions at close-out — did they
-  // turn up, did they pay — are answered on one line rather than one screen
-  // apart.
-  const badges = page.getByTestId("attendance-row");
+  // `roster-row` — ~~`attendance-row`~~ until 2026-11-09, when present /
+  // no-show went and the row kept only who and how they paid.
+  const badges = page.getByTestId("roster-row");
   await expect(badges.filter({ hasText: players.runner.nickname })).toContainText(/paid/i);
   await expect(badges.filter({ hasText: players.organizer.nickname })).toContainText(/cash/i);
   await expect(badges.filter({ hasText: players.seedBot.nickname })).toContainText(/free/i);
@@ -201,23 +199,18 @@ test("attendance drives the game to settled with no reserved booking left", asyn
     p_confirmed_by: players.organizer.id,
   });
 
-  // Kick-off has to be in the past before a game can be marked played.
+  // ~~Mark played, then present / no-show~~ — both gone (2026-11-09). The game
+  // finishes and the five-minute sweep marks it played; the spec drives that
+  // sweep, which is what production does. Kicked off two hours ago, ninety
+  // minutes long, so its final whistle has gone.
   await moveKickoff(game.id, -2);
+  await serviceClient().rpc("advance_played_games", { p_buffer_minutes: 0 });
 
   await signInAs(context, players.organizer);
-  await page.goto(`/admin/games/${game.id}/attendance`);
-
-  await page.getByTestId("mark-played").click();
-
-  const rows = page.getByTestId("attendance-row");
-  await rows
-    .filter({ hasText: players.runner.nickname })
-    .getByTestId("mark-present")
-    .click();
-  await rows
-    .filter({ hasText: players.creditPartial.nickname })
-    .getByTestId("mark-no-show")
-    .click();
+  await page.goto(`/admin/games/${game.id}`);
+  await expect(page.getByTestId("mark-played")).toHaveCount(0);
+  await expect(page.getByTestId("mark-present")).toHaveCount(0);
+  await expect(page.getByTestId("mark-no-show")).toHaveCount(0);
 
   // THE HARD BLOCK. An unpaid hold surviving into `settled` is a debt with no
   // surface left to raise it, so settle refuses while one exists — and says
@@ -389,15 +382,10 @@ test("the whole admin lifecycle fits inside five minutes", async ({ page, contex
     await pending.getByTestId("mark-paid").click();
     await expect(pending).toHaveCount(0);
 
-    // --- attendance + settle ----------------------------------------------
+    // --- played + settle ---------------------------------------------------
+    // ~~Mark played, mark present~~ — the game finishes and the sweep does
+    // both jobs (2026-11-09).
     await moveKickoff(lifecycleGame, -2);
-    await page.goto(`/admin/games/${lifecycleGame}/attendance`);
-    await page.getByTestId("mark-played").click();
-    await page
-      .getByTestId("attendance-row")
-      .filter({ hasText: players.runner.nickname })
-      .getByTestId("mark-present")
-      .click();
     await serviceClient().rpc("advance_played_games", { p_buffer_minutes: 0 });
     await page.reload({ waitUntil: "networkidle" });
     await expect(page.getByTestId("admin-game-status")).toHaveText(
@@ -420,14 +408,14 @@ test("the whole admin lifecycle fits inside five minutes", async ({ page, contex
 });
 
 /*
- * TEST-226 — the player detail page, and no-show marking from it.
+ * TEST-226 — the player detail page.
  *
- * REQ-ADMIN-001 and REQ-ADMIN-002. The second half is the one worth being
- * careful about: §7 asks for the control in two places, and what makes that
- * safe is that both are surfaces onto ONE write. This asserts the write lands
- * and emits its event, not merely that a button existed.
+ * REQ-ADMIN-001. ~~And no-show marking from it (REQ-ADMIN-002)~~ — present /
+ * no-show is gone (the owner, 2026-11-09: "let's remove the 'present' and
+ * 'no-show' function from the web completely"): the history row says where
+ * the booking stands, and there is nothing left on it to mark.
  */
-test("the player detail page shows history and marks a no-show", async ({
+test("the player detail page shows history, with no attendance to mark", async ({
   page,
   context,
 }) => {
@@ -435,13 +423,12 @@ test("the player detail page shows history and marks a no-show", async ({
 
   try {
     const runner = await apiClientFor(players.runner);
-    const { data: booking } = await runner.rpc("create_booking", {
+    await runner.rpc("create_booking", {
       p_game_id: scratch.id,
       p_payment_method: "cash",
     });
 
-    // Attendance is only markable once the game has kicked off — the RPC says
-    // so and the row mirrors it.
+    // Kicked off two hours ago, ninety minutes long: its final whistle has gone.
     await moveKickoff(scratch.id, -2);
 
     await signInAs(context, players.organizer);
@@ -453,40 +440,19 @@ test("the player detail page shows history and marks a no-show", async ({
     );
     await expect(page.getByTestId("admin-player-balance")).toBeVisible();
     await expect(page.getByTestId("admin-player-games-played")).toBeVisible();
-    await expect(page.getByTestId("admin-player-no-shows")).toBeVisible();
     // No photo on this seeded player, so initials — the ordinary case.
     await expect(page.getByTestId("admin-player-avatar")).toBeVisible();
     await expect(page.getByTestId("admin-player-photo")).toHaveCount(0);
 
-    const before = Number(
-      (await page.getByTestId("admin-player-no-shows").textContent()) ?? "0",
-    );
-
-    // REQ-ADMIN-002 — mark it here rather than on the game.
+    // The history row says the game was played — and offers nothing to mark.
     const row = page
       .locator('[data-testid="player-game-row"]')
       .filter({ hasText: "E2E Scratch Pitch" })
       .first();
-    await row.getByTestId("player-mark-no-show").click();
-
-    // Wait for what the SERVER renders next, not for the action's own state.
-    await expect(page.getByTestId("admin-player-no-shows")).toHaveText(String(before + 1));
-
-    const admin = serviceClient();
-    const { data: updated } = await admin
-      .from("bookings")
-      .select("attendance")
-      .eq("id", booking.id)
-      .single();
-    expect(updated?.attendance).toBe("no_show");
-
-    // The same RPC the game roster calls, so the same event.
-    const { data: events } = await admin
-      .from("events")
-      .select("event_type")
-      .eq("booking_id", booking.id)
-      .eq("event_type", "attendance_marked");
-    expect((events ?? []).length).toBeGreaterThan(0);
+    await expect(row.getByTestId("player-game-state")).toHaveText(strings.admin.status.played);
+    await expect(page.getByTestId("admin-player-no-shows")).toHaveCount(0);
+    await expect(page.getByTestId("player-mark-no-show")).toHaveCount(0);
+    await expect(page.getByTestId("player-mark-present")).toHaveCount(0);
   } finally {
     await destroyScratchGame(scratch.id);
   }
@@ -496,7 +462,7 @@ test("the player detail page shows history and marks a no-show", async ({
  * REQ-ADMIN-003 — one surface. The merged page carries every function that
  * used to be spread across three routes, and the old URLs still resolve.
  */
-test("the game surface carries edit, roster, paid, attendance and cancel", async ({
+test("the game surface carries edit, roster, paid and cancel", async ({
   page,
   context,
 }) => {

@@ -1,5 +1,3 @@
-import { markPlayedAction } from "@/app/admin/games/[id]/attendance/actions";
-import { TransitionButton } from "@/components/admin/TransitionButton";
 import { Panel } from "@/components/admin/ui/Panel";
 import type { AdminBookingRow } from "@/lib/admin/queries";
 import { strings } from "@/lib/strings";
@@ -24,16 +22,12 @@ const hub = strings.admin.gamesHub;
  * Renders nothing for a state with nothing to say (a draft).
  */
 export function CloseOutPanel({
-  gameId,
   status,
-  canPlay,
   canSettle,
   pending,
   cancelReason,
 }: {
-  gameId: string;
   status: GameStatus;
-  canPlay: boolean;
   canSettle: boolean;
   pending: AdminBookingRow[];
   cancelReason: string | null;
@@ -50,23 +44,16 @@ export function CloseOutPanel({
   }
 
   const settled = status === "settled";
-  if (!canPlay && !canSettle && !settled) return null;
+  if (!canSettle && !settled) return null;
 
   return (
     <Panel title={hub.closeOutTitle} testId="game-close-out">
-      {canPlay && (
-        <>
-          <TransitionButton
-            action={markPlayedAction}
-            gameId={gameId}
-            label={strings.admin.markPlayed}
-            testId="mark-played"
-            tone="secondary"
-          />
-          <p className="mt-2 text-[12px] leading-snug text-muted">{hub.markPlayedHint}</p>
-        </>
-      )}
-
+      {/*
+        ~~MARK PLAYED~~ — gone (the owner, 2026-11-09: "a game has been played
+        once it finishes"). The five-minute sweep marks it at the final whistle
+        (`/api/cron/played-now`); what is left here is what that sweep cannot
+        settle on its own.
+      */}
       {canSettle && pending.length > 0 && (
         <div data-testid="settle-outstanding" className="rounded-card border border-warn/40 bg-warn/[.06] p-4">
           <p className="m-0 text-[13px] text-bone">{strings.admin.settleBlocked}</p>

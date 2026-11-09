@@ -48,6 +48,7 @@ export async function NextGameStrip({
   game,
   bookedCount,
   pitchName,
+  live = false,
 }: {
   game: GameCardGame;
   bookedCount: number;
@@ -57,6 +58,8 @@ export async function NextGameStrip({
    * accepts and ignores are props somebody will keep passing.
    */
   pitchName?: string | null;
+  /** Kicked off and still on (2026-11-09) — the strip stays until the final whistle. */
+  live?: boolean;
 }) {
   const t = await getStrings();
   const locale = await getLocale();
@@ -122,6 +125,12 @@ export async function NextGameStrip({
           change — and it is volt while there is room, muted once there is not,
           which is the same "nothing to do here" reading the admin rows use.
         */}
+        {live ? (
+          /* While the game is on (2026-11-09): the card's orange pill. */
+          <span data-testid="next-game-live" className="badge-pill border-warn bg-warn/[.12] text-warn">
+            {t.games.playingNow}
+          </span>
+        ) : (
         <span
           data-testid="next-game-status"
           className={`text-[11px] uppercase tracking-eyebrow ${
@@ -136,6 +145,7 @@ export async function NextGameStrip({
           */}
           {spotsLeftLabel(bookedCount, game.capacity, locale, t)}
         </span>
+        )}
       </Link>
     </section>
   );

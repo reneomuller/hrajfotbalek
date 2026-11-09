@@ -66,12 +66,6 @@ export async function GET(request: Request) {
       denominator: null,
     },
     {
-      metric: "no_show_rate",
-      value: ratio(stats.noShow.noShows, stats.noShow.marked),
-      numerator: stats.noShow.noShows,
-      denominator: stats.noShow.marked,
-    },
-    {
       metric: "fill_rate",
       value: ratio(stats.fillRate.sold, stats.fillRate.capacity),
       numerator: stats.fillRate.sold,

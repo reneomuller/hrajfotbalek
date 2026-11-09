@@ -32,7 +32,6 @@ const COLUMNS: CsvColumn<AdminBookingRow>[] = [
   { header: "price_czk", value: (b) => b.priceCzk },
   { header: "credit_applied_czk", value: (b) => b.creditAppliedCzk },
   { header: "amount_due_czk", value: (b) => b.amountDueCzk },
-  { header: "attendance", value: (b) => b.attendance },
   { header: "booked_by_admin", value: (b) => b.bookedByAdmin },
   { header: "is_seed", value: (b) => b.isSeed },
   { header: "booking_id", value: (b) => b.id },

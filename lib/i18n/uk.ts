@@ -404,6 +404,7 @@ export const uk: StringsOverlay = {
     priceLabel: "Ціна",
     alreadyStarted: "Цей матч уже почався.",
     inProgress: "Цей матч триває просто зараз.",
+    playingNow: "Триває гра",
 
     urgencyOpen: "Є місця",
     urgencyLastFew: "Майже заповнений",
@@ -636,13 +637,10 @@ export const uk: StringsOverlay = {
     creditHint: "Кредит автоматично застосується до наступного бронювання.",
     historyTitle: "Твоя історія",
     gamesPlayedLabel: "Зіграно ігор",
-    noShowsLabel: "Неявки",
     upcomingTitle: "Найближчі",
     waitlistTitle: "Черга",
     pastTitle: "Уже зіграно",
     pastEmpty: "Поки нічого не зіграно — перша гра з’явиться тут.",
-    attendancePresent: "Прийшов",
-    attendanceNoShow: "Не прийшов",
 
     topupTitle: "Поповни кредити",
     topupLede: "Додай кредит зараз — він автоматично застосується до наступного бронювання.",

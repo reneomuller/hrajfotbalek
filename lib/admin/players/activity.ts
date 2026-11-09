@@ -1,27 +1,29 @@
-import type { AttendanceStatus, BookingStatus, GameStatus } from "@/lib/types/database";
+import { hasFinished } from "@/lib/games/duration";
+import type { BookingStatus, GameStatus } from "@/lib/types/database";
 
 /**
  * What a player has PLAYED (round 42, the admin rebuild).
  *
- * A booking counts when its game kicked off — marked played or settled, or past
- * its start and neither cancelled nor a draft — the booking is still held
- * (`confirmed`, or `reserved` for cash nobody has marked paid yet), and the
- * player was not marked a no-show. That is the player's own account page's
- * rule (`lib/booking/history.ts`): an unmarked booking on a past game means
- * they turned up and nobody said otherwise, so the two pages agree.
+ * A booking counts when its game has been PLAYED — marked played or settled,
+ * or past its final whistle and neither cancelled nor a draft — and the
+ * booking is still held (`confirmed`, or `reserved` for cash nobody has
+ * marked paid yet). ~~And the player was not marked a no-show~~ — attendance
+ * is gone (2026-11-09). That is the player's own account page's rule
+ * (`lib/booking/history.ts`), so the two pages agree.
  */
 
 export interface ActivityGame {
   id: string;
   startsAt: string;
   status: GameStatus;
+  /** Null or absent: the null-row fallback, like every other surface. */
+  durationMinutes?: number | null;
 }
 
 export interface ActivityBooking {
   playerId: string;
   gameId: string;
   status: BookingStatus;
-  attendance: AttendanceStatus | null;
 }
 
 export interface PlayerActivity {
@@ -35,14 +37,21 @@ export interface PlayerActivity {
 
 const HELD: ReadonlySet<BookingStatus> = new Set(["confirmed", "reserved"]);
 
-export function hasKickedOff(game: ActivityGame, now: number): boolean {
+/**
+ * Whether a game has been PLAYED: marked played or settled, or past its FINAL
+ * WHISTLE and not cancelled (2026-11-09 — ~~kicked off~~: "a game has been
+ * played once it finishes"). The sweep marks it within five minutes; this does
+ * not wait for it.
+ */
+export function hasBeenPlayed(game: ActivityGame, now: number): boolean {
   if (game.status === "played" || game.status === "settled") return true;
   if (game.status === "cancelled" || game.status === "draft") return false;
-  return Date.parse(game.startsAt) <= now;
+  return hasFinished(game.startsAt, game.durationMinutes, now);
 }
 
-function isPlayed(status: BookingStatus, attendance: AttendanceStatus | null, kickedOff: boolean): boolean {
-  return kickedOff && HELD.has(status) && attendance !== "no_show";
+/** A held booking on a played game. ~~Unless marked a no-show~~ — attendance is gone. */
+function isPlayed(status: BookingStatus, played: boolean): boolean {
+  return played && HELD.has(status);
 }
 
 /** Each player's games played, last game and booking count, from every booking. */
@@ -61,7 +70,7 @@ export function summariseActivity(
     activity.set(booking.playerId, entry);
 
     const game = gamesById.get(booking.gameId);
-    if (!game || !isPlayed(booking.status, booking.attendance, hasKickedOff(game, now))) continue;
+    if (!game || !isPlayed(booking.status, hasBeenPlayed(game, now))) continue;
 
     const seen = played.get(booking.playerId) ?? new Set<string>();
     if (seen.has(game.id)) continue;
@@ -80,16 +89,14 @@ export function summariseActivity(
 /** One history row, as the player page already has it. */
 export interface HistoryRow {
   status: BookingStatus;
-  attendance: AttendanceStatus | null;
-  /** Read once per request by the query layer, never during render. */
-  hasStarted: boolean;
+  /** Past its final whistle — read once per request by the query layer, never during render. */
+  finished: boolean;
   startsAt: string;
 }
 
 export interface HistoryFigures {
   gamesPlayed: number;
   lastGameAt: string | null;
-  noShows: number;
 }
 
 /**
@@ -97,7 +104,7 @@ export interface HistoryFigures {
  * bookings are cancelled with it, so the booking's status is enough here.
  */
 export function historyFigures(rows: HistoryRow[]): HistoryFigures {
-  const played = rows.filter((row) => isPlayed(row.status, row.attendance, row.hasStarted));
+  const played = rows.filter((row) => isPlayed(row.status, row.finished));
   const lastGameAt = played.reduce<string | null>(
     (latest, row) => (latest === null || Date.parse(row.startsAt) > Date.parse(latest) ? row.startsAt : latest),
     null,
@@ -106,6 +113,5 @@ export function historyFigures(rows: HistoryRow[]): HistoryFigures {
   return {
     gamesPlayed: played.length,
     lastGameAt,
-    noShows: rows.filter((row) => row.attendance === "no_show").length,
   };
 }

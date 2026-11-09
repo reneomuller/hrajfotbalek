@@ -48,11 +48,11 @@ export async function listPlayerDirectory(now: number = Date.now()): Promise<Dir
     readAll("bookings", (from, to) =>
       service
         .from("bookings")
-        .select("player_id, game_id, status, attendance, created_at")
+        .select("player_id, game_id, status, created_at")
         .order("id")
         .range(from, to),
     ),
-    readAll("games", (from, to) => service.from("games").select("id, starts_at, status").order("id").range(from, to)),
+    readAll("games", (from, to) => service.from("games").select("id, starts_at, status, duration_minutes").order("id").range(from, to)),
     readAll("checkout_sessions", (from, to) =>
       service.from("checkout_sessions").select("player_id, status, created_at").order("id").range(from, to),
     ),
@@ -65,8 +65,8 @@ export async function listPlayerDirectory(now: number = Date.now()): Promise<Dir
   for (const row of ledger) balances.set(row.player_id, (balances.get(row.player_id) ?? 0) + row.delta_czk);
 
   const activity = summariseActivity(
-    bookings.map((b) => ({ playerId: b.player_id, gameId: b.game_id, status: b.status, attendance: b.attendance })),
-    games.map((g) => ({ id: g.id, startsAt: g.starts_at, status: g.status })),
+    bookings.map((b) => ({ playerId: b.player_id, gameId: b.game_id, status: b.status })),
+    games.map((g) => ({ id: g.id, startsAt: g.starts_at, status: g.status, durationMinutes: g.duration_minutes })),
     now,
   );
 

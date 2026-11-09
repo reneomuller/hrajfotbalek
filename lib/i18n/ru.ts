@@ -403,6 +403,7 @@ export const ru: StringsOverlay = {
     priceLabel: "Цена",
     alreadyStarted: "Этот матч уже начался.",
     inProgress: "Этот матч идёт прямо сейчас.",
+    playingNow: "Идёт игра",
 
     urgencyOpen: "Есть места",
     urgencyLastFew: "Почти заполнен",
@@ -634,14 +635,11 @@ export const ru: StringsOverlay = {
     creditHint: "Кредит автоматически применится к следующей брони.",
     historyTitle: "Твоя история",
     gamesPlayedLabel: "Сыграно игр",
-    noShowsLabel: "Неявки",
     upcomingTitle: "Ближайшие",
     // Round 16 item 12 — DRAFT.
     waitlistTitle: "Лист ожидания",
     pastTitle: "Уже сыграно",
     pastEmpty: "Пока ничего не сыграно — первая игра появится здесь.",
-    attendancePresent: "Пришёл",
-    attendanceNoShow: "Не пришёл",
 
     topupTitle: "Пополни кредиты",
     topupLede: "Добавь кредит сейчас — он автоматически применится к следующей брони.",

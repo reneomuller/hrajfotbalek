@@ -341,11 +341,12 @@ export default async function LandingPage() {
                       */}
                       <DayHeading>{day.label}</DayHeading>
                       <div className="flex flex-col gap-3">
-                        {day.items.map(({ game, bookedCount }, cardIndex) => (
+                        {day.items.map(({ game, bookedCount, inProgress }, cardIndex) => (
                           <GameCard
                             key={game.id}
                             game={game}
                             bookedCount={bookedCount}
+                    live={inProgress}
                             /* The LCP image on this page — see GameCard. */
                             priority={dayIndex === 0 && cardIndex === 0}
                             roster={rosters.get(game.id) ?? []}

@@ -12,7 +12,7 @@ function row(
   const startsAt = new Date(NOW + hoursFromNow * 3_600_000).toISOString();
   return {
     booking: { id: `b${hoursFromNow}`, status, attendance } as never,
-    game: { id: `g${hoursFromNow}`, starts_at: startsAt } as never,
+    game: { id: `g${hoursFromNow}`, starts_at: startsAt, duration_minutes: 90 } as never,
     canCancel: false,
     refundable: true,
   };
@@ -31,7 +31,7 @@ describe("splitHistory", () => {
     ]);
   });
 
-  it("puts everything already started in past, most recent first", () => {
+  it("puts everything already finished in past, most recent first", () => {
     const { past } = splitHistory([row(-72, "confirmed"), row(-24, "confirmed")], NOW);
     expect(past[0].game.starts_at).toBe(new Date(NOW - 24 * 3_600_000).toISOString());
   });
@@ -49,23 +49,25 @@ describe("splitHistory", () => {
     expect(gamesPlayed).toBe(0);
   });
 
-  it("counts un-marked attendance as played", () => {
-    // Attendance marking is an admin action that may not have happened.
-    // Counting only `present` would make the number drift down whenever an
-    // organizer forgot — a statement about the organizer, not the player.
+  it("counts every booking on a finished game as played, whatever attendance was once marked", () => {
+    // ~~Excludes a marked no-show~~ — attendance is gone (the owner,
+    // 2026-11-09: "remove the 'present' and 'no-show' function from the web
+    // completely"), and marks recorded before that no longer count.
     expect(splitHistory([row(-24, "confirmed", null)], NOW).gamesPlayed).toBe(1);
     expect(splitHistory([row(-24, "confirmed", "present")], NOW).gamesPlayed).toBe(1);
+    expect(splitHistory([row(-24, "confirmed", "no_show")], NOW).gamesPlayed).toBe(1);
   });
 
-  it("excludes a marked no-show from the played count and counts it separately", () => {
-    const { gamesPlayed, noShows } = splitHistory([row(-24, "confirmed", "no_show")], NOW);
-    expect(gamesPlayed).toBe(0);
-    expect(noShows).toBe(1);
+  it("keeps a game that has kicked off in upcoming until its final whistle", () => {
+    // The owner, 2026-11-09: "the game should dissapear for the user only
+    // after it has finished". An hour into a ninety-minute game.
+    const { upcoming, past } = splitHistory([row(-1, "confirmed")], NOW);
+    expect(upcoming).toHaveLength(1);
+    expect(past).toHaveLength(0);
   });
 
-  it("treats a game starting exactly now as past", () => {
-    // Kickoff has happened; there is nothing left to cancel.
-    const { upcoming, past } = splitHistory([row(0, "confirmed")], NOW);
+  it("moves it to past at the final whistle", () => {
+    const { upcoming, past } = splitHistory([row(-1.5, "confirmed")], NOW);
     expect(upcoming).toHaveLength(0);
     expect(past).toHaveLength(1);
   });
@@ -75,7 +77,6 @@ describe("splitHistory", () => {
       upcoming: [],
       past: [],
       gamesPlayed: 0,
-      noShows: 0,
     });
   });
 });

@@ -5,7 +5,7 @@ import { ChangeNameForm } from "@/components/admin/ChangeNameForm";
 import { DeletePlayerButton } from "@/components/admin/DeletePlayerButton";
 import { GrantCreditForm } from "@/components/admin/GrantCreditForm";
 import { OrganizerRightsButton } from "@/components/admin/OrganizerRightsButton";
-import { PlayerAttendanceRow } from "@/components/admin/PlayerAttendanceRow";
+import { PlayerGameRow } from "@/components/admin/PlayerGameRow";
 import { RemoveCoverButton } from "@/components/admin/RemoveCoverButton";
 import { RemoveCreditForm } from "@/components/admin/RemoveCreditForm";
 import { RemovePhotoButton } from "@/components/admin/RemovePhotoButton";
@@ -51,8 +51,7 @@ function cameBackLine(gamesPlayed: number): string {
  * says who this is and how to reach them; four figures say how they play and
  * what they hold (and, once the pitch-cost migration is live, what they have
  * paid); the controls sit in three panels by what they change — rights, the
- * account, the Credit — and the history closes the page with its attendance
- * controls.
+ * account, the Credit — and the history closes the page, one row per game.
  *
  * EVERY CONTROL IS THE ONE THAT WAS HERE, with its own confirm step, its own
  * capability gate and its own RPC — `set_player_admin`, `admin_set_organizer`,
@@ -99,7 +98,7 @@ export default async function AdminPlayerPage({ params }: { params: Promise<{ id
       <PlayerHeader player={player} photoUrl={photo} coverUrl={cover} />
 
       {/* --- the figures ------------------------------------------------------ */}
-      <section data-testid="admin-player-stats" className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-4">
+      <section data-testid="admin-player-stats" className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-3">
         <KpiTile label={t.playerKpis.gamesPlayed} value={String(figures.gamesPlayed)} valueTestId="admin-player-games-played">
           <span>
             {strings.admin.bookingsLabel} {games.length}
@@ -116,9 +115,7 @@ export default async function AdminPlayerPage({ params }: { params: Promise<{ id
             {cameBackLine(figures.gamesPlayed)}
           </span>
         </KpiTile>
-        <KpiTile label={t.playerKpis.noShows} value={String(figures.noShows)} valueTestId="admin-player-no-shows" tone="white">
-          <span>{t.playerKpis.noShowsDetail}</span>
-        </KpiTile>
+        {/* ~~No-shows~~ — attendance is gone (2026-11-09). */}
         {/*
           THE WALLET READS IN CREDITS, EXACTLY AS THE PLAYER SEES IT (round 31,
           item 3), and the ragged case is handled rather than rounded: the count
@@ -228,7 +225,7 @@ export default async function AdminPlayerPage({ params }: { params: Promise<{ id
         ) : (
           <ul className="m-0 list-none p-0">
             {games.map((row) => (
-              <PlayerAttendanceRow key={row.bookingId} row={row} />
+              <PlayerGameRow key={row.bookingId} row={row} />
             ))}
           </ul>
         )}

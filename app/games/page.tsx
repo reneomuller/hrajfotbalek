@@ -4,6 +4,7 @@ import { EmptyState } from "@/components/EmptyState";
 import { DayPicker } from "@/components/game/DayPicker";
 import { GameCard } from "@/components/game/GameCard";
 import { NextGameStrip } from "@/components/game/NextGameStrip";
+import { isInProgress } from "@/lib/games/duration";
 import { PassPanel } from "@/components/pass/PassPanel";
 import { getOwnNextBooking } from "@/lib/booking/queries";
 import { getSessionUser } from "@/lib/auth/session";
@@ -165,6 +166,7 @@ export default async function GamesPage({
             game={nextOwn.game}
             bookedCount={nextOwnCount}
             pitchName={pitchNames.get(nextOwn.game.id)}
+            live={isInProgress(nextOwn.game.starts_at, nextOwn.game.duration_minutes, now)}
           />
         </div>
       )}
@@ -213,11 +215,12 @@ export default async function GamesPage({
               */}
               <DayHeading>{day.label}</DayHeading>
               <div className="flex flex-col gap-3">
-                {day.items.map(({ game, bookedCount }, cardIndex) => (
+                {day.items.map(({ game, bookedCount, inProgress }, cardIndex) => (
                   <GameCard
                     key={game.id}
                     game={game}
                     bookedCount={bookedCount}
+                    live={inProgress}
                     /* The LCP image on this page — see GameCard. */
                     priority={dayIndex === 0 && cardIndex === 0}
                     roster={rosters.get(game.id) ?? []}

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { gameEndsAt, isInProgress, resolveDurationMinutes } from "@/lib/games/duration";
+import { gameEndsAt, hasFinished, isInProgress, resolveDurationMinutes } from "@/lib/games/duration";
 import { DEFAULT_DURATION_MINUTES } from "@/lib/calendar/ics";
 import { policy } from "@/lib/policy";
 
@@ -84,5 +84,31 @@ describe("isInProgress", () => {
     const justOutside = start + policy.game.durationMinutes * 60_000;
     expect(isInProgress(START, null, justInside)).toBe(true);
     expect(isInProgress(START, null, justOutside)).toBe(false);
+  });
+});
+
+/*
+ * A GAME IS ON UNTIL ITS FINAL WHISTLE (the owner, 2026-11-09: "the game should
+ * dissapear for the user only after it has finished (a game from 18:00-19:30
+ * would dissapear from view at 19:30"). Before, every list dropped a game the
+ * moment it kicked off.
+ */
+describe("hasFinished", () => {
+  const SIX_PM = "2026-11-09T17:00:00.000Z"; // 18:00 in Prague
+
+  it("is not finished while the game is on", () => {
+    expect(hasFinished(SIX_PM, 90, Date.parse("2026-11-09T18:29:00.000Z"))).toBe(false);
+  });
+
+  it("is finished at the final whistle — 19:30 for an 18:00 game of ninety minutes", () => {
+    expect(hasFinished(SIX_PM, 90, Date.parse("2026-11-09T18:30:00.000Z"))).toBe(true);
+  });
+
+  it("uses the null-row fallback for a game with no length, like every other surface", () => {
+    expect(hasFinished(SIX_PM, null, Date.parse("2026-11-09T18:00:00.000Z"))).toBe(true);
+  });
+
+  it("is not finished before kick-off either", () => {
+    expect(hasFinished(SIX_PM, 90, Date.parse("2026-11-09T12:00:00.000Z"))).toBe(false);
   });
 });

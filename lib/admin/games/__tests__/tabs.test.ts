@@ -87,9 +87,21 @@ describe("gameTabOf", () => {
     expect(tab).toBe("played");
   });
 
-  it("puts a game kicking off this very instant under Played", () => {
+  it("keeps a game that is on under Upcoming until its final whistle", () => {
+    // Arrange — the owner, 2026-11-09: "a game has been played once it
+    // finishes". Kicked off an hour ago, ninety minutes long.
+    const game = { status: "full", starts_at: new Date(NOW - 60 * 60_000).toISOString(), duration_minutes: 90 };
+
+    // Act
+    const tab = gameTabOf(game, NOW);
+
+    // Assert
+    expect(tab).toBe("upcoming");
+  });
+
+  it("moves it to Played at the final whistle", () => {
     // Arrange
-    const game = { status: "full", starts_at: new Date(NOW).toISOString() };
+    const game = { status: "full", starts_at: new Date(NOW - 90 * 60_000).toISOString(), duration_minutes: 90 };
 
     // Act
     const tab = gameTabOf(game, NOW);

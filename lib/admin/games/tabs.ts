@@ -1,3 +1,4 @@
+import { hasFinished } from "@/lib/games/duration";
 import { DEFAULT_GAME_SORT, type GameSort } from "@/lib/admin/gameSort";
 
 /**
@@ -8,10 +9,10 @@ import { DEFAULT_GAME_SORT, type GameSort } from "@/lib/admin/gameSort";
  * worst of it: next Sunday's game sat between a settled fixture from August and
  * a cancelled one, and the only way to tell them apart was a word in 12px grey.
  *
- * DECIDED BY THE CLOCK AS WELL AS THE STATUS. A game whose kick-off has passed
- * is over, whether or not the nightly sweep has marked it `played` yet — so a
- * `published` game from last night is under Played, where its money and its
- * attendance are, rather than under Upcoming pretending it can still fill.
+ * DECIDED BY THE CLOCK AS WELL AS THE STATUS. A game whose FINAL WHISTLE has
+ * gone is over, whether or not the sweep has marked it `played` yet — so it is
+ * under Played, where its money is, rather than under Upcoming pretending it
+ * can still fill. One that is still on stays under Upcoming (2026-11-09).
  *
  * IN THE URL, like the sort: a tab survives a reload, can be sent to somebody,
  * and keeps the page a server component that renders only the rows it shows.
@@ -33,6 +34,8 @@ export function parseGameTab(raw: string | string[] | undefined): GameTab {
 export interface TabbableGame {
   status: string;
   starts_at: string;
+  /** Null or absent: the null-row fallback, like every other surface. */
+  duration_minutes?: number | null;
 }
 
 /**
@@ -43,7 +46,9 @@ export interface TabbableGame {
 export function gameTabOf(game: TabbableGame, now: number = Date.now()): GameTab {
   if (game.status === "cancelled") return "cancelled";
   if (OVER.has(game.status)) return "played";
-  return Date.parse(game.starts_at) <= now ? "played" : "upcoming";
+  // ~~Kicked off~~ — FINISHED (the owner, 2026-11-09: "a game has been played
+  // once it finishes"). A game that is on stays under Upcoming until then.
+  return hasFinished(game.starts_at, game.duration_minutes, now) ? "played" : "upcoming";
 }
 
 /** Every tab's rows, each in the order it was given. */

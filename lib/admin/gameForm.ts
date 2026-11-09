@@ -1,4 +1,5 @@
 import { policy } from "@/lib/policy";
+import { LONGEST_GAME_MINUTES } from "@/lib/games/duration";
 import { gameLanguageOf, type GameLanguage } from "@/lib/games/language";
 import { strings } from "@/lib/strings";
 import type { GameSurface, SkillLevel } from "@/lib/types/database";
@@ -60,7 +61,7 @@ export const NOTES_MAX = 500;
 
 /** Mirrors `games_duration_range` and `assert_game_shape`. */
 export const DURATION_MIN = 30;
-export const DURATION_MAX = 180;
+export const DURATION_MAX = LONGEST_GAME_MINUTES;
 
 /**
  * What the field is pre-filled with, per the v1.1.1 ruling: 60 is the standard

@@ -88,8 +88,8 @@ export async function PlayerOfMonthPanel({
 
               Rendered only above zero: "0 h on the pitch this month" under a
               Player of the Month is a worse sentence than no sentence, and it
-              is reachable — a pick made early in a month, or before anyone has
-              marked attendance.
+              is reachable — a pick made early in a month, before their first
+              game of it has been played.
 
               It survives the reshuffle by the same 2026-08-10 amendment to
               ruling J that kept the panel; the frame does not draw it.

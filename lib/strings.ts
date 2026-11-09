@@ -839,6 +839,8 @@ export const strings = {
     // the ball is rolling the page says so, and only once the game has run its
     // duration does it become past tense.
     inProgress: "This game is being played right now.",
+    /* The card's pill while a game is on (2026-11-09), in the format pill's shape, orange. */
+    playingNow: "Playing now",
 
     // --- urgency ladder ------------------------------------------------------
     // Three rungs, and the copy is what distinguishes them: plenty of room
@@ -1334,14 +1336,11 @@ export const strings = {
     creditHint: "Credit is applied automatically to your next booking.",
     historyTitle: "Your history",
     gamesPlayedLabel: "Games played",
-    noShowsLabel: "No-shows",
     upcomingTitle: "Coming up",
     // Round 16 item 12 — the queue, between what is booked and what is over.
     waitlistTitle: "Waitlist",
     pastTitle: "Already played",
     pastEmpty: "Nothing played yet — your first game will show up here.",
-    attendancePresent: "Turned up",
-    attendanceNoShow: "Marked no-show",
 
     topupTitle: "Top up your credits",
     topupLede: "Add credit now, and it applies to your next booking automatically.",
@@ -2051,8 +2050,6 @@ export const strings = {
     statCancellations: "Cancellations",
     statCancellationsHint: "Split by whether credit was issued — that is, whether money had been applied.",
     statCancellationsWithCredit: "with credit",
-    statNoShow: "No-show rate",
-    statNoShowHint: "Of the bookings whose attendance has been marked, on games in this window.",
     statOf: "of",
     // Shown in place of every tile when the window holds nothing. "Today"
     // legitimately holds nothing most days, and a page of dashes reads as
@@ -2150,10 +2147,6 @@ export const strings = {
     // --- attendance + settle -------------------------------------------------
     attendanceLink: "Attendance & settle",
     attendanceLede: "Mark who turned up, clear anything unpaid, then close the books.",
-    markPresent: "Present",
-    markNoShow: "No-show",
-    attendanceUnmarked: "Not marked",
-    markPlayed: "Mark as played",
     /*
      * ~~`settleGame: "Settle the game"`~~ REMOVED (round 29) — there is no
      * button. `settleBlocked` and `settleBlockedHint` SURVIVE and now describe
@@ -2362,7 +2355,6 @@ export const strings = {
       rosterBookingsOne: "1 booking",
       toConfirm: "Payments to confirm",
       closeOutTitle: "After the game",
-      markPlayedHint: "The nightly sweep marks a game played on its own — press this to do it now.",
       closeOutSweeping: "Played. The nightly sweep settles it.",
       cancelledTitle: "Why it was cancelled",
       dangerTitle: "Cancel or delete",
@@ -2380,6 +2372,8 @@ export const strings = {
 
     /** The players list and a player's page. */
     playersHub: {
+      /** A player's history row for a game still ahead (2026-11-09). */
+      gameBooked: "Booked",
       title: "Players",
       lede: "Everyone who signed up. Shadow accounts — the names you book onto games — and test accounts are counted nowhere.",
 
@@ -2465,8 +2459,6 @@ export const strings = {
         cameBack: "Came back · {n} games",
         oneGame: "One game so far",
         notPlayed: "Not played yet",
-        noShows: "No-shows",
-        noShowsDetail: "marked by an organizer",
         credit: "Credits",
         spent: "Money spent",
         spentDetail:

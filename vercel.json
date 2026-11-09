@@ -6,6 +6,7 @@
     { "path": "/api/cron/nudge", "schedule": "10 5 * * *" },
     { "path": "/api/cron/reminder", "schedule": "0 15 * * *" },
     { "path": "/api/cron/pass-expiry", "schedule": "20 5 * * *" },
-    { "path": "/api/cron/played", "schedule": "30 5 * * *" }
+    { "path": "/api/cron/played", "schedule": "30 5 * * *" },
+    { "path": "/api/cron/played-now", "schedule": "*/5 * * * *" }
   ]
 }

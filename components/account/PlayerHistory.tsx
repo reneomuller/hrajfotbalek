@@ -42,18 +42,7 @@ export async function PlayerHistory({
           </p>
         </div>
 
-        {/* Shown only when there is one. A zero here is a reproach nobody
-            earned, and most players will never have a single no-show. */}
-        {history.noShows > 0 ? (
-          <div>
-            <p className="m-0 text-[11px] uppercase tracking-eyebrow text-faint">
-              {t.account.noShowsLabel}
-            </p>
-            <p className="m-0 font-display text-3xl text-white/70" data-testid="no-shows">
-              {history.noShows}
-            </p>
-          </div>
-        ) : null}
+        {/* ~~No-shows~~ — attendance is gone (2026-11-09). */}
       </section>
 
       <section className="mt-10">
@@ -133,17 +122,6 @@ export async function PlayerHistory({
                 <span className="text-xs text-white/50">
                   {formatGameDateTime(game.starts_at)}
                 </span>
-                {booking.attendance ? (
-                  <span
-                    className={`text-[11px] uppercase tracking-eyebrow ${
-                      booking.attendance === "no_show" ? "text-white/40" : "text-volt"
-                    }`}
-                  >
-                    {booking.attendance === "no_show"
-                      ? t.account.attendanceNoShow
-                      : t.account.attendancePresent}
-                  </span>
-                ) : null}
               </li>
             ))}
           </ul>

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { AttendanceRow } from "@/components/admin/AttendanceRow";
+import { RosterRow } from "@/components/admin/RosterRow";
 import { CancelGameButton } from "@/components/admin/CancelGameButton";
 import { ConfirmPaymentRow } from "@/components/admin/ConfirmPaymentRow";
 import { DeleteControl } from "@/components/admin/DeleteControl";
@@ -61,7 +61,7 @@ const PUBLIC_STATUSES = new Set(["published", "full", "played", "settled"]);
  * Everything that acts on one game is here, in the order the organizer meets
  * it: what the game is and how it stands (the header and its figures), who is
  * on it and what they paid (the seat map and the money), the roster where
- * payments are confirmed and attendance is marked, then close-out, the venue,
+ * payments are confirmed, then close-out, the venue,
  * editing, and last the two things with no undo.
  *
  * `/edit` and `/attendance` redirect here, so every bookmark, every link in
@@ -103,7 +103,7 @@ export default async function AdminGamePage({
   const seatsTakenNow = seatsTaken(bookings, game.guest_count);
   // Already VS-sorted by the query — the order the banking app lists payments in.
   const pending = unpaidBookings(bookings);
-  const { canEdit, canPlay, canSettle, canCancel } = availableTransitions(game.status);
+  const { canEdit, canSettle, canCancel } = availableTransitions(game.status);
   const erasesHistory = deleteErasesHistory(game);
   const tab = gameTabOf(game);
   const upcoming = tab === "upcoming";
@@ -238,8 +238,8 @@ export default async function AdminGamePage({
       </div>
 
       {/*
-        THE ROSTER, with payments and attendance on the same rows (Phase 18):
-        "did they turn up" and "did they pay" are answered on one line. What is
+        THE ROSTER, one row per booking with how they paid. ~~And attendance~~
+        — gone with present / no-show (2026-11-09). What is
         still owed sits at its top — present when there is something to
         reconcile, absent when there is not (round 16, item 16).
       */}
@@ -271,7 +271,7 @@ export default async function AdminGamePage({
         ) : (
           <ul className="list-none space-y-2 p-0">
             {roster.map((booking) => (
-              <AttendanceRow
+              <RosterRow
                 key={booking.id}
                 booking={booking}
                 gameId={game.id}
@@ -300,9 +300,7 @@ export default async function AdminGamePage({
 
       <div className="mt-4 grid gap-4 md:grid-cols-2">
         <CloseOutPanel
-          gameId={game.id}
           status={game.status}
-          canPlay={canPlay}
           canSettle={canSettle}
           pending={pending}
           cancelReason={cancelReasons.get(game.id) ?? null}

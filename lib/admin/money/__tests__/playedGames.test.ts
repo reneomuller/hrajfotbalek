@@ -10,6 +10,15 @@ import { hasBeenPlayed } from "@/lib/admin/money/playedGames";
 const NOW = Date.parse("2026-11-08T21:30:00.000Z");
 
 describe("hasBeenPlayed", () => {
+  it("does not count a game that is still on — it is played at its final whistle (2026-11-09)", () => {
+    // Kicked off at 21:00 UTC, ninety minutes long, half an hour in.
+    expect(hasBeenPlayed({ status: "full", starts_at: "2026-11-08T21:00:00.000Z", duration_minutes: 90 }, NOW)).toBe(false);
+  });
+
+  it("counts it from the final whistle", () => {
+    expect(hasBeenPlayed({ status: "full", starts_at: "2026-11-08T20:00:00.000Z", duration_minutes: 90 }, NOW)).toBe(true);
+  });
+
   it("counts a game that kicked off this evening, before the sweep marked it", () => {
     expect(hasBeenPlayed({ status: "full", starts_at: "2026-11-08T16:00:00.000Z" }, NOW)).toBe(true);
   });

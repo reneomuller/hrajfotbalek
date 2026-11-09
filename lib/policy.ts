@@ -188,6 +188,14 @@ export const policy = {
      * rather than leaning on the fallback above.
      */
     standardMinutes: 90,
+    /**
+     * A GAME IS PLAYED AT THE FINAL WHISTLE (the owner, 2026-11-09: "a game
+     * from 18:00-19:30 would dissapear from view at 19:30 and get marked as
+     * played automatically"). Minutes after kick-off + length before the sweep
+     * every five minutes marks it — none. The daily sweep keeps its own two
+     * hours, for the report of what could not settle.
+     */
+    playedAfterEndMinutes: 0,
   },
 
   /**

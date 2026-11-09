@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
-  hasKickedOff,
+  hasBeenPlayed,
   historyFigures,
   summariseActivity,
   type ActivityBooking,
@@ -8,10 +8,11 @@ import {
 } from "@/lib/admin/players/activity";
 
 /**
- * What a player has PLAYED (round 42): a game that kicked off — marked played
- * or settled, or simply past its start and not cancelled — on a booking they
- * did not cancel, where they were not marked a no-show. The same rule as the
- * player's own account page (`lib/booking/history.ts`), so the two agree.
+ * What a player has PLAYED (round 42): a game that has FINISHED — marked
+ * played or settled, or past its final whistle and not cancelled — on a
+ * booking they did not cancel. ~~Where they were not marked a no-show~~ —
+ * attendance is gone (2026-11-09). The same rule as the player's own account
+ * page (`lib/booking/history.ts`), so the two agree.
  */
 
 const NOW = Date.parse("2026-11-08T12:00:00Z");
@@ -20,31 +21,36 @@ const EARLIER = "2026-10-20T18:00:00Z";
 const FUTURE = "2026-11-15T18:00:00Z";
 
 function game(id: string, startsAt: string, status: ActivityGame["status"] = "published"): ActivityGame {
-  return { id, startsAt, status };
+  return { id, startsAt, status, durationMinutes: 90 };
 }
 
 function booking(overrides: Partial<ActivityBooking> & Pick<ActivityBooking, "playerId" | "gameId">): ActivityBooking {
-  return { status: "confirmed", attendance: null, ...overrides };
+  return { status: "confirmed", ...overrides };
 }
 
-describe("hasKickedOff", () => {
-  it("is true for a game marked played or settled", () => {
-    expect(hasKickedOff(game("g", FUTURE, "played"), NOW)).toBe(true);
-    expect(hasKickedOff(game("g", FUTURE, "settled"), NOW)).toBe(true);
+describe("hasBeenPlayed", () => {
+  it("is false for a game that is on — it is played at its final whistle (2026-11-09)", () => {
+    const anHourIn = new Date(NOW - 60 * 60_000).toISOString();
+    expect(hasBeenPlayed(game("g", anHourIn, "full"), NOW)).toBe(false);
   });
 
-  it("is true for a published or full game past its start", () => {
-    expect(hasKickedOff(game("g", PAST, "published"), NOW)).toBe(true);
-    expect(hasKickedOff(game("g", PAST, "full"), NOW)).toBe(true);
+  it("is true for a game marked played or settled", () => {
+    expect(hasBeenPlayed(game("g", FUTURE, "played"), NOW)).toBe(true);
+    expect(hasBeenPlayed(game("g", FUTURE, "settled"), NOW)).toBe(true);
+  });
+
+  it("is true for a published or full game past its final whistle", () => {
+    expect(hasBeenPlayed(game("g", PAST, "published"), NOW)).toBe(true);
+    expect(hasBeenPlayed(game("g", PAST, "full"), NOW)).toBe(true);
   });
 
   it("is false for a game still ahead", () => {
-    expect(hasKickedOff(game("g", FUTURE), NOW)).toBe(false);
+    expect(hasBeenPlayed(game("g", FUTURE), NOW)).toBe(false);
   });
 
   it("is false for a cancelled game or a draft, whenever it was", () => {
-    expect(hasKickedOff(game("g", PAST, "cancelled"), NOW)).toBe(false);
-    expect(hasKickedOff(game("g", PAST, "draft"), NOW)).toBe(false);
+    expect(hasBeenPlayed(game("g", PAST, "cancelled"), NOW)).toBe(false);
+    expect(hasBeenPlayed(game("g", PAST, "draft"), NOW)).toBe(false);
   });
 });
 
@@ -70,11 +76,10 @@ describe("summariseActivity", () => {
     expect(activity?.gamesPlayed).toBe(1);
   });
 
-  it("does not count a no-show, a cancelled or expired booking, or a game still ahead", () => {
+  it("does not count a cancelled or expired booking, or a game still ahead", () => {
     // Arrange
-    const games = [game("g1", PAST), game("g2", PAST), game("g3", PAST), game("g4", FUTURE)];
+    const games = [game("g2", PAST), game("g3", PAST), game("g4", FUTURE)];
     const bookings = [
-      booking({ playerId: "p1", gameId: "g1", attendance: "no_show" }),
       booking({ playerId: "p1", gameId: "g2", status: "cancelled" }),
       booking({ playerId: "p1", gameId: "g3", status: "expired" }),
       booking({ playerId: "p1", gameId: "g4" }),
@@ -84,7 +89,7 @@ describe("summariseActivity", () => {
     const activity = summariseActivity(bookings, games, NOW).get("p1");
 
     // Assert
-    expect(activity).toEqual({ gamesPlayed: 0, lastGameAt: null, bookingCount: 4 });
+    expect(activity).toEqual({ gamesPlayed: 0, lastGameAt: null, bookingCount: 3 });
   });
 
   it("counts each game once and keeps the latest kick-off", () => {
@@ -120,24 +125,24 @@ describe("summariseActivity", () => {
 });
 
 describe("historyFigures", () => {
-  it("reads games played, the last one and the no-shows from a player's history rows", () => {
+  it("reads games played and the last one from a player's history rows", () => {
     // Arrange
     const rows = [
-      { status: "confirmed" as const, attendance: null, hasStarted: false, startsAt: FUTURE },
-      { status: "confirmed" as const, attendance: "present" as const, hasStarted: true, startsAt: PAST },
-      { status: "reserved" as const, attendance: null, hasStarted: true, startsAt: EARLIER },
-      { status: "confirmed" as const, attendance: "no_show" as const, hasStarted: true, startsAt: EARLIER },
-      { status: "cancelled" as const, attendance: null, hasStarted: true, startsAt: EARLIER },
+      { status: "confirmed" as const, finished: false, startsAt: FUTURE },
+      { status: "confirmed" as const, finished: true, startsAt: PAST },
+      { status: "reserved" as const, finished: true, startsAt: EARLIER },
+      { status: "confirmed" as const, finished: true, startsAt: EARLIER },
+      { status: "cancelled" as const, finished: true, startsAt: EARLIER },
     ];
 
     // Act
     const figures = historyFigures(rows);
 
     // Assert
-    expect(figures).toEqual({ gamesPlayed: 2, lastGameAt: PAST, noShows: 1 });
+    expect(figures).toEqual({ gamesPlayed: 3, lastGameAt: PAST });
   });
 
   it("has no last game for a player who has not played", () => {
-    expect(historyFigures([])).toEqual({ gamesPlayed: 0, lastGameAt: null, noShows: 0 });
+    expect(historyFigures([])).toEqual({ gamesPlayed: 0, lastGameAt: null });
   });
 });

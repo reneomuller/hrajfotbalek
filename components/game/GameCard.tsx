@@ -87,6 +87,7 @@ export async function GameCard({
   pitchName,
   past = false,
   joinCue = true,
+  live = false,
   priority = false,
 }: {
   game: GameCardGame;
@@ -136,6 +137,12 @@ export async function GameCard({
    * whole card remains the single anchor.
    */
   joinCue?: boolean;
+  /**
+   * The game has kicked off and is still on (2026-11-09). The lists keep it
+   * until the final whistle, and "x spots left" becomes an orange pill in the
+   * format pill's shape: nobody can book it, and the card says why.
+   */
+  live?: boolean;
   /** The `past` state — 45% opacity, not tappable, not focusable. */
   past?: boolean;
   /*
@@ -392,7 +399,13 @@ export async function GameCard({
           data one.
         */}
         <span data-testid="row-spots" className="shrink-0">
-          <SpotsLeft bookedCount={bookedCount} capacity={game.capacity} />
+          {live ? (
+            <span data-testid="card-live" className="badge-pill border-warn bg-warn/[.12] text-warn">
+              {t.games.playingNow}
+            </span>
+          ) : (
+            <SpotsLeft bookedCount={bookedCount} capacity={game.capacity} />
+          )}
         </span>
       </span>
 
@@ -424,7 +437,7 @@ export async function GameCard({
           call to action on it would be a lie about what the card does. Nor
           where the viewer already holds the spot — see `joinCue`.
         */}
-        {!past && joinCue && (
+        {!past && !live && joinCue && (
           <span
             aria-hidden
             data-testid="card-join-cue"

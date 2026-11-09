@@ -1,4 +1,5 @@
 import { canOfferCancel, isCancellationRefundable } from "@/lib/booking/badges";
+import { hasFinished } from "@/lib/games/duration";
 import { policy } from "@/lib/policy";
 import { refundCutoffHours } from "@/lib/policy/refundCutoff";
 import { createServerSupabaseClient } from "@/lib/supabase/clients";
@@ -152,11 +153,17 @@ export async function getOwnNextBooking(): Promise<BookingWithGame | null> {
   const bookings = await listOwnBookings();
   const now = Date.now();
 
+  // Soonest game first: the list arrives newest BOOKING first, which is not
+  // the same order, so a player with two bookings saw the one made last.
+  const bySoonest = [...bookings].sort(
+    (a, b) => new Date(a.game.starts_at).getTime() - new Date(b.game.starts_at).getTime(),
+  );
   return (
-    bookings.find(
+    bySoonest.find(
       ({ booking, game }) =>
         (booking.status === "reserved" || booking.status === "confirmed") &&
-        new Date(game.starts_at).getTime() > now,
+        // Until the final whistle (2026-11-09), not until kick-off.
+        !hasFinished(game.starts_at, game.duration_minutes, now),
     ) ?? null
   );
 }

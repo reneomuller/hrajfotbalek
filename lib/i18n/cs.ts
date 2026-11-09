@@ -400,6 +400,7 @@ export const cs: StringsOverlay = {
     priceLabel: "Cena",
     alreadyStarted: "Tenhle zápas už začal.",
     inProgress: "Tenhle zápas se právě hraje.",
+    playingNow: "Právě se hraje",
 
     urgencyOpen: "Volná místa",
     urgencyLastFew: "Skoro plno",
@@ -630,14 +631,11 @@ export const cs: StringsOverlay = {
     creditHint: "Kredit se automaticky uplatní u další rezervace.",
     historyTitle: "Tvoje historie",
     gamesPlayedLabel: "Odehrané zápasy",
-    noShowsLabel: "Neúčasti",
     upcomingTitle: "Nadcházející",
     // Round 16 item 12 — DRAFT.
     waitlistTitle: "Čekací listina",
     pastTitle: "Už odehrané",
     pastEmpty: "Zatím nic odehraného — první zápas se objeví tady.",
-    attendancePresent: "Dorazil",
-    attendanceNoShow: "Nedorazil",
 
     topupTitle: "Dobij si kredity",
     topupLede: "Přidej si kredit teď a na další rezervaci se použije automaticky.",

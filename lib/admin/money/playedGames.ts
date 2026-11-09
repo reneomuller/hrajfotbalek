@@ -1,4 +1,5 @@
 import { readAllPages } from "@/lib/admin/money/readAll";
+import { hasFinished } from "@/lib/games/duration";
 import { createServiceRoleSupabaseClient } from "@/lib/supabase/clients";
 
 /**
@@ -8,13 +9,21 @@ import { createServiceRoleSupabaseClient } from "@/lib/supabase/clients";
  * 06:30 the next morning, so the evening's game sat outside "games settled",
  * the average and the profit table until then. The owner counted three games
  * where the page said two: production's #10 kicked off at 17:00 and was still
- * "full". A game counts once it has KICKED OFF and was not cancelled (or left
- * a draft) — the games list's own rule (`lib/admin/games/tabs.ts`).
+ * "full". A game counts once it has FINISHED — ~~kicked off~~, the owner on
+ * 2026-11-09: "a game has been played once it finishes" — and was not
+ * cancelled (or left a draft); the games list's own rule
+ * (`lib/admin/games/tabs.ts`).
  */
 const PLAYABLE_STATUSES = ["published", "full", "played", "settled"] as const;
 
-export function hasBeenPlayed(game: { status: string; starts_at: string }, now: number): boolean {
-  return (PLAYABLE_STATUSES as readonly string[]).includes(game.status) && Date.parse(game.starts_at) <= now;
+export function hasBeenPlayed(
+  game: { status: string; starts_at: string; duration_minutes?: number | null },
+  now: number,
+): boolean {
+  return (
+    (PLAYABLE_STATUSES as readonly string[]).includes(game.status) &&
+    hasFinished(game.starts_at, game.duration_minutes, now)
+  );
 }
 
 export interface PlayedGame {
@@ -24,7 +33,7 @@ export interface PlayedGame {
   priceCzk: number;
 }
 
-/** Games played in a period — kicked off inside it and before `now`. Newest first. */
+/** Games played in a period — kicked off inside it, finished before `now`. Newest first. */
 export async function playedGamesBetween(
   bounds: { from: string | null; to: string | null },
   now: number,
@@ -36,7 +45,7 @@ export async function playedGamesBetween(
   const rows = await readAllPages("played games", (from, to) => {
     let query = service
       .from("games")
-      .select("id,status,starts_at,venue,price_czk")
+      .select("id,status,starts_at,duration_minutes,venue,price_czk")
       .in("status", [...PLAYABLE_STATUSES])
       .lt("starts_at", until);
     if (bounds.from) query = query.gte("starts_at", bounds.from);

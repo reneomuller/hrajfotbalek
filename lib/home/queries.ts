@@ -1,4 +1,5 @@
 import { STABLE_TAGS, stableRead } from "@/lib/db/stableRead";
+import { hasFinished } from "@/lib/games/duration";
 import {
   createServerSupabaseClient,
   createServiceRoleSupabaseClient,
@@ -128,14 +129,11 @@ async function getPlayerCard(
 /**
  * Hours the Player of the Month spent on a pitch THIS CALENDAR MONTH.
  *
- * NO SCHEMA CHANGE, and that is worth stating because the obvious reading of
- * "add a stat" is a new column. Everything needed is already recorded:
- * `bookings.attendance` is written by `mark_attendance`, and
- * `games.duration_minutes` is the same value every other surface resolves.
- *
- * `present` ONLY. A `no_show` is a booking, not an hour, and counting it would
- * make the stat a measure of intent — the same error the games-played counter
- * on the roster deliberately avoids by counting played rather than booked.
+ * NO SCHEMA CHANGE: a held booking (reserved or confirmed) on a game that has
+ * FINISHED, and `games.duration_minutes` as every other surface resolves it.
+ * ~~`present` ONLY~~ — attendance is gone (2026-11-09: "remove the 'present'
+ * and 'no-show' function from the web completely"), so an hour is a game the
+ * player was on and that has been played, as everywhere else.
  *
  * THE MONTH IS PRAGUE'S, matching every other date in this product: a game at
  * 00:30 on the 1st belongs to the month the players would name it in. The
@@ -164,22 +162,28 @@ async function getPitchHours(
     .from("bookings")
     .select("game_id")
     .eq("player_id", playerId)
-    .eq("attendance", "present");
+    .in("status", ["reserved", "confirmed"]);
 
   if (bookingsError || !attended || attended.length === 0) return 0;
 
   const { data: games, error: gamesError } = await service
     .from("games")
-    .select("duration_minutes")
+    .select("starts_at, duration_minutes")
     .in(
       "id",
       attended.map((booking) => booking.game_id),
     )
+    .neq("status", "cancelled")
     .gte("starts_at", monthStart);
 
   if (gamesError || !games) return 0;
 
-  return pitchHours(games.map((game) => game.duration_minutes));
+  const now = Date.now();
+  return pitchHours(
+    games
+      .filter((game) => hasFinished(game.starts_at, game.duration_minutes, now))
+      .map((game) => game.duration_minutes),
+  );
 }
 
 

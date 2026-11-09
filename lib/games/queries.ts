@@ -1,7 +1,7 @@
 import { parseGameRef } from "@/lib/games/link";
 import { canOfferCancel, isCancellationRefundable } from "@/lib/booking/badges";
 import { isWithinVisibleDays } from "@/lib/games/days";
-import { isInProgress } from "@/lib/games/duration";
+import { hasFinished, isInProgress, LONGEST_GAME_MINUTES } from "@/lib/games/duration";
 import { policy } from "@/lib/policy";
 import { refundCutoffHours } from "@/lib/policy/refundCutoff";
 import {
@@ -123,6 +123,9 @@ export interface UpcomingGames {
 /** A day and a half: past the far edge of any Prague day, in either offset. */
 const VISIBLE_WINDOW_MARGIN_MS = 36 * 3600_000;
 const DAY_MS = 24 * 3600_000;
+const MINUTE_MS = 60_000;
+/** Games that can kick off inside the longest game's length — far more than ever do. */
+const FINISHED_HEADROOM = 10;
 
 /**
  * Upcoming publicly-visible games, soonest first — and only as far ahead as
@@ -158,20 +161,31 @@ export async function listUpcomingGames(
     .from("games")
     .select("*")
     .in("status", ["published", "full"])
-    .gte("starts_at", new Date(now).toISOString())
+    /*
+     * ~~`starts_at >= now`~~ — a game stays listed until its FINAL WHISTLE
+     * (the owner, 2026-11-09: "a game from 18:00-19:30 would dissapear from
+     * view at 19:30"), so SQL looks back as far as the longest game can run
+     * and `hasFinished` below makes the exact cut by each game's own length.
+     */
+    .gte("starts_at", new Date(now - LONGEST_GAME_MINUTES * MINUTE_MS).toISOString())
     .lt(
       "starts_at",
       new Date(now + policy.schedule.visibleDays * DAY_MS + VISIBLE_WINDOW_MARGIN_MS).toISOString(),
     )
     .order("starts_at", { ascending: true });
 
-  if (limit !== null) query = query.limit(limit);
+  // Headroom for the games that kicked off and have since finished, which
+  // the cut below drops — they come first in kick-off order.
+  if (limit !== null) query = query.limit(limit + FINISHED_HEADROOM);
 
   const { data, error } = await query;
 
   if (error || !data) return { games: [], now };
 
-  const games = data.filter((game) => isWithinVisibleDays(game.starts_at, now));
+  const kept = data.filter(
+    (game) => !hasFinished(game.starts_at, game.duration_minutes, now) && isWithinVisibleDays(game.starts_at, now),
+  );
+  const games = limit === null ? kept : kept.slice(0, limit);
 
   const counts = await countRosterByGame(games.map((g) => g.id));
 

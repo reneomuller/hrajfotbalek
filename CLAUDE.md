@@ -1037,9 +1037,13 @@ with "Request rate limit reached", which reads exactly like a broken product.
 
 - **No service worker, no offline logic.** A stale cached roster is worse than
   a spinner.
-- **No `ends_at` column.** `policy.game.durationMinutes` is display-only;
-  nothing transitions on it. Revisit when a game of a different length is
-  actually scheduled.
+- **No `ends_at` column**, and since 2026-11-09 the end MATTERS: a game is on
+  until kick-off + `duration_minutes` (`gameEndsAt` / `hasFinished` in
+  `lib/games/duration.ts`). Every list keeps a game until then, the card shows
+  an orange "Playing now" pill while it is on, and `/api/cron/played-now`
+  (every five minutes — Vercel Pro) marks it played at the final whistle.
+  **The lists go by the clock, never by `status`**: the sweep can be five
+  minutes late and the screens must not be. A null length is 60 minutes.
 - ~~**Emails are English only.**~~ Since round 41 every email is in the
   reader's language, kept in the auth user's metadata — see the lesson above.
 - **Waitlist is notify-all FCFS.** Everyone is told at once and the race is

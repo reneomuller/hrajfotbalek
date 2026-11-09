@@ -37,9 +37,13 @@ test("the two summary sections are gone and their controls are not", async ({
       "a section headed Attendance is back — attendance is marked on the rows",
     ).not.toMatch(/^\s*attendance\s*$/im);
 
-    // The roster survived, and so did close-out: `mark-played` is the only way
-    // a game ever becomes settled.
-    await expect(page.getByTestId("mark-played")).toBeVisible();
+    // The roster survived. ~~And so did close-out: `mark-played`~~ — gone
+    // (the owner, 2026-11-09: "a game has been played once it finishes"); the
+    // sweep marks it at the final whistle, and nothing on the page does.
+    // This game has no bookings, so the roster has no rows — its guest control
+    // is what every game page carries.
+    await expect(page.getByTestId("guest-add")).toBeVisible();
+    await expect(page.getByTestId("mark-played")).toHaveCount(0);
   } finally {
     await destroyScratchGame(game.id);
   }

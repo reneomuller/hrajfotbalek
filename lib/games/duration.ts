@@ -55,3 +55,26 @@ export function isInProgress(
   if (Number.isNaN(start.getTime())) return false;
   return now >= start.getTime() && now < gameEndsAt(start, durationMinutes).getTime();
 }
+
+/**
+ * The longest a game may run — `games_duration_range` (30–180) in SQL. A list
+ * that keeps games until their final whistle looks back this far for games
+ * that kicked off but may still be on.
+ */
+export const LONGEST_GAME_MINUTES = 180;
+
+/**
+ * WHETHER THE FINAL WHISTLE HAS GONE (the owner, 2026-11-09: "the game should
+ * dissapear for the user only after it has finished (a game from 18:00-19:30
+ * would dissapear from view at 19:30"). The lists keep a game until this is
+ * true; until then a game that has kicked off is `isInProgress`.
+ */
+export function hasFinished(
+  startsAt: Date | string | number,
+  durationMinutes: number | null | undefined,
+  now: number,
+): boolean {
+  const start = startsAt instanceof Date ? startsAt : new Date(startsAt);
+  if (Number.isNaN(start.getTime())) return false;
+  return now >= gameEndsAt(start, durationMinutes).getTime();
+}

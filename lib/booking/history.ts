@@ -1,37 +1,34 @@
 import type { BookingWithGame } from "@/lib/booking/queries";
+import { hasFinished } from "@/lib/games/duration";
 
 /**
  * Splitting a player's bookings into the two questions they actually have.
  *
  * "My bookings" was one reverse-chronological list, which answered neither
  * question well: what am I committed to, and what have I played? Those are
- * different tenses and different actions — one has a cancel button, the other
- * has an attendance mark — so they are separated here rather than in the page,
- * where the rule would be untestable.
+ * different tenses and different actions, so they are separated here rather
+ * than in the page, where the rule would be untestable.
  *
- * Pure, and split on kickoff rather than on booking status. A cancelled booking
+ * Pure, and split on the FINAL WHISTLE (2026-11-09) — ~~on kickoff~~: "the game
+ * should dissapear for the user only after it has finished" — rather than on
+ * booking status. A cancelled booking
  * on a future game is not "upcoming" — there is nothing to turn up to — and a
  * confirmed booking on a past game belongs in history whether or not anyone got
  * round to marking attendance.
  */
 
 export interface PlayerHistory {
-  /** Active bookings on games that have not started, soonest first. */
+  /** Active bookings on games that have not finished, soonest first. */
   upcoming: BookingWithGame[];
-  /** Everything that has already kicked off, most recent first. */
+  /** Everything whose final whistle has gone, most recent first. */
   past: BookingWithGame[];
   /**
-   * Games actually played: a past game the player did not cancel out of.
-   *
-   * Counts `present` and un-marked attendance alike, and excludes `no_show`.
-   * Attendance marking is an admin action that may simply not have happened —
-   * counting only `present` would make the number drift down every time an
-   * organizer forgot, which is a statement about the organizer rather than the
-   * player.
+   * Games actually played: a finished game the player did not cancel out of.
+   * ~~Excluding a marked no-show~~ — attendance is gone (2026-11-09: "remove
+   * the 'present' and 'no-show' function from the web completely"), and a
+   * mark recorded before then no longer counts against anybody.
    */
   gamesPlayed: number;
-  /** Marked no-shows. Shown only when non-zero; nobody needs a zero here. */
-  noShows: number;
 }
 
 const ACTIVE = new Set(["reserved", "confirmed"]);
@@ -41,8 +38,7 @@ export function splitHistory(rows: BookingWithGame[], now = Date.now()): PlayerH
   const past: BookingWithGame[] = [];
 
   for (const row of rows) {
-    const started = new Date(row.game.starts_at).getTime() <= now;
-    if (started) {
+    if (hasFinished(row.game.starts_at, row.game.duration_minutes, now)) {
       past.push(row);
     } else if (ACTIVE.has(row.booking.status)) {
       upcoming.push(row);
@@ -58,14 +54,9 @@ export function splitHistory(rows: BookingWithGame[], now = Date.now()): PlayerH
     (a, b) => new Date(b.game.starts_at).getTime() - new Date(a.game.starts_at).getTime(),
   );
 
-  const attended = past.filter(
-    ({ booking }) => ACTIVE.has(booking.status) && booking.attendance !== "no_show",
-  );
-
   return {
     upcoming,
     past,
-    gamesPlayed: attended.length,
-    noShows: past.filter(({ booking }) => booking.attendance === "no_show").length,
+    gamesPlayed: past.filter(({ booking }) => ACTIVE.has(booking.status)).length,
   };
 }
