@@ -29,6 +29,7 @@ import {
   getGameOrganizer,
   getOwnActiveBooking,
   getRoster,
+  getRosterCountries,
   getVenue,
   getWaitlist,
 } from "@/lib/games/queries";
@@ -194,6 +195,12 @@ export default async function GameDetailPage({ params, searchParams }: GamePageP
     getCurrentPlayer(),
     siteUrl(),
   ]);
+
+  // The lineup's flags (2026-11-11) — public on every profile already; one
+  // read for the whole roster, once its nicknames are known.
+  const rosterCountries = await getRosterCountries(
+    roster.flatMap((row) => (row.is_guest || !row.nickname ? [] : [row.nickname])),
+  );
 
   // Storage origin for the roster photos. Read here rather than inside
   // `AvatarRow` so the component stays renderable in isolation; absent, every
@@ -516,7 +523,7 @@ export default async function GameDetailPage({ params, searchParams }: GamePageP
         />
       )}
 
-      <PlayersList rows={roster} supabaseUrl={supabaseUrl} />
+      <PlayersList rows={roster} supabaseUrl={supabaseUrl} countries={rosterCountries} />
 
       {/*
         ADD GUESTS — BETWEEN THE LINEUP AND THE SHARE BOX (round 27, item 2).

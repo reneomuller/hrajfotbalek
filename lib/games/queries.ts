@@ -588,6 +588,40 @@ export async function getRoster(gameId: string): Promise<RosterRow[]> {
 }
 
 /**
+ * Each rostered player's nationality, for the flag on their face in the
+ * lineup (the owner, 2026-11-11: "when in a game page you see players, could
+ * we make a little flag on the bottom right of their profile pic? the one they
+ * have as their nationality").
+ *
+ * NOT A WIDENING OF THE PII BOUNDARY ABOVE. A signed-up player's country is
+ * already public: `public_player_profile` returns it to anyone who opens their
+ * profile, and the profile prints it with the flag. So it is read here by
+ * nickname, through the service role (`players` grants anon nothing), rather
+ * than added to `game_roster_public` — which would have needed a migration —
+ * and `game_roster_public` stays exactly as narrow as it was.
+ *
+ * Signed-up, not deleted: a guest or a shadow has no profile to agree with.
+ */
+export async function getRosterCountries(nicknames: readonly string[]): Promise<Map<string, string>> {
+  const names = [...new Set(nicknames.filter((name) => name.trim() !== ""))];
+  if (names.length === 0) return new Map();
+
+  const service = createServiceRoleSupabaseClient();
+  const { data, error } = await service
+    .from("players")
+    .select("nickname, country")
+    .in("nickname", names)
+    .not("auth_user_id", "is", null)
+    .is("deleted_at", null)
+    .not("country", "is", null);
+
+  if (error || !data) return new Map();
+  return new Map(
+    data.flatMap((row) => (row.country ? [[row.nickname, row.country] as [string, string]] : [])),
+  );
+}
+
+/**
  * Roster nicknames per game, in join order, for a set of games in one round
  * trip.
  *

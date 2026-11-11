@@ -1,6 +1,7 @@
 import { profilePhotoVersion } from "@/lib/storage/photoVersions";
 import Image from "next/image";
 import Link from "next/link";
+import { CountryFlag, hasFlag } from "@/components/flags/CountryFlag";
 import { GuestIcon } from "@/components/game/GuestIcon";
 import { sortRoster, toRosterAvatar, type RosterAvatar } from "@/lib/games/queries";
 import { guestLabel, isAnonymousGuest } from "@/lib/roster/guests";
@@ -26,6 +27,11 @@ export interface PlayersListProps {
   >[];
   /** Storage origin for the photos; absent means initials everywhere. */
   supabaseUrl?: string;
+  /**
+   * Nationality by nickname, for the flag on each face (2026-11-11). Public on
+   * every profile already — see `getRosterCountries`. Absent: no flags.
+   */
+  countries?: ReadonlyMap<string, string>;
 }
 
 /**
@@ -56,7 +62,7 @@ export interface PlayersListProps {
  * `nickname` is player-supplied and interpolated as a JSX text child, which
  * React escapes.
  */
-export async function PlayersList({ rows, supabaseUrl }: PlayersListProps) {
+export async function PlayersList({ rows, supabaseUrl, countries }: PlayersListProps) {
   const t = await getStrings();
   const locale = await getLocale();
 
@@ -137,7 +143,12 @@ export async function PlayersList({ rows, supabaseUrl }: PlayersListProps) {
                   data-testid="roster-player-link"
                   className="flex min-w-0 flex-1 items-center gap-3 no-underline"
                 >
-                  <Avatar seat={seat} supabaseUrl={supabaseUrl} index={i} />
+                  <Avatar
+                    seat={seat}
+                    supabaseUrl={supabaseUrl}
+                    index={i}
+                    country={countries?.get(seat.nickname) ?? null}
+                  />
                   <span className="min-w-0 flex-1 truncate text-[15px] text-bone">
                     {seat.nickname}
                   </span>
@@ -214,10 +225,13 @@ async function Avatar({
   seat,
   supabaseUrl,
   index,
+  country = null,
 }: {
   seat: RosterAvatar;
   supabaseUrl?: string;
   index: number;
+  /** The player's nationality: a small flag on the bottom right of the face. */
+  country?: string | null;
 }) {
   const t = await getStrings();
   // A guest has no account and therefore no photograph. Not a fallback: there
@@ -227,28 +241,44 @@ async function Avatar({
       ? avatarUrl(supabaseUrl, seat.photoPath, await profilePhotoVersion(seat.photoPath))
       : null;
 
+  /*
+   * THE FLAG RIDES OUTSIDE THE CIRCLE (2026-11-11). The face is clipped round
+   * (`overflow-hidden`), so a flag inside it would be cut in half; it sits in
+   * a wrapper instead, over the face's bottom-right edge, ringed in the page
+   * colour so it reads as a badge rather than a stain on the photo.
+   */
   return (
-    <span
-      data-testid="roster-avatar"
-      className={`flex h-[34px] w-[34px] shrink-0 items-center justify-center overflow-hidden rounded-pill bg-surface-avatar text-[12px] font-bold ${
-        !seat.isGuest && index % 3 === 0 ? "text-volt" : seat.isGuest ? "text-muted" : "text-bone"
-      }`}
-    >
-      {photo ? (
-        /* 512x512 stored, 34px rendered — see AvatarRow (round 37, item 2). */
-        <Image
-          src={photo}
-          alt=""
-          width={96}
-          height={96}
-          data-testid="roster-avatar-photo"
-          className="h-full w-full object-cover"
-          loading="lazy"
-        />
-      ) : isAnonymousGuest(seat) ? (
-        <GuestIcon />
-      ) : (
-        initials(seat.nickname ?? "", t)
+    <span className="relative shrink-0">
+      <span
+        data-testid="roster-avatar"
+        className={`flex h-[34px] w-[34px] shrink-0 items-center justify-center overflow-hidden rounded-pill bg-surface-avatar text-[12px] font-bold ${
+          !seat.isGuest && index % 3 === 0 ? "text-volt" : seat.isGuest ? "text-muted" : "text-bone"
+        }`}
+      >
+        {photo ? (
+          /* 512x512 stored, 34px rendered — see AvatarRow (round 37, item 2). */
+          <Image
+            src={photo}
+            alt=""
+            width={96}
+            height={96}
+            data-testid="roster-avatar-photo"
+            className="h-full w-full object-cover"
+            loading="lazy"
+          />
+        ) : isAnonymousGuest(seat) ? (
+          <GuestIcon />
+        ) : (
+          initials(seat.nickname ?? "", t)
+        )}
+      </span>
+      {country && hasFlag(country) && (
+        <span
+          data-testid="roster-avatar-flag"
+          className="absolute -bottom-[2px] -right-[3px] rounded-full ring-2 ring-ink"
+        >
+          <CountryFlag code={country} size="compact" />
+        </span>
       )}
     </span>
   );
