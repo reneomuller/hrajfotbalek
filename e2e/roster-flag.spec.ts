@@ -34,11 +34,18 @@ test("a player's nationality flag sits on the bottom right of their face in the 
     await expect(flag).toBeVisible();
     await expect(flag.getByTestId("country-flag")).toHaveAttribute("data-country", "CZ");
 
+    // The owner: the face's outline passes through the flag's middle — its
+    // centre ON the outline, at 45° to the bottom right.
     const face = (await row.getByTestId("roster-avatar").boundingBox())!;
     const badge = (await flag.boundingBox())!;
-    expect(badge.x + badge.width / 2, "right of the face's centre").toBeGreaterThan(face.x + face.width / 2);
-    expect(badge.y + badge.height / 2, "below the face's centre").toBeGreaterThan(face.y + face.height / 2);
-    expect(badge.width, "smaller than the face").toBeLessThan(face.width);
+    const radius = face.width / 2;
+    const dx = badge.x + badge.width / 2 - (face.x + radius);
+    const dy = badge.y + badge.height / 2 - (face.y + face.height / 2);
+    expect(Math.abs(Math.hypot(dx, dy) - radius), "the flag's centre is on the outline").toBeLessThan(1.5);
+    expect(dx, "to the right").toBeGreaterThan(0);
+    expect(dy, "and below").toBeGreaterThan(0);
+    expect(Math.abs(dx - dy), "at 45°, bottom right").toBeLessThan(1.5);
+    expect(badge.width, "a 14px flag").toBeLessThan(16);
   } finally {
     await execAsOwner("update public.players set country = $2 where id = $1", [
       players.runner.id,

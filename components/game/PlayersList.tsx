@@ -242,10 +242,14 @@ async function Avatar({
       : null;
 
   /*
-   * THE FLAG RIDES OUTSIDE THE CIRCLE (2026-11-11). The face is clipped round
-   * (`overflow-hidden`), so a flag inside it would be cut in half; it sits in
-   * a wrapper instead, over the face's bottom-right edge, ringed in the page
-   * colour so it reads as a badge rather than a stain on the photo.
+   * THE FLAG SITS ON THE FACE'S OUTLINE (2026-11-11). The owner: the photo's
+   * outer circle should "go through those opposite points" of the flag — the
+   * flag's CENTRE on the outline, at the bottom right, half on the photo and
+   * half off. For the 34px face and the 14px flag: 17 + 17·cos 45° − 7 ≈ 22px
+   * from the top and from the left. The flag lives outside the face's round
+   * clip (`overflow-hidden`) or that half would be cut away; `flex` keeps
+   * its box exactly 14px, where an inline box would grow to the line height
+   * and lift the flag off the line.
    */
   return (
     <span className="relative shrink-0">
@@ -275,7 +279,7 @@ async function Avatar({
       {country && hasFlag(country) && (
         <span
           data-testid="roster-avatar-flag"
-          className="absolute -bottom-[2px] -right-[3px] rounded-full ring-2 ring-ink"
+          className="absolute left-[22px] top-[22px] flex rounded-full ring-2 ring-ink"
         >
           <CountryFlag code={country} size="compact" />
         </span>
