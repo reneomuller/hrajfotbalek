@@ -5,6 +5,16 @@ import { anonClient, apiClientFor, players, serviceClient, signInAs } from "./he
 import { pragueDayKey } from "../lib/games/days.ts";
 
 /**
+ * A kick-off at `hourUtc`:00 UTC on the Prague day `days` from today — 11:00
+ * and 12:00 UTC are midday in Prague in winter and in summer, so two games
+ * made this way are always on the same day, whatever hour the suite runs.
+ */
+function middayInDays(days: number, hourUtc: number): string {
+  const day = pragueDayKey(new Date(Date.now() + days * 24 * 3_600_000));
+  return `${day}T${String(hourUtc).padStart(2, "0")}:00:00Z`;
+}
+
+/**
  * The list URL for the day a given game falls on.
  *
  * ~~The list now defaults to EVERY upcoming game, so this is no longer needed
@@ -694,9 +704,12 @@ test("the day strip filters the list, by the date on the chip", async ({ page })
    * list.~~ Since 2026-11-02 it is on no list at all (the owner: lists show 8
    * days incl. today) — asserted in the test after this one.
    */
-  const dayOne = await createScratchGame({ hoursFromNow: 24 * 3 });
-  const dayTwoA = await createScratchGame({ hoursFromNow: 24 * 5 });
-  const dayTwoB = await createScratchGame({ hoursFromNow: 24 * 5 + 1 });
+  // ~~`hoursFromNow: 24 * 5` and `24 * 5 + 1`~~ — after 23:00 the second
+  // landed on the NEXT day and the pair split across two chips (found running
+  // at 23:39 on 2026-11-11). Midday on a fixed day cannot cross midnight.
+  const dayOne = await createScratchGame({ startsAt: middayInDays(3, 11) });
+  const dayTwoA = await createScratchGame({ startsAt: middayInDays(5, 11) });
+  const dayTwoB = await createScratchGame({ startsAt: middayInDays(5, 12) });
 
   try {
     await page.goto("/games");
@@ -1513,8 +1526,9 @@ test("a booked game shows its avatar stack on the card AND on the detail", async
    * eight days incl. today), and the second game's extra hour carried it into
    * the ninth — off every list — whenever the run started after 23:00 Prague.
    */
-  const empty = await createScratchGame({ hoursFromNow: 24 * 5, capacity: 12 });
-  const booked = await createScratchGame({ hoursFromNow: 24 * 5 + 1, capacity: 12 });
+  // Same day whatever the hour the suite runs — see the day-strip test.
+  const empty = await createScratchGame({ startsAt: middayInDays(5, 11), capacity: 12 });
+  const booked = await createScratchGame({ startsAt: middayInDays(5, 12), capacity: 12 });
 
   try {
     const organizer = await apiClientFor(players.organizer);
