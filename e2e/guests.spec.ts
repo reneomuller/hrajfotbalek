@@ -1,6 +1,7 @@
 import { PASS_REFERENCE_PRICE_CZK } from "../lib/pass/creditPrice";
 import { expect, test } from "@playwright/test";
 import { LOCALE_COOKIE } from "../lib/i18n/locales";
+import { execAsOwner } from "./helpers/clock";
 import { players, serviceClient, signInAs } from "./helpers/session";
 import {
   clearActiveBookings,
@@ -86,7 +87,7 @@ test("a player brings two guests: one booking, one price, three seats", async ({
   }
 });
 
-test("the party renders as guests, last in the row and never with a photo", async ({
+test("the party renders as guests, under the player who brought them, and never with a photo", async ({
   page,
   context,
 }) => {
@@ -116,6 +117,14 @@ test("the party renders as guests, last in the row and never with a photo", asyn
     // An admin holds one house guest too, so both kinds are on one row.
     const admin = serviceClient();
     await admin.rpc("set_game_guests", { p_game_id: game.id, p_count: 1 });
+    // And a second player whose name sorts AFTER the runner's, so the runner's
+    // guests have to sit between the two to be "under the player who brought
+    // them" (2026-11-12) rather than merely near the end.
+    await execAsOwner(
+      `insert into public.bookings (game_id, player_id, status, payment_method, payment_code, price_czk, credit_applied_czk)
+       values ($1, $2, 'confirmed', 'cash', null, $3, 0)`,
+      [game.id, players.seedBot.id, PRICE],
+    );
 
     await page.goto(`/game/${game.id}`, { waitUntil: "networkidle" });
 
@@ -132,7 +141,7 @@ test("the party renders as guests, last in the row and never with a photo", asyn
      * kept in step are one rendering too many. The scoping stays because it
      * is right either way.
      */
-    await expect(page.getByTestId("roster").locator("li")).toHaveCount(4);
+    await expect(page.getByTestId("roster").locator("li")).toHaveCount(5);
     await expect(page.getByTestId("roster").locator('li[data-guest="true"]')).toHaveCount(3);
 
     // And the removed stack has not come back to disagree with it.
@@ -147,18 +156,32 @@ test("the party renders as guests, last in the row and never with a photo", asyn
     expect(text).toContain("Guest 2");
 
     /*
-     * GUESTS LAST. Asserted as an INDEX rather than by reading the markup
-     * order visually: the whole point of the sort is that the recognisable
-     * half of the row stays together, and a component that re-sorted its own
-     * input would make this page and the games list disagree about which
-     * faces the "+N" chip swallowed.
+     * ~~GUESTS LAST~~ — EACH GUEST UNDER THE PLAYER WHO BROUGHT THEM (the owner,
+     * 2026-11-12: "Let's have the guest under the user that selected the guest
+     * instead, not all at the end"). The house guest, nobody's, closes the
+     * list. Read as the rows' text in order.
      */
-    const flags = await page
-      .getByTestId("roster")
-      .locator("li")
-      .evaluateAll((items) => items.map((el) => el.getAttribute("data-guest") === "true"));
-    expect(flags[0]).toBe(false);
-    expect(flags.slice(1)).toEqual([true, true, true]);
+    const rows = await page.getByTestId("roster").locator("li").allInnerTexts();
+    // Whole row text: each row begins with the avatar's initials.
+    expect(rows).toEqual([
+      expect.stringContaining(players.runner.nickname),
+      expect.stringContaining("Guest 1"),
+      expect.stringContaining("Guest 2"),
+      expect.stringContaining(players.seedBot.nickname),
+      expect.stringMatching(/guest/i),
+    ]);
+    expect(rows[1], "the runner's guest, not the house's").toContain(players.runner.nickname);
+
+    // Each player's games count is THEIR OWN — the profile's figure. It used
+    // to be read back by position from the unsorted rows (2026-11-12).
+    for (const player of [players.runner, players.seedBot]) {
+      const { data: profile } = await admin.rpc("public_player_profile", { p_nickname: player.nickname });
+      const row = page.getByTestId("roster").locator("li").filter({ hasText: player.nickname });
+      await expect(row.getByTestId("player-games-played")).toHaveAttribute(
+        "data-count",
+        String((Array.isArray(profile) ? profile[0] : profile)?.games_played ?? 0),
+      );
+    }
 
     // No guest carries a photograph — there is no account to carry one.
     const guestPhotos = await page

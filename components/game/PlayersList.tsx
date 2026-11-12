@@ -3,7 +3,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { CountryFlag, hasFlag } from "@/components/flags/CountryFlag";
 import { GuestIcon } from "@/components/game/GuestIcon";
-import { sortRoster, toRosterAvatar, type RosterAvatar } from "@/lib/games/queries";
+import { toRosterAvatar, type RosterAvatar } from "@/lib/games/queries";
+import { lineupOrder } from "@/lib/roster/lineup";
 import { guestLabel, isAnonymousGuest } from "@/lib/roster/guests";
 import { initials } from "@/lib/roster/initials";
 import { avatarUrl } from "@/lib/storage/avatar";
@@ -66,10 +67,10 @@ export async function PlayersList({ rows, supabaseUrl, countries }: PlayersListP
   const t = await getStrings();
   const locale = await getLocale();
 
-  // Sorted HERE and passed down, so the stack and the named list beneath it
-  // agree about the order — and so the `+N` chip swallows the same tail in
-  // both. `sortRoster` puts guests last.
-  const seats = sortRoster(rows.map(toRosterAvatar));
+  // Each guest under the player who brought them, house guests last
+  // (2026-11-12) — `lineupOrder`. ~~`sortRoster`, guests last~~ is the game
+  // card's row of faces; this list says who came with whom.
+  const seats = lineupOrder(rows.map(toRosterAvatar));
 
   return (
     <section
@@ -170,13 +171,19 @@ export async function PlayersList({ rows, supabaseUrl, countries }: PlayersListP
                 booking exists only once money has arrived, so there is no
                 anonymous row on this list for the chip to be wrong beside.
               */}
-              {!seat.isGuest && typeof rows[i]?.games_played === "number" && (
+              {/*
+                THE SEAT'S OWN COUNT (2026-11-12). ~~`rows[i]`~~ read it back by
+                position from the UNSORTED rows, so every player beside a
+                reordered list showed somebody else's number — "it shows up
+                correctly on their user profile, but not here".
+              */}
+              {!seat.isGuest && typeof seat.gamesPlayed === "number" && (
                 <span
                   data-testid="player-games-played"
-                  data-count={rows[i]?.games_played ?? 0}
+                  data-count={seat.gamesPlayed}
                   className="shrink-0 text-[12px] text-muted"
                 >
-                  {gamesPlayedLabel(rows[i]?.games_played ?? 0, locale, t)}
+                  {gamesPlayedLabel(seat.gamesPlayed, locale, t)}
                 </span>
               )}
             </li>

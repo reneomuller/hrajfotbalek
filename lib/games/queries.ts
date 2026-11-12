@@ -250,6 +250,13 @@ export interface RosterAvatar {
   guestOf: string | null;
   /** 1-based, among that owner's guests or among the house guests. */
   guestIndex: number | null;
+  /**
+   * The view's games-played count, carried WITH the seat (2026-11-12). The
+   * lineup used to read it back by position from the unsorted rows, so once
+   * the list was sorted every player showed somebody else's number. Null where
+   * the loader did not ask for it.
+   */
+  gamesPlayed: number | null;
 }
 
 /**
@@ -266,6 +273,8 @@ export function toRosterAvatar(row: {
   is_guest: boolean;
   guest_of: string | null;
   guest_index: number | null;
+  /** Optional: the card loaders do not ask for it. */
+  games_played?: number | null;
   /*
    * ~~`is_pending`~~ — round 25's anonymous checkout seat, GONE (round 27,
    * item 6b), field and select together.
@@ -290,6 +299,7 @@ export function toRosterAvatar(row: {
     isGuest: row.is_guest,
     guestOf: row.guest_of,
     guestIndex: row.guest_index,
+    gamesPlayed: row.games_played ?? null,
   };
 }
 
@@ -308,6 +318,7 @@ export function plainAvatar(nickname: string): RosterAvatar {
     isGuest: false,
     guestOf: null,
     guestIndex: null,
+    gamesPlayed: null,
   };
 }
 
