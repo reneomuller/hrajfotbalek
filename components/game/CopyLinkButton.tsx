@@ -1,5 +1,6 @@
 "use client";
 
+import { sharedGameId } from "@/lib/analytics/gtm";
 import { useEffect, useState } from "react";
 import { Toast } from "@/components/Toast";
 
@@ -73,6 +74,8 @@ export function CopyLinkButton({
         type="button"
         onClick={() => void copy()}
         data-testid="share-copy-link"
+        data-share-platform="copy_link"
+        data-share-game={sharedGameId(url) ?? undefined}
         className={`inline-flex items-center gap-2 rounded-control border border-hairline-volt bg-volt/[.08] px-3 py-2 uppercase tracking-eyebrow text-volt transition hover:border-hairline-volt ${
           size === "slim" ? "text-[9px]" : "text-[10px]"
         }`}

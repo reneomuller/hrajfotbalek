@@ -1,6 +1,7 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect } from "react";
+import { pushDataLayer } from "@/lib/analytics/gtm";
 import { useFormStatus } from "react-dom";
 import { joinWaitlistAction, type WaitlistActionState } from "@/app/game/[id]/waitlist/actions";
 import { describeWaitlistError } from "@/lib/booking/errors";
@@ -67,6 +68,10 @@ export function WaitlistButton({
 }) {
   const t = useStrings();
   const [state, formAction] = useActionState(joinWaitlistAction, INITIAL);
+  // GA4 `waitlist_join` (GTM v4): once, when the action says this player was added.
+  useEffect(() => {
+    if (state.status === "joined") pushDataLayer({ event: "waitlist_join", game_id: gameId });
+  }, [state, gameId]);
 
   const joined = state.status === "joined" || state.status === "already" || alreadyOnList;
   const positionLabel = waitlistPositionLabel(position, t);

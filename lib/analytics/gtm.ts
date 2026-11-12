@@ -91,11 +91,40 @@ export const SIGNED_UP_PARAM = "signed_up";
  * browser removes it with `history.replaceState` once it has been read.
  */
 export function withSignedUp(path: string): string {
+  return withFlag(path, SIGNED_UP_PARAM, "1");
+}
+
+/**
+ * THE OTHER ONE-TIME FLAGS (GTM v4, 2026-11-12). Same mechanism as
+ * `signed_up`: a server action or a redirect cannot reach `dataLayer`, so it
+ * marks the next page and a client component pushes once and strips the flag
+ * (`components/analytics/FlagEvent.tsx`). A refresh cannot push twice.
+ *
+ *   booked    — a booking came into existence on this confirmation page
+ *   paid      — Stripe confirmed a card payment; the value is the Checkout
+ *               Session id, which is the `transaction_id` GA4 dedupes on
+ *   logged_in — `password` | `email`
+ *   cancelled — `<game id>~<hours before kick-off>~<1 refunded | 0 not>`
+ */
+export const ANALYTICS_FLAGS = {
+  booked: "booked",
+  paid: "paid",
+  loggedIn: "logged_in",
+  cancelled: "cancelled",
+} as const;
+
+/** Appends `name=value` before any `#hash`. */
+export function withFlag(path: string, name: string, value: string): string {
   const hashAt = path.indexOf("#");
   const base = hashAt === -1 ? path : path.slice(0, hashAt);
   const hash = hashAt === -1 ? "" : path.slice(hashAt);
   const joiner = base.includes("?") ? "&" : "?";
-  return `${base}${joiner}${SIGNED_UP_PARAM}=1${hash}`;
+  return `${base}${joiner}${name}=${encodeURIComponent(value)}${hash}`;
+}
+
+/** `withFlag` only while a container is configured — otherwise the path as it was. */
+export function flagDestination(path: string, name: string, value: string): string {
+  return gtmEnabled() ? withFlag(path, name, value) : path;
 }
 
 /** `withSignedUp` only while a container is configured — otherwise the path as it was. */
@@ -115,4 +144,9 @@ export function pushDataLayer(entry: Record<string, unknown>): void {
   if (typeof window === "undefined") return;
   window.dataLayer = window.dataLayer ?? [];
   window.dataLayer.push(entry);
+}
+
+/** The game a share link points at (`/game/<number or id>`), for `share_game`'s `game_id`. */
+export function sharedGameId(url: string): string | null {
+  return url.match(/\/game\/([^/?#]+)/)?.[1] ?? null;
 }

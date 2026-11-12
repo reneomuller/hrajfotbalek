@@ -1,3 +1,4 @@
+import { sharedGameId } from "@/lib/analytics/gtm";
 import { whatsAppShareUrl } from "@/lib/games/share";
 import { getStrings } from "@/lib/i18n/server";
 
@@ -42,6 +43,8 @@ export async function ShareButton({
       target="_blank"
       rel="noopener noreferrer"
       data-testid="share-whatsapp"
+      data-share-platform="whatsapp"
+      data-share-game={sharedGameId(url) ?? undefined}
       aria-label={t.games.shareWhatsApp}
       /*
         BIGGER, WITH THE REAL LOGO (Section 4, item 8). It was a 10px green

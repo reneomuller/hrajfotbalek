@@ -1,3 +1,4 @@
+import { ANALYTICS_FLAGS, flagDestination } from "@/lib/analytics/gtm";
 /**
  * What the player was paying for, remembered across the trip to Stripe
  * (round 15, item 1).
@@ -130,7 +131,7 @@ export function purchaseDestination(
   purchase: PendingPurchase,
   context: { gameId: string | null },
 ): string | null {
-  if (purchase.kind === "pass") return `/pass/credits-added?topup=${purchase.id}`;
+  if (purchase.kind === "pass") return flagDestination(`/pass/credits-added?topup=${purchase.id}`, ANALYTICS_FLAGS.paid, "1");
 
   if (!context.gameId) return null;
   return `/game/${context.gameId}/book/confirmation?booking=${purchase.id}`;

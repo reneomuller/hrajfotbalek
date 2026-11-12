@@ -1,5 +1,6 @@
 "use server";
 
+import { ANALYTICS_FLAGS, flagDestination } from "@/lib/analytics/gtm";
 import { redirect } from "next/navigation";
 import { withToast } from "@/lib/ux/toast";
 import { bookingEmailContext } from "@/lib/cron/context";
@@ -294,7 +295,7 @@ export async function createBookingAction(
   // the acting request and the request that renders the confirmation are
   // different requests, and a kind in the URL is what survives that.
   redirect(
-    withToast(`/game/${gameId}/book/confirmation?booking=${bookingId}`, "bookingCreated"),
+    withToast(flagDestination(`/game/${gameId}/book/confirmation?booking=${bookingId}`, ANALYTICS_FLAGS.booked, "1"), "bookingCreated"),
   );
 }
 

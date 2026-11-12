@@ -1,5 +1,6 @@
 "use server";
 
+import { ANALYTICS_FLAGS, flagDestination } from "@/lib/analytics/gtm";
 import { redirect } from "next/navigation";
 import { withToast } from "@/lib/ux/toast";
 import {
@@ -160,7 +161,7 @@ export async function verifyEmailOtp(
    */
   // Outside the try/catch shape above deliberately: `redirect()` works by
   // throwing, so it must not sit anywhere that swallows exceptions.
-  redirect(`/login/set-password?next=${encodeURIComponent(destination)}`);
+  redirect(flagDestination(`/login/set-password?next=${encodeURIComponent(destination)}`, ANALYTICS_FLAGS.loggedIn, "email"));
 }
 
 /**
@@ -210,7 +211,7 @@ export async function signInWithPassword(
   // The sign-in toast rides the redirect that already happens (§8). Only on
   // the PASSWORD path: the code path lands on set-password, where "signed in"
   // is not the news and the next step is.
-  redirect(withToast(destinationAfterAuth({ hasPlayer, resume }), "signedIn"));
+  redirect(withToast(flagDestination(destinationAfterAuth({ hasPlayer, resume }), ANALYTICS_FLAGS.loggedIn, "password"), "signedIn"));
 }
 
 /**
