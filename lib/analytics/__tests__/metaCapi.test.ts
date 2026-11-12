@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { buildCapiEvent, capiConfig, registrationEventId } from "@/lib/analytics/metaCapi";
+import { buildCapiEvent, capiConfig, GRAPH_VERSION, registrationEventId } from "@/lib/analytics/metaCapi";
 
 describe("Meta Conversions API (dormant until configured)", () => {
   afterEach(() => vi.unstubAllEnvs());
@@ -39,6 +39,12 @@ describe("Meta Conversions API (dormant until configured)", () => {
     expect(event.user_data.external_id).toMatch(/^[0-9a-f]{64}$/);
     expect(JSON.stringify(event)).not.toContain(input.playerId);
     expect(event.user_data).not.toHaveProperty("fbc");
+  });
+
+  it("calls a Marketing API version Meta still serves — the Conversions API follows that schedule", () => {
+    // v21.0, the first draft's, had expired: Meta lists the Marketing API's
+    // current version as v25.0 (released 2026-02-18), checked 2026-11-12.
+    expect(GRAPH_VERSION).toBe("v25.0");
   });
 
   it("gives a registration one stable event id per player, matching the browser's sign_up push", () => {

@@ -150,3 +150,32 @@ export function pushDataLayer(entry: Record<string, unknown>): void {
 export function sharedGameId(url: string): string | null {
   return url.match(/\/game\/([^/?#]+)/)?.[1] ?? null;
 }
+
+/**
+ * THE PLAYER ID, BEFORE THE CONTAINER (2026-11-12, a correction to the GTM v4
+ * patch). `SiteEvents` pushes `user_id` from an effect, which runs after
+ * hydration — and GTM's GA4 tag can fire the first `page_view` before that, so
+ * the first page of every visit went to GA4 without its player. This runs in
+ * <head>, beside the consent defaults, before GTM loads. `SiteEvents` keeps
+ * pushing on navigation, so a sign-in or sign-out without a reload is caught.
+ *
+ * The internal player id, never the email. Serialised with `<` escaped, so no
+ * value can close the script tag.
+ */
+export function userIdBootstrapScript(playerId: string | null): string | null {
+  if (!playerId) return null;
+  const entry = JSON.stringify({ user_id: playerId, player_id: playerId }).replace(/</g, "\\u003c");
+  return `window.dataLayer=window.dataLayer||[];window.dataLayer.push(${entry});`;
+}
+
+/**
+ * How a player signed in, as `login`'s `method` (GA4). `magic_link` added
+ * 2026-11-12: the patch counted the password and the six-digit code, and the
+ * emailed link — the way most players sign in — not at all.
+ */
+export const LOGIN_METHODS = ["password", "email", "magic_link"] as const;
+export type LoginMethod = (typeof LOGIN_METHODS)[number];
+
+export function isLoginMethod(value: string | null | undefined): value is LoginMethod {
+  return (LOGIN_METHODS as readonly string[]).includes(value ?? "");
+}

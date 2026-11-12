@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
-import { ANALYTICS_FLAGS, pushDataLayer } from "@/lib/analytics/gtm";
+import { ANALYTICS_FLAGS, isLoginMethod, pushDataLayer } from "@/lib/analytics/gtm";
 
 /**
  * The site-wide analytics events, mounted once in the root layout while a GTM
@@ -12,7 +12,8 @@ import { ANALYTICS_FLAGS, pushDataLayer } from "@/lib/analytics/gtm";
  *                        GA4 counts one person's phone and laptop as one user.
  *                        Never the email. `null` when signed out, so a shared
  *                        device does not carry the last player's id.
- *   login              — `?logged_in=password|email`, set by `app/login/actions.ts`
+ *   login              — `?logged_in=password|email|magic_link`, set by
+ *                        `app/login/actions.ts` and `app/auth/callback/route.ts`
  *   booking_cancelled  — `?cancelled=<game>~<hours>~<1|0>`, set by the cancel action
  *   share_game         — any click on an element carrying `data-share-platform`
  *                        (the WhatsApp link and Copy link), so the share
@@ -39,7 +40,7 @@ export function SiteEvents({ userId }: { userId: string | null }) {
     if (handled.current === here) return;
     handled.current = here;
 
-    if (login === "password" || login === "email") pushDataLayer({ event: "login", method: login });
+    if (isLoginMethod(login)) pushDataLayer({ event: "login", method: login });
     if (cancelled) {
       const [gameId, hours, refunded] = cancelled.split("~");
       const h = Number(hours);

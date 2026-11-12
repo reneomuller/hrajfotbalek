@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import { FlagEvent } from "@/components/analytics/FlagEvent";
 import { ANALYTICS_FLAGS, gtmEnabled } from "@/lib/analytics/gtm";
 import { queueCapiEvent } from "@/lib/analytics/capiFromRequest";
+import { bookedJustNow, paidCheckoutAmount } from "@/lib/analytics/paidCheckout";
 import { createServerSupabaseClient } from "@/lib/supabase/clients";
 import Link from "next/link";
 import { requireCurrentPlayer } from "@/lib/auth/session";
@@ -116,9 +117,21 @@ export default async function ConfirmationPage({
    * by `FlagEvent`, which then strips both flags.
    */
   const analytics: Record<string, unknown>[] = [];
-  const bookedFlag = query[ANALYTICS_FLAGS.booked] != null;
+  /*
+   * NEITHER FLAG IS TAKEN ON TRUST (2026-11-12). `booked` counts only for a
+   * booking made in the last hour — adding it to an old confirmation link must
+   * not book a game twice — and `paid` only for a Checkout Session that really
+   * paid for THIS booking (`paidCheckoutAmount`), whose amount is the value.
+   */
+  const bookedFlag =
+    query[ANALYTICS_FLAGS.booked] != null && bookedJustNow(booking.created_at);
   const paidRaw = query[ANALYTICS_FLAGS.paid];
-  const paidSession = typeof paidRaw === "string" && paidRaw.startsWith("cs_") ? paidRaw : null;
+  const claimedSession = typeof paidRaw === "string" && paidRaw.startsWith("cs_") ? paidRaw : null;
+  const paidAmount =
+    gtmEnabled() && !isSeed && claimedSession
+      ? await paidCheckoutAmount({ sessionId: claimedSession, bookingId: booking.id, playerId: booking.player_id })
+      : null;
+  const paidSession = paidAmount === null ? null : claimedSession;
   if (gtmEnabled() && !isSeed && (bookedFlag || paidSession)) {
     const card = paidSession != null || booking.stripe_session_id != null;
     if (bookedFlag) {
@@ -139,7 +152,7 @@ export default async function ConfirmationPage({
       });
     }
     if (paidSession) {
-      const charged = addedGuests > 0 ? addedGuests * game.price_czk : Math.max(0, booking.price_czk - booking.credit_applied_czk);
+      const charged = paidAmount ?? 0;
       const seats = addedGuests > 0 ? addedGuests : 1 + booking.guest_count;
       await queueCapiEvent({ name: "Purchase", eventId: paidSession, playerId: booking.player_id, path: `/game/${game.id}/book/confirmation`, value: charged });
       analytics.push({

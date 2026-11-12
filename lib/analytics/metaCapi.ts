@@ -24,7 +24,13 @@ import { createHash } from "node:crypto";
  * returning false. A Meta outage cannot slow or break a page.
  */
 
-const GRAPH_VERSION = "v21.0";
+/**
+ * The Conversions API runs on the MARKETING API's versions, which Meta retires
+ * far sooner than the Graph API's: the first draft's v21.0 had already expired
+ * there. v25.0 was current on 2026-11-12 (developers.facebook.com, "Graph API
+ * and Marketing API Versions") — bump it when Meta schedules its retirement.
+ */
+export const GRAPH_VERSION = "v25.0";
 const SEND_TIMEOUT_MS = 4_000;
 const CURRENCY = "CZK";
 
