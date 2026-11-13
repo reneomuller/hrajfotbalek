@@ -7,6 +7,9 @@ import { queueCapiEvent } from "@/lib/analytics/capiFromRequest";
 import { bookedJustNow, paidCheckoutAmount } from "@/lib/analytics/paidCheckout";
 import { createServerSupabaseClient } from "@/lib/supabase/clients";
 import Link from "next/link";
+import { googleCalendarUrl } from "@/lib/calendar/googleCalendar";
+import { gamePath } from "@/lib/games/link";
+import { siteUrl } from "@/lib/site";
 import { requireCurrentPlayer } from "@/lib/auth/session";
 import { getOwnBookingWithGame } from "@/lib/booking/queries";
 import { formatCzk, formatGameDateTime } from "@/lib/format";
@@ -358,16 +361,39 @@ export default async function ConfirmationPage({
         )}
 
         {/*
-          Calendar download. A plain anchor rather than a Link: this is a file
-          download, not a client-side navigation, and prefetching it would be
-          a pointless request for an attachment.
+          GOOGLE CALENDAR FIRST (2026-11-13). The owner: on Android the old
+          button downloaded a file to open by hand, and on an iPhone it went to
+          Apple Calendar — "I'd like both android and iphone to prompt google
+          calendar and make it a one click addition". Google's own new-event
+          link opens with the game filled in; the player taps Save. A new tab,
+          so this confirmation is still here when they come back.
+        */}
+        <a
+          href={googleCalendarUrl({
+            venue: game.venue,
+            startsAt: game.starts_at,
+            durationMinutes: game.duration_minutes,
+            url: `${await siteUrl()}${gamePath(game)}`,
+          })}
+          target="_blank"
+          rel="noopener noreferrer"
+          data-testid="google-calendar-link"
+          className="mt-8 block rounded-control border border-hairline-volt px-6 py-4 text-center text-cta font-extrabold uppercase tracking-wide text-volt no-underline"
+        >
+          {t.booking.addToGoogleCalendar}
+        </a>
+        {/*
+          The .ics, second and quieter, for Apple and every other calendar. A
+          plain anchor rather than a Link: a file download, not a client-side
+          navigation, and prefetching it would be a pointless request for an
+          attachment.
         */}
         <a
           href={`/game/${game.id}/ics`}
           data-testid="ics-link"
-          className="mt-8 block rounded-control border border-hairline-volt px-6 py-4 text-center text-cta font-extrabold uppercase tracking-wide text-volt no-underline"
+          className="mt-3 block text-center text-small text-muted underline-offset-4 hover:text-volt hover:underline"
         >
-          {t.booking.addToCalendar}
+          {t.booking.addToOtherCalendar}
         </a>
 
         <Link

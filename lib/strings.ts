@@ -1110,7 +1110,10 @@ export const strings = {
       "It is less than {hours} hours to kickoff, so this one is not credited back. Cancelling still frees your spot for someone else.",
     cancelConfirm: "Cancel this booking? Your credits are returned to you.",
     cancelled: "Booking cancelled",
-    addToCalendar: "Add to calendar",
+    /* Google Calendar opens with the game filled in (2026-11-13); the .ics stays
+       beneath it for Apple and other calendars. */
+    addToGoogleCalendar: "Add to Google Calendar",
+    addToOtherCalendar: "Apple or other calendar",
     share: "Share",
     // Full-credit and seed outcomes: confirmed instantly, nothing to pay.
     coveredByCredit: "Your credit covered this game in full. Nothing to pay.",
