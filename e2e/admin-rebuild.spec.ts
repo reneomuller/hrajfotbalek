@@ -95,7 +95,7 @@ test("every rebuilt admin page fits a 390px phone", async ({ page }) => {
   }
 });
 
-test("the season switch prices the games created after it, and leaves the earlier ones alone", async ({
+test("the season switch reprices every game not yet played, including ones made before it", async ({
   page,
 }) => {
   // Arrange
@@ -115,7 +115,10 @@ test("the season switch prices the games created after it, and leaves the earlie
 
     // Assert
     expect((await costOf(after.id))?.cost, "a new game takes the new season's price").toBe(prices[other]);
-    expect((await costOf(before.id))?.cost, "an existing game keeps its own").toBe(prices[original]);
+    // ~~"an existing game keeps its own"~~ — since 2026-11-13 a game follows
+    // its venue until it is played (the owner: the 1200 placeholder stayed on
+    // every game in the finances section).
+    expect((await costOf(before.id))?.cost, "a game made earlier but not yet played follows").toBe(prices[other]);
   } finally {
     await (await apiClientFor(players.organizer)).rpc("set_pitch_season", { p_season: original });
     await destroyScratchGame(before.id);

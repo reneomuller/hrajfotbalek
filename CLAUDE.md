@@ -919,6 +919,23 @@ node scripts/apply-migration.mjs \
   supabase/migrations/20261108100000_pitch_costs.sql --production
 ```
 
+**OUTSTANDING — round 42's fifth, a game's pitch cost follows its venue until it is
+played (ledger row 465).** Waits for the owner's go; the Oliver-applies rule stands.
+Idempotent, order-free after `20261108100000`; applied twice locally and drilled
+(`pitch_cost_follows_venue.sql`, 60/60 suites). It REVISES the 2026-11-08 ruling
+"each game keeps the cost it was created with": `set_venue_pitch_costs` and
+`set_pitch_season` now reprice every game that has not FINISHED and was not
+typed by hand (`reprice_unplayed_games`, internal). And it CORRECTS DATA ONCE:
+every game not typed by hand — played ones included — takes its venue's current
+price for the current season, which is what removes the 1200 placeholder from the
+finances. No capability flag. Apply it with or before the deploy: the deploy only
+changes the venue page's wording to describe the new rule.
+
+```
+node scripts/apply-migration.mjs \
+  supabase/migrations/20261113100000_pitch_cost_follows_venue.sql --production
+```
+
 When a UI failure looks inexplicable and the code reads correctly, check this
 list before debugging the component.
 

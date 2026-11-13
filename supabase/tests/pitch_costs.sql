@@ -189,8 +189,12 @@ insert into public.games (id, venue, venue_id, starts_at, capacity, price_czk, s
   ('94245000-0000-0000-0000-0000000000a0', 'R42P Nowhere', null,
    now() + interval '4 days', 14, 180, 'published', 90);
 
-select pg_temp.ok(pg_temp.cost('94245000-0000-0000-0000-0000000000a1') = 900,
-  'switching to winter leaves an existing game at the price it was made with');
+-- ~~"switching to winter leaves an existing game at the price it was made
+-- with"~~ — since 2026-11-13 a game follows its venue until it is played
+-- (pitch_cost_follows_venue.sql), so a game ahead takes the winter price.
+select pg_temp.ok(pg_temp.cost('94245000-0000-0000-0000-0000000000a1') = 1300,
+  'switching to winter reprices a game that is still ahead',
+  coalesce(pg_temp.cost('94245000-0000-0000-0000-0000000000a1')::text, 'null'));
 select pg_temp.ok(pg_temp.cost('94245000-0000-0000-0000-0000000000a2') = 1300,
   'a game created in winter takes the winter price',
   coalesce(pg_temp.cost('94245000-0000-0000-0000-0000000000a2')::text, 'null'));
@@ -200,8 +204,10 @@ select pg_temp.ok(pg_temp.cost('94245000-0000-0000-0000-0000000000a0') is null,
 select pg_temp.act_as('42450000-0000-0000-0000-000000000013');
 select public.set_venue_pitch_costs('94245000-0000-0000-0000-0000000000c1', 700, 1100);
 reset role;
-select pg_temp.ok(pg_temp.cost('94245000-0000-0000-0000-0000000000a2') = 1300,
-  'repricing the venue leaves its existing games alone');
+-- ~~"repricing the venue leaves its existing games alone"~~ (2026-11-13).
+select pg_temp.ok(pg_temp.cost('94245000-0000-0000-0000-0000000000a2') = 1100,
+  'repricing the venue reprices its games that are still ahead',
+  coalesce(pg_temp.cost('94245000-0000-0000-0000-0000000000a2')::text, 'null'));
 
 -- --- an admin corrects one game --------------------------------------------
 

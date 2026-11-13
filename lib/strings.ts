@@ -2565,15 +2565,15 @@ export const strings = {
       inForce: "Now",
       currency: "CZK",
       costSave: "Save pitch cost",
-      costSaved: "Saved. A game created here now costs {amount}; games already created keep theirs.",
+      costSaved: "Saved. Games here that haven't been played now cost {amount}; played games keep theirs, and a cost typed on a game's page stays.",
       /** The one season switch, at the top of the page. */
       seasonHeading: "Pitch season",
-      seasonLegend: "Price new games for",
+      seasonLegend: "Price games for",
       seasonHint:
-        "One switch for every venue. It prices the games you create from now on — games already created keep the pitch cost they were made with.",
+        "One switch for every venue. It prices every game that hasn't been played yet — a played game keeps what it cost, and a cost typed on a game's page always wins.",
       seasonSaved: {
-        winter: "Switched to winter. New games take each venue's winter cost.",
-        summer: "Switched to summer. New games take each venue's summer cost.",
+        winter: "Switched to winter. Games not yet played take each venue's winter cost.",
+        summer: "Switched to summer. Games not yet played take each venue's summer cost.",
       },
       /** The list's heading row: how many venues, and what the figure on each row is. */
       listHeading: "In use ({count})",
