@@ -16,7 +16,7 @@ import { SIGNED_UP_PARAM, pushDataLayer } from "@/lib/analytics/gtm";
  * Pushed whatever the reader consented to: the event is a fact about the page,
  * and GTM's tags decide — under Consent Mode — whether anything is sent.
  */
-export function SignUpEvent() {
+export function SignUpEvent({ eventId = null, capi = false }: { eventId?: string | null; capi?: boolean } = {}) {
   const params = useSearchParams();
   const pathname = usePathname();
   const handled = useRef<string | null>(null);
@@ -28,13 +28,15 @@ export function SignUpEvent() {
     if (handled.current === here) return;
     handled.current = here;
 
-    pushDataLayer({ event: "sign_up" });
+    // `event_id` lets GTM's Meta Pixel tag and the Conversions API count this once.
+    pushDataLayer(eventId ? { event: "sign_up", event_id: eventId } : { event: "sign_up" });
+    if (capi) void fetch("/api/meta/registration", { method: "POST", keepalive: true }).catch(() => undefined);
 
     const rest = new URLSearchParams(params.toString());
     rest.delete(SIGNED_UP_PARAM);
     const query = rest.toString();
     window.history.replaceState(null, "", `${pathname}${query ? `?${query}` : ""}${window.location.hash}`);
-  }, [flagged, params, pathname]);
+  }, [flagged, params, pathname, eventId, capi]);
 
   return null;
 }

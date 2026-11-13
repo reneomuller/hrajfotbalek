@@ -91,11 +91,40 @@ export const SIGNED_UP_PARAM = "signed_up";
  * browser removes it with `history.replaceState` once it has been read.
  */
 export function withSignedUp(path: string): string {
+  return withFlag(path, SIGNED_UP_PARAM, "1");
+}
+
+/**
+ * THE OTHER ONE-TIME FLAGS (GTM v4, 2026-11-12). Same mechanism as
+ * `signed_up`: a server action or a redirect cannot reach `dataLayer`, so it
+ * marks the next page and a client component pushes once and strips the flag
+ * (`components/analytics/FlagEvent.tsx`). A refresh cannot push twice.
+ *
+ *   booked    — a booking came into existence on this confirmation page
+ *   paid      — Stripe confirmed a card payment; the value is the Checkout
+ *               Session id, which is the `transaction_id` GA4 dedupes on
+ *   logged_in — `password` | `email`
+ *   cancelled — `<game id>~<hours before kick-off>~<1 refunded | 0 not>`
+ */
+export const ANALYTICS_FLAGS = {
+  booked: "booked",
+  paid: "paid",
+  loggedIn: "logged_in",
+  cancelled: "cancelled",
+} as const;
+
+/** Appends `name=value` before any `#hash`. */
+export function withFlag(path: string, name: string, value: string): string {
   const hashAt = path.indexOf("#");
   const base = hashAt === -1 ? path : path.slice(0, hashAt);
   const hash = hashAt === -1 ? "" : path.slice(hashAt);
   const joiner = base.includes("?") ? "&" : "?";
-  return `${base}${joiner}${SIGNED_UP_PARAM}=1${hash}`;
+  return `${base}${joiner}${name}=${encodeURIComponent(value)}${hash}`;
+}
+
+/** `withFlag` only while a container is configured — otherwise the path as it was. */
+export function flagDestination(path: string, name: string, value: string): string {
+  return gtmEnabled() ? withFlag(path, name, value) : path;
 }
 
 /** `withSignedUp` only while a container is configured — otherwise the path as it was. */
@@ -115,4 +144,38 @@ export function pushDataLayer(entry: Record<string, unknown>): void {
   if (typeof window === "undefined") return;
   window.dataLayer = window.dataLayer ?? [];
   window.dataLayer.push(entry);
+}
+
+/** The game a share link points at (`/game/<number or id>`), for `share_game`'s `game_id`. */
+export function sharedGameId(url: string): string | null {
+  return url.match(/\/game\/([^/?#]+)/)?.[1] ?? null;
+}
+
+/**
+ * THE PLAYER ID, BEFORE THE CONTAINER (2026-11-12, a correction to the GTM v4
+ * patch). `SiteEvents` pushes `user_id` from an effect, which runs after
+ * hydration — and GTM's GA4 tag can fire the first `page_view` before that, so
+ * the first page of every visit went to GA4 without its player. This runs in
+ * <head>, beside the consent defaults, before GTM loads. `SiteEvents` keeps
+ * pushing on navigation, so a sign-in or sign-out without a reload is caught.
+ *
+ * The internal player id, never the email. Serialised with `<` escaped, so no
+ * value can close the script tag.
+ */
+export function userIdBootstrapScript(playerId: string | null): string | null {
+  if (!playerId) return null;
+  const entry = JSON.stringify({ user_id: playerId, player_id: playerId }).replace(/</g, "\\u003c");
+  return `window.dataLayer=window.dataLayer||[];window.dataLayer.push(${entry});`;
+}
+
+/**
+ * How a player signed in, as `login`'s `method` (GA4). `magic_link` added
+ * 2026-11-12: the patch counted the password and the six-digit code, and the
+ * emailed link — the way most players sign in — not at all.
+ */
+export const LOGIN_METHODS = ["password", "email", "magic_link"] as const;
+export type LoginMethod = (typeof LOGIN_METHODS)[number];
+
+export function isLoginMethod(value: string | null | undefined): value is LoginMethod {
+  return (LOGIN_METHODS as readonly string[]).includes(value ?? "");
 }

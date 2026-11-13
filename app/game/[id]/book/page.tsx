@@ -1,3 +1,4 @@
+import { ANALYTICS_FLAGS, flagDestination } from "@/lib/analytics/gtm";
 import type { Metadata } from "next";
 import { appCapabilities } from "@/lib/db/capabilities";
 import Link from "next/link";
@@ -90,7 +91,7 @@ export default async function BookPage({ params, searchParams }: BookPageProps) 
   if (intent?.method && user) {
     const outcome = await runCreateBooking(game.id, intent.method);
     if (typeof outcome === "string") {
-      redirect(`/game/${game.id}/book/confirmation?booking=${outcome}`);
+      redirect(flagDestination(`/game/${game.id}/book/confirmation?booking=${outcome}`, ANALYTICS_FLAGS.booked, "1"));
     }
     return (
       <main className="relative z-10 mx-auto w-full max-w-shell px-gutter pb-16 pt-24">

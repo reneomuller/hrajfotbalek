@@ -1,5 +1,6 @@
 "use server";
 
+import { ANALYTICS_FLAGS, flagDestination } from "@/lib/analytics/gtm";
 import { STABLE_TAGS } from "@/lib/db/stableRead";
 import { revalidatePath, updateTag } from "next/cache";
 import { withToast } from "@/lib/ux/toast";
@@ -137,7 +138,11 @@ export async function cancelBookingAction(
    */
   const toastTo = String(formData.get("toastTo") ?? "");
   if (toastTo.startsWith("/")) {
-    redirect(withToast(toastTo, "bookingCancelled"));
+    // `booking_cancelled` for GA4: how late people drop out, and whether it was credited.
+    const flagged = booking?.game_id
+      ? flagDestination(toastTo, ANALYTICS_FLAGS.cancelled, `${booking.game_id}~${Number(result?.cancel_lead_hours ?? 0)}~${credited > 0 ? 1 : 0}`)
+      : toastTo;
+    redirect(withToast(flagged, "bookingCancelled"));
   }
 
   return { status: "cancelled" };

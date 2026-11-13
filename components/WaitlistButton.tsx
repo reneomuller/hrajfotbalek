@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
+import { pushDataLayer } from "@/lib/analytics/gtm";
 import { useFormStatus } from "react-dom";
 import { joinWaitlistAction, type WaitlistActionState } from "@/app/game/[id]/waitlist/actions";
 import { describeWaitlistError } from "@/lib/booking/errors";
@@ -66,7 +67,21 @@ export function WaitlistButton({
   variant?: "panel" | "bar";
 }) {
   const t = useStrings();
-  const [state, formAction] = useActionState(joinWaitlistAction, INITIAL);
+  /*
+   * GA4 `waitlist_join`, pushed AS THE ACTION ANSWERS (2026-11-12). The first
+   * draft pushed from an effect on `state` — and the action revalidates, so
+   * the claim bar re-renders to "waitlisted" and unmounts this button in the
+   * same commit: the effect never ran and the event never left. The
+   * revalidation lesson in CLAUDE.md, one more time.
+   */
+  const [state, formAction] = useActionState(
+    async (previous: WaitlistActionState, formData: FormData) => {
+      const result = await joinWaitlistAction(previous, formData);
+      if (result.status === "joined") pushDataLayer({ event: "waitlist_join", game_id: gameId });
+      return result;
+    },
+    INITIAL,
+  );
 
   const joined = state.status === "joined" || state.status === "already" || alreadyOnList;
   const positionLabel = waitlistPositionLabel(position, t);

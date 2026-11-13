@@ -1,5 +1,11 @@
 import type { Metadata } from "next";
 import { ToastFromQuery } from "@/components/ToastFromQuery";
+import { Suspense } from "react";
+import { FlagEvent } from "@/components/analytics/FlagEvent";
+import { ANALYTICS_FLAGS, gtmEnabled } from "@/lib/analytics/gtm";
+import { queueCapiEvent } from "@/lib/analytics/capiFromRequest";
+import { bookedJustNow, paidCheckoutAmount } from "@/lib/analytics/paidCheckout";
+import { createServerSupabaseClient } from "@/lib/supabase/clients";
 import Link from "next/link";
 import { requireCurrentPlayer } from "@/lib/auth/session";
 import { getOwnBookingWithGame } from "@/lib/booking/queries";
@@ -102,8 +108,73 @@ export default async function ConfirmationPage({
   const amountDue = amountDueCzk(booking.price_czk, booking.credit_applied_czk);
   const needsPayment = booking.status === "reserved" && amountDue > 0;
 
+  /*
+   * GA4 (GTM v4): `game_booked` when this page was reached by creating the
+   * booking (`?booked=1`), and `purchase` when Stripe confirmed a card payment
+   * (`?paid=<Checkout Session id>`, GA4's transaction_id, so a second push of
+   * the same payment is dropped). Read off the persisted booking like the rest
+   * of the page; the flags only say WHICH of these just happened. Pushed once
+   * by `FlagEvent`, which then strips both flags.
+   */
+  const analytics: Record<string, unknown>[] = [];
+  /*
+   * NEITHER FLAG IS TAKEN ON TRUST (2026-11-12). `booked` counts only for a
+   * booking made in the last hour — adding it to an old confirmation link must
+   * not book a game twice — and `paid` only for a Checkout Session that really
+   * paid for THIS booking (`paidCheckoutAmount`), whose amount is the value.
+   */
+  const bookedFlag =
+    query[ANALYTICS_FLAGS.booked] != null && bookedJustNow(booking.created_at);
+  const paidRaw = query[ANALYTICS_FLAGS.paid];
+  const claimedSession = typeof paidRaw === "string" && paidRaw.startsWith("cs_") ? paidRaw : null;
+  const paidAmount =
+    gtmEnabled() && !isSeed && claimedSession
+      ? await paidCheckoutAmount({ sessionId: claimedSession, bookingId: booking.id, playerId: booking.player_id })
+      : null;
+  const paidSession = paidAmount === null ? null : claimedSession;
+  if (gtmEnabled() && !isSeed && (bookedFlag || paidSession)) {
+    const card = paidSession != null || booking.stripe_session_id != null;
+    if (bookedFlag) {
+      // First booking: no other booking of theirs that still stands (reserved or confirmed).
+      const supabase = await createServerSupabaseClient();
+      const { count } = await supabase
+        .from("bookings")
+        .select("id", { count: "exact", head: true })
+        .eq("player_id", booking.player_id)
+        .in("status", ["reserved", "confirmed"])
+        .neq("id", booking.id);
+      analytics.push({
+        event: "game_booked",
+        game_id: game.id,
+        booking_id: booking.id,
+        payment_method: card ? "card" : booking.payment_method,
+        is_first_booking: (count ?? 0) === 0,
+      });
+    }
+    if (paidSession) {
+      const charged = paidAmount ?? 0;
+      const seats = addedGuests > 0 ? addedGuests : 1 + booking.guest_count;
+      await queueCapiEvent({ name: "Purchase", eventId: paidSession, playerId: booking.player_id, path: `/game/${game.id}/book/confirmation`, value: charged });
+      analytics.push({
+        event: "purchase",
+        event_id: paidSession,
+        ecommerce: {
+          transaction_id: paidSession,
+          value: charged,
+          currency: "CZK",
+          items: [{ item_id: game.id, item_name: `${game.venue} · ${game.starts_at.slice(0, 10)}`, item_category: "single", price: seats ? Math.round(charged / seats) : charged, quantity: seats }],
+        },
+      });
+    }
+  }
+
   return (
     <main className="relative z-10 mx-auto w-full max-w-shell px-gutter pb-16 pt-24">
+      {analytics.length > 0 && (
+        <Suspense fallback={null}>
+          <FlagEvent flags={[ANALYTICS_FLAGS.booked, ANALYTICS_FLAGS.paid]} events={analytics} />
+        </Suspense>
+      )}
       <div
         data-testid="confirmation"
         data-status={booking.status}

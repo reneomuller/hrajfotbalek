@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import type { EmailOtpType } from "@supabase/supabase-js";
+import { ANALYTICS_FLAGS, flagDestination } from "@/lib/analytics/gtm";
 import { createServerSupabaseClient } from "@/lib/supabase/clients";
 import { getLocale } from "@/lib/i18n/server";
 import {
@@ -81,7 +82,16 @@ export async function GET(request: NextRequest) {
   const { hasPlayer } = await completePostAuth(supabase, await getLocale());
   const resume = resumeDestination({ next, gameId, action });
 
+  // GA4 `login` for the emailed link (2026-11-12) — the way most players
+  // sign in, and the one the first draft of the events missed. Only for an
+  // existing player: a first visit through the link is a sign-up, not a login.
+  const destination = destinationAfterAuth({ hasPlayer, resume });
   return NextResponse.redirect(
-    new URL(destinationAfterAuth({ hasPlayer, resume }), url.origin),
+    new URL(
+      hasPlayer && otpType !== "recovery"
+        ? flagDestination(destination, ANALYTICS_FLAGS.loggedIn, "magic_link")
+        : destination,
+      url.origin,
+    ),
   );
 }

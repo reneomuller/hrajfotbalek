@@ -1,5 +1,6 @@
 "use server";
 
+import { ANALYTICS_FLAGS, flagDestination } from "@/lib/analytics/gtm";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getSessionUser } from "@/lib/auth/session";
@@ -117,7 +118,7 @@ export async function convertWaitlistAction(
   const booking = data as unknown as { id: string } | null;
   if (!booking?.id) return { status: "error", code: "UNKNOWN" };
 
-  redirect(`/game/${gameId}/book/confirmation?booking=${booking.id}`);
+  redirect(flagDestination(`/game/${gameId}/book/confirmation?booking=${booking.id}`, ANALYTICS_FLAGS.booked, "1"));
 }
 
 

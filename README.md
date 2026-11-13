@@ -52,7 +52,8 @@ reads Vercel's environment. The variables that must be set:
 | `NEXT_PUBLIC_SITE_URL` | Must match Supabase's redirect allow-list **exactly** — a mismatch fails silently, see `CLAUDE.md` |
 | `STRIPE_SECRET_KEY`, `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`, `STRIPE_WEBHOOK_SECRET` | Card payments |
 | `RESEND_API_KEY`, `EMAIL_DRY_RUN` | Mail. The E2E suite forces dry-run on |
-| `NEXT_PUBLIC_GTM_ID` | Optional. A Google Tag Manager container (`GTM-…`). Unset, the site sets only necessary cookies and shows no banner; set, it loads GTM with Consent Mode defaulting to denied, the lawyer's cookie banner, the footer's "Cookie settings" link, the analytics rows in the cookie policy and the `sign_up` event. Inlined at build time, so a change needs a redeploy |
+| `NEXT_PUBLIC_GTM_ID` | Optional. A Google Tag Manager container (`GTM-…`). Unset, the site sets only necessary cookies and shows no banner; set, it loads GTM with Consent Mode defaulting to denied, the lawyer's cookie banner, the footer's "Cookie settings" link, the analytics rows in the cookie policy and the GA4 events (`sign_up`, `purchase`, `game_booked`, `login`, `waitlist_join`, `booking_cancelled`, `share_game`, plus `user_id`/`player_id`). Inlined at build time, so a change needs a redeploy |
+| `META_PIXEL_ID`, `META_CAPI_TOKEN` | Optional, server-only. Both set: Purchase and CompleteRegistration also go to Meta's Conversions API from the server, for readers who accepted marketing cookies, deduplicated against the Pixel by event id. The token is a secret (Vercel Production only) |
 
 ## Common commands
 

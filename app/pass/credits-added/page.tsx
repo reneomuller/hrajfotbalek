@@ -1,6 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Suspense } from "react";
+import { FlagEvent } from "@/components/analytics/FlagEvent";
+import { ANALYTICS_FLAGS, gtmEnabled } from "@/lib/analytics/gtm";
+import { queueCapiEvent } from "@/lib/analytics/capiFromRequest";
 import { requireCurrentPlayer } from "@/lib/auth/session";
+import { createServerSupabaseClient } from "@/lib/supabase/clients";
 import { getOwnCreditBalance } from "@/lib/booking/queries";
 import { getLocale, getStrings } from "@/lib/i18n/server";
 import { creditsLabel } from "@/lib/pass/credits";
@@ -40,8 +45,14 @@ export async function generateMetadata(): Promise<Metadata> {
  * screen that teaches it; a CZK figure here re-introduces the unit at exactly
  * the moment the player is forming their idea of what they just bought.
  */
-export default async function CreditsAddedPage() {
+export default async function CreditsAddedPage({
+  searchParams,
+}: {
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
+}) {
   await requireCurrentPlayer("/pass/credits-added");
+  const query = searchParams ? await searchParams : {};
+  const purchase = await passPurchaseEvent(query);
 
   const [t, locale, balanceCzk] = await Promise.all([
     getStrings(),
@@ -56,6 +67,11 @@ export default async function CreditsAddedPage() {
 
   return (
     <main className="relative z-10 mx-auto w-full max-w-shell px-gutter pb-16 pt-24">
+      {purchase && (
+        <Suspense fallback={null}>
+          <FlagEvent flags={[ANALYTICS_FLAGS.paid]} events={[purchase]} />
+        </Suspense>
+      )}
       <div data-testid="credits-added" data-credits={credits}>
         <div className="flex items-center gap-3 rounded-card border-2 border-volt bg-volt/[.08] px-5 py-4">
           <span
@@ -94,4 +110,38 @@ export default async function CreditsAddedPage() {
       </div>
     </main>
   );
+}
+
+/**
+ * GA4 `purchase` for a pass (GTM v4), only on the redirect that follows a
+ * confirmed payment (`?paid=1`, set by `purchaseDestination`). `?topup=` names
+ * the row; RLS returns it only to its owner, and it is read here rather than
+ * trusted from the URL. The Stripe session id is the transaction_id, so GA4
+ * drops a second push of the same payment.
+ */
+async function passPurchaseEvent(query: Record<string, string | string[] | undefined>): Promise<Record<string, unknown> | null> {
+  if (!gtmEnabled() || query[ANALYTICS_FLAGS.paid] == null) return null;
+  const topupId = typeof query.topup === "string" ? query.topup : null;
+  if (!topupId) return null;
+  const supabase = await createServerSupabaseClient();
+  const { data } = await supabase
+    .from("credit_topups")
+    .select("id, player_id, status, amount_czk, received_amount_czk, pass_games, stripe_session_id")
+    .eq("id", topupId)
+    .maybeSingle();
+  if (!data || data.status !== "confirmed") return null;
+  const value = Number(data.received_amount_czk ?? data.amount_czk);
+  const games = data.pass_games;
+  const eventId = data.stripe_session_id ?? data.id;
+  await queueCapiEvent({ name: "Purchase", eventId, playerId: data.player_id, path: "/pass/credits-added", value });
+  return {
+    event: "purchase",
+    event_id: eventId,
+    ecommerce: {
+      transaction_id: eventId,
+      value,
+      currency: "CZK",
+      items: [{ item_id: games ? `pass_${games}` : "credit_topup", item_name: games ? `${games}-game pass` : "Credit top-up", item_category: "pass", price: value, quantity: 1 }],
+    },
+  };
 }

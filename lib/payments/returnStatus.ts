@@ -1,3 +1,4 @@
+import { ANALYTICS_FLAGS, flagDestination } from "@/lib/analytics/gtm";
 import {
   purchaseDestination,
   type PendingPurchase,
@@ -133,14 +134,16 @@ async function readBookingStatus(
       const added = Number(outcome.guest_count ?? 0);
       return {
         state: "confirmed",
-        href: added > 0 ? `${confirmation}&added=${added}` : confirmation,
+        // A card payment for more guests: revenue, not a new booking (`paid` only).
+        href: flagDestination(added > 0 ? `${confirmation}&added=${added}` : confirmation, ANALYTICS_FLAGS.paid, purchase.id),
         fallbackHref,
       };
     }
 
     return {
       state: "confirmed",
-      href: `/game/${outcome.game_id}/book/confirmation?booking=${outcome.booking_id}`,
+      // A new booking paid by card: `booked` and `paid` (the Stripe session id is GA4's transaction_id).
+      href: flagDestination(flagDestination(confirmation, ANALYTICS_FLAGS.booked, "1"), ANALYTICS_FLAGS.paid, purchase.id),
       fallbackHref,
     };
   }
