@@ -55,16 +55,14 @@ export function CardPhotoScrim() {
         seam nobody put there on purpose.
       */}
       {/*
-        ~~`to-ink to-70%`~~ — LIGHTER AT THE FOOT (2026-11-16), the owner's
-        choice: the photo stays visible to the card's bottom edge, under the
-        bar, the faces and Join, shaded to 70% rather than blacked out from
-        70% down. The top and the middle are as they were. Every element down
-        there carries its own fill (solid segments, filled faces, a volt
-        pill), so none of them leaned on the black.
+        THE BLACK FOOT STAYS (2026-11-16). A lighter foot shipped as
+        `cr75qe3mp` and went straight back: the owner, "i misunderstood the
+        black faded thing at the bottom of the game card. that HAS to stay
+        like before". Do not lighten it again without asking.
       */}
       <span
         data-testid="card-scrim"
-        className="absolute inset-0 bg-gradient-to-b from-ink/[.15] via-ink/[.40] via-50% to-ink/[.70]"
+        className="absolute inset-0 bg-gradient-to-b from-ink/[.15] via-ink/[.45] via-50% to-ink to-70%"
       />
       {/*
         TEXT PROTECTION, LOCAL TO THE TITLE LINE.

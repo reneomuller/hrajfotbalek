@@ -55,8 +55,8 @@ const TITLE_BAND_FLOOR = 45;
  * there. An assertion that cannot fail is worse than none, because it reports
  * coverage it does not have.
  */
-/** The shaded foot still shows the photo: above solid ink (about 10). */
-const FADED_FLOOR = 15;
+/** The faded foot: the band reads 29-30 on the ink ramp (faces and cue included). */
+const FADED_CEILING = 40;
 
 /** Mean luminance of a horizontal slice, as a fraction of the card's height. */
 async function sliceLuminance(
@@ -243,12 +243,11 @@ test("the card over the photo — scrim, outline and inert cue", async ({
   ).toBeGreaterThanOrEqual(TITLE_BAND_FLOOR);
 
   /*
-   * ~~AND IT IS GONE BY THE CAPACITY / AVATAR REGION.~~ NOT SINCE 2026-11-16:
-   * the owner chose a lighter foot ("Lighten the card's bottom") so the photo
-   * he framed still shows under the bar and the faces. What survives of the
-   * round-7 claim is that the ramp still RUNS — the foot is SHADED, darker
-   * than the title band, and not black. (This assertion had been failing on
-   * the old ceiling for a while, ledger row 468, with a mean of 29-30.)
+   * AND IT FADES TO INK BY THE CAPACITY / AVATAR REGION — the black foot the
+   * owner wants kept ("that HAS to stay like before", 2026-11-16). The old
+   * ceiling of 15 failed at 29-30 for a while (ledger row 468) on the old ramp
+   * itself, because the band also holds the faces and the cue; what is
+   * asserted is that the foot is well below the title band and not lit.
    */
   const belowBoundary = await sliceLuminance(card, 0.72, 0.9);
   expect(
@@ -257,8 +256,8 @@ test("the card over the photo — scrim, outline and inert cue", async ({
   ).toBeLessThan(luminance);
   expect(
     belowBoundary,
-    `the foot is black — the photo should still show under the bar and the faces (mean ${belowBoundary})`,
-  ).toBeGreaterThan(FADED_FLOOR);
+    `the foot is not faded to ink under the bar and the faces (mean ${belowBoundary})`,
+  ).toBeLessThanOrEqual(FADED_CEILING);
 
   // --- R6's named requirement: the volt outline survives the photo --------
   const pill = card.getByTestId("card-when");

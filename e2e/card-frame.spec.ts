@@ -58,14 +58,12 @@ test("the venue photo's crop window darkens as the card does, so the outline sho
     await expect(overlay.getByTestId("card-title-scrim")).toBeAttached();
     await expect(page.getByTestId("photo-cropper")).toContainText("the dashed band is what a computer shows");
 
-    // …and they paint as the card does: light in the middle, and SHADED — not
-    // black — at the foot, where the card's faces and bar sit (the owner chose
-    // the lighter foot, 2026-11-16). Yellow at full brightness is 170.
+    // …and they paint as the card does: light in the middle, ink at the foot
+    // where the card's faces and bar sit (the owner: the black fade "HAS to
+    // stay like before"). Yellow at full brightness is 170.
     const frame = '[data-testid="photo-cropper-frame"]';
     expect(await lumaAt(page, frame, 0.4), "the window is dark where the card shows the photo").toBeGreaterThan(90);
-    const foot = await lumaAt(page, frame, 0.85);
-    expect(foot, "the window's foot is not shaded").toBeLessThan(90);
-    expect(foot, "the window's foot is black — the photo should still show there").toBeGreaterThan(35);
+    expect(await lumaAt(page, frame, 0.85), "the window is bright where the card is ink").toBeLessThan(30);
 
     // And the computer's band, centred, the share of the frame the card on a
     // computer keeps.
