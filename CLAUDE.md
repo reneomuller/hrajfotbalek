@@ -919,8 +919,8 @@ node scripts/apply-migration.mjs \
   supabase/migrations/20261108100000_pitch_costs.sql --production
 ```
 
-**OUTSTANDING — round 42's fifth, a game's pitch cost follows its venue until it is
-played (ledger row 465).** Waits for the owner's go; the Oliver-applies rule stands.
+**~~OUTSTANDING~~ APPLIED, verified 2026-11-16 — round 42's fifth, a game's pitch cost follows its venue until it is
+played (ledger row 465), applied BY ME on the owner's explicit instruction (he sent the command); the Oliver-applies rule stands.** Probed: `reprice_unplayed_games` present and not API-callable, both writers reprice, zero unhand-typed games differ from their venue.
 Idempotent, order-free after `20261108100000`; applied twice locally and drilled
 (`pitch_cost_follows_venue.sql`, 60/60 suites). It REVISES the 2026-11-08 ruling
 "each game keeps the cost it was created with": `set_venue_pitch_costs` and
@@ -936,8 +936,8 @@ node scripts/apply-migration.mjs \
   supabase/migrations/20261113100000_pitch_cost_follows_venue.sql --production
 ```
 
-**OUTSTANDING — round 42's sixth, indoor or outdoor (ledger row 467).** Waits for
-the owner's go; the Oliver-applies rule stands. Additive, idempotent, NOT
+**~~OUTSTANDING~~ APPLIED, verified 2026-11-16 — round 42's sixth, indoor or outdoor (ledger row 467), applied BY ME on
+the owner's explicit instruction (he sent the command); the Oliver-applies rule stands.** Probed: 38 flags all true with `gameIndoor`, `games.indoor` readable, `set_game_indoor` not executable by anon. The live list was diffed against the file first: all 37 kept. Additive, idempotent, NOT
 deploy-first, order-free against `20261113100000`; applied twice locally and
 drilled (`game_indoor.sql`, 61/61 suites). It adds `games.indoor` (null until
 said, readable like every other game column) and the admin-only
