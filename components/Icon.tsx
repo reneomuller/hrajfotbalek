@@ -37,6 +37,11 @@ export type IconName =
   | "boot"
   // Veteran (round 38) — a medal: long service, not a list.
   | "medal"
+  // The game card (2026-11-16): the format, the languages, indoor or outdoor.
+  | "team"
+  | "globe"
+  | "indoor"
+  | "outdoor"
   // The amenity catalog (migration 38). One entry per permitted value, and
   // widening the CHECK means widening this — an amenity with no icon renders
   // as a gap.
@@ -128,6 +133,37 @@ const PATHS: Record<IconName, React.ReactNode> = {
     </>
   ),
 
+  // --- the game card (2026-11-16) -------------------------------------------
+  // FILLED, the one glyph here that is: it sits on the solid volt format pill,
+  // where a 1.6 stroke at 16px reads as a smudge. The owner's mock draws it
+  // solid too.
+  team: (
+    <g fill="currentColor" stroke="none">
+      <circle cx="12" cy="7.2" r="3.2" />
+      <path d="M6.2 19a5.8 5.8 0 0 1 11.6 0z" />
+      <circle cx="5.2" cy="9" r="2.4" />
+      <path d="M.8 18.6a4.4 4.4 0 0 1 4.9-4.4 7.4 7.4 0 0 0-1.9 4.4z" />
+      <circle cx="18.8" cy="9" r="2.4" />
+      <path d="M23.2 18.6a4.4 4.4 0 0 0-4.9-4.4 7.4 7.4 0 0 1 1.9 4.4z" />
+    </g>
+  ),
+  globe: (
+    <>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M3 12h18" />
+      <path d="M12 3a13.8 13.8 0 0 1 0 18a13.8 13.8 0 0 1 0-18z" />
+    </>
+  ),
+  // A roof and walls, no door: the mock's mark, and it says "a hall" rather
+  // than "home", which the tab bar already means.
+  indoor: <path d="M4 10.4 12 4l8 6.4V20H4z" />,
+  outdoor: (
+    <>
+      <circle cx="12" cy="12" r="4" />
+      <path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4" />
+    </>
+  ),
+
   // --- provided by the organizer -------------------------------------------
   bibs: (
     <>
@@ -197,9 +233,12 @@ const PATHS: Record<IconName, React.ReactNode> = {
 export function Icon({
   name,
   className = "h-4 w-4",
+  strokeWidth = 1.6,
 }: {
   name: IconName;
   className?: string;
+  /** Heavier for a glyph drawn small on the card, where 1.6 at 10–16px reads as a hairline. */
+  strokeWidth?: number;
 }) {
   return (
     <svg
@@ -208,7 +247,7 @@ export function Icon({
       className={`shrink-0 ${className}`}
       fill="none"
       stroke="currentColor"
-      strokeWidth="1.6"
+      strokeWidth={strokeWidth}
       strokeLinecap="round"
       strokeLinejoin="round"
     >

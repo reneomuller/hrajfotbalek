@@ -197,7 +197,8 @@ test("the card carries the language pill where the surface pill used to be", asy
     await page.goto("/games", { waitUntil: "networkidle" });
     const boxes = await card.evaluate((el) => {
       const f = el.querySelector('[data-testid="game-format"]')!.getBoundingClientRect();
-      const l = el.querySelector('[data-testid="language-pill"]')!.getBoundingClientRect();
+      // The outlined pill the flags sit in on the card (2026-11-16).
+      const l = el.querySelector('[data-testid="card-language"]')!.getBoundingClientRect();
       return { fTop: f.top, lTop: l.top, fH: f.height, lH: l.height, gap: l.left - f.right };
     });
     expect(Math.abs(boxes.fTop - boxes.lTop), "the pills are on different lines").toBeLessThan(2);

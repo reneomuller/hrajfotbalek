@@ -2,7 +2,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { AvatarRow } from "@/components/game/AvatarRow";
 import { CapacityBar } from "@/components/game/CapacityBar";
-import { CardBadges } from "@/components/game/CardBadges";
+import { CardPills } from "@/components/game/CardPills";
+import { Icon } from "@/components/Icon";
 import { venueDisplayName } from "@/lib/venues/displayName";
 import { SpotsLeft } from "@/components/game/SpotsLeft";
 import { formatTime } from "@/lib/format";
@@ -21,7 +22,15 @@ type GameRowData = Database["public"]["Tables"]["games"]["Row"];
 
 export type GameCardGame = Pick<
   GameRowData,
-  "id" | "game_number" | "venue" | "starts_at" | "capacity" | "format" | "surface" | "duration_minutes"
+  | "id"
+  | "game_number"
+  | "venue"
+  | "starts_at"
+  | "capacity"
+  | "format"
+  | "surface"
+  | "duration_minutes"
+  | "indoor"
 > & {
   /**
    * The language pair (round 18, item 2). Optional because `games.language`
@@ -342,11 +351,7 @@ export async function GameCard({
         <span data-testid="card-venue" className="min-w-0 flex-1 truncate text-body-lg font-bold leading-tight text-white">
           {venueDisplayName(game.venue, pitchName)}
         </span>
-        <CardBadges
-          format={game.format}
-          surface={game.surface}
-          language={gameLanguageOf(game.language)}
-        />
+        <CardPills format={game.format} language={gameLanguageOf(game.language)} indoor={game.indoor} />
       </span>
 
       <span className="relative mt-2 flex items-center justify-between gap-2">
@@ -372,8 +377,10 @@ export async function GameCard({
             taken from `.lifted` simply because this element states its own
             stroke; that part of the change stands on its own.
           */
-          className="min-w-0 shrink-0 truncate rounded-pill border-2 border-volt bg-surface-raised px-3 py-[6px] text-body-lg font-bold text-bone"
+          className="inline-flex min-w-0 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-pill border-2 border-volt bg-surface-raised px-3 py-[6px] text-body-lg font-bold text-bone"
         >
+          {/* The owner's mock, 2026-11-16: a clock before the kick-off. */}
+          <Icon name="clock" className="h-[18px] w-[18px] text-volt" strokeWidth={2.2} />
           {formatTime(game.starts_at)}
         </span>
 

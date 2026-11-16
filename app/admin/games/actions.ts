@@ -186,6 +186,17 @@ export async function createGameAction(
     }
   }
 
+  // Indoor or outdoor (2026-11-16) — only once offered and answered.
+  if (capabilities.gameIndoor && values.indoor !== null) {
+    const { error: indoorError } = await supabase.rpc("set_game_indoor", {
+      p_game_id: gameId,
+      p_indoor: values.indoor,
+    });
+    if (indoorError) {
+      console.error("set_game_indoor failed", indoorError.message);
+    }
+  }
+
   if (capabilities.gameLanguage) {
     const { error: languageError } = await supabase.rpc("set_game_language", {
       p_game_id: gameId,
@@ -391,6 +402,17 @@ export async function updateGameAction(
     });
     if (organizerPlayerError) {
       console.error("set_game_organizer_player failed", organizerPlayerError.message);
+    }
+  }
+
+  // Indoor or outdoor (2026-11-16) — only once offered and answered.
+  if (capabilities.gameIndoor && values.indoor !== null) {
+    const { error: indoorError } = await supabase.rpc("set_game_indoor", {
+      p_game_id: gameId,
+      p_indoor: values.indoor,
+    });
+    if (indoorError) {
+      console.error("set_game_indoor failed", indoorError.message);
     }
   }
 

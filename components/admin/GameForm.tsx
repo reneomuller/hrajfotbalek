@@ -85,6 +85,7 @@ export function GameForm({
   organizer,
   defaultOrganizerName,
   canSetLanguage = false,
+  canSetIndoor = false,
   canSetTelegram = false,
   organizerPlayers,
   defaultOrganizerPlayerId,
@@ -111,6 +112,8 @@ export function GameForm({
     price_czk: number;
     format: string | null;
     surface: GameSurface | null;
+    /** Absent before the migration. */
+    indoor?: boolean | null;
     notes: string | null;
     duration_minutes: number | null;
     allowed_skill_levels: SkillLevel[] | null;
@@ -138,6 +141,8 @@ export function GameForm({
   defaultOrganizerName?: string;
   /** Whether `games.language` exists yet (round 18, item 2). */
   canSetLanguage?: boolean;
+  /** Whether `games.indoor` exists yet (2026-11-16). */
+  canSetIndoor?: boolean;
   /** Whether `organizer_telegram` exists yet (round 19, item 2). */
   canSetTelegram?: boolean;
   /**
@@ -198,6 +203,9 @@ export function GameForm({
    */
   const [format, setFormat] = useState(game?.format ?? "");
   const [surface, setSurface] = useState<string>(game?.surface ?? "");
+  const [setting, setSetting] = useState<string>(
+    game?.indoor === true ? "indoor" : game?.indoor === false ? "outdoor" : "",
+  );
   // Round 18 item 2 — resolved through `gameLanguageOf` so a pre-migration row
   // (no such property) reads as the column default rather than as undefined.
   const [language, setLanguage] = useState<GameLanguage>(gameLanguageOf(game?.language));
@@ -465,6 +473,34 @@ export function GameForm({
                 {/* Required since round 16 item 10 — see `lib/admin/gameForm.ts`. */}
                 {errors.surface && <p className={ERROR}>{errors.surface}</p>}
               </div>
+
+              {/*
+                INDOOR OR OUTDOOR (2026-11-16), beside the surface, which is
+                where the owner asked for it. Offered only once the migration
+                exists; the hidden marker tells the parser it was offered, so
+                it can insist on an answer the way it does for the surface.
+              */}
+              {canSetIndoor && (
+                <div className="min-w-0">
+                  <input type="hidden" name="indoorOffered" value="1" />
+                  <label className={LABEL} htmlFor="setting">
+                    {strings.admin.settingLabel}
+                  </label>
+                  <select
+                    id="setting"
+                    name="setting"
+                    data-testid="game-setting"
+                    className={FIELD}
+                    value={setting}
+                    onChange={(event) => setSetting(event.target.value)}
+                  >
+                    <option value="">{strings.admin.settingNone}</option>
+                    <option value="indoor">{strings.admin.settingOptions.indoor}</option>
+                    <option value="outdoor">{strings.admin.settingOptions.outdoor}</option>
+                  </select>
+                  {errors.indoor && <p className={ERROR}>{errors.indoor}</p>}
+                </div>
+              )}
             </div>
 
             {/*

@@ -42,6 +42,8 @@ async function asAdmin(context: import("@playwright/test").BrowserContext) {
 async function fillRequiredCreateFields(page: import("@playwright/test").Page, hours: number) {
   await page.getByTestId("venue-select").selectOption({ label: "E2E Scratch Pitch" });
   await page.selectOption("#surface", "turf");
+  // Required beside the surface since 2026-11-16 (indoor or outdoor).
+  await page.selectOption("#setting", "outdoor");
   await page
     .getByTestId("starts-at")
     .fill(new Date(Date.now() + hours * 3600_000).toISOString().slice(0, 16));
@@ -217,8 +219,10 @@ test("EDITING a price stores the new one — the length does not overrule it", a
       "the edit form does not load the stored price",
     ).toHaveValue("200");
 
-    // Act
+    // Act — indoor or outdoor too: required since 2026-11-16, and the
+    // scaffold leaves it null for the same reason it leaves the surface.
     await page.getByTestId("price-czk").fill(String(OFF_MAPPING_LOW));
+    await page.selectOption("#setting", "outdoor");
     await page.getByTestId("game-form-submit").click();
 
     // Assert — on the database, because a success marker can be revalidated away.

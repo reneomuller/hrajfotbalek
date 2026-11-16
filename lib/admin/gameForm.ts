@@ -108,6 +108,11 @@ export interface GameFormValues {
   priceCzk: number;
   format: string | null;
   surface: GameSurface | null;
+  /**
+   * Indoor (true) or outdoor (false), 2026-11-16 — null while the form does
+   * not offer the choice (before `20261116100000_game_indoor.sql`).
+   */
+  indoor: boolean | null;
   /** Round 18 item 2. Always resolved — see `gameLanguageOf`. */
   language: GameLanguage;
   /** Round 19 item 2. Bare handle, or null. */
@@ -237,6 +242,19 @@ export function parseGameForm(form: FormData): GameFormResult {
   const language = gameLanguageOf(text(form, "language"));
 
   /*
+   * INDOOR OR OUTDOOR (2026-11-16, the owner: "we currently have no selection
+   * of indoor or outdoor, so let's also please add that in the same area we
+   * choose the surface"). Required once the form offers it — the surface's rule,
+   * for the same reason: the card shows it, and only the organizer knows. Not
+   * offered before the migration, when a submission carries nothing and saves.
+   */
+  const settingRaw = text(form, "setting");
+  const indoor = settingRaw === "indoor" ? true : settingRaw === "outdoor" ? false : null;
+  if (text(form, "indoorOffered") === "1" && indoor === null) {
+    fieldErrors.indoor = strings.admin.settingRequired;
+  }
+
+  /*
    * THE TELEGRAM HANDLE (round 19, item 2), normalised HERE ONLY to be
    * validated — the stored form is `normalize_telegram_handle`'s in SQL.
    *
@@ -360,6 +378,7 @@ export function parseGameForm(form: FormData): GameFormResult {
       priceCzk,
       format: format || null,
       surface,
+      indoor,
       language,
       organizerTelegram,
       organizerPlayerId,

@@ -104,6 +104,8 @@ export interface AppCapabilities {
   venueAddress: boolean;
   /** Round 42 — pitch costs (summer / winter, one season switch) and `game_economics`. */
   pitchCosts: boolean;
+  /** 2026-11-16 — `games.indoor` and `set_game_indoor`: indoor or outdoor on the card. */
+  gameIndoor: boolean;
 }
 
 const NONE: AppCapabilities = {
@@ -131,6 +133,7 @@ const NONE: AppCapabilities = {
   adminRemoveCreditChoice: false,
   venueAddress: false,
   pitchCosts: false,
+  gameIndoor: false,
 };
 
 /*
@@ -196,6 +199,7 @@ const readCapabilities = stableRead(
       adminRemoveCreditChoice: read("adminRemoveCreditChoice"),
       venueAddress: read("venueAddress"),
       pitchCosts: read("pitchCosts"),
+      gameIndoor: read("gameIndoor"),
     };
   } catch {
     return NONE;

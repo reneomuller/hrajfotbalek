@@ -841,6 +841,8 @@ export const strings = {
     inProgress: "This game is being played right now.",
     /* The card's pill while a game is on (2026-11-09), in the format pill's shape, orange. */
     playingNow: "Playing now",
+    /* The card's small pill under the languages (2026-11-16); absent until the admin says which. */
+    setting: { indoor: "Indoor", outdoor: "Outdoor" },
 
     // --- urgency ladder ------------------------------------------------------
     // Three rungs, and the copy is what distinguishes them: plenty of room
@@ -1796,6 +1798,12 @@ export const strings = {
     languageUkRu: "Ukrainian / Russian",
     languageHint: "Shows as a flag pair on the game card, and picks which messaging app the organizer contact offers.",
     surfaceRequired: "Pick the surface — it shows on the game's card.",
+    /* Indoor or outdoor (2026-11-16), beside the surface. */
+    settingLabel: "Indoor or outdoor",
+    settingNone: "Choose…",
+    settingOptions: { indoor: "Indoor", outdoor: "Outdoor" },
+    settingRequired: "Pick indoor or outdoor — it shows on the game's card.",
+    settingInvalid: "A game is indoor or outdoor.",
     surfaceOptions: {
       turf: "Turf",
       grass: "Grass",

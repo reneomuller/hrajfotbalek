@@ -350,6 +350,7 @@ export default async function AdminGamePage({
               organizer={organizer}
               defaultOrganizerName={admin.nickname}
               canSetLanguage={capabilities.gameLanguage}
+          canSetIndoor={capabilities.gameIndoor}
               canSetTelegram={capabilities.organizerTelegram}
               organizerPlayers={capabilities.organizerPlayer ? organizerPlayers : undefined}
             />

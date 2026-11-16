@@ -44,7 +44,9 @@ import type { GameLanguage } from "@/lib/games/language";
  * Announcing "flag of Ukraine, flag of Russia" twice down a list is noise.
  */
 const PAIRS = {
-  "en-cs": [FlagGB, FlagCZ],
+  // Czech first since 2026-11-16 — the owner's card mock draws it that way,
+  // and the detail follows so one game does not show two orders.
+  "en-cs": [FlagCZ, FlagGB],
   "uk-ru": [FlagUA, FlagRU],
 } as const;
 
@@ -60,17 +62,34 @@ const PAIRS = {
  */
 const CIRCLE_PX = 34;
 
+/**
+ * THE CARD'S SIZE (2026-11-16). The owner's mock puts the flags INSIDE an
+ * outlined pill with a globe, beside a solid format pill, and that pill is the
+ * height of a line of small text — so the circles shrink to fit it rather than
+ * setting the row's height the way the 34px ones do on the detail.
+ */
+const CARD_CIRCLE_PX = 16;
+
 /** The space between them. Narrow enough to read as a pair, wide enough to
  *  read as two. */
 const GAP_PX = 4;
 
-export function LanguagePill({ language }: { language: GameLanguage }) {
+export function LanguagePill({
+  language,
+  size = "badge",
+}: {
+  language: GameLanguage;
+  /** `badge` beside a `.badge-pill` (the detail, the admin); `card` inside the card's pill. */
+  size?: "badge" | "card";
+}) {
   const [First, Second] = PAIRS[language];
+  const circle = size === "card" ? CARD_CIRCLE_PX : CIRCLE_PX;
 
   return (
     <span
       data-testid="language-pill"
       data-language={language}
+      data-size={size}
       className="inline-flex items-center"
       style={{ gap: GAP_PX }}
     >
@@ -91,7 +110,7 @@ export function LanguagePill({ language }: { language: GameLanguage }) {
             separates the circle from a photograph behind it.
           */
           className="relative shrink-0 overflow-hidden rounded-full ring-1 ring-inset ring-ink/70"
-          style={{ width: CIRCLE_PX, height: CIRCLE_PX }}
+          style={{ width: circle, height: circle }}
         >
           <Flag cover className="absolute inset-0 h-full w-full" />
         </span>

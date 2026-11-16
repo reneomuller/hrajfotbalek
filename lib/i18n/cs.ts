@@ -401,6 +401,7 @@ export const cs: StringsOverlay = {
     alreadyStarted: "Tenhle zápas už začal.",
     inProgress: "Tenhle zápas se právě hraje.",
     playingNow: "Právě se hraje",
+    setting: { indoor: "Hala", outdoor: "Venku" },
 
     urgencyOpen: "Volná místa",
     urgencyLastFew: "Skoro plno",

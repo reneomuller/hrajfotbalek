@@ -936,6 +936,22 @@ node scripts/apply-migration.mjs \
   supabase/migrations/20261113100000_pitch_cost_follows_venue.sql --production
 ```
 
+**OUTSTANDING — round 42's sixth, indoor or outdoor (ledger row 467).** Waits for
+the owner's go; the Oliver-applies rule stands. Additive, idempotent, NOT
+deploy-first, order-free against `20261113100000`; applied twice locally and
+drilled (`game_indoor.sql`, 61/61 suites). It adds `games.indoor` (null until
+said, readable like every other game column) and the admin-only
+`set_game_indoor`, and restates `app_capabilities()` as 38 flags: the 37 live on
+2026-11-16, every one PROBED (`pitchCosts` by its table), plus `gameIndoor`. The
+deploy is safe without it: the game form shows the choice only once
+`app_capabilities()` says `gameIndoor`, and the card draws no pill for a missing
+column.
+
+```
+node scripts/apply-migration.mjs \
+  supabase/migrations/20261116100000_game_indoor.sql --production
+```
+
 When a UI failure looks inexplicable and the code reads correctly, check this
 list before debugging the component.
 

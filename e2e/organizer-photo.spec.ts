@@ -165,6 +165,8 @@ test("a game created through the form runs under the chosen organizer's nickname
     await page.goto("/admin/games/new", { waitUntil: "networkidle" });
     await page.getByTestId("venue-select").selectOption(venue.id);
     await page.selectOption("#surface", "turf");
+    // Required beside the surface since 2026-11-16 (indoor or outdoor).
+    await page.selectOption("#setting", "outdoor");
     await page.getByTestId("starts-at").fill(when);
     await expect(page.getByTestId("organizer-player")).toHaveValue(players.organizer.id);
     await page.getByTestId("game-form-submit").click();

@@ -320,6 +320,7 @@ describe("parseGameForm", () => {
       priceCzk: 333,
       format: "9v9",
       surface: "sand",
+      indoor: null,
       // Round 18 item 2. Carried through like every other field — and unlike
       // them it can never be null: `gameLanguageOf` resolves an absent value
       // to the column's own default rather than leaving a third state.
@@ -504,5 +505,40 @@ describe("parseGameForm — organizer, duration, skill, substitutes", () => {
     if (!result.ok) return;
     expect(result.values.format).toBe("5v5");
     expect(result.values.capacity).toBe(12);
+  });
+});
+
+/*
+ * INDOOR OR OUTDOOR (the owner, 2026-11-16: "we currently have no selection of
+ * indoor or outdoor, so let's also please add that in the same area we choose
+ * the surface"). Shown on the game card as a small pill under the languages.
+ */
+describe("parseGameForm — indoor or outdoor", () => {
+  it("reads indoor and outdoor", () => {
+    // Act
+    const indoor = parseGameForm(form({ ...VALID, indoorOffered: "1", setting: "indoor" }));
+    const outdoor = parseGameForm(form({ ...VALID, indoorOffered: "1", setting: "outdoor" }));
+
+    // Assert
+    expect(indoor.ok && indoor.values.indoor).toBe(true);
+    expect(outdoor.ok && outdoor.values.indoor).toBe(false);
+  });
+
+  it("asks for it once the form offers it, as it asks for the surface", () => {
+    // Act
+    const result = parseGameForm(form({ ...VALID, indoorOffered: "1" }));
+
+    // Assert
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.fieldErrors.indoor).toBe(strings.admin.settingRequired);
+  });
+
+  it("is not asked for before the migration, when the form does not offer it", () => {
+    // Act
+    const result = parseGameForm(form(VALID));
+
+    // Assert
+    expect(result.ok && result.values.indoor).toBeNull();
   });
 });

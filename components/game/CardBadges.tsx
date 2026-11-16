@@ -1,11 +1,12 @@
-import { LanguagePill } from "@/components/game/LanguagePill";
-import type { GameLanguage } from "@/lib/games/language";
 import { getStrings } from "@/lib/i18n/server";
 import type { GameSurface } from "@/lib/types/database";
 
 /**
- * The format and surface BADGES — top-right of a list card (ruling 6,
- * 2026-08-10).
+ * The format and surface BADGES — ~~top-right of a list card (ruling 6,
+ * 2026-08-10)~~ the Format row of the game detail's fact list. Since
+ * 2026-11-16 the list card draws its own pills from the owner's mock
+ * (`CardPills`): a solid format pill, the flags behind a globe, and indoor or
+ * outdoor. What follows is why the DETAIL's badges look the way they do.
  *
  * They returned from an inline `6v6 • Turf` text line, which buried two facts
  * a reader scans for in a sentence they have to read. Pre-v1.3 these were
@@ -41,13 +42,10 @@ import type { GameSurface } from "@/lib/types/database";
 export async function CardBadges({
   format,
   surface,
-  language,
 }: {
   format: string | null;
   /**
-   * Rendered only when no `language` is given (round 18, item 2).
-   *
-   * THE SURFACE PILL LEFT THE LIST CARD. It answers "what am I playing on",
+   * THE SURFACE PILL LEFT THE LIST CARD (round 18, item 2). It answers "what am I playing on",
    * which is a thing you check once when you decide to come; the LANGUAGE
    * answers "will I be able to talk to anyone", which is what somebody
    * scanning a list of games is actually filtering on. Two secondary pills
@@ -58,14 +56,9 @@ export async function CardBadges({
    * room to state it in full. Round 18 item 2.
    */
   surface: GameSurface | null;
-  /**
-   * The game's language pair. Present on the list card, absent on the detail's
-   * fact list — which is what selects between the two pills above.
-   */
-  language?: GameLanguage;
 }) {
   const t = await getStrings();
-  if (!format && !surface && !language) return null;
+  if (!format && !surface) return null;
 
   return (
     <div data-testid="card-badges" className="flex shrink-0 flex-wrap items-center gap-1">
@@ -77,22 +70,13 @@ export async function CardBadges({
           {format}
         </span>
       )}
-      {/*
-        ONE SECONDARY PILL, AND WHICH ONE DEPENDS ON THE SURFACE IT IS ON. The
-        list card passes `language` and gets flags; the detail's fact list
-        passes `surface` and gets the word. Never both — see the `surface` prop.
-      */}
-      {language ? (
-        <LanguagePill language={language} />
-      ) : (
-        surface && (
-          <span
-            data-testid="game-surface"
-            className="badge-pill border-hairline-strong bg-surface-raised text-bone"
-          >
-            {t.games.surface[surface]}
-          </span>
-        )
+      {surface && (
+        <span
+          data-testid="game-surface"
+          className="badge-pill border-hairline-strong bg-surface-raised text-bone"
+        >
+          {t.games.surface[surface]}
+        </span>
       )}
     </div>
   );

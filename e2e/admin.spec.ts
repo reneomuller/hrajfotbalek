@@ -325,6 +325,8 @@ test("the whole admin lifecycle fits inside five minutes", async ({ page, contex
   await page.getByTestId("venue-select").selectOption({ label: "E2E Scratch Pitch" });
   // Required since round 16 item 10 — a game with no surface draws no badge.
   await page.selectOption("#surface", "turf");
+  // Required beside the surface since 2026-11-16 (indoor or outdoor).
+  await page.selectOption("#setting", "outdoor");
   await page
     .getByTestId("starts-at")
     .fill(new Date(Date.now() + 48 * 3600_000).toISOString().slice(0, 16));

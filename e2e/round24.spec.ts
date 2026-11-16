@@ -410,6 +410,8 @@ test("publishing a game lands on an unmistakable confirmed state", async ({
   // The form's own fields, filled the way `admin.spec.ts` fills them.
   await page.getByTestId("venue-select").selectOption({ label: "E2E Scratch Pitch" });
   await page.selectOption("#surface", "turf");
+  // Required beside the surface since 2026-11-16 (indoor or outdoor).
+  await page.selectOption("#setting", "outdoor");
   await page
     .getByTestId("starts-at")
     .fill(new Date(Date.now() + 21 * 24 * 3600_000).toISOString().slice(0, 16));

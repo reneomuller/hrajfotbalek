@@ -405,6 +405,7 @@ export const uk: StringsOverlay = {
     alreadyStarted: "Цей матч уже почався.",
     inProgress: "Цей матч триває просто зараз.",
     playingNow: "Триває гра",
+    setting: { indoor: "У залі", outdoor: "Надворі" },
 
     urgencyOpen: "Є місця",
     urgencyLastFew: "Майже заповнений",

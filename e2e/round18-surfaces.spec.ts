@@ -254,7 +254,7 @@ test("an English/Czech game still offers WhatsApp", async ({ page, context }) =>
  * possible, so the assertion is that the two SURFACES agree, not merely that
  * each looks plausible.
  */
-test("the language pill is identical on the card and the detail", async ({
+test("the language flags are two identical circles on the card and the detail, as tall as the format beside them", async ({
   page,
   context,
 }) => {
@@ -271,9 +271,13 @@ test("the language pill is identical on the card and the detail", async ({
     ]);
     await serviceClient().from("games").update({ language: "uk-ru" }).eq("id", game.id);
 
-    /** Pill height, both flag boxes, and the badge it must match. */
-    async function measure(sel: string) {
-      return page.evaluate((sel) => {
+    /**
+     * Pill height, both flag boxes, and the badge it must match. `holder` is
+     * what stands beside the format badge: the flags themselves on the detail,
+     * and on the card the outlined pill they sit in (2026-11-16).
+     */
+    async function measure(sel: string, holder: string) {
+      return page.evaluate(([sel, holder]) => {
         const root = document.querySelector(sel)!;
         const pill = root.querySelector('[data-testid="language-pill"]')!;
         const flags = [...pill.querySelectorAll("svg")].map((f) => {
@@ -282,7 +286,7 @@ test("the language pill is identical on the card and the detail", async ({
         });
         const badge = root.querySelector('[data-testid="game-format"]')!.getBoundingClientRect();
         return {
-          pill: Math.round(pill.getBoundingClientRect().height * 100) / 100,
+          pill: Math.round(root.querySelector(holder)!.getBoundingClientRect().height * 100) / 100,
           badge: Math.round(badge.height * 100) / 100,
           flags,
           /*
@@ -301,27 +305,71 @@ test("the language pill is identical on the card and the detail", async ({
             },
           ),
         };
-      }, sel);
+      }, [sel, holder] as const);
     }
 
     await page.goto("/games", { waitUntil: "networkidle" });
     await page
       .locator(`[data-testid="game-row"][data-game-id="${game.id}"]`)
       .scrollIntoViewIfNeeded();
-    const onCard = await measure(`[data-testid="game-row"][data-game-id="${game.id}"]`);
+    const onCard = await measure(
+      `[data-testid="game-row"][data-game-id="${game.id}"]`,
+      '[data-testid="card-language"]',
+    );
 
     await page.goto(`/game/${game.id}`, { waitUntil: "networkidle" });
-    const onDetail = await measure('[data-testid="game-info-card"]');
+    const onDetail = await measure('[data-testid="game-info-card"]', '[data-testid="language-pill"]');
 
-    // --- the same everywhere -----------------------------------------------
-    expect(onCard, "the card and the detail draw the language differently").toEqual(onDetail);
+    /*
+     * ~~--- the same everywhere ---~~ NOT SINCE 2026-11-16. The owner's card
+     * mock gathers the flags into a small outlined pill behind a globe, so the
+     * card's circles are smaller than the detail's on purpose. What round 18
+     * got wrong survives as the claims below, made of BOTH surfaces: two flags,
+     * identical, round, cropped rather than stretched, and as tall as the
+     * format badge they stand beside.
+     */
+    for (const [where, surface] of [["card", onCard], ["detail", onDetail]] as const) {
+      // --- two flags, identical dimensions -----------------------------------
+      expect(surface.flags, where).toHaveLength(2);
+      expect(
+        surface.flags[0],
+        `${where}: the two flags are different sizes — the round-18 bug`,
+      ).toEqual(surface.flags[1]);
 
-    // --- two flags, identical dimensions -----------------------------------
-    expect(onCard.flags).toHaveLength(2);
-    expect(
-      onCard.flags[0],
-      "the two flags are different sizes — the round-18 bug",
-    ).toEqual(onCard.flags[1]);
+      /*
+       * --- TWO CIRCLES, NOT ONE SPLIT CAPSULE (round 24, item 6) -----------
+       *
+       * The assertion inverts rather than disappearing. Round 19's claim was
+       * "one pill, one divider, rounded ends"; this round's is "two marks,
+       * each round, both the same" — two languages are two things, and the
+       * divided capsule read as one object showing two states.
+       */
+      expect(surface.circles, `${where}: there are not exactly two circles`).toHaveLength(2);
+      expect(
+        surface.circles[0],
+        `${where}: the two circles are not identical — the round-18 bug, in a new shape`,
+      ).toEqual(surface.circles[1]);
+      for (const circle of surface.circles) {
+        expect(Math.abs(circle.w - circle.h), `${where}: a circle is not square`).toBeLessThan(0.5);
+        expect(
+          circle.radius,
+          `${where}: the flags are not clipped to circles`,
+        ).toBeGreaterThanOrEqual(circle.w / 2 - 0.5);
+      }
+
+      /*
+       * --- AS TALL AS THE FORMAT BESIDE IT ---------------------------------
+       *
+       * The constraint that made item 6 a redraw rather than a redesign: "same
+       * vertical dimensions as the current pill". The badge beside it is the
+       * fixed point — on the card, the solid format pill and the outlined
+       * language pill are one height.
+       */
+      expect(
+        Math.abs(surface.pill - surface.badge),
+        `${where}: the language mark is no longer the same height as the format badge`,
+      ).toBeLessThan(1);
+    }
 
     /*
      * NOT SQUASHED. The flags are drawn 2:1 and rendered into a box that is
@@ -336,40 +384,6 @@ test("the language pill is identical on the card and the detail", async ({
       .first()
       .evaluate((el) => el.getAttribute("preserveAspectRatio"));
     expect(drawn, "the flags are being stretched to fit").toContain("slice");
-
-    /*
-     * --- TWO CIRCLES, NOT ONE SPLIT CAPSULE (round 24, item 6) -------------
-     *
-     * The assertion inverts rather than disappearing. Round 19's claim was
-     * "one pill, one divider, rounded ends"; this round's is "two marks, each
-     * round, both the same" — two languages are two things, and the divided
-     * capsule read as one object showing two states.
-     */
-    expect(onCard.circles, "there are not exactly two circles").toHaveLength(2);
-    expect(
-      onCard.circles[0],
-      "the two circles are not identical — the round-18 bug, in a new shape",
-    ).toEqual(onCard.circles[1]);
-    for (const circle of onCard.circles) {
-      expect(Math.abs(circle.w - circle.h), "a circle is not square").toBeLessThan(0.5);
-      expect(
-        circle.radius,
-        "the flags are not clipped to circles",
-      ).toBeGreaterThanOrEqual(circle.w / 2 - 0.5);
-    }
-
-    /*
-     * --- AND THE HEIGHT DID NOT MOVE ---------------------------------------
-     *
-     * The constraint that made item 6 a redraw rather than a redesign: "same
-     * vertical dimensions as the current pill". The badge beside it is the
-     * fixed point, so measuring against the badge measures both claims at
-     * once.
-     */
-    expect(
-      Math.abs(onCard.pill - onCard.badge),
-      "the language mark is no longer the same height as the format badge",
-    ).toBeLessThan(1);
   } finally {
     await destroyScratchGame(game.id);
   }

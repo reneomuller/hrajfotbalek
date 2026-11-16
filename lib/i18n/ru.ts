@@ -404,6 +404,7 @@ export const ru: StringsOverlay = {
     alreadyStarted: "Этот матч уже начался.",
     inProgress: "Этот матч идёт прямо сейчас.",
     playingNow: "Идёт игра",
+    setting: { indoor: "В зале", outdoor: "На улице" },
 
     urgencyOpen: "Есть места",
     urgencyLastFew: "Почти заполнен",

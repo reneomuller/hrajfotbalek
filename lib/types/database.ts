@@ -485,6 +485,12 @@ export interface Database {
           /** "6v6" — CHECK-constrained to `<n>v<n>`. */
           format: string | null;
           surface: GameSurface | null;
+          /**
+           * Indoor (true) or outdoor (false); null until said (2026-11-16,
+           * migration `20261116100000`). Optional until that migration lands,
+           * for the reason `language` is below: absent on production until then.
+           */
+          indoor?: boolean | null;
           /** Organizer logistics, ≤500 chars. */
           notes: string | null;
           city: string;
@@ -1047,6 +1053,8 @@ export interface Database {
       booking_seat_values: { Args: { p_game_ids: string[] }; Returns: BookingSeatValue[] };
       /** Round 42 — per game: seats, revenue at what was paid, pitch cost, profit, break-even. Admin only. */
       game_economics: { Args: { p_game_ids: string[] }; Returns: GameEconomicsRow[] };
+      /** 2026-11-16 — indoor (true) or outdoor (false); null clears. Admin only. */
+      set_game_indoor: { Args: { p_game_id: string; p_indoor: boolean | null }; Returns: boolean | null };
       /** Round 42 — a venue's address line; empty clears it. Admin only. */
       set_venue_address: { Args: { p_venue_id: string; p_address: string | null }; Returns: string | null };
       /** Round 42 — make a player an organizer, or take it away. Admin only. */
