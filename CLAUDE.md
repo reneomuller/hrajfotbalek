@@ -283,8 +283,15 @@ hero is asserted only to be NARROWER than the frame — the property that means
 **the fix below shipped and was REVERTED the same day** ("phone shows up
 incorrectly now", the owner, on his phone; not reproduced in emulated Chromium —
 suspect iOS Safari and `aspect-ratio` on an absolutely positioned box). The
-card is back at `bd318aa`; only the window's darkening stayed. Test on a real
-iPhone before trying it again. A
+card is back at `bd318aa`. **THE SECOND ATTEMPT LEFT THE LAYOUT ALONE**: a lighter
+foot, a venue photo CENTRED (a computer shows the frame's middle band), and the
+crop window outlining that band (`ComputerBand`, from the measured
+`VENUE_WIDE_CARD`). It was proved on SEVEN engine/device setups, WebKit
+included, with a temporary config listing `devices[...]` projects — do that for
+anything visual. Two harness traps it surfaced: WebKit loses the upload race if a
+spec leaves the page when the window closes (wait for `image_path` in the
+database), and Playwright's Firefox pushes a captured drag the WRONG way once the
+pointer leaves the window (keep drags inside it). A
 fixed height means the aspect moves with the WIDTH: right at 390, and 676x161
 on a laptop, where the card showed the lower half of the frame, enlarged — the
 owner: "it also shows up differently on phone and pc". And the crop window

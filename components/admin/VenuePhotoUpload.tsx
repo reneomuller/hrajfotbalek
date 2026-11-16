@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { PhotoUpload } from "@/components/account/PhotoUpload";
 import { CardPhotoScrim } from "@/components/game/CardPhotoScrim";
+import { ComputerBand } from "@/components/admin/ComputerBand";
 import { strings } from "@/lib/strings";
 
 /**
@@ -72,6 +73,7 @@ export function VenuePhotoUpload({
             className="object-cover"
           />
           <CardPhotoScrim />
+          <ComputerBand />
         </div>
       ) : emptyFrame ? (
         <div className="mt-2 flex aspect-[1600/740] w-full items-center justify-center rounded-control border border-dashed border-hairline-strong bg-surface text-[12px] text-faint">

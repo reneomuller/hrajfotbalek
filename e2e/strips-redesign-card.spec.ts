@@ -55,7 +55,8 @@ const TITLE_BAND_FLOOR = 45;
  * there. An assertion that cannot fail is worse than none, because it reports
  * coverage it does not have.
  */
-const FADED_CEILING = 15;
+/** The shaded foot still shows the photo: above solid ink (about 10). */
+const FADED_FLOOR = 15;
 
 /** Mean luminance of a horizontal slice, as a fraction of the card's height. */
 async function sliceLuminance(
@@ -242,15 +243,22 @@ test("the card over the photo — scrim, outline and inert cue", async ({
   ).toBeGreaterThanOrEqual(TITLE_BAND_FLOOR);
 
   /*
-   * AND IT IS GONE BY THE CAPACITY / AVATAR REGION. This is the half the
-   * round-7 spec did not have: it proved the top was bright and said nothing
-   * about where the image stopped, so a wash that never finished passed.
+   * ~~AND IT IS GONE BY THE CAPACITY / AVATAR REGION.~~ NOT SINCE 2026-11-16:
+   * the owner chose a lighter foot ("Lighten the card's bottom") so the photo
+   * he framed still shows under the bar and the faces. What survives of the
+   * round-7 claim is that the ramp still RUNS — the foot is SHADED, darker
+   * than the title band, and not black. (This assertion had been failing on
+   * the old ceiling for a while, ledger row 468, with a mean of 29-30.)
    */
   const belowBoundary = await sliceLuminance(card, 0.72, 0.9);
   expect(
     belowBoundary,
-    `the photograph is still visible under the capacity bar and faces (mean ${belowBoundary}, ceiling ${FADED_CEILING})`,
-  ).toBeLessThanOrEqual(FADED_CEILING);
+    `the foot is no darker than the title band (foot ${belowBoundary}, title ${luminance})`,
+  ).toBeLessThan(luminance);
+  expect(
+    belowBoundary,
+    `the foot is black — the photo should still show under the bar and the faces (mean ${belowBoundary})`,
+  ).toBeGreaterThan(FADED_FLOOR);
 
   // --- R6's named requirement: the volt outline survives the photo --------
   const pill = card.getByTestId("card-when");

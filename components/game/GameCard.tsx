@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { AvatarRow } from "@/components/game/AvatarRow";
 import { CapacityBar } from "@/components/game/CapacityBar";
+import { CardPhotoScrim } from "@/components/game/CardPhotoScrim";
 import { CardPills } from "@/components/game/CardPills";
 import { Icon } from "@/components/Icon";
 import { venueDisplayName } from "@/lib/venues/displayName";
@@ -256,81 +257,20 @@ export async function GameCard({
           priority={priority}
           data-testid="card-photo"
           data-photo={photo === DEFAULT_PITCH ? "default" : "venue"}
-          className="h-full w-full object-cover object-bottom"
+          /*
+            THE DEFAULT IS BOTTOM-ANCHORED (above); A VENUE'S OWN PHOTO IS
+            CENTRED (2026-11-16). On a phone the card is the frame's shape and
+            the anchor barely matters; on a computer the card is twice as wide
+            for its height and shows a band of the frame — and from the bottom
+            that band was the shaded foot of the picture, enlarged. The crop
+            window draws the centred band as a dashed outline, so a venue photo
+            is framed for both (the owner: "it's somehow gotta look good on
+            both, not just one of them").
+          */
+          className={`h-full w-full object-cover ${photo === DEFAULT_PITCH ? "object-bottom" : "object-center"}`}
         />
-        {/*
-          THE GRADIENT IS A RAMP, NOT A DIMMER — rebalanced from p02.
-
-          The first version was a uniform-ish wash (.68 -> .82 -> .92) and it
-          crushed the photograph to near-invisible: the card read as a dark
-          slab that happened to have texture. p02 draws the opposite — the
-          pitch is CLEARLY there behind the venue title, and the image darkens
-          as it falls toward the avatars and the join cue, which is where the
-          small text lives.
-
-          So the stops now start almost clear and end heavy. The dark end is
-          what the bar, the faces and the cue sit on; the clear end is the
-          picture doing the job it was added for.
-        */}
-        {/*
-          THE FADE HAS A BOUNDARY, AND THE BOUNDARY IS THE CAPACITY BAR
-          (round 8, item 5).
-
-          It was `.12 -> .52 -> .90`: a wash across the whole card that never
-          finished. The photograph was faintly present everywhere and fully
-          gone nowhere, so the bar, the faces and the cue all sat on texture
-          instead of on a surface — and the top, where the photograph is
-          supposed to read, was being dimmed to make that texture survivable.
-
-          Measured off the rendered card at 390px: the venue title ends at 23%,
-          the time pill at 56%, and the capacity bar begins at about 58%. So
-          the ramp holds light through the title and the time row, climbs
-          across the pill's lower edge, and reaches FULL `ink` at 72% — before
-          the bar, and well before the faces and the cue. Everything from
-          there down is flat page surface, which is what `p02` draws.
-
-          `to-ink`, NOT `to-ink/[.90]`. The old end left a tenth of the
-          photograph under the busiest, smallest elements on the card; a
-          gradient that stops short of its own colour is a gradient with a
-          seam nobody put there on purpose.
-        */}
-        <span
-          data-testid="card-scrim"
-          className="absolute inset-0 bg-gradient-to-b from-ink/[.15] via-ink/[.45] via-50% to-ink to-70%"
-        />
-        {/*
-          TEXT PROTECTION, LOCAL TO THE TITLE LINE.
-
-          The venue title sits at the top, and rather than dimming the WHOLE
-          card to rescue one line, this is a short gradient behind the title
-          band only.
-
-          `.72` -> `.55`, AND THE CROP IS WHY IT CAN COME DOWN (round 7, item
-          3). `.72` was set against a PALE SKY sitting behind the title — the
-          measurement that mattered was white-on-cloud. `object-bottom` above
-          puts green field there instead, which is both darker and textured,
-          so the same legibility needs less scrim.
-
-          64px -> 48px (round 8, item 5). The title ends at 23% of a 146px
-          card, so 48px covers it exactly; at 64 this reached down into the
-          time row and dimmed the part of the photograph the new boundary is
-          there to keep visible. Measured against `p02`: the
-          frame's card reads about 76 mean luminance across its title band and
-          this was rendering about 60, which is the "washed out, does not match
-          the frame" complaint stated as a number.
-
-          The two changes are one change. Dropping the scrim alone would put
-          white text on a pale sky; re-cropping alone would leave the photo
-          needlessly dim. Neither is correct on its own.
-
-          A separate element rather than another stop on the ramp above,
-          because the two do different jobs and one of them is allowed to
-          change when the type does.
-        */}
-        <span
-          data-testid="card-title-scrim"
-          className="absolute inset-x-0 top-0 h-[48px] bg-gradient-to-b from-ink/[.55] to-transparent"
-        />
+        {/* The ramp and the title shade: `CardPhotoScrim`, shared with the crop window. */}
+        <CardPhotoScrim />
       </span>
 
       {/*

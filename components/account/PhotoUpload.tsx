@@ -20,6 +20,7 @@ import { fillTemplate } from "@/lib/i18n/template";
 import { Toast } from "@/components/Toast";
 import { PhotoCropper, type CropRect } from "@/components/account/PhotoCropper";
 import { CardPhotoScrim } from "@/components/game/CardPhotoScrim";
+import { ComputerBand } from "@/components/admin/ComputerBand";
 import { useStrings } from "@/components/LocaleProvider";
 import { venuePhotoChangedAction } from "@/app/admin/venues/actions";
 import { profilePhotoChangedAction } from "@/app/account/actions";
@@ -317,7 +318,14 @@ export function PhotoUpload({
         A VENUE PHOTO IS FRAMED UNDER THE CARD'S DARKENING (2026-11-16): the
         owner wants the outline to show "the same exact way" the card does.
       */
-      overlay={target === "venue" ? <CardPhotoScrim /> : undefined}
+      overlay={
+        target === "venue" ? (
+          <>
+            <CardPhotoScrim />
+            <ComputerBand />
+          </>
+        ) : undefined
+      }
       hint={target === "venue" ? t.admin.venueCropHint : undefined}
       onCancel={() => setPending(null)}
       onConfirm={(rect) => void upload(pending, rect)}

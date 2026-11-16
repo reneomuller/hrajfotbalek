@@ -247,8 +247,14 @@ test("the game card shows EXACTLY the region the organizer framed", async ({ pag
     const box = (await frameEl.boundingBox())!;
     await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
     await page.mouse.down();
+    /*
+     * 30px A STEP, NOT 120 (2026-11-16): 720px of drag left the window on a
+     * 720px-tall desktop, and Playwright's Firefox answers a pointer outside
+     * the window with moves that pushed the photo the WRONG way (it read -30
+     * where Chromium read 0). The slack is about 30px, so 180px still pins it.
+     */
     for (let step = 1; step <= 6; step++) {
-      await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2 + step * 120);
+      await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2 + step * 30);
     }
     await page.mouse.up();
 
@@ -271,6 +277,22 @@ test("the game card shows EXACTLY the region the organizer framed", async ({ pag
         return Math.round(img.y - box.y);
       })
       .toBe(0);
+
+    /*
+     * THE COMPUTER BAND, READ OFF THE WINDOW (2026-11-16): the dashed outline
+     * the organizer frames against. Its place in the frame is what the card on
+     * a computer must show, and it is taken from what was drawn — not from the
+     * constant that drew it.
+     */
+    const band = await page.evaluate(() => {
+      const frame = document.querySelector('[data-testid="photo-cropper-frame"]')!.getBoundingClientRect();
+      const outline = document.querySelector('[data-testid="photo-cropper-overlay"] [data-testid="computer-band"]')!.getBoundingClientRect();
+      return {
+        top: (outline.top - frame.top) / frame.height,
+        height: outline.height / frame.height,
+        frameAspect: frame.width / frame.height,
+      };
+    });
 
     /*
      * ~~AND A SCREENSHOT OF THE CROP WINDOW, COMPARED WITH THE CARD.~~ THE
@@ -296,92 +318,110 @@ test("the game card shows EXACTLY the region the organizer framed", async ({ pag
      */
     await page.getByTestId("photo-cropper-save").click();
     await expect(page.getByTestId("photo-cropper")).toBeHidden();
+    /*
+     * AND WAIT FOR THE PHOTO TO LAND (2026-11-16). The window closes before the
+     * upload ends, and leaving the page cancels what is left of it (CLAUDE.md).
+     * Chromium always won that race; WebKit lost it every time, and the card
+     * kept the default photo — which read as a Safari bug until the database
+     * was asked.
+     */
+    await expect
+      .poll(async () => (await admin.from("venues").select("image_path").eq("id", venueId!).single()).data?.image_path ?? null, {
+        message: "the venue photo never reached the database",
+        timeout: 30_000,
+      })
+      .not.toBeNull();
 
     // ---- Act 2: the card as served -----------------------------------------
-    const cardPhoto = page
-      .locator(`[data-testid="game-row"][data-game-id="${gameId}"] [data-testid="card-photo"]`)
-      .first();
+    /** The card as served at the current width, photo only, decoded from a fresh capture. */
+    async function serveCard(): Promise<PNG> {
+      const cardPhoto = page
+        .locator(`[data-testid="game-row"][data-game-id="${gameId}"] [data-testid="card-photo"]`)
+        .first();
 
-    await expect
-      .poll(
-        async () => {
-          await page.goto(`/games?day=${pragueDayKey(startsAt)}`, { waitUntil: "networkidle" });
-          if ((await cardPhoto.count()) === 0) return "missing";
-          /*
-           * SCROLL IT INTO VIEW BEFORE ASKING WHETHER IT LOADED (round 37).
-           *
-           * The card's photograph goes through `next/image` now, and every card
-           * but the first is `loading="lazy"` — which is the point: a list of a
-           * dozen venues should not fetch a dozen photographs to show three.
-           * This fixture's game is rarely the first card, so the image was
-           * correctly never loading and the poll read `loading` until it timed
-           * out.
-           *
-           * A REAL READER SCROLLS TO IT. Doing the same here keeps the lazy
-           * behaviour under test rather than switching it off to make the test
-           * pass — if the image failed to load once visible, this would still
-           * fail, which is the property worth keeping.
-           */
-          await cardPhoto.scrollIntoViewIfNeeded();
-          /*
-           * AND WAIT FOR THE FETCH THE SCROLL JUST STARTED. Scrolling makes a
-           * lazy image eligible to load; it does not make it loaded. Without
-           * this the check ran on the same tick and read `loading` every time,
-           * which looks identical to an image that never loads at all.
-           */
-          await cardPhoto
-            .evaluate(
-              (el: HTMLImageElement) =>
-                el.complete
-                  ? null
-                  : new Promise<null>((resolve) => {
-                      el.addEventListener("load", () => resolve(null), { once: true });
-                      el.addEventListener("error", () => resolve(null), { once: true });
-                    }),
-            )
-            .catch(() => null);
-          return (
-            (await cardPhoto.evaluate(
-              (el: HTMLImageElement) => (el.complete && el.naturalWidth > 0 ? el.dataset.photo : "loading"),
-            )) ?? "none"
-          );
-        },
-        { message: "the card never rendered the venue photograph", timeout: 30_000 },
-      )
-      .toBe("venue");
+      await expect
+        .poll(
+          async () => {
+            await page.goto(`/games?day=${pragueDayKey(startsAt)}`, { waitUntil: "networkidle" });
+            if ((await cardPhoto.count()) === 0) return "missing";
+            /*
+             * SCROLL IT INTO VIEW BEFORE ASKING WHETHER IT LOADED (round 37).
+             *
+             * The card's photograph goes through `next/image` now, and every card
+             * but the first is `loading="lazy"` — which is the point: a list of a
+             * dozen venues should not fetch a dozen photographs to show three.
+             * This fixture's game is rarely the first card, so the image was
+             * correctly never loading and the poll read `loading` until it timed
+             * out.
+             *
+             * A REAL READER SCROLLS TO IT. Doing the same here keeps the lazy
+             * behaviour under test rather than switching it off to make the test
+             * pass — if the image failed to load once visible, this would still
+             * fail, which is the property worth keeping.
+             */
+            await cardPhoto.scrollIntoViewIfNeeded();
+            /*
+             * AND WAIT FOR THE FETCH THE SCROLL JUST STARTED. Scrolling makes a
+             * lazy image eligible to load; it does not make it loaded. Without
+             * this the check ran on the same tick and read `loading` every time,
+             * which looks identical to an image that never loads at all.
+             */
+            await cardPhoto
+              .evaluate(
+                (el: HTMLImageElement) =>
+                  el.complete
+                    ? null
+                    : new Promise<null>((resolve) => {
+                        el.addEventListener("load", () => resolve(null), { once: true });
+                        el.addEventListener("error", () => resolve(null), { once: true });
+                      }),
+              )
+              .catch(() => null);
+            return (
+              (await cardPhoto.evaluate(
+                (el: HTMLImageElement) => (el.complete && el.naturalWidth > 0 ? el.dataset.photo : "loading"),
+              )) ?? "none"
+            );
+          },
+          { message: "the card never rendered the venue photograph", timeout: 30_000 },
+        )
+        .toBe("venue");
 
-    /*
-     * THE OVERLAY COMES OFF FOR THE DECODE, AND ONLY FOR THE DECODE.
-     *
-     * THE PHOTOGRAPH IS THE WHOLE CARD, not a band at the top of one: the
-     * image layer is `absolute inset-0` and the venue name, the time pill, the
-     * capacity bar, the faces and two gradient scrims are all painted ON it.
-     * Decoding through that measures the pill, which is what the first run of
-     * this spec did — rgb(22,22,22) in the middle of a yellow-to-white grid.
-     *
-     * `visibility: hidden`, NOT `display: none`, and the difference is the
-     * whole trick. The card takes its HEIGHT from that overlaid content, so
-     * removing it from the layout would collapse the card and shrink the very
-     * box whose crop is being measured. `visibility` keeps every element's
-     * geometry and stops it painting, so the image is rendered at exactly the
-     * size it is served at — the filter in front of it is what goes away.
-     */
-    await page.evaluate((id) => {
-      const row = document.querySelector<HTMLElement>(`[data-game-id="${id}"]`)!;
-      const photo = row.querySelector<HTMLElement>('[data-testid="card-photo"]')!;
-      for (const el of row.querySelectorAll<HTMLElement>("*")) {
-        if (el === photo || el.contains(photo)) continue;
-        el.style.setProperty("visibility", "hidden", "important");
-      }
-    }, gameId);
-    // The card is below the fold, and a viewport clip cannot reach it.
-    await cardPhoto.scrollIntoViewIfNeeded();
-    const cardBox = (await cardPhoto.boundingBox())!;
-    const served = PNG.sync.read(
-      await page.screenshot({
-        clip: { x: cardBox.x, y: cardBox.y, width: cardBox.width, height: cardBox.height },
-      }),
-    );
+      /*
+       * THE OVERLAY COMES OFF FOR THE DECODE, AND ONLY FOR THE DECODE.
+       *
+       * THE PHOTOGRAPH IS THE WHOLE CARD, not a band at the top of one: the
+       * image layer is `absolute inset-0` and the venue name, the time pill, the
+       * capacity bar, the faces and two gradient scrims are all painted ON it.
+       * Decoding through that measures the pill, which is what the first run of
+       * this spec did — rgb(22,22,22) in the middle of a yellow-to-white grid.
+       *
+       * `visibility: hidden`, NOT `display: none`, and the difference is the
+       * whole trick. The card takes its HEIGHT from that overlaid content, so
+       * removing it from the layout would collapse the card and shrink the very
+       * box whose crop is being measured. `visibility` keeps every element's
+       * geometry and stops it painting, so the image is rendered at exactly the
+       * size it is served at — the filter in front of it is what goes away.
+       */
+      await page.evaluate((id) => {
+        const row = document.querySelector<HTMLElement>(`[data-game-id="${id}"]`)!;
+        const photo = row.querySelector<HTMLElement>('[data-testid="card-photo"]')!;
+        for (const el of row.querySelectorAll<HTMLElement>("*")) {
+          if (el === photo || el.contains(photo)) continue;
+          el.style.setProperty("visibility", "hidden", "important");
+        }
+      }, gameId);
+      // The card is below the fold, and a viewport clip cannot reach it.
+      await cardPhoto.scrollIntoViewIfNeeded();
+      const cardBox = (await cardPhoto.boundingBox())!;
+      const served = PNG.sync.read(
+        await page.screenshot({
+          clip: { x: cardBox.x, y: cardBox.y, width: cardBox.width, height: cardBox.height },
+        }),
+      );
+      return served;
+    }
+    const served = await serveCard();
 
     // ---- Assert: per edge, stated ------------------------------------------
     const lines: string[] = [];
@@ -436,6 +476,30 @@ test("the game card shows EXACTLY the region the organizer framed", async ({ pag
       `${magenta} magenta pixels on the card — the crop reaches BELOW the framed region\n` +
         lines.join("\n"),
     ).toBe(0);
+
+    /*
+     * ON A COMPUTER (2026-11-16): the card is twice as wide for its height and
+     * shows a band of the frame. The owner: "it can look differently than on
+     * the phone, but when we choose the photo, it's somehow gotta look good on
+     * both". So the band it shows must be the one the window outlined. The
+     * grid's green channel names its row (30 + 22 per row), so the card's top
+     * and foot say which rows of the picture it shows.
+     */
+    await page.setViewportSize({ width: 1280, height: 900 });
+    const wide = await serveCard();
+    // Dragged to the top at zoom 1, the window holds the image's full width.
+    const framedRows = IMAGE.width / band.frameAspect;
+    const gridRow = (imageRow: number) => Math.floor((imageRow - 150) / 71);
+    for (const fy of [0.12, 0.85]) {
+      const expected = gridRow((band.top + fy * band.height) * framedRows);
+      const seen = Math.round((sample(wide, 0.5, fy)[1] - 30) / 22);
+      lines.push(`COMPUTER at ${fy}: grid row ${seen} (the window's band: ${expected})`);
+      expect(
+        Math.abs(seen - expected),
+        `on a computer the card shows grid row ${seen} at ${fy} of its height, and the window's dashed band ` +
+          `put row ${expected} there\n${lines.join("\n")}`,
+      ).toBeLessThanOrEqual(1);
+    }
 
     // The per-edge reading, attached to the report rather than printed: the
     // acceptance asks what is visible on each edge, and that answer belongs

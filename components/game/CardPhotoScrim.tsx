@@ -14,9 +14,6 @@
  * (`1600x740`): every stop below is a share of the frame, so it lands on the
  * same part of the picture at every width.
  *
- * THE RAMP'S `to-70%` IS LOAD-BEARING OUTSIDE THIS FILE: `GameCard` holds the
- * card at least as tall as the frame's lit 70% (`aspect-[1600/518]`) and lets
- * the solid ink beyond fall off the card's foot. Move the stop, move that box.
  */
 export function CardPhotoScrim() {
   return (
@@ -57,9 +54,17 @@ export function CardPhotoScrim() {
         gradient that stops short of its own colour is a gradient with a
         seam nobody put there on purpose.
       */}
+      {/*
+        ~~`to-ink to-70%`~~ — LIGHTER AT THE FOOT (2026-11-16), the owner's
+        choice: the photo stays visible to the card's bottom edge, under the
+        bar, the faces and Join, shaded to 70% rather than blacked out from
+        70% down. The top and the middle are as they were. Every element down
+        there carries its own fill (solid segments, filled faces, a volt
+        pill), so none of them leaned on the black.
+      */}
       <span
         data-testid="card-scrim"
-        className="absolute inset-0 bg-gradient-to-b from-ink/[.15] via-ink/[.45] via-50% to-ink to-70%"
+        className="absolute inset-0 bg-gradient-to-b from-ink/[.15] via-ink/[.40] via-50% to-ink/[.70]"
       />
       {/*
         TEXT PROTECTION, LOCAL TO THE TITLE LINE.

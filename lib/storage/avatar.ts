@@ -118,6 +118,19 @@ export const VENUE_WIDTH_PX = 1600;
 export const VENUE_HEIGHT_PX = 740;
 
 /**
+ * THE CARD ON A COMPUTER (2026-11-16), measured inside its border: 674x158.5
+ * from 768px up, where the list's column stops growing. That is twice the
+ * frame's width for its height, so the card shows a CENTRED BAND of the frame
+ * — `VENUE_WIDE_BAND` is the share of the frame's height it keeps (about half).
+ * The crop window draws that band as a dashed outline, so a venue photo is
+ * framed for the phone (the whole frame) and the computer (the band) at once.
+ * `e2e/card-frame.spec.ts` measures the card and fails if this drifts.
+ */
+export const VENUE_WIDE_CARD = { width: 674, height: 158.5 } as const;
+export const VENUE_WIDE_BAND =
+  VENUE_WIDTH_PX / VENUE_HEIGHT_PX / (VENUE_WIDE_CARD.width / VENUE_WIDE_CARD.height);
+
+/**
  * THE OUTPUT SIZE OF EVERY CROPPABLE SURFACE, IN ONE PLACE (round 32, item 1).
  *
  * WHY THIS MAP EXISTS, AND IT IS A BUG RATHER THAN TIDINESS. `PhotoUpload`
