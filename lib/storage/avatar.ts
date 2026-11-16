@@ -107,15 +107,12 @@ export const COVER_HEIGHT_PX = 1049;
  * 1.658-1.875 box, so it fills the height and loses a slice from each side.
  * Nothing is lost from the top or bottom on any surface.
  *
- * ~~390 IS THE REFERENCE WIDTH. At 430 the card is 2.419 and takes a sliver
- * off the frame's top and bottom instead; that is a real limit of pinning a
- * fixed aspect to a fluid box.~~ NOT A LIMIT ANY MORE (2026-11-16): on a laptop
- * that "sliver" was half the frame. The card now draws the photo in a box of
- * THIS shape at its full width, top-anchored, and is never shorter than the
- * frame's lit 70% — so every width shows exactly what the crop window shows,
- * the window drawing the card's darkening too. `e2e/card-frame.spec.ts`
- * measures it at four widths; `e2e/crop-truth.spec.ts` proves it with a marked
- * image at a phone and a laptop.
+ * 390 IS THE REFERENCE WIDTH. At 430 the card is 2.419 and takes a sliver
+ * off the frame's top and bottom instead, and on a laptop that "sliver" is half
+ * the frame — a real limit of pinning a fixed aspect to a fluid box. A fix
+ * (the photo in a box of THIS shape, the card never shorter than its lit part)
+ * shipped on 2026-11-16 and was reverted the same day on the owner's phone
+ * report; see ledger row 469. The crop window does draw the card's darkening.
  */
 export const VENUE_WIDTH_PX = 1600;
 export const VENUE_HEIGHT_PX = 740;

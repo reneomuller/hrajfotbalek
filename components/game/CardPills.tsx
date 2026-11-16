@@ -19,10 +19,10 @@ import { getStrings } from "@/lib/i18n/server";
  * INDOOR OR OUTDOOR HANGS, IT DOES NOT STACK. The pill sits below the language
  * pill without adding to the row's height, so a card that says "Indoor" is as
  * tall as one that does not: on a phone the list shows three cards and the
- * start of a fourth, and 12px a card would cost the fourth. (~~The photo's crop
- * was pinned to the card's height~~ — not since 2026-11-16: the photo keeps
- * the frame's shape at any card height.) The row reserves the height the old
- * 34px flags had, and the hanging pill ends above the spots figure beneath.
+ * start of a fourth, and 12px a card would cost the fourth — and the venue
+ * photo's crop is pinned to the card's height (`1600x740`). The row reserves
+ * the height the old 34px flags had, and the hanging pill ends above the spots
+ * figure beneath.
  *
  * ABSENT UNTIL SAID. `games.indoor` is null for every game the admin has not
  * answered for, and `undefined` before the migration; neither draws a pill.

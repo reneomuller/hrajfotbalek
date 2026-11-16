@@ -279,7 +279,12 @@ row of real data.** The crop is now pinned to the CARD (`1600x740`), and the
 hero is asserted only to be NARROWER than the frame — the property that means
 `object-cover` trims its sides and never the goalposts.
 
-**AND "THE CARD IS A FIXED HEIGHT" WAS ITSELF THE NEXT TRAP** (2026-11-16). A
+**AND "THE CARD IS A FIXED HEIGHT" WAS ITSELF THE NEXT TRAP** (2026-11-16) —
+**the fix below shipped and was REVERTED the same day** ("phone shows up
+incorrectly now", the owner, on his phone; not reproduced in emulated Chromium —
+suspect iOS Safari and `aspect-ratio` on an absolutely positioned box). The
+card is back at `bd318aa`; only the window's darkening stayed. Test on a real
+iPhone before trying it again. A
 fixed height means the aspect moves with the WIDTH: right at 390, and 676x161
 on a laptop, where the card showed the lower half of the frame, enlarged — the
 owner: "it also shows up differently on phone and pc". And the crop window
