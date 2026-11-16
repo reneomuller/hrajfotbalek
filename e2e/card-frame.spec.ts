@@ -1,83 +1,16 @@
 import { expect, test, type Page } from "@playwright/test";
 import { PNG } from "pngjs";
 import { LOCALE_COOKIE } from "../lib/i18n/locales";
-import { createScratchGame, destroyScratchGame } from "./helpers/scaffold";
 import { players, serviceClient, signInAs } from "./helpers/session";
 import { YELLOW, solidImage } from "./helpers/solidPhoto";
 
 /**
- * THE CARD SHOWS THE FRAME AS IT WAS FRAMED, AT EVERY WIDTH (2026-11-16): the
- * same shape, scale and place as the crop window, and never less than its lit
- * part — below that the window is solid ink as well. The owner: "i would like for me to select the photo, crop it
- * to fit the outline, and for it to show up the same exact way on the game
- * card", and "currently it also shows up differently on phone and pc".
- *
- * `crop-truth.spec.ts` proves the framing with a marked image at a phone and a
- * laptop width; this measures the geometry at four widths, and proves the crop
- * window darkens the way the card does.
+ * THE VENUE PHOTO'S CROP WINDOW DARKENS AS THE CARD DOES (2026-11-16): the
+ * owner wants to "crop it to fit the outline, and for it to show up the same
+ * exact way on the game card". (The card's frame-shaped photo box went out the
+ * same day and came back the same day — the owner: "phone shows up incorrectly
+ * now. please fix to how it was before". Ledger row 469.)
  */
-const FRAME_ASPECT = 1600 / 740;
-const WIDTHS = [360, 390, 430, 1280] as const;
-/** Where `CardPhotoScrim`'s ramp reaches solid ink. */
-const LIT_SHARE = 0.7;
-
-test("the card's photograph keeps the frame's shape at every width, and the card never cuts its lit part", async ({
-  page,
-}) => {
-  // Arrange
-  const game = await createScratchGame({ hoursFromNow: 48, format: "6v6" });
-  try {
-    const heights = new Map<number, number>();
-    for (const width of WIDTHS) {
-      await page.setViewportSize({ width, height: 900 });
-
-      // Act
-      await page.goto("/games", { waitUntil: "networkidle" });
-      const card = page.locator(`[data-testid="game-row"][data-game-id="${game.id}"]`);
-      await card.scrollIntoViewIfNeeded();
-      const box = await card.evaluate((el) => {
-        const outer = el.getBoundingClientRect();
-        const border = parseFloat(getComputedStyle(el).borderTopWidth);
-        const photo = el.querySelector('[data-testid="card-photo"]')!.getBoundingClientRect();
-        return {
-          innerTop: outer.top + border,
-          innerWidth: outer.width - 2 * border,
-          innerHeight: outer.height - 2 * border,
-          photo: { top: photo.top, width: photo.width, height: photo.height },
-        };
-      });
-      heights.set(width, box.innerHeight);
-
-      // Assert — the frame's shape, full width, from the top: scaled and placed
-      // exactly as the crop window places it.
-      expect(
-        Math.abs(box.photo.width / box.photo.height - FRAME_ASPECT),
-        `${width}px: the photograph is ${box.photo.width}x${box.photo.height}, not the frame's shape`,
-      ).toBeLessThan(0.01);
-      expect(Math.abs(box.photo.width - box.innerWidth), `${width}px: the photograph is not full width`).toBeLessThan(1);
-      expect(Math.abs(box.photo.top - box.innerTop), `${width}px: the photograph is not at the top`).toBeLessThan(1);
-      // Never shorter than the lit 70% — past it the window is solid ink too.
-      expect(
-        box.innerHeight,
-        `${width}px: the card cuts into the lit part of the frame`,
-      ).toBeGreaterThanOrEqual(box.photo.height * LIT_SHARE - 0.5);
-    }
-
-    // And every phone draws the card at one height — the content's — so the
-    // list keeps three cards and the start of a fourth on screen.
-    for (const width of [360, 430] as const) {
-      expect(Math.abs(heights.get(width)! - heights.get(390)!), `the card at ${width}px is not the phone's height`).toBeLessThan(
-        0.5,
-      );
-    }
-    expect(heights.get(1280)!, "on a laptop the card did not grow to the frame's lit part").toBeGreaterThan(
-      heights.get(390)! + 20,
-    );
-  } finally {
-    await destroyScratchGame(game.id);
-  }
-});
-
 /** Mean of a few pixels at a fraction of an element's height, from a fresh capture. */
 async function lumaAt(page: Page, selector: string, fy: number): Promise<number> {
   const box = (await page.locator(selector).boundingBox())!;

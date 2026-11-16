@@ -159,9 +159,6 @@ const show = (c: Rgb | readonly number[]) => `rgb(${c.map((v) => Math.round(v)).
  * claims about its edge is unchanged. And the bottom's real statement is the
  * magenta count below, which scans every pixel of the card.
  */
-/** The widths the card is decoded at: a phone, and a laptop's list. */
-const CARD_WIDTHS = [390, 1280] as const;
-
 const PROBES = [
   { edge: "TOP", fx: 0.5, fy: 0.08, sentinel: SENTINEL.top },
   { edge: "LEFT", fx: 0.04, fy: 0.5, sentinel: SENTINEL.left },
@@ -300,177 +297,150 @@ test("the game card shows EXACTLY the region the organizer framed", async ({ pag
     await page.getByTestId("photo-cropper-save").click();
     await expect(page.getByTestId("photo-cropper")).toBeHidden();
 
-    /*
-     * ON A PHONE AND ON A LAPTOP (2026-11-16). The owner: "currently it also
-     * shows up differently on phone and pc. not good, we need consistency".
-     * The card was 161px tall at every width, so at 1280 it showed the lower
-     * half of the frame, enlarged — and this spec, run only at phone width,
-     * never saw it. The same sentinels, at both.
-     */
-    for (const width of CARD_WIDTHS) {
-      await page.setViewportSize({ width, height: 844 });
+    // ---- Act 2: the card as served -----------------------------------------
+    const cardPhoto = page
+      .locator(`[data-testid="game-row"][data-game-id="${gameId}"] [data-testid="card-photo"]`)
+      .first();
 
-      // ---- Act 2: the card as served -----------------------------------------
-      const cardPhoto = page
-        .locator(`[data-testid="game-row"][data-game-id="${gameId}"] [data-testid="card-photo"]`)
-        .first();
-
-      await expect
-        .poll(
-          async () => {
-            await page.goto(`/games?day=${pragueDayKey(startsAt)}`, { waitUntil: "networkidle" });
-            if ((await cardPhoto.count()) === 0) return "missing";
-            /*
-             * SCROLL IT INTO VIEW BEFORE ASKING WHETHER IT LOADED (round 37).
-             *
-             * The card's photograph goes through `next/image` now, and every card
-             * but the first is `loading="lazy"` — which is the point: a list of a
-             * dozen venues should not fetch a dozen photographs to show three.
-             * This fixture's game is rarely the first card, so the image was
-             * correctly never loading and the poll read `loading` until it timed
-             * out.
-             *
-             * A REAL READER SCROLLS TO IT. Doing the same here keeps the lazy
-             * behaviour under test rather than switching it off to make the test
-             * pass — if the image failed to load once visible, this would still
-             * fail, which is the property worth keeping.
-             */
-            await cardPhoto.scrollIntoViewIfNeeded();
-            /*
-             * AND WAIT FOR THE FETCH THE SCROLL JUST STARTED. Scrolling makes a
-             * lazy image eligible to load; it does not make it loaded. Without
-             * this the check ran on the same tick and read `loading` every time,
-             * which looks identical to an image that never loads at all.
-             */
-            await cardPhoto
-              .evaluate(
-                (el: HTMLImageElement) =>
-                  el.complete
-                    ? null
-                    : new Promise<null>((resolve) => {
-                        el.addEventListener("load", () => resolve(null), { once: true });
-                        el.addEventListener("error", () => resolve(null), { once: true });
-                      }),
-              )
-              .catch(() => null);
-            return (
-              (await cardPhoto.evaluate(
-                (el: HTMLImageElement) => (el.complete && el.naturalWidth > 0 ? el.dataset.photo : "loading"),
-              )) ?? "none"
-            );
-          },
-          { message: "the card never rendered the venue photograph", timeout: 30_000 },
-        )
-        .toBe("venue");
-
-      /*
-       * THE OVERLAY COMES OFF FOR THE DECODE, AND ONLY FOR THE DECODE.
-       *
-       * THE PHOTOGRAPH IS THE WHOLE CARD, not a band at the top of one: the
-       * image layer is `absolute inset-0` and the venue name, the time pill, the
-       * capacity bar, the faces and two gradient scrims are all painted ON it.
-       * Decoding through that measures the pill, which is what the first run of
-       * this spec did — rgb(22,22,22) in the middle of a yellow-to-white grid.
-       *
-       * `visibility: hidden`, NOT `display: none`, and the difference is the
-       * whole trick. The card takes its HEIGHT from that overlaid content, so
-       * removing it from the layout would collapse the card and shrink the very
-       * box whose crop is being measured. `visibility` keeps every element's
-       * geometry and stops it painting, so the image is rendered at exactly the
-       * size it is served at — the filter in front of it is what goes away.
-       */
-      await page.evaluate((id) => {
-        const row = document.querySelector<HTMLElement>(`[data-game-id="${id}"]`)!;
-        const photo = row.querySelector<HTMLElement>('[data-testid="card-photo"]')!;
-        for (const el of row.querySelectorAll<HTMLElement>("*")) {
-          if (el === photo || el.contains(photo)) continue;
-          el.style.setProperty("visibility", "hidden", "important");
-        }
-      }, gameId);
-      // The card is below the fold, and a viewport clip cannot reach it.
-      await cardPhoto.scrollIntoViewIfNeeded();
-      const cardBox = (await cardPhoto.boundingBox())!;
-      /*
-       * WHAT THE CARD SHOWS OF THE PHOTO BOX (2026-11-16). The box has the
-       * frame's shape and the card may end before it does — never before the
-       * lit 70%, past which the crop window is solid ink too. Only the part
-       * inside the card is decoded; a probe below it is under ink by design.
-       */
-      const rowBox = (await page.locator(`[data-testid="game-row"][data-game-id="${gameId}"]`).boundingBox())!;
-      const visible = Math.min(cardBox.y + cardBox.height, rowBox.y + rowBox.height - 1) - cardBox.y;
-      expect(visible / cardBox.height, `${width}px: the card cuts into the lit part of the frame`).toBeGreaterThanOrEqual(
-        0.7 - 0.01,
-      );
-      const served = PNG.sync.read(
-        await page.screenshot({
-          clip: { x: cardBox.x, y: cardBox.y, width: cardBox.width, height: visible },
-        }),
-      );
-
-      // ---- Assert: per edge, stated ------------------------------------------
-      const lines: string[] = [`at ${width}px`];
-      for (const probe of PROBES) {
-        const fyShown = (probe.fy * cardBox.height) / visible;
-        if (fyShown > 0.98) {
-          lines.push(`${probe.edge}: past the card's foot at this width, under the ramp's ink`);
-          continue;
-        }
-        const onCard = sample(served, probe.fx, fyShown);
-        lines.push(
-          `${probe.edge}: card ${show(onCard)}` +
-            (probe.sentinel ? ` (expect ${probe.sentinel.name})` : " (expect the last grid band)"),
-        );
-        if (probe.sentinel) {
-          expect(
-            near(onCard, probe.sentinel.rgb, 40),
-            `${probe.edge} edge: expected the ${probe.sentinel.name} sentinel and the card shows ` +
-              `${show(onCard)} — the framing moved off the image's ${probe.edge.toLowerCase()} edge\n` +
-              lines.join("\n"),
-          ).toBe(true);
-        } else {
+    await expect
+      .poll(
+        async () => {
+          await page.goto(`/games?day=${pragueDayKey(startsAt)}`, { waitUntil: "networkidle" });
+          if ((await cardPhoto.count()) === 0) return "missing";
           /*
-           * THE BOTTOM IS THE LAST GRID BAND, which is what "the crop ends just
-           * above the magenta" looks like. Its green channel encodes the row, so
-           * this is a statement about WHICH part of the picture is at the bottom
-           * of the card, not merely that something is.
+           * SCROLL IT INTO VIEW BEFORE ASKING WHETHER IT LOADED (round 37).
+           *
+           * The card's photograph goes through `next/image` now, and every card
+           * but the first is `loading="lazy"` — which is the point: a list of a
+           * dozen venues should not fetch a dozen photographs to show three.
+           * This fixture's game is rarely the first card, so the image was
+           * correctly never loading and the poll read `loading` until it timed
+           * out.
+           *
+           * A REAL READER SCROLLS TO IT. Doing the same here keeps the lazy
+           * behaviour under test rather than switching it off to make the test
+           * pass — if the image failed to load once visible, this would still
+           * fail, which is the property worth keeping.
            */
-          expect(
-            onCard[2],
-            `BOTTOM edge: the card shows ${show(onCard)} — the grid's blue channel is 100, so ` +
-              `this is not a grid band at all\n${lines.join("\n")}`,
-          ).toBeGreaterThan(80);
-          expect(onCard[1], `BOTTOM edge: expected the LAST grid band\n${lines.join("\n")}`)
-            .toBeGreaterThan(200);
-        }
-      }
+          await cardPhoto.scrollIntoViewIfNeeded();
+          /*
+           * AND WAIT FOR THE FETCH THE SCROLL JUST STARTED. Scrolling makes a
+           * lazy image eligible to load; it does not make it loaded. Without
+           * this the check ran on the same tick and read `loading` every time,
+           * which looks identical to an image that never loads at all.
+           */
+          await cardPhoto
+            .evaluate(
+              (el: HTMLImageElement) =>
+                el.complete
+                  ? null
+                  : new Promise<null>((resolve) => {
+                      el.addEventListener("load", () => resolve(null), { once: true });
+                      el.addEventListener("error", () => resolve(null), { once: true });
+                    }),
+            )
+            .catch(() => null);
+          return (
+            (await cardPhoto.evaluate(
+              (el: HTMLImageElement) => (el.complete && el.naturalWidth > 0 ? el.dataset.photo : "loading"),
+            )) ?? "none"
+          );
+        },
+        { message: "the card never rendered the venue photograph", timeout: 30_000 },
+      )
+      .toBe("venue");
 
-      /*
-       * AND THE CUT EDGE, ASSERTED AS AN ABSENCE. Everything above compares two
-       * pictures; this one names what must NOT be in the card at all. The
-       * magenta strip lies below the framed region, so a single magenta pixel
-       * anywhere on the card means the crop kept something the organizer had
-       * pushed out of the window.
-       */
-      let magenta = 0;
-      for (let y = 0; y < served.height; y++) {
-        for (let x = 0; x < served.width; x++) {
-          const i = (served.width * y + x) << 2;
-          if (near([served.data[i]!, served.data[i + 1]!, served.data[i + 2]!], SENTINEL.bottom.rgb, 40)) {
-            magenta++;
-          }
-        }
+    /*
+     * THE OVERLAY COMES OFF FOR THE DECODE, AND ONLY FOR THE DECODE.
+     *
+     * THE PHOTOGRAPH IS THE WHOLE CARD, not a band at the top of one: the
+     * image layer is `absolute inset-0` and the venue name, the time pill, the
+     * capacity bar, the faces and two gradient scrims are all painted ON it.
+     * Decoding through that measures the pill, which is what the first run of
+     * this spec did — rgb(22,22,22) in the middle of a yellow-to-white grid.
+     *
+     * `visibility: hidden`, NOT `display: none`, and the difference is the
+     * whole trick. The card takes its HEIGHT from that overlaid content, so
+     * removing it from the layout would collapse the card and shrink the very
+     * box whose crop is being measured. `visibility` keeps every element's
+     * geometry and stops it painting, so the image is rendered at exactly the
+     * size it is served at — the filter in front of it is what goes away.
+     */
+    await page.evaluate((id) => {
+      const row = document.querySelector<HTMLElement>(`[data-game-id="${id}"]`)!;
+      const photo = row.querySelector<HTMLElement>('[data-testid="card-photo"]')!;
+      for (const el of row.querySelectorAll<HTMLElement>("*")) {
+        if (el === photo || el.contains(photo)) continue;
+        el.style.setProperty("visibility", "hidden", "important");
       }
-      expect(
-        magenta,
-        `${magenta} magenta pixels on the card — the crop reaches BELOW the framed region\n` +
-          lines.join("\n"),
-      ).toBe(0);
+    }, gameId);
+    // The card is below the fold, and a viewport clip cannot reach it.
+    await cardPhoto.scrollIntoViewIfNeeded();
+    const cardBox = (await cardPhoto.boundingBox())!;
+    const served = PNG.sync.read(
+      await page.screenshot({
+        clip: { x: cardBox.x, y: cardBox.y, width: cardBox.width, height: cardBox.height },
+      }),
+    );
 
-      // The per-edge reading, attached to the report rather than printed: the
-      // acceptance asks what is visible on each edge, and that answer belongs
-      // with the run it came from.
-      await test.info().attach(`per-edge-${width}`, { body: lines.join("\n"), contentType: "text/plain" });
+    // ---- Assert: per edge, stated ------------------------------------------
+    const lines: string[] = [];
+    for (const probe of PROBES) {
+      const onCard = sample(served, probe.fx, probe.fy);
+      lines.push(
+        `${probe.edge}: card ${show(onCard)}` +
+          (probe.sentinel ? ` (expect ${probe.sentinel.name})` : " (expect the last grid band)"),
+      );
+      if (probe.sentinel) {
+        expect(
+          near(onCard, probe.sentinel.rgb, 40),
+          `${probe.edge} edge: expected the ${probe.sentinel.name} sentinel and the card shows ` +
+            `${show(onCard)} — the framing moved off the image's ${probe.edge.toLowerCase()} edge\n` +
+            lines.join("\n"),
+        ).toBe(true);
+      } else {
+        /*
+         * THE BOTTOM IS THE LAST GRID BAND, which is what "the crop ends just
+         * above the magenta" looks like. Its green channel encodes the row, so
+         * this is a statement about WHICH part of the picture is at the bottom
+         * of the card, not merely that something is.
+         */
+        expect(
+          onCard[2],
+          `BOTTOM edge: the card shows ${show(onCard)} — the grid's blue channel is 100, so ` +
+            `this is not a grid band at all\n${lines.join("\n")}`,
+        ).toBeGreaterThan(80);
+        expect(onCard[1], `BOTTOM edge: expected the LAST grid band\n${lines.join("\n")}`)
+          .toBeGreaterThan(200);
+      }
     }
+
+    /*
+     * AND THE CUT EDGE, ASSERTED AS AN ABSENCE. Everything above compares two
+     * pictures; this one names what must NOT be in the card at all. The
+     * magenta strip lies below the framed region, so a single magenta pixel
+     * anywhere on the card means the crop kept something the organizer had
+     * pushed out of the window.
+     */
+    let magenta = 0;
+    for (let y = 0; y < served.height; y++) {
+      for (let x = 0; x < served.width; x++) {
+        const i = (served.width * y + x) << 2;
+        if (near([served.data[i]!, served.data[i + 1]!, served.data[i + 2]!], SENTINEL.bottom.rgb, 40)) {
+          magenta++;
+        }
+      }
+    }
+    expect(
+      magenta,
+      `${magenta} magenta pixels on the card — the crop reaches BELOW the framed region\n` +
+        lines.join("\n"),
+    ).toBe(0);
+
+    // The per-edge reading, attached to the report rather than printed: the
+    // acceptance asks what is visible on each edge, and that answer belongs
+    // with the run it came from.
+    await test.info().attach("per-edge", { body: lines.join("\n"), contentType: "text/plain" });
   } finally {
     if (gameId) {
       await admin.from("events").delete().eq("game_id", gameId);
