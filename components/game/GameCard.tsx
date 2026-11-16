@@ -345,7 +345,17 @@ export async function GameCard({
           and the `.ics` both read it — so this is a rendering decision, not a
           data one.
         */}
-        <span data-testid="row-spots" className="shrink-0">
+        {/*
+          `text-body-lg` ON THE WRAPPER (2026-11-16): the owner, "the spots are
+          a tiny bit higher than the numbers … i want the spots to match the
+          numbers". The figure is `leading-none` inside a line box built from
+          the card's own type, and the time is a 17px/1.4 line centred in its
+          pill — two different line boxes, so two baselines half a pixel
+          apart. The wrapper now builds the time's line box (17px, 1.4), and
+          both are centred on the row, so the baselines are one by
+          construction. The time does not move.
+        */}
+        <span data-testid="row-spots" className="shrink-0 text-body-lg">
           {live ? (
             <span data-testid="card-live" className="badge-pill border-warn bg-warn/[.12] text-warn">
               {t.games.playingNow}
