@@ -66,12 +66,22 @@ export function PhotoCropper({
   file,
   outputWidth,
   outputHeight,
+  overlay,
+  hint,
   onCancel,
   onConfirm,
 }: {
   file: File;
   outputWidth: number;
   outputHeight: number;
+  /**
+   * Painted over the window, as the surface that shows the crop paints over
+   * it (2026-11-16) — the game card's darkening for a venue photo, so the
+   * outline shows what the card will. Never captured: the crop is the image.
+   */
+  overlay?: React.ReactNode;
+  /** Replaces the generic hint under the title, for a surface that needs its own. */
+  hint?: string;
   onCancel: () => void;
   onConfirm: (crop: CropRect) => void;
 }) {
@@ -225,7 +235,7 @@ export function PhotoCropper({
           {t.account.cropTitle}
         </h2>
         <p className="mt-1 mb-4 text-[13px] leading-snug text-muted">
-          {t.account.cropHint}
+          {hint ?? t.account.cropHint}
         </p>
 
         {/*
@@ -319,6 +329,11 @@ export function PhotoCropper({
               }}
               className="max-w-none origin-top-left select-none"
             />
+          )}
+          {overlay && (
+            <div aria-hidden data-testid="photo-cropper-overlay" className="pointer-events-none absolute inset-0">
+              {overlay}
+            </div>
           )}
         </div>
         </div>

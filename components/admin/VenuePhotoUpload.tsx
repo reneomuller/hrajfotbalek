@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { PhotoUpload } from "@/components/account/PhotoUpload";
+import { CardPhotoScrim } from "@/components/game/CardPhotoScrim";
 import { strings } from "@/lib/strings";
 
 /**
@@ -57,15 +58,21 @@ export function VenuePhotoUpload({
       <p className="m-0 text-small font-semibold text-bone">{strings.admin.venuePhotoTitle}</p>
 
       {photoUrl ? (
-        <Image
-          src={photoUrl}
-          alt=""
-          width={440}
-          height={204}
-          sizes="(min-width: 768px) 440px, 100vw"
-          data-testid="venue-photo-preview"
-          className="mt-2 aspect-[1600/740] w-full rounded-control border border-hairline object-cover"
-        />
+        /*
+          AS THE CARD SHOWS IT (2026-11-16): the frame's shape, under the
+          card's own darkening — the same layers the crop window draws.
+        */
+        <div className="relative mt-2 aspect-[1600/740] w-full overflow-hidden rounded-control border border-hairline">
+          <Image
+            src={photoUrl}
+            alt=""
+            fill
+            sizes="(min-width: 768px) 440px, 100vw"
+            data-testid="venue-photo-preview"
+            className="object-cover"
+          />
+          <CardPhotoScrim />
+        </div>
       ) : emptyFrame ? (
         <div className="mt-2 flex aspect-[1600/740] w-full items-center justify-center rounded-control border border-dashed border-hairline-strong bg-surface text-[12px] text-faint">
           {strings.admin.pitch.photoEmpty}

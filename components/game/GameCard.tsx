@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { AvatarRow } from "@/components/game/AvatarRow";
 import { CapacityBar } from "@/components/game/CapacityBar";
+import { CardPhotoScrim } from "@/components/game/CardPhotoScrim";
 import { CardPills } from "@/components/game/CardPills";
 import { Icon } from "@/components/Icon";
 import { venueDisplayName } from "@/lib/venues/displayName";
@@ -212,247 +213,211 @@ export async function GameCard({
         stroke is still `rgb(200, 255, 0)` at 1.5px over the photo, and that the
         scrim element covers the photo exactly. Values derived from the frames.
       */}
-      <span aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden rounded-card">
-        {/*
-          THE CROP IS BOTTOM-ANCHORED, NOT CENTRED (round 7, item 3).
+      {/*
+        THE PHOTOGRAPH KEEPS THE SHAPE IT WAS FRAMED IN (2026-11-16). The owner:
+        "i would like for me to select the photo, crop it to fit the outline,
+        and for it to show up the same exact way on the game card", and
+        "currently it also shows up differently on phone and pc".
 
-          `pitch-default.jpg` is 640x336 and its top fifth is sky and
-          mountains. On the DETAIL header and the PROFILE cover that reads
-          well — those bands are tall enough to want a horizon. The list card
-          is a 358x159 strip, and `object-center` on it put the pale sky
-          directly behind the venue title, which is the single most
-          conspicuous way this card failed to look like `p02`: the frame's
-          card is green field edge to edge.
+        It did. The card was 161px tall at every width, so the 1600x740 frame
+        was cover-cropped into whatever shape the screen made: about right on a
+        390 phone, and 676x161 on a laptop, where the card showed the lower
+        half of the frame, enlarged. Now the photo sits in a box of the frame's
+        own shape across the card's full width, top-anchored, so it is never
+        scaled or shifted differently from the crop window. The card is never
+        shorter than the frame's LIT part (below) — what lies past the card's
+        foot is the ramp's solid ink in the window too, so every width shows
+        exactly what the window showed. Where the content is taller than the
+        frame (a 360 phone), the card runs on below it on the same ink.
+      */}
+      <span aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden rounded-card bg-ink">
+        <span className="absolute inset-x-0 top-0 aspect-[1600/740]">
+          {/*
+            THE CROP IS BOTTOM-ANCHORED, NOT CENTRED (round 7, item 3).
 
-          `object-bottom` pushes the visible window down onto the fields. It
-          cannot remove the horizon entirely — cover only has 24px of slack at
-          this height — but it takes the pale band out from behind the title,
-          which is where it was doing the damage.
+            `pitch-default.jpg` is 640x336 and its top fifth is sky and
+            mountains. On the DETAIL header and the PROFILE cover that reads
+            well — those bands are tall enough to want a horizon. The list card
+            is a 358x159 strip, and `object-center` on it put the pale sky
+            directly behind the venue title, which is the single most
+            conspicuous way this card failed to look like `p02`: the frame's
+            card is green field edge to edge.
 
-          NOT A SECOND CROPPED ASSET. One default is R6's rule and a second
-          file is a second thing to keep in step; this is the same image read
-          differently by one surface.
-        */}
-        {/*
-          THROUGH THE OPTIMIZER (round 37, item 2).
+            `object-bottom` pushes the visible window down onto the fields. It
+            cannot remove the horizon entirely — cover only has 24px of slack at
+            this height — but it takes the pale band out from behind the title,
+            which is where it was doing the damage.
 
-          ~~A raw `<img>` at the storage URL.~~ That painted a 1600x740 upload
-          into this 358x159 strip — 143 KB for one card and 429 KB for another,
-          measured on production before the change. `fill` keeps the markup
-          shape identical (the parent span is already `absolute inset-0`), so
-          `object-cover object-bottom` above still means exactly what it meant,
-          and the pixel specs that read this card are reading the same crop at a
-          sane resolution.
+            NOT A SECOND CROPPED ASSET. One default is R6's rule and a second
+            file is a second thing to keep in step; this is the same image read
+            differently by one surface.
+          */}
+          {/*
+            THROUGH THE OPTIMIZER (round 37, item 2).
 
-          `sizes` IS THE WHOLE SAVING. Without it Next assumes 100vw at the
-          largest device size and serves the biggest variant anyway; the card is
-          full-bleed inside a 560px shell, so one breakpoint states it honestly.
-        */}
-        <Image
-          src={photo}
-          alt=""
-          fill
-          sizes="(max-width: 600px) 100vw, 560px"
-          priority={priority}
-          data-testid="card-photo"
-          data-photo={photo === DEFAULT_PITCH ? "default" : "venue"}
-          className="h-full w-full object-cover object-bottom"
-        />
-        {/*
-          THE GRADIENT IS A RAMP, NOT A DIMMER — rebalanced from p02.
+            ~~A raw `<img>` at the storage URL.~~ That painted a 1600x740 upload
+            into this 358x159 strip — 143 KB for one card and 429 KB for another,
+            measured on production before the change. `fill` keeps the markup
+            shape identical (the parent span is already `absolute inset-0`), so
+            `object-cover object-bottom` above still means exactly what it meant,
+            and the pixel specs that read this card are reading the same crop at a
+            sane resolution.
 
-          The first version was a uniform-ish wash (.68 -> .82 -> .92) and it
-          crushed the photograph to near-invisible: the card read as a dark
-          slab that happened to have texture. p02 draws the opposite — the
-          pitch is CLEARLY there behind the venue title, and the image darkens
-          as it falls toward the avatars and the join cue, which is where the
-          small text lives.
-
-          So the stops now start almost clear and end heavy. The dark end is
-          what the bar, the faces and the cue sit on; the clear end is the
-          picture doing the job it was added for.
-        */}
-        {/*
-          THE FADE HAS A BOUNDARY, AND THE BOUNDARY IS THE CAPACITY BAR
-          (round 8, item 5).
-
-          It was `.12 -> .52 -> .90`: a wash across the whole card that never
-          finished. The photograph was faintly present everywhere and fully
-          gone nowhere, so the bar, the faces and the cue all sat on texture
-          instead of on a surface — and the top, where the photograph is
-          supposed to read, was being dimmed to make that texture survivable.
-
-          Measured off the rendered card at 390px: the venue title ends at 23%,
-          the time pill at 56%, and the capacity bar begins at about 58%. So
-          the ramp holds light through the title and the time row, climbs
-          across the pill's lower edge, and reaches FULL `ink` at 72% — before
-          the bar, and well before the faces and the cue. Everything from
-          there down is flat page surface, which is what `p02` draws.
-
-          `to-ink`, NOT `to-ink/[.90]`. The old end left a tenth of the
-          photograph under the busiest, smallest elements on the card; a
-          gradient that stops short of its own colour is a gradient with a
-          seam nobody put there on purpose.
-        */}
-        <span
-          data-testid="card-scrim"
-          className="absolute inset-0 bg-gradient-to-b from-ink/[.15] via-ink/[.45] via-50% to-ink to-70%"
-        />
-        {/*
-          TEXT PROTECTION, LOCAL TO THE TITLE LINE.
-
-          The venue title sits at the top, and rather than dimming the WHOLE
-          card to rescue one line, this is a short gradient behind the title
-          band only.
-
-          `.72` -> `.55`, AND THE CROP IS WHY IT CAN COME DOWN (round 7, item
-          3). `.72` was set against a PALE SKY sitting behind the title — the
-          measurement that mattered was white-on-cloud. `object-bottom` above
-          puts green field there instead, which is both darker and textured,
-          so the same legibility needs less scrim.
-
-          64px -> 48px (round 8, item 5). The title ends at 23% of a 146px
-          card, so 48px covers it exactly; at 64 this reached down into the
-          time row and dimmed the part of the photograph the new boundary is
-          there to keep visible. Measured against `p02`: the
-          frame's card reads about 76 mean luminance across its title band and
-          this was rendering about 60, which is the "washed out, does not match
-          the frame" complaint stated as a number.
-
-          The two changes are one change. Dropping the scrim alone would put
-          white text on a pale sky; re-cropping alone would leave the photo
-          needlessly dim. Neither is correct on its own.
-
-          A separate element rather than another stop on the ramp above,
-          because the two do different jobs and one of them is allowed to
-          change when the type does.
-        */}
-        <span
-          data-testid="card-title-scrim"
-          className="absolute inset-x-0 top-0 h-[48px] bg-gradient-to-b from-ink/[.55] to-transparent"
-        />
+            `sizes` IS THE WHOLE SAVING. Without it Next assumes 100vw at the
+            largest device size and serves the biggest variant anyway; the card is
+            full-bleed inside a 560px shell, so one breakpoint states it honestly.
+          */}
+          <Image
+            src={photo}
+            alt=""
+            fill
+            sizes="(max-width: 600px) 100vw, 560px"
+            priority={priority}
+            data-testid="card-photo"
+            data-photo={photo === DEFAULT_PITCH ? "default" : "venue"}
+            className="h-full w-full object-cover object-bottom"
+          />
+          <CardPhotoScrim />
+        </span>
       </span>
 
       {/*
-        THE ANATOMY, RE-ORDERED TO THE FRAMES:
-
-          venue                      · format/surface badges
-          time pill                  · spots left
-          capacity bar
-          faces                      · Join → (paint)
-
-        What moved: the spots figure comes UP onto the time row, and the faces
-        drop to share the last row with the join cue. The previous order put
-        spots and faces together on the final row, which was right on a flat
-        card and wrong over a photograph — the two loudest elements both sat in
-        the darkest band and the middle of the card carried nothing.
+        THE FRAME'S LIT PART, held by an empty box in the card's one grid cell:
+        518 is 70% of the frame's 740, where `CardPhotoScrim`'s ramp reaches
+        solid ink — THE TWO NUMBERS CHANGE TOGETHER. The content column shares
+        the cell, so the card is as tall as its content or as the lit part,
+        whichever is taller. On every phone that is the content (161px, as
+        before, so the list still shows three cards and the start of a fourth);
+        on a laptop it is the lit part, which the card used to cut in half.
+        Holding the WHOLE frame instead made a 412 phone's cards 10px taller
+        for nothing but more ink.
       */}
-      <span className="relative flex items-start justify-between gap-2">
-        <span data-testid="card-venue" className="min-w-0 flex-1 truncate text-body-lg font-bold leading-tight text-white">
-          {venueDisplayName(game.venue, pitchName)}
-        </span>
-        <CardPills format={game.format} language={gameLanguageOf(game.language)} indoor={game.indoor} />
-      </span>
+      <span aria-hidden className="col-start-1 row-start-1 aspect-[1600/518]" />
 
-      <span className="relative mt-2 flex items-center justify-between gap-2">
-        <span
-          data-testid="card-when"
-          /*
-            `border-2`, NOT `border-[1.5px]`, AND THE REASON IS THE DEVICE.
-
-            The night round set this to 1.5px to make the volt outline read.
-            It never rendered: Chrome snaps a border to whole device pixels, so
-            at this DPR 1.5px is used — and REPORTED by getComputedStyle — as
-            1px. The old spec asserted `1px` and passed, which is how it went
-            unnoticed through two rounds.
-
-            My first diagnosis here was wrong and is recorded so nobody repeats
-            it: I blamed `.lifted` beating the arbitrary utility from the
-            components layer. The built stylesheet disproves it — the utility
-            is emitted after `.lifted` and does win. The pixel snapping is the
-            whole of it.
-
-            2px is a whole pixel at every DPR, so it renders everywhere and the
-            assertion means something. The fill is spelled out rather than
-            taken from `.lifted` simply because this element states its own
-            stroke; that part of the change stands on its own.
-          */
-          className="inline-flex min-w-0 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-pill border-2 border-volt bg-surface-raised px-3 py-[6px] text-body-lg font-bold text-bone"
-        >
-          {/* The owner's mock, 2026-11-16: a clock before the kick-off. */}
-          <Icon name="clock" className="h-[18px] w-[18px] text-volt" strokeWidth={2.2} />
-          {formatTime(game.starts_at)}
-        </span>
+      <span className="relative col-start-1 row-start-1 flex min-w-0 flex-col px-4 py-3">
 
         {/*
-          ~~THE DURATION, which this card had never rendered until round 18
-          item 9 put it here.~~ REMOVED (round 19, item 4).
+          THE ANATOMY, RE-ORDERED TO THE FRAMES:
 
-          ROUND 18 WAS RIGHT ABOUT THE BUG AND WRONG ABOUT THE FIX. The prop
-          really was threaded, typed and drawn in this file's ASCII sketch with
-          nothing rendering it — but the conclusion "so render it" skipped the
-          question of whether the card should carry it at all. A grey "60 min"
-          in the middle of the box is the third number on a row that already
-          carries a kick-off time and a spots figure, and it is the one nobody
-          is scanning for: how long a game runs almost never varies, and when
-          it does it is a detail you check after deciding to come.
+            venue                      · format/surface badges
+            time pill                  · spots left
+            capacity bar
+            faces                      · Join → (paint)
 
-          IT IS NOT LOST. `duration_minutes` renders on the game DETAIL, in the
-          fact list beside When and Format, where there is room to say
-          "90 minutes" in words. The card links to it.
-
-          The `Pick<>` above still carries `duration_minutes` — `isInProgress`
-          and the `.ics` both read it — so this is a rendering decision, not a
-          data one.
+          What moved: the spots figure comes UP onto the time row, and the faces
+          drop to share the last row with the join cue. The previous order put
+          spots and faces together on the final row, which was right on a flat
+          card and wrong over a photograph — the two loudest elements both sat in
+          the darkest band and the middle of the card carried nothing.
         */}
-        <span data-testid="row-spots" className="shrink-0">
-          {live ? (
-            <span data-testid="card-live" className="badge-pill border-warn bg-warn/[.12] text-warn">
-              {t.games.playingNow}
-            </span>
+        <span className="relative flex items-start justify-between gap-2">
+          <span data-testid="card-venue" className="min-w-0 flex-1 truncate text-body-lg font-bold leading-tight text-white">
+            {venueDisplayName(game.venue, pitchName)}
+          </span>
+          <CardPills format={game.format} language={gameLanguageOf(game.language)} indoor={game.indoor} />
+        </span>
+
+        <span className="relative mt-2 mb-2 flex items-center justify-between gap-2">
+          <span
+            data-testid="card-when"
+            /*
+              `border-2`, NOT `border-[1.5px]`, AND THE REASON IS THE DEVICE.
+
+              The night round set this to 1.5px to make the volt outline read.
+              It never rendered: Chrome snaps a border to whole device pixels, so
+              at this DPR 1.5px is used — and REPORTED by getComputedStyle — as
+              1px. The old spec asserted `1px` and passed, which is how it went
+              unnoticed through two rounds.
+
+              My first diagnosis here was wrong and is recorded so nobody repeats
+              it: I blamed `.lifted` beating the arbitrary utility from the
+              components layer. The built stylesheet disproves it — the utility
+              is emitted after `.lifted` and does win. The pixel snapping is the
+              whole of it.
+
+              2px is a whole pixel at every DPR, so it renders everywhere and the
+              assertion means something. The fill is spelled out rather than
+              taken from `.lifted` simply because this element states its own
+              stroke; that part of the change stands on its own.
+            */
+            className="inline-flex min-w-0 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-pill border-2 border-volt bg-surface-raised px-3 py-[6px] text-body-lg font-bold text-bone"
+          >
+            {/* The owner's mock, 2026-11-16: a clock before the kick-off. */}
+            <Icon name="clock" className="h-[18px] w-[18px] text-volt" strokeWidth={2.2} />
+            {formatTime(game.starts_at)}
+          </span>
+
+          {/*
+            ~~THE DURATION, which this card had never rendered until round 18
+            item 9 put it here.~~ REMOVED (round 19, item 4).
+
+            ROUND 18 WAS RIGHT ABOUT THE BUG AND WRONG ABOUT THE FIX. The prop
+            really was threaded, typed and drawn in this file's ASCII sketch with
+            nothing rendering it — but the conclusion "so render it" skipped the
+            question of whether the card should carry it at all. A grey "60 min"
+            in the middle of the box is the third number on a row that already
+            carries a kick-off time and a spots figure, and it is the one nobody
+            is scanning for: how long a game runs almost never varies, and when
+            it does it is a detail you check after deciding to come.
+
+            IT IS NOT LOST. `duration_minutes` renders on the game DETAIL, in the
+            fact list beside When and Format, where there is room to say
+            "90 minutes" in words. The card links to it.
+
+            The `Pick<>` above still carries `duration_minutes` — `isInProgress`
+            and the `.ics` both read it — so this is a rendering decision, not a
+            data one.
+          */}
+          <span data-testid="row-spots" className="shrink-0">
+            {live ? (
+              <span data-testid="card-live" className="badge-pill border-warn bg-warn/[.12] text-warn">
+                {t.games.playingNow}
+              </span>
+            ) : (
+              <SpotsLeft bookedCount={bookedCount} capacity={game.capacity} />
+            )}
+          </span>
+        </span>
+
+        {/* `mt-auto`: on a card taller than its content the bar and the faces sit at the foot, on the dark end of the ramp. */}
+        <span className="relative mt-auto block">
+          <CapacityBar bookedCount={bookedCount} capacity={game.capacity} size="slim" />
+        </span>
+
+        <span className="relative mt-2 flex items-center justify-between gap-3">
+          {/* Absent at zero (§2.1) — a ring drawn around nobody is a question. */}
+          {roster.length > 0 ? (
+            <AvatarRow players={roster} max={3} size="card" supabaseUrl={supabaseUrl} />
           ) : (
-            <SpotsLeft bookedCount={bookedCount} capacity={game.capacity} />
+            <span />
+          )}
+
+          {/*
+            `Join →` — PAINT, NOT A CONTROL (R1).
+
+            A `<span>`. No href, no handler, no focus stop, no role. Ruling E is
+            UPHELD rather than reversed: the whole card is still one anchor, and
+            a link inside a link is the construction E removed. This only makes
+            the card LOOK like it carries the action it has always carried.
+
+            `aria-hidden`, because it is decoration on top of a link that already
+            announces itself — without it a screen reader reads the card's name
+            and then the word "Join" as if a second control existed.
+
+            Not rendered on a past card: the state is not tappable at all, and a
+            call to action on it would be a lie about what the card does. Nor
+            where the viewer already holds the spot — see `joinCue`.
+          */}
+          {!past && !live && joinCue && (
+            <span
+              aria-hidden
+              data-testid="card-join-cue"
+              className="shrink-0 rounded-pill bg-volt px-4 py-1 text-body font-bold text-ink"
+            >
+              {t.games.cardJoinCue} →
+            </span>
           )}
         </span>
-      </span>
-
-      <span className="relative mt-2 block">
-        <CapacityBar bookedCount={bookedCount} capacity={game.capacity} size="slim" />
-      </span>
-
-      <span className="relative mt-2 flex items-center justify-between gap-3">
-        {/* Absent at zero (§2.1) — a ring drawn around nobody is a question. */}
-        {roster.length > 0 ? (
-          <AvatarRow players={roster} max={3} size="card" supabaseUrl={supabaseUrl} />
-        ) : (
-          <span />
-        )}
-
-        {/*
-          `Join →` — PAINT, NOT A CONTROL (R1).
-
-          A `<span>`. No href, no handler, no focus stop, no role. Ruling E is
-          UPHELD rather than reversed: the whole card is still one anchor, and
-          a link inside a link is the construction E removed. This only makes
-          the card LOOK like it carries the action it has always carried.
-
-          `aria-hidden`, because it is decoration on top of a link that already
-          announces itself — without it a screen reader reads the card's name
-          and then the word "Join" as if a second control existed.
-
-          Not rendered on a past card: the state is not tappable at all, and a
-          call to action on it would be a lie about what the card does. Nor
-          where the viewer already holds the spot — see `joinCue`.
-        */}
-        {!past && !live && joinCue && (
-          <span
-            aria-hidden
-            data-testid="card-join-cue"
-            className="shrink-0 rounded-pill bg-volt px-4 py-1 text-body font-bold text-ink"
-          >
-            {t.games.cardJoinCue} →
-          </span>
-        )}
       </span>
     </>
   );
@@ -470,7 +435,7 @@ export async function GameCard({
         data-testid="game-row"
         data-game-id={game.id}
         data-past="true"
-        className="game-box relative isolate block overflow-hidden rounded-card px-4 py-3 opacity-45"
+        className="game-box relative isolate grid overflow-hidden rounded-card opacity-45"
       >
         {body}
       </div>
@@ -483,7 +448,7 @@ export async function GameCard({
       data-testid="game-row"
       data-game-id={game.id}
       data-past="false"
-      className="game-box pressable relative isolate block overflow-hidden rounded-card px-4 py-3 no-underline"
+      className="game-box pressable relative isolate grid overflow-hidden rounded-card no-underline"
     >
       {body}
     </Link>

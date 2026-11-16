@@ -1737,6 +1737,9 @@ export const strings = {
     venuePhotoReplace: "Replace the photo",
     venuePhotoHint:
       "Landscape, taken at the pitch. It shows on every game here, above the map. Up to 4 MB, jpg/png/webp.",
+    /* The crop window for a venue photo (2026-11-16): it darkens as the game card does. */
+    venueCropHint:
+      "Drag and zoom. The outline is the game card, darkened where the card's text and players sit — keep the pitch in the light part.",
     venuePhotoBadType: "That is not a jpg, png or webp.",
     venuePhotoTooBig: "That file is over 4 MB. Photograph it again at a lower size.",
     venuePhotoFailed: "The upload did not go through. Try again.",

@@ -279,6 +279,19 @@ row of real data.** The crop is now pinned to the CARD (`1600x740`), and the
 hero is asserted only to be NARROWER than the frame — the property that means
 `object-cover` trims its sides and never the goalposts.
 
+**AND "THE CARD IS A FIXED HEIGHT" WAS ITSELF THE NEXT TRAP** (2026-11-16). A
+fixed height means the aspect moves with the WIDTH: right at 390, and 676x161
+on a laptop, where the card showed the lower half of the frame, enlarged — the
+owner: "it also shows up differently on phone and pc". And the crop window
+showed the photo at full brightness while the card blacked out its bottom
+third. Now the card draws the photo in a box of the frame's own shape,
+top-anchored, is never shorter than the frame's LIT 70% (`aspect-[1600/518]`,
+tied to `CardPhotoScrim`'s `to-70%`), and the window draws the card's
+darkening (`CardPhotoScrim`, one component, three surfaces). Holding the WHOLE
+frame instead made a 412 phone's cards 10px taller for nothing but ink, and
+`games.spec`'s "three whole cards and a fourth started" caught it.
+`e2e/card-frame.spec.ts` measures four widths; `crop-truth` decodes two.
+
 **And a crop test that compares two constants can never fail for the reason you
 care about.** `crop-frames.spec.ts` compared the constant to a rendered box and
 passed for three rounds while the wrong surface was being measured.

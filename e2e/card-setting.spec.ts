@@ -7,8 +7,8 @@ import { players, serviceClient, signInAs } from "./helpers/session";
  * INDOOR OR OUTDOOR, AND THE CARD THE OWNER DREW (2026-11-16): "we currently
  * have no selection of indoor or outdoor, so let's also please add that in the
  * same area we choose the surface". The card shows it in a small pill under
- * the language pill — and does not grow to make room, because the venue
- * photo's crop is pinned to the card's height.
+ * the language pill — and does not grow to make room, because on a phone the
+ * list shows three cards and the start of a fourth.
  */
 test.use({ viewport: { width: 390, height: 844 } });
 
@@ -69,7 +69,7 @@ test("the admin picks Indoor beside the surface, and the card shows it under the
       "centred under it",
     ).toBeLessThan(1);
     expect(setting.bottom, "clear of the spots figure beneath").toBeLessThanOrEqual(after.spots!.top);
-    expect(Math.abs(after.card - before.card), "the card grew — the photo crop is pinned to its height").toBeLessThan(
+    expect(Math.abs(after.card - before.card), "the card grew — on a phone that costs the list its fourth card").toBeLessThan(
       0.5,
     );
   } finally {
