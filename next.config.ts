@@ -57,6 +57,12 @@ const nextConfig: NextConfig = {
      * brand card reads the fonts too but only at build, where the repo is on disk.
      */
     "/admin/games/[id]/story": ["./lib/og/fonts/**", "./public/venues/**"],
+    /*
+     * The game link preview (2026-11-17), drawn per request from the same
+     * fonts and photos — and, for a game it cannot see, the brand card, whose
+     * mark is read from `public/brand/` at request time here.
+     */
+    "/game/[id]/opengraph-image": ["./lib/og/fonts/**", "./public/venues/**", "./public/brand/hf-logo.png"],
   },
 
   /**

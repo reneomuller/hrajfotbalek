@@ -1,11 +1,8 @@
-import { readFileSync } from "node:fs";
-import { join } from "node:path";
 import { ImageResponse } from "next/og";
 import { formatGameDate, formatTime, type DateLocale } from "@/lib/format";
 import type { SpotsTone } from "@/lib/games/urgency";
-import { capacitySegments } from "@/lib/games/capacity";
-import { OG_MARK_DATA_URI } from "@/lib/og/mark";
 import type { StoryFact } from "@/lib/og/storyFacts";
+import { BrandPill, CapacityBar, DISPLAY_FONT, FactTiles, STORY_TILES, TEXT_FONT, TONE_COLOR, storyFonts } from "@/lib/og/storyKit";
 import { COLORS } from "@/lib/og/theme";
 import type { Strings } from "@/lib/strings";
 
@@ -28,26 +25,20 @@ import type { Strings } from "@/lib/strings";
  * same tone ladder — and nothing at all while nobody has booked
  * (`storyAvailability`).
  *
- * FONTS: Anton for the display lines, Barlow Condensed for the small ones —
- * both the site's own, both under the SIL Open Font License
- * (`lib/og/fonts/`). Read from disk per request; `next.config.ts` traces them
- * into the route's bundle.
+ * THE PARTS ARE SHARED WITH THE LINK PREVIEW (`storyKit.tsx`, 2026-11-17):
+ * the pill, the tiles, the bar and the fonts, so the WhatsApp preview of a game
+ * is this image laid on its side.
  */
 
 export const STORY_SIZE = { width: 1080, height: 1920 };
 const PAD = 72;
 const PHOTO_HEIGHT = 1000;
+/** The size the venue photo is drawn at, so it is fetched at no more. */
+export const STORY_PHOTO_SIZE = { width: STORY_SIZE.width, height: PHOTO_HEIGHT };
 const SAFE_TOP = 200;
 /** Where the game's facts begin: on the photo's fade, so the two read as one. */
 const FACTS_TOP = 640;
 const MARK_PX = 128;
-
-const TONE_COLOR: Record<SpotsTone, string> = {
-  plenty: COLORS.volt,
-  few: COLORS.warn,
-  critical: COLORS.danger,
-  full: COLORS.danger,
-};
 
 export interface GameStoryProps {
   venueName: string;
@@ -83,9 +74,6 @@ function pitchFallbackDataUri(): string {
 export function renderGameStory(props: GameStoryProps): ImageResponse {
   const { venueName, address, startsAt, facts, availability, bookedCount, capacity, photoDataUri, locale, t } = props;
   const upper = (text: string) => text.toLocaleUpperCase(locale);
-  const fontDir = join(process.cwd(), "lib/og/fonts");
-  const anton = readFileSync(join(fontDir, "Anton-Regular.ttf"));
-  const barlow = readFileSync(join(fontDir, "BarlowCondensed-SemiBold.ttf"));
 
   const when = `${upper(formatGameDate(startsAt, locale))} · ${formatTime(startsAt, locale)}`;
   const tone = availability ? TONE_COLOR[availability.tone] : COLORS.volt;
@@ -100,7 +88,7 @@ export function renderGameStory(props: GameStoryProps): ImageResponse {
           height: STORY_SIZE.height,
           display: "flex",
           backgroundColor: COLORS.ink,
-          fontFamily: "Barlow",
+          fontFamily: TEXT_FONT,
         }}
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -136,35 +124,17 @@ export function renderGameStory(props: GameStoryProps): ImageResponse {
         >
           {/* The mark and the wordmark, the header's pairing — large enough to
               be read at a glance, which the first draft's was not. */}
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              alignSelf: "flex-start",
-              height: MARK_PX + 24,
-              padding: "12px 44px 12px 12px",
-              borderRadius: (MARK_PX + 24) / 2,
-              backgroundColor: "rgba(8,8,8,.78)",
-              border: `2px solid ${COLORS.hairline}`,
-            }}
-          >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={OG_MARK_DATA_URI} width={MARK_PX} height={MARK_PX} style={{ borderRadius: MARK_PX / 2 }} alt="" />
-            <div style={{ display: "flex", marginLeft: 28, fontFamily: "Anton", fontSize: 76, letterSpacing: 1 }}>
-              <span style={{ color: "white" }}>{upper(t.brand.wordmarkLead)}</span>
-              <span style={{ color: COLORS.volt, marginLeft: 18 }}>{upper(t.brand.wordmarkAccent)}</span>
-            </div>
-          </div>
+          <BrandPill markPx={MARK_PX} t={t} upper={upper} />
 
           <div style={{ display: "flex", flexDirection: "column", marginTop: FACTS_TOP - SAFE_TOP - (MARK_PX + 24) }}>
-            <div style={{ display: "flex", fontFamily: "Anton", fontSize: 64, color: COLORS.volt, letterSpacing: 1 }}>
+            <div style={{ display: "flex", fontFamily: DISPLAY_FONT, fontSize: 64, color: COLORS.volt, letterSpacing: 1 }}>
               {when}
             </div>
             <div
               style={{
                 display: "flex",
                 marginTop: 18,
-                fontFamily: "Anton",
+                fontFamily: DISPLAY_FONT,
                 fontSize: 140,
                 lineHeight: 0.98,
                 color: "white",
@@ -185,49 +155,16 @@ export function renderGameStory(props: GameStoryProps): ImageResponse {
             )}
 
             {/* One row: the format and the length. */}
-            <div style={{ display: "flex", marginTop: 64 }}>
-              {facts.map((fact, i) => (
-                <div
-                  key={fact.key}
-                  style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    flex: 1,
-                    marginLeft: i === 0 ? 0 : 24,
-                    padding: "26px 30px",
-                    borderRadius: 28,
-                    backgroundColor: COLORS.surface,
-                    border: `2px solid ${COLORS.hairline}`,
-                  }}
-                >
-                  <span style={{ fontSize: 32, letterSpacing: 3, color: COLORS.muted }}>{upper(fact.label)}</span>
-                  <FactValue fact={fact} color="white" />
-                </div>
-              ))}
-            </div>
+            <FactTiles facts={facts} sizes={STORY_TILES} upper={upper} marginTop={64} />
 
             {/* Availability, the app's way: the count above the bar. */}
             {availability && (
-              <div style={{ display: "flex", marginTop: 52, fontFamily: "Anton", fontSize: 64, color: tone }}>
+              <div style={{ display: "flex", marginTop: 52, fontFamily: DISPLAY_FONT, fontSize: 64, color: tone }}>
                 {upper(availability.label)}
               </div>
             )}
             {availability && (
-              <div style={{ display: "flex", marginTop: 20 }}>
-                {capacitySegments(bookedCount, capacity).map((filled, i) => (
-                  <div
-                    key={i}
-                    style={{
-                      display: "flex",
-                      flex: 1,
-                      height: 18,
-                      marginLeft: i === 0 ? 0 : 8,
-                      borderRadius: 4,
-                      backgroundColor: filled ? tone : COLORS.surfaceSeg,
-                    }}
-                  />
-                ))}
-              </div>
+              <CapacityBar bookedCount={bookedCount} capacity={capacity} color={tone} heightPx={18} gapPx={8} marginTop={20} />
             )}
 
           </div>
@@ -235,21 +172,6 @@ export function renderGameStory(props: GameStoryProps): ImageResponse {
         </div>
       </div>
     ),
-    {
-      ...STORY_SIZE,
-      fonts: [
-        { name: "Anton", data: anton, weight: 400, style: "normal" },
-        { name: "Barlow", data: barlow, weight: 600, style: "normal" },
-      ],
-    },
-  );
-}
-
-/** A fact's value, on one line at one size — two tiles leave "90 min" room. */
-function FactValue({ fact, color }: { fact: StoryFact; color: string }) {
-  return (
-    <span style={{ marginTop: 6, fontFamily: "Anton", fontSize: 86, color, whiteSpace: "nowrap" }}>
-      {fact.value}
-    </span>
+    { ...STORY_SIZE, fonts: storyFonts() },
   );
 }

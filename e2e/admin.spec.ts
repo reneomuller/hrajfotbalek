@@ -293,7 +293,9 @@ test("a shared game link renders a preview card and a working .ics", async ({
   const imageUrl = await ogImage.getAttribute("content");
   const image = await request.get(imageUrl!);
   expect(image.ok()).toBeTruthy();
-  expect(image.headers()["content-type"]).toContain("image/png");
+  // A JPEG since 2026-11-17: it carries the venue photo, and WhatsApp drops
+  // a heavy image (`lib/og/shareImage.tsx`).
+  expect(image.headers()["content-type"]).toContain("image/jpeg");
 
   // --- the calendar file ---------------------------------------------------
   const runner = await apiClientFor(players.runner);

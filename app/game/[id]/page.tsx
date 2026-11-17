@@ -86,13 +86,16 @@ export async function generateMetadata({ params }: GamePageProps): Promise<Metad
   }
 
   const { game } = result;
-  const title = `${game.venue} — ${formatGameDateTime(game.starts_at)}`;
+  const locale = await getLocale();
+  // In the reader's language, like the description and the preview image: the
+  // date was English under a Czech picture (2026-11-17).
+  const title = `${game.venue} — ${formatGameDateTime(game.starts_at, locale)}`;
   // Same ladder the page renders, so the WhatsApp preview and the page it
   // links to never disagree about how urgent the game is.
   const description = `${spotsLeftLabel(
     result.bookedCount,
     game.capacity,
-    await getLocale(),
+    locale,
     t,
   )} · ${formatCzk(
     game.price_czk,
